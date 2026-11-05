@@ -210,6 +210,88 @@ public struct AWSPrice: Decodable, Equatable, Sendable {
     }
 }
 
+/// StartAWSImage's specJSON. The image's URL comes from the template, never from here.
+public struct AWSImageSpec: Encodable, Equatable, Sendable {
+    public let templateNode: String
+    public let arch: String
+    public let region: String
+    public let subnetId: String
+    /// "" for the VPC's default group.
+    public let securityGroupId: String
+    /// "" for the core's default (t3.small or t4g.small).
+    public let instanceType: String
+    /// "" for talos-<version>-aws-<arch>-<schematic12>.
+    public let name: String
+
+    public init(
+        templateNode: String = "", arch: String, region: String, subnetId: String, securityGroupId: String = "",
+        instanceType: String = "", name: String = ""
+    ) {
+        self.templateNode = templateNode
+        self.arch = arch
+        self.region = region
+        self.subnetId = subnetId
+        self.securityGroupId = securityGroupId
+        self.instanceType = instanceType
+        self.name = name
+    }
+}
+
+/// What a finished AMI run reports.
+public struct AWSImageResult: Decodable, Equatable, Sendable {
+    public let imageId: String
+    public let snapshotId: String
+    public let name: String
+    public let arch: String
+    public let talosVersion: String
+    public let schematic: String
+    public let sizeGB: Int
+
+    private enum CodingKeys: String, CodingKey { case imageId, snapshotId, name, arch, talosVersion, schematic, sizeGB }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        imageId = try c.field(.imageId, "")
+        snapshotId = try c.field(.snapshotId, "")
+        name = try c.field(.name, "")
+        arch = try c.field(.arch, "")
+        talosVersion = try c.field(.talosVersion, "")
+        schematic = try c.field(.schematic, "")
+        sizeGB = try c.field(.sizeGB, 0)
+    }
+}
+
+/// The cost line of an AMI run; prices before tax, in `currency`, "" when the Price List does not
+/// give them.
+public struct AWSImageCost: Decodable, Equatable, Sendable {
+    public let instanceType: String
+    public let hourly: String
+    public let currency: String
+    public let snapshotMonthlyPerGB: String
+    public let minutes: Int
+
+    /// Both prices are known.
+    public var priced: Bool { !hourly.isEmpty && !snapshotMonthlyPerGB.isEmpty }
+
+    private enum CodingKeys: String, CodingKey { case instanceType, hourly, currency, snapshotMonthlyPerGB, minutes }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        instanceType = try c.field(.instanceType, "")
+        hourly = try c.field(.hourly, "")
+        currency = try c.field(.currency, "")
+        snapshotMonthlyPerGB = try c.field(.snapshotMonthlyPerGB, "")
+        minutes = try c.field(.minutes, 0)
+    }
+}
+
+extension AWSOptions {
+    /// The subnets a helper instance can reach the Image Factory from: those assigning a public IP first.
+    public var helperSubnets: [AWSSubnet] {
+        subnets.filter(\.public) + subnets.filter { !$0.public }
+    }
+}
+
 /// StartAWSCreate's specJSON. Never holds the keys.
 public struct AWSCreateSpec: Encodable, Equatable, Sendable {
     public let region: String

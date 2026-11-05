@@ -110,37 +110,49 @@ struct HetznerSnapshotSheet: View {
     }
 }
 
-/// The followed snapshot run: its steps with the command's last line, Stop, then the result.
-struct HetznerSnapshotRunSections: View {
-    /// Called when the result is closed, with the snapshot that was made.
-    let onClose: (HetznerSnapshotResult?) -> Void
+/// The followed image run (a Hetzner snapshot or an AWS AMI): its steps with the command's last
+/// line, Stop, then the result.
+struct ImageRunSections: View {
+    /// Called when the result is closed, with how the run ended.
+    let onClose: (JoinJob.Outcome?) -> Void
 
     @State private var confirmStop = false
     private var job: JoinJob { .shared }
+    private var aws: Bool { job.request?.awsImage != nil }
 
     // Explicit: the private @State makes the memberwise init private.
-    init(onClose: @escaping (HetznerSnapshotResult?) -> Void) {
+    init(onClose: @escaping (JoinJob.Outcome?) -> Void) {
         self.onClose = onClose
     }
 
     var body: some View {
         Section {
             ForEach(job.timeline) { step in
-                RunStepRow(label: step.phase.localizedLabel, state: step.state, at: step.at, message: step.message)
+                RunStepRow(
+                    label: step.phase.localizedLabel(awsImage: aws), state: step.state, at: step.at,
+                    message: step.message)
             }
         } header: {
-            Text("Make a Talos snapshot")
+            // Literals in each branch: a ternary would make a String, shown unlocalized.
+            if aws {
+                Text("Make a Talos AMI")
+            } else {
+                Text("Make a Talos snapshot")
+            }
         }
         Section {
             switch job.outcome {
             case .snapshotMade(let made)?:
                 Text("Snapshot \(made.description) is ready: pick it to create the server.")
-                closeButton(made)
+                closeButton()
+            case .amiMade(let made)?:
+                Text("AMI \(made.name) is ready: it is picked for the new node.")
+                closeButton()
             case .failed(let error)?:
                 Text(verbatim: error).foregroundStyle(.statusBad)
-                closeButton(nil)
+                closeButton()
             case .joined?, .appearedInOmni?:
-                closeButton(nil)
+                closeButton()
             case nil:
                 Button(
                     job.stopping ? String(localized: "Stopping…") : String(localized: "Stop and clean up"),
@@ -151,7 +163,9 @@ struct HetznerSnapshotRunSections: View {
                 .disabled(job.stopping)
             }
         } footer: {
-            if job.isActive {
+            if job.isActive, aws {
+                Text("Stopping terminates the throwaway instance.")
+            } else if job.isActive {
                 Text("Stopping deletes the throwaway server and its key.")
             }
         }
@@ -159,14 +173,21 @@ struct HetznerSnapshotRunSections: View {
             Button("Stop and clean up", role: .destructive) { job.requestStop() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("The run stops. The throwaway server, its key and an unfinished snapshot are deleted.")
+            if aws {
+                Text(
+                    "The run stops. The throwaway instance is terminated, and an unfinished snapshot or AMI is deleted."
+                )
+            } else {
+                Text("The run stops. The throwaway server, its key and an unfinished snapshot are deleted.")
+            }
         }
     }
 
-    private func closeButton(_ made: HetznerSnapshotResult?) -> some View {
+    private func closeButton() -> some View {
         Button("Close") {
+            let outcome = job.outcome
             job.clear()
-            onClose(made)
+            onClose(outcome)
         }
     }
 }

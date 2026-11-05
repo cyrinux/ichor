@@ -50,6 +50,7 @@ import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.AWSCheck
 import name.levis.ichor.model.AWSCreateSpec
 import name.levis.ichor.model.AWSCredential
+import name.levis.ichor.model.AWSImageCost
 import name.levis.ichor.model.AWSInstanceType
 import name.levis.ichor.model.AWSOptions
 import name.levis.ichor.model.AWSPrice
@@ -117,6 +118,19 @@ class AWSCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
             _options.value = uiStateOf { lifecycle.awsOptions(if (account.isBlank()) "" else credential(account)) }
         }
     }
+
+    /** Lists the options again, keeping the shown form (and what is picked in it) meanwhile. */
+    fun refresh() {
+        val account = _account.value
+        if (account.isBlank()) return
+        viewModelScope.launch {
+            val state = uiStateOf { lifecycle.awsOptions(credential(account)) }
+            if (state is UiState.Loaded) _options.value = state
+        }
+    }
+
+    suspend fun estimate(arch: String, region: String): AWSImageCost =
+        lifecycle.awsImageEstimate(credential(_account.value), arch, region)
 
     /** Asks the Price List for [instanceType]; a failure (the demo has no keys) is "price unavailable". */
     fun loadPrice(instanceType: String) {
@@ -191,6 +205,8 @@ fun AWSCreateCard(
     val price by vm.price.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var adding by remember { mutableStateOf(false) }
+    var amiFor by remember { mutableStateOf<AMIAsk?>(null) }
+    var madeImage by rememberSaveable { mutableStateOf("") }
     LaunchedEffect(demo) { vm.load(demo) }
 
     SectionCard(stringResource(R.string.aws_title)) {
@@ -198,6 +214,13 @@ fun AWSCreateCard(
         if (current?.request?.aws != null) {
             JoinRunView(current, onStop = app.joinManager::stop, onOpenNode = null, onClose = app.joinManager::dismiss, onAllocate = onAllocate)
         } else {
+            if (current?.request?.awsImage != null) {
+                SnapshotRunView(current, onStop = app.joinManager::stop) {
+                    madeImage = current.awsImageResult?.imageId ?: madeImage
+                    app.joinManager.dismiss()
+                    vm.refresh()
+                }
+            }
             if (demo) {
                 InfoNotice(stringResource(R.string.hetzner_demo))
             } else {
@@ -220,6 +243,8 @@ fun AWSCreateCard(
                 is UiState.Loaded -> InstanceForm(
                     state.data, form, labelsJson, busy = current?.running == true, price = price,
                     onType = vm::loadPrice, onRegion = if (demo) null else vm::switchRegion,
+                    canMakeImage = !demo && account.isNotBlank(), madeImage = madeImage,
+                    onMakeImage = { arch, subnet, group -> amiFor = AMIAsk(state.data, arch, subnet, group) },
                 ) { request ->
                     // The keys are read only now, and go to the run alone.
                     scope.launch { app.joinManager.start(request, if (account.isBlank()) "" else vm.credential(account)) }
@@ -228,7 +253,30 @@ fun AWSCreateCard(
         }
     }
     if (adding) KeysDialog(vm) { adding = false }
+    amiFor?.let { ask ->
+        AWSImageSheet(
+            options = ask.options,
+            initialArch = ask.arch,
+            initialSubnet = ask.subnet,
+            initialGroup = ask.group,
+            template = form?.template.orEmpty(),
+            estimate = vm::estimate,
+            onStart = { spec ->
+                amiFor = null
+                val request = JoinRequest(
+                    address = "", template = spec.templateNode, role = "", hostname = "Talos ${spec.arch}", disk = "",
+                    staticAddress = "", awsImage = spec,
+                )
+                // The keys are read only now, and go to the run alone.
+                scope.launch { app.joinManager.start(request, vm.credential(account)) }
+            },
+            onDismiss = { amiFor = null },
+        )
+    }
 }
+
+/** What the AMI sheet opens with: the card's current picks. */
+private data class AMIAsk(val options: AWSOptions, val arch: String, val subnet: String, val group: String)
 
 /** "t3.small · 2 CPU · 8 GB", and "burstable" when it is. */
 @Composable
@@ -239,7 +287,7 @@ private fun typeLabel(t: AWSInstanceType): String {
 }
 
 @Composable
-private fun subnetLabel(s: AWSSubnet): String {
+internal fun subnetLabel(s: AWSSubnet): String {
     val base = listOf(s.name.ifBlank { s.id }, s.az, s.cidr).filter { it.isNotBlank() }.joinToString(" · ")
     return if (s.public) "$base · ${stringResource(R.string.aws_subnet_public)}" else base
 }
@@ -256,6 +304,10 @@ private fun InstanceForm(
     price: UiState<AWSPrice>?,
     onType: (String) -> Unit,
     onRegion: ((String) -> Unit)?,
+    canMakeImage: Boolean,
+    /** The AMI the last run made: picked once it is listed. */
+    madeImage: String,
+    onMakeImage: (arch: String, subnet: String, group: String) -> Unit,
     onCreate: (JoinRequest) -> Unit,
 ) {
     val colors = LocalStatusColors.current
@@ -267,6 +319,7 @@ private fun InstanceForm(
     var publicIp by rememberSaveable(options.region) { mutableStateOf(false) }
     var omniName by rememberSaveable { mutableStateOf("") }
     var confirm by remember { mutableStateOf(false) }
+    LaunchedEffect(madeImage) { if (madeImage.isNotBlank()) imageId = madeImage }
 
     val type = options.types.firstOrNull { it.name == typeName }
     val images = type?.let { options.imagesFor(it.arch) }.orEmpty()
@@ -315,10 +368,16 @@ private fun InstanceForm(
     }
     if (type != null) {
         Text(stringResource(R.string.aws_image), style = MaterialTheme.typography.labelLarge)
-        if (images.isEmpty()) {
-            InfoNotice(stringResource(R.string.aws_no_image, type.arch))
-            IchorOutlinedButton(onClick = {}, enabled = false) { Text(stringResource(R.string.aws_make_ami)) }
-            MutedText(stringResource(R.string.aws_make_ami_soon))
+        if (images.isEmpty() && !canMakeImage) InfoNotice(stringResource(R.string.aws_no_image, type.arch))
+        if (canMakeImage) {
+            // The official AMI boots Talos without the cluster's extensions: offer one of its own image.
+            val own = images.any { !it.official }
+            if (!own) InfoNotice(stringResource(R.string.aws_image_missing, type.arch, options.region))
+            IchorOutlinedButton(
+                onClick = { onMakeImage(type.arch, subnetId, groupIds.firstOrNull().orEmpty()) },
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(stringResource(if (own) R.string.aws_image_make_another else R.string.aws_make_ami)) }
         }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             images.forEach { i -> IchorFilterChip(selected = i.id == imageId, onClick = { imageId = i.id }, label = { Text(i.name.ifBlank { i.id }) }) }

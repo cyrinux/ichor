@@ -99,7 +99,9 @@ struct JoinApplySection: View {
         }
         Section {
             ForEach(job.timeline) { step in
-                RunStepRow(label: step.phase.localizedLabel, state: step.state, at: step.at, message: step.message)
+                RunStepRow(
+                    label: step.phase.localizedLabel(awsImage: job.request?.awsImage != nil), state: step.state,
+                    at: step.at, message: step.message)
             }
         } header: {
             Text("3. Apply it and follow the node until it joins the cluster")
@@ -123,6 +125,9 @@ struct JoinApplySection: View {
                 Button("Close") { job.clear() }
             case .snapshotMade(let made)?:
                 Text("Snapshot \(made.description) is ready: pick it to create the server.")
+                Button("Close") { job.clear() }
+            case .amiMade(let made)?:
+                Text("AMI \(made.name) is ready: it is picked for the new node.")
                 Button("Close") { job.clear() }
             case .failed(let error)?:
                 Label {
@@ -177,12 +182,23 @@ struct JoinApplySection: View {
 }
 
 extension JoinPhase {
+    /// The AMI run's labels where a helper instance, not a server with a key, does the work.
+    func localizedLabel(awsImage: Bool) -> String {
+        guard awsImage else { return localizedLabel }
+        return switch self {
+        case .creating: String(localized: "Start the throwaway instance")
+        case .cleanup: String(localized: "Terminate the throwaway instance")
+        default: localizedLabel
+        }
+    }
+
     var localizedLabel: String {
         switch self {
         case .key: String(localized: "Add a temporary SSH key")
         case .rescue: String(localized: "Start the rescue system")
         case .writing: String(localized: "Write the Talos image")
         case .snapshot: String(localized: "Take the snapshot")
+        case .register: String(localized: "Register the AMI")
         case .cleanup: String(localized: "Delete the server and the key")
         case .creating: String(localized: "Create the server")
         case .starting: String(localized: "Start the server")

@@ -133,6 +133,8 @@ public struct JoinRequest: Equatable, Sendable {
     public let omni: Bool
     /// No node at all: a throwaway server becomes a Talos snapshot (`hostname` only labels the run).
     public let snapshot: HetznerSnapshotSpec?
+    /// No node either: a throwaway AWS instance becomes a Talos AMI (`hostname` only labels the run).
+    public let awsImage: AWSImageSpec?
     /// A machine of Omni to put in the cluster (`hostname` and `role` are the machine's and the set's).
     public let omniAllocate: OmniAllocateSpec?
 
@@ -140,9 +142,10 @@ public struct JoinRequest: Equatable, Sendable {
         address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
         replacing: Bool = false, hetzner: HetznerCreateSpec? = nil, ovh: OVHCreateSpec? = nil,
         aws: AWSCreateSpec? = nil, azure: AzureCreateSpec? = nil, omni: Bool = false,
-        snapshot: HetznerSnapshotSpec? = nil, omniAllocate: OmniAllocateSpec? = nil
+        snapshot: HetznerSnapshotSpec? = nil, awsImage: AWSImageSpec? = nil, omniAllocate: OmniAllocateSpec? = nil
     ) {
         self.omniAllocate = omniAllocate
+        self.awsImage = awsImage
         self.snapshot = snapshot
         self.address = address
         self.template = template
@@ -162,6 +165,7 @@ public struct JoinRequest: Equatable, Sendable {
     public var phases: [JoinPhase] {
         if omniAllocate != nil { return JoinPhase.omniAllocateRun }
         if snapshot != nil { return JoinPhase.snapshotRun }
+        if awsImage != nil { return JoinPhase.awsImageRun }
         guard cloud else { return JoinPhase.maintenanceRun }
         return omni ? JoinPhase.cloudOmniRun : JoinPhase.cloudRun
     }
@@ -169,12 +173,15 @@ public struct JoinRequest: Equatable, Sendable {
     /// A machine to create at a cloud provider.
     public var cloud: Bool { hetzner != nil || ovh != nil || aws != nil || azure != nil }
 
+    /// No node at all: the run makes a Talos image (a Hetzner snapshot or an AWS AMI).
+    public var imageRun: Bool { snapshot != nil || awsImage != nil }
+
     /// The same request, replacing (or not) the member already named `hostname`.
     public func withReplacing(_ on: Bool) -> JoinRequest {
         JoinRequest(
             address: address, template: template, role: role, hostname: hostname, disk: disk,
             staticAddress: staticAddress, replacing: on, hetzner: hetzner, ovh: ovh, aws: aws, azure: azure,
-            omni: omni, snapshot: snapshot, omniAllocate: omniAllocate)
+            omni: omni, snapshot: snapshot, awsImage: awsImage, omniAllocate: omniAllocate)
     }
 }
 
@@ -206,7 +213,7 @@ public struct JoinProgress: Decodable, Equatable, Sendable {
 /// Phases of a node join, in order.
 public enum JoinPhase: String, CaseIterable, Comparable, Sendable {
     case key, creating, starting, applying, allocated, installing, booting, rebooting, booted, joining, omni
-    case registering, rescue, writing, snapshot, cleanup, done
+    case registering, rescue, writing, snapshot, register, cleanup, done
 
     /// A node in maintenance mode that gets its config from the app.
     public static let maintenanceRun: [JoinPhase] = [
@@ -220,6 +227,8 @@ public enum JoinPhase: String, CaseIterable, Comparable, Sendable {
     public static let cloudOmniRun: [JoinPhase] = [.creating, .starting, .omni, .done]
     /// A throwaway server that becomes a Talos snapshot.
     public static let snapshotRun: [JoinPhase] = [.key, .creating, .rescue, .writing, .snapshot, .cleanup, .done]
+    /// A throwaway AWS instance whose volume becomes a Talos AMI.
+    public static let awsImageRun: [JoinPhase] = [.creating, .writing, .snapshot, .register, .cleanup, .done]
     /// A machine put in a cluster through Omni.
     public static let omniAllocateRun: [JoinPhase] = [.allocated, .installing, .booting, .done]
 

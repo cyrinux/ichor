@@ -110,4 +110,52 @@ final class CloudAWSTests: XCTestCase {
         XCTAssertEqual(omni.phases, JoinPhase.cloudOmniRun)
         XCTAssertEqual(omni.withReplacing(true).aws, spec)
     }
+
+    func testTheAMISpecUsesTheCoresNames() throws {
+        let spec = AWSImageSpec(
+            templateNode: "10.0.0.2", arch: "arm64", region: "eu-west-1", subnetId: "subnet-a", securityGroupId: "sg-a")
+        let json = String(decoding: try JSONEncoder().encode(spec), as: UTF8.self)
+        let keys = ["\"templateNode\":\"10.0.0.2\"", "\"arch\":\"arm64\"", "\"subnetId\""]
+        for key in keys + ["\"securityGroupId\":\"sg-a\""] {
+            XCTAssertTrue(json.contains(key), json)
+        }
+    }
+
+    func testTheAMIResultAndItsCostDecode() throws {
+        let result = try JSONDecoder().decode(
+            AWSImageResult.self,
+            from: Data(
+                #"{"imageId":"ami-0abc","snapshotId":"snap-0abc","name":"talos-v1.12.0-aws-amd64","arch":"amd64","sizeGB":8}"#
+                    .utf8))
+        XCTAssertEqual(result.imageId, "ami-0abc")
+        XCTAssertEqual(result.sizeGB, 8)
+        XCTAssertEqual(result.schematic, "")
+
+        let cost = try JSONDecoder().decode(
+            AWSImageCost.self,
+            from: Data(
+                #"{"instanceType":"t3.small","hourly":"0.0228","currency":"USD","snapshotMonthlyPerGB":"0.05","minutes":10}"#
+                    .utf8))
+        XCTAssertEqual(cost.minutes, 10)
+        XCTAssertTrue(cost.priced)
+        let unpriced = try JSONDecoder().decode(
+            AWSImageCost.self, from: Data(#"{"instanceType":"t4g.small","minutes":10}"#.utf8))
+        XCTAssertFalse(unpriced.priced)
+    }
+
+    func testAnAMIRunHasItsOwnSteps() {
+        let spec = AWSImageSpec(arch: "amd64", region: "eu-west-1", subnetId: "subnet-a")
+        let request = JoinRequest(
+            address: "", template: "", role: "", hostname: "Talos amd64", disk: "", staticAddress: "", awsImage: spec)
+        XCTAssertEqual(request.phases, JoinPhase.awsImageRun)
+        XCTAssertTrue(request.imageRun)
+        XCTAssertFalse(request.cloud)
+        XCTAssertEqual(request.withReplacing(true).awsImage, spec)
+
+        let steps = joinTimeline(
+            [JoinProgress(phase: "creating"), JoinProgress(phase: "register")], phases: JoinPhase.awsImageRun)
+        XCTAssertEqual(steps.map(\.phase), JoinPhase.awsImageRun)
+        XCTAssertEqual(steps[2].state, .done)
+        XCTAssertEqual(steps[3].state, .current)
+    }
 }

@@ -27,6 +27,8 @@ import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.model.HetznerTokenCheck
 import name.levis.ichor.model.AWSCheck
 import name.levis.ichor.model.AWSCreateSpec
+import name.levis.ichor.model.AWSImageCost
+import name.levis.ichor.model.AWSImageSpec
 import name.levis.ichor.model.AWSOptions
 import name.levis.ichor.model.AWSPrice
 import name.levis.ichor.model.AzureCheck
@@ -427,6 +429,15 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** See [TalosStreams.awsCreate]. */
     fun awsCreate(credentialJson: String, spec: AWSCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.awsCreate(credentialJson, TalosJson.encodeToString(AWSCreateSpec.serializer(), spec), stop)
+
+    /** The cost line of an AMI run. Creates nothing. */
+    suspend fun awsImageEstimate(credentialJson: String, arch: String, region: String): AWSImageCost = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSImageCost.serializer(), Ichorgo.awsImageEstimate(credentialJson, arch, region))
+    }
+
+    /** See [TalosStreams.awsImage]. */
+    fun awsImage(credentialJson: String, spec: AWSImageSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.awsImage(credentialJson, TalosJson.encodeToString(AWSImageSpec.serializer(), spec), stop)
 
     /** Whose service principal this is and whether it may create VMs (its permissions, read only). Creates nothing. */
     suspend fun azureTest(credentialJson: String): AzureCheck = withContext(Dispatchers.IO) {

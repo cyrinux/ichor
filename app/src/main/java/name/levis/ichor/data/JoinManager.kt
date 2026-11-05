@@ -14,6 +14,8 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.model.HetznerCreateSpec
 import name.levis.ichor.model.AWSCreateSpec
+import name.levis.ichor.model.AWSImageResult
+import name.levis.ichor.model.AWSImageSpec
 import name.levis.ichor.model.AzureCreateSpec
 import name.levis.ichor.model.HetznerSnapshotResult
 import name.levis.ichor.model.HetznerSnapshotSpec
@@ -45,6 +47,8 @@ data class JoinRequest(
     val omni: Boolean = false,
     /** No node at all: a throwaway server becomes a Talos snapshot ([hostname] only labels the run). */
     val snapshot: HetznerSnapshotSpec? = null,
+    /** No node either: a throwaway AWS instance becomes a Talos AMI ([hostname] only labels the run). */
+    val awsImage: AWSImageSpec? = null,
     /** A machine of Omni to put in the cluster ([hostname] and [role] are the machine's and the set's). */
     val omniAllocate: OmniAllocateSpec? = null,
 ) {
@@ -53,6 +57,7 @@ data class JoinRequest(
         get() = when {
             omniAllocate != null -> JoinPhase.omniAllocateRun
             snapshot != null -> JoinPhase.snapshotRun
+            awsImage != null -> JoinPhase.awsImageRun
             !cloud -> JoinPhase.maintenanceRun
             omni -> JoinPhase.cloudOmniRun
             else -> JoinPhase.cloudRun
@@ -61,6 +66,10 @@ data class JoinRequest(
     /** A machine to create at a cloud provider. */
     val cloud: Boolean
         get() = hetzner != null || ovh != null || aws != null || azure != null
+
+    /** No node at all: the run makes a Talos image (a Hetzner snapshot or an AWS AMI). */
+    val imageRun: Boolean
+        get() = snapshot != null || awsImage != null
 }
 
 /** The node join the app follows: at most one at a time. */
@@ -77,6 +86,8 @@ data class JoinRunState(
     val stopping: Boolean = false,
     /** The finished snapshot of a [JoinRequest.snapshot] run. */
     val snapshotResult: HetznerSnapshotResult? = null,
+    /** The finished AMI of a [JoinRequest.awsImage] run. */
+    val awsImageResult: AWSImageResult? = null,
 ) : FollowedRun {
     override val hostname: String get() = request.hostname
 }
@@ -115,6 +126,7 @@ class JoinManager(
             try {
                 val events = request.omniAllocate?.let { lifecycle.omniAllocate(it, stopped.filter { s -> s }) }
                     ?: request.snapshot?.let { lifecycle.hetznerSnapshot(providerToken, it, stopped.filter { s -> s }) }
+                    ?: request.awsImage?.let { lifecycle.awsImage(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.hetzner?.let { lifecycle.hetznerCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.ovh?.let { lifecycle.ovhCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.aws?.let { lifecycle.awsCreate(providerToken, it, stopped.filter { s -> s }) }
@@ -138,10 +150,15 @@ class JoinManager(
     }
 
     private suspend fun finish(context: String, done: JoinEvent.Done) {
-        // A snapshot run's "address" is its result; no node to add.
+        // An image run's "address" is its result; no node to add.
         if (_current.value?.request?.snapshot != null) {
             val result = runCatching { TalosJson.decodeFromString(HetznerSnapshotResult.serializer(), done.address) }.getOrNull()
             _current.update { it?.copy(finished = true, error = done.error, snapshotResult = result) }
+            return
+        }
+        if (_current.value?.request?.awsImage != null) {
+            val result = runCatching { TalosJson.decodeFromString(AWSImageResult.serializer(), done.address) }.getOrNull()
+            _current.update { it?.copy(finished = true, error = done.error, awsImageResult = result) }
             return
         }
         // Omni keeps its own list of machines: no address to add.

@@ -30,6 +30,7 @@ struct AWSCreateSection: View {
     @State private var omniName = ""
     @State private var confirming = false
     @State private var adding = false
+    @State private var makingAMI = false
     @State private var confirmStop = false
     @State private var authError: String?
     private var job: JoinJob { .shared }
@@ -74,6 +75,12 @@ struct AWSCreateSection: View {
                 AWSKeysSheet { added in
                     reloadAccounts()
                     pick(added)
+                }
+            }
+            if job.request?.awsImage != nil {
+                ImageRunSections { outcome in
+                    guard case .amiMade(let made)? = outcome else { return }
+                    Task { await amiClosed(made) }
                 }
             }
             if let options { optionsSections(options) }
@@ -158,22 +165,43 @@ struct AWSCreateSection: View {
             }
             if let type {
                 let images = value.images(for: type.arch)
-                if images.isEmpty {
+                if images.isEmpty, demo {
                     Text("No Talos AMI for \(type.arch) here: pick another region, or an AMI of your own.")
                         .font(.footnote).foregroundStyle(.orange)
-                    Button("Make a Talos AMI") {}
-                        .disabled(true)
-                    Text("Coming next: an AMI of the cluster's image, made from the phone.")
-                        .font(.footnote).foregroundStyle(.secondary)
-                } else {
+                }
+                if !images.isEmpty {
                     Picker("Talos AMI", selection: $imageId) {
                         Text(verbatim: "—").tag("")
                         ForEach(images) { Text(verbatim: $0.name.isEmpty ? $0.id : $0.name).tag($0.id) }
                     }
                 }
+                if !demo { makeAMIRows(type: type, images: images, region: value.region) }
             }
         }
         .task(id: typeName) { await loadPrice() }
+        .sheet(isPresented: $makingAMI) {
+            AWSImageSheet(
+                options: value, arch: type?.arch ?? "", subnetId: subnetId, groupId: groupIds.first ?? "",
+                template: omni ? "" : template, credential: credential
+            ) { spec in
+                startAMI(spec)
+            }
+        }
+    }
+
+    /// The official AMI boots Talos without the cluster's extensions: offer one of its own image.
+    @ViewBuilder
+    private func makeAMIRows(type: AWSInstanceType, images: [AWSImage], region: String) -> some View {
+        let own = images.contains { !$0.official }
+        if own {
+            Button("Make another Talos AMI") { makingAMI = true }
+                .disabled(job.isActive || account.isEmpty)
+        } else {
+            Text("No Talos AMI of this cluster's image for \(type.arch) in \(region) yet: Ichor can make one.")
+                .font(.footnote).foregroundStyle(.secondary)
+            Button("Make a Talos AMI") { makingAMI = true }
+                .disabled(job.isActive || account.isEmpty)
+        }
     }
 
     /// The subnet, the security groups of its VPC and the public address.
@@ -304,7 +332,7 @@ struct AWSCreateSection: View {
                     path.append(.omniAllocate)
                 }
                 Button("Close") { job.clear() }
-            case .snapshotMade?:
+            case .snapshotMade?, .amiMade?:
                 Button("Close") { job.clear() }
             case .failed(let error)?:
                 Text(verbatim: error).foregroundStyle(.statusBad)
@@ -392,6 +420,24 @@ struct AWSCreateSection: View {
         let type = typeName
         let answer = (try? await TalosClient.awsPrice(credential: credential, instanceType: type)) ?? AWSPrice()
         if !Task.isCancelled { price = answer }
+    }
+
+    /// The throwaway instance's run: followed like a join, with no node to add at its end.
+    private func startAMI(_ spec: AWSImageSpec) {
+        guard let client = model.client else { return }
+        let request = JoinRequest(
+            address: "", template: spec.templateNode, role: "", hostname: "Talos \(spec.arch)", disk: "",
+            staticAddress: "", awsImage: spec)
+        job.start(client: client, request: request, providerToken: credential) { _ in }
+    }
+
+    /// The region's AMIs again, with the new one picked.
+    private func amiClosed(_ made: AWSImageResult) async {
+        await loadOptions()
+        guard case .loaded(let value, _, _) = options, value.images.contains(where: { $0.id == made.imageId }) else {
+            return
+        }
+        imageId = made.imageId
     }
 
     /// Face ID / passcode first when the app lock is on, then the run.

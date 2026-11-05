@@ -93,6 +93,7 @@ enum class JoinPhase(val wire: String) {
     RESCUE("rescue"),
     WRITING("writing"),
     SNAPSHOT("snapshot"),
+    REGISTER("register"),
     CLEANUP("cleanup"),
     DONE("done"),
     ;
@@ -111,6 +112,9 @@ enum class JoinPhase(val wire: String) {
 
         /** A throwaway server that becomes a Talos snapshot. */
         val snapshotRun = listOf(KEY, CREATING, RESCUE, WRITING, SNAPSHOT, CLEANUP, DONE)
+
+        /** A throwaway AWS instance whose volume becomes a Talos AMI. */
+        val awsImageRun = listOf(CREATING, WRITING, SNAPSHOT, REGISTER, CLEANUP, DONE)
 
         /** A machine put in a cluster through Omni. */
         val omniAllocateRun = listOf(ALLOCATED, INSTALLING, OMNI_BOOTING, DONE)

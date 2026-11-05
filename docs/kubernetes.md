@@ -358,8 +358,17 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     nothing). Then pick an instance type (grouped by architecture), the Talos AMI, a subnet and its
     security groups, and whether the instance gets a public address (the subnet's setting by
     default). The official Talos AMI of the cluster's version and of the type's architecture is
-    listed for the region; AMIs of your own are listed by name when the account has them, and
-    making one from the phone is the next step. Only existing subnets and security groups are
+    listed for the region; AMIs of your own are listed by name when the account has them. The
+    official AMI boots Talos without the cluster's extensions, so **Make a Talos AMI** makes one of
+    the cluster's own image: a throwaway Amazon Linux instance runs for about ten minutes, writes
+    the Image Factory's image for your Talos version and schematic to an extra volume and powers
+    off; the app snapshots the volume, registers the AMI (tagged with the version and schematic)
+    and terminates the instance, and the new AMI is picked for the node. The cost line comes first
+    (the instance's hourly price, then the snapshot's price per GB-month); the instance is billed
+    by AWS, and the snapshot stays, billed per GB-month, until you delete it at AWS. Stop
+    terminates the instance and deletes an unfinished snapshot or AMI; see [safety](safety.md).
+    The instance's subnet must reach the internet (one that assigns a public IP). Only existing
+    subnets and security groups are
     listed: a group that allows traffic from itself is enough for Omni, while a plain Talos node
     must be reachable from the phone on port 50000 of the address the app follows. The user data
     must fit EC2's 16 KB. The hourly price in USD before tax comes from the AWS Price List, or

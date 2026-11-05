@@ -323,9 +323,18 @@ enum OperationActivities {
         let job = JoinJob.shared
         guard let request = job.request else { return nil }
         let title =
-            request.snapshot != nil
-            ? String(localized: "Making a Talos snapshot") : String(localized: "Adding \(request.hostname)")
+            if request.snapshot != nil {
+                String(localized: "Making a Talos snapshot")
+            } else if request.awsImage != nil {
+                String(localized: "Making a Talos AMI")
+            } else {
+                String(localized: "Adding \(request.hostname)")
+            }
         switch job.outcome {
+        case .amiMade(let made)?:
+            return OperationContent(
+                title: title, step: String(localized: "AMI \(made.name) is ready: it is picked for the new node."),
+                phase: .succeeded)
         case .snapshotMade(let made)?:
             return OperationContent(
                 title: title,

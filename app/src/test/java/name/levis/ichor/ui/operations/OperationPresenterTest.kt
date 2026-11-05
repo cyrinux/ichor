@@ -13,6 +13,7 @@ import name.levis.ichor.data.ImagePullRunState
 import name.levis.ichor.data.ImageScanSession
 import name.levis.ichor.data.JoinRequest
 import name.levis.ichor.data.JoinRunState
+import name.levis.ichor.model.AWSImageSpec
 import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.data.K8sUpgradeRunState
 import name.levis.ichor.data.MaintenanceRunState
@@ -177,6 +178,16 @@ class OperationPresenterTest {
         assertEquals(res(R.string.hetzner_snapshot_notification_title), JoinPresenter.progress(run).title)
         assertEquals(res(R.string.hetzner_snapshot_notification_failed), JoinPresenter.failedTitle(run))
         assertEquals(listOf(OperationAction.STOP_FOLLOWING), JoinPresenter.progress(run).actions)
+    }
+
+    @Test
+    fun anAMIRunIsNotNamedLikeANode() {
+        val spec = AWSImageSpec(arch = "amd64", region = "eu-west-1", subnetId = "subnet-a")
+        val run = JoinRunState(JoinRequest("", "", "", "Talos amd64", "", "", awsImage = spec), "lab")
+        assertEquals(res(R.string.aws_image_notification_title), JoinPresenter.progress(run).title)
+        assertEquals(res(R.string.aws_phase_helper), JoinPresenter.progress(run).text)
+        assertEquals(res(R.string.aws_image_notification_failed), JoinPresenter.failedTitle(run))
+        assertEquals(res(R.string.aws_image_notification_done), JoinPresenter.done(run.copy(finished = true)).title)
     }
 
     @Test
