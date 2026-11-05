@@ -337,8 +337,8 @@ func TestAWSCreateJoins(t *testing.T) {
 }
 
 // On Omni the run hands over to the Omni watch once the instance runs: the machine appears by its
-// host name. (The whole Omni run needs a session through Omni's Talos proxy, which the fakes do
-// not serve; Hetzner's and OVHcloud's tests stop at the same seam.)
+// host name. (The whole Omni run, on a cluster with no machine yet, is
+// TestCloudCreateOmniEmptyCluster.)
 func TestAWSCreateWaitsForOmni(t *testing.T) {
 	rec := newJoinRecorder()
 	h := awsTestRun("", "", "", rec)
