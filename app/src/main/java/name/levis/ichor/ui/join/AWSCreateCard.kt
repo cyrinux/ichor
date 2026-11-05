@@ -56,6 +56,7 @@ import name.levis.ichor.model.AWSOptions
 import name.levis.ichor.model.AWSPrice
 import name.levis.ichor.model.AWSSubnet
 import name.levis.ichor.model.arches
+import name.levis.ichor.model.hasClusterImage
 import name.levis.ichor.model.imagesFor
 import name.levis.ichor.model.securityGroupsIn
 import name.levis.ichor.model.typesFor
@@ -370,17 +371,24 @@ private fun InstanceForm(
         Text(stringResource(R.string.aws_image), style = MaterialTheme.typography.labelLarge)
         if (images.isEmpty() && !canMakeImage) InfoNotice(stringResource(R.string.aws_no_image, type.arch))
         if (canMakeImage) {
-            // The official AMI boots Talos without the cluster's extensions: offer one of its own image.
-            val own = images.any { !it.official }
-            if (!own) InfoNotice(stringResource(R.string.aws_image_missing, type.arch, options.region))
+            // An AMI of another version or schematic boots Talos without the cluster's extensions: offer one of its image.
+            val matched = options.hasClusterImage(type.arch)
+            if (!matched) InfoNotice(stringResource(R.string.aws_image_missing, type.arch, options.region))
             IchorOutlinedButton(
                 onClick = { onMakeImage(type.arch, subnetId, groupIds.firstOrNull().orEmpty()) },
                 enabled = !busy,
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text(stringResource(if (own) R.string.aws_image_make_another else R.string.aws_make_ami)) }
+            ) { Text(stringResource(if (matched) R.string.aws_image_make_another else R.string.aws_make_ami)) }
         }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            images.forEach { i -> IchorFilterChip(selected = i.id == imageId, onClick = { imageId = i.id }, label = { Text(i.name.ifBlank { i.id }) }) }
+            images.forEach { i ->
+                val name = i.name.ifBlank { i.id }
+                IchorFilterChip(
+                    selected = i.id == imageId,
+                    onClick = { imageId = i.id },
+                    label = { Text(if (i.matches(options)) stringResource(R.string.aws_image_matches, name) else name) },
+                )
+            }
         }
     }
 

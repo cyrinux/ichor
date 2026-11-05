@@ -49,6 +49,51 @@ final class CloudAWSTests: XCTestCase {
         XCTAssertEqual(value.types(for: "amd64").first?.memoryLabel, "2")
     }
 
+    // The cluster runs v1.12.0 with `schematic`: "own", "default", or that literal value.
+    private func templated(_ schematic: String) throws -> AWSOptions {
+        let fallback = "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba"
+        let own = "9d2c5e4b1a7f0836c4d2e1b9a0f7c6d5e4b3a2918f7e6d5c4b3a29180f7e6d5c"
+        let json = """
+            {
+              "region": "eu-west-1",
+              "images": [
+                {"id": "ami-amd", "arch": "amd64", "source": "official", "name": "Talos v1.12.0 (amd64)",
+                 "talosVersion": "v1.12.0", "schematic": "\(fallback)"},
+                {"id": "ami-old", "arch": "amd64", "source": "custom", "name": "a old",
+                 "talosVersion": "v1.11.5", "schematic": "\(own)"},
+                {"id": "ami-own", "arch": "amd64", "source": "custom", "name": "z own",
+                 "talosVersion": "v1.12.0", "schematic": "\(own)"},
+                {"id": "ami-arm", "arch": "arm64", "source": "official", "name": "Talos v1.12.0 (arm64)",
+                 "talosVersion": "v1.12.0", "schematic": "\(fallback)"}
+              ],
+              "templateVersion": "v1.12.0",
+              "templateSchematic": "\(schematic == "own" ? own : schematic == "default" ? fallback : schematic)"
+            }
+            """
+        return try JSONDecoder().decode(AWSOptions.self, from: Data(json.utf8))
+    }
+
+    func testTheClustersImageComesFirst() throws {
+        let value = try templated("own")
+        XCTAssertEqual(value.templateVersion, "v1.12.0")
+        XCTAssertEqual(value.images(for: "amd64").map(\.id), ["ami-own", "ami-amd", "ami-old"])
+        XCTAssertTrue(value.hasClusterImage(for: "amd64"))
+        // An official AMI is the default schematic: not this cluster's image.
+        XCTAssertFalse(value.hasClusterImage(for: "arm64"))
+
+        // A cluster on the default schematic: the official AMI is its image.
+        let plain = try templated("default")
+        XCTAssertTrue(plain.images[0].matches(plain))
+        XCTAssertTrue(plain.hasClusterImage(for: "arm64"))
+
+        // Nothing to compare: no AMI matches, and an AMI of the account's own is enough.
+        let unknown = try templated("")
+        XCTAssertFalse(unknown.images.contains { $0.matches(unknown) })
+        XCTAssertTrue(unknown.hasClusterImage(for: "amd64"))
+        XCTAssertFalse(unknown.hasClusterImage(for: "arm64"))
+        XCTAssertEqual(try options().templateVersion, "")
+    }
+
     func testSecurityGroupsFollowTheSubnetsVPC() throws {
         let value = try options()
         XCTAssertEqual(value.securityGroups(in: "vpc-a").map(\.id), ["sg-a"])

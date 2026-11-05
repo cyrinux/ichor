@@ -1085,6 +1085,20 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ 中还没有此集群镜像的 %1$@ Talos AMI:Ichor 可以制作一个。" } }
       }
     },
+    "%@ · matches the cluster's image" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ · entspricht dem Image des Clusters" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ · coincide con la imagen del clúster" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ · correspond à l'image du cluster" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ · corrisponde all'immagine del cluster" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ · クラスターのイメージと一致" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ · corresponde à imagem do cluster" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@ · совпадает с образом кластера" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ · збігається з образом кластера" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ · 与集群镜像一致" } }
+      }
+    },
     "Make another Talos AMI" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -6301,6 +6301,7 @@
     <string name="aws_make_ami">Créer une AMI Talos</string>
     <string name="aws_image_missing">Pas encore d\'AMI Talos de l\'image de ce cluster pour %1$s dans %2$s : Ichor peut en créer une.</string>
     <string name="aws_image_make_another">Créer une autre AMI Talos</string>
+    <string name="aws_image_matches">%1$s · correspond à l\'image du cluster</string>
     <string name="aws_image_intro">Ichor démarre une instance Amazon Linux jetable qui écrit l\'image Talos de ce cluster sur un volume supplémentaire, prend un instantané du volume et enregistre l\'AMI, puis résilie l\'instance. Rien du cluster n\'est touché. Cela prend une dizaine de minutes.</string>
     <string name="aws_image_subnet">Sous-réseau de l\'instance jetable</string>
     <string name="aws_image_subnet_hint">Elle télécharge l\'image depuis l\'Image Factory : choisissez un sous-réseau qui attribue une IP publique.</string>

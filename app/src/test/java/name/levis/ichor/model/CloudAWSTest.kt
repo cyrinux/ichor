@@ -37,6 +37,45 @@ class CloudAWSTest {
     }
 
     @Test
+    fun theClustersImageComesFirst() {
+        val default = "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba"
+        val own = "9d2c5e4b1a7f0836c4d2e1b9a0f7c6d5e4b3a2918f7e6d5c4b3a29180f7e6d5c"
+        val withTemplate = options.copy(
+            templateVersion = "v1.12.0",
+            templateSchematic = own,
+            images = listOf(
+                AWSImage(id = "ami-amd", arch = "amd64", source = "official", name = "Talos v1.12.0 (amd64)", talosVersion = "v1.12.0", schematic = default),
+                AWSImage(id = "ami-old", arch = "amd64", source = "custom", name = "a old", talosVersion = "v1.11.5", schematic = own),
+                AWSImage(id = "ami-own", arch = "amd64", source = "custom", name = "z own", talosVersion = "v1.12.0", schematic = own),
+                AWSImage(id = "ami-arm", arch = "arm64", source = "official", name = "Talos v1.12.0 (arm64)", talosVersion = "v1.12.0", schematic = default),
+            ),
+        )
+        assertEquals(listOf("ami-own", "ami-amd", "ami-old"), withTemplate.imagesFor("amd64").map { it.id })
+        assertTrue(withTemplate.hasClusterImage("amd64"))
+        // An official AMI is the default schematic: not this cluster's image.
+        assertFalse(withTemplate.hasClusterImage("arm64"))
+
+        // A cluster on the default schematic: the official AMI is its image.
+        val plain = withTemplate.copy(templateSchematic = default)
+        assertTrue(plain.images.first().matches(plain))
+        assertTrue(plain.hasClusterImage("arm64"))
+
+        // Nothing to compare: no AMI matches, and an AMI of the account's own is enough.
+        val unknown = withTemplate.copy(templateSchematic = "")
+        assertFalse(unknown.images.any { it.matches(unknown) })
+        assertTrue(unknown.hasClusterImage("amd64"))
+        assertFalse(unknown.hasClusterImage("arm64"))
+    }
+
+    @Test
+    fun theTemplateDecodes() {
+        val decoded = TalosJson.decodeFromString(AWSOptions.serializer(), """{"templateVersion":"v1.12.0","templateSchematic":"abc"}""")
+        assertEquals("v1.12.0", decoded.templateVersion)
+        assertEquals("abc", decoded.templateSchematic)
+        assertEquals("", options.templateVersion)
+    }
+
+    @Test
     fun securityGroupsFollowTheSubnetsVPC() {
         assertEquals(listOf("sg-a"), options.securityGroupsIn("vpc-a").map { it.id })
         assertTrue(options.securityGroupsIn("vpc-z").isEmpty())

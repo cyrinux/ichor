@@ -46,15 +46,18 @@ var (
 )
 
 // awsOptions is what an instance can be created from, in one region. Hourly prices are asked
-// one type at a time (AWSPrice).
+// one type at a time (AWSPrice). TemplateVersion and TemplateSchematic are the cluster's image,
+// what an AMI must carry to match it; "" when they cannot be read (a warning says why).
 type awsOptions struct {
-	Region         string             `json:"region"`
-	Regions        []string           `json:"regions"`
-	Types          []awsType          `json:"types"`
-	Subnets        []awsSubnet        `json:"subnets"`
-	SecurityGroups []awsSecurityGroup `json:"securityGroups"`
-	Images         []awsImage         `json:"images"`
-	Warnings       []string           `json:"warnings"`
+	Region            string             `json:"region"`
+	Regions           []string           `json:"regions"`
+	Types             []awsType          `json:"types"`
+	Subnets           []awsSubnet        `json:"subnets"`
+	SecurityGroups    []awsSecurityGroup `json:"securityGroups"`
+	Images            []awsImage         `json:"images"`
+	TemplateVersion   string             `json:"templateVersion"`
+	TemplateSchematic string             `json:"templateSchematic"`
+	Warnings          []string           `json:"warnings"`
 }
 
 type awsType struct {
@@ -82,6 +85,7 @@ type awsSecurityGroup struct {
 	Description string `json:"description"`
 }
 
+// awsImage is a Talos AMI. An official one is the Image Factory's default schematic.
 type awsImage struct {
 	ID           string `json:"id"`
 	Arch         string `json:"arch"`
@@ -165,12 +169,14 @@ func awsTalosArch(arch string) string {
 // AWSOptions lists, in the keys' region: the regions, the current-generation instance types
 // Talos runs on (no t2), the subnets with their VPC and whether they assign a public IPv4, the
 // security groups, and the Talos AMIs: the official ones of the cluster's Talos version (both
-// architectures) and the account's own tagged ichor-talos-version. A cloud-images.json that does
-// not answer, or a version that cannot be read, is a warning, never an error. The demo context
-// answers with samples, without keys. JSON: {"region","regions","types":[{"name","vcpus",
-// "memoryGB","arch","burstable"}],"subnets":[{"id","vpcId","vpcDefault","cidr","az","public",
-// "name"}],"securityGroups":[{"id","vpcId","name","description"}],"images":[{"id","arch",
-// "source","name","talosVersion","schematic"}],"warnings"}.
+// architectures) and the account's own tagged ichor-talos-version; with the template member's
+// version and schematic, which an AMI must carry to be the cluster's image. A cloud-images.json
+// that does not answer, or a version or schematic that cannot be read, is a warning, never an
+// error. The demo context answers with samples, without keys. JSON: {"region","regions",
+// "types":[{"name","vcpus","memoryGB","arch","burstable"}],"subnets":[{"id","vpcId","vpcDefault",
+// "cidr","az","public","name"}],"securityGroups":[{"id","vpcId","name","description"}],
+// "images":[{"id","arch","source","name","talosVersion","schematic"}],"templateVersion",
+// "templateSchematic","warnings"}.
 func AWSOptions(configYAML, contextName, credJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -188,34 +194,61 @@ func AWSOptions(configYAML, contextName, credJSON string) (out string, err error
 	ctx, cancel := context.WithTimeout(context.Background(), awsOptionsTimeout)
 	defer cancel()
 
-	version, warning := awsClusterTalosVersion(configYAML, contextName)
+	template, warnings := awsClusterImage(configYAML, contextName)
 
-	options, err := c.options(ctx, version)
+	options, err := c.options(ctx, template.version)
 	if err != nil {
 		return "", err
 	}
 
-	if warning != "" {
-		options.Warnings = append([]string{warning}, options.Warnings...)
+	options.TemplateVersion, options.TemplateSchematic = template.version, template.schematic
+	if len(warnings) > 0 {
+		options.Warnings = append(warnings, options.Warnings...)
 	}
 
 	return toJSON(options)
 }
 
-// awsClusterTalosVersion is the cluster's Talos version, or a warning saying why not.
-func awsClusterTalosVersion(configYAML, contextName string) (string, string) {
-	const without = "no official Talos AMI listed"
+const awsNoOfficialImage = "no official Talos AMI listed"
 
+// awsTemplateImage is the cluster's Talos version and the template member's schematic.
+type awsTemplateImage struct {
+	version, schematic string
+}
+
+// awsClusterImage reads the template member the way cloudImageMedia does, with warnings for what
+// cannot be read instead of an error.
+func awsClusterImage(configYAML, contextName string) (awsTemplateImage, []string) {
 	if strings.TrimSpace(configYAML) == "" {
-		return "", "no cluster given: " + without
+		return awsTemplateImage{}, []string{"no cluster given: " + awsNoOfficialImage}
 	}
 
-	media, err := cloudBootMedia(configYAML, contextName, "")
+	src, err := withSession(configYAML, contextName, configPreviewTimeout, func(ctx context.Context, s *session) (bootSource, error) {
+		return readBootSource(ctx, s, "")
+	})
+
+	return awsTemplateImageOf(src, err)
+}
+
+// awsTemplateImageOf is what src says of the cluster's image. A member that cannot be read gives
+// neither; an install image that cannot be read gives the version only, so that no AMI is said to
+// match rather than one of the default schematic by mistake.
+func awsTemplateImageOf(src bootSource, err error) (awsTemplateImage, []string) {
+	media := bootMedia{}
+	if err == nil {
+		media, err = buildBootMedia(src, "", false)
+	}
+
 	if err != nil {
-		return "", "the cluster's Talos version cannot be read (" + friendlyError(err) + "): " + without
+		return awsTemplateImage{}, []string{"the cluster's Talos version cannot be read (" + friendlyError(err) + "): " + awsNoOfficialImage}
 	}
 
-	return media.TalosVersion, ""
+	if src.imageErr != "" {
+		return awsTemplateImage{version: media.TalosVersion},
+			[]string{fmt.Sprintf("the install image of %s cannot be read (%s): no AMI is marked as the cluster's image", src.node, src.imageErr)}
+	}
+
+	return awsTemplateImage{version: media.TalosVersion, schematic: media.Schematic}, nil
 }
 
 func (c *awsClient) options(ctx context.Context, version string) (awsOptions, error) {
@@ -410,6 +443,7 @@ func talosAWSImages(ctx context.Context, version, region string) ([]awsImage, er
 		if i.Cloud == "aws" && i.Region == region && (i.Arch == bootArchAMD64 || i.Arch == bootArchARM64) {
 			out = append(out, awsImage{
 				ID: i.ID, Arch: i.Arch, Source: awsImageOfficial, Name: "Talos " + version + " (" + i.Arch + ")", TalosVersion: version,
+				Schematic: defaultSchematic,
 			})
 		}
 	}
@@ -473,9 +507,21 @@ func demoAWSOptions() awsOptions {
 		},
 		SecurityGroups: []awsSecurityGroup{{ID: "sg-0123456789abcdef0", VPCID: vpc, Name: "talos-nodes", Description: "Talos and Kubernetes APIs"}},
 		Images: []awsImage{
-			{ID: "ami-0123456789abcdef0", Arch: bootArchAMD64, Source: awsImageOfficial, Name: "Talos " + demoTalosVersion + " (amd64)", TalosVersion: demoTalosVersion},
-			{ID: "ami-0123456789abcdef1", Arch: bootArchARM64, Source: awsImageOfficial, Name: "Talos " + demoTalosVersion + " (arm64)", TalosVersion: demoTalosVersion},
+			{
+				ID: "ami-0123456789abcdef0", Arch: bootArchAMD64, Source: awsImageOfficial, Name: "Talos " + demoTalosVersion + " (amd64)",
+				TalosVersion: demoTalosVersion, Schematic: defaultSchematic,
+			},
+			{
+				ID: "ami-0123456789abcdef1", Arch: bootArchARM64, Source: awsImageOfficial, Name: "Talos " + demoTalosVersion + " (arm64)",
+				TalosVersion: demoTalosVersion, Schematic: defaultSchematic,
+			},
+			{
+				ID: "ami-0123456789abcdef2", Arch: bootArchAMD64, Source: awsImageCustom,
+				Name:         "talos-" + demoTalosVersion + "-aws-amd64-" + demoBootSchematic[:awsSchematicShown],
+				TalosVersion: demoTalosVersion, Schematic: demoBootSchematic,
+			},
 		},
+		TemplateVersion: demoTalosVersion, TemplateSchematic: demoBootSchematic,
 		Warnings: []string{},
 	}
 }

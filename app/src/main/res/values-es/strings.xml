@@ -6301,6 +6301,7 @@
     <string name="aws_make_ami">Crear una AMI de Talos</string>
     <string name="aws_image_missing">Aún no hay una AMI de Talos con la imagen de este clúster para %1$s en %2$s: Ichor puede crear una.</string>
     <string name="aws_image_make_another">Crear otra AMI de Talos</string>
+    <string name="aws_image_matches">%1$s · coincide con la imagen del clúster</string>
     <string name="aws_image_intro">Ichor inicia una instancia desechable de Amazon Linux que escribe la imagen de Talos de este clúster en un volumen adicional, crea una instantánea del volumen y registra la AMI, y luego termina la instancia. No se toca nada del clúster. Tarda unos diez minutos.</string>
     <string name="aws_image_subnet">Subred de la instancia desechable</string>
     <string name="aws_image_subnet_hint">Descarga la imagen de la Image Factory: elige una subred que asigne una IP pública.</string>

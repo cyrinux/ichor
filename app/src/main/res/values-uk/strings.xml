@@ -6559,6 +6559,7 @@
     <string name="aws_make_ami">Створити AMI Talos</string>
     <string name="aws_image_missing">Для %1$s у %2$s ще немає AMI Talos з образу цього кластера: Ichor може його створити.</string>
     <string name="aws_image_make_another">Створити ще один AMI Talos</string>
+    <string name="aws_image_matches">%1$s · збігається з образом кластера</string>
     <string name="aws_image_intro">Ichor запускає одноразовий інстанс Amazon Linux, який записує образ Talos цього кластера на додатковий том, робить знімок тому й реєструє AMI, потім завершує інстанс. Кластер не зачіпається. Це триває близько десяти хвилин.</string>
     <string name="aws_image_subnet">Підмережа одноразового інстансу</string>
     <string name="aws_image_subnet_hint">Він завантажує образ з Image Factory: виберіть підмережу, яка призначає публічну IP.</string>

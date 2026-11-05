@@ -172,10 +172,10 @@ struct AWSCreateSection: View {
                 if !images.isEmpty {
                     Picker("Talos AMI", selection: $imageId) {
                         Text(verbatim: "—").tag("")
-                        ForEach(images) { Text(verbatim: $0.name.isEmpty ? $0.id : $0.name).tag($0.id) }
+                        ForEach(images) { imageLabel($0, options: value).tag($0.id) }
                     }
                 }
-                if !demo { makeAMIRows(type: type, images: images, region: value.region) }
+                if !demo { makeAMIRows(type: type, options: value) }
             }
         }
         .task(id: typeName) { await loadPrice() }
@@ -189,11 +189,17 @@ struct AWSCreateSection: View {
         }
     }
 
-    /// The official AMI boots Talos without the cluster's extensions: offer one of its own image.
+    /// The AMI's name, marked when it is the cluster's image.
+    private func imageLabel(_ image: AWSImage, options: AWSOptions) -> Text {
+        let name = image.name.isEmpty ? image.id : image.name
+        return image.matches(options) ? Text("\(name) · matches the cluster's image") : Text(verbatim: name)
+    }
+
+    /// An AMI of another version or schematic boots Talos without the cluster's extensions: offer one of its image.
     @ViewBuilder
-    private func makeAMIRows(type: AWSInstanceType, images: [AWSImage], region: String) -> some View {
-        let own = images.contains { !$0.official }
-        if own {
+    private func makeAMIRows(type: AWSInstanceType, options: AWSOptions) -> some View {
+        let region = options.region
+        if options.hasClusterImage(for: type.arch) {
             Button("Make another Talos AMI") { makingAMI = true }
                 .disabled(job.isActive || account.isEmpty)
         } else {
