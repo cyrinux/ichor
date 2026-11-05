@@ -76,6 +76,22 @@ Part of the [Ichor documentation](../README.md#documentation).
   and tag only on `RunInstances`. The one case that needs the AWS console is a terminate that
   fails: the message names the instance id and the region, and the instance stays billed until
   it is terminated there.
+- **Making a Talos AMI at AWS (from the Go core and the probe for now):** billable, so the
+  estimate gives the helper's hourly price and the snapshot's storage price first, and the probe's
+  `aws image` runs only with `-yes`. Nothing of the cluster is touched: the schematic comes from
+  the template's machine config, and a template whose config cannot be read is refused. Before any
+  billable call the run checks the keys, the subnet and the security group's VPC, that no AMI of
+  the account already has the name, then sends `RunInstances` as a dry run. It creates one
+  throwaway Amazon Linux instance with two volumes (its root and an empty 8 GiB one), tagged
+  `ichor-run`; the instance downloads the Image Factory's image itself (the phone moves no image
+  bytes), writes it to the empty volume and powers off. The run reads the result on the
+  instance's serial console and takes no snapshot without it, then snapshots the volume and
+  registers the AMI, both tagged `os=talos`, `ichor-talos-version`, `ichor-arch` and
+  `ichor-schematic`. It terminates the instance on every path (its volumes go with it), and
+  deletes an unfinished snapshot or AMI when it fails or is stopped; a finished AMI and its
+  snapshot stay, billed per GB-month until you deregister and delete them. The printed policy lets
+  the keys stop, delete and deregister only `ichor-run`-tagged resources. The one case that needs
+  the AWS console is a delete that fails: the message names the ids and the region.
 - **Creating a VM at Azure (Add a node… → A server at a cloud provider → Azure):** billable, so
   the hourly price shows first when the Retail Prices API answers, the host name is typed to
   confirm, and Stop asks once more (the VM and its disk are billed until deleted); the probe's

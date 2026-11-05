@@ -216,19 +216,7 @@ func (r *hetznerSnapshotRun) prepare(ctx context.Context) error {
 		return errHetznerReadOnly
 	}
 
-	media, err := withSession(r.config, r.context, configPreviewTimeout, func(ctx context.Context, s *session) (bootMedia, error) {
-		src, err := readBootSource(ctx, s, r.spec.TemplateNode)
-		if err != nil {
-			return bootMedia{}, err
-		}
-
-		// A snapshot lasts: one silently without the cluster's extensions is worse than none.
-		if src.imageErr != "" {
-			return bootMedia{}, fmt.Errorf("the install image of %s cannot be read (%s), so neither can its schematic", src.node, src.imageErr)
-		}
-
-		return buildBootMedia(src, "", false)
-	})
+	media, err := cloudImageMedia(r.config, r.context, r.spec.TemplateNode)
 	if err != nil {
 		return err
 	}
@@ -255,6 +243,24 @@ func (r *hetznerSnapshotRun) prepare(ctx context.Context) error {
 	r.serverType = option.Name
 
 	return nil
+}
+
+// cloudImageMedia reads the template's version, architecture and schematic for an image made at a
+// cloud provider. An image lasts: one silently without the cluster's extensions is worse than
+// none, so a template whose install image cannot be read is refused.
+func cloudImageMedia(configYAML, contextName, templateNode string) (bootMedia, error) {
+	return withSession(configYAML, contextName, configPreviewTimeout, func(ctx context.Context, s *session) (bootMedia, error) {
+		src, err := readBootSource(ctx, s, templateNode)
+		if err != nil {
+			return bootMedia{}, err
+		}
+
+		if src.imageErr != "" {
+			return bootMedia{}, fmt.Errorf("the install image of %s cannot be read (%s), so neither can its schematic", src.node, src.imageErr)
+		}
+
+		return buildBootMedia(src, "", false)
+	})
 }
 
 // hetznerSnapshotType is name when it fits, else the cheapest type of arch at location.
