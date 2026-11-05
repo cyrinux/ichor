@@ -222,6 +222,8 @@ class AzureCreateViewModel(private val lifecycle: NodeLifecycleRepository, priva
 @Composable
 fun AzureCreateCard(
     form: JoinConfigForm?,
+    /** On Omni, the labels to sign into the join token; "" on plain Talos. */
+    labelsJson: String,
     demo: Boolean,
     onAllocate: (() -> Unit)? = null,
     vm: AzureCreateViewModel = viewModel(key = "azure-create", factory = factory { AzureCreateViewModel(app.nodeLifecycleRepository, app.cloudProviderStore) }),
@@ -263,7 +265,7 @@ fun AzureCreateCard(
                 UiState.Loading -> LoadingBox()
                 is UiState.Failed -> ErrorBox(state.message, vm::reload)
                 is UiState.Loaded -> VMForm(
-                    state.data, group, form, busy = current?.running == true, price = price,
+                    state.data, group, form, labelsJson, busy = current?.running == true, price = price,
                     onGroup = { name -> vm.chooseGroup(name, state.data.locationOf(name), state.data.location) },
                     onLocation = if (demo) null else vm::switchLocation,
                     onSize = { size -> vm.loadPrice(state.data.location, size) },
@@ -305,6 +307,8 @@ private fun VMForm(
     options: AzureOptions,
     group: String,
     form: JoinConfigForm?,
+    /** On Omni, the labels to sign into the join token; "" on plain Talos. */
+    labelsJson: String,
     busy: Boolean,
     price: UiState<AzurePrice>?,
     onGroup: (String) -> Unit,
@@ -482,7 +486,7 @@ private fun VMForm(
                 val spec = AzureCreateSpec(
                     resourceGroup = resourceGroup.name, location = options.location, size = size.name, imageId = image.id,
                     subnetId = subnet.id, securityGroupId = nsg?.id.orEmpty(), associatePublicIp = publicIp, osDiskGB = diskGB,
-                    hostname = hostname, role = form?.role.orEmpty(), templateNode = form?.template.orEmpty(), installDisk = form?.disk.orEmpty(),
+                    hostname = hostname, role = form?.role.orEmpty(), templateNode = form?.template.orEmpty(), installDisk = form?.disk.orEmpty(), labelsJson = labelsJson,
                 )
                 authenticated(hostname) {
                     onCreate(

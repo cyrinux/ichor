@@ -223,11 +223,13 @@ public struct AWSCreateSpec: Encodable, Equatable, Sendable {
     public let role: String
     public let templateNode: String
     public let installDisk: String
+    /// On Omni, the labels to sign into the join token (`omniLabelsJSON`); "" for none.
+    public let labelsJson: String
 
     public init(
         region: String, instanceType: String, imageId: String, subnetId: String, securityGroupIds: [String] = [],
         associatePublicIp: Bool = false, keyName: String = "", hostname: String, role: String = "",
-        templateNode: String = "", installDisk: String = ""
+        templateNode: String = "", installDisk: String = "", labelsJson: String = ""
     ) {
         self.region = region
         self.instanceType = instanceType
@@ -240,5 +242,6 @@ public struct AWSCreateSpec: Encodable, Equatable, Sendable {
         self.role = role
         self.templateNode = templateNode
         self.installDisk = installDisk
+        self.labelsJson = labelsJson
     }
 }

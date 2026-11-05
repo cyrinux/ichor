@@ -177,6 +177,8 @@ class AWSCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
 @Composable
 fun AWSCreateCard(
     form: JoinConfigForm?,
+    /** On Omni, the labels to sign into the join token; "" on plain Talos. */
+    labelsJson: String,
     demo: Boolean,
     onAllocate: (() -> Unit)? = null,
     vm: AWSCreateViewModel = viewModel(key = "aws-create", factory = factory { AWSCreateViewModel(app.nodeLifecycleRepository, app.cloudProviderStore) }),
@@ -216,7 +218,7 @@ fun AWSCreateCard(
                 UiState.Loading -> LoadingBox()
                 is UiState.Failed -> ErrorBox(state.message, vm::reload)
                 is UiState.Loaded -> InstanceForm(
-                    state.data, form, busy = current?.running == true, price = price,
+                    state.data, form, labelsJson, busy = current?.running == true, price = price,
                     onType = vm::loadPrice, onRegion = if (demo) null else vm::switchRegion,
                 ) { request ->
                     // The keys are read only now, and go to the run alone.
@@ -248,6 +250,8 @@ private fun subnetLabel(s: AWSSubnet): String {
 private fun InstanceForm(
     options: AWSOptions,
     form: JoinConfigForm?,
+    /** On Omni, the labels to sign into the join token; "" on plain Talos. */
+    labelsJson: String,
     busy: Boolean,
     price: UiState<AWSPrice>?,
     onType: (String) -> Unit,
@@ -381,7 +385,7 @@ private fun InstanceForm(
                 val spec = AWSCreateSpec(
                     region = options.region, instanceType = type.name, imageId = image.id, subnetId = subnet.id,
                     securityGroupIds = groupIds.filter { id -> groups.any { it.id == id } }, associatePublicIp = publicIp,
-                    hostname = hostname, role = form?.role.orEmpty(), templateNode = form?.template.orEmpty(), installDisk = form?.disk.orEmpty(),
+                    hostname = hostname, role = form?.role.orEmpty(), templateNode = form?.template.orEmpty(), installDisk = form?.disk.orEmpty(), labelsJson = labelsJson,
                 )
                 authenticated(hostname) {
                     onCreate(

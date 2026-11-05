@@ -171,7 +171,7 @@ func gcpCreate(e env, credJSON string) (string, error) {
 	}
 
 	spec, err := json.Marshal(map[string]any{
-		"templateNode": flag.Arg(2), "role": flag.Arg(3), "hostname": flag.Arg(4), "installDisk": flag.Arg(5),
+		"templateNode": flag.Arg(2), "role": flag.Arg(3), "hostname": flag.Arg(4), "installDisk": flag.Arg(5), "labelsJson": e.labels,
 		"project": flag.Arg(6), "zone": flag.Arg(7), "machineType": flag.Arg(8), "image": flag.Arg(9),
 		"subnetwork": flag.Arg(10), "associatePublicIp": true,
 	})
@@ -198,7 +198,7 @@ func azureCreate(e env, credJSON string) (string, error) {
 	}
 
 	spec, err := json.Marshal(map[string]any{
-		"templateNode": flag.Arg(2), "role": flag.Arg(3), "hostname": flag.Arg(4), "installDisk": flag.Arg(5),
+		"templateNode": flag.Arg(2), "role": flag.Arg(3), "hostname": flag.Arg(4), "installDisk": flag.Arg(5), "labelsJson": e.labels,
 		"resourceGroup": flag.Arg(6), "location": flag.Arg(7), "size": flag.Arg(8), "imageId": flag.Arg(9),
 		"subnetId": flag.Arg(10), "securityGroupId": nsg, "associatePublicIp": true,
 	})
@@ -219,7 +219,7 @@ func awsCreate(e env, credJSON string) (string, error) {
 	}
 
 	spec, err := json.Marshal(map[string]any{
-		"templateNode": flag.Arg(2), "role": flag.Arg(3), "hostname": flag.Arg(4), "installDisk": flag.Arg(5),
+		"templateNode": flag.Arg(2), "role": flag.Arg(3), "hostname": flag.Arg(4), "installDisk": flag.Arg(5), "labelsJson": e.labels,
 		"instanceType": flag.Arg(6), "imageId": flag.Arg(7), "subnetId": flag.Arg(8),
 		"securityGroupIds": strings.Split(flag.Arg(9), ","), "region": os.Getenv("AWS_REGION"),
 	})
@@ -240,7 +240,7 @@ func ovhCreate(e env, credJSON string) (string, error) {
 	}
 
 	spec, err := json.Marshal(map[string]string{
-		"templateNode": flag.Arg(2), "role": flag.Arg(3), "hostname": flag.Arg(4), "installDisk": flag.Arg(5),
+		"templateNode": flag.Arg(2), "role": flag.Arg(3), "hostname": flag.Arg(4), "installDisk": flag.Arg(5), "labelsJson": e.labels,
 		"region": flag.Arg(6), "flavorId": flag.Arg(7), "imageId": flag.Arg(8),
 	})
 	if err != nil {
@@ -283,7 +283,7 @@ func hetznerCreate(e env, tokenJSON string) (string, error) {
 	}
 
 	spec, err := json.Marshal(map[string]any{
-		"templateNode": flag.Arg(2), "role": flag.Arg(3), "hostname": flag.Arg(4), "installDisk": flag.Arg(5),
+		"templateNode": flag.Arg(2), "role": flag.Arg(3), "hostname": flag.Arg(4), "installDisk": flag.Arg(5), "labelsJson": e.labels,
 		"serverType": flag.Arg(6), "location": flag.Arg(7), "snapshotId": snapshot,
 	})
 	if err != nil {

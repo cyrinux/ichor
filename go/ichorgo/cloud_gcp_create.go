@@ -54,6 +54,7 @@ type gcpCreateSpec struct {
 	TemplateNode      string `json:"templateNode"`
 	InstallDisk       string `json:"installDisk"`
 	ExtraEdits        string `json:"extraEditsJSON"`
+	LabelsJSON        string `json:"labelsJson"`
 }
 
 // gcpAPIInstance is the part of an instance the run reads.
@@ -90,7 +91,7 @@ func (i gcpAPIInstance) addresses() (public, private string) {
 // node's config as the user-data metadata value, and follows it: creating → starting → (plain
 // Talos) rebooting → booted → joining → registering → done, or (Omni) omni → done. specJSON:
 // {"project","zone","machineType","image","subnetwork","associatePublicIp","diskGB","hostname",
-// "role","templateNode","installDisk","extraEditsJSON"} (project "" for the credential's; image
+// "role","templateNode","installDisk","extraEditsJSON","labelsJson"} (project "" for the credential's; image
 // a name or a link of the project; subnetwork a link, or a name of the zone's region; diskGB 0
 // for 20). credJSON: as GCPTest's. Refused before any write: an image the machine type cannot
 // boot (architecture, UEFI for Arm), a subnet of another region, an instance of the host's name
@@ -119,12 +120,12 @@ func StartGCPCreate(configYAML, contextName, credJSON, specJSON string, listener
 		specErr = errors.New("invalid VM request")
 	}
 
+	req, specErr := cloudJoinRequest(spec.TemplateNode, spec.Role, spec.Hostname, spec.InstallDisk, spec.LabelsJSON, specErr)
+
 	h := &gcpCreate{
 		join: &nodeJoin{
 			config: configYAML, context: contextName, listener: listener, interval: upgradePollInterval,
-			req: joinConfigRequest{
-				template: spec.TemplateNode, role: spec.Role, hostname: spec.Hostname, installDisk: spec.InstallDisk,
-			},
+			req:       req,
 			editsJSON: spec.ExtraEdits,
 		},
 		spec: spec, specErr: specErr, credJSON: credJSON, poll: gcpPollInterval,

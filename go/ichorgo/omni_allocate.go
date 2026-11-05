@@ -36,6 +36,8 @@ const (
 	omniLabelMachineSet       = "omni.sidero.dev/machine-set"
 	omniNamespace             = "default"
 	omniReservedLabelPrefix   = "omni.sidero.dev/"
+	// omniRoleLabel is the label the app signs the chosen role as (a machine class matches on it).
+	omniRoleLabel = "ichor/role"
 
 	omniAllocationStatic    = "static"
 	omniAllocationUnlimited = "unlimited"

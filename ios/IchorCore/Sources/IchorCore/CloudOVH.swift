@@ -111,10 +111,12 @@ public struct OVHCreateSpec: Encodable, Equatable, Sendable {
     public let role: String
     public let templateNode: String
     public let installDisk: String
+    /// On Omni, the labels to sign into the join token (`omniLabelsJSON`); "" for none.
+    public let labelsJson: String
 
     public init(
         region: String, flavorId: String, imageId: String, hostname: String, role: String = "",
-        templateNode: String = "", installDisk: String = ""
+        templateNode: String = "", installDisk: String = "", labelsJson: String = ""
     ) {
         self.region = region
         self.flavorId = flavorId
@@ -123,5 +125,6 @@ public struct OVHCreateSpec: Encodable, Equatable, Sendable {
         self.role = role
         self.templateNode = templateNode
         self.installDisk = installDisk
+        self.labelsJson = labelsJson
     }
 }

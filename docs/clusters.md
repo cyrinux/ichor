@@ -305,6 +305,8 @@ proxies the Talos API to its machines and signs every call with a PGP key, as `t
 
 A machine booted with Omni's join config or arguments (Add a node, then pick where the machine is) appears
 in Omni with no cluster. Pick its role and labels there first: they are signed into the join token.
+A machine the app creates at a cloud host (Hetzner, OVHcloud, AWS, Azure) carries the same role
+and labels, so a machine class that matches on them picks it with no allocation by hand.
 **Allocate in Omni** then lists these machines and the cluster's machine sets, and follows the
 chosen machine until it runs. What it does depends on the set. A set without a machine class gets
 the machine directly, as `omnictl cluster template sync` binds one. A set with a machine class

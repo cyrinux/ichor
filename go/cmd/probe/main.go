@@ -103,6 +103,7 @@ func main() {
 	stream := flag.Bool("stream", false, "overview: print each node as it answers, then the complete overview")
 	minScore := flag.Float64("min", 0, "diag-eval: fail when the mean score is under this")
 	nodes := flag.String("nodes", "", "clusterstats: sample only these nodes (comma-separated; default: every node)")
+	labels := flag.String("labels", "", "hetzner|ovh|aws|azure|gcp create on Omni: labels to sign into the join token, as a JSON object")
 	// Flags may also follow the command: `probe overview -timing -context lab`.
 	_ = flag.CommandLine.Parse(hoistFlags(flag.CommandLine, os.Args[1:])) //nolint:errcheck // ExitOnError
 
@@ -141,7 +142,7 @@ func main() {
 
 	out, err := c.run(env{
 		cmd: c.name, cfg: cfg, context: *contextName, kubeServer: *kubeServer, ageRecipient: *ageRecipient,
-		configPath: *configPath, home: home, mask: *mask, maskWords: *maskWords, stream: *stream, nodes: *nodes, minScore: *minScore,
+		configPath: *configPath, home: home, mask: *mask, maskWords: *maskWords, stream: *stream, nodes: *nodes, labels: *labels, minScore: *minScore,
 	})
 	if err != nil {
 		fail(err)

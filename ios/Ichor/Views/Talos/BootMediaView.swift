@@ -159,6 +159,7 @@ struct BootMediaView: View {
                 )
             }
         }
+        if omni { OmniLabelsSection(labelsJSON: $omniLabels) }
         CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .hetzner, imagePlatform: nil, path: $path)
     }
 
@@ -174,6 +175,7 @@ struct BootMediaView: View {
                 )
             }
         }
+        if omni { OmniLabelsSection(labelsJSON: $omniLabels) }
         CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .aws, imagePlatform: nil, path: $path)
     }
 
@@ -189,6 +191,7 @@ struct BootMediaView: View {
                 )
             }
         }
+        if omni { OmniLabelsSection(labelsJSON: $omniLabels) }
         CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .azure, imagePlatform: nil, path: $path)
     }
 
@@ -204,6 +207,7 @@ struct BootMediaView: View {
                 )
             }
         }
+        if omni { OmniLabelsSection(labelsJSON: $omniLabels) }
         CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .ovhcloud, imagePlatform: nil, path: $path)
     }
 

@@ -128,6 +128,8 @@ data class AzureCreateSpec(
     val role: String = "",
     val templateNode: String = "",
     val installDisk: String = "",
+    /** On Omni, the labels to sign into the join token (omniLabelsJson); "" for none. */
+    val labelsJson: String = "",
 )
 
 /** The VM sizes that boot [image] (its architecture and Hyper-V generation), in the core's order. */

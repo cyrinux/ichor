@@ -62,6 +62,8 @@ data class OVHCreateSpec(
     val role: String = "",
     val templateNode: String = "",
     val installDisk: String = "",
+    /** On Omni, the labels to sign into the join token (omniLabelsJson); "" for none. */
+    val labelsJson: String = "",
 )
 
 /** The flavors of [region], smallest first as the core lists them. */

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 	"time"
@@ -263,6 +264,41 @@ func cloudNodeUserData(j *nodeJoin, omni bool, spec joinConfigRequest, editsJSON
 	}
 
 	return withSession(j.config, j.context, configPreviewTimeout, func(ctx context.Context, s *session) (cloudUserData, error) {
-		return omniCloudUserData(ctx, s, spec.template, "", "", "", nil)
+		return omniCloudUserData(ctx, s, spec.template, "", "", "", omniCreateLabels(spec))
 	})
+}
+
+// cloudJoinRequest is a create spec's new member, with its labelsJson (the JSON
+// NodeCloudUserDataOmni takes, Omni's own prefix refused). A spec that did not decode keeps
+// its own error.
+func cloudJoinRequest(template, role, hostname, installDisk, labelsJSON string, specErr error) (joinConfigRequest, error) {
+	req := joinConfigRequest{template: template, role: role, hostname: hostname, installDisk: installDisk}
+	if specErr != nil {
+		return req, specErr
+	}
+
+	labels, err := parseOmniLabels(labelsJSON)
+	if err != nil {
+		return req, err
+	}
+
+	req.labels = labels
+
+	return req, nil
+}
+
+// omniCreateLabels are the labels signed into the created machine's join token: the chosen
+// ones, plus the card's role as ichor/role when no label gives one, so a machine class matching
+// on it picks the machine.
+func omniCreateLabels(spec joinConfigRequest) map[string]string {
+	role := strings.TrimSpace(spec.role)
+	if _, given := spec.labels[omniRoleLabel]; given || (role != joinRoleWorker && role != joinRoleControlPlane) {
+		return spec.labels
+	}
+
+	labels := make(map[string]string, len(spec.labels)+1)
+	maps.Copy(labels, spec.labels)
+	labels[omniRoleLabel] = role
+
+	return labels
 }

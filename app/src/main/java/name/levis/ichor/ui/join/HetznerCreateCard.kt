@@ -151,6 +151,8 @@ class HetznerCreateViewModel(private val lifecycle: NodeLifecycleRepository, pri
 @Composable
 fun HetznerCreateCard(
     form: JoinConfigForm?,
+    /** On Omni, the labels to sign into the join token; "" on plain Talos. */
+    labelsJson: String,
     demo: Boolean,
     onAllocate: (() -> Unit)? = null,
     vm: HetznerCreateViewModel = viewModel(key = "hetzner-create", factory = factory { HetznerCreateViewModel(app.nodeLifecycleRepository, app.cloudProviderStore) }),
@@ -201,6 +203,7 @@ fun HetznerCreateCard(
                 is UiState.Loaded -> ServerForm(
                     options = state.data,
                     form = form,
+                    labelsJson = labelsJson,
                     busy = current?.running == true,
                     canMakeSnapshot = !demo,
                     madeSnapshot = madeSnapshot,
@@ -243,6 +246,8 @@ private data class SnapshotAsk(val options: HetznerOptions, val arch: String, va
 private fun ServerForm(
     options: HetznerOptions,
     form: JoinConfigForm?,
+    /** On Omni, the labels to sign into the join token; "" on plain Talos. */
+    labelsJson: String,
     busy: Boolean,
     canMakeSnapshot: Boolean,
     madeSnapshot: Long,
@@ -325,7 +330,7 @@ private fun ServerForm(
                 confirm = false
                 val spec = HetznerCreateSpec(
                     serverType = type.name, location = locationName, snapshotId = snapshot.id, hostname = hostname,
-                    role = form?.role.orEmpty(), templateNode = form?.template.orEmpty(), installDisk = form?.disk.orEmpty(),
+                    role = form?.role.orEmpty(), templateNode = form?.template.orEmpty(), installDisk = form?.disk.orEmpty(), labelsJson = labelsJson,
                 )
                 authenticated(hostname) {
                     onCreate(

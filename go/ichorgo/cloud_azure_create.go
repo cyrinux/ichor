@@ -60,6 +60,7 @@ type azureCreateSpec struct {
 	TemplateNode      string `json:"templateNode"`
 	InstallDisk       string `json:"installDisk"`
 	ExtraEdits        string `json:"extraEditsJSON"`
+	LabelsJSON        string `json:"labelsJson"`
 }
 
 // azureAPIVM is the part of a VM the run reads.
@@ -108,7 +109,7 @@ type azureMade struct {
 // node's config as custom data, and follows it: creating → starting → (plain Talos) rebooting →
 // booted → joining → registering → done, or (Omni) omni → done. specJSON: {"resourceGroup",
 // "location","size","imageId","subnetId","securityGroupId","associatePublicIp","osDiskGB",
-// "hostname","role","templateNode","installDisk","extraEditsJSON"}. credJSON: as AzureTest's.
+// "hostname","role","templateNode","installDisk","extraEditsJSON","labelsJson"}. credJSON: as AzureTest's.
 // Refused before any write: a principal whose permissions on the resource group lack a write the
 // run makes, an image whose generation or architecture the size cannot run, a subnet or security
 // group of another location, a VM, NIC or public IP of the host's name already there, custom
@@ -135,12 +136,12 @@ func StartAzureCreate(configYAML, contextName, credJSON, specJSON string, listen
 		specErr = errors.New("invalid VM request")
 	}
 
+	req, specErr := cloudJoinRequest(spec.TemplateNode, spec.Role, spec.Hostname, spec.InstallDisk, spec.LabelsJSON, specErr)
+
 	h := &azureCreate{
 		join: &nodeJoin{
 			config: configYAML, context: contextName, listener: listener, interval: upgradePollInterval,
-			req: joinConfigRequest{
-				template: spec.TemplateNode, role: spec.Role, hostname: spec.Hostname, installDisk: spec.InstallDisk,
-			},
+			req:       req,
 			editsJSON: spec.ExtraEdits,
 		},
 		spec: spec, specErr: specErr, credJSON: credJSON, poll: azurePollInterval,

@@ -58,19 +58,19 @@ struct CloudUserDataCard: View {
             case .aws:
                 AWSCreateSection(
                     omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
-                    path: $path)
+                    labels: omni ? omniLabels : "", path: $path)
             case .azure:
                 AzureCreateSection(
                     omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
-                    path: $path)
+                    labels: omni ? omniLabels : "", path: $path)
             case .ovhcloud:
                 OVHCreateSection(
                     omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
-                    path: $path)
+                    labels: omni ? omniLabels : "", path: $path)
             default:
                 HetznerCreateSection(
                     omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
-                    path: $path)
+                    labels: omni ? omniLabels : "", path: $path)
             }
         } else {
             pasteSections
