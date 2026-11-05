@@ -115,7 +115,7 @@ func (c *cloudCreateRun) run(ctx context.Context, timeout time.Duration) error {
 		return err
 	}
 
-	s, release, err := acquireSession(c.join.config, c.join.context)
+	s, release, err := c.session()
 	if err != nil {
 		return err
 	}
@@ -147,6 +147,16 @@ func (c *cloudCreateRun) run(ctx context.Context, timeout time.Duration) error {
 	}
 
 	return nil
+}
+
+// session is the run's session. On Omni it is only signed: Omni's API serves a cluster with no
+// machine yet, whose member listing refuses; plain Talos needs the members for the host name check.
+func (c *cloudCreateRun) session() (*session, func(), error) {
+	if *c.omni {
+		return acquireSigned(c.join.config, c.join.context)
+	}
+
+	return acquireSession(c.join.config, c.join.context)
 }
 
 // waitOmni polls Omni until a machine with the machine's name appears: Talos's cloud platforms
@@ -263,9 +273,23 @@ func cloudNodeUserData(j *nodeJoin, omni bool, spec joinConfigRequest, editsJSON
 		return cloudUserData{}, errCloudOmniPrivacy
 	}
 
-	return withSession(j.config, j.context, configPreviewTimeout, func(ctx context.Context, s *session) (cloudUserData, error) {
-		return omniCloudUserData(ctx, s, spec.template, "", "", "", omniCreateLabels(spec))
-	})
+	// Signed only: the join config comes from Omni's API, which also serves a cluster with no
+	// machine yet (its cloud images then become a warning).
+	s, release, err := acquireSigned(j.config, j.context)
+	if err != nil {
+		return cloudUserData{}, err
+	}
+
+	defer release()
+
+	parent := callParent(j.config, j.context)
+
+	ctx, cancel := context.WithTimeout(parent, configPreviewTimeout)
+	defer cancel()
+
+	data, err := omniCloudUserData(ctx, s, spec.template, "", "", "", omniCreateLabels(spec))
+
+	return scopedResult(parent, data, err)
 }
 
 // cloudJoinRequest is a create spec's new member, with its labelsJson (the JSON
