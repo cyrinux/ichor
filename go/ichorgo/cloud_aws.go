@@ -43,6 +43,7 @@ const (
 	awsTagTalosVersion = "ichor-talos-version"
 	awsTagSchematic    = "ichor-schematic"
 	awsTagRun          = "ichor-run"
+	awsTagArch         = "ichor-arch"
 	awsTagCluster      = "ichor-cluster"
 
 	// awsCheckTalosVersion is the release whose official AMI AWSTest's dry run names: any
@@ -243,27 +244,30 @@ func (c *awsClient) sts(ctx context.Context) (awsIdentity, error) {
 // region, "" when the Price List does not answer in time or says nothing (a missing
 // pricing:GetProducts right included): not worth failing for.
 func (c *awsClient) pricing(ctx context.Context, instanceType string) string {
+	return awsHourlyPrice(c.products(ctx, 1,
+		[2]string{"regionCode", c.region}, [2]string{"instanceType", instanceType}, [2]string{"operatingSystem", "Linux"},
+		[2]string{"tenancy", "Shared"}, [2]string{"preInstalledSw", "NA"}, [2]string{"capacitystatus", "Used"}))
+}
+
+// products is the Price List's GetProducts answer for EC2 products matching every filter (field,
+// value), nil when it does not answer in time or refuses.
+func (c *awsClient) products(ctx context.Context, maxResults int, filters ...[2]string) []byte {
 	ctx, cancel := context.WithTimeout(ctx, awsPriceTimeout)
 	defer cancel()
 
-	filter := func(field, value string) map[string]string {
-		return map[string]string{"Type": "TERM_MATCH", "Field": field, "Value": value}
+	terms := make([]map[string]string, 0, len(filters))
+	for _, f := range filters {
+		terms = append(terms, map[string]string{"Type": "TERM_MATCH", "Field": f[0], "Value": f[1]})
 	}
 
-	body, err := json.Marshal(map[string]any{
-		"ServiceCode": "AmazonEC2", "FormatVersion": "aws_v1", "MaxResults": 1,
-		"Filters": []map[string]string{
-			filter("regionCode", c.region), filter("instanceType", instanceType), filter("operatingSystem", "Linux"),
-			filter("tenancy", "Shared"), filter("preInstalledSw", "NA"), filter("capacitystatus", "Used"),
-		},
-	})
+	body, err := json.Marshal(map[string]any{"ServiceCode": "AmazonEC2", "FormatVersion": "aws_v1", "MaxResults": maxResults, "Filters": terms})
 	if err != nil {
-		return ""
+		return nil
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, awsPricingEndpoint()+"/", bytes.NewReader(body))
 	if err != nil {
-		return ""
+		return nil
 	}
 
 	req.Header.Set("Content-Type", "application/x-amz-json-1.1")
@@ -272,41 +276,54 @@ func (c *awsClient) pricing(ctx context.Context, instanceType string) string {
 
 	data, status, err := c.send(req)
 	if err != nil || status != http.StatusOK {
-		return ""
+		return nil
 	}
 
-	return awsHourlyPrice(data)
+	return data
 }
 
 // awsHourlyPrice reads GetProducts' answer: PriceList holds products as JSON strings.
 func awsHourlyPrice(data []byte) string {
+	return awsProductPrice(data, "Hrs", func(string) bool { return true })
+}
+
+// awsProductPrice is the USD price per unit of the first product of GetProducts' answer whose
+// usage type passes keep, with 4 decimals, "" for none.
+func awsProductPrice(data []byte, unit string, keep func(usageType string) bool) string {
 	var answer struct {
 		PriceList []string `json:"PriceList"`
 	}
 
-	if json.Unmarshal(data, &answer) != nil || len(answer.PriceList) == 0 {
+	if json.Unmarshal(data, &answer) != nil {
 		return ""
 	}
 
-	var product struct {
-		Terms struct {
-			OnDemand map[string]struct {
-				PriceDimensions map[string]struct {
-					Unit         string            `json:"unit"`
-					PricePerUnit map[string]string `json:"pricePerUnit"`
-				} `json:"priceDimensions"`
-			} `json:"OnDemand"`
-		} `json:"terms"`
-	}
+	for _, raw := range answer.PriceList {
+		var product struct {
+			Product struct {
+				Attributes struct {
+					UsageType string `json:"usagetype"`
+				} `json:"attributes"`
+			} `json:"product"`
+			Terms struct {
+				OnDemand map[string]struct {
+					PriceDimensions map[string]struct {
+						Unit         string            `json:"unit"`
+						PricePerUnit map[string]string `json:"pricePerUnit"`
+					} `json:"priceDimensions"`
+				} `json:"OnDemand"`
+			} `json:"terms"`
+		}
 
-	if json.Unmarshal([]byte(answer.PriceList[0]), &product) != nil {
-		return ""
-	}
+		if json.Unmarshal([]byte(raw), &product) != nil || !keep(product.Product.Attributes.UsageType) {
+			continue
+		}
 
-	for _, term := range product.Terms.OnDemand {
-		for _, dim := range term.PriceDimensions {
-			if price, err := strconv.ParseFloat(dim.PricePerUnit["USD"], 64); err == nil && dim.Unit == "Hrs" {
-				return strconv.FormatFloat(price, 'f', 4, 64)
+		for _, term := range product.Terms.OnDemand {
+			for _, dim := range term.PriceDimensions {
+				if price, err := strconv.ParseFloat(dim.PricePerUnit["USD"], 64); err == nil && dim.Unit == unit {
+					return strconv.FormatFloat(price, 'f', 4, 64)
+				}
 			}
 		}
 	}
@@ -387,8 +404,9 @@ type awsPolicyStatement struct {
 }
 
 // AWSIAMPolicy is the IAM policy to attach to the keys' user or role: only the calls the app
-// makes. Tags may be set only by RunInstances, and TerminateInstances reaches only instances
-// tagged ichor-run: the app can terminate what it created, nothing else. The person pastes it.
+// makes. Tags may be set only by the calls that create (RunInstances, CreateSnapshot,
+// RegisterImage), and the terminate, stop and delete calls reach only what is tagged ichor-run:
+// the app can remove what it created, nothing else. The person pastes it.
 func AWSIAMPolicy() string {
 	// Plain values: it always encodes.
 	out, _ := toJSON(struct { //nolint:errcheck
@@ -402,15 +420,21 @@ func AWSIAMPolicy() string {
 				Action: []string{
 					"sts:GetCallerIdentity", "ec2:DescribeRegions", "ec2:DescribeInstanceTypes", "ec2:DescribeSubnets",
 					"ec2:DescribeVpcs", "ec2:DescribeSecurityGroups", "ec2:DescribeImages", "ec2:DescribeInstances", "pricing:GetProducts",
+					"ec2:DescribeSnapshots", "ec2:GetConsoleOutput",
 				},
 			},
-			{Sid: "IchorRun", Effect: "Allow", Resource: "*", Action: []string{"ec2:RunInstances"}},
+			// CreateSnapshot and RegisterImage make the Talos AMI (StartAWSImage).
+			{Sid: "IchorRun", Effect: "Allow", Resource: "*", Action: []string{"ec2:RunInstances", "ec2:CreateSnapshot", "ec2:RegisterImage"}},
 			{
-				Sid: "IchorTagOnRun", Effect: "Allow", Resource: "*", Action: []string{"ec2:CreateTags"},
-				Condition: map[string]any{"StringEquals": map[string]string{"ec2:CreateAction": "RunInstances"}},
+				Sid: "IchorTagOnCreate", Effect: "Allow", Resource: "*", Action: []string{"ec2:CreateTags"},
+				Condition: map[string]any{"StringEquals": map[string][]string{"ec2:CreateAction": {"RunInstances", "CreateSnapshot", "RegisterImage"}}},
 			},
 			{
 				Sid: "IchorTerminateOwn", Effect: "Allow", Resource: "*", Action: []string{"ec2:TerminateInstances"},
+				Condition: map[string]any{"StringLike": map[string]string{"aws:ResourceTag/" + awsTagRun: "*"}},
+			},
+			{
+				Sid: "IchorCleanUpOwn", Effect: "Allow", Resource: "*", Action: []string{"ec2:StopInstances", "ec2:DeleteSnapshot", "ec2:DeregisterImage"},
 				Condition: map[string]any{"StringLike": map[string]string{"aws:ResourceTag/" + awsTagRun: "*"}},
 			},
 		},

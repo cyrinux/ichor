@@ -67,7 +67,7 @@ var cloudCommands = []command{
 
 		return "", errors.New("usage: ovh test|options|policy|create …")
 	}},
-	{name: "aws", args: "test|options|policy|price TYPE|create TEMPLATE ROLE HOSTNAME DISK TYPE AMI SUBNET SG[,SG] -yes", run: func(e env) (string, error) {
+	{name: "aws", args: "test|options|policy|price TYPE|estimate ARCH REGION|image TEMPLATE ARCH SUBNET SG|- -yes|create TEMPLATE ROLE HOSTNAME DISK TYPE AMI SUBNET SG[,SG] -yes", run: func(e env) (string, error) {
 		credJSON, err := json.Marshal(map[string]string{
 			"accessKeyId": os.Getenv("AWS_ACCESS_KEY_ID"), "secretAccessKey": os.Getenv("AWS_SECRET_ACCESS_KEY"),
 			"sessionToken": os.Getenv("AWS_SESSION_TOKEN"), "region": os.Getenv("AWS_REGION"),
@@ -85,11 +85,15 @@ var cloudCommands = []command{
 			return ichorgo.AWSIAMPolicy(), nil
 		case "price":
 			return ichorgo.AWSPrice(string(credJSON), flag.Arg(2))
+		case "estimate":
+			return ichorgo.AWSImageEstimate(string(credJSON), flag.Arg(2), flag.Arg(3))
+		case "image":
+			return awsImage(e, string(credJSON))
 		case "create":
 			return awsCreate(e, string(credJSON))
 		}
 
-		return "", errors.New("usage: aws test|options|policy|price TYPE|create …")
+		return "", errors.New("usage: aws test|options|policy|price TYPE|estimate|image|create …")
 	}},
 	{name: "azure", args: "test|options|role [RG]|price LOCATION SIZE|create TEMPLATE ROLE HOSTNAME DISK RG LOCATION SIZE IMAGE_ID SUBNET_ID NSG_ID|- -yes", run: func(e env) (string, error) {
 		credJSON, err := json.Marshal(map[string]string{
@@ -229,6 +233,31 @@ func awsCreate(e env, credJSON string) (string, error) {
 
 	j := joinProbe{done: make(chan string, 1)}
 	ichorgo.StartAWSCreate(e.cfg, e.context, credJSON, string(spec), j)
+
+	return "done: " + <-j.done, nil
+}
+
+// awsImage makes a billable AMI with a throwaway helper instance: scratch accounts only, and only
+// with -yes. SG "-" for the VPC's default group.
+func awsImage(e env, credJSON string) (string, error) {
+	if flag.NArg() != 7 || flag.Arg(6) != "-yes" {
+		return "", errors.New("usage: aws image TEMPLATE ARCH SUBNET SG|- -yes (runs a billable instance and keeps a snapshot and an AMI)")
+	}
+
+	group := flag.Arg(5)
+	if group == "-" {
+		group = ""
+	}
+
+	spec, err := json.Marshal(map[string]string{
+		"templateNode": flag.Arg(2), "arch": flag.Arg(3), "subnetId": flag.Arg(4), "securityGroupId": group, "region": os.Getenv("AWS_REGION"),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	j := joinProbe{done: make(chan string, 1)}
+	ichorgo.StartAWSImage(e.cfg, e.context, credJSON, string(spec), j)
 
 	return "done: " + <-j.done, nil
 }

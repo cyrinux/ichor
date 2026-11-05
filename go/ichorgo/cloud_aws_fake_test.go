@@ -44,6 +44,7 @@ type fakeEC2 struct {
 	endState      string // where the instance ends up, running by default
 	privateOnly   bool
 	onRunning     func()
+	helper        *fakeAWSHelper // the AMI run's side, nil for a node create
 
 	scopes      []string // region/service of each signed call
 	actions     []string
@@ -162,10 +163,18 @@ func (f *fakeEC2) ec2(w http.ResponseWriter, action string, form url.Values) {
 	case "DescribeInstances":
 		fmt.Fprint(w, `<DescribeInstancesResponse`+ns+`><reservationSet>`+f.instances(form)+`</reservationSet></DescribeInstancesResponse>`)
 	case "TerminateInstances":
+		if f.helper != nil && f.helper.failTerminate {
+			awsFail(w, http.StatusForbidden, awsCodeUnauthorized, "You are not authorized to perform this operation.")
+
+			return
+		}
+
 		f.terminated = append(f.terminated, form.Get("InstanceId.1"))
 		fmt.Fprint(w, `<TerminateInstancesResponse`+ns+`><instancesSet><item><instanceId>`+form.Get("InstanceId.1")+`</instanceId></item></instancesSet></TerminateInstancesResponse>`)
 	default:
-		awsFail(w, http.StatusBadRequest, "InvalidAction", action)
+		if f.helper == nil || !f.helper.handle(w, action, form) {
+			awsFail(w, http.StatusBadRequest, "InvalidAction", action)
+		}
 	}
 }
 
@@ -233,12 +242,16 @@ func awsTestGroups(form url.Values) string {
 }
 
 func (f *fakeEC2) images(form url.Values) string {
+	if f.helper != nil && (form.Get("Owner.1") == "amazon" || form.Get("Filter.1.Name") == "name" || strings.HasPrefix(form.Get("Filter.1.Name"), "tag:")) {
+		return f.helper.images(form)
+	}
+
 	if form.Get("Owner.1") == "self" && form.Get("Filter.1.Name") == "tag-key" && form.Get("Filter.1.Value.1") == awsTagTalosVersion {
 		return `<item><imageId>` + awsTestAMIOwn + `</imageId><name>talos-own</name><architecture>arm64</architecture><imageState>available</imageState><tagSet><item><key>ichor-talos-version</key><value>v1.14.2</value></item><item><key>ichor-schematic</key><value>sample-schematic</value></item></tagSet></item>`
 	}
 
 	if form.Get("ImageId.1") == awsTestAMI {
-		return `<item><imageId>` + awsTestAMI + `</imageId><architecture>` + f.imageArch + `</architecture><imageState>available</imageState></item>`
+		return `<item><imageId>` + awsTestAMI + `</imageId><architecture>` + f.imageArch + `</architecture><imageState>available</imageState><bootMode>uefi-preferred</bootMode></item>`
 	}
 
 	return ""
@@ -286,6 +299,10 @@ func (f *fakeEC2) instances(form url.Values) string {
 		return ""
 	}
 
+	if f.helper != nil {
+		return f.helper.instance()
+	}
+
 	state, reason, address := cmpOr(f.endState, awsStateRunning), "", `<ipAddress>192.0.2.20</ipAddress>`
 	if f.endState != "" {
 		reason = `<stateReason><code>Server.InternalError</code><message>Server.InternalError: Internal error on launch</message></stateReason>`
@@ -328,6 +345,14 @@ func (f *fakeEC2) pricing(w http.ResponseWriter, r *http.Request) {
 	if f.noPricing {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, `{"__type":"AccessDeniedException","message":"not authorized to perform pricing:GetProducts"}`)
+
+		return
+	}
+
+	if strings.Contains(f.priceFilter, "Storage Snapshot") {
+		archive := `{\"product\":{\"attributes\":{\"usagetype\":\"EUW1-EBS:SnapshotArchiveStorage\"}},\"terms\":{\"OnDemand\":{\"A\":{\"priceDimensions\":{\"A.1\":{\"unit\":\"GB-Mo\",\"pricePerUnit\":{\"USD\":\"0.0125000000\"}}}}}}}`
+		standard := `{\"product\":{\"attributes\":{\"usagetype\":\"EUW1-EBS:SnapshotUsage\"}},\"terms\":{\"OnDemand\":{\"S\":{\"priceDimensions\":{\"S.1\":{\"unit\":\"GB-Mo\",\"pricePerUnit\":{\"USD\":\"0.0500000000\"}}}}}}}`
+		fmt.Fprint(w, `{"FormatVersion":"aws_v1","PriceList":["`+archive+`","`+standard+`"]}`)
 
 		return
 	}

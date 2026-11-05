@@ -54,6 +54,10 @@ type awsInstance struct {
 	StateReason string `xml:"stateReason>message"`
 	PublicIP    string `xml:"ipAddress"`
 	PrivateIP   string `xml:"privateIpAddress"`
+	Devices     []struct {
+		Name     string `xml:"deviceName"`
+		VolumeID string `xml:"ebs>volumeId"`
+	} `xml:"blockDeviceMapping>item"`
 }
 
 // awsInstances is DescribeInstances' answer.
@@ -401,7 +405,9 @@ func (h *awsCreate) reachedRunning(i awsInstance) {
 }
 
 // transient: worth trying again (rate limit, a server error, no answer).
-func (h *awsCreate) transient(err error) bool {
+func (h *awsCreate) transient(err error) bool { return awsTransient(err) }
+
+func awsTransient(err error) bool {
 	var e *awsError
 	if errors.As(err, &e) {
 		switch e.code {
