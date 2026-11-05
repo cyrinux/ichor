@@ -505,7 +505,10 @@ func (h *azureCreate) reachedRunning(ctx context.Context) (bool, error) {
 }
 
 // transient: worth trying again (rate limit, a server error, no answer).
-func (h *azureCreate) transient(err error) bool {
+func (h *azureCreate) transient(err error) bool { return azureTransient(err) }
+
+// azureTransient: worth trying again (rate limit, a server error, no answer).
+func azureTransient(err error) bool {
 	var e *azureError
 	if errors.As(err, &e) {
 		switch e.code {
@@ -560,26 +563,36 @@ func (h *azureCreate) deleteMachine(ctx context.Context) error {
 // gone is deleted; a delete still running then is an error naming the resource, so the run
 // says what may still be billed instead of claiming it is gone.
 func (h *azureCreate) deleteOne(ctx context.Context, path string, query url.Values) error {
-	_, headers, err := h.client.do(ctx, http.MethodDelete, path, query, nil, nil)
+	_, err := azureDeleteResource(ctx, h.client, h.poll, path, query)
+
+	return err
+}
+
+// azureDeleteResource is deleteOne for any run; existed is false when the resource was already
+// gone (Azure answered 204 or 404).
+func azureDeleteResource(ctx context.Context, c *azureClient, poll time.Duration, path string, query url.Values) (bool, error) {
+	status, headers, err := c.do(ctx, http.MethodDelete, path, query, nil, nil)
 
 	switch {
 	case azureNotFound(err):
-		return nil
+		return false, nil
 	case err != nil:
-		return err
+		return true, err
+	case status == http.StatusNoContent:
+		return false, nil
 	}
 
 	waitCtx, cancel := context.WithTimeout(ctx, azureDeleteWait)
 	defer cancel()
 
-	err = h.client.wait(waitCtx, headers, h.poll)
+	err = c.wait(waitCtx, headers, poll)
 	if err != nil && ctx.Err() == nil && errors.Is(err, context.DeadlineExceeded) {
 		name := nameOnly(path)
 
-		return &azureUnfinishedDelete{name: name[strings.LastIndexByte(name, '/')+1:]}
+		return true, &azureUnfinishedDelete{name: name[strings.LastIndexByte(name, '/')+1:]}
 	}
 
-	return err
+	return true, err
 }
 
 // azureUnfinishedDelete is a delete Azure accepted but had not finished within azureDeleteWait.

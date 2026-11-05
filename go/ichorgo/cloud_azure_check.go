@@ -172,66 +172,84 @@ func (h *azureCreate) imageKind(ctx context.Context) (string, string, error) {
 		return "", "", errors.New("this image is not a Linux image: pick another")
 	}
 
-	return bootArchAMD64, cmp.Or(image.Properties.HyperVGeneration, azureGenV1), nil
+	return image.managedArch(), cmp.Or(image.Properties.HyperVGeneration, azureGenV1), nil
 }
 
 // size is the chosen VM size in the location, refused when the subscription may not run it.
 func (h *azureCreate) size(ctx context.Context) (azureSize, error) {
-	skus, err := azureList[azureAPISKU](ctx, h.client, "/subscriptions/"+h.client.subscription+"/providers/Microsoft.Compute/skus",
-		azureSKUsVersion, url.Values{"$filter": {"location eq '" + h.spec.Location + "'"}})
+	return azureFindSize(ctx, h.client, h.spec.Location, h.spec.Size)
+}
+
+// azureFindSize is one VM size in a location, refused when the subscription may not run it.
+func azureFindSize(ctx context.Context, c *azureClient, location, name string) (azureSize, error) {
+	skus, err := azureList[azureAPISKU](ctx, c, "/subscriptions/"+c.subscription+"/providers/Microsoft.Compute/skus",
+		azureSKUsVersion, url.Values{"$filter": {"location eq '" + location + "'"}})
 	if err != nil {
 		return azureSize{}, err
 	}
 
 	for _, s := range skus {
-		if size, ok := s.size(); ok && strings.EqualFold(s.Name, h.spec.Size) {
+		if size, ok := s.size(); ok && strings.EqualFold(s.Name, name) {
 			return size, nil
 		}
 	}
 
-	return azureSize{}, fmt.Errorf("no VM size %s in %s for this subscription: pick another", h.spec.Size, h.spec.Location)
+	return azureSize{}, fmt.Errorf("no VM size %s in %s for this subscription: pick another", name, location)
 }
 
 // checkNetwork refuses a subnet or a security group of another location than the VM's.
 func (h *azureCreate) checkNetwork(ctx context.Context) error {
+	nat, err := azureCheckNetwork(ctx, h.client, h.spec.SubnetID, h.spec.SecurityGroupID, h.spec.Location)
+	if err != nil {
+		return err
+	}
+
+	h.noRoute = !h.spec.AssociatePublicIP && !nat
+
+	return nil
+}
+
+// azureCheckNetwork refuses a subnet or a security group ("" for none) of another location, and
+// says whether the subnet has a NAT gateway.
+func azureCheckNetwork(ctx context.Context, c *azureClient, subnetID, securityGroupID, location string) (bool, error) {
 	var subnet azureAPISubnet
-	if err := h.client.get(ctx, h.spec.SubnetID, azureNetworkVersion, &subnet); err != nil {
+	if err := c.get(ctx, subnetID, azureNetworkVersion, &subnet); err != nil {
 		if azureNotFound(err) {
-			return errors.New("the subnet cannot be found: pick another")
+			return false, errors.New("the subnet cannot be found: pick another")
 		}
 
-		return err
+		return false, err
 	}
 
 	var network azureAPINetwork
 
-	vnet := h.spec.SubnetID[:strings.LastIndex(strings.ToLower(h.spec.SubnetID), "/subnets/")]
-	if err := h.client.get(ctx, vnet, azureNetworkVersion, &network); err != nil {
-		return err
+	vnet := subnetID[:strings.LastIndex(strings.ToLower(subnetID), "/subnets/")]
+	if err := c.get(ctx, vnet, azureNetworkVersion, &network); err != nil {
+		return false, err
 	}
 
-	if !azureSameLocation(network.Location, h.spec.Location) {
-		return fmt.Errorf("virtual network %s is in %s, the VM in %s: pick a subnet of %s", network.Name, network.Location, h.spec.Location, h.spec.Location)
+	if !azureSameLocation(network.Location, location) {
+		return false, fmt.Errorf("virtual network %s is in %s, the VM in %s: pick a subnet of %s", network.Name, network.Location, location, location)
 	}
 
-	h.noRoute = !h.spec.AssociatePublicIP && subnet.Properties.NATGateway == nil
+	nat := subnet.Properties.NATGateway != nil
 
-	if h.spec.SecurityGroupID == "" {
-		return nil
+	if securityGroupID == "" {
+		return nat, nil
 	}
 
 	var group azureAPISecurityGroup
-	if err := h.client.get(ctx, h.spec.SecurityGroupID, azureNetworkVersion, &group); err != nil {
+	if err := c.get(ctx, securityGroupID, azureNetworkVersion, &group); err != nil {
 		if azureNotFound(err) {
-			return errors.New("the network security group cannot be found: pick another")
+			return false, errors.New("the network security group cannot be found: pick another")
 		}
 
-		return err
+		return false, err
 	}
 
-	if !azureSameLocation(group.Location, h.spec.Location) {
-		return fmt.Errorf("network security group %s is in %s, the VM in %s: pick one of %s", group.Name, group.Location, h.spec.Location, h.spec.Location)
+	if !azureSameLocation(group.Location, location) {
+		return false, fmt.Errorf("network security group %s is in %s, the VM in %s: pick one of %s", group.Name, group.Location, location, location)
 	}
 
-	return nil
+	return nat, nil
 }

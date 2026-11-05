@@ -52,6 +52,7 @@ type fakeARM struct {
 	noPrices          bool
 	slowDelete        bool // an accepted delete never finishes
 	onRunning         func()
+	helper            *fakeAzureHelper // the image run's side, nil for a VM create
 
 	tokenForms   []url.Values
 	unauthorized int
@@ -128,6 +129,10 @@ func (f *fakeARM) handle(w http.ResponseWriter, r *http.Request) {
 		f.unauthorized++
 		armFail(w, http.StatusUnauthorized, "InvalidAuthenticationToken", "The access token is invalid.")
 
+		return
+	}
+
+	if f.helper != nil && f.helper.handle(f, w, r) {
 		return
 	}
 

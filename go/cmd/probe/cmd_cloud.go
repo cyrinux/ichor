@@ -95,7 +95,8 @@ var cloudCommands = []command{
 
 		return "", errors.New("usage: aws test|options|policy|price TYPE|estimate|image|create …")
 	}},
-	{name: "azure", args: "test|options|role [RG]|price LOCATION SIZE|create TEMPLATE ROLE HOSTNAME DISK RG LOCATION SIZE IMAGE_ID SUBNET_ID NSG_ID|- -yes", run: func(e env) (string, error) {
+	{name: "azure", args: "test|options|role [RG]|price LOCATION SIZE|estimate ARCH LOCATION|image TEMPLATE ARCH RG LOCATION SUBNET_ID NSG_ID|- -yes|" +
+		"create TEMPLATE ROLE HOSTNAME DISK RG LOCATION SIZE IMAGE_ID SUBNET_ID NSG_ID|- -yes", run: func(e env) (string, error) {
 		credJSON, err := json.Marshal(map[string]string{
 			"tenantId": os.Getenv("AZURE_TENANT_ID"), "clientId": os.Getenv("AZURE_CLIENT_ID"), "clientSecret": os.Getenv("AZURE_CLIENT_SECRET"),
 			"subscriptionId": os.Getenv("AZURE_SUBSCRIPTION_ID"), "location": os.Getenv("AZURE_LOCATION"),
@@ -113,11 +114,15 @@ var cloudCommands = []command{
 			return ichorgo.AzureRoleDefinition(os.Getenv("AZURE_SUBSCRIPTION_ID"), flag.Arg(2)), nil
 		case "price":
 			return ichorgo.AzurePrice(string(credJSON), flag.Arg(2), flag.Arg(3))
+		case "estimate":
+			return ichorgo.AzureImageEstimate(string(credJSON), flag.Arg(2), flag.Arg(3))
+		case "image":
+			return azureImage(e, string(credJSON))
 		case "create":
 			return azureCreate(e, string(credJSON))
 		}
 
-		return "", errors.New("usage: azure test|options|role [RG]|price LOCATION SIZE|create …")
+		return "", errors.New("usage: azure test|options|role [RG]|price LOCATION SIZE|estimate|image|create …")
 	}},
 	{name: "gcp", args: "test|options|role|price ZONE TYPE|create TEMPLATE ROLE HOSTNAME DISK PROJECT ZONE TYPE IMAGE SUBNET -yes", run: func(e env) (string, error) {
 		if flag.Arg(1) == "role" {
@@ -212,6 +217,32 @@ func azureCreate(e env, credJSON string) (string, error) {
 
 	j := joinProbe{done: make(chan string, 1)}
 	ichorgo.StartAzureCreate(e.cfg, e.context, credJSON, string(spec), j)
+
+	return "done: " + <-j.done, nil
+}
+
+// azureImage makes a billable managed image with a throwaway helper VM: scratch subscriptions
+// only, and only with -yes. NSG_ID "-" for none.
+func azureImage(e env, credJSON string) (string, error) {
+	if flag.NArg() != 9 || flag.Arg(8) != "-yes" {
+		return "", errors.New("usage: azure image TEMPLATE ARCH RG LOCATION SUBNET_ID NSG_ID|- -yes (runs a billable VM and keeps a managed image)")
+	}
+
+	nsg := flag.Arg(7)
+	if nsg == "-" {
+		nsg = ""
+	}
+
+	spec, err := json.Marshal(map[string]string{
+		"templateNode": flag.Arg(2), "arch": flag.Arg(3), "resourceGroup": flag.Arg(4), "location": flag.Arg(5),
+		"subnetId": flag.Arg(6), "securityGroupId": nsg,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	j := joinProbe{done: make(chan string, 1)}
+	ichorgo.StartAzureImage(e.cfg, e.context, credJSON, string(spec), j)
 
 	return "done: " + <-j.done, nil
 }

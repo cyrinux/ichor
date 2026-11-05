@@ -42,6 +42,8 @@ const (
 	azureTagCluster      = "ichor-cluster"
 	azureTagTalosVersion = "ichor-talos-version"
 	azureTagSchematic    = "ichor-schematic"
+	// azureTagArch is a managed image's architecture: ARM gives one for gallery images only.
+	azureTagArch = "ichor-arch"
 
 	azureCodeAuthorizationFailed = "AuthorizationFailed"
 	azureCodeBadPrincipal        = "invalid_client"
@@ -666,8 +668,9 @@ func AzureRoleDefinition(subscriptionID, resourceGroup string) string {
 	// Plain values: it always encodes.
 	out, _ := toJSON(azureRole{ //nolint:errcheck
 		Name: "Ichor node creator", IsCustom: true,
-		Description: "Lets Ichor create a Talos node VM (with its NIC, public IP and OS disk) in this resource group and delete what it created",
-		Actions: []string{
+		Description: "Lets Ichor create a Talos node VM (with its NIC, public IP and OS disk) in this resource group, make a Talos image there " +
+			"with a throwaway helper VM, and delete what it created",
+		Actions: append([]string{
 			"Microsoft.Resources/subscriptions/read", "Microsoft.Resources/subscriptions/locations/read",
 			"Microsoft.Resources/subscriptions/resourceGroups/read", "Microsoft.Compute/skus/read", "Microsoft.Compute/images/read",
 			"Microsoft.Compute/galleries/read", "Microsoft.Compute/galleries/images/read", "Microsoft.Compute/galleries/images/versions/read",
@@ -681,7 +684,7 @@ func AzureRoleDefinition(subscriptionID, resourceGroup string) string {
 			"Microsoft.Network/networkInterfaces/delete", "Microsoft.Network/publicIPAddresses/read",
 			"Microsoft.Network/publicIPAddresses/write", "Microsoft.Network/publicIPAddresses/join/action",
 			"Microsoft.Network/publicIPAddresses/delete", "Microsoft.Authorization/permissions/read",
-		},
+		}, azureImageActions...),
 		NotActions:       []string{},
 		AssignableScopes: []string{"/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup},
 	})

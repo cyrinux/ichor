@@ -251,6 +251,16 @@ type azureAPIImage struct {
 	} `json:"properties"`
 }
 
+// managedArch is a managed image's architecture: its ichor-arch tag (an image the app made),
+// else amd64, as ARM keeps none for a managed image.
+func (i azureAPIImage) managedArch() string {
+	if i.Tags[azureTagArch] == bootArchARM64 {
+		return bootArchARM64
+	}
+
+	return bootArchAMD64
+}
+
 // azureTalosArch maps Azure's architecture names to Talos's ("" and x64 are amd64).
 func azureTalosArch(arch string) string {
 	switch strings.ToLower(arch) {
@@ -501,7 +511,7 @@ func (c *azureClient) images(ctx context.Context, location string, warnings *[]s
 	for _, i := range listOrWarn[azureAPIImage](ctx, c, base+"images", azureComputeVersion, nil, warnings) {
 		if strings.EqualFold(i.Properties.StorageProfile.OSDisk.OSType, "Linux") && azureSameLocation(i.Location, location) {
 			out = append(out, azureImage{
-				ID: i.ID, Name: i.Name, ResourceGroup: azureResourceGroupOf(i.ID), Source: azureImageManaged, Arch: bootArchAMD64,
+				ID: i.ID, Name: i.Name, ResourceGroup: azureResourceGroupOf(i.ID), Source: azureImageManaged, Arch: i.managedArch(),
 				Generation:   cmp.Or(i.Properties.HyperVGeneration, azureGenV1),
 				TalosVersion: i.Tags[azureTagTalosVersion], Schematic: i.Tags[azureTagSchematic],
 			})
