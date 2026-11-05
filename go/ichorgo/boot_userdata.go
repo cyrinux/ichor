@@ -247,7 +247,7 @@ func (d *cloudUserData) withImages(media bootMedia) {
 	}
 
 	d.Images = cloudImages(target)
-	d.Warnings = append(d.Warnings, "Scaleway: follow the Talos guide's disk layout (a second disk for EPHEMERAL); some instance types need apply-config instead of user data")
+	d.Warnings = append(d.Warnings, "Scaleway: the automated create adds the EPHEMERAL disk and its VolumeConfig; the copy-and-share path needs the Talos guide's disk layout")
 }
 
 func cloudImages(t bootTarget) []cloudImage {

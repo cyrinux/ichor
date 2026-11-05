@@ -17,7 +17,8 @@ import (
 // AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID and AZURE_LOCATION, the Google
 // service account key from GOOGLE_APPLICATION_CREDENTIALS (the key file's path) or
 // GCP_SERVICE_ACCOUNT_JSON, with GCP_PROJECT and GCP_ZONE (never a flag: it would show in the
-// shell history).
+// shell history). The Scaleway key comes from SCW_ACCESS_KEY, SCW_SECRET_KEY,
+// SCW_DEFAULT_PROJECT_ID and SCW_DEFAULT_ZONE, the names Scaleway's own CLI reads.
 var cloudCommands = []command{
 	{name: "hetzner", args: "test|options|estimate ARCH LOCATION|snapshot ARCH LOCATION -yes|create TEMPLATE ROLE HOSTNAME DISK TYPE LOCATION SNAPSHOT_ID -yes", run: func(e env) (string, error) {
 		token := os.Getenv("HETZNER_TOKEN")
@@ -66,6 +67,28 @@ var cloudCommands = []command{
 		}
 
 		return "", errors.New("usage: ovh test|options|policy|create …")
+	}},
+	{name: "scaleway", args: "test|options|policy|create TEMPLATE ROLE HOSTNAME DISK ZONE TYPE IMAGE_ID -yes", run: func(e env) (string, error) {
+		credJSON, err := json.Marshal(map[string]string{
+			"accessKey": os.Getenv("SCW_ACCESS_KEY"), "secretKey": os.Getenv("SCW_SECRET_KEY"),
+			"project": os.Getenv("SCW_DEFAULT_PROJECT_ID"), "zone": os.Getenv("SCW_DEFAULT_ZONE"),
+		})
+		if err != nil {
+			return "", err
+		}
+
+		switch flag.Arg(1) {
+		case "test":
+			return ichorgo.ScalewayTest(string(credJSON))
+		case "options":
+			return ichorgo.ScalewayOptions(e.cfg, e.context, string(credJSON))
+		case "policy":
+			return ichorgo.ScalewayPolicy(os.Getenv("SCW_DEFAULT_PROJECT_ID")), nil
+		case "create":
+			return scalewayCreate(e, string(credJSON))
+		}
+
+		return "", errors.New("usage: scaleway test|options|policy|create …")
 	}},
 	{name: "aws", args: "test|options|policy|price TYPE|estimate ARCH REGION|image TEMPLATE ARCH SUBNET SG|- -yes|create TEMPLATE ROLE HOSTNAME DISK TYPE AMI SUBNET SG[,SG] -yes", run: func(e env) (string, error) {
 		credJSON, err := json.Marshal(map[string]string{
@@ -334,6 +357,26 @@ func ovhCreate(e env, credJSON string) (string, error) {
 
 	j := joinProbe{done: make(chan string, 1)}
 	ichorgo.StartOVHCreate(e.cfg, e.context, credJSON, string(spec), j)
+
+	return "done: " + <-j.done, nil
+}
+
+// scalewayCreate creates a billable Instance: scratch projects only, and only with -yes.
+func scalewayCreate(e env, credJSON string) (string, error) {
+	if flag.NArg() != 10 || flag.Arg(9) != "-yes" {
+		return "", errors.New("usage: scaleway create TEMPLATE ROLE HOSTNAME DISK ZONE TYPE IMAGE_ID -yes (creates a billable Instance, a flexible IP and a volume)")
+	}
+
+	spec, err := json.Marshal(map[string]string{
+		"templateNode": flag.Arg(2), "role": flag.Arg(3), "hostname": flag.Arg(4), "installDisk": flag.Arg(5), "labelsJson": e.labels,
+		"zone": flag.Arg(6), "type": flag.Arg(7), "imageId": flag.Arg(8),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	j := joinProbe{done: make(chan string, 1)}
+	ichorgo.StartScalewayCreate(e.cfg, e.context, credJSON, string(spec), j)
 
 	return "done: " + <-j.done, nil
 }

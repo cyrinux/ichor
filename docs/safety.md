@@ -60,6 +60,18 @@ Part of the [Ichor documentation](../README.md#documentation).
   the one instance it created, by id, when it fails or is stopped, except a control plane that
   already answered. A create that gets no clear answer deletes nothing, because another instance may
   carry the same name: the message says to check the project, where it may stay billed.
+- **Creating an Instance at Scaleway (Go core and the probe's `scaleway create`, `-yes` only; the
+  app's card comes next):** billable. It makes a flexible routed IPv4, then an Instance from a
+  Talos image of the project with a second volume for EPHEMERAL (local storage when the type has
+  room, else Block Storage), writes the node's config as the `cloud-init` user data while the
+  Instance is stopped, and powers it on; both carry the run's `ichor-run` tag. The API key's secret
+  stays sealed on the device; give its application only the policy the app prints (Instances and
+  Block Storage on one project). When the run fails or is stopped it deletes what it made, except
+  a control plane that already answered: a running Instance is terminated (which takes its local
+  volumes), one that never ran is deleted with its volumes, then a Block Storage volume and the
+  flexible IP, which outlive the Instance. A create without a clear answer is looked for by the
+  run's tag and deleted. The one case that needs the console is a delete that fails: the message
+  names the zone and the ids still there, billed until they are deleted.
 - **Creating an instance at AWS EC2 (Add a node… → A server at a cloud provider → AWS):**
   billable, so the hourly price shows first when the Price List answers, the host name is typed to
   confirm, and Stop asks once more (the instance is billed until it is terminated); the probe's
