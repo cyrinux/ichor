@@ -12,6 +12,8 @@ struct OverviewBannerSections: View {
     let look: HistoryLook
     let discovered: Int
     let showDiscovered: () -> Void
+    /// The import screen, for a renewed talosconfig.
+    let openImport: () -> Void
     @Environment(AppModel.self) private var model
     @Environment(SupportPrompt.self) private var support
 
@@ -19,7 +21,11 @@ struct OverviewBannerSections: View {
         // Offered once, after the first real cluster: first, above everything else.
         AlertsOfferSection()
         if let lastKnownOutage {
-            Section { LastKnownBanner(outage: lastKnownOutage, retry: retry) }
+            Section {
+                LastKnownBanner(
+                    outage: lastKnownOutage, recovery: model.outageRecovery(lastKnownOutage), retry: retry,
+                    openImport: openImport)
+            }
         }
         DemoNoticeSection()
         if showsSwitcherTip {
