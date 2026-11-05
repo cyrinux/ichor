@@ -6291,6 +6291,7 @@
     <string name="aws_make_ami">Ein Talos-AMI erstellen</string>
     <string name="aws_image_missing">Noch kein Talos-AMI aus dem Image dieses Clusters für %1$s in %2$s: Ichor kann eines erstellen.</string>
     <string name="aws_image_make_another">Ein weiteres Talos-AMI erstellen</string>
+    <string name="aws_image_matches">%1$s · entspricht dem Image des Clusters</string>
     <string name="aws_image_intro">Ichor startet eine Wegwerf-Instanz mit Amazon Linux, die das Talos-Image dieses Clusters auf ein zusätzliches Volume schreibt, erstellt einen Snapshot des Volumes, registriert das AMI und beendet dann die Instanz. Am Cluster wird nichts verändert. Es dauert etwa zehn Minuten.</string>
     <string name="aws_image_subnet">Subnetz der Wegwerf-Instanz</string>
     <string name="aws_image_subnet_hint">Sie lädt das Image von der Image Factory herunter: Wähle ein Subnetz, das eine öffentliche IP vergibt.</string>

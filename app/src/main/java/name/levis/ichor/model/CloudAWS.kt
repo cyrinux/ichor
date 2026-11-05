@@ -23,7 +23,10 @@ data class AWSCheck(
     val checked: Boolean = false,
 )
 
-/** What an instance can be created from in [region]; [warnings] are the core's, shown as they are. */
+/**
+ * What an instance can be created from in [region]; [warnings] are the core's, shown as they are.
+ * [templateVersion] and [templateSchematic] are the cluster's image, "" when they cannot be read.
+ */
 @Serializable
 data class AWSOptions(
     val region: String = "",
@@ -32,6 +35,8 @@ data class AWSOptions(
     val subnets: List<AWSSubnet> = emptyList(),
     val securityGroups: List<AWSSecurityGroup> = emptyList(),
     val images: List<AWSImage> = emptyList(),
+    val templateVersion: String = "",
+    val templateSchematic: String = "",
     val warnings: List<String> = emptyList(),
 )
 
@@ -76,6 +81,11 @@ data class AWSImage(
     val schematic: String = "",
 ) {
     val official: Boolean get() = source == "official"
+
+    /** The cluster's image: same version, same schematic (an official AMI carries the default one). */
+    fun matches(options: AWSOptions): Boolean =
+        options.templateVersion.isNotBlank() && options.templateSchematic.isNotBlank() &&
+            talosVersion == options.templateVersion && schematic == options.templateSchematic
 }
 
 /** The on-demand hourly price before tax; [hourly] is empty when the Price List does not answer. */
@@ -143,9 +153,20 @@ fun AWSOptions.arches(): List<String> = types.map { it.arch }.distinct().sortedB
 /** The instance types of [arch], in the core's order. */
 fun AWSOptions.typesFor(arch: String): List<AWSInstanceType> = types.filter { it.arch == arch }
 
-/** The images [arch] can boot: official ones first, then the account's own by name. */
+/** The images [arch] can boot: the cluster's image first, then official ones, then the account's own by name. */
 fun AWSOptions.imagesFor(arch: String): List<AWSImage> =
-    images.filter { it.arch == arch }.sortedWith(compareBy<AWSImage> { !it.official }.thenBy { it.name.lowercase() })
+    images.filter { it.arch == arch }
+        .sortedWith(compareBy<AWSImage> { !it.matches(this) }.thenBy { !it.official }.thenBy { it.name.lowercase() })
+
+/**
+ * Whether [arch] has an AMI of the cluster's image. When the cluster's image cannot be read, any
+ * AMI of the account's own counts, as nothing can be compared.
+ */
+fun AWSOptions.hasClusterImage(arch: String): Boolean {
+    val images = imagesFor(arch)
+    if (templateVersion.isBlank() || templateSchematic.isBlank()) return images.any { !it.official }
+    return images.any { it.matches(this) }
+}
 
 /** The security groups of [vpcId], the subnet's VPC: EC2 refuses the others. */
 fun AWSOptions.securityGroupsIn(vpcId: String): List<AWSSecurityGroup> = securityGroups.filter { it.vpcId == vpcId }

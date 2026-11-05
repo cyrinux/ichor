@@ -6161,6 +6161,7 @@
     <string name="aws_make_ami">Talos AMI を作成</string>
     <string name="aws_image_missing">%2$s には、このクラスターのイメージの %1$s 用 Talos AMI がまだありません。Ichor で作成できます。</string>
     <string name="aws_image_make_another">別の Talos AMI を作成</string>
+    <string name="aws_image_matches">%1$s · クラスターのイメージと一致</string>
     <string name="aws_image_intro">Ichor は使い捨ての Amazon Linux インスタンスを起動し、このクラスターの Talos イメージを追加ボリュームに書き込み、そのボリュームのスナップショットを取って AMI を登録してから、インスタンスを終了します。クラスターには一切触れません。約 10 分かかります。</string>
     <string name="aws_image_subnet">使い捨てインスタンスのサブネット</string>
     <string name="aws_image_subnet_hint">Image Factory からイメージをダウンロードします。パブリック IP を割り当てるサブネットを選んでください。</string>

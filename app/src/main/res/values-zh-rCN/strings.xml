@@ -6161,6 +6161,7 @@
     <string name="aws_make_ami">制作 Talos AMI</string>
     <string name="aws_image_missing">%2$s 中还没有此集群镜像的 %1$s Talos AMI:Ichor 可以制作一个。</string>
     <string name="aws_image_make_another">再制作一个 Talos AMI</string>
+    <string name="aws_image_matches">%1$s · 与集群镜像一致</string>
     <string name="aws_image_intro">Ichor 会启动一个一次性的 Amazon Linux 实例，把此集群的 Talos 镜像写入一个额外的卷，为该卷制作快照并注册 AMI，然后终止该实例。不会触碰集群的任何部分。大约需要十分钟。</string>
     <string name="aws_image_subnet">一次性实例的子网</string>
     <string name="aws_image_subnet_hint">它会从 Image Factory 下载镜像:请选择会分配公网 IP 的子网。</string>

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -127,8 +128,14 @@ func TestAWSOptions(t *testing.T) {
 				t.Errorf("own AMI = %+v", own)
 			}
 
-			if c.wantWarn == "" && (o.Images[0].Source != awsImageOfficial || o.Images[0].TalosVersion != "v1.14.2" || o.Images[0].Arch != bootArchAMD64) {
+			if c.wantWarn == "" && (o.Images[0].Source != awsImageOfficial || o.Images[0].TalosVersion != "v1.14.2" || o.Images[0].Arch != bootArchAMD64 ||
+				o.Images[0].Schematic != defaultSchematic) {
 				t.Errorf("official AMI = %+v", o.Images[0])
+			}
+
+			// The template installs the plain installer: the default schematic, the one of the official AMIs.
+			if o.TemplateVersion != "v1.14.2" || o.TemplateSchematic != defaultSchematic {
+				t.Errorf("template = %q %q", o.TemplateVersion, o.TemplateSchematic)
 			}
 
 			if got := strings.Join(o.Warnings, "\n"); (c.wantWarn == "") != (got == "") || !strings.Contains(got, c.wantWarn) {
@@ -148,10 +155,48 @@ func TestAWSOptions(t *testing.T) {
 				t.Errorf("security groups = %+v", o.SecurityGroups)
 			}
 
-			for _, key := range []string{`"memoryGB":2,`, `"vpcDefault":true`, `"securityGroups":[{"id"`, `"source":"custom"`} {
+			for _, key := range []string{`"memoryGB":2,`, `"vpcDefault":true`, `"securityGroups":[{"id"`, `"source":"custom"`, `"templateVersion":"v1.14.2"`, `"templateSchematic":"` + defaultSchematic} {
 				if !strings.Contains(out, key) {
 					t.Errorf("%s not in %s", key, out)
 				}
+			}
+		})
+	}
+}
+
+func TestAWSTemplateImage(t *testing.T) {
+	factory := factoryHost + "/metal-installer/" + sampleSchematic + ":v1.14.4"
+
+	cases := []struct {
+		name          string
+		src           bootSource
+		err           error
+		wantVersion   string
+		wantSchematic string
+		wantWarning   string
+	}{
+		{name: "a factory image", src: bootSource{node: "cp-1", version: "v1.14.4", arch: "amd64", image: factory}, wantVersion: "v1.14.4", wantSchematic: sampleSchematic},
+		{
+			name: "the plain installer: the default schematic", src: bootSource{node: "cp-1", version: "v1.14.4", image: "ghcr.io/siderolabs/installer:v1.14.4"},
+			wantVersion: "v1.14.4", wantSchematic: defaultSchematic,
+		},
+		{
+			name: "an install image that cannot be read", src: bootSource{node: "cp-1", version: "v1.14.4", imageErr: "permission denied"},
+			wantVersion: "v1.14.4", wantWarning: "install image of cp-1 cannot be read (permission denied)",
+		},
+		{name: "a member that cannot be read", err: errors.New("no member answers"), wantWarning: "cannot be read (no member answers)"},
+		{name: "no version", src: bootSource{node: "cp-1", image: "registry.example.com/installer"}, wantWarning: "which Talos version"},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			img, warnings := awsTemplateImageOf(c.src, c.err)
+			if img.version != c.wantVersion || img.schematic != c.wantSchematic {
+				t.Errorf("image = %+v, want %q %q", img, c.wantVersion, c.wantSchematic)
+			}
+
+			if got := strings.Join(warnings, "\n"); (c.wantWarning == "") != (got == "") || !strings.Contains(got, c.wantWarning) {
+				t.Errorf("warnings = %q, want %q", warnings, c.wantWarning)
 			}
 		})
 	}
@@ -521,8 +566,18 @@ func TestAWSDemo(t *testing.T) {
 	}
 
 	out, err := AWSOptions(cfg, "", "")
-	if o := decodeJSON[awsOptions](t, out, err); len(o.Types) == 0 || len(o.Subnets) == 0 || len(o.Images) != 2 || o.Images[0].Source != awsImageOfficial {
+
+	o := decodeJSON[awsOptions](t, out, err)
+	if len(o.Types) == 0 || len(o.Subnets) == 0 || len(o.Images) != 3 || o.Images[0].Source != awsImageOfficial {
 		t.Errorf("demo options = %+v", o)
+	}
+
+	// One sample AMI of the account's own is the cluster's image.
+	matching := slices.IndexFunc(o.Images, func(i awsImage) bool {
+		return i.TalosVersion == o.TemplateVersion && i.Schematic == o.TemplateSchematic
+	})
+	if o.TemplateVersion != demoTalosVersion || o.TemplateSchematic != demoBootSchematic || matching < 0 || o.Images[matching].Source != awsImageCustom {
+		t.Errorf("demo template = %q %q, images %+v", o.TemplateVersion, o.TemplateSchematic, o.Images)
 	}
 
 	rec := newJoinRecorder()

@@ -54,6 +54,7 @@ public struct AWSCheck: Decodable, Equatable, Sendable {
 }
 
 /// What an instance can be created from in `region`; `warnings` are the core's, shown as they are.
+/// `templateVersion` and `templateSchematic` are the cluster's image, "" when they cannot be read.
 public struct AWSOptions: Decodable, Equatable, Sendable {
     public let region: String
     public let regions: [String]
@@ -61,10 +62,12 @@ public struct AWSOptions: Decodable, Equatable, Sendable {
     public let subnets: [AWSSubnet]
     public let securityGroups: [AWSSecurityGroup]
     public let images: [AWSImage]
+    public let templateVersion: String
+    public let templateSchematic: String
     public let warnings: [String]
 
     private enum CodingKeys: String, CodingKey {
-        case region, regions, types, subnets, securityGroups, images, warnings
+        case region, regions, types, subnets, securityGroups, images, templateVersion, templateSchematic, warnings
     }
 
     // Go encodes empty (nil) slices as null.
@@ -76,6 +79,8 @@ public struct AWSOptions: Decodable, Equatable, Sendable {
         subnets = try c.field(.subnets, [])
         securityGroups = try c.field(.securityGroups, [])
         images = try c.field(.images, [])
+        templateVersion = try c.field(.templateVersion, "")
+        templateSchematic = try c.field(.templateSchematic, "")
         warnings = try c.field(.warnings, [])
     }
 
@@ -89,12 +94,22 @@ public struct AWSOptions: Decodable, Equatable, Sendable {
     /// The instance types of `arch`, in the core's order.
     public func types(for arch: String) -> [AWSInstanceType] { types.filter { $0.arch == arch } }
 
-    /// The images `arch` can boot: official ones first, then the account's own by name.
+    /// The images `arch` can boot: the cluster's image first, then official ones, then the account's own by name.
     public func images(for arch: String) -> [AWSImage] {
         images.filter { $0.arch == arch }.sorted {
+            let (first, second) = ($0.matches(self), $1.matches(self))
+            if first != second { return first }
             if $0.official != $1.official { return $0.official }
             return $0.name.lowercased() < $1.name.lowercased()
         }
+    }
+
+    /// Whether `arch` has an AMI of the cluster's image. When the cluster's image cannot be read,
+    /// any AMI of the account's own counts, as nothing can be compared.
+    public func hasClusterImage(for arch: String) -> Bool {
+        let candidates = images(for: arch)
+        if templateVersion.isEmpty || templateSchematic.isEmpty { return candidates.contains { !$0.official } }
+        return candidates.contains { $0.matches(self) }
     }
 
     /// The security groups of `vpc`, the subnet's VPC: EC2 refuses the others.
@@ -177,6 +192,12 @@ public struct AWSImage: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let talosVersion: String
     public let schematic: String
     public var official: Bool { source == "official" }
+
+    /// The cluster's image: same version, same schematic (an official AMI carries the default one).
+    public func matches(_ options: AWSOptions) -> Bool {
+        !options.templateVersion.isEmpty && !options.templateSchematic.isEmpty
+            && talosVersion == options.templateVersion && schematic == options.templateSchematic
+    }
 
     private enum CodingKeys: String, CodingKey { case id, arch, source, name, talosVersion, schematic }
 

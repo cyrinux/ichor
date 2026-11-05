@@ -6308,6 +6308,7 @@
     <string name="aws_make_ami">Make a Talos AMI</string>
     <string name="aws_image_missing">No Talos AMI of this cluster\'s image for %1$s in %2$s yet: Ichor can make one.</string>
     <string name="aws_image_make_another">Make another Talos AMI</string>
+    <string name="aws_image_matches">%1$s · matches the cluster\'s image</string>
     <string name="aws_image_intro">Ichor starts a throwaway Amazon Linux instance that writes this cluster\'s Talos image to an extra volume, snapshots the volume and registers the AMI, then terminates the instance. Nothing of the cluster is touched. It takes about ten minutes.</string>
     <string name="aws_image_subnet">Subnet of the throwaway instance</string>
     <string name="aws_image_subnet_hint">It downloads the image from the Image Factory: pick a subnet that assigns a public IP.</string>
