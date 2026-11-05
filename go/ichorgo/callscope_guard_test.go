@@ -35,6 +35,7 @@ var delegatedRuns = map[string]string{
 	"StartHetznerSnapshot":       "hetznerSnapshotRun.start",
 	"StartAWSImage":              "awsImageRun.start",
 	"StartAzureImage":            "azureImageRun.start",
+	"StartGCPImage":              "gcpImageRun.start",
 	"StartNodeJoin":              "nodeJoin.start",
 	"StartOmniAllocate":          "omniAllocate.start",
 	"StartRunbook":               "startRunbook",

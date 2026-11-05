@@ -154,6 +154,27 @@ Part of the [Ichor documentation](../README.md#documentation).
   is reported as still billed, never as done. The one case that needs the Google Cloud console is
   a delete that fails: the message names the instance and the zone, and it stays billed until it
   is deleted there.
+- **Making a Talos image at Google Cloud (from the Go core and the probe for now):** billable, so
+  the estimate gives the helper's hourly price and the disk's and image's storage prices first,
+  and the probe's `gcp image` runs only with `-yes`. Nothing of the cluster is touched: the
+  schematic comes from the template's machine config, and a template whose config cannot be read
+  is refused. Before any write the run checks the machine type (in the zone, of the image's
+  architecture), the subnet against the zone's region and its route out (a public address, or
+  Cloud NAT: the helper must reach the Image Factory), that the project holds no image of that
+  name (without a name: none for this Talos version and schematic), then asks
+  `testIamPermissions` on the project, as for a VM. It creates one throwaway Debian VM
+  `ichor-image-<run>` with a 10 GB boot disk (`autoDelete`) and an empty 12 GB data disk
+  `ichor-image-<run>-data` (kept when the VM goes, so that the image can be made from it), both
+  labelled `ichor-run`. Its startup script downloads the Image Factory's image itself (the phone
+  moves no image bytes), writes it to the data disk and powers the VM off; no bucket and no
+  Storage Transfer are used. The run makes no image without the script's success marker on the
+  serial console. It then makes the image from the data disk, labelled `os=talos`,
+  `ichor-talos-version`, `ichor-arch` and `ichor-schematic`. On every path it deletes the VM (its
+  boot disk goes with it), then the data disk, and on a failure or Stop an unfinished image of
+  the run. A finished image stays, billed per GB-month until you delete it. A delete Google has not
+  finished within five minutes is reported as still billed, never as done. The one case that
+  needs the Google Cloud console is a delete that fails: the message names each resource left
+  and the zone.
 - **Rotating the Talos CA (Settings → Clusters & backup → Rotate the cluster CA…, `os:admin`):**
   replaces the CA that signs every Talos API certificate, in the order of
   `talosctl rotate-ca --kubernetes=false`. Rotate it when a talosconfig leaked or a phone was

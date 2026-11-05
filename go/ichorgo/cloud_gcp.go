@@ -39,6 +39,7 @@ const (
 	gcpLabelCluster      = "ichor-cluster"
 	gcpLabelTalosVersion = "ichor-talos-version"
 	gcpLabelSchematic    = "ichor-schematic"
+	gcpLabelArch         = "ichor-arch"
 	// gcpNetworkTag is what the guided network's firewall rules will target.
 	gcpNetworkTag = "ichor-node"
 
@@ -406,10 +407,14 @@ func gcpPermissionOf(method, raw string) string {
 	switch {
 	case len(collection) == 0:
 		return ""
+	case collection[0] == "operations" && parts[0] == "global":
+		return "compute.globalOperations.get"
 	case collection[0] == "operations":
 		return "compute.zoneOperations.get"
 	case len(collection) == 3 && collection[2] == "serialPort":
 		return "compute.instances.getSerialPortOutput"
+	case len(collection) == 3 && method == http.MethodPost:
+		return "compute." + collection[0] + "." + collection[2]
 	case len(collection) == 1 && method == http.MethodPost:
 		return "compute." + collection[0] + ".create"
 	case len(collection) == 1:
@@ -518,15 +523,20 @@ func gcpTransient(err error) bool {
 	return !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded)
 }
 
-// waitOperation follows a zone operation until it is DONE, on its wait method (which blocks up to
-// two minutes, often past the HTTP client's timeout: then it asks again). An operation that ends
-// with errors is a *gcpError.
+// waitOperation follows a zone operation (a global one when zone is "") until it is DONE, on its
+// wait method (which blocks up to two minutes, often past the HTTP client's timeout: then it asks
+// again). An operation that ends with errors is a *gcpError.
 func (c *gcpClient) waitOperation(ctx context.Context, project, zone, name string, interval time.Duration) error {
 	if name == "" {
 		return nil
 	}
 
-	u := c.compute(project, "/zones/"+url.PathEscape(zone)+"/operations/"+url.PathEscape(name)+"/wait")
+	scope := "/global"
+	if zone != "" {
+		scope = "/zones/" + url.PathEscape(zone)
+	}
+
+	u := c.compute(project, scope+"/operations/"+url.PathEscape(name)+"/wait")
 
 	for {
 		var op gcpOperation
@@ -594,9 +604,27 @@ func gcpOptionsPermissions() []string {
 	}
 }
 
-// gcpRolePermissions is the printed role's list: every permission the app may use.
+// gcpImagePermissions are what an image run needs on top of a create's: the helper's data disk
+// (labelled, read by the image, then deleted), its stop and serial console, and the image.
+func gcpImagePermissions() []string {
+	return []string{
+		"compute.disks.setLabels", "compute.disks.get", "compute.disks.use", "compute.disks.useReadOnly", "compute.disks.delete",
+		"compute.instances.stop", "compute.instances.getSerialPortOutput", "compute.images.create", "compute.images.delete",
+		"compute.images.setLabels", "compute.globalOperations.get",
+	}
+}
+
+// gcpRolePermissions is the printed role's list: every permission the app may use, once.
 func gcpRolePermissions() []string {
-	return append(gcpCreatePermissions(true), gcpOptionsPermissions()...)
+	out := []string{}
+
+	for _, p := range slices.Concat(gcpCreatePermissions(true), gcpOptionsPermissions(), gcpImagePermissions()) {
+		if !slices.Contains(out, p) {
+			out = append(out, p)
+		}
+	}
+
+	return out
 }
 
 // missingPermissions is what of wanted granted lacks, in wanted's order.
@@ -672,8 +700,9 @@ func (c *gcpClient) readProject(ctx context.Context) error {
 
 // GCPRoleDefinition is the custom role to create (gcloud iam roles create ichorNodeCreator
 // --project … --file …) and grant the service account on the project: only the calls the app
-// makes. GCP IAM cannot limit a delete to labelled instances: the app deletes only the instance
-// its run named after the host name and labelled ichor-run. The Talos and Omni guides'
+// makes, the image run's included. GCP IAM cannot limit a delete to labelled instances: the app
+// deletes only the instance its run named after the host name and labelled ichor-run, and the
+// helper, the data disk and an unfinished image of its own image run. The Talos and Omni guides'
 // roles/compute.instanceAdmin.v1 is wider. A placeholder stands for an empty project. The person
 // pastes it.
 func GCPRoleDefinition(project string) string {
@@ -687,7 +716,7 @@ func GCPRoleDefinition(project string) string {
 	b.WriteString("# Wider, as the Talos and Omni guides say: roles/compute.instanceAdmin.v1. GCP IAM cannot limit a delete to\n")
 	b.WriteString("# labelled instances: Ichor deletes only the instance its run named after the host name and labelled ichor-run.\n")
 	b.WriteString("title: Ichor node creator\n")
-	b.WriteString("description: Lets Ichor create a Talos node VM (with its boot disk) in this project and delete what it created\n")
+	b.WriteString("description: Lets Ichor create a Talos node VM (with its boot disk) or a Talos image in this project and delete what it created\n")
 	b.WriteString("stage: GA\n")
 	b.WriteString("includedPermissions:\n")
 

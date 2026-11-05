@@ -530,19 +530,39 @@ func (s gcpSKU) rate() (float64, bool) {
 
 // pricing is the type's hourly price, "" when anything does not match.
 func (c *gcpClient) pricing(ctx context.Context, zone, machineType string) string {
+	t, ok := c.machineType(ctx, zone, machineType)
+	if !ok {
+		return ""
+	}
+
+	return gcpHourly(c.catalog(ctx), zone, machineType, t)
+}
+
+// machineType reads one machine type of zone for its price, false when it cannot be read.
+func (c *gcpClient) machineType(ctx context.Context, zone, machineType string) (gcpAPIMachineType, bool) {
 	var t gcpAPIMachineType
 	if err := c.get(ctx, c.compute(c.project, "/zones/"+zone+"/machineTypes/"+machineType), &t); err != nil || t.GuestCpus == 0 {
-		return ""
+		return t, false
 	}
 
-	region := zone[:strings.LastIndexByte(zone, '-')]
-	series, _, _ := strings.Cut(machineType, "-")
-	series = strings.ToUpper(series)
+	return t, true
+}
 
+// catalog is Compute Engine's SKUs in the Cloud Billing Catalog, nil when it cannot be read.
+func (c *gcpClient) catalog(ctx context.Context) []gcpSKU {
 	skus, err := gcpList[gcpSKU](ctx, c, gcpBillingEndpoint+"/v1/services/"+gcpComputeService+"/skus?pageSize=5000", "skus")
 	if err != nil {
-		return ""
+		return nil
 	}
+
+	return skus
+}
+
+// gcpHourly is machine type t's on-demand hourly price in zone from skus, "" when a SKU is missing.
+func gcpHourly(skus []gcpSKU, zone, machineType string, t gcpAPIMachineType) string {
+	region := gcpRegionOf(zone)
+	series, _, _ := strings.Cut(machineType, "-")
+	series = strings.ToUpper(series)
 
 	core, ram, found := 0.0, 0.0, 0
 	for _, s := range skus {
