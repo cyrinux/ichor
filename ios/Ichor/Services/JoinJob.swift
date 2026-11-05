@@ -19,6 +19,8 @@ final class JoinJob {
         case appearedInOmni
         /// The finished snapshot of a request with `snapshot`.
         case snapshotMade(HetznerSnapshotResult)
+        /// The finished AMI of a request with `awsImage`.
+        case amiMade(AWSImageResult)
         case failed(String)
     }
 
@@ -38,9 +40,10 @@ final class JoinJob {
     var timeline: [JoinStep] {
         let phases = request?.phases ?? JoinPhase.maintenanceRun
         return switch outcome {
-        case .joined?, .appearedInOmni?, .snapshotMade?: joinTimeline(events, finished: true, phases: phases)
+        case .joined?, .appearedInOmni?, .snapshotMade?, .amiMade?:
+            joinTimeline(events, finished: true, phases: phases)
         case .failed(let message)?:
-            // A snapshot's failure stays on the step that failed, not on the cleanup that followed.
+            // An image run's failure stays on the step that failed, not on the cleanup that followed.
             joinTimeline(events.filter { $0.phase != JoinPhase.cleanup.rawValue }, failure: message, phases: phases)
         case nil: joinTimeline(events, phases: phases)
         }
@@ -68,6 +71,7 @@ final class JoinJob {
         let run =
             request.omniAllocate.map { client.startOmniAllocate($0) }
             ?? request.snapshot.map { client.startHetznerSnapshot($0, token: providerToken) }
+            ?? request.awsImage.map { client.startAWSImage($0, credential: providerToken) }
             ?? request.hetzner.map { client.startHetznerCreate($0, token: providerToken) }
             ?? request.ovh.map { client.startOVHCreate($0, credential: providerToken) }
             ?? request.aws.map { client.startAWSCreate($0, credential: providerToken) }
@@ -86,6 +90,9 @@ final class JoinJob {
                         // The "address" of a snapshot run is its result.
                         let made = try? JSONDecoder().decode(HetznerSnapshotResult.self, from: Data(address.utf8))
                         if let made { result = .snapshotMade(made) }
+                    } else if request.awsImage != nil {
+                        let made = try? JSONDecoder().decode(AWSImageResult.self, from: Data(address.utf8))
+                        if let made { result = .amiMade(made) }
                     } else if !address.isEmpty {
                         result = .joined(address)
                     } else if request.omni {

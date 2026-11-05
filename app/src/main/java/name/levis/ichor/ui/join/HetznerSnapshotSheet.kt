@@ -123,10 +123,14 @@ fun HetznerSnapshotSheet(
     )
 }
 
-/** The followed snapshot run: its steps with the command's last line, Stop, then the result. */
+/**
+ * The followed image run (a Hetzner snapshot or an AWS AMI): its steps with the command's last
+ * line, Stop, then the result.
+ */
 @Composable
 internal fun SnapshotRunView(run: JoinRunState, onStop: () -> Unit, onClose: () -> Unit) {
     val colors = LocalStatusColors.current
+    val aws = run.request.awsImage != null
     var confirmStop by remember { mutableStateOf(false) }
     // A failure stays on the step that failed, not on the cleanup that followed: the message says what was deleted.
     val steps = remember(run.events, run.finished, run.error) {
@@ -137,12 +141,12 @@ internal fun SnapshotRunView(run: JoinRunState, onStop: () -> Unit, onClose: () 
 
     IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            steps.forEach { TimelineRow(stringResource(it.phase.label), it.status, it.at, it.message) }
+            steps.forEach { TimelineRow(stringResource(if (aws) it.phase.awsImageLabel else it.phase.label), it.status, it.at, it.message) }
         }
     }
     when {
         run.running -> {
-            MutedText(stringResource(R.string.hetzner_snapshot_stop_hint))
+            MutedText(stringResource(if (aws) R.string.aws_image_stop_hint else R.string.hetzner_snapshot_stop_hint))
             IchorOutlinedButton(onClick = { confirmStop = true }, enabled = !run.stopping, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.hetzner_snapshot_stop))
             }
@@ -152,7 +156,11 @@ internal fun SnapshotRunView(run: JoinRunState, onStop: () -> Unit, onClose: () 
                 Text(run.error, color = colors.bad)
             } else {
                 Text(
-                    stringResource(R.string.hetzner_snapshot_done, run.snapshotResult?.description.orEmpty()),
+                    if (aws) {
+                        stringResource(R.string.aws_image_done, run.awsImageResult?.name.orEmpty())
+                    } else {
+                        stringResource(R.string.hetzner_snapshot_done, run.snapshotResult?.description.orEmpty())
+                    },
                     color = colors.ok,
                     style = MaterialTheme.typography.titleMedium,
                 )
@@ -164,7 +172,7 @@ internal fun SnapshotRunView(run: JoinRunState, onStop: () -> Unit, onClose: () 
     if (confirmStop) {
         ConfirmDialog(
             title = stringResource(R.string.hetzner_snapshot_stop),
-            text = stringResource(R.string.hetzner_snapshot_stop_body),
+            text = stringResource(if (aws) R.string.aws_image_stop_body else R.string.hetzner_snapshot_stop_body),
             confirm = stringResource(R.string.hetzner_snapshot_stop),
             onConfirm = {
                 confirmStop = false
@@ -175,3 +183,12 @@ internal fun SnapshotRunView(run: JoinRunState, onStop: () -> Unit, onClose: () 
         )
     }
 }
+
+/** The AMI run's labels: a helper instance, not a server with a key. */
+private val JoinPhase.awsImageLabel: Int
+    get() = when (this) {
+        JoinPhase.CREATING -> R.string.aws_phase_helper
+        JoinPhase.REGISTER -> R.string.aws_phase_register
+        JoinPhase.CLEANUP -> R.string.aws_phase_cleanup
+        else -> label
+    }

@@ -55,7 +55,7 @@ fun JoinApplyStep(request: JoinRequest?, onOpenNode: (address: String, hostname:
     SectionTitle(stringResource(R.string.join_node_step_apply))
     val current = run
     when {
-        current?.request?.snapshot != null -> SnapshotRunView(current, onStop = app.joinManager::stop, onClose = app.joinManager::dismiss)
+        current?.request?.imageRun == true -> SnapshotRunView(current, onStop = app.joinManager::stop, onClose = app.joinManager::dismiss)
         current != null -> JoinRunView(
             run = current,
             onStop = app.joinManager::stop,
@@ -243,6 +243,7 @@ internal val JoinPhase.label: Int
         JoinPhase.RESCUE -> R.string.hetzner_phase_rescue
         JoinPhase.WRITING -> R.string.hetzner_phase_writing
         JoinPhase.SNAPSHOT -> R.string.hetzner_phase_snapshot
+        JoinPhase.REGISTER -> R.string.aws_phase_register
         JoinPhase.CLEANUP -> R.string.hetzner_phase_cleanup
         JoinPhase.CREATING -> R.string.hetzner_create
         JoinPhase.STARTING -> R.string.hetzner_phase_starting

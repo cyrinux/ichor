@@ -78,4 +78,53 @@ class CloudAWSTest {
         assertEquals(JoinPhase.cloudRun, plain.phases)
         assertEquals(JoinPhase.cloudOmniRun, plain.copy(omni = true).phases)
     }
+
+    @Test
+    fun theAMISpecUsesTheCoresNames() {
+        val spec = AWSImageSpec(templateNode = "10.0.0.2", arch = "arm64", region = "eu-west-1", subnetId = "subnet-a", securityGroupId = "sg-a")
+        val json = TalosJson.encodeToString(AWSImageSpec.serializer(), spec)
+        listOf("\"templateNode\":\"10.0.0.2\"", "\"arch\":\"arm64\"", "\"region\"", "\"subnetId\"", "\"securityGroupId\":\"sg-a\"").forEach {
+            assertTrue(json, json.contains(it))
+        }
+    }
+
+    @Test
+    fun theAMIResultAndItsCostDecode() {
+        val result = TalosJson.decodeFromString(
+            AWSImageResult.serializer(),
+            """{"imageId":"ami-0abc","snapshotId":"snap-0abc","name":"talos-v1.12.0-aws-amd64-0123456789ab","arch":"amd64","talosVersion":"v1.12.0","schematic":"0123","sizeGB":8}""",
+        )
+        assertEquals("ami-0abc", result.imageId)
+        assertEquals(8, result.sizeGB)
+        val cost = TalosJson.decodeFromString(
+            AWSImageCost.serializer(),
+            """{"instanceType":"t3.small","hourly":"0.0228","currency":"USD","snapshotMonthlyPerGB":"0.05","minutes":10}""",
+        )
+        assertEquals("t3.small", cost.instanceType)
+        assertEquals(10, cost.minutes)
+        val unpriced = TalosJson.decodeFromString(AWSImageCost.serializer(), """{"instanceType":"t4g.small","minutes":10}""")
+        assertEquals("", unpriced.hourly)
+    }
+
+    @Test
+    fun theHelperSubnetsListPublicOnesFirst() {
+        assertEquals(listOf("subnet-a", "subnet-b"), options.helperSubnets().map { it.id })
+        val reversed = options.copy(subnets = options.subnets.reversed())
+        assertEquals(listOf("subnet-a", "subnet-b"), reversed.helperSubnets().map { it.id })
+    }
+
+    @Test
+    fun anAMIRunHasItsOwnSteps() {
+        val spec = AWSImageSpec(arch = "amd64", region = "eu-west-1", subnetId = "subnet-a")
+        val request = JoinRequest(address = "", template = "", role = "", hostname = "Talos amd64", disk = "", staticAddress = "", awsImage = spec)
+        assertEquals(JoinPhase.awsImageRun, request.phases)
+        assertTrue(request.imageRun)
+        assertFalse(request.cloud)
+        val steps = joinTimeline(listOf(JoinProgress(phase = "creating"), JoinProgress(phase = "snapshot")), finished = false, failed = false, phases = request.phases)
+        assertEquals(JoinPhase.awsImageRun, steps.map { it.phase })
+        assertEquals(StepStatus.DONE, steps[JoinPhase.awsImageRun.indexOf(JoinPhase.WRITING)].status)
+        assertEquals(StepStatus.CURRENT, steps[JoinPhase.awsImageRun.indexOf(JoinPhase.SNAPSHOT)].status)
+        assertEquals(StepStatus.PENDING, steps[JoinPhase.awsImageRun.indexOf(JoinPhase.REGISTER)].status)
+        assertEquals(JoinPhase.REGISTER, JoinPhase.of("register"))
+    }
 }

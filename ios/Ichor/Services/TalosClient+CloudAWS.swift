@@ -37,4 +37,21 @@ extension TalosClient {
             IchorgoStartAWSCreate(config, context, credential, specJSON, bridge)
         }
     }
+
+    /// The cost line of an AMI run. Creates nothing.
+    static func awsImageEstimate(credential: String, arch: String, region: String) async throws -> AWSImageCost {
+        try await json { IchorgoAWSImageEstimate(credential, arch, region, $0) }
+    }
+
+    /// Makes a Talos AMI with a throwaway instance (StartAWSImage): `done`'s address is the result
+    /// JSON. `stop` terminates the helper and deletes an unfinished snapshot or AMI, and so only
+    /// `stop` stops it, as above.
+    func startAWSImage(
+        _ spec: AWSImageSpec, credential: String
+    ) -> (events: AsyncStream<JoinEvent>, stop: @Sendable () -> Void) {
+        let specJSON = (try? JSONEncoder().encode(spec)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+        return hetznerRun { [config, context] bridge in
+            IchorgoStartAWSImage(config, context, credential, specJSON, bridge)
+        }
+    }
 }

@@ -100,6 +100,43 @@ data class AWSCreateSpec(
     val labelsJson: String = "",
 )
 
+/** StartAWSImage's specJSON. The image's URL comes from the template, never from here. */
+@Serializable
+data class AWSImageSpec(
+    val templateNode: String = "",
+    val arch: String,
+    val region: String,
+    val subnetId: String,
+    /** "" for the VPC's default group. */
+    val securityGroupId: String = "",
+    /** "" for the core's default (t3.small or t4g.small). */
+    val instanceType: String = "",
+    /** "" for talos-<version>-aws-<arch>-<schematic12>. */
+    val name: String = "",
+)
+
+/** What a finished AMI run reports. */
+@Serializable
+data class AWSImageResult(
+    val imageId: String = "",
+    val snapshotId: String = "",
+    val name: String = "",
+    val arch: String = "",
+    val talosVersion: String = "",
+    val schematic: String = "",
+    val sizeGB: Int = 0,
+)
+
+/** The cost line of an AMI run; prices before tax, in [currency], "" when the Price List does not give them. */
+@Serializable
+data class AWSImageCost(
+    val instanceType: String = "",
+    val hourly: String = "",
+    val currency: String = "",
+    val snapshotMonthlyPerGB: String = "",
+    val minutes: Int = 0,
+)
+
 /** The architectures the instance types run, amd64 first. */
 fun AWSOptions.arches(): List<String> = types.map { it.arch }.distinct().sortedBy { if (it == "amd64") "" else it }
 
@@ -112,3 +149,6 @@ fun AWSOptions.imagesFor(arch: String): List<AWSImage> =
 
 /** The security groups of [vpcId], the subnet's VPC: EC2 refuses the others. */
 fun AWSOptions.securityGroupsIn(vpcId: String): List<AWSSecurityGroup> = securityGroups.filter { it.vpcId == vpcId }
+
+/** The subnets a helper instance can reach the Image Factory from: those assigning a public IP first. */
+fun AWSOptions.helperSubnets(): List<AWSSubnet> = subnets.sortedBy { !it.public }

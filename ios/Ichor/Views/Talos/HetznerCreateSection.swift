@@ -74,7 +74,8 @@ struct HetznerCreateSection: View {
                 }
             }
             if job.request?.snapshot != nil {
-                HetznerSnapshotRunSections { made in
+                ImageRunSections { outcome in
+                    guard case .snapshotMade(let made)? = outcome else { return }
                     Task { await snapshotClosed(made) }
                 }
             }
@@ -210,7 +211,7 @@ struct HetznerCreateSection: View {
                     path.append(.omniAllocate)
                 }
                 Button("Close") { job.clear() }
-            case .snapshotMade?:
+            case .snapshotMade?, .amiMade?:
                 // Not this section's run: a snapshot run has its own (HetznerSnapshotRunSections).
                 Button("Close") { job.clear() }
             case .failed(let error)?:

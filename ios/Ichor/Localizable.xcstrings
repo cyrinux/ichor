@@ -1070,18 +1070,245 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "制作 Talos AMI" } }
       }
     },
-    "Coming next: an AMI of the cluster's image, made from the phone." : {
+    "No Talos AMI of this cluster's image for %@ in %@ yet: Ichor can make one." : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Demnächst: ein AMI aus dem Image des Clusters, vom Telefon aus erstellt." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Próximamente: una AMI de la imagen del clúster, creada desde el teléfono." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Bientôt : une AMI de l'image du cluster, créée depuis le téléphone." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "In arrivo: un'AMI dell'immagine del cluster, creata dal telefono." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "近日対応:クラスターのイメージの AMI をスマートフォンから作成。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Em breve: uma AMI da imagem do cluster, criada pelo telefone." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Скоро: AMI из образа кластера, созданный с телефона." } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Незабаром: AMI з образу кластера, створений з телефона." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "即将推出:在手机上用集群的镜像制作 AMI。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Talos AMI of this cluster's image for %1$@ in %2$@ yet: Ichor can make one." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch kein Talos-AMI aus dem Image dieses Clusters für %1$@ in %2$@: Ichor kann eines erstellen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aún no hay una AMI de Talos con la imagen de este clúster para %1$@ en %2$@: Ichor puede crear una." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pas encore d'AMI Talos de l'image de ce cluster pour %1$@ dans %2$@ : Ichor peut en créer une." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ancora nessuna AMI di Talos dell'immagine di questo cluster per %1$@ in %2$@: Ichor può crearne una." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ には、このクラスターのイメージの %1$@ 用 Talos AMI がまだありません。Ichor で作成できます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ainda não há AMI do Talos com a imagem deste cluster para %1$@ em %2$@: o Ichor pode criar uma." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Для %1$@ в %2$@ ещё нет AMI Talos из образа этого кластера: Ichor может его создать." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Для %1$@ у %2$@ ще немає AMI Talos з образу цього кластера: Ichor може його створити." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ 中还没有此集群镜像的 %1$@ Talos AMI:Ichor 可以制作一个。" } }
+      }
+    },
+    "Make another Talos AMI" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein weiteres Talos-AMI erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear otra AMI de Talos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer une autre AMI Talos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea un'altra AMI di Talos" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "別の Talos AMI を作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar outra AMI do Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать ещё один AMI Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити ще один AMI Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "再制作一个 Talos AMI" } }
+      }
+    },
+    "Ichor starts a throwaway Amazon Linux instance that writes this cluster's Talos image to an extra volume, snapshots the volume and registers the AMI, then terminates the instance. Nothing of the cluster is touched. It takes about ten minutes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor startet eine Wegwerf-Instanz mit Amazon Linux, die das Talos-Image dieses Clusters auf ein zusätzliches Volume schreibt, erstellt einen Snapshot des Volumes, registriert das AMI und beendet dann die Instanz. Am Cluster wird nichts verändert. Es dauert etwa zehn Minuten." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor inicia una instancia desechable de Amazon Linux que escribe la imagen de Talos de este clúster en un volumen adicional, crea una instantánea del volumen y registra la AMI, y luego termina la instancia. No se toca nada del clúster. Tarda unos diez minutos." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor démarre une instance Amazon Linux jetable qui écrit l'image Talos de ce cluster sur un volume supplémentaire, prend un instantané du volume et enregistre l'AMI, puis résilie l'instance. Rien du cluster n'est touché. Cela prend une dizaine de minutes." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor avvia un'istanza Amazon Linux usa e getta che scrive l'immagine Talos di questo cluster su un volume aggiuntivo, crea uno snapshot del volume e registra l'AMI, poi termina l'istanza. Il cluster non viene toccato. Ci vogliono circa dieci minuti." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor は使い捨ての Amazon Linux インスタンスを起動し、このクラスターの Talos イメージを追加ボリュームに書き込み、そのボリュームのスナップショットを取って AMI を登録してから、インスタンスを終了します。クラスターには一切触れません。約 10 分かかります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor inicia uma instância descartável do Amazon Linux que grava a imagem do Talos deste cluster em um volume extra, tira um snapshot do volume e registra a AMI, depois encerra a instância. Nada do cluster é alterado. Leva cerca de dez minutos." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor запускает одноразовый инстанс Amazon Linux, который записывает образ Talos этого кластера на дополнительный том, делает снимок тома и регистрирует AMI, затем завершает инстанс. Кластер не затрагивается. Это занимает около десяти минут." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor запускає одноразовий інстанс Amazon Linux, який записує образ Talos цього кластера на додатковий том, робить знімок тому й реєструє AMI, потім завершує інстанс. Кластер не зачіпається. Це триває близько десяти хвилин." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 会启动一个一次性的 Amazon Linux 实例，把此集群的 Talos 镜像写入一个额外的卷，为该卷制作快照并注册 AMI，然后终止该实例。不会触碰集群的任何部分。大约需要十分钟。" } }
+      }
+    },
+    "Subnet of the throwaway instance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Subnetz der Wegwerf-Instanz" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Subred de la instancia desechable" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sous-réseau de l'instance jetable" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Subnet dell'istanza usa e getta" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "使い捨てインスタンスのサブネット" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sub-rede da instância descartável" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подсеть одноразового инстанса" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Підмережа одноразового інстансу" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "一次性实例的子网" } }
+      }
+    },
+    "It downloads the image from the Image Factory: pick a subnet that assigns a public IP." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sie lädt das Image von der Image Factory herunter: Wähle ein Subnetz, das eine öffentliche IP vergibt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Descarga la imagen de la Image Factory: elige una subred que asigne una IP pública." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Elle télécharge l'image depuis l'Image Factory : choisissez un sous-réseau qui attribue une IP publique." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scarica l'immagine dalla Image Factory: scegli un subnet che assegna un IP pubblico." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Image Factory からイメージをダウンロードします。パブリック IP を割り当てるサブネットを選んでください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ela baixa a imagem da Image Factory: escolha uma sub-rede que atribua um IP público." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Он скачивает образ из Image Factory: выберите подсеть, которая назначает публичный IP." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Він завантажує образ з Image Factory: виберіть підмережу, яка призначає публічну IP." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "它会从 Image Factory 下载镜像:请选择会分配公网 IP 的子网。" } }
+      }
+    },
+    "Security group of the throwaway instance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sicherheitsgruppe der Wegwerf-Instanz" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Grupo de seguridad de la instancia desechable" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Groupe de sécurité de l'instance jetable" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Gruppo di sicurezza dell'istanza usa e getta" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "使い捨てインスタンスのセキュリティグループ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Grupo de segurança da instância descartável" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Группа безопасности одноразового инстанса" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Група безпеки одноразового інстансу" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "一次性实例的安全组" } }
+      }
+    },
+    "The VPC's default group" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Standardgruppe der VPC" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El grupo predeterminado de la VPC" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le groupe par défaut du VPC" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il gruppo predefinito del VPC" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "VPC のデフォルトグループ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O grupo padrão da VPC" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Группа VPC по умолчанию" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Типова група VPC" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "VPC 的默认安全组" } }
+      }
+    },
+    "About %lld minutes of %@ (%@/h), then %@ per GB per month for the snapshot until you delete it at AWS, before tax" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About %1$lld minutes of %2$@ (%3$@/h), then %4$@ per GB per month for the snapshot until you delete it at AWS, before tax" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Etwa %1$lld Minuten %2$@ (%3$@/h), danach %4$@ pro GB und Monat für den Snapshot, bis du ihn bei AWS löschst, vor Steuern" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Unos %1$lld minutos de %2$@ (%3$@/h), y luego %4$@ por GB al mes por la instantánea hasta que la borres en AWS, sin impuestos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Environ %1$lld minutes de %2$@ (%3$@/h), puis %4$@ par Go par mois pour l'instantané jusqu'à ce que vous le supprimiez chez AWS, hors taxes" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Circa %1$lld minuti di %2$@ (%3$@/h), poi %4$@ per GB al mese per lo snapshot finché non lo elimini su AWS, tasse escluse" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ を約 %1$lld 分 (%3$@/h)、その後 AWS で削除するまでスナップショットに 1 GB あたり月 %4$@ (税抜)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cerca de %1$lld minutos de %2$@ (%3$@/h), depois %4$@ por GB por mês pelo snapshot até você excluí-lo na AWS, sem impostos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Около %1$lld минут %2$@ (%3$@/ч), затем %4$@ за ГБ в месяц за снимок, пока вы не удалите его в AWS, без налогов" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Близько %1$lld хвилин %2$@ (%3$@/год), потім %4$@ за ГБ на місяць за знімок, доки ви не видалите його в AWS, без податків" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "约 %1$lld 分钟的 %2$@(%3$@/小时),之后快照每 GB 每月 %4$@,直到你在 AWS 删除它(税前)" } }
+      }
+    },
+    "About %lld minutes of %@, then snapshot storage per GB per month until you delete it at AWS. Prices unavailable: see AWS's EC2 and EBS pricing." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About %1$lld minutes of %2$@, then snapshot storage per GB per month until you delete it at AWS. Prices unavailable: see AWS's EC2 and EBS pricing." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Etwa %1$lld Minuten %2$@, danach Snapshot-Speicher pro GB und Monat, bis du ihn bei AWS löschst. Preise nicht verfügbar: siehe die EC2- und EBS-Preise von AWS." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Unos %1$lld minutos de %2$@, y luego el almacenamiento de la instantánea por GB al mes hasta que la borres en AWS. Precios no disponibles: consulta los precios de EC2 y EBS de AWS." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Environ %1$lld minutes de %2$@, puis le stockage de l'instantané par Go par mois jusqu'à ce que vous le supprimiez chez AWS. Prix indisponibles : voir les tarifs EC2 et EBS d'AWS." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Circa %1$lld minuti di %2$@, poi l'archiviazione dello snapshot per GB al mese finché non lo elimini su AWS. Prezzi non disponibili: vedi i prezzi EC2 ed EBS di AWS." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ を約 %1$lld 分、その後 AWS で削除するまでスナップショットの保存料 (1 GB あたり月額)。料金を取得できません。AWS の EC2 と EBS の料金を確認してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cerca de %1$lld minutos de %2$@, depois o armazenamento do snapshot por GB por mês até você excluí-lo na AWS. Preços indisponíveis: veja os preços de EC2 e EBS da AWS." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Около %1$lld минут %2$@, затем хранение снимка за ГБ в месяц, пока вы не удалите его в AWS. Цены недоступны: см. цены EC2 и EBS на сайте AWS." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Близько %1$lld хвилин %2$@, потім зберігання знімка за ГБ на місяць, доки ви не видалите його в AWS. Ціни недоступні: див. ціни EC2 та EBS на сайті AWS." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "约 %1$lld 分钟的 %2$@,之后快照按每 GB 每月计费，直到你在 AWS 删除它。价格不可用:请查看 AWS 的 EC2 和 EBS 价格。" } }
+      }
+    },
+    "Make the AMI" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "AMI erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear la AMI" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer l'AMI" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea l'AMI" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AMI を作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar a AMI" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать AMI" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити AMI" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "制作 AMI" } }
+      }
+    },
+    "Start the throwaway instance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wegwerf-Instanz starten" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar la instancia desechable" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Démarrer l'instance jetable" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvia l'istanza usa e getta" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "使い捨てインスタンスを起動" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar a instância descartável" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запустить одноразовый инстанс" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Запустити одноразовий інстанс" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启动一次性实例" } }
+      }
+    },
+    "Register the AMI" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "AMI registrieren" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Registrar la AMI" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Enregistrer l'AMI" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Registra l'AMI" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AMI を登録" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Registrar a AMI" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Зарегистрировать AMI" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зареєструвати AMI" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "注册 AMI" } }
+      }
+    },
+    "Terminate the throwaway instance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wegwerf-Instanz beenden" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Terminar la instancia desechable" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Résilier l'instance jetable" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Termina l'istanza usa e getta" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "使い捨てインスタンスを終了" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Encerrar a instância descartável" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Завершить одноразовый инстанс" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Завершити одноразовий інстанс" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "终止一次性实例" } }
+      }
+    },
+    "Stopping terminates the throwaway instance." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Beim Stoppen wird die Wegwerf-Instanz beendet." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detener termina la instancia desechable." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'arrêt résilie l'instance jetable." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Fermare termina l'istanza usa e getta." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "停止すると使い捨てインスタンスが終了します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Parar encerra a instância descartável." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Остановка завершает одноразовый инстанс." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зупинка завершує одноразовий інстанс." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止会终止一次性实例。" } }
+      }
+    },
+    "The run stops. The throwaway instance is terminated, and an unfinished snapshot or AMI is deleted." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Lauf stoppt. Die Wegwerf-Instanz wird beendet, ein unfertiger Snapshot oder ein unfertiges AMI wird gelöscht." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La ejecución se detiene. La instancia desechable se termina y se borra una instantánea o AMI sin terminar." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'exécution s'arrête. L'instance jetable est résiliée, et un instantané ou une AMI inachevés sont supprimés." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'esecuzione si ferma. L'istanza usa e getta viene terminata e uno snapshot o un'AMI incompleti vengono eliminati." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "実行を停止します。使い捨てインスタンスは終了し、未完成のスナップショットや AMI は削除されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A execução para. A instância descartável é encerrada, e um snapshot ou AMI inacabado é excluído." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запуск останавливается. Одноразовый инстанс завершается, незавершённый снимок или AMI удаляется." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Запуск зупиняється. Одноразовий інстанс завершується, незавершений знімок або AMI видаляється." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "运行会停止。一次性实例会被终止，未完成的快照或 AMI 会被删除。" } }
+      }
+    },
+    "AMI %@ is ready: it is picked for the new node." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "AMI %@ ist bereit: Es ist für den neuen Node ausgewählt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La AMI %@ está lista: está elegida para el nuevo nodo." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'AMI %@ est prête : elle est choisie pour le nouveau nœud." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'AMI %@ è pronta: è scelta per il nuovo nodo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AMI %@ の準備ができました。新しいノードに選択されています。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A AMI %@ está pronta: ela foi escolhida para o novo nó." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "AMI %@ готов: он выбран для нового узла." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "AMI %@ готовий: його вибрано для нового вузла." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "AMI %@ 已就绪:已为新节点选中。" } }
+      }
+    },
+    "Making a Talos AMI" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Talos-AMI wird erstellt" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Creando una AMI de Talos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Création d'une AMI Talos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Creazione di un'AMI di Talos" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos AMI を作成中" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criando uma AMI do Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создание AMI Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створення AMI Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在制作 Talos AMI" } }
       }
     },
     "Subnet" : {
