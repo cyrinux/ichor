@@ -169,11 +169,13 @@ fun CloudUserDataCard(
             )
         }
     }
+    // The labels are signed into Omni's join token only: plain Talos sends none.
+    val labels = if (omni) omniLabelsJson else ""
     when (create) {
-        CloudProvider.HETZNER -> HetznerCreateCard(form.takeUnless { omni }, demo, onAllocate)
-        CloudProvider.OVHCLOUD -> OVHCreateCard(form.takeUnless { omni }, demo, onAllocate)
-        CloudProvider.AWS -> AWSCreateCard(form.takeUnless { omni }, demo, onAllocate)
-        CloudProvider.AZURE -> AzureCreateCard(form.takeUnless { omni }, demo, onAllocate)
+        CloudProvider.HETZNER -> HetznerCreateCard(form.takeUnless { omni }, labels, demo, onAllocate)
+        CloudProvider.OVHCLOUD -> OVHCreateCard(form.takeUnless { omni }, labels, demo, onAllocate)
+        CloudProvider.AWS -> AWSCreateCard(form.takeUnless { omni }, labels, demo, onAllocate)
+        CloudProvider.AZURE -> AzureCreateCard(form.takeUnless { omni }, labels, demo, onAllocate)
         else -> Unit
     }
 }

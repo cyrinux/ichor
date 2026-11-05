@@ -44,6 +44,7 @@ type awsCreateSpec struct {
 	TemplateNode      string   `json:"templateNode"`
 	InstallDisk       string   `json:"installDisk"`
 	ExtraEdits        string   `json:"extraEditsJSON"`
+	LabelsJSON        string   `json:"labelsJson"`
 }
 
 // awsInstance is the part of an instance the run reads.
@@ -75,7 +76,7 @@ func (a awsInstances) all() []awsInstance {
 // follows it: creating → starting → (plain Talos) rebooting → booted → joining → registering →
 // done, or (Omni) omni → done. specJSON: {"region","instanceType","imageId","subnetId",
 // "securityGroupIds","associatePublicIp","keyName","hostname","role","templateNode",
-// "installDisk","extraEditsJSON"} (region "" for the keys'). credJSON: as AWSTest's. Refused
+// "installDisk","extraEditsJSON","labelsJson"} (region "" for the keys'). credJSON: as AWSTest's. Refused
 // before any write: keys that may not run the instance (a RunInstances dry run with every
 // parameter), an AMI of another architecture than the type, security groups of another VPC than
 // the subnet, user data over 16 KB. The instance carries the tags Name, ichor-run and
@@ -100,12 +101,12 @@ func StartAWSCreate(configYAML, contextName, credJSON, specJSON string, listener
 		specErr = errors.New("invalid instance request")
 	}
 
+	req, specErr := cloudJoinRequest(spec.TemplateNode, spec.Role, spec.Hostname, spec.InstallDisk, spec.LabelsJSON, specErr)
+
 	h := &awsCreate{
 		join: &nodeJoin{
 			config: configYAML, context: contextName, listener: listener, interval: upgradePollInterval,
-			req: joinConfigRequest{
-				template: spec.TemplateNode, role: spec.Role, hostname: spec.Hostname, installDisk: spec.InstallDisk,
-			},
+			req:       req,
 			editsJSON: spec.ExtraEdits,
 		},
 		spec: spec, specErr: specErr, credJSON: credJSON, poll: awsPollInterval,

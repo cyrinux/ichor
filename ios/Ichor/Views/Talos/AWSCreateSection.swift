@@ -12,6 +12,8 @@ struct AWSCreateSection: View {
     let role: String
     let hostname: String
     let disk: String
+    /// On Omni, the labels to sign into the join token.
+    let labels: String
     @Binding var path: [Route]
 
     @Environment(AppModel.self) private var model
@@ -33,13 +35,17 @@ struct AWSCreateSection: View {
     private var job: JoinJob { .shared }
 
     // Explicit: the private @State makes the memberwise init private.
-    init(omni: Bool, template: String, role: String, hostname: String, disk: String, path: Binding<[Route]>) {
+    init(
+        omni: Bool, template: String, role: String, hostname: String, disk: String, labels: String,
+        path: Binding<[Route]>
+    ) {
         _path = path
         self.omni = omni
         self.template = template
         self.role = role
         self.hostname = hostname
         self.disk = disk
+        self.labels = labels
     }
 
     private var credential: String {
@@ -257,7 +263,7 @@ struct AWSCreateSection: View {
                                 region: value.region, instanceType: type.name, imageId: image.id, subnetId: subnet.id,
                                 securityGroupIds: groups, associatePublicIp: publicIp, hostname: name,
                                 role: omni ? "" : role, templateNode: omni ? "" : template,
-                                installDisk: omni ? "" : disk)
+                                installDisk: omni ? "" : disk, labelsJson: omni ? labels : "")
                             Task { await create(spec) }
                         }
                     }

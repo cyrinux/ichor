@@ -34,6 +34,7 @@ type ovhCreateSpec struct {
 	TemplateNode string `json:"templateNode"`
 	InstallDisk  string `json:"installDisk"`
 	ExtraEdits   string `json:"extraEditsJSON"`
+	LabelsJSON   string `json:"labelsJson"`
 	SSHKeyID     string `json:"sshKeyId"`
 }
 
@@ -62,7 +63,7 @@ func (i ovhInstance) address() string {
 // StartOVHCreate creates an OVHcloud Public Cloud instance from an image of the project with the
 // new node's user data, and follows it: creating → starting → (plain Talos) rebooting → booted →
 // joining → registering → done, or (Omni) omni → done. specJSON: {"region","flavorId","imageId",
-// "hostname","role","templateNode","installDisk","extraEditsJSON","sshKeyId"}. credJSON: as
+// "hostname","role","templateNode","installDisk","extraEditsJSON","sshKeyId","labelsJson"}. credJSON: as
 // OVHTest's (an account that may not create is refused, as is user data over 48 KiB, before any
 // write). OnDone gets the node's address to add to the context ("" on Omni, which keeps its own
 // list). A failed or cancelled run deletes the one instance it created (see cloudCreateRun for the
@@ -84,12 +85,12 @@ func StartOVHCreate(configYAML, contextName, credJSON, specJSON string, listener
 		specErr = errors.New("invalid instance request")
 	}
 
+	req, specErr := cloudJoinRequest(spec.TemplateNode, spec.Role, spec.Hostname, spec.InstallDisk, spec.LabelsJSON, specErr)
+
 	h := &ovhCreate{
 		join: &nodeJoin{
 			config: configYAML, context: contextName, listener: listener, interval: upgradePollInterval,
-			req: joinConfigRequest{
-				template: spec.TemplateNode, role: spec.Role, hostname: spec.Hostname, installDisk: spec.InstallDisk,
-			},
+			req:       req,
 			editsJSON: spec.ExtraEdits,
 		},
 		spec: spec, specErr: specErr, credJSON: credJSON, poll: ovhPollInterval,

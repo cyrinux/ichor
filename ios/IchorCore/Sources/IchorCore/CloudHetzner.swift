@@ -182,10 +182,12 @@ public struct HetznerCreateSpec: Encodable, Equatable, Sendable {
     public let role: String
     public let templateNode: String
     public let installDisk: String
+    /// On Omni, the labels to sign into the join token (`omniLabelsJSON`); "" for none.
+    public let labelsJson: String
 
     public init(
         serverType: String, location: String, snapshotId: Int64, hostname: String, role: String = "",
-        templateNode: String = "", installDisk: String = ""
+        templateNode: String = "", installDisk: String = "", labelsJson: String = ""
     ) {
         self.serverType = serverType
         self.location = location
@@ -194,5 +196,6 @@ public struct HetznerCreateSpec: Encodable, Equatable, Sendable {
         self.role = role
         self.templateNode = templateNode
         self.installDisk = installDisk
+        self.labelsJson = labelsJson
     }
 }

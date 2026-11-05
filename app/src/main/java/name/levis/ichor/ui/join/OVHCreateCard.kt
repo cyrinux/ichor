@@ -133,6 +133,8 @@ class OVHCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
 @Composable
 fun OVHCreateCard(
     form: JoinConfigForm?,
+    /** On Omni, the labels to sign into the join token; "" on plain Talos. */
+    labelsJson: String,
     demo: Boolean,
     onAllocate: (() -> Unit)? = null,
     vm: OVHCreateViewModel = viewModel(key = "ovh-create", factory = factory { OVHCreateViewModel(app.nodeLifecycleRepository, app.cloudProviderStore) }),
@@ -170,7 +172,7 @@ fun OVHCreateCard(
                 null -> Unit
                 UiState.Loading -> LoadingBox()
                 is UiState.Failed -> ErrorBox(state.message, vm::reload)
-                is UiState.Loaded -> InstanceForm(state.data, form, busy = current?.running == true) { request ->
+                is UiState.Loaded -> InstanceForm(state.data, form, labelsJson, busy = current?.running == true) { request ->
                     // The account is read only now, and goes to the run alone.
                     scope.launch { app.joinManager.start(request, if (account.isBlank()) "" else vm.credential(account)) }
                 }
@@ -183,7 +185,7 @@ fun OVHCreateCard(
 /** The pickers, the cost line and the confirmed Create. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun InstanceForm(options: OVHOptions, form: JoinConfigForm?, busy: Boolean, onCreate: (JoinRequest) -> Unit) {
+private fun InstanceForm(options: OVHOptions, form: JoinConfigForm?, labelsJson: String, busy: Boolean, onCreate: (JoinRequest) -> Unit) {
     val colors = LocalStatusColors.current
     val authenticated = rememberAuthenticated()
     var region by rememberSaveable { mutableStateOf("") }
@@ -247,7 +249,7 @@ private fun InstanceForm(options: OVHOptions, form: JoinConfigForm?, busy: Boole
                 confirm = false
                 val spec = OVHCreateSpec(
                     region = region, flavorId = flavor.id, imageId = image.id, hostname = hostname,
-                    role = form?.role.orEmpty(), templateNode = form?.template.orEmpty(), installDisk = form?.disk.orEmpty(),
+                    role = form?.role.orEmpty(), templateNode = form?.template.orEmpty(), installDisk = form?.disk.orEmpty(), labelsJson = labelsJson,
                 )
                 authenticated(hostname) {
                     onCreate(

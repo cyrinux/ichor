@@ -96,6 +96,8 @@ data class AWSCreateSpec(
     val role: String = "",
     val templateNode: String = "",
     val installDisk: String = "",
+    /** On Omni, the labels to sign into the join token (omniLabelsJson); "" for none. */
+    val labelsJson: String = "",
 )
 
 /** The architectures the instance types run, amd64 first. */

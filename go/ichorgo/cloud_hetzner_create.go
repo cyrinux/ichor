@@ -38,6 +38,7 @@ type hetznerCreateSpec struct {
 	TemplateNode string  `json:"templateNode"`
 	InstallDisk  string  `json:"installDisk"`
 	ExtraEdits   string  `json:"extraEditsJSON"`
+	LabelsJSON   string  `json:"labelsJson"`
 	SSHKeyIDs    []int64 `json:"sshKeyIds"`
 }
 
@@ -81,7 +82,7 @@ type hetznerAction struct {
 // StartHetznerCreate creates a Hetzner server from one of the project's snapshots with the new
 // node's user data, and follows it: creating → starting → (plain Talos) rebooting → booted →
 // joining → registering → done, or (Omni) omni → done. specJSON: {"serverType","location",
-// "snapshotId","hostname","role","templateNode","installDisk","extraEditsJSON","sshKeyIds"}.
+// "snapshotId","hostname","role","templateNode","installDisk","extraEditsJSON","sshKeyIds","labelsJson"}.
 // tokenJSON: {"token"}, a Read & Write token (a read-only one is refused, as is a snapshot of
 // another architecture, or user data over 32 KiB, all before any write). OnDone gets the node's
 // address to add to the context ("" on Omni, which keeps its own list). A failed or cancelled
@@ -103,12 +104,12 @@ func StartHetznerCreate(configYAML, contextName, tokenJSON, specJSON string, lis
 		specErr = errors.New("invalid server request")
 	}
 
+	req, specErr := cloudJoinRequest(spec.TemplateNode, spec.Role, spec.Hostname, spec.InstallDisk, spec.LabelsJSON, specErr)
+
 	h := &hetznerCreate{
 		join: &nodeJoin{
 			config: configYAML, context: contextName, listener: listener, interval: upgradePollInterval,
-			req: joinConfigRequest{
-				template: spec.TemplateNode, role: spec.Role, hostname: spec.Hostname, installDisk: spec.InstallDisk,
-			},
+			req:       req,
 			editsJSON: spec.ExtraEdits,
 		},
 		spec: spec, specErr: specErr, tokenJSON: tokenJSON, poll: cloudPollInterval,

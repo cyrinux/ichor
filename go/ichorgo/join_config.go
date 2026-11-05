@@ -31,6 +31,8 @@ var errJoinPrivacy = errors.New("turn privacy mode off to generate a node's conf
 type joinConfigRequest struct {
 	template, role, hostname, installDisk, staticAddress string
 	edits                                                []configEdit
+	// labels are signed into Omni's join token by a cloud create (nil on plain Talos).
+	labels map[string]string
 }
 
 // joinConfigPreview is what JoinNodeConfigPreview returns: no secret in it.

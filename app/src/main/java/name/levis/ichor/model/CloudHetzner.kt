@@ -54,6 +54,8 @@ data class HetznerCreateSpec(
     val role: String = "",
     val templateNode: String = "",
     val installDisk: String = "",
+    /** On Omni, the labels to sign into the join token (omniLabelsJson); "" for none. */
+    val labelsJson: String = "",
 )
 
 /** StartHetznerSnapshot's specJSON. The image's URL comes from the template, never from here. */
