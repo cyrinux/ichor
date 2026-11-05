@@ -203919,6 +203919,48 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Войдите снова" } }
       }
     },
+    "Import the renewed talosconfig" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erneuerte talosconfig importieren" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Importar el talosconfig renovado" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Importer le talosconfig renouvelé" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Importa il talosconfig rinnovato" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新した talosconfig をインポート" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Importar o talosconfig renovado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Импортировать обновлённый talosconfig" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Імпортувати оновлений talosconfig" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导入已续期的 talosconfig" } }
+      }
+    },
+    "Your Omni session may have ended. Signing in again keeps this cluster as it is." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Deine Omni-Sitzung ist möglicherweise abgelaufen. Eine erneute Anmeldung lässt diesen Cluster unverändert." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Es posible que tu sesión de Omni haya terminado. Volver a iniciar sesión deja este clúster como está." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Votre session Omni a peut-être expiré. Se reconnecter laisse ce cluster tel quel." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "La sessione Omni potrebbe essere scaduta. Accedendo di nuovo questo cluster resta com’è." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Omni のセッションが終了した可能性があります。再度サインインしても、このクラスターは変わりません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sua sessão do Omni pode ter terminado. Entrar novamente mantém este cluster como está." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Возможно, ваш сеанс Omni завершился. Повторный вход оставит этот кластер без изменений." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Можливо, ваш сеанс Omni завершився. Повторний вхід залишить цей кластер без змін." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "你的 Omni 会话可能已结束。重新登录不会改变此集群。" } }
+      }
+    },
+    "Import the talosconfig you renewed with talosctl. If it is for the same cluster and CA, choose Replace when the import offers it: the cluster keeps its name, colour, tags and history. The app cannot renew a certificate itself." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Importiere die mit talosctl erneuerte talosconfig. Gehört sie zum selben Cluster und zur selben CA, wähle Ersetzen, wenn der Import es anbietet: Der Cluster behält Name, Farbe, Tags und Verlauf. Die App kann ein Zertifikat nicht selbst erneuern." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Importa el talosconfig que renovaste con talosctl. Si es del mismo clúster y la misma CA, elige Reemplazar cuando la importación lo ofrezca: el clúster conserva su nombre, color, etiquetas e historial. La app no puede renovar un certificado por sí misma." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Importez le talosconfig renouvelé avec talosctl. S’il s’agit du même cluster et de la même CA, choisissez Remplacer quand l’import le propose : le cluster garde son nom, sa couleur, ses tags et son historique. L’application ne peut pas renouveler un certificat elle-même." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Importa il talosconfig rinnovato con talosctl. Se è dello stesso cluster e della stessa CA, scegli Sostituisci quando l’importazione lo propone: il cluster mantiene nome, colore, tag e cronologia. L’app non può rinnovare un certificato da sola." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "talosctl で更新した talosconfig をインポートしてください。同じクラスターと CA のものであれば、インポート時に表示される「置き換え」を選ぶと、クラスターの名前、色、タグ、履歴は保持されます。アプリ自体は証明書を更新できません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Importe o talosconfig renovado com o talosctl. Se for do mesmo cluster e da mesma CA, escolha Substituir quando a importação oferecer: o cluster mantém nome, cor, tags e histórico. O app não pode renovar um certificado sozinho." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Импортируйте talosconfig, обновлённый с помощью talosctl. Если он для того же кластера и CA, выберите «Заменить», когда импорт это предложит: кластер сохранит имя, цвет, теги и историю. Приложение не может само обновить сертификат." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Імпортуйте talosconfig, оновлений за допомогою talosctl. Якщо він для того самого кластера й CA, виберіть Замінити, коли імпорт це запропонує: кластер збереже назву, колір, теги й історію. Застосунок не може сам оновити сертифікат." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请导入用 talosctl 续期的 talosconfig。如果它属于同一集群和同一 CA，请在导入提示时选择替换：集群会保留名称、颜色、标签和历史记录。应用本身无法续期证书。" } }
+      }
+    },
     "%@ needs you to sign in again before its next check." : {
       "localizations" : {
         "fr" : {

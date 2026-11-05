@@ -222,7 +222,8 @@ struct OverviewView: View {
                             outage: outage,
                             endpoints: model.activeSummary?.endpoints ?? [],
                             retry: load,
-                            showNodes: { showNodesAnyway = true }
+                            showNodes: { showNodesAnyway = true },
+                            openImport: { path.append(.importConfig) }
                         )
                         .themedBackground()
                     } else {
@@ -261,7 +262,8 @@ struct OverviewView: View {
                     showsSwitcherTip: tourActive && tourShowsSwitcher,
                     look: look,
                     discovered: discovered.count,
-                    showDiscovered: { showDiscovered = true }
+                    showDiscovered: { showDiscovered = true },
+                    openImport: { path.append(.importConfig) }
                 )
             }
             // The sections as arranged (Customize overview, in the ⋯ menu).
