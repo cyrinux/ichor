@@ -8,6 +8,8 @@
 #   scripts/ios-build.sh test   # core tests + simulator build + demo smoke walk, a stalled
 #                               # test retried once (CI on every push)
 #   scripts/ios-build.sh screenshots  # the demo walk in both appearances (scripts/ios-screenshots.sh next)
+#   scripts/ios-build.sh store-screenshots  # the App Store walk in ten languages on a 6.9" iPhone
+#                               # (scripts/ios-store-screenshots.sh next)
 #   scripts/ios-build.sh ipa    # unsigned Release build packaged as an IPA (default)
 #   scripts/ios-build.sh appstore  # App Store build, signed and uploaded to App Store Connect
 #   scripts/ios-build.sh watch  # the Apple Watch app and complication, unsigned, for the watchOS
@@ -34,7 +36,7 @@ set -euo pipefail
 MODE="${1:-ipa}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 case "$MODE" in
-  test|screenshots|ipa|watch|format) ;;
+  test|screenshots|store-screenshots|ipa|watch|format) ;;
   appstore)
     : "${ICHOR_IOS_TEAM_ID:?ICHOR_IOS_TEAM_ID is not set}"
     : "${ASC_KEY_PATH:?ASC_KEY_PATH is not set (App Store Connect API key, AuthKey_<id>.p8)}"
@@ -42,7 +44,7 @@ case "$MODE" in
     : "${ASC_ISSUER_ID:?ASC_ISSUER_ID is not set}"
     ;;
   *)
-    echo "usage: $0 [test|screenshots|ipa|appstore|watch|format]" >&2
+    echo "usage: $0 [test|screenshots|store-screenshots|ipa|appstore|watch|format]" >&2
     exit 2
     ;;
 esac
@@ -194,6 +196,26 @@ case "$MODE" in
         -only-testing:IchorUITests/DemoScreenshotTests \
         -resultBundlePath "build/screenshots-$appearance.xcresult" test-without-building
     done
+    ;;
+  store-screenshots)
+    # The App Store walk (IchorUITests/StoreScreenshotTests, one test per language) in the dark
+    # appearance, as the Play set: result bundle build/store-screenshots.xcresult, read by
+    # scripts/ios-store-screenshots.sh. On the first "Pro Max" iPhone, the 6.9" class App Store
+    # Connect asks for (the image's models change, so it is picked from simctl); otherwise the
+    # same signing, boot, status bar and retry as `screenshots`.
+    sim=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone.*Pro Max/ { print $2; exit }')
+    [[ -n "$sim" ]] || { echo "no iPhone Pro Max simulator available" >&2; exit 1; }
+    adhoc=(CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER=)
+    xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug -destination "id=$sim" build-for-testing
+    xcrun simctl bootstatus "$sim" -b
+    xcrun simctl ui "$sim" appearance dark
+    xcrun simctl status_bar "$sim" override --time 9:41 --batteryState charged --batteryLevel 100 \
+      --wifiBars 3 --cellularBars 4
+    rm -rf build/store-screenshots.xcresult
+    TEST_RUNNER_ICHOR_STORE_SHOTS=1 xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug \
+      -destination "id=$sim" -parallel-testing-enabled NO -retry-tests-on-failure -test-iterations 2 \
+      -only-testing:IchorUITests/StoreScreenshotTests \
+      -resultBundlePath build/store-screenshots.xcresult test-without-building
     ;;
   ipa)
     xcodebuild "${common[@]}" "${unsigned[@]}" -configuration Release -destination 'generic/platform=iOS' build

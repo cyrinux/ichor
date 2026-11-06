@@ -218,5 +218,12 @@ which is skipped in that run. To retake the whole set on a Mac with Xcode 16 or 
 missing screen. Or run the `screenshots` workflow from the Actions tab, unzip its `screenshots-ios`
 artifact at the root of the repository and commit it.
 
+The App Store's pictures walk the same seven listing screens once per language
+(`ios/IchorUITests/StoreScreenshotTests.swift`, skipped in the other runs) on the first "Pro Max"
+simulator: `scripts/ios-build.sh store-screenshots && scripts/ios-store-screenshots.sh`, or the
+`screenshots` workflow run by hand with its `app_store` input. It writes
+`fastlane/screenshots/ios/` for all ten languages or nothing: a missing screen or a size App
+Store Connect would refuse fails the run. Uploading them is by hand (`fastlane/APP_STORE_CONNECT.md`).
+
 The website shows both platforms' captures behind one Android / iPhone switch, so
 `scripts/site-i18n.py --check` requires every picture a page names (`data-shot`) in both sets.
