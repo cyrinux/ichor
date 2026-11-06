@@ -93,6 +93,27 @@ Description, keywords and promotional text can reuse `fastlane/metadata/android/
 (full and short descriptions); keywords are limited to 100 characters, for example
 `talos,kubernetes,k8s,cluster,etcd,kubectl,sysadmin,devops,homelab,server`.
 
+### Screenshots
+
+App Store Connect requires one iPhone 6.9" set per language (1320×2868, 1290×2796 or
+1260×2736, portrait); the 6.5" set and the iPad 13" set are optional (Apple scales the 6.9" one
+down for the smaller iPhones, and the iPad pictures are a separate task). The repository holds the
+6.9" set, the seven listing screens of the offline demo in the dark appearance, in all ten languages:
+`fastlane/screenshots/ios/<language>/1_overview.png` … `7_upgrade.png`, with App Store Connect's
+language names as folders (`en-US fr-FR es-ES uk de-DE it-IT zh-Hans ja pt-BR ru`).
+
+To retake them:
+
+- on a Mac with Xcode 16 or newer: `scripts/ios-build.sh store-screenshots && scripts/ios-store-screenshots.sh`;
+- or from GitHub: Actions → **Screenshots** → *Run workflow* with **app_store** ticked, then
+  unzip the `app-store-screenshots` artifact at the root of the repository.
+
+Either way the set is written whole or not at all: a missing screen or a size outside the list
+above fails the run. Commit the folders, then upload by hand: in App Store Connect, open the
+version, pick each language in the top-right menu and drag that language's seven files into the
+**iPhone 6.9" Display** section, in their numbered order. fastlane `deliver` is not wired (no
+Deliverfile and no App Store metadata in the repository), so nothing uploads them on a release.
+
 ### Age rating
 
 Answer **None** / **No** to every content question (violence, sexuality, profanity, drugs,

@@ -8,12 +8,20 @@ name: Screenshots
 # simulator and come back as `screenshots-ios`: unzip it at the root too and commit
 # docs/screenshots/ios/. Run with the `store` input it takes the Play listing's pictures in all ten
 # languages instead (half an hour of emulator, so never on a pull request): the `store-screenshots`
-# artifact, unzipped the same way, then scripts/play-assets.sh.
+# artifact, unzipped the same way, then scripts/play-assets.sh. Run with the `app_store` input it
+# takes the App Store's iPhone pictures in all ten languages on a 6.9" simulator
+# (ios/IchorUITests/StoreScreenshotTests.swift, scripts/ios-store-screenshots.sh): the
+# `app-store-screenshots` artifact, unzipped at the root, fills fastlane/screenshots/ios/, uploaded
+# by hand (fastlane/APP_STORE_CONNECT.md).
 on:
   workflow_dispatch:
     inputs:
       store:
         description: The Play listing's pictures in all ten languages, not the website's
+        type: boolean
+        default: false
+      app_store:
+        description: The App Store's iPhone pictures in all ten languages, not the website's
         type: boolean
         default: false
   pull_request:
@@ -27,6 +35,7 @@ on:
       - ios/IchorUITests/**
       - ios/Ichor/App/UITestLaunch.swift
       - scripts/ios-screenshots.sh
+      - scripts/ios-store-screenshots.sh
 
 permissions:
   contents: read
@@ -38,7 +47,7 @@ concurrency:
 jobs:
   capture:
     name: Capture the demo (emulator)
-    if: ${{ !inputs.store }}
+    if: ${{ !inputs.store && !inputs.app_store }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -138,7 +147,7 @@ jobs:
 
   capture-ios:
     name: Capture the demo (simulator)
-    if: ${{ !inputs.store }}
+    if: ${{ !inputs.store && !inputs.app_store }}
     runs-on: macos-26
     timeout-minutes: 60
     steps:
@@ -179,5 +188,46 @@ jobs:
           path: |
             ios/build/screenshots-dark.xcresult
             ios/build/screenshots-light.xcresult
+          retention-days: 7
+          if-no-files-found: ignore
+
+  store-ios:
+    name: Capture the App Store listing in every language (simulator)
+    if: ${{ inputs.app_store }}
+    runs-on: macos-26
+    # Ten walks of the seven screens, each with the graphs' 150 s: about an hour of simulator.
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # scripts/version.sh derives the version from tags and history
+          persist-credentials: false
+
+      - uses: ./.github/actions/ios-toolchain
+
+      # Restored, never saved here: ios.yml's test job on main is the only writer of the caches.
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/llama-xcframework-*
+          key: llama-xcframework-${{ runner.os }}-${{ hashFiles('native/llama-cpp.env') }}
+
+      - name: Walk the demo in every language on a 6.9" simulator
+        env:
+          ICHOR_SKIP_TESTS: "1" # ios.yml's test job runs the core tests
+        run: scripts/ios-build.sh store-screenshots
+
+      - name: Write and check the images
+        run: scripts/ios-store-screenshots.sh --out "$RUNNER_TEMP/shots"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: app-store-screenshots
+          path: ${{ runner.temp }}/shots
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: app-store-screenshots-report
+          path: ios/build/store-screenshots.xcresult
           retention-days: 7
           if-no-files-found: ignore
