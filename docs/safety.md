@@ -316,3 +316,34 @@ Part of the [Ichor documentation](../README.md#documentation).
   The widget and the Wear OS tile show counts only, no hostnames.
 - **Kubeconfig export:** the kubeconfig is written only to the file you choose. Use it with
   kubectl or any Kubernetes client, then delete the file.
+
+## Reaching the cluster: VPN, firewall and ACLs
+
+Ichor talks straight to the Talos API and the Kubernetes API; it has no relay. How those APIs
+are exposed is up to you and outside the app, but a phone moves between networks, so we
+recommend never putting them on the open internet:
+
+- **A VPN:** reach the cluster over a private network only.
+  - [WireGuard](https://www.wireguard.com/) or [OpenVPN](https://openvpn.net/): a classic
+    VPN server in front of the cluster network.
+  - [Tailscale](https://tailscale.com/), or a self-hosted alternative:
+    [Headscale](https://github.com/juanfont/headscale) (a Tailscale control server you run,
+    with the Tailscale apps), [NetBird](https://netbird.io/) or
+    [ZeroTier](https://www.zerotier.com/). A mesh VPN needs no open port on the cluster side.
+  - **In the app:** set the cluster to **VPN only** (cluster switcher → the cluster's menu).
+    Without a VPN connected, the app does not try the cluster, and background checks wait.
+- **A firewall:** let only the VPN (or your admin networks) reach the API ports:
+  - `50000/tcp`: the Talos API (apid), what Ichor uses for Talos clusters;
+  - `50001/tcp`: trustd, needed between nodes only, never from a phone;
+  - `6443/tcp`: the Kubernetes API.
+
+  On Talos, the [ingress firewall](https://www.talos.dev/latest/talos-guides/network/ingress-firewall/)
+  (`NetworkDefaultActionConfig` with `block`, plus `NetworkRuleConfig` rules) does this on the
+  nodes themselves; at a cloud provider, use its security groups or firewall too. Keep the
+  ports the cluster itself needs open between nodes (etcd, kubelet, the CNI, KubeSpan).
+- **ACLs:** in the VPN, allow only the people and devices that need it, and only to those
+  ports: Tailscale and Headscale ACLs or grants, NetBird access policies, ZeroTier flow rules,
+  or firewall rules per VPN client.
+- **Least privilege:** give the phone a talosconfig with the smallest role that does the job
+  (`os:reader` to watch, see [Roles](roles.md)), and a Kubernetes user bound by RBAC to what it
+  needs. A lost phone then costs less, and its certificate can be left to expire.

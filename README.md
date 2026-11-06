@@ -98,7 +98,7 @@ tag and compared in CI (`just verify-release`, see
 | [Adding clusters](docs/clusters.md) | Talosconfig for the phone, kubeconfig and cloud clusters, Omni, several clusters, share links, backup and restore |
 | [Kubernetes screens](docs/kubernetes.md) | Checkup, CronJobs, capacity, policies, autoscaling, virtual machines, Crossplane, Tailscale, Cluster API, image scans, Argo CD icons |
 | [Network](docs/network.md) | Node network tools, packet capture, network test |
-| [Safety](docs/safety.md) | What protects the cluster and the phone |
+| [Safety](docs/safety.md) | What protects the cluster and the phone; VPN, firewall and ACLs for reaching it |
 | [etcd](docs/etcd.md) | Snapshots, recovery, the NOSPACE fix |
 | [Cluster insights](docs/insights.md) | Drift, incident recorder, bottleneck metrics |
 | [AI diagnosis](docs/ai.md) | Optional, off by default, on Talos and kubeconfig clusters |
