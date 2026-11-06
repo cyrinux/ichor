@@ -6268,7 +6268,14 @@
     <string name="gcp_machine_type">机器类型</string>
     <string name="gcp_no_image">此项目中没有适用于 %1$s 的 Talos 镜像:请按 Talos 指南注册一个,或选择其他架构。</string>
     <string name="gcp_make_image">制作 Talos 镜像</string>
-    <string name="gcp_make_image_soon">即将推出:从手机制作集群 schematic 的镜像。</string>
+    <string name="gcp_image_missing">此项目中还没有 %1$s 的 Talos 镜像:Ichor 可以用此集群的镜像制作一个。</string>
+    <string name="gcp_image_need_subnet">请先选择子网：辅助 VM 在其中运行。</string>
+    <string name="gcp_image_intro">Ichor 会启动一台一次性的 Debian VM,把此集群的 Talos 镜像写入一个空的数据磁盘，用该磁盘制作镜像，然后删除 VM 和磁盘。镜像会保留，并带有 Talos 版本和 schematic 标签。不会触碰集群的任何部分。大约需要十分钟。</string>
+    <string name="gcp_image_place">镜像放在项目 %1$s 中。辅助 VM 在 %2$s 的子网 %3$s 中运行。</string>
+    <string name="gcp_image_nat_hint">辅助 VM 没有公网地址：它通过子网的 Cloud NAT 从 Image Factory 下载镜像。</string>
+    <string name="gcp_image_cost">约 %1$d 分钟的 %2$s(%3$s/小时),之后镜像每 GB 每月 %4$s,直到你在 Google Cloud 删除它(税前)</string>
+    <string name="gcp_image_cost_unknown">约 %1$d 分钟的 %2$s,之后镜像存储按每 GB 每月计费，直到你在 Google Cloud 删除它。价格不可用：请参阅 Google Cloud 的 Compute Engine 定价。</string>
+    <string name="gcp_phase_image">用数据磁盘制作镜像</string>
     <string name="gcp_no_subnet">没有网络在 %1$s 中有子网:请选择其他可用区。</string>
     <string name="gcp_public_ip">为其分配公网地址</string>
     <string name="gcp_disk">启动磁盘(GB)</string>

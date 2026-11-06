@@ -119,6 +119,9 @@ enum class JoinPhase(val wire: String) {
         /** A throwaway helper VM whose data disk becomes a Talos image (Azure's managed image). */
         val imageRun = listOf(CREATING, WRITING, SNAPSHOT, CLEANUP, DONE)
 
+        /** A throwaway Compute Engine VM whose data disk becomes a Talos image: no snapshot in between. */
+        val gcpImageRun = listOf(CREATING, WRITING, REGISTER, CLEANUP, DONE)
+
         /** A machine put in a cluster through Omni. */
         val omniAllocateRun = listOf(ALLOCATED, INSTALLING, OMNI_BOOTING, DONE)
     }
@@ -129,9 +132,10 @@ enum class ImageRunKind(val phases: List<JoinPhase>) {
     HETZNER_SNAPSHOT(JoinPhase.snapshotRun),
     AWS_AMI(JoinPhase.awsImageRun),
     AZURE_IMAGE(JoinPhase.imageRun),
+    GCP_IMAGE(JoinPhase.gcpImageRun),
 }
 
-/** An image an image run made (an AMI or an Azure managed image): its id to pick it, its name to say so. */
+/** An image an image run made (an AMI, an Azure managed image, a Compute Engine image): its id to pick it, its name to say so. */
 interface MadeImage {
     val imageId: String
     val name: String

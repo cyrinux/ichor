@@ -1963,20 +1963,6 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "制作 Talos 镜像" } }
       }
     },
-    "Coming next: an image of the cluster's schematic, made from the phone." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Demnächst: ein Image des Schematics des Clusters, vom Telefon aus erstellt." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Próximamente: una imagen del schematic del clúster, creada desde el teléfono." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Bientôt : une image du schematic du cluster, créée depuis le téléphone." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prossimamente: un'immagine dello schematic del cluster, creata dal telefono." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "近日対応: クラスターのスキーマティックのイメージをスマートフォンから作成。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Em breve: uma imagem do schematic do cluster, criada pelo telefone." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Скоро: образ схемы кластера, созданный с телефона." } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Незабаром: образ схеми кластера, створений з телефона." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "即将推出:从手机制作集群 schematic 的镜像。" } }
-      }
-    },
     "No network has a subnet in %@: pick another zone." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2144,6 +2130,121 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать ещё один образ Talos" } },
         "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити ще один образ Talos" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "再制作一个 Talos 镜像" } }
+      }
+    },
+    "No Talos image for %@ in this project yet: Ichor can make one of this cluster's image." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch kein Talos-Image für %@ in diesem Projekt: Ichor kann eines aus dem Image dieses Clusters erstellen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aún no hay una imagen de Talos para %@ en este proyecto: Ichor puede crear una con la imagen de este clúster." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pas encore d'image Talos pour %@ dans ce projet : Ichor peut en créer une de l'image de ce cluster." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ancora nessuna immagine Talos per %@ in questo progetto: Ichor può crearne una dall'immagine di questo cluster." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このプロジェクトには %@ 用の Talos イメージがまだありません。Ichor でこのクラスターのイメージから作成できます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ainda não há imagem do Talos para %@ neste projeto: o Ichor pode criar uma com a imagem deste cluster." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В этом проекте ещё нет образа Talos для %@: Ichor может создать его из образа этого кластера." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "У цьому проєкті ще немає образу Talos для %@: Ichor може створити його з образу цього кластера." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此项目中还没有 %@ 的 Talos 镜像:Ichor 可以用此集群的镜像制作一个。" } }
+      }
+    },
+    "Pick a subnet first: the helper VM runs in it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wähle zuerst ein Subnetz: Die Hilfs-VM läuft darin." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elige primero una subred: la VM auxiliar se ejecuta en ella." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisissez d'abord un sous-réseau : la VM auxiliaire y tourne." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scegli prima una subnet: la VM ausiliaria gira lì." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "先にサブネットを選んでください。補助 VM はそこで動きます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escolha primeiro uma sub-rede: a VM auxiliar roda nela." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сначала выберите подсеть: вспомогательная ВМ работает в ней." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Спершу виберіть підмережу: допоміжна ВМ працює в ній." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请先选择子网：辅助 VM 在其中运行。" } }
+      }
+    },
+    "Ichor starts a throwaway Debian VM that writes this cluster's Talos image to an empty data disk, makes an image from the disk, then deletes the VM and the disk. The image is kept, labelled with the Talos version and schematic. Nothing of the cluster is touched. It takes about ten minutes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor startet eine Wegwerf-VM mit Debian, die das Talos-Image dieses Clusters auf einen leeren Datenträger schreibt, erstellt daraus ein Image und löscht dann die VM und den Datenträger. Das Image bleibt erhalten, mit der Talos-Version und dem Schematic gekennzeichnet. Am Cluster wird nichts verändert. Es dauert etwa zehn Minuten." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor inicia una VM desechable de Debian que escribe la imagen de Talos de este clúster en un disco de datos vacío, crea una imagen a partir del disco y luego borra la VM y el disco. La imagen se conserva, etiquetada con la versión de Talos y el schematic. No se toca nada del clúster. Tarda unos diez minutos." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor démarre une VM Debian jetable qui écrit l'image Talos de ce cluster sur un disque de données vide, crée une image à partir du disque, puis supprime la VM et le disque. L'image est conservée, étiquetée avec la version de Talos et le schematic. Rien du cluster n'est touché. Cela prend une dizaine de minutes." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor avvia una VM Debian usa e getta che scrive l'immagine Talos di questo cluster su un disco dati vuoto, crea un'immagine dal disco, poi elimina la VM e il disco. L'immagine resta, etichettata con la versione di Talos e lo schematic. Il cluster non viene toccato. Ci vogliono circa dieci minuti." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor は使い捨ての Debian VM を起動し、このクラスターの Talos イメージを空のデータディスクに書き込み、そのディスクからイメージを作成してから、VM とディスクを削除します。イメージは Talos のバージョンとスキーマティックのラベル付きで残ります。クラスターには一切触れません。約 10 分かかります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor inicia uma VM descartável do Debian que grava a imagem do Talos deste cluster em um disco de dados vazio, cria uma imagem a partir do disco e depois exclui a VM e o disco. A imagem é mantida, rotulada com a versão do Talos e o schematic. Nada do cluster é alterado. Leva cerca de dez minutos." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor запускает одноразовую ВМ Debian, которая записывает образ Talos этого кластера на пустой диск данных, создаёт из диска образ, затем удаляет ВМ и диск. Образ сохраняется с метками версии Talos и схемы. Кластер не затрагивается. Это занимает около десяти минут." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor запускає одноразову ВМ Debian, яка записує образ Talos цього кластера на порожній диск даних, створює з диска образ, потім видаляє ВМ і диск. Образ зберігається з мітками версії Talos і схеми. Кластер не зачіпається. Це триває близько десяти хвилин." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 会启动一台一次性的 Debian VM,把此集群的 Talos 镜像写入一个空的数据磁盘，用该磁盘制作镜像，然后删除 VM 和磁盘。镜像会保留，并带有 Talos 版本和 schematic 标签。不会触碰集群的任何部分。大约需要十分钟。" } }
+      }
+    },
+    "The image goes in project %@. The helper VM runs in %@, on subnet %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The image goes in project %1$@. The helper VM runs in %2$@, on subnet %3$@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Image kommt in das Projekt %1$@. Die Hilfs-VM läuft in %2$@, im Subnetz %3$@." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La imagen va al proyecto %1$@. La VM auxiliar se ejecuta en %2$@, en la subred %3$@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'image va dans le projet %1$@. La VM auxiliaire tourne dans %2$@, sur le sous-réseau %3$@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'immagine va nel progetto %1$@. La VM ausiliaria gira in %2$@, sulla subnet %3$@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "イメージはプロジェクト %1$@ に作成されます。補助 VM は %2$@ のサブネット %3$@ で動きます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A imagem vai para o projeto %1$@. A VM auxiliar roda em %2$@, na sub-rede %3$@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Образ создаётся в проекте %1$@. Вспомогательная ВМ работает в %2$@, в подсети %3$@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Образ створюється в проєкті %1$@. Допоміжна ВМ працює в %2$@, у підмережі %3$@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "镜像放在项目 %1$@ 中。辅助 VM 在 %2$@ 的子网 %3$@ 中运行。" } }
+      }
+    },
+    "The helper VM gets no public address: it downloads the image from the Image Factory through the subnet's Cloud NAT." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Hilfs-VM erhält keine öffentliche Adresse: Sie lädt das Image über das Cloud NAT des Subnetzes von der Image Factory herunter." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La VM auxiliar no recibe dirección pública: descarga la imagen de la Image Factory a través del Cloud NAT de la subred." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La VM auxiliaire n'a pas d'adresse publique : elle télécharge l'image depuis l'Image Factory par le Cloud NAT du sous-réseau." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "La VM ausiliaria non riceve un indirizzo pubblico: scarica l'immagine dalla Image Factory tramite il Cloud NAT della subnet." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "補助 VM にはパブリックアドレスがありません。サブネットの Cloud NAT 経由で Image Factory からイメージをダウンロードします。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A VM auxiliar não recebe endereço público: ela baixa a imagem da Image Factory pelo Cloud NAT da sub-rede." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вспомогательная ВМ не получает публичного адреса: она скачивает образ из Image Factory через Cloud NAT подсети." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Допоміжна ВМ не отримує публічної адреси: вона завантажує образ з Image Factory через Cloud NAT підмережі." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "辅助 VM 没有公网地址：它通过子网的 Cloud NAT 从 Image Factory 下载镜像。" } }
+      }
+    },
+    "About %lld minutes of %@ (%@/h), then %@ per GB per month for the image until you delete it at Google Cloud, before tax" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About %1$lld minutes of %2$@ (%3$@/h), then %4$@ per GB per month for the image until you delete it at Google Cloud, before tax" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Etwa %1$lld Minuten %2$@ (%3$@/h), danach %4$@ pro GB und Monat für das Image, bis du es bei Google Cloud löschst, vor Steuern" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Unos %1$lld minutos de %2$@ (%3$@/h), y luego %4$@ por GB al mes por la imagen hasta que la borres en Google Cloud, sin impuestos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Environ %1$lld minutes de %2$@ (%3$@/h), puis %4$@ par Go par mois pour l'image jusqu'à ce que vous la supprimiez chez Google Cloud, hors taxes" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Circa %1$lld minuti di %2$@ (%3$@/h), poi %4$@ per GB al mese per l'immagine finché non la elimini su Google Cloud, tasse escluse" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ を約 %1$lld 分 (%3$@/h)、その後 Google Cloud で削除するまでイメージに 1 GB あたり月額 %4$@ (税抜)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cerca de %1$lld minutos de %2$@ (%3$@/h), depois %4$@ por GB por mês pela imagem até você excluí-la no Google Cloud, sem impostos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Около %1$lld минут %2$@ (%3$@/ч), затем %4$@ за ГБ в месяц за образ, пока вы не удалите его в Google Cloud, без налогов" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Близько %1$lld хвилин %2$@ (%3$@/год), потім %4$@ за ГБ на місяць за образ, доки ви не видалите його в Google Cloud, без податків" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "约 %1$lld 分钟的 %2$@(%3$@/小时),之后镜像每 GB 每月 %4$@,直到你在 Google Cloud 删除它(税前)" } }
+      }
+    },
+    "About %lld minutes of %@, then the image's storage per GB per month until you delete it at Google Cloud. Prices unavailable: see Google Cloud's Compute Engine pricing." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About %1$lld minutes of %2$@, then the image's storage per GB per month until you delete it at Google Cloud. Prices unavailable: see Google Cloud's Compute Engine pricing." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Etwa %1$lld Minuten %2$@, danach der Speicher des Images pro GB und Monat, bis du es bei Google Cloud löschst. Preise nicht verfügbar: siehe die Compute-Engine-Preise von Google Cloud." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Unos %1$lld minutos de %2$@, y luego el almacenamiento de la imagen por GB al mes hasta que la borres en Google Cloud. Precios no disponibles: consulta los precios de Compute Engine de Google Cloud." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Environ %1$lld minutes de %2$@, puis le stockage de l'image par Go par mois jusqu'à ce que vous la supprimiez chez Google Cloud. Prix indisponibles : voir les tarifs Compute Engine de Google Cloud." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Circa %1$lld minuti di %2$@, poi lo spazio dell'immagine per GB al mese finché non la elimini su Google Cloud. Prezzi non disponibili: vedi i prezzi di Compute Engine di Google Cloud." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ を約 %1$lld 分、その後 Google Cloud で削除するまでイメージの保存料が 1 GB あたり月額で課金されます。価格は取得できません。Google Cloud の Compute Engine の料金をご覧ください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cerca de %1$lld minutos de %2$@, depois o armazenamento da imagem por GB por mês até você excluí-la no Google Cloud. Preços indisponíveis: veja os preços do Compute Engine do Google Cloud." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Около %1$lld минут %2$@, затем хранение образа за ГБ в месяц, пока вы не удалите его в Google Cloud. Цены недоступны: см. цены Compute Engine в Google Cloud." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Близько %1$lld хвилин %2$@, потім зберігання образу за ГБ на місяць, доки ви не видалите його в Google Cloud. Ціни недоступні: див. ціни Compute Engine у Google Cloud." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "约 %1$lld 分钟的 %2$@,之后镜像存储按每 GB 每月计费，直到你在 Google Cloud 删除它。价格不可用：请参阅 Google Cloud 的 Compute Engine 定价。" } }
+      }
+    },
+    "Make the image from the data disk" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Image aus dem Datenträger erstellen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear la imagen a partir del disco de datos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer l'image à partir du disque de données" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea l'immagine dal disco dati" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "データディスクからイメージを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar a imagem a partir do disco de dados" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать образ из диска данных" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити образ з диска даних" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "用数据磁盘制作镜像" } }
       }
     },
     "Ichor starts a throwaway Ubuntu VM that writes this cluster's Talos image to an empty data disk, makes a managed image from the disk, then deletes the VM and the disk. Nothing of the cluster is touched. It takes about ten minutes." : {

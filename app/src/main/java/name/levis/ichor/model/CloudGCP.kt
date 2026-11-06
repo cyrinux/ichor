@@ -108,6 +108,52 @@ data class GCPCreateSpec(
     val labelsJson: String = "",
 )
 
+/** StartGCPImage's specJSON. The image's URL comes from the template, never from here. */
+@Serializable
+data class GCPImageSpec(
+    val templateNode: String = "",
+    val arch: String,
+    val project: String,
+    val zone: String,
+    /** The subnet's selfLink. */
+    val subnetwork: String,
+    // No default: TalosJson leaves default values out, and the core reads a missing one as false.
+    val associatePublicIp: Boolean,
+    /** "" for the core's default (e2-small or t2a-standard-1). */
+    val machineType: String = "",
+    /** "" for talos-<version>-gcp-<arch>-<schematic12>. */
+    val name: String = "",
+)
+
+/** What a finished image run reports; [selfLink] picks it in the image list. */
+@Serializable
+data class GCPImageResult(
+    val image: String = "",
+    val selfLink: String = "",
+    val arch: String = "",
+    val talosVersion: String = "",
+    val schematic: String = "",
+    val sizeGB: Int = 0,
+) : MadeImage {
+    override val imageId: String get() = selfLink.ifBlank { image }
+    override val name: String get() = image
+}
+
+/**
+ * The cost line of an image run: the helper's [machineType] and its [hourly] price, the data
+ * disk's and the image's prices per GB-month, before tax in [currency]; a price the Billing
+ * Catalog does not give is "".
+ */
+@Serializable
+data class GCPImageEstimate(
+    val machineType: String = "",
+    val hourly: String = "",
+    val currency: String = "",
+    val diskMonthlyPerGB: String = "",
+    val imageMonthlyPerGB: String = "",
+    val minutes: Int = 0,
+)
+
 const val GCP_DEFAULT_DISK_GB = 20
 const val GCP_MIN_DISK_GB = 10
 const val GCP_MAX_DISK_GB = 65536

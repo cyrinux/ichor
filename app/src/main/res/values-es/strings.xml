@@ -6408,7 +6408,14 @@
     <string name="gcp_machine_type">Tipo de máquina</string>
     <string name="gcp_no_image">No hay imagen de Talos para %1$s en este proyecto: registra una como indica la guía de Talos o elige otra arquitectura.</string>
     <string name="gcp_make_image">Crear una imagen de Talos</string>
-    <string name="gcp_make_image_soon">Próximamente: una imagen del schematic del clúster, creada desde el teléfono.</string>
+    <string name="gcp_image_missing">Aún no hay una imagen de Talos para %1$s en este proyecto: Ichor puede crear una con la imagen de este clúster.</string>
+    <string name="gcp_image_need_subnet">Elige primero una subred: la VM auxiliar se ejecuta en ella.</string>
+    <string name="gcp_image_intro">Ichor inicia una VM desechable de Debian que escribe la imagen de Talos de este clúster en un disco de datos vacío, crea una imagen a partir del disco y luego borra la VM y el disco. La imagen se conserva, etiquetada con la versión de Talos y el schematic. No se toca nada del clúster. Tarda unos diez minutos.</string>
+    <string name="gcp_image_place">La imagen va al proyecto %1$s. La VM auxiliar se ejecuta en %2$s, en la subred %3$s.</string>
+    <string name="gcp_image_nat_hint">La VM auxiliar no recibe dirección pública: descarga la imagen de la Image Factory a través del Cloud NAT de la subred.</string>
+    <string name="gcp_image_cost">Unos %1$d minutos de %2$s (%3$s/h), y luego %4$s por GB al mes por la imagen hasta que la borres en Google Cloud, sin impuestos</string>
+    <string name="gcp_image_cost_unknown">Unos %1$d minutos de %2$s, y luego el almacenamiento de la imagen por GB al mes hasta que la borres en Google Cloud. Precios no disponibles: consulta los precios de Compute Engine de Google Cloud.</string>
+    <string name="gcp_phase_image">Crear la imagen a partir del disco de datos</string>
     <string name="gcp_no_subnet">Ninguna red tiene una subred en %1$s: elige otra zona.</string>
     <string name="gcp_public_ip">Darle una dirección pública</string>
     <string name="gcp_disk">Disco de arranque (GB)</string>

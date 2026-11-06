@@ -143,4 +143,58 @@ class CloudGCPTest {
         assertEquals(JoinPhase.cloudRun, plain.phases)
         assertEquals(JoinPhase.cloudOmniRun, plain.copy(omni = true).phases)
     }
+
+    @Test
+    fun theImageSpecUsesTheCoresNames() {
+        val spec = GCPImageSpec(
+            templateNode = "10.0.0.2", arch = "arm64", project = "example-project", zone = "europe-west1-b",
+            subnetwork = "https://example.test/subnetworks/default", associatePublicIp = false,
+        )
+        val json = TalosJson.encodeToString(GCPImageSpec.serializer(), spec)
+        listOf(
+            "\"templateNode\":\"10.0.0.2\"", "\"arch\":\"arm64\"", "\"project\":\"example-project\"", "\"zone\":\"europe-west1-b\"",
+            "\"subnetwork\":\"https://example.test/subnetworks/default\"", "\"associatePublicIp\":false",
+        ).forEach { assertTrue(json, json.contains(it)) }
+    }
+
+    @Test
+    fun theImageResultAndItsEstimateDecode() {
+        val result = TalosJson.decodeFromString(
+            GCPImageResult.serializer(),
+            """{"image":"talos-v1-12-0-gcp-amd64-0123456789ab","selfLink":"https://example.test/global/images/talos-v1-12-0-gcp-amd64-0123456789ab",
+               "arch":"amd64","talosVersion":"v1.12.0","schematic":"0123","sizeGB":12}""",
+        )
+        assertEquals("v1.12.0", result.talosVersion)
+        assertEquals(12, result.sizeGB)
+        val made: MadeImage = result
+        assertEquals("https://example.test/global/images/talos-v1-12-0-gcp-amd64-0123456789ab", made.imageId)
+        assertEquals("talos-v1-12-0-gcp-amd64-0123456789ab", made.name)
+        assertEquals("talos-a", GCPImageResult(image = "talos-a").imageId)
+        val estimate = TalosJson.decodeFromString(
+            GCPImageEstimate.serializer(),
+            """{"machineType":"e2-small","hourly":"0.0168","currency":"USD","diskMonthlyPerGB":"0.1000","imageMonthlyPerGB":"0.0500","minutes":10}""",
+        )
+        assertEquals("e2-small", estimate.machineType)
+        assertEquals("0.0168", estimate.hourly)
+        assertEquals("0.0500", estimate.imageMonthlyPerGB)
+        assertEquals(10, estimate.minutes)
+        val unpriced = TalosJson.decodeFromString(GCPImageEstimate.serializer(), """{"machineType":"t2a-standard-1","minutes":10}""")
+        assertEquals("", unpriced.hourly)
+        assertEquals("", unpriced.imageMonthlyPerGB)
+    }
+
+    @Test
+    fun anImageRunHasItsOwnSteps() {
+        val spec = GCPImageSpec(arch = "amd64", project = "example-project", zone = "europe-west1-b", subnetwork = "s", associatePublicIp = true)
+        val request = JoinRequest(address = "", template = "", role = "", hostname = "Talos amd64", disk = "", staticAddress = "", gcpImage = spec)
+        assertEquals(ImageRunKind.GCP_IMAGE, request.imageKind)
+        assertEquals(JoinPhase.gcpImageRun, request.phases)
+        assertTrue(request.imageRun)
+        assertFalse(request.cloud)
+        val steps = joinTimeline(listOf(JoinProgress(phase = "creating"), JoinProgress(phase = "register")), finished = false, failed = false, phases = request.phases)
+        assertEquals(listOf(JoinPhase.CREATING, JoinPhase.WRITING, JoinPhase.REGISTER, JoinPhase.CLEANUP, JoinPhase.DONE), steps.map { it.phase })
+        assertEquals(StepStatus.DONE, steps[1].status)
+        assertEquals(StepStatus.CURRENT, steps[2].status)
+        assertEquals(StepStatus.PENDING, steps[3].status)
+    }
 }

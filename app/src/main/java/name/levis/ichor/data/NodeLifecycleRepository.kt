@@ -39,6 +39,8 @@ import name.levis.ichor.model.AzureOptions
 import name.levis.ichor.model.AzurePrice
 import name.levis.ichor.model.GCPCheck
 import name.levis.ichor.model.GCPCreateSpec
+import name.levis.ichor.model.GCPImageEstimate
+import name.levis.ichor.model.GCPImageSpec
 import name.levis.ichor.model.GCPOptions
 import name.levis.ichor.model.GCPPrice
 import name.levis.ichor.model.OVHCheck
@@ -499,6 +501,15 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** See [TalosStreams.gcpCreate]. */
     fun gcpCreate(credentialJson: String, spec: GCPCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.gcpCreate(credentialJson, TalosJson.encodeToString(GCPCreateSpec.serializer(), spec), stop)
+
+    /** The cost line of a Compute Engine image run. Creates nothing. */
+    suspend fun gcpImageEstimate(credentialJson: String, arch: String, zone: String): GCPImageEstimate = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(GCPImageEstimate.serializer(), Ichorgo.gcpImageEstimate(credentialJson, arch, zone))
+    }
+
+    /** See [TalosStreams.gcpImage]. */
+    fun gcpImage(credentialJson: String, spec: GCPImageSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.gcpImage(credentialJson, TalosJson.encodeToString(GCPImageSpec.serializer(), spec), stop)
 
     private fun hetznerTokenJson(token: String): String =
         TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), mapOf("token" to token))

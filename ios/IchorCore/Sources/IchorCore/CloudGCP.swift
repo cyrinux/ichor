@@ -308,6 +308,86 @@ public struct GCPCreateSpec: Encodable, Equatable, Sendable {
     }
 }
 
+/// StartGCPImage's specJSON. The image's URL comes from the template, never from here.
+public struct GCPImageSpec: Encodable, Equatable, Sendable {
+    public let templateNode: String
+    public let arch: String
+    public let project: String
+    public let zone: String
+    /// The subnet's selfLink (or its name in the zone's region).
+    public let subnetwork: String
+    public let associatePublicIp: Bool
+    /// "" for the core's default (e2-small or t2a-standard-1).
+    public let machineType: String
+    /// "" for talos-<version>-gcp-<arch>-<schematic12>.
+    public let name: String
+
+    public init(
+        templateNode: String = "", arch: String, project: String, zone: String, subnetwork: String,
+        associatePublicIp: Bool = true, machineType: String = "", name: String = ""
+    ) {
+        self.templateNode = templateNode
+        self.arch = arch
+        self.project = project
+        self.zone = zone
+        self.subnetwork = subnetwork
+        self.associatePublicIp = associatePublicIp
+        self.machineType = machineType
+        self.name = name
+    }
+}
+
+/// What a finished image run reports.
+public struct GCPImageResult: Decodable, Equatable, Sendable {
+    public let image: String
+    public let selfLink: String
+    public let arch: String
+    public let talosVersion: String
+    public let schematic: String
+    public let sizeGB: Int
+
+    /// Its id to pick it (as `GCPImage.id`) and its name to say so.
+    public var made: MadeImage { MadeImage(id: selfLink.isEmpty ? image : selfLink, name: image) }
+
+    private enum CodingKeys: String, CodingKey { case image, selfLink, arch, talosVersion, schematic, sizeGB }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        image = try c.field(.image, "")
+        selfLink = try c.field(.selfLink, "")
+        arch = try c.field(.arch, "")
+        talosVersion = try c.field(.talosVersion, "")
+        schematic = try c.field(.schematic, "")
+        sizeGB = try c.field(.sizeGB, 0)
+    }
+}
+
+/// The cost line of an image run: the helper's `machineType` and its `hourly` price, the data
+/// disk's and the image's prices per GB-month, before tax in `currency`; a price the Billing
+/// Catalog does not give is "".
+public struct GCPImageEstimate: Decodable, Equatable, Sendable {
+    public let machineType: String
+    public let hourly: String
+    public let currency: String
+    public let diskMonthlyPerGB: String
+    public let imageMonthlyPerGB: String
+    public let minutes: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case machineType, hourly, currency, diskMonthlyPerGB, imageMonthlyPerGB, minutes
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        machineType = try c.field(.machineType, "")
+        hourly = try c.field(.hourly, "")
+        currency = try c.field(.currency, "")
+        diskMonthlyPerGB = try c.field(.diskMonthlyPerGB, "")
+        imageMonthlyPerGB = try c.field(.imageMonthlyPerGB, "")
+        minutes = try c.field(.minutes, 0)
+    }
+}
+
 public enum GCPNames {
     /// Compute Engine's instance name rule (RFC 1035), which the host name must follow: the VM is named after it.
     public static func valid(_ name: String) -> Bool {

@@ -1,8 +1,8 @@
 import IchorCore
 import SwiftUI
 
-/// The followed image run (a Hetzner snapshot, an AWS AMI or an Azure image): its steps with the
-/// command's last line, Stop, then the result.
+/// The followed image run (a Hetzner snapshot, an AWS AMI, an Azure or a Compute Engine image): its
+/// steps with the command's last line, Stop, then the result.
 struct ImageRunSections: View {
     /// Called when the result is closed, with how the run ended.
     let onClose: (JoinJob.Outcome?) -> Void
@@ -28,7 +28,7 @@ struct ImageRunSections: View {
             switch kind {
             case .hetznerSnapshot: Text("Make a Talos snapshot")
             case .awsAMI: Text("Make a Talos AMI")
-            case .azureImage: Text("Make a Talos image")
+            case .azureImage, .gcpImage: Text("Make a Talos image")
             }
         }
         Section {
@@ -68,7 +68,7 @@ struct ImageRunSections: View {
         switch kind {
         case .hetznerSnapshot: Text("Stopping deletes the throwaway server and its key.")
         case .awsAMI: Text("Stopping terminates the throwaway instance.")
-        case .azureImage: Text("Stopping deletes the helper VM and its data disk.")
+        case .azureImage, .gcpImage: Text("Stopping deletes the helper VM and its data disk.")
         }
     }
 
@@ -78,7 +78,7 @@ struct ImageRunSections: View {
             Text("The run stops. The throwaway server, its key and an unfinished snapshot are deleted.")
         case .awsAMI:
             Text("The run stops. The throwaway instance is terminated, and an unfinished snapshot or AMI is deleted.")
-        case .azureImage:
+        case .azureImage, .gcpImage:
             Text(
                 "The run stops. The helper VM, billed until it is deleted, is deleted with its data disk, and an unfinished image too."
             )
@@ -98,7 +98,7 @@ extension ImageRunKind {
     /// "AMI … is ready", or the Azure image's line, for what the run made.
     func madeText(_ made: MadeImage) -> String {
         switch self {
-        case .azureImage: String(localized: "Image \(made.name) is ready: it is picked for the new node.")
+        case .azureImage, .gcpImage: String(localized: "Image \(made.name) is ready: it is picked for the new node.")
         case .awsAMI, .hetznerSnapshot: String(localized: "AMI \(made.name) is ready: it is picked for the new node.")
         }
     }
@@ -108,7 +108,7 @@ extension ImageRunKind {
         switch self {
         case .hetznerSnapshot: String(localized: "Making a Talos snapshot")
         case .awsAMI: String(localized: "Making a Talos AMI")
-        case .azureImage: String(localized: "Making a Talos image")
+        case .azureImage, .gcpImage: String(localized: "Making a Talos image")
         }
     }
 }
@@ -122,6 +122,9 @@ extension JoinPhase {
         case (.azureImage?, .creating): String(localized: "Start the helper VM")
         case (.azureImage?, .snapshot): String(localized: "Make the managed image")
         case (.azureImage?, .cleanup): String(localized: "Delete the helper VM and its data disk")
+        case (.gcpImage?, .creating): String(localized: "Start the helper VM")
+        case (.gcpImage?, .register): String(localized: "Make the image from the data disk")
+        case (.gcpImage?, .cleanup): String(localized: "Delete the helper VM and its data disk")
         default: localizedLabel
         }
     }

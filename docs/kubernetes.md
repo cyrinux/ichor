@@ -420,10 +420,10 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     may create VMs, or names the permissions it lacks, or links to the page that enables a missing
     API. Then pick the project, the zone, a machine type (grouped by architecture), the Talos image
     the project holds, a network and its subnet in the zone's region, whether the VM gets a public
-    address (on by default) and the boot disk size (20 GB by default). The image must already be
-    in the project: register one once as the Talos guide for GCP says (an image labelled
-    `ichor-talos-version` with the cluster's version is listed first); making one from the phone is
-    the next step. An Arm machine type boots only a `UEFI_COMPATIBLE` image. Only existing networks
+    address (on by default) and the boot disk size (20 GB by default). An image labelled
+    `ichor-talos-version` with the cluster's version is listed first; an image registered by hand
+    as the Talos guide for GCP says is listed too. An Arm machine type boots only a
+    `UEFI_COMPATIBLE` image. Only existing networks
     and subnets are listed: the `default` network's `default-allow-internal` rule is enough for
     Omni, while a plain Talos node must be reachable from the phone on port 50000 of the address
     the app follows; without a public address, a network with no Cloud NAT in the region is
@@ -435,7 +435,21 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     appears in Omni. A failed or stopped run deletes the VM it created with its boot disk, with the
     same control-plane exception as Hetzner; an insert that gets no clear answer is looked up by
     name and kept only when its run label is the run's. The key stays sealed on the device, under
-    its project id, and is not in backups.
+    its project id, and is not in backups. **Make a Talos image** (under the machine type, once a
+    subnet is picked) makes one of the cluster's own image, with no laptop and no bucket: a
+    throwaway Debian VM (`e2-small`, or `t2a-standard-1` for Arm) runs for about ten minutes in the
+    picked zone and subnet, with a public address when the card's switch is on (else the subnet
+    needs Cloud NAT), and writes the
+    Image Factory's GCP disk for your Talos version and schematic to an empty 12 GB data disk; the
+    app makes an image from that disk (family `talos-<arch>`, labelled with the version, the
+    architecture and the schematic), then deletes the VM, its boot disk and the data disk, and the
+    new image is kept in the project and picked for the node. The cost line comes first (the
+    helper's hourly price, then the image's storage per GB-month until you delete it at Google
+    Cloud). It needs the image permissions of the printed role: a role created before this step
+    is brought up to date with `gcloud iam roles update ichorNodeCreator --project PROJECT_ID
+    --file role.yaml`. Stop deletes the helper, its data disk and an unfinished image; a
+    delete Google has not finished is reported as still billed, with the resource and the zone;
+    see [safety](safety.md).
   - **Maintenance mode:** the node is read over the maintenance API (disks, links, version), which
     has no authentication: the phone must be on the same LAN or on a VPN that reaches it, and a
     public address is refused.

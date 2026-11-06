@@ -6268,7 +6268,14 @@
     <string name="gcp_machine_type">マシンタイプ</string>
     <string name="gcp_no_image">このプロジェクトには %1$s 用の Talos イメージがありません。Talos ガイドに従って登録するか、別のアーキテクチャを選んでください。</string>
     <string name="gcp_make_image">Talos イメージを作成</string>
-    <string name="gcp_make_image_soon">近日対応: クラスターのスキーマティックのイメージをスマートフォンから作成。</string>
+    <string name="gcp_image_missing">このプロジェクトには %1$s 用の Talos イメージがまだありません。Ichor でこのクラスターのイメージから作成できます。</string>
+    <string name="gcp_image_need_subnet">先にサブネットを選んでください。補助 VM はそこで動きます。</string>
+    <string name="gcp_image_intro">Ichor は使い捨ての Debian VM を起動し、このクラスターの Talos イメージを空のデータディスクに書き込み、そのディスクからイメージを作成してから、VM とディスクを削除します。イメージは Talos のバージョンとスキーマティックのラベル付きで残ります。クラスターには一切触れません。約 10 分かかります。</string>
+    <string name="gcp_image_place">イメージはプロジェクト %1$s に作成されます。補助 VM は %2$s のサブネット %3$s で動きます。</string>
+    <string name="gcp_image_nat_hint">補助 VM にはパブリックアドレスがありません。サブネットの Cloud NAT 経由で Image Factory からイメージをダウンロードします。</string>
+    <string name="gcp_image_cost">%2$s を約 %1$d 分 (%3$s/h)、その後 Google Cloud で削除するまでイメージに 1 GB あたり月額 %4$s (税抜)</string>
+    <string name="gcp_image_cost_unknown">%2$s を約 %1$d 分、その後 Google Cloud で削除するまでイメージの保存料が 1 GB あたり月額で課金されます。価格は取得できません。Google Cloud の Compute Engine の料金をご覧ください。</string>
+    <string name="gcp_phase_image">データディスクからイメージを作成</string>
     <string name="gcp_no_subnet">%1$s にサブネットを持つネットワークがありません。別のゾーンを選んでください。</string>
     <string name="gcp_public_ip">パブリックアドレスを付与</string>
     <string name="gcp_disk">ブートディスク(GB)</string>

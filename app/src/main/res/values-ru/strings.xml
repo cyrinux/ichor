@@ -6670,7 +6670,14 @@
     <string name="gcp_machine_type">Тип машины</string>
     <string name="gcp_no_image">В этом проекте нет образа Talos для %1$s: зарегистрируйте его по руководству Talos или выберите другую архитектуру.</string>
     <string name="gcp_make_image">Создать образ Talos</string>
-    <string name="gcp_make_image_soon">Скоро: образ схемы кластера, созданный с телефона.</string>
+    <string name="gcp_image_missing">В этом проекте ещё нет образа Talos для %1$s: Ichor может создать его из образа этого кластера.</string>
+    <string name="gcp_image_need_subnet">Сначала выберите подсеть: вспомогательная ВМ работает в ней.</string>
+    <string name="gcp_image_intro">Ichor запускает одноразовую ВМ Debian, которая записывает образ Talos этого кластера на пустой диск данных, создаёт из диска образ, затем удаляет ВМ и диск. Образ сохраняется с метками версии Talos и схемы. Кластер не затрагивается. Это занимает около десяти минут.</string>
+    <string name="gcp_image_place">Образ создаётся в проекте %1$s. Вспомогательная ВМ работает в %2$s, в подсети %3$s.</string>
+    <string name="gcp_image_nat_hint">Вспомогательная ВМ не получает публичного адреса: она скачивает образ из Image Factory через Cloud NAT подсети.</string>
+    <string name="gcp_image_cost">Около %1$d минут %2$s (%3$s/ч), затем %4$s за ГБ в месяц за образ, пока вы не удалите его в Google Cloud, без налогов</string>
+    <string name="gcp_image_cost_unknown">Около %1$d минут %2$s, затем хранение образа за ГБ в месяц, пока вы не удалите его в Google Cloud. Цены недоступны: см. цены Compute Engine в Google Cloud.</string>
+    <string name="gcp_phase_image">Создать образ из диска данных</string>
     <string name="gcp_no_subnet">Ни у одной сети нет подсети в %1$s: выберите другую зону.</string>
     <string name="gcp_public_ip">Дать ей публичный адрес</string>
     <string name="gcp_disk">Загрузочный диск (ГБ)</string>

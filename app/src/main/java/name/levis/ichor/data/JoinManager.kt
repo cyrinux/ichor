@@ -20,6 +20,8 @@ import name.levis.ichor.model.AzureCreateSpec
 import name.levis.ichor.model.AzureImageResult
 import name.levis.ichor.model.AzureImageSpec
 import name.levis.ichor.model.GCPCreateSpec
+import name.levis.ichor.model.GCPImageResult
+import name.levis.ichor.model.GCPImageSpec
 import name.levis.ichor.model.HetznerSnapshotResult
 import name.levis.ichor.model.HetznerSnapshotSpec
 import name.levis.ichor.model.ImageRunKind
@@ -58,6 +60,8 @@ data class JoinRequest(
     val awsImage: AWSImageSpec? = null,
     /** No node either: a throwaway Azure VM's data disk becomes a Talos managed image. */
     val azureImage: AzureImageSpec? = null,
+    /** No node either: a throwaway Compute Engine VM's data disk becomes a Talos image. */
+    val gcpImage: GCPImageSpec? = null,
     /** A machine of Omni to put in the cluster ([hostname] and [role] are the machine's and the set's). */
     val omniAllocate: OmniAllocateSpec? = null,
 ) {
@@ -82,10 +86,11 @@ data class JoinRequest(
             snapshot != null -> ImageRunKind.HETZNER_SNAPSHOT
             awsImage != null -> ImageRunKind.AWS_AMI
             azureImage != null -> ImageRunKind.AZURE_IMAGE
+            gcpImage != null -> ImageRunKind.GCP_IMAGE
             else -> null
         }
 
-    /** No node at all: the run makes a Talos image (a Hetzner snapshot, an AWS AMI, an Azure image). */
+    /** No node at all: the run makes a Talos image (a Hetzner snapshot, an AWS AMI, an Azure or a Compute Engine image). */
     val imageRun: Boolean
         get() = imageKind != null
 }
@@ -104,7 +109,7 @@ data class JoinRunState(
     val stopping: Boolean = false,
     /** The finished snapshot of a [JoinRequest.snapshot] run. */
     val snapshotResult: HetznerSnapshotResult? = null,
-    /** The finished AMI or Azure image of a [JoinRequest.awsImage] or [JoinRequest.azureImage] run. */
+    /** The finished AMI or image of a [JoinRequest.awsImage], [JoinRequest.azureImage] or [JoinRequest.gcpImage] run. */
     val madeImage: MadeImage? = null,
 ) : FollowedRun {
     override val hostname: String get() = request.hostname
@@ -146,6 +151,7 @@ class JoinManager(
                     ?: request.snapshot?.let { lifecycle.hetznerSnapshot(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.awsImage?.let { lifecycle.awsImage(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.azureImage?.let { lifecycle.azureImage(providerToken, it, stopped.filter { s -> s }) }
+                    ?: request.gcpImage?.let { lifecycle.gcpImage(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.hetzner?.let { lifecycle.hetznerCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.ovh?.let { lifecycle.ovhCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.aws?.let { lifecycle.awsCreate(providerToken, it, stopped.filter { s -> s }) }
@@ -182,6 +188,7 @@ class JoinManager(
                 when (kind) {
                     ImageRunKind.AWS_AMI -> TalosJson.decodeFromString(AWSImageResult.serializer(), done.address)
                     ImageRunKind.AZURE_IMAGE -> TalosJson.decodeFromString(AzureImageResult.serializer(), done.address)
+                    ImageRunKind.GCP_IMAGE -> TalosJson.decodeFromString(GCPImageResult.serializer(), done.address)
                     // Handled above: its result is a snapshot, not an image.
                     ImageRunKind.HETZNER_SNAPSHOT -> null
                 }
