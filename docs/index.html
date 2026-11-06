@@ -114,11 +114,19 @@
           <a data-i18n href="features.html">Features</a>
           <a href="https://github.com/cyrinux/ichor" translate="no">GitHub</a>
         </span>
+        <button class="menu-button search-button" id="search-button" aria-label="Search the site" aria-controls="search-dialog" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m20 20-4.8-4.8" /></svg>
+        </button>
         <button class="menu-button" id="menu-button" aria-label="Menu" aria-controls="menu" aria-expanded="false">
           <span></span>
         </button>
       </nav>
     </header>
+
+    <dialog class="search-dialog" id="search-dialog" aria-label="Search the site">
+      <div id="search"></div>
+      <p class="search-error" hidden>Search could not load. Try again later.</p>
+    </dialog>
 
     <div class="overlay" id="menu" aria-label="What Ichor does">
       <ol>
@@ -160,13 +168,13 @@
       </symbol>
     </svg>
 
-    <main id="top">
+    <main id="top" data-pagefind-body>
       <section class="hero">
         <div class="mark">
           <svg viewBox="0 0 512 512" aria-hidden="true"><use href="#glyph" /></svg>
         </div>
         <h1 translate="no">ichor</h1>
-        <p class="tagline">
+        <p class="tagline" data-pagefind-meta="title">
           Every <b>Kubernetes</b> and <b>Talos</b> cluster you run, right in your <b>pocket</b>.
         </p>
         <div class="badges">

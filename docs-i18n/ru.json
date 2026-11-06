@@ -420,5 +420,7 @@
   "Changes to this policy are published on this page, with a new effective date. Its history is in the <a href=\"https://github.com/cyrinux/ichor/commits/main/docs/privacy.html\">source repository</a>.": "Изменения этой политики публикуются на этой странице с новой датой вступления в силу. Её история доступна в <a href=\"https://github.com/cyrinux/ichor/commits/main/docs/privacy.html\">репозитории с исходным кодом</a>.",
   "Contact": "Контакты",
   "Questions or requests: open an issue at <a href=\"https://github.com/cyrinux/ichor/issues\">github.com/cyrinux/ichor/issues</a>.": "Вопросы и запросы: создайте issue на <a href=\"https://github.com/cyrinux/ichor/issues\">github.com/cyrinux/ichor/issues</a>.",
-  "Ichor is an independent project, not affiliated with Sidero Labs. Talos is a trademark of Sidero Labs, Inc.": "Ichor — независимый проект, не связанный с Sidero Labs. Talos — товарный знак Sidero Labs, Inc."
+  "Ichor is an independent project, not affiliated with Sidero Labs. Talos is a trademark of Sidero Labs, Inc.": "Ichor — независимый проект, не связанный с Sidero Labs. Talos — товарный знак Sidero Labs, Inc.",
+  "Search the site": "Поиск по сайту",
+  "Search could not load. Try again later.": "Не удалось загрузить поиск. Попробуйте позже."
 }

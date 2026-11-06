@@ -162,6 +162,12 @@ site-reference:
     .cache/site-venv/bin/python -c "import markdown" 2>/dev/null || .cache/site-venv/bin/pip install --quiet markdown==3.8.2
     .cache/site-venv/bin/python scripts/site-reference.py
 
+# The site as CI publishes it, with its search index (docs/pagefind/, git-ignored), served on
+# http://localhost:8000 to try the search box.
+site-search: site site-reference
+    npx --yes pagefind@1.6.0 --site docs
+    python3 -m http.server -d docs 8000
+
 # Refresh the bundled app-inventory icons from go/ichorgo/appcatalog.json (needs network
 # and ImageMagick). `just app-icons --check` only validates the catalog and the bundle.
 app-icons *args:

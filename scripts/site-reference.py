@@ -2,7 +2,8 @@
 """Builds the website's reference pages (docs/<name>/index.html) from docs/<name>.md.
 
 The Markdown stays the one source: the Go tests hold docs/plugins.md to the format, the apps'
-Settings, Plugins and their Runbooks (i) link to the published pages. The pages are English
+Settings, Plugins and their Runbooks (i) link to the published pages, and the site's search
+(Pagefind, run after this script) finds the rest of the documentation there. The pages are English
 only, like the Markdown, and are not committed: CI writes them before publishing
 (.github/workflows/pages.yml).
 
@@ -20,9 +21,12 @@ import markdown
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 # docs/<name>.md, published as docs/<name>/index.html.
-PAGES = ("plugins", "runbooks")
+PAGES = ("plugins", "runbooks", "clusters", "kubernetes", "network", "safety", "etcd", "insights",
+         "ai", "roles")
 SITE = "https://cyrinux.github.io/ichor/"
 REPO = "https://github.com/cyrinux/ichor/blob/main/docs/"
+# A relative link in the Markdown: to a page published here, or else to the file on GitHub.
+MD_LINK = re.compile(r'href="([^":#]+\.md)(#[^"]*)?"')
 
 TEMPLATE = """<!doctype html>
 <html lang="en">
@@ -36,6 +40,7 @@ TEMPLATE = """<!doctype html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="../pagefind/pagefind-ui.css" rel="stylesheet">
 <style>
   :root {{
     --bg: #E9EEF2;
@@ -86,6 +91,11 @@ TEMPLATE = """<!doctype html>
   th, td {{ border: 1px solid var(--line); padding: .4rem .6rem; text-align: left; vertical-align: top; }}
   th {{ background: var(--surface); font-weight: 600; }}
   li {{ margin-bottom: .4rem; }}
+  .search {{ max-width: var(--measure);
+    --pagefind-ui-scale: .8; --pagefind-ui-primary: var(--accent); --pagefind-ui-text: var(--ink);
+    --pagefind-ui-background: var(--surface); --pagefind-ui-border: var(--line);
+    --pagefind-ui-tag: var(--bg); --pagefind-ui-font: inherit; }}
+  .pagefind-ui__filter-panel {{ display: none !important; }}
   footer {{ border-top: 1px solid var(--line); padding: 2rem 0 3rem; color: var(--ink-2); font-size: .92rem; }}
 </style>
 </head>
@@ -97,8 +107,9 @@ TEMPLATE = """<!doctype html>
       Ichor
     </a>
   </header>
+  <div class="search" id="search" role="search"></div>
 
-  <main translate="no">
+  <main translate="no" data-pagefind-body data-pagefind-filter="type:docs">
 {body}
   </main>
 
@@ -106,9 +117,20 @@ TEMPLATE = """<!doctype html>
     <p>Generated from <a href="{repo}{name}.md">docs/{name}.md</a>.</p>
   </footer>
 </div>
+<script src="../pagefind/pagefind-ui.js" onload="new PagefindUI({{ element: '#search', baseUrl: new window.URL('../', location).pathname, showSubResults: true, showImages: false }})"></script>
 </body>
 </html>
 """
+
+
+def relink(match: re.Match) -> str:
+    """docs/x.md#y as the published ../x/#y; any other Markdown file on GitHub."""
+    path, anchor = match.group(1), match.group(2) or ""
+    stem = path.removesuffix(".md")
+    if stem in PAGES:
+        return f'href="../{stem}/{anchor}"'
+    target = path[3:] if path.startswith("../") else "docs/" + path
+    return f'href="{REPO.removesuffix("docs/")}{target}{anchor}"'
 
 
 def render(name: str, source: str) -> str:
@@ -118,7 +140,9 @@ def render(name: str, source: str) -> str:
         extensions=["fenced_code", "tables", "toc"],
         extension_configs={"toc": {"permalink": "#", "toc_depth": "2-3"}},
     )
-    body = md.convert(source)
+    body = MD_LINK.sub(relink, md.convert(source))
+    # The headings' "#" permalinks stay out of the search results' titles.
+    body = body.replace('class="headerlink"', 'class="headerlink" data-pagefind-ignore')
     title_match = re.search(r"<h1[^>]*>(.*?)</h1>", body, re.S)
     if not title_match:
         raise ValueError(f"{name}.md has no top-level heading")
