@@ -55,6 +55,18 @@ class CloudProviderStoreTest {
     }
 
     @Test
+    fun gcpKeysAreKeptPerProjectApartFromTheOtherProviders() {
+        val store = CloudProviderStore(MemoryValue())
+        val credential = """{"serviceAccountJson":"{}","project":"example-project","zone":"europe-west1-b"}"""
+        store.save(CloudProviderStore.GCP, "example-project", credential)
+        store.save(CloudProviderStore.AWS, "000000000000", "{}")
+
+        assertEquals(listOf("example-project"), store.projects(CloudProviderStore.GCP))
+        assertEquals(credential, store.token(CloudProviderStore.GCP, "example-project"))
+        assertEquals(listOf("000000000000"), store.projects(CloudProviderStore.AWS))
+    }
+
+    @Test
     fun aBlankTokenRemovesTheProjectAndTheLastOneTheFile() {
         val file = MemoryValue()
         val store = CloudProviderStore(file)

@@ -63,6 +63,10 @@ struct CloudUserDataCard: View {
                 AzureCreateSection(
                     omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
                     labels: omni ? omniLabels : "", path: $path)
+            case .gcp:
+                GCPCreateSection(
+                    omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
+                    labels: omni ? omniLabels : "", path: $path)
             case .ovhcloud:
                 OVHCreateSection(
                     omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,

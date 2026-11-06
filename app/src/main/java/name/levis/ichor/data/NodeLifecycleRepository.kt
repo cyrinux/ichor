@@ -37,6 +37,10 @@ import name.levis.ichor.model.AzureImageSpec
 import name.levis.ichor.model.AzureCreateSpec
 import name.levis.ichor.model.AzureOptions
 import name.levis.ichor.model.AzurePrice
+import name.levis.ichor.model.GCPCheck
+import name.levis.ichor.model.GCPCreateSpec
+import name.levis.ichor.model.GCPOptions
+import name.levis.ichor.model.GCPPrice
 import name.levis.ichor.model.OVHCheck
 import name.levis.ichor.model.OVHCreateSpec
 import name.levis.ichor.model.OVHOptions
@@ -473,6 +477,28 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** See [TalosStreams.azureImage]. */
     fun azureImage(credentialJson: String, spec: AzureImageSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.azureImage(credentialJson, TalosJson.encodeToString(AzureImageSpec.serializer(), spec), stop)
+
+    /** Whose service account key this is and which of the printed role's permissions it lacks. Creates nothing. */
+    suspend fun gcpTest(credentialJson: String): GCPCheck = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(GCPCheck.serializer(), Ichorgo.gcpTest(credentialJson))
+    }
+
+    /** Projects, zones, and the zone's machine types, networks and images ([credentialJson] may be empty on the demo). */
+    suspend fun gcpOptions(credentialJson: String): GCPOptions = call { cfg, ctx ->
+        TalosJson.decodeFromString(GCPOptions.serializer(), Ichorgo.gcpOptions(cfg, ctx, credentialJson))
+    }
+
+    /** The custom role to create in [project] and grant the service account: only the calls Ichor makes. */
+    suspend fun gcpRole(project: String): String = withContext(Dispatchers.IO) { Ichorgo.gcpRoleDefinition(project) }
+
+    /** The hourly price of [machineType] in [zone]; an empty hourly when unknown. */
+    suspend fun gcpPrice(credentialJson: String, zone: String, machineType: String): GCPPrice = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(GCPPrice.serializer(), Ichorgo.gcpPrice(credentialJson, zone, machineType))
+    }
+
+    /** See [TalosStreams.gcpCreate]. */
+    fun gcpCreate(credentialJson: String, spec: GCPCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.gcpCreate(credentialJson, TalosJson.encodeToString(GCPCreateSpec.serializer(), spec), stop)
 
     private fun hetznerTokenJson(token: String): String =
         TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), mapOf("token" to token))

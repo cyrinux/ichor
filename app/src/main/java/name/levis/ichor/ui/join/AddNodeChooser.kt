@@ -36,6 +36,7 @@ enum class AddNodePath(@StringRes val title: Int, @StringRes val body: Int) {
 enum class CloudProvider(val label: String?, val platform: String?) {
     AWS("AWS", "aws"),
     AZURE("Azure", "azure"),
+    GCP("Google Cloud", "gcp"),
     HETZNER("Hetzner", "hcloud"),
     OVHCLOUD("OVHcloud", "openstack"),
     SCALEWAY("Scaleway", "scaleway"),

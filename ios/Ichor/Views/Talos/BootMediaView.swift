@@ -9,13 +9,14 @@ enum AddNodePath: String, CaseIterable, Identifiable, Hashable {
 
 /// A cloud provider, in alphabetical order; `platform` names its Talos image, nil lists them all.
 enum CloudProvider: String, CaseIterable, Identifiable, Hashable {
-    case aws, azure, hetzner, ovhcloud, scaleway, other
+    case aws, azure, gcp, hetzner, ovhcloud, scaleway, other
     var id: String { rawValue }
 
     var platform: String? {
         switch self {
         case .aws: "aws"
         case .azure: "azure"
+        case .gcp: "gcp"
         case .hetzner: "hcloud"
         case .ovhcloud: "openstack"
         case .scaleway: "scaleway"
@@ -27,6 +28,7 @@ enum CloudProvider: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .aws: Text(verbatim: "AWS")
         case .azure: Text(verbatim: "Azure")
+        case .gcp: Text(verbatim: "Google Cloud")
         case .hetzner: Text(verbatim: "Hetzner")
         case .ovhcloud: Text(verbatim: "OVHcloud")
         case .scaleway: Text(verbatim: "Scaleway")
@@ -137,6 +139,7 @@ struct BootMediaView: View {
         // Ichor can call these providers' APIs: it creates the machine itself.
         case .aws: awsSections
         case .azure: azureSections
+        case .gcp: gcpSections
         case .hetzner: hetznerSections
         case .ovhcloud: ovhSections
         // A server at a cloud provider boots its own image and reads the config as user data.
@@ -193,6 +196,22 @@ struct BootMediaView: View {
         }
         if omni { OmniLabelsSection(labelsJSON: $omniLabels) }
         CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .azure, imagePlatform: nil, path: $path)
+    }
+
+    @ViewBuilder private var gcpSections: some View {
+        Section {
+            if omni {
+                Text(
+                    "1. Add a service account key that has the role Ichor prints, with the Compute Engine API enabled in its project.\n2. Name the VM, then pick a zone, a machine type, the Talos image the project holds, a network and its subnet.\n3. Create it: Ichor shows the price first, then follows it until the machine appears in Omni. Allocate it to the cluster."
+                )
+            } else {
+                Text(
+                    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add a service account key that has the role Ichor prints, with the Compute Engine API enabled in its project.\n3. Pick a zone, a machine type, the Talos image the project holds (register one as the Talos guide says until Ichor makes it), a network and its subnet.\n4. Create it: Ichor shows the price first and follows it until the node joins. The phone must reach port 50000 of the VM."
+                )
+            }
+        }
+        if omni { OmniLabelsSection(labelsJSON: $omniLabels) }
+        CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .gcp, imagePlatform: nil, path: $path)
     }
 
     @ViewBuilder private var ovhSections: some View {

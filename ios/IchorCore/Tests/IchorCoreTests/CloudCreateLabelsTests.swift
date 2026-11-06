@@ -27,6 +27,10 @@ final class CloudCreateLabelsTests: XCTestCase {
                 AzureCreateSpec(
                     resourceGroup: "rg", location: "westeurope", size: "Standard_B2s", imageId: "img",
                     subnetId: "subnet", hostname: "node-c", labelsJson: labels)),
+            try labelsField(
+                GCPCreateSpec(
+                    project: "example-project", zone: "europe-west1-b", machineType: "e2-medium", image: "image",
+                    subnetwork: "subnet", hostname: "node-c", labelsJson: labels)),
         ]
         for field in fields {
             XCTAssertEqual(field, labels)

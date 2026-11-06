@@ -180,6 +180,11 @@ fun BootMediaScreen(
                             if (omni) OmniLabelsCard(labelsVm)
                             CloudUserDataCard(omni = omni, omniLabelsJson = labelsJson, create = chosen, onAllocate = onAllocate)
                         }
+                        CloudProvider.GCP -> {
+                            Text(stringResource(if (omni) R.string.gcp_howto_omni else R.string.gcp_howto), style = MaterialTheme.typography.bodyMedium)
+                            if (omni) OmniLabelsCard(labelsVm)
+                            CloudUserDataCard(omni = omni, omniLabelsJson = labelsJson, create = chosen, onAllocate = onAllocate)
+                        }
                         CloudProvider.OVHCLOUD -> {
                             Text(stringResource(if (omni) R.string.ovh_howto_omni else R.string.ovh_howto), style = MaterialTheme.typography.bodyMedium)
                             if (omni) OmniLabelsCard(labelsVm)

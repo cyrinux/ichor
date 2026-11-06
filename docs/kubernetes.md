@@ -408,6 +408,34 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     The cost line comes first (the helper's hourly price, then the image's storage, billed as a
     managed disk per GB-month until you delete it at Azure). Stop deletes the helper, its data
     disk and an unfinished image; see [safety](safety.md).
+  - **At Google Cloud, from the phone (Add a node… → A server at a cloud provider → Google
+    Cloud):** paste a service account key (the JSON file `gcloud iam service-accounts keys
+    create` writes) or pick the file; the sheet shows only the key's email and project, never the
+    key. The app prints a custom role with only the calls it makes: create it with
+    `gcloud iam roles create ichorNodeCreator --project PROJECT_ID --file role.yaml` and grant it
+    with `gcloud projects add-iam-policy-binding PROJECT_ID --member
+    serviceAccount:SERVICE_ACCOUNT_EMAIL --role projects/PROJECT_ID/roles/ichorNodeCreator`.
+    Enable the Compute Engine API in the project; Test also needs Cloud Resource Manager to check
+    the role (`testIamPermissions`), and the price needs Cloud Billing. Test says whether the key
+    may create VMs, or names the permissions it lacks, or links to the page that enables a missing
+    API. Then pick the project, the zone, a machine type (grouped by architecture), the Talos image
+    the project holds, a network and its subnet in the zone's region, whether the VM gets a public
+    address (on by default) and the boot disk size (20 GB by default). The image must already be
+    in the project: register one once as the Talos guide for GCP says (an image labelled
+    `ichor-talos-version` with the cluster's version is listed first); making one from the phone is
+    the next step. An Arm machine type boots only a `UEFI_COMPATIBLE` image. Only existing networks
+    and subnets are listed: the `default` network's `default-allow-internal` rule is enough for
+    Omni, while a plain Talos node must be reachable from the phone on port 50000 of the address
+    the app follows; without a public address, a network with no Cloud NAT in the region is
+    flagged, since the node then has no route out. The VM is named after the host name, so the
+    host name follows Compute Engine's rule (lowercase letters, digits and hyphens). The user data
+    must fit Compute Engine's 256 KiB metadata value. The hourly price in USD before tax comes from
+    the Cloud Billing Catalog, or says "price unavailable". The app creates the VM with the user
+    data, follows it until it runs, then follows the node until it joins, or until the machine
+    appears in Omni. A failed or stopped run deletes the VM it created with its boot disk, with the
+    same control-plane exception as Hetzner; an insert that gets no clear answer is looked up by
+    name and kept only when its run label is the run's. The key stays sealed on the device, under
+    its project id, and is not in backups.
   - **Maintenance mode:** the node is read over the maintenance API (disks, links, version), which
     has no authentication: the phone must be on the same LAN or on a VPN that reaches it, and a
     public address is refused.

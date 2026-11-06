@@ -129,6 +129,8 @@ public struct JoinRequest: Equatable, Sendable {
     public let aws: AWSCreateSpec?
     /// A VM to create at Azure for the node, likewise.
     public let azure: AzureCreateSpec?
+    /// A Compute Engine VM to create at Google Cloud for the node, likewise.
+    public let gcp: GCPCreateSpec?
     /// The cloud machine joins Omni, not the cluster directly.
     public let omni: Bool
     /// No node at all: a throwaway server becomes a Talos snapshot (`hostname` only labels the run).
@@ -143,7 +145,8 @@ public struct JoinRequest: Equatable, Sendable {
     public init(
         address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
         replacing: Bool = false, hetzner: HetznerCreateSpec? = nil, ovh: OVHCreateSpec? = nil,
-        aws: AWSCreateSpec? = nil, azure: AzureCreateSpec? = nil, omni: Bool = false,
+        aws: AWSCreateSpec? = nil, azure: AzureCreateSpec? = nil,
+        gcp: GCPCreateSpec? = nil, omni: Bool = false,
         snapshot: HetznerSnapshotSpec? = nil, awsImage: AWSImageSpec? = nil, azureImage: AzureImageSpec? = nil,
         omniAllocate: OmniAllocateSpec? = nil
     ) {
@@ -162,6 +165,7 @@ public struct JoinRequest: Equatable, Sendable {
         self.ovh = ovh
         self.aws = aws
         self.azure = azure
+        self.gcp = gcp
         self.omni = omni
     }
 
@@ -174,7 +178,7 @@ public struct JoinRequest: Equatable, Sendable {
     }
 
     /// A machine to create at a cloud provider.
-    public var cloud: Bool { hetzner != nil || ovh != nil || aws != nil || azure != nil }
+    public var cloud: Bool { hetzner != nil || ovh != nil || aws != nil || azure != nil || gcp != nil }
 
     /// What the run makes when it makes a Talos image instead of a node; nil for a node.
     public var imageKind: ImageRunKind? {
@@ -191,7 +195,7 @@ public struct JoinRequest: Equatable, Sendable {
     public func withReplacing(_ on: Bool) -> JoinRequest {
         JoinRequest(
             address: address, template: template, role: role, hostname: hostname, disk: disk,
-            staticAddress: staticAddress, replacing: on, hetzner: hetzner, ovh: ovh, aws: aws, azure: azure,
+            staticAddress: staticAddress, replacing: on, hetzner: hetzner, ovh: ovh, aws: aws, azure: azure, gcp: gcp,
             omni: omni, snapshot: snapshot, awsImage: awsImage, azureImage: azureImage, omniAllocate: omniAllocate)
     }
 }

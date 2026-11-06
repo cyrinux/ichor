@@ -56,5 +56,7 @@ class CloudProviderStore(private val file: SealedValue) {
 
         /** Keyed by the subscription id AzureTest names; the value is the principal's credential JSON. */
         const val AZURE = "azure"
+        /** Keyed by the service account key's project id; the value is the credential JSON (key, project, zone). */
+        const val GCP = "gcp"
     }
 }
