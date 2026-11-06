@@ -167,6 +167,83 @@ proxy's certificate is checked against the phone's own roots. It does not carry 
 Omni, or a sign-in provider's own calls (OIDC, EKS…), which stay direct; the environment's proxy
 settings are never read.
 
+### Example kubeconfigs: proxy, bastion, Teleport, Tailscale
+
+Samples to adapt (hosts, names and data are made up). Flatten a kubeconfig before importing it
+(`kubectl config view --flatten --minify`), so the certificates are inline. To keep the API
+off the internet, see [Reaching the cluster](safety.md#reaching-the-cluster-vpn-firewall-and-acls).
+
+**SOCKS5 through an SSH bastion.** On a machine the phone reaches (over the VPN, ideally), run
+`ssh -N -D 0.0.0.0:1080 admin@bastion.example.internal`, then point the cluster at it.
+`socks5h://` lets the bastion resolve the API server's name, for a name only it knows:
+
+```yaml
+apiVersion: v1
+kind: Config
+clusters:
+  - name: prod
+    cluster:
+      server: https://api.prod.example.internal:6443
+      certificate-authority-data: LS0tLS1CRUdJTi... # the cluster's CA
+      proxy-url: socks5h://10.8.0.1:1080
+users:
+  - name: prod-viewer
+    user:
+      client-certificate-data: LS0tLS1CRUdJTi...
+      client-key-data: LS0tLS1CRUdJTi...
+contexts:
+  - name: prod
+    context: { cluster: prod, user: prod-viewer }
+current-context: prod
+```
+
+**An HTTP(S) proxy with a password.** Only the cluster entry changes; the password stays in the
+sealed kubeconfig:
+
+```yaml
+    cluster:
+      server: https://api.prod.example.com:6443
+      certificate-authority-data: LS0tLS1CRUdJTi...
+      proxy-url: http://ichor:s3cret@proxy.example.com:3128
+```
+
+**Teleport.** The `tsh kube credentials` plugin that `tsh kube login` writes cannot run on the
+phone yet (see the table below). Until then, an administrator issues a kubeconfig with a
+short-lived client certificate for a Teleport user (or a bot) whose roles allow the cluster:
+
+```sh
+tctl auth sign --user=ichor-phone --format=kubernetes \
+  --proxy=teleport.example.com:443 --kube-cluster-name=prod \
+  --ttl=24h --out=ichor-prod.kubeconfig
+```
+
+It points at the Teleport proxy, which routes on the TLS server name; the app honours
+`tls-server-name`:
+
+```yaml
+    cluster:
+      server: https://teleport.example.com:443
+      tls-server-name: kube-teleport-proxy-alpn.teleport.cluster.local
+      certificate-authority-data: LS0tLS1CRUdJTi... # Teleport's host CA
+```
+
+Teleport's RBAC and audit log apply as with `tsh`. Issue it again before `--ttl` ends.
+
+**Tailscale's Kubernetes API proxy.** With the
+[Tailscale operator](https://tailscale.com/kb/1437/kubernetes-operator-api-server-proxy)'s API
+server proxy in auth mode, the phone on the tailnet signs in with its Tailscale identity, and
+the tailnet ACLs and the cluster's RBAC (on that identity) decide what it may do.
+`tailscale configure kubeconfig <operator-hostname>` writes:
+
+```yaml
+    cluster:
+      server: https://tailscale-operator.example-tailnet.ts.net
+users:
+  - name: tailscale-auth
+    user:
+      token: unused # the proxy reads the Tailscale identity, not this token
+```
+
 Each node on that home also says where the cloud put it, read from its labels: the
 autoscaler pool it came from (a Karpenter NodePool — open source or EKS Auto Mode — an EKS
 managed node group, a GKE custom compute class or node pool, an AKS agent pool), its
@@ -190,7 +267,7 @@ preview names the plugin and says what to do instead:
 
 | Plugin | What to do instead |
 |---|---|
-| `tsh` (Teleport) | Teleport sign-in from the phone is planned; until then, export a kubeconfig with a client certificate |
+| `tsh` (Teleport) | Teleport sign-in from the phone is planned; until then, export a kubeconfig with a client certificate (`tctl auth sign --format=kubernetes`, [example](#example-kubeconfigs-proxy-bastion-teleport-tailscale)) |
 | `vault`, `aws-vault`, `az` | They only print a token: paste that token, or use a client certificate |
 | kubelogin without `--oidc-issuer-url` | Export it again with the issuer URL, and the built-in OIDC sign-in takes over |
 | Anything else | Use a client certificate or a token |
