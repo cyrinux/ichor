@@ -166,4 +166,37 @@ class CloudAWSTest {
         assertEquals(StepStatus.PENDING, steps[JoinPhase.awsImageRun.indexOf(JoinPhase.REGISTER)].status)
         assertEquals(JoinPhase.REGISTER, JoinPhase.of("register"))
     }
+
+    // An invented Identity Center sign-in, as the core returns it (tokens included).
+    private val signedIn = """
+        {"region":"eu-west-1","ssoStartUrl":"https://example.awsapps.com/start","ssoRegion":"eu-west-1",
+         "accountId":"123456789012","accountName":"Sandbox","roleName":"IchorNodeCreator",
+         "ssoToken":{"accessToken":"a","refreshToken":"r","clientId":"c","clientSecret":"s"}}
+    """.trimIndent()
+
+    @Test
+    fun anIdentityCenterSignInIsReadWithoutItsTokens() {
+        val credential = TalosJson.decodeFromString(AWSCredential.serializer(), signedIn)
+        assertTrue(credential.identityCenter)
+        assertEquals("Sandbox · IchorNodeCreator", credential.role.label)
+        assertFalse(AWSCredential(accessKeyId = "AKIAEXAMPLE", secretAccessKey = "secret", region = "eu-west-1").identityCenter)
+    }
+
+    @Test
+    fun theSignInStepsDecode() {
+        val start = TalosJson.decodeFromString(
+            AWSSignInStart.serializer(),
+            """{"verificationUri":"https://device.sso/","verificationUriComplete":"https://device.sso/?user_code=WXYZ-1234","userCode":"WXYZ-1234","expiresIn":600,"credential":"{}"}""",
+        )
+        assertTrue(start.prompt.isDevice)
+        assertEquals("https://device.sso/?user_code=WXYZ-1234", start.prompt.url)
+        assertEquals("WXYZ-1234", start.prompt.userCode)
+        val finish = TalosJson.decodeFromString(
+            AWSSignInFinish.serializer(),
+            """{"credential":"{}","roles":[{"accountId":"123456789012","roleName":"IchorNodeCreator"}]}""",
+        )
+        assertEquals("IchorNodeCreator", finish.roles.single().roleName)
+        assertEquals("{}", TalosJson.decodeFromString(AWSCheck.serializer(), """{"account":"123456789012","credential":"{}"}""").credential)
+        assertEquals("", TalosJson.decodeFromString(AWSRenewed.serializer(), "{}").credential)
+    }
 }

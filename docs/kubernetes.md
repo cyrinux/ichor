@@ -355,7 +355,14 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     keys (and a session token, from `aws sts get-session-token` or the SSO portal, if they are
     temporary) and their region; the app prints the IAM policy to give their user, only the calls
     it makes, and Test says whether they may run instances (a `RunInstances` dry run, which creates
-    nothing). Then pick an instance type (grouped by architecture), the Talos AMI, a subnet and its
+    nothing). Or sign in with **IAM Identity Center** instead, as `aws sso login` does: the start
+    URL and its region, the code to approve in the browser, then the account and role from a list;
+    the role's permission set must allow the actions of the printed policy. No long-lived key is
+    made: the role's temporary keys (a 1 to 12 hour session) are fetched again with the Identity
+    Center token, renewed while that session lives (8 hours by default, set by your
+    administrator), and the card asks you to sign in again after it ends. The refresh token and
+    the role's keys are sealed on the device like access keys, never in backups or logs. Then pick
+    an instance type (grouped by architecture), the Talos AMI, a subnet and its
     security groups, and whether the instance gets a public address (the subnet's setting by
     default). The official Talos AMI of the cluster's version and of the type's architecture is
     listed for the region; AMIs of your own are listed by name when the account has them. The

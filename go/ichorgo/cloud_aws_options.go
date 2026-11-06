@@ -58,6 +58,8 @@ type awsOptions struct {
 	TemplateVersion   string             `json:"templateVersion"`
 	TemplateSchematic string             `json:"templateSchematic"`
 	Warnings          []string           `json:"warnings"`
+	// Credential is the credential JSON to seal again when the call renewed it, else "".
+	Credential string `json:"credential,omitempty"`
 }
 
 type awsType struct {
@@ -186,13 +188,13 @@ func AWSOptions(configYAML, contextName, credJSON string) (out string, err error
 		return toJSON(demoAWSOptions())
 	}
 
-	c, err := newAWSClient(credJSON)
+	ctx, cancel := context.WithTimeout(context.Background(), awsOptionsTimeout)
+	defer cancel()
+
+	c, updated, err := newAWSClientOnline(ctx, credJSON)
 	if err != nil {
 		return "", err
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), awsOptionsTimeout)
-	defer cancel()
 
 	template, warnings := awsClusterImage(configYAML, contextName)
 
@@ -201,7 +203,7 @@ func AWSOptions(configYAML, contextName, credJSON string) (out string, err error
 		return "", err
 	}
 
-	options.TemplateVersion, options.TemplateSchematic = template.version, template.schematic
+	options.TemplateVersion, options.TemplateSchematic, options.Credential = template.version, template.schematic, updated
 	if len(warnings) > 0 {
 		options.Warnings = append(warnings, options.Warnings...)
 	}

@@ -6141,7 +6141,6 @@
     <string name="aws_title">在 AWS 创建实例</string>
     <string name="aws_howto">1. 选择要复制的成员,然后选择新节点的主机名和安装磁盘。\n2. 添加访问密钥,其 IAM 用户需拥有 Ichor 显示的策略。\n3. 选择实例类型、Talos AMI(会列出集群版本的官方 AMI)、子网及其安全组。\n4. 创建:Ichor 先显示价格,然后跟踪直到节点加入。手机必须能访问实例的 50000 端口。</string>
     <string name="aws_howto_omni">1. 添加访问密钥,其 IAM 用户需拥有 Ichor 显示的策略。\n2. 为实例命名,然后选择实例类型、Talos AMI、子网及其安全组。\n3. 创建:Ichor 先显示价格,然后跟踪直到机器出现在 Omni 中。将其分配给集群。</string>
-    <string name="aws_add_keys">添加 AWS 访问密钥</string>
     <string name="aws_remove">移除这些密钥</string>
     <string name="aws_keys_warning">访问密钥除非轮换否则不会过期,并可执行其 IAM 策略允许的操作。它们密封保存在本设备上,不会进入备份。</string>
     <string name="aws_policy_hint">为密钥的 IAM 用户授予此策略:仅包含 Ichor 发出的调用,且只能终止 Ichor 打过标签的实例。</string>
@@ -6150,6 +6149,11 @@
     <string name="aws_secret_access_key">秘密访问密钥</string>
     <string name="aws_session_token">会话令牌(可选)</string>
     <string name="aws_session_token_hint">来自 aws sts get-session-token 或 SSO 门户。它会过期:届时请重新添加密钥。</string>
+    <string name="aws_add_account">添加 AWS 账户</string>
+    <string name="aws_sso_hint">与 aws sso login 一样登录:不会保存任何长期有效的凭据。角色的权限集需要包含上方策略中的操作。</string>
+    <string name="aws_sso_ec2_region">EC2 区域(留空则使用 Identity Center 区域)</string>
+    <string name="aws_sso_signed_in">已通过 IAM Identity Center 登录为 %1$s</string>
+    <string name="aws_sso_session_note">在 Identity Center 会话期间(默认 8 小时,由管理员设定)角色密钥会自动续期;会话结束后请重新登录。</string>
     <string name="aws_region">区域</string>
     <string name="aws_check_ok">账户 %1$s 的密钥可以在 %2$s 中运行实例。</string>
     <string name="aws_check_no">账户 %1$s 的密钥不能在 %2$s 中运行实例:请为其 IAM 用户授予该策略(ec2:RunInstances)。</string>

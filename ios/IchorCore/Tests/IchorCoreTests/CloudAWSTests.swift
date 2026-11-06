@@ -130,6 +130,48 @@ final class CloudAWSTests: XCTestCase {
         XCTAssertEqual(decoded, moved)
     }
 
+    // An invented Identity Center sign-in, as the core returns it (tokens included).
+    private let signedIn = """
+        {"region":"eu-west-1","ssoStartUrl":"https://example.awsapps.com/start","ssoRegion":"eu-west-1",\
+        "accountId":"123456789012","accountName":"Sandbox","roleName":"IchorNodeCreator",\
+        "ssoToken":{"accessToken":"a","refreshToken":"r","clientId":"c","clientSecret":"s"}}
+        """
+
+    func testAnIdentityCenterSignInIsReadWithoutItsTokens() throws {
+        let credential = try JSONDecoder().decode(AWSCredential.self, from: Data(signedIn.utf8))
+        XCTAssertTrue(credential.identityCenter)
+        XCTAssertEqual(credential.role.label, "Sandbox · IchorNodeCreator")
+        let keys = AWSCredential(accessKeyId: "AKIAEXAMPLE", secretAccessKey: "secret", region: "eu-west-1")
+        XCTAssertFalse(keys.identityCenter)
+    }
+
+    func testMovingASignInToAnotherRegionKeepsItsTokens() throws {
+        let moved = try XCTUnwrap(AWSCredential.moved(signedIn, to: "us-east-1"))
+        let object = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(moved.utf8)) as? [String: Any])
+        XCTAssertEqual(object["region"] as? String, "us-east-1")
+        XCTAssertEqual((object["ssoToken"] as? [String: Any])?["refreshToken"] as? String, "r")
+        XCTAssertNil(AWSCredential.moved("not json", to: "us-east-1"))
+    }
+
+    func testTheSignInStepsDecode() throws {
+        let startJSON = """
+            {"verificationUri":"https://device.sso/","verificationUriComplete":"","userCode":"WXYZ-1234",\
+            "expiresIn":600,"credential":"{}"}
+            """
+        let start = try JSONDecoder().decode(AWSSignInStart.self, from: Data(startJSON.utf8))
+        XCTAssertEqual(start.openURL, "https://device.sso/")
+        XCTAssertEqual(start.userCode, "WXYZ-1234")
+        let finishJSON = """
+            {"credential":"{}","roles":[{"accountId":"123456789012","roleName":"IchorNodeCreator"}]}
+            """
+        let finish = try JSONDecoder().decode(AWSSignInFinish.self, from: Data(finishJSON.utf8))
+        XCTAssertEqual(finish.roles.first?.roleName, "IchorNodeCreator")
+        let checkJSON = #"{"account":"123456789012","credential":"{}"}"#
+        let check = try JSONDecoder().decode(AWSCheck.self, from: Data(checkJSON.utf8))
+        XCTAssertEqual(check.credential, "{}")
+        XCTAssertEqual(try JSONDecoder().decode(AWSRenewed.self, from: Data("{}".utf8)).credential, "")
+    }
+
     func testTheSpecUsesTheCoresNames() throws {
         let spec = AWSCreateSpec(
             region: "eu-west-1", instanceType: "t3.small", imageId: "ami-amd", subnetId: "subnet-a",

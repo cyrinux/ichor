@@ -6141,7 +6141,6 @@
     <string name="aws_title">AWS でインスタンスを作成</string>
     <string name="aws_howto">1. コピーするメンバーを選び、新しいノードのホスト名とインストールディスクを選びます。\n2. Ichor が表示するポリシーを持つ IAM ユーザーのアクセスキーを追加します。\n3. インスタンスタイプ、Talos AMI(クラスターのバージョンの公式 AMI が表示されます)、サブネットとそのセキュリティグループを選びます。\n4. 作成します。Ichor は先に料金を表示し、ノードが参加するまで追跡します。スマートフォンからインスタンスのポート 50000 に到達できる必要があります。</string>
     <string name="aws_howto_omni">1. Ichor が表示するポリシーを持つ IAM ユーザーのアクセスキーを追加します。\n2. インスタンスに名前を付け、インスタンスタイプ、Talos AMI、サブネットとそのセキュリティグループを選びます。\n3. 作成します。Ichor は先に料金を表示し、マシンが Omni に現れるまで追跡します。クラスターに割り当ててください。</string>
-    <string name="aws_add_keys">AWS アクセスキーを追加</string>
     <string name="aws_remove">このキーを削除</string>
     <string name="aws_keys_warning">アクセスキーはローテーションしない限り失効せず、IAM ポリシーで許可された操作ができます。この端末に封印して保存され、バックアップには含まれません。</string>
     <string name="aws_policy_hint">キーの IAM ユーザーにこのポリシーを付与してください。Ichor が行う呼び出しだけで、終了できるのは Ichor がタグ付けしたインスタンスだけです。</string>
@@ -6150,6 +6149,11 @@
     <string name="aws_secret_access_key">シークレットアクセスキー</string>
     <string name="aws_session_token">セッショントークン(任意)</string>
     <string name="aws_session_token_hint">aws sts get-session-token または SSO ポータルから取得します。有効期限があるので、切れたらキーを追加し直してください。</string>
+    <string name="aws_add_account">AWS アカウントを追加</string>
+    <string name="aws_sso_hint">aws sso login と同じようにサインインします。長期間有効なものは保存されません。ロールの権限セットには上のポリシーのアクションが必要です。</string>
+    <string name="aws_sso_ec2_region">EC2 リージョン(空欄なら Identity Center のリージョン)</string>
+    <string name="aws_sso_signed_in">IAM Identity Center で %1$s としてサインイン中</string>
+    <string name="aws_sso_session_note">ロールのキーは Identity Center のセッション中は更新されます(既定は 8 時間、管理者が設定)。終了したら再度サインインしてください。</string>
     <string name="aws_region">リージョン</string>
     <string name="aws_check_ok">アカウント %1$s のキーは %2$s でインスタンスを起動できます。</string>
     <string name="aws_check_no">アカウント %1$s のキーは %2$s でインスタンスを起動できません。IAM ユーザーにポリシーを付与してください(ec2:RunInstances)。</string>

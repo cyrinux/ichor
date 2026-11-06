@@ -6288,7 +6288,6 @@
     <string name="aws_title">Create the instance at AWS</string>
     <string name="aws_howto">1. Pick a member to copy, then the new node\'s host name and install disk.\n2. Add access keys whose IAM user has the policy Ichor prints.\n3. Pick an instance type, the Talos AMI (the official one of the cluster\'s version is listed), a subnet and its security groups.\n4. Create it: Ichor shows the price first and follows it until the node joins. The phone must reach port 50000 of the instance.</string>
     <string name="aws_howto_omni">1. Add access keys whose IAM user has the policy Ichor prints.\n2. Name the instance, then pick an instance type, the Talos AMI, a subnet and its security groups.\n3. Create it: Ichor shows the price first, then follows it until the machine appears in Omni. Allocate it to the cluster.</string>
-    <string name="aws_add_keys">Add AWS access keys</string>
     <string name="aws_remove">Remove these keys</string>
     <string name="aws_keys_warning">Access keys do not expire unless you rotate them and can do what their IAM policy allows. They stay sealed on this device and are not in backups.</string>
     <string name="aws_policy_hint">Give the keys\' IAM user this policy: only the calls Ichor makes, and it may terminate only the instances Ichor tagged.</string>
@@ -6297,6 +6296,11 @@
     <string name="aws_secret_access_key">Secret access key</string>
     <string name="aws_session_token">Session token (optional)</string>
     <string name="aws_session_token_hint">From aws sts get-session-token or the SSO portal. It expires: add the keys again then.</string>
+    <string name="aws_add_account">Add an AWS account</string>
+    <string name="aws_sso_hint">Signs in as aws sso login does: nothing long-lived is stored. The permission set of the role needs the actions of the policy above.</string>
+    <string name="aws_sso_ec2_region">EC2 region (empty: the Identity Center region)</string>
+    <string name="aws_sso_signed_in">Signed in with IAM Identity Center as %1$s</string>
+    <string name="aws_sso_session_note">The role\'s keys are renewed while your Identity Center session lasts (8 hours by default, set by your administrator); sign in again after it ends.</string>
     <string name="aws_region">Region</string>
     <string name="aws_check_ok">Keys of account %1$s may run instances in %2$s.</string>
     <string name="aws_check_no">Keys of account %1$s may not run instances in %2$s: give their IAM user the policy (ec2:RunInstances).</string>

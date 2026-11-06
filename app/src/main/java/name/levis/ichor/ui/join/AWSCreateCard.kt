@@ -41,6 +41,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.CloudProviderStore
@@ -54,6 +57,10 @@ import name.levis.ichor.model.AWSImageCost
 import name.levis.ichor.model.AWSInstanceType
 import name.levis.ichor.model.AWSOptions
 import name.levis.ichor.model.AWSPrice
+import name.levis.ichor.model.AWSSignInChoice
+import name.levis.ichor.model.AWSSignInFinish
+import name.levis.ichor.model.AWSSignInStart
+import name.levis.ichor.model.SsoRoleChoice
 import name.levis.ichor.model.AWSSubnet
 import name.levis.ichor.model.arches
 import name.levis.ichor.model.hasClusterImage
@@ -94,6 +101,10 @@ class AWSCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
     val price: StateFlow<UiState<AWSPrice>?> = _price.asStateFlow()
     private var priceJob: Job? = null
 
+    /** The picked account's IAM Identity Center sign-in (no secret in it), null for access keys. */
+    private val _signedIn = MutableStateFlow<AWSCredential?>(null)
+    val signedIn: StateFlow<AWSCredential?> = _signedIn.asStateFlow()
+
     /** Reads the stored keys; the demo lists its samples without any. */
     fun load(demo: Boolean) {
         viewModelScope.launch {
@@ -109,29 +120,65 @@ class AWSCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
     fun pick(account: String) {
         _account.value = account
         _price.value = null
-        if (account.isBlank()) _options.value = null else reload()
+        _signedIn.value = null
+        if (account.isBlank()) {
+            _options.value = null
+            return
+        }
+        reload()
+        viewModelScope.launch {
+            val stored = runCatching { TalosJson.decodeFromString(AWSCredential.serializer(), credential(account)) }.getOrNull()
+            _signedIn.value = stored?.takeIf { it.identityCenter }
+        }
     }
 
     fun reload() {
         val account = _account.value
         viewModelScope.launch {
             _options.value = UiState.Loading
-            _options.value = uiStateOf { lifecycle.awsOptions(if (account.isBlank()) "" else credential(account)) }
+            _options.value = uiStateOf { lifecycle.awsOptions(if (account.isBlank()) "" else credential(account)).also { reseal(account, it.credential) } }
         }
     }
+
+    /** Seals again what the core renewed (an Identity Center sign-in's tokens); "" is nothing to do. */
+    private suspend fun reseal(account: String, updated: String) {
+        if (account.isNotBlank() && updated.isNotBlank()) withContext(Dispatchers.IO) { store.save(CloudProviderStore.AWS, account, updated) }
+    }
+
+    /**
+     * The credential for a run, which uses only what it is given: an Identity Center sign-in is
+     * renewed first. A renewal that fails passes the stored one, and the run says why.
+     */
+    suspend fun runCredential(account: String): String {
+        if (account.isBlank()) return ""
+        val stored = credential(account)
+        val renewed = runCatching { lifecycle.awsRenew(stored).credential }.getOrDefault("")
+        reseal(account, renewed)
+        return renewed.ifBlank { stored }
+    }
+
+    suspend fun signInStart(request: String): AWSSignInStart = lifecycle.awsSignInStart(request)
+
+    suspend fun signInFinish(credential: String): AWSSignInFinish = lifecycle.awsSignInFinish(credential)
+
+    suspend fun signInChoose(credential: String, role: SsoRoleChoice): AWSSignInChoice = lifecycle.awsSignInChoose(credential, role)
+
+    fun cancelSignIn() = lifecycle.awsSignInCancel()
 
     /** Lists the options again, keeping the shown form (and what is picked in it) meanwhile. */
     fun refresh() {
         val account = _account.value
         if (account.isBlank()) return
         viewModelScope.launch {
-            val state = uiStateOf { lifecycle.awsOptions(credential(account)) }
+            val state = uiStateOf { lifecycle.awsOptions(credential(account)).also { reseal(account, it.credential) } }
             if (state is UiState.Loaded) _options.value = state
         }
     }
 
-    suspend fun estimate(arch: String, region: String): AWSImageCost =
-        lifecycle.awsImageEstimate(credential(_account.value), arch, region)
+    suspend fun estimate(arch: String, region: String): AWSImageCost {
+        val account = _account.value
+        return lifecycle.awsImageEstimate(credential(account), arch, region).also { reseal(account, it.credential) }
+    }
 
     /** Asks the Price List for [instanceType]; a failure (the demo has no keys) is "price unavailable". */
     fun loadPrice(instanceType: String) {
@@ -143,18 +190,23 @@ class AWSCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
         }
         priceJob = viewModelScope.launch {
             _price.value = UiState.Loading
-            val state = uiStateOf { lifecycle.awsPrice(if (account.isBlank()) "" else credential(account), instanceType) }
+            val state = uiStateOf {
+                lifecycle.awsPrice(if (account.isBlank()) "" else credential(account), instanceType).also { reseal(account, it.credential) }
+            }
             _price.value = if (state is UiState.Failed) UiState.Loaded(AWSPrice()) else state
         }
     }
 
-    /** The same keys in another region: re-sealed with it, then the region's options. */
+    /**
+     * The same keys in another region: re-sealed with it, then the region's options. Edited as
+     * JSON: an Identity Center sign-in holds tokens [AWSCredential] does not keep.
+     */
     fun switchRegion(region: String) {
         val account = _account.value
         if (account.isBlank()) return
         viewModelScope.launch {
-            val current = runCatching { TalosJson.decodeFromString(AWSCredential.serializer(), credential(account)) }.getOrNull() ?: return@launch
-            val updated = TalosJson.encodeToString(AWSCredential.serializer(), current.copy(region = region))
+            val current = runCatching { TalosJson.parseToJsonElement(credential(account)).jsonObject }.getOrNull() ?: return@launch
+            val updated = JsonObject(current + ("region" to JsonPrimitive(region))).toString()
             if (withContext(Dispatchers.IO) { store.save(CloudProviderStore.AWS, account, updated) }) pick(account)
         }
     }
@@ -204,6 +256,7 @@ fun AWSCreateCard(
     val account by vm.account.collectAsStateWithLifecycle()
     val options by vm.options.collectAsStateWithLifecycle()
     val price by vm.price.collectAsStateWithLifecycle()
+    val signedIn by vm.signedIn.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var adding by remember { mutableStateOf(false) }
     var amiFor by remember { mutableStateOf<AMIAsk?>(null) }
@@ -230,10 +283,13 @@ fun AWSCreateCard(
                         IchorFilterChip(selected = name == account, onClick = { vm.pick(name) }, label = { Text(name) })
                     }
                 }
+                signedIn?.let { MutedText(stringResource(R.string.aws_sso_signed_in, it.role.label)) }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    IchorOutlinedButton(onClick = { adding = true }) { Text(stringResource(R.string.aws_add_keys)) }
+                    IchorOutlinedButton(onClick = { adding = true }) { Text(stringResource(R.string.aws_add_account)) }
                     if (account.isNotBlank()) {
-                        IchorTextButton(onClick = { vm.remove(account) }) { Text(stringResource(R.string.aws_remove)) }
+                        IchorTextButton(onClick = { vm.remove(account) }) {
+                            Text(stringResource(if (signedIn != null) R.string.kube_signin_sign_out else R.string.aws_remove))
+                        }
                     }
                 }
             }
@@ -248,7 +304,7 @@ fun AWSCreateCard(
                     onMakeImage = { arch, subnet, group -> amiFor = AMIAsk(state.data, arch, subnet, group) },
                 ) { request ->
                     // The keys are read only now, and go to the run alone.
-                    scope.launch { app.joinManager.start(request, if (account.isBlank()) "" else vm.credential(account)) }
+                    scope.launch { app.joinManager.start(request, vm.runCredential(account)) }
                 }
             }
         }
@@ -269,7 +325,7 @@ fun AWSCreateCard(
                     staticAddress = "", awsImage = spec,
                 )
                 // The keys are read only now, and go to the run alone.
-                scope.launch { app.joinManager.start(request, vm.credential(account)) }
+                scope.launch { app.joinManager.start(request, vm.runCredential(account)) }
             },
             onDismiss = { amiFor = null },
         )
@@ -471,12 +527,17 @@ private fun InstanceForm(
     }
 }
 
-/** The access keys (masked), an optional session token, the region, the policy to give them, a test, then sealed under the account id. */
+/**
+ * Access keys (masked, an optional session token, the region) or an IAM Identity Center sign-in,
+ * the policy to give them, a test, then sealed under the account id.
+ */
 @Composable
 private fun KeysDialog(vm: AWSCreateViewModel, onDismiss: () -> Unit) {
     val colors = LocalStatusColors.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var identityCenter by remember { mutableStateOf(false) }
+    var ssoReady by remember { mutableStateOf<Pair<String, AWSCheck>?>(null) }
     var accessKeyId by remember { mutableStateOf("") }
     var secret by remember { mutableStateOf("") }
     var sessionToken by remember { mutableStateOf("") }
@@ -498,12 +559,21 @@ private fun KeysDialog(vm: AWSCreateViewModel, onDismiss: () -> Unit) {
 
     IchorAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.aws_add_keys)) },
+        title = { Text(stringResource(R.string.aws_add_account)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.aws_keys_warning), color = colors.warn, style = MaterialTheme.typography.bodySmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    IchorFilterChip(selected = !identityCenter, onClick = { identityCenter = false }, label = { Text(stringResource(R.string.kube_signin_option_aws_keys)) })
+                    IchorFilterChip(selected = identityCenter, onClick = { identityCenter = true }, label = { Text(stringResource(R.string.kube_signin_option_aws_sso)) })
+                }
                 MutedText(stringResource(R.string.aws_policy_hint))
                 IchorOutlinedButton(onClick = { scope.launch { copyToClipboard(context, policyTitle, vm.policy()) } }) { Text(policyTitle) }
+                if (identityCenter) {
+                    IdentityCenterSide(vm) { credential, check -> ssoReady = if (credential != null && check != null) credential to check else null }
+                    if (saveFailed) NotSaved()
+                    return@Column
+                }
+                Text(stringResource(R.string.aws_keys_warning), color = colors.warn, style = MaterialTheme.typography.bodySmall)
                 KeyField(accessKeyId, R.string.aws_access_key_id, secret = false) {
                     accessKeyId = it
                     check = null
@@ -531,40 +601,53 @@ private fun KeysDialog(vm: AWSCreateViewModel, onDismiss: () -> Unit) {
                     null -> Unit
                     UiState.Loading -> LoadingBox()
                     is UiState.Failed -> ErrorBox(state.message, ::runTest)
-                    is UiState.Loaded -> {
-                        val data = state.data
-                        Text(
-                            when {
-                                !data.checked -> stringResource(R.string.aws_check_unknown, data.account, data.region)
-                                data.canCreate -> stringResource(R.string.aws_check_ok, data.account, data.region)
-                                else -> stringResource(R.string.aws_check_no, data.account, data.region)
-                            },
-                            color = if (data.checked && !data.canCreate) colors.warn else colors.ok,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
+                    is UiState.Loaded -> CheckLine(state.data)
                 }
-                if (saveFailed) Text(stringResource(R.string.hetzner_token_not_saved), color = colors.bad, style = MaterialTheme.typography.bodySmall)
+                if (saveFailed) NotSaved()
             }
         },
         confirmButton = {
+            // What the test passed: the keys (renewed by the core when it says so), or the sign-in.
+            val ready = if (identityCenter) ssoReady else tested?.let { (it.credential.ifBlank { credential() }) to it }
+            val readyCheck = ready?.second
             IchorButton(
                 onClick = {
-                    val account = tested?.account.orEmpty()
+                    val (json, passed) = ready ?: return@IchorButton
                     scope.launch {
-                        if (vm.save(account, credential())) onDismiss() else saveFailed = true
+                        if (vm.save(passed.account, json)) onDismiss() else saveFailed = true
                     }
                 },
-                enabled = tested != null && tested.account.isNotBlank() && (tested.canCreate || !tested.checked),
+                enabled = readyCheck != null && readyCheck.account.isNotBlank() && (readyCheck.canCreate || !readyCheck.checked),
             ) { Text(stringResource(R.string.hetzner_save)) }
         },
         dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
+/** The store could not seal the account. */
+@Composable
+private fun NotSaved() {
+    Text(stringResource(R.string.hetzner_token_not_saved), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
+}
+
+/** What a test of the keys or the sign-in says: whose they are, and whether they may run instances. */
+@Composable
+internal fun CheckLine(data: AWSCheck) {
+    val colors = LocalStatusColors.current
+    Text(
+        when {
+            !data.checked -> stringResource(R.string.aws_check_unknown, data.account, data.region)
+            data.canCreate -> stringResource(R.string.aws_check_ok, data.account, data.region)
+            else -> stringResource(R.string.aws_check_no, data.account, data.region)
+        },
+        color = if (data.checked && !data.canCreate) colors.warn else colors.ok,
+        style = MaterialTheme.typography.bodySmall,
+    )
+}
+
 /** One field of the keys dialog; a secret one is masked and never suggested. */
 @Composable
-private fun KeyField(value: String, @StringRes label: Int, secret: Boolean, onChange: (String) -> Unit) {
+internal fun KeyField(value: String, @StringRes label: Int, secret: Boolean, onChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
         onValueChange = onChange,

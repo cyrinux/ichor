@@ -6539,7 +6539,6 @@
     <string name="aws_title">Створити екземпляр в AWS</string>
     <string name="aws_howto">1. Виберіть учасника для копіювання, потім ім\'я хоста та інсталяційний диск нового вузла.\n2. Додайте ключі доступу, IAM-користувач яких має політику, яку показує Ichor.\n3. Виберіть тип екземпляра, AMI Talos (офіційний AMI версії кластера вже в списку), підмережу та її групи безпеки.\n4. Створіть його: Ichor спершу покаже ціну й стежитиме, доки вузол не приєднається. Телефон має досягати порту 50000 екземпляра.</string>
     <string name="aws_howto_omni">1. Додайте ключі доступу, IAM-користувач яких має політику, яку показує Ichor.\n2. Назвіть екземпляр, потім виберіть тип екземпляра, AMI Talos, підмережу та її групи безпеки.\n3. Створіть його: Ichor спершу покаже ціну, потім стежитиме, доки машина не з\'явиться в Omni. Виділіть її кластеру.</string>
-    <string name="aws_add_keys">Додати ключі доступу AWS</string>
     <string name="aws_remove">Вилучити ці ключі</string>
     <string name="aws_keys_warning">Ключі доступу не спливають, доки ви їх не зміните, і можуть робити те, що дозволяє їхня політика IAM. Вони зберігаються запечатаними на цьому пристрої й не потрапляють у резервні копії.</string>
     <string name="aws_policy_hint">Призначте IAM-користувачу ключів цю політику: лише виклики, які робить Ichor, і завершувати він може лише екземпляри з міткою Ichor.</string>
@@ -6548,6 +6547,11 @@
     <string name="aws_secret_access_key">Секретний ключ доступу</string>
     <string name="aws_session_token">Токен сесії (необов\'язково)</string>
     <string name="aws_session_token_hint">З aws sts get-session-token або порталу SSO. Він спливає: тоді додайте ключі знову.</string>
+    <string name="aws_add_account">Додати обліковий запис AWS</string>
+    <string name="aws_sso_hint">Вхід як у aws sso login: нічого довготривалого не зберігається. Набору дозволів ролі потрібні дії політики вище.</string>
+    <string name="aws_sso_ec2_region">Регіон EC2 (порожньо: регіон Identity Center)</string>
+    <string name="aws_sso_signed_in">Вхід через IAM Identity Center як %1$s</string>
+    <string name="aws_sso_session_note">Ключі ролі оновлюються, доки триває ваша сесія Identity Center (типово 8 годин, задає адміністратор); потім увійдіть знову.</string>
     <string name="aws_region">Регіон</string>
     <string name="aws_check_ok">Ключі облікового запису %1$s можуть запускати екземпляри в %2$s.</string>
     <string name="aws_check_no">Ключі облікового запису %1$s не можуть запускати екземпляри в %2$s: призначте їхньому IAM-користувачу політику (ec2:RunInstances).</string>
