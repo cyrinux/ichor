@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Add an AWS account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "AWS-Konto hinzufügen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir una cuenta de AWS" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter un compte AWS" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi un account AWS" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AWS アカウントを追加" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Adicionar uma conta da AWS" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавить аккаунт AWS" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додати обліковий запис AWS" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加 AWS 账户" } }
+      }
+    },
+    "Signs in as aws sso login does: nothing long-lived is stored. The permission set of the role needs the actions of the policy above." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Meldet sich an wie aws sso login: Nichts Langlebiges wird gespeichert. Der Berechtigungssatz der Rolle braucht die Aktionen der Richtlinie oben." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Inicia sesión como lo hace aws sso login: no se guarda nada de larga duración. El conjunto de permisos del rol necesita las acciones de la política de arriba." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Se connecte comme aws sso login : rien de durable n'est stocké. L'ensemble d'autorisations du rôle doit permettre les actions de la politique ci-dessus." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Accede come fa aws sso login: non viene salvato nulla di duraturo. Il set di autorizzazioni del ruolo deve consentire le azioni della policy qui sopra." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "aws sso login と同じようにサインインします。長期間有効なものは保存されません。ロールの権限セットには上のポリシーのアクションが必要です。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Entra como o aws sso login: nada de longa duração é guardado. O conjunto de permissões da função precisa das ações da política acima." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вход как в aws sso login: ничего долгоживущего не сохраняется. Набору разрешений роли нужны действия политики выше." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вхід як у aws sso login: нічого довготривалого не зберігається. Набору дозволів ролі потрібні дії політики вище." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "与 aws sso login 一样登录:不会保存任何长期有效的凭据。角色的权限集需要包含上方策略中的操作。" } }
+      }
+    },
+    "EC2 region (empty: the Identity Center region)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "EC2-Region (leer: die Identity-Center-Region)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Región de EC2 (vacía: la región de Identity Center)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Région EC2 (vide : la région d'Identity Center)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Regione EC2 (vuota: la regione di Identity Center)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "EC2 リージョン(空欄なら Identity Center のリージョン)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Região do EC2 (vazia: a região do Identity Center)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Регион EC2 (пусто: регион Identity Center)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Регіон EC2 (порожньо: регіон Identity Center)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "EC2 区域(留空则使用 Identity Center 区域)" } }
+      }
+    },
+    "Signed in with IAM Identity Center as %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mit IAM Identity Center angemeldet als %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sesión iniciada con IAM Identity Center como %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Connecté avec IAM Identity Center en tant que %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Accesso con IAM Identity Center come %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "IAM Identity Center で %@ としてサインイン中" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Conectado com o IAM Identity Center como %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вход через IAM Identity Center как %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вхід через IAM Identity Center як %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已通过 IAM Identity Center 登录为 %@" } }
+      }
+    },
+    "The role's keys are renewed while your Identity Center session lasts (8 hours by default, set by your administrator); sign in again after it ends." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Schlüssel der Rolle werden erneuert, solange deine Identity-Center-Sitzung dauert (standardmäßig 8 Stunden, von deinem Administrator festgelegt); melde dich danach erneut an." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las claves del rol se renuevan mientras dure tu sesión de Identity Center (8 horas por defecto, las fija tu administrador); después vuelve a iniciar sesión." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les clés du rôle sont renouvelées tant que dure votre session Identity Center (8 heures par défaut, fixées par votre administrateur) ; reconnectez-vous ensuite." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Le chiavi del ruolo vengono rinnovate finché dura la tua sessione di Identity Center (8 ore di default, decise dal tuo amministratore); poi accedi di nuovo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ロールのキーは Identity Center のセッション中は更新されます(既定は 8 時間、管理者が設定)。終了したら再度サインインしてください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "As chaves da função são renovadas enquanto durar sua sessão do Identity Center (8 horas por padrão, definidas pelo seu administrador); depois, entre de novo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ключи роли обновляются, пока длится ваша сессия Identity Center (по умолчанию 8 часов, задаёт администратор); затем войдите снова." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ключі ролі оновлюються, доки триває ваша сесія Identity Center (типово 8 годин, задає адміністратор); потім увійдіть знову." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Identity Center 会话期间(默认 8 小时,由管理员设定)角色密钥会自动续期;会话结束后请重新登录。" } }
+      }
+    },
     "Images report" : {
       "extractionState" : "manual",
       "localizations" : {

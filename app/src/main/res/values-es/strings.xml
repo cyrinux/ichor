@@ -6281,7 +6281,6 @@
     <string name="aws_title">Crear la instancia en AWS</string>
     <string name="aws_howto">1. Elige un miembro para copiar y luego el nombre de host y el disco de instalación del nuevo nodo.\n2. Añade claves de acceso cuyo usuario IAM tenga la política que muestra Ichor.\n3. Elige un tipo de instancia, la AMI de Talos (aparece la oficial de la versión del clúster), una subred y sus grupos de seguridad.\n4. Créala: Ichor muestra primero el precio y la sigue hasta que el nodo se une. El teléfono debe llegar al puerto 50000 de la instancia.</string>
     <string name="aws_howto_omni">1. Añade claves de acceso cuyo usuario IAM tenga la política que muestra Ichor.\n2. Nombra la instancia y luego elige un tipo de instancia, la AMI de Talos, una subred y sus grupos de seguridad.\n3. Créala: Ichor muestra primero el precio y la sigue hasta que la máquina aparece en Omni. Asígnala al clúster.</string>
-    <string name="aws_add_keys">Añadir claves de acceso de AWS</string>
     <string name="aws_remove">Quitar estas claves</string>
     <string name="aws_keys_warning">Las claves de acceso no caducan salvo que las rotes y pueden hacer lo que su política IAM permita. Quedan selladas en este dispositivo y no están en las copias de seguridad.</string>
     <string name="aws_policy_hint">Da esta política al usuario IAM de las claves: solo las llamadas que hace Ichor, y solo puede terminar las instancias que Ichor etiquetó.</string>
@@ -6290,6 +6289,11 @@
     <string name="aws_secret_access_key">Clave de acceso secreta</string>
     <string name="aws_session_token">Token de sesión (opcional)</string>
     <string name="aws_session_token_hint">De aws sts get-session-token o del portal SSO. Caduca: entonces vuelve a añadir las claves.</string>
+    <string name="aws_add_account">Añadir una cuenta de AWS</string>
+    <string name="aws_sso_hint">Inicia sesión como lo hace aws sso login: no se guarda nada de larga duración. El conjunto de permisos del rol necesita las acciones de la política de arriba.</string>
+    <string name="aws_sso_ec2_region">Región de EC2 (vacía: la región de Identity Center)</string>
+    <string name="aws_sso_signed_in">Sesión iniciada con IAM Identity Center como %1$s</string>
+    <string name="aws_sso_session_note">Las claves del rol se renuevan mientras dure tu sesión de Identity Center (8 horas por defecto, las fija tu administrador); después vuelve a iniciar sesión.</string>
     <string name="aws_region">Región</string>
     <string name="aws_check_ok">Las claves de la cuenta %1$s pueden lanzar instancias en %2$s.</string>
     <string name="aws_check_no">Las claves de la cuenta %1$s no pueden lanzar instancias en %2$s: da la política a su usuario IAM (ec2:RunInstances).</string>

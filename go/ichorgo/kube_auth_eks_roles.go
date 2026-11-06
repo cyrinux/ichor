@@ -35,6 +35,14 @@ const (
 // ssoRoles lists the accounts and roles the token may assume, sorted by account name then
 // role.
 func (m *eksMethod) ssoRoles(ctx context.Context, token, region string) ([]awsSSORole, error) {
+	roles, err := awsSSO{region: region, http: m.http}.roles(ctx, token)
+
+	return roles, asSignInRequired(err)
+}
+
+// roles lists the accounts and roles the access token may assume, sorted by account name then
+// role. The portal refusing the token is errAWSSSOUnauthorized.
+func (s awsSSO) roles(ctx context.Context, token string) ([]awsSSORole, error) {
 	type account struct {
 		AccountID   string `json:"accountId"`
 		AccountName string `json:"accountName"`
@@ -42,7 +50,7 @@ func (m *eksMethod) ssoRoles(ctx context.Context, token, region string) ([]awsSS
 
 	var accounts []account
 
-	err := m.portalPages(ctx, token, region, "/assignment/accounts", url.Values{}, func(data json.RawMessage) error {
+	err := s.portalPages(ctx, token, "/assignment/accounts", url.Values{}, func(data json.RawMessage) error {
 		var page struct {
 			AccountList []account `json:"accountList"`
 		}
@@ -66,7 +74,7 @@ func (m *eksMethod) ssoRoles(ctx context.Context, token, region string) ([]awsSS
 	var roles []awsSSORole
 
 	for _, acc := range accounts {
-		err := m.portalPages(ctx, token, region, "/assignment/roles", url.Values{"account_id": {acc.AccountID}}, func(data json.RawMessage) error {
+		err := s.portalPages(ctx, token, "/assignment/roles", url.Values{"account_id": {acc.AccountID}}, func(data json.RawMessage) error {
 			var page struct {
 				RoleList []struct {
 					RoleName string `json:"roleName"`
@@ -96,7 +104,7 @@ func (m *eksMethod) ssoRoles(ctx context.Context, token, region string) ([]awsSS
 }
 
 // portalPages GETs every page of a portal listing, handing each answer to read.
-func (m *eksMethod) portalPages(ctx context.Context, token, region, path string, query url.Values, read func(json.RawMessage) error) error {
+func (s awsSSO) portalPages(ctx context.Context, token, path string, query url.Values, read func(json.RawMessage) error) error {
 	next := ""
 
 	for range awsSSOMaxPages {
@@ -107,7 +115,7 @@ func (m *eksMethod) portalPages(ctx context.Context, token, region, path string,
 			q.Set("next_token", next)
 		}
 
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, awsSSOPortalEndpoint(region)+path+"?"+q.Encode(), nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, awsSSOPortalEndpoint(s.region)+path+"?"+q.Encode(), nil)
 		if err != nil {
 			return err
 		}
@@ -116,7 +124,7 @@ func (m *eksMethod) portalPages(ctx context.Context, token, region, path string,
 
 		var raw json.RawMessage
 
-		status, err := m.doJSON(req, &raw)
+		status, err := s.doJSON(req, &raw)
 		if err != nil {
 			return err
 		}
@@ -129,7 +137,7 @@ func (m *eksMethod) portalPages(ctx context.Context, token, region, path string,
 		_ = json.Unmarshal(raw, &page)
 
 		if status == http.StatusUnauthorized || status == http.StatusForbidden {
-			return signInRequired(authEKS, page.Message)
+			return &errAWSSSOUnauthorized{message: page.Message}
 		}
 
 		if status != http.StatusOK {

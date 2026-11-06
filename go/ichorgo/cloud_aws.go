@@ -99,29 +99,24 @@ type awsClient struct {
 	region string
 }
 
-// newAWSClient reads credJSON: {"accessKeyId","secretAccessKey","sessionToken","region"}.
+// newAWSClient reads credJSON (awsCredentialFile): {"accessKeyId","secretAccessKey",
+// "sessionToken","region"}, or an IAM Identity Center sign-in whose role credentials are used as
+// they are, refused with less than five minutes left (a run: the app renews them first with
+// AWSRenew). See newAWSClientOnline for the calls that may renew them.
 func newAWSClient(credJSON string) (*awsClient, error) {
-	var c struct {
-		AccessKeyID     string `json:"accessKeyId"`
-		SecretAccessKey string `json:"secretAccessKey"`
-		SessionToken    string `json:"sessionToken"`
-		Region          string `json:"region"`
+	f, err := parseAWSCredential(credJSON)
+	if err != nil {
+		return nil, err
 	}
 
-	if strings.TrimSpace(credJSON) != "" {
-		if err := json.Unmarshal([]byte(credJSON), &c); err != nil {
-			return nil, errors.New("invalid AWS keys data") //nolint:nilerr // the parser's message may quote the secret
-		}
-	}
-
-	creds := awsCredentials{strings.TrimSpace(c.AccessKeyID), strings.TrimSpace(c.SecretAccessKey), strings.TrimSpace(c.SessionToken)}
-	if creds.accessKeyID == "" || creds.secretAccessKey == "" {
-		return nil, errAWSNoCredential
+	creds, _, _, err := awsResolve(context.Background(), f, false, awsRoleMinLeft)
+	if err != nil {
+		return nil, err
 	}
 
 	client := &awsClient{creds: creds}
 
-	return client, client.setRegion(c.Region)
+	return client, client.setRegion(f.Region)
 }
 
 // setRegion checks a region name: it goes into a host name.
@@ -362,29 +357,32 @@ type awsTestResult struct {
 	Region    string `json:"region"`
 	CanCreate bool   `json:"canCreate"`
 	Checked   bool   `json:"checked"`
+	// Credential is the credential JSON to seal again when the call renewed it, else "".
+	Credential string `json:"credential,omitempty"`
 }
 
 // AWSTest checks access keys. JSON: {"account","arn","region","canCreate","checked"}: canCreate
 // from a RunInstances dry run naming the region's official Talos AMI, checked false when that
 // AMI cannot be found (the release's cloud-images.json does not answer) or EC2 answers anything
-// but yes or no. Creates nothing.
+// but yes or no. Creates nothing. With an IAM Identity Center sign-in, "credential" is the
+// renewed credential JSON when it changed.
 func AWSTest(credJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
 
-	c, err := newAWSClient(credJSON)
+	ctx, cancel := context.WithTimeout(context.Background(), awsOptionsTimeout)
+	defer cancel()
+
+	c, updated, err := newAWSClientOnline(ctx, credJSON)
 	if err != nil {
 		return "", err
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), awsOptionsTimeout)
-	defer cancel()
 
 	id, err := c.sts(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	result := awsTestResult{Account: id.Account, Arn: id.Arn, Region: c.region}
+	result := awsTestResult{Account: id.Account, Arn: id.Arn, Region: c.region, Credential: updated}
 
 	images, err := talosAWSImages(ctx, awsCheckTalosVersion, c.region)
 	if i := slices.IndexFunc(images, func(i awsImage) bool { return i.Arch == bootArchAMD64 }); err == nil && i >= 0 {
@@ -444,8 +442,9 @@ func AWSIAMPolicy() string {
 }
 
 type awsPriceResult struct {
-	Hourly   string `json:"hourly"`
-	Currency string `json:"currency,omitempty"`
+	Hourly     string `json:"hourly"`
+	Currency   string `json:"currency,omitempty"`
+	Credential string `json:"credential,omitempty"`
 }
 
 // AWSPrice is the on-demand Linux hourly price of one instance type in the keys' region, before
@@ -454,20 +453,23 @@ type awsPriceResult struct {
 func AWSPrice(credJSON, instanceType string) (out string, err error) {
 	defer maskResult(&out, &err)
 
-	c, err := newAWSClient(credJSON)
-	if err != nil {
-		return "", err
-	}
-
 	instanceType = strings.TrimSpace(instanceType)
 	if instanceType == "" {
 		return "", errors.New("pick an instance type")
 	}
 
-	hourly := c.pricing(context.Background(), instanceType)
-	if hourly == "" {
-		return toJSON(awsPriceResult{})
+	ctx, cancel := context.WithTimeout(context.Background(), awsOptionsTimeout)
+	defer cancel()
+
+	c, updated, err := newAWSClientOnline(ctx, credJSON)
+	if err != nil {
+		return "", err
 	}
 
-	return toJSON(awsPriceResult{Hourly: hourly, Currency: "USD"})
+	hourly := c.pricing(ctx, instanceType)
+	if hourly == "" {
+		return toJSON(awsPriceResult{Credential: updated})
+	}
+
+	return toJSON(awsPriceResult{Hourly: hourly, Currency: "USD", Credential: updated})
 }

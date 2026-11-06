@@ -38,6 +38,30 @@ extension TalosClient {
         }
     }
 
+    /// Starts an IAM Identity Center sign-in: the device code to approve.
+    static func awsSignInStart(request: String) async throws -> AWSSignInStart {
+        try await json { IchorgoAWSSignInStart(request, $0) }
+    }
+
+    /// Waits for the code to be approved (minutes; ended by `awsSignInCancel`), then lists the roles.
+    static func awsSignInFinish(credential: String) async throws -> AWSSignInFinish {
+        try await json { IchorgoAWSSignInFinish(credential, $0) }
+    }
+
+    static func awsSignInCancel() {
+        IchorgoAWSSignInCancel()
+    }
+
+    /// The credentials of one account and role of the list.
+    static func awsSignInChoose(credential: String, role: KubeSsoRoleChoice) async throws -> AWSSignInChoice {
+        try await json { IchorgoAWSSignInChoose(credential, role.accountId, role.roleName, $0) }
+    }
+
+    /// Role credentials that last a run; "" when the stored credential is good as it is.
+    static func awsRenew(credential: String) async throws -> AWSRenewed {
+        try await json { IchorgoAWSRenew(credential, $0) }
+    }
+
     /// The cost line of an AMI run. Creates nothing.
     static func awsImageEstimate(credential: String, arch: String, region: String) async throws -> AWSImageCost {
         try await json { IchorgoAWSImageEstimate(credential, arch, region, $0) }

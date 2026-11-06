@@ -241,12 +241,7 @@ func (m *eksMethod) ssoAccessToken(ctx context.Context, state kubeAuthState) (st
 		return "", state, signInRequired(authEKS, "")
 	}
 
-	var t awsSSOToken
-
-	status, err := m.postJSONStatus(ctx, awsSSOOIDCEndpoint(state.secret(awsFieldSSORegion))+"/token", map[string]any{
-		"clientId": state.session("ssoClientId"), "clientSecret": state.session("ssoClientSecret"),
-		"grantType": "refresh_token", "refreshToken": state.session("ssoRefresh"),
-	}, &t)
+	t, status, err := m.sso(state).refresh(ctx, state.session("ssoClientId"), state.session("ssoClientSecret"), state.session("ssoRefresh"))
 
 	// Only AWS refusing the refresh token ends the session; the phone off its network or VPN,
 	// a timeout or AWS failing is an error to retry, the refresh token kept for the next try.
@@ -299,42 +294,23 @@ func (m *eksMethod) withSSOToken(state kubeAuthState, t awsSSOToken) kubeAuthSta
 }
 
 func (m *eksMethod) ssoRoleCredentials(ctx context.Context, token string, state kubeAuthState) (awsCredentials, kubeAuthState, error) {
-	q := url.Values{"account_id": {state.secret(awsFieldAccountID)}, "role_name": {state.secret(awsFieldRoleName)}}
+	c, expiry, err := m.sso(state).roleCredentials(ctx, token, state.secret(awsFieldAccountID), state.secret(awsFieldRoleName))
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, awsSSOPortalEndpoint(state.secret(awsFieldSSORegion))+"/federation/credentials?"+q.Encode(), nil)
+	var refused *errAWSSSOUnauthorized
+	if errors.As(err, &refused) {
+		return awsCredentials{}, state.withSession(map[string]string{"ssoAccess": ""}), signInRequired(authEKS, refused.message)
+	}
+
 	if err != nil {
 		return awsCredentials{}, state, err
 	}
 
-	req.Header.Set("X-Amz-Sso_bearer_token", token)
+	return c, withSessionCredentials(state, "role", c, expiry), nil
+}
 
-	var answer struct {
-		RoleCredentials struct {
-			AccessKeyID     string `json:"accessKeyId"`
-			SecretAccessKey string `json:"secretAccessKey"`
-			SessionToken    string `json:"sessionToken"`
-			Expiration      int64  `json:"expiration"` // milliseconds
-		} `json:"roleCredentials"`
-		Message string `json:"message"`
-	}
-
-	status, err := m.doJSON(req, &answer)
-	if err != nil {
-		return awsCredentials{}, state, err
-	}
-
-	rc := answer.RoleCredentials
-	if status == http.StatusUnauthorized || status == http.StatusForbidden {
-		return awsCredentials{}, state.withSession(map[string]string{"ssoAccess": ""}), signInRequired(authEKS, answer.Message)
-	}
-
-	if rc.AccessKeyID == "" {
-		return awsCredentials{}, state, fmt.Errorf("IAM Identity Center gave no role credentials: %s", cmpOr(answer.Message, strconv.Itoa(status)))
-	}
-
-	c := awsCredentials{rc.AccessKeyID, rc.SecretAccessKey, rc.SessionToken}
-
-	return c, withSessionCredentials(state, "role", c, time.UnixMilli(rc.Expiration)), nil
+// sso is IAM Identity Center in the sign-in's SSO region, with the method's HTTP client.
+func (m *eksMethod) sso(state kubeAuthState) awsSSO {
+	return awsSSO{region: state.secret(awsFieldSSORegion), http: m.http}
 }
 
 // assumedRole switches to roleARN with STS AssumeRole, cached until it expires.
@@ -387,51 +363,6 @@ func (m *eksMethod) assumedRole(ctx context.Context, base awsCredentials, state 
 	return creds, withSessionCredentials(state, "assumed", creds, c.Expiration), nil
 }
 
-func (m *eksMethod) postJSON(ctx context.Context, endpoint string, body any, out any) error {
-	_, err := m.postJSONStatus(ctx, endpoint, body, out)
-
-	return err
-}
-
-// postJSONStatus is postJSON with the HTTP status of the answer (0 when there was none).
-func (m *eksMethod) postJSONStatus(ctx context.Context, endpoint string, body any, out any) (int, error) {
-	data, err := json.Marshal(body)
-	if err != nil {
-		return 0, err
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(data))
-	if err != nil {
-		return 0, err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	return m.doJSON(req, out)
-}
-
-// doJSON decodes the answer whatever its status (AWS sends errors as JSON too).
-func (m *eksMethod) doJSON(req *http.Request, out any) (int, error) {
-	resp, err := m.http.Do(req)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close() //nolint:errcheck
-
-	data, err := io.ReadAll(io.LimitReader(resp.Body, awsMaxBody))
-	if err != nil {
-		return resp.StatusCode, err
-	}
-
-	if len(bytes.TrimSpace(data)) > 0 {
-		if err := json.Unmarshal(data, out); err != nil {
-			return resp.StatusCode, fmt.Errorf("AWS answered %d", resp.StatusCode)
-		}
-	}
-
-	return resp.StatusCode, nil
-}
-
 // signIn runs the IAM Identity Center device flow (like `aws sso login`): register a public
 // client allowed refresh tokens, show the code, wait for approval.
 func (m *eksMethod) signIn(ctx context.Context, state kubeAuthState, prompt func(signInPrompt), _ <-chan string) (kubeAuthState, error) {
@@ -439,52 +370,16 @@ func (m *eksMethod) signIn(ctx context.Context, state kubeAuthState, prompt func
 		return state, errors.New("enter AWS access keys or an IAM Identity Center start URL first")
 	}
 
-	endpoint := awsSSOOIDCEndpoint(state.secret(awsFieldSSORegion))
+	sso := m.sso(state)
 
-	var client struct {
-		ClientID     string `json:"clientId"`
-		ClientSecret string `json:"clientSecret"`
-		Error        string `json:"error"`
-	}
-
-	err := m.postJSON(ctx, endpoint+"/client/register", map[string]any{
-		"clientName": "ichor", "clientType": "public", "scopes": []string{"sso:account:access"},
-		"grantTypes": []string{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"},
-	}, &client)
-	if err != nil || client.ClientID == "" {
-		return state, fmt.Errorf("IAM Identity Center refused the app: %s", cmpOr(client.Error, errText(err)))
-	}
-
-	var device struct {
-		DeviceCode              string `json:"deviceCode"`
-		UserCode                string `json:"userCode"`
-		VerificationURI         string `json:"verificationUri"`
-		VerificationURIComplete string `json:"verificationUriComplete"`
-		ExpiresIn               int    `json:"expiresIn"`
-		Interval                int    `json:"interval"`
-	}
-
-	err = m.postJSON(ctx, endpoint+"/device_authorization", map[string]any{
-		"clientId": client.ClientID, "clientSecret": client.ClientSecret, "startUrl": state.secret(awsFieldSSOStartURL),
-	}, &device)
-	if err != nil || device.DeviceCode == "" {
-		return state, fmt.Errorf("IAM Identity Center gave no device code: %s", errText(err))
+	client, device, err := sso.deviceStart(ctx, state.secret(awsFieldSSOStartURL))
+	if err != nil {
+		return state, err
 	}
 
 	prompt(signInPrompt{Kind: "device", URL: cmpOr(device.VerificationURIComplete, device.VerificationURI), UserCode: device.UserCode, VerificationURL: device.VerificationURI, ExpiresIn: device.ExpiresIn})
 
-	var token awsSSOToken
-
-	_, err = pollDeviceToken(ctx, oidcDeviceAnswer{ExpiresIn: device.ExpiresIn, Interval: device.Interval}, func(ctx context.Context) (oidcTokens, error) {
-		token = awsSSOToken{}
-
-		err := m.postJSON(ctx, endpoint+"/token", map[string]any{
-			"clientId": client.ClientID, "clientSecret": client.ClientSecret,
-			"grantType": "urn:ietf:params:oauth:grant-type:device_code", "deviceCode": device.DeviceCode,
-		}, &token)
-
-		return oidcTokens{Error: awsDeviceError(token.Error)}, err
-	})
+	token, err := sso.deviceFinish(ctx, client, device)
 	if err != nil {
 		return state, err
 	}

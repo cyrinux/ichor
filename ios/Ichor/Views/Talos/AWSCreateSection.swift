@@ -1,6 +1,5 @@
 import IchorCore
 import SwiftUI
-import UIKit
 
 /// "Create the instance at AWS": the run makes the user data itself. On Omni only a name is asked;
 /// on plain Talos the card's new member is used. The price, the typed name and the app lock come
@@ -53,6 +52,13 @@ struct AWSCreateSection: View {
         account.isEmpty ? "" : CloudProviderStore.token(provider: CloudProviderStore.aws, project: account)
     }
 
+    /// The picked account's IAM Identity Center sign-in (no secret read from it), nil for access keys.
+    private var signedIn: AWSCredential? {
+        let decoded = try? JSONDecoder().decode(AWSCredential.self, from: Data(credential.utf8))
+        guard let stored = decoded else { return nil }
+        return stored.identityCenter ? stored : nil
+    }
+
     private var demo: Bool { model.activeSummary?.demo == true }
     private var name: String { omni ? omniName.trimmingCharacters(in: .whitespaces) : hostname }
 
@@ -72,7 +78,7 @@ struct AWSCreateSection: View {
             }
             .task { await load() }
             .sheet(isPresented: $adding) {
-                AWSKeysSheet { added in
+                AWSAccountSheet { added in
                     reloadAccounts()
                     pick(added)
                 }
@@ -93,14 +99,40 @@ struct AWSCreateSection: View {
                 ForEach(accounts, id: \.self) { Text(verbatim: $0).tag($0) }
             }
         }
-        Button("Add AWS access keys") { adding = true }
+        if let signedIn {
+            Text("Signed in with IAM Identity Center as \(signedIn.role.label)")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+        Button("Add an AWS account") { adding = true }
         if !account.isEmpty {
-            Button("Remove these keys", role: .destructive) {
-                try? CloudProviderStore.save(provider: CloudProviderStore.aws, project: account, token: "")
-                reloadAccounts()
-                pick(accounts.first ?? "")
+            if signedIn != nil {
+                Button("Sign out", role: .destructive) { removeAccount() }
+            } else {
+                Button("Remove these keys", role: .destructive) { removeAccount() }
             }
         }
+    }
+
+    private func removeAccount() {
+        try? CloudProviderStore.save(provider: CloudProviderStore.aws, project: account, token: "")
+        reloadAccounts()
+        pick(accounts.first ?? "")
+    }
+
+    /// Seals again what the core renewed (an Identity Center sign-in's tokens); "" is nothing to do.
+    private func reseal(_ updated: String) {
+        guard !account.isEmpty, !updated.isEmpty else { return }
+        try? CloudProviderStore.save(provider: CloudProviderStore.aws, project: account, token: updated)
+    }
+
+    /// The credential for a run, which uses only what it is given: an Identity Center sign-in is
+    /// renewed first. A renewal that fails passes the stored one, and the run says why.
+    private func runCredential() async -> String {
+        let stored = credential
+        guard !account.isEmpty else { return stored }
+        let renewed = (try? await TalosClient.awsRenew(credential: stored))?.credential ?? ""
+        reseal(renewed)
+        return renewed.isEmpty ? stored : renewed
     }
 
     @ViewBuilder
@@ -394,16 +426,16 @@ struct AWSCreateSection: View {
         }
     }
 
-    /// The same keys in another region: re-sealed with it, then the region's options.
+    /// The same keys in another region: re-sealed with it, then the region's options. Edited as
+    /// JSON: an Identity Center sign-in holds tokens AWSCredential does not keep.
     private func switchRegion(_ region: String) {
         guard !account.isEmpty,
             let keys = try? JSONDecoder().decode(AWSCredential.self, from: Data(credential.utf8)),
             keys.region != region,
-            let json = try? JSONEncoder().encode(keys.with(region: region))
+            let json = AWSCredential.moved(credential, to: region)
         else { return }
         do {
-            try CloudProviderStore.save(
-                provider: CloudProviderStore.aws, project: account, token: String(decoding: json, as: UTF8.self))
+            try CloudProviderStore.save(provider: CloudProviderStore.aws, project: account, token: json)
         } catch {
             authError = error.localizedDescription
             return
@@ -416,6 +448,7 @@ struct AWSCreateSection: View {
         let credential = self.credential
         options = .loading
         options = await LoadState.from { try await client.awsOptions(credential: credential) }
+        if case .loaded(let value, _, _) = options { reseal(value.credential) }
     }
 
     /// The Price List's answer for the picked type; a failure (the demo has no keys) is "price unavailable".
@@ -425,6 +458,7 @@ struct AWSCreateSection: View {
         let credential = self.credential
         let type = typeName
         let answer = (try? await TalosClient.awsPrice(credential: credential, instanceType: type)) ?? AWSPrice()
+        reseal(answer.credential)
         if !Task.isCancelled { price = answer }
     }
 
@@ -434,7 +468,10 @@ struct AWSCreateSection: View {
         let request = JoinRequest(
             address: "", template: spec.templateNode, role: "", hostname: "Talos \(spec.arch)", disk: "",
             staticAddress: "", awsImage: spec)
-        job.start(client: client, request: request, providerToken: credential) { _ in }
+        Task {
+            let token = await runCredential()
+            job.start(client: client, request: request, providerToken: token) { _ in }
+        }
     }
 
     /// The region's AMIs again, with the new one picked.
@@ -461,145 +498,9 @@ struct AWSCreateSection: View {
             staticAddress: "", aws: spec, omni: omni)
         // The cluster the node joins, even if another one is active when it has joined.
         let context = model.activeContext
-        job.start(client: client, request: request, providerToken: credential) { address in
+        let token = await runCredential()
+        job.start(client: client, request: request, providerToken: token) { address in
             try await model.addNodes([address], to: context)
-        }
-    }
-}
-
-/// The access keys (masked), an optional session token, the region, the policy to give them, a
-/// test, then sealed under the account id.
-private struct AWSKeysSheet: View {
-    let onSaved: (String) -> Void
-
-    @Environment(\.dismiss) private var dismiss
-    @State private var accessKeyId = ""
-    @State private var secret = ""
-    @State private var sessionToken = ""
-    @State private var region = ""
-    @State private var check: LoadState<AWSCheck>?
-    @State private var saveError: String?
-
-    // Explicit: the private @State makes the memberwise init private.
-    init(onSaved: @escaping (String) -> Void) {
-        self.onSaved = onSaved
-    }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Text(
-                        "Access keys do not expire unless you rotate them and can do what their IAM policy allows. They stay sealed on this device and are not in backups."
-                    )
-                    .font(.footnote).foregroundStyle(.orange)
-                    Text(
-                        "Give the keys' IAM user this policy: only the calls Ichor makes, and it may terminate only the instances Ichor tagged."
-                    )
-                    .font(.footnote).foregroundStyle(.secondary)
-                    Button("Copy the IAM policy") {
-                        UIPasteboard.general.string = TalosClient.awsPolicy()
-                    }
-                }
-                Section {
-                    TextField("Access key ID", text: $accessKeyId)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .onChange(of: accessKeyId) { check = nil }
-                    SecureField("Secret access key", text: $secret)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .onChange(of: secret) { check = nil }
-                    SecureField("Session token (optional)", text: $sessionToken)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .onChange(of: sessionToken) { check = nil }
-                    TextField("Region", text: $region)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .onChange(of: region) { check = nil }
-                    Button("Test") { Task { await test() } }
-                        .disabled(accessKeyId.isEmpty || secret.isEmpty || region.isEmpty)
-                } footer: {
-                    Text("From aws sts get-session-token or the SSO portal. It expires: add the keys again then.")
-                }
-                if let check {
-                    Section { result(check) }
-                }
-                if let saveError {
-                    Section { Text(verbatim: saveError).foregroundStyle(.statusBad) }
-                }
-            }
-            .navigationTitle("Add AWS access keys")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
-                        .disabled(!canSave)
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func result(_ state: LoadState<AWSCheck>) -> some View {
-        switch state {
-        case .loading:
-            ProgressView().frame(maxWidth: .infinity)
-        case .failed(let error):
-            Text(verbatim: error).foregroundStyle(.statusBad)
-        case .loaded(let value, _, _):
-            if !value.checked {
-                Text(
-                    "Keys of account \(value.account), in \(value.region). Whether they may run instances shows when they try."
-                )
-            } else if value.canCreate {
-                Text("Keys of account \(value.account) may run instances in \(value.region).")
-                    .foregroundStyle(.statusOK)
-            } else {
-                Text(
-                    "Keys of account \(value.account) may not run instances in \(value.region): give their IAM user the policy (ec2:RunInstances)."
-                )
-                .foregroundStyle(.orange)
-            }
-        }
-    }
-
-    private var tested: AWSCheck? {
-        guard case .loaded(let value, _, _) = check else { return nil }
-        return value
-    }
-
-    private var canSave: Bool {
-        guard let tested, tested.canCreate || !tested.checked else { return false }
-        return !tested.account.isEmpty
-    }
-
-    private func credentialJSON() -> String {
-        let trim = { (text: String) in text.trimmingCharacters(in: .whitespacesAndNewlines) }
-        let credential = AWSCredential(
-            accessKeyId: trim(accessKeyId), secretAccessKey: trim(secret), sessionToken: trim(sessionToken),
-            region: trim(region))
-        return (try? JSONEncoder().encode(credential)).map { String(decoding: $0, as: UTF8.self) } ?? ""
-    }
-
-    private func test() async {
-        let credential = credentialJSON()
-        check = .loading
-        check = await LoadState.from { try await TalosClient.awsTest(credential: credential) }
-    }
-
-    private func save() {
-        guard let account = tested?.account else { return }
-        do {
-            try CloudProviderStore.save(provider: CloudProviderStore.aws, project: account, token: credentialJSON())
-            onSaved(account)
-            dismiss()
-        } catch {
-            saveError = error.localizedDescription
         }
     }
 }

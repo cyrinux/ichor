@@ -4,16 +4,35 @@ import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo/cloud_aws.go, cloud_aws_options.go and cloud_aws_create.go.
 
-/** Access keys and their region, sealed on the device; what the core gets per call. */
+/**
+ * Access keys and their region, sealed on the device; what the core gets per call. An IAM
+ * Identity Center sign-in has no keys but [ssoStartUrl] and the account and role: its tokens
+ * stay in the JSON the core returns, which the app seals as it is and never re-encodes from
+ * this class (it would drop them).
+ */
 @Serializable
 data class AWSCredential(
     val accessKeyId: String = "",
     val secretAccessKey: String = "",
     val sessionToken: String = "",
     val region: String = "",
-)
+    val ssoStartUrl: String = "",
+    val ssoRegion: String = "",
+    val accountId: String = "",
+    val accountName: String = "",
+    val roleName: String = "",
+) {
+    val identityCenter: Boolean get() = accessKeyId.isBlank() && ssoStartUrl.isNotBlank()
 
-/** Whose keys these are and whether they may run instances; [checked] is false when that could not be told. */
+    /** The signed-in role, as the role list shows it. */
+    val role: SsoRoleChoice get() = SsoRoleChoice(accountId, accountName, roleName)
+}
+
+/**
+ * Whose keys these are and whether they may run instances; [checked] is false when that could not
+ * be told. [credential] is the renewed credential JSON to seal again, "" when nothing changed (as
+ * in [AWSOptions], [AWSPrice] and [AWSImageCost]).
+ */
 @Serializable
 data class AWSCheck(
     val account: String = "",
@@ -21,7 +40,35 @@ data class AWSCheck(
     val region: String = "",
     val canCreate: Boolean = false,
     val checked: Boolean = false,
+    val credential: String = "",
 )
+
+/** AWSSignInStart: the code to approve at [verificationUriComplete], and the credential for the next step. */
+@Serializable
+data class AWSSignInStart(
+    val verificationUri: String = "",
+    val verificationUriComplete: String = "",
+    val userCode: String = "",
+    val expiresIn: Int = 0,
+    val interval: Int = 0,
+    val credential: String = "",
+) {
+    /** As the kube sign-in's device code, to show it the same way. */
+    val prompt: SignInPrompt
+        get() = SignInPrompt(SignInPrompt.KIND_DEVICE, verificationUriComplete, userCode, verificationUri, expiresIn = expiresIn)
+}
+
+/** AWSSignInFinish: the accounts and roles to pick from. */
+@Serializable
+data class AWSSignInFinish(val credential: String = "", val roles: List<SsoRoleChoice> = emptyList())
+
+/** AWSSignInChoose: the picked role's credential, and whose it is. */
+@Serializable
+data class AWSSignInChoice(val credential: String = "", val account: String = "", val arn: String = "")
+
+/** AWSRenew: the credential to seal and give a run, "" when the stored one is good as it is. */
+@Serializable
+data class AWSRenewed(val credential: String = "")
 
 /**
  * What an instance can be created from in [region]; [warnings] are the core's, shown as they are.
@@ -38,6 +85,7 @@ data class AWSOptions(
     val templateVersion: String = "",
     val templateSchematic: String = "",
     val warnings: List<String> = emptyList(),
+    val credential: String = "",
 )
 
 @Serializable
@@ -90,7 +138,7 @@ data class AWSImage(
 
 /** The on-demand hourly price before tax; [hourly] is empty when the Price List does not answer. */
 @Serializable
-data class AWSPrice(val hourly: String = "", val currency: String = "")
+data class AWSPrice(val hourly: String = "", val currency: String = "", val credential: String = "")
 
 /** StartAWSCreate's specJSON. Never holds the keys. */
 @Serializable
@@ -145,6 +193,7 @@ data class AWSImageCost(
     val currency: String = "",
     val snapshotMonthlyPerGB: String = "",
     val minutes: Int = 0,
+    val credential: String = "",
 )
 
 /** The architectures the instance types run, amd64 first. */

@@ -6281,7 +6281,6 @@
     <string name="aws_title">Créer l\'instance chez AWS</string>
     <string name="aws_howto">1. Choisissez un membre à copier, puis le nom d\'hôte et le disque d\'installation du nouveau nœud.\n2. Ajoutez des clés d\'accès dont l\'utilisateur IAM a la politique qu\'Ichor affiche.\n3. Choisissez un type d\'instance, l\'AMI Talos (l\'officielle de la version du cluster est listée), un sous-réseau et ses groupes de sécurité.\n4. Créez-la : Ichor affiche d\'abord le prix et la suit jusqu\'à ce que le nœud rejoigne. Le téléphone doit joindre le port 50000 de l\'instance.</string>
     <string name="aws_howto_omni">1. Ajoutez des clés d\'accès dont l\'utilisateur IAM a la politique qu\'Ichor affiche.\n2. Nommez l\'instance, puis choisissez un type d\'instance, l\'AMI Talos, un sous-réseau et ses groupes de sécurité.\n3. Créez-la : Ichor affiche d\'abord le prix, puis la suit jusqu\'à ce que la machine apparaisse dans Omni. Allouez-la au cluster.</string>
-    <string name="aws_add_keys">Ajouter des clés d\'accès AWS</string>
     <string name="aws_remove">Retirer ces clés</string>
     <string name="aws_keys_warning">Les clés d\'accès n\'expirent pas tant que vous ne les renouvelez pas et peuvent faire ce que leur politique IAM permet. Elles restent scellées sur cet appareil et ne sont pas dans les sauvegardes.</string>
     <string name="aws_policy_hint">Donnez cette politique à l\'utilisateur IAM des clés : seulement les appels qu\'Ichor fait, et il ne peut résilier que les instances qu\'Ichor a étiquetées.</string>
@@ -6290,6 +6289,11 @@
     <string name="aws_secret_access_key">Clé d\'accès secrète</string>
     <string name="aws_session_token">Jeton de session (facultatif)</string>
     <string name="aws_session_token_hint">Issu de aws sts get-session-token ou du portail SSO. Il expire : ajoutez alors les clés à nouveau.</string>
+    <string name="aws_add_account">Ajouter un compte AWS</string>
+    <string name="aws_sso_hint">Se connecte comme aws sso login : rien de durable n\'est stocké. L\'ensemble d\'autorisations du rôle doit permettre les actions de la politique ci-dessus.</string>
+    <string name="aws_sso_ec2_region">Région EC2 (vide : la région d\'Identity Center)</string>
+    <string name="aws_sso_signed_in">Connecté avec IAM Identity Center en tant que %1$s</string>
+    <string name="aws_sso_session_note">Les clés du rôle sont renouvelées tant que dure votre session Identity Center (8 heures par défaut, fixées par votre administrateur) ; reconnectez-vous ensuite.</string>
     <string name="aws_region">Région</string>
     <string name="aws_check_ok">Les clés du compte %1$s peuvent lancer des instances dans %2$s.</string>
     <string name="aws_check_no">Les clés du compte %1$s ne peuvent pas lancer d\'instances dans %2$s : donnez la politique à leur utilisateur IAM (ec2:RunInstances).</string>

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -90,7 +91,8 @@ var cloudCommands = []command{
 
 		return "", errors.New("usage: scaleway test|options|policy|create …")
 	}},
-	{name: "aws", args: "test|options|policy|price TYPE|estimate ARCH REGION|image TEMPLATE ARCH SUBNET SG|- -yes|create TEMPLATE ROLE HOSTNAME DISK TYPE AMI SUBNET SG[,SG] -yes", run: func(e env) (string, error) {
+	{name: "aws", args: "test|options|policy|price TYPE|estimate ARCH REGION|image TEMPLATE ARCH SUBNET SG|- -yes|create TEMPLATE ROLE HOSTNAME DISK TYPE AMI SUBNET SG[,SG] -yes|" +
+		"signin START_URL SSO_REGION [ACCOUNT ROLE]", run: func(e env) (string, error) {
 		credJSON, err := json.Marshal(map[string]string{
 			"accessKeyId": os.Getenv("AWS_ACCESS_KEY_ID"), "secretAccessKey": os.Getenv("AWS_SECRET_ACCESS_KEY"),
 			"sessionToken": os.Getenv("AWS_SESSION_TOKEN"), "region": os.Getenv("AWS_REGION"),
@@ -114,9 +116,11 @@ var cloudCommands = []command{
 			return awsImage(e, string(credJSON))
 		case "create":
 			return awsCreate(e, string(credJSON))
+		case "signin":
+			return awsSignIn()
 		}
 
-		return "", errors.New("usage: aws test|options|policy|price TYPE|estimate|image|create …")
+		return "", errors.New("usage: aws test|options|policy|price TYPE|estimate|image|create|signin …")
 	}},
 	{name: "azure", args: "test|options|role [RG]|price LOCATION SIZE|estimate ARCH LOCATION|image TEMPLATE ARCH RG LOCATION SUBNET_ID NSG_ID|- -yes|" +
 		"create TEMPLATE ROLE HOSTNAME DISK RG LOCATION SIZE IMAGE_ID SUBNET_ID NSG_ID|- -yes", run: func(e env) (string, error) {
@@ -339,6 +343,67 @@ func awsImage(e env, credJSON string) (string, error) {
 	ichorgo.StartAWSImage(e.cfg, e.context, credJSON, string(spec), j)
 
 	return "done: " + <-j.done, nil
+}
+
+// awsSignIn runs the IAM Identity Center sign-in of the EC2 create: the code and link, the wait
+// for the browser, the accounts and roles; with ACCOUNT ROLE, whose the role's credentials are.
+// The credential JSON (tokens and keys) is never printed.
+func awsSignIn() (string, error) {
+	if flag.NArg() != 4 && flag.NArg() != 6 {
+		return "", errors.New("usage: aws signin START_URL SSO_REGION [ACCOUNT ROLE]")
+	}
+
+	cred, err := json.Marshal(map[string]string{"ssoStartUrl": flag.Arg(2), "ssoRegion": flag.Arg(3), "region": os.Getenv("AWS_REGION")})
+	if err != nil {
+		return "", err
+	}
+
+	var start struct {
+		VerificationURIComplete string `json:"verificationUriComplete"`
+		UserCode                string `json:"userCode"`
+		Credential              string `json:"credential"`
+	}
+
+	if err := probeJSON(ichorgo.AWSSignInStart(string(cred)))(&start); err != nil {
+		return "", err
+	}
+
+	fmt.Fprintf(os.Stderr, "open %s and confirm the code %s\n", start.VerificationURIComplete, start.UserCode)
+
+	var finish struct {
+		Credential string          `json:"credential"`
+		Roles      json.RawMessage `json:"roles"`
+	}
+
+	if err := probeJSON(ichorgo.AWSSignInFinish(start.Credential))(&finish); err != nil {
+		return "", err
+	}
+
+	if flag.NArg() == 4 {
+		return string(finish.Roles), nil
+	}
+
+	var chosen struct {
+		Account string `json:"account"`
+		Arn     string `json:"arn"`
+	}
+
+	if err := probeJSON(ichorgo.AWSSignInChoose(finish.Credential, flag.Arg(4), flag.Arg(5)))(&chosen); err != nil {
+		return "", err
+	}
+
+	return "signed in as " + chosen.Arn + " (account " + chosen.Account + ")", nil
+}
+
+// probeJSON decodes a facade result, or passes its error on.
+func probeJSON(out string, err error) func(any) error {
+	return func(v any) error {
+		if err != nil {
+			return err
+		}
+
+		return json.Unmarshal([]byte(out), v)
+	}
 }
 
 // ovhCreate creates a billable instance: scratch projects only, and only with -yes.

@@ -435,6 +435,7 @@ type awsImageCost struct {
 	Currency             string `json:"currency"`
 	SnapshotMonthlyPerGB string `json:"snapshotMonthlyPerGB"`
 	Minutes              int    `json:"minutes"`
+	Credential           string `json:"credential,omitempty"`
 }
 
 // AWSImageEstimate is the cost line of an AMI run: the helper's type and hourly price (it runs
@@ -453,7 +454,10 @@ func AWSImageEstimate(credJSON, arch, region string) (out string, err error) {
 		return "", errors.New("pick an architecture (amd64, arm64)")
 	}
 
-	c, err := newAWSClient(credJSON)
+	ctx, cancel := context.WithTimeout(context.Background(), awsOptionsTimeout)
+	defer cancel()
+
+	c, updated, err := newAWSClientOnline(ctx, credJSON)
 	if err != nil {
 		return "", err
 	}
@@ -464,10 +468,7 @@ func AWSImageEstimate(credJSON, arch, region string) (out string, err error) {
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), awsOptionsTimeout)
-	defer cancel()
-
-	cost := awsImageCost{InstanceType: awsImageType(arch), Minutes: awsImageMinutes}
+	cost := awsImageCost{InstanceType: awsImageType(arch), Minutes: awsImageMinutes, Credential: updated}
 	cost.Hourly = c.pricing(ctx, cost.InstanceType)
 	cost.SnapshotMonthlyPerGB = awsProductPrice(c.products(ctx, 10, [2]string{"productFamily", "Storage Snapshot"}, [2]string{"regionCode", c.region}),
 		"GB-Mo", func(usage string) bool { return strings.HasSuffix(usage, "EBS:SnapshotUsage") })

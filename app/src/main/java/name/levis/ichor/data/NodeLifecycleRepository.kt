@@ -31,6 +31,11 @@ import name.levis.ichor.model.AWSImageCost
 import name.levis.ichor.model.AWSImageSpec
 import name.levis.ichor.model.AWSOptions
 import name.levis.ichor.model.AWSPrice
+import name.levis.ichor.model.AWSRenewed
+import name.levis.ichor.model.AWSSignInChoice
+import name.levis.ichor.model.AWSSignInFinish
+import name.levis.ichor.model.AWSSignInStart
+import name.levis.ichor.model.SsoRoleChoice
 import name.levis.ichor.model.AzureCheck
 import name.levis.ichor.model.AzureImageEstimate
 import name.levis.ichor.model.AzureImageSpec
@@ -446,6 +451,28 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** See [TalosStreams.awsImage]. */
     fun awsImage(credentialJson: String, spec: AWSImageSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.awsImage(credentialJson, TalosJson.encodeToString(AWSImageSpec.serializer(), spec), stop)
+
+    /** Starts an IAM Identity Center sign-in: the device code to approve. */
+    suspend fun awsSignInStart(credentialJson: String): AWSSignInStart = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSSignInStart.serializer(), Ichorgo.awsSignInStart(credentialJson))
+    }
+
+    /** Waits for the code to be approved (minutes; ended by [awsSignInCancel]), then lists the roles. */
+    suspend fun awsSignInFinish(credentialJson: String): AWSSignInFinish = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSSignInFinish.serializer(), Ichorgo.awsSignInFinish(credentialJson))
+    }
+
+    fun awsSignInCancel() = Ichorgo.awsSignInCancel()
+
+    /** The credentials of one account and role of the list. */
+    suspend fun awsSignInChoose(credentialJson: String, role: SsoRoleChoice): AWSSignInChoice = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSSignInChoice.serializer(), Ichorgo.awsSignInChoose(credentialJson, role.accountId, role.roleName))
+    }
+
+    /** Role credentials that last a run; "" when the stored credential is good as it is. */
+    suspend fun awsRenew(credentialJson: String): AWSRenewed = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSRenewed.serializer(), Ichorgo.awsRenew(credentialJson))
+    }
 
     /** Whose service principal this is and whether it may create VMs (its permissions, read only). Creates nothing. */
     suspend fun azureTest(credentialJson: String): AzureCheck = withContext(Dispatchers.IO) {

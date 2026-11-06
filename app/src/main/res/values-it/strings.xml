@@ -6281,7 +6281,6 @@
     <string name="aws_title">Crea l\'istanza su AWS</string>
     <string name="aws_howto">1. Scegli un membro da copiare, poi il nome host e il disco di installazione del nuovo nodo.\n2. Aggiungi chiavi di accesso il cui utente IAM ha la policy che Ichor mostra.\n3. Scegli un tipo di istanza, l\'AMI di Talos (è elencata quella ufficiale della versione del cluster), una subnet e i suoi gruppi di sicurezza.\n4. Creala: Ichor mostra prima il prezzo e la segue finché il nodo si unisce. Il telefono deve raggiungere la porta 50000 dell\'istanza.</string>
     <string name="aws_howto_omni">1. Aggiungi chiavi di accesso il cui utente IAM ha la policy che Ichor mostra.\n2. Dai un nome all\'istanza, poi scegli un tipo di istanza, l\'AMI di Talos, una subnet e i suoi gruppi di sicurezza.\n3. Creala: Ichor mostra prima il prezzo, poi la segue finché la macchina compare in Omni. Assegnala al cluster.</string>
-    <string name="aws_add_keys">Aggiungi chiavi di accesso AWS</string>
     <string name="aws_remove">Rimuovi queste chiavi</string>
     <string name="aws_keys_warning">Le chiavi di accesso non scadono finché non le ruoti e possono fare ciò che la loro policy IAM consente. Restano sigillate su questo dispositivo e non sono nei backup.</string>
     <string name="aws_policy_hint">Dai questa policy all\'utente IAM delle chiavi: solo le chiamate che Ichor fa, e può terminare solo le istanze che Ichor ha etichettato.</string>
@@ -6290,6 +6289,11 @@
     <string name="aws_secret_access_key">Chiave di accesso segreta</string>
     <string name="aws_session_token">Token di sessione (facoltativo)</string>
     <string name="aws_session_token_hint">Da aws sts get-session-token o dal portale SSO. Scade: allora aggiungi di nuovo le chiavi.</string>
+    <string name="aws_add_account">Aggiungi un account AWS</string>
+    <string name="aws_sso_hint">Accede come fa aws sso login: non viene salvato nulla di duraturo. Il set di autorizzazioni del ruolo deve consentire le azioni della policy qui sopra.</string>
+    <string name="aws_sso_ec2_region">Regione EC2 (vuota: la regione di Identity Center)</string>
+    <string name="aws_sso_signed_in">Accesso con IAM Identity Center come %1$s</string>
+    <string name="aws_sso_session_note">Le chiavi del ruolo vengono rinnovate finché dura la tua sessione di Identity Center (8 ore di default, decise dal tuo amministratore); poi accedi di nuovo.</string>
     <string name="aws_region">Regione</string>
     <string name="aws_check_ok">Le chiavi dell\'account %1$s possono avviare istanze in %2$s.</string>
     <string name="aws_check_no">Le chiavi dell\'account %1$s non possono avviare istanze in %2$s: dai la policy al loro utente IAM (ec2:RunInstances).</string>

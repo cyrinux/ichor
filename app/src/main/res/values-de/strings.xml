@@ -6271,7 +6271,6 @@
     <string name="aws_title">Die Instanz bei AWS erstellen</string>
     <string name="aws_howto">1. Wähle ein Mitglied als Vorlage, dann Hostname und Installationsdatenträger des neuen Knotens.\n2. Füge Zugriffsschlüssel hinzu, deren IAM-Benutzer die Richtlinie hat, die Ichor ausgibt.\n3. Wähle einen Instanztyp, das Talos-AMI (das offizielle der Clusterversion ist aufgeführt), ein Subnetz und seine Sicherheitsgruppen.\n4. Erstelle sie: Ichor zeigt zuerst den Preis und verfolgt sie, bis der Knoten beitritt. Das Telefon muss Port 50000 der Instanz erreichen.</string>
     <string name="aws_howto_omni">1. Füge Zugriffsschlüssel hinzu, deren IAM-Benutzer die Richtlinie hat, die Ichor ausgibt.\n2. Benenne die Instanz, dann wähle einen Instanztyp, das Talos-AMI, ein Subnetz und seine Sicherheitsgruppen.\n3. Erstelle sie: Ichor zeigt zuerst den Preis und verfolgt sie, bis die Maschine in Omni erscheint. Weise sie dem Cluster zu.</string>
-    <string name="aws_add_keys">AWS-Zugriffsschlüssel hinzufügen</string>
     <string name="aws_remove">Diese Schlüssel entfernen</string>
     <string name="aws_keys_warning">Zugriffsschlüssel laufen nicht ab, solange du sie nicht rotierst, und dürfen, was ihre IAM-Richtlinie erlaubt. Sie bleiben versiegelt auf diesem Gerät und sind nicht in Backups.</string>
     <string name="aws_policy_hint">Gib dem IAM-Benutzer der Schlüssel diese Richtlinie: nur die Aufrufe, die Ichor macht, und beenden darf er nur die Instanzen, die Ichor markiert hat.</string>
@@ -6280,6 +6279,11 @@
     <string name="aws_secret_access_key">Geheimer Zugriffsschlüssel</string>
     <string name="aws_session_token">Sitzungstoken (optional)</string>
     <string name="aws_session_token_hint">Aus aws sts get-session-token oder dem SSO-Portal. Es läuft ab: Füge die Schlüssel dann erneut hinzu.</string>
+    <string name="aws_add_account">AWS-Konto hinzufügen</string>
+    <string name="aws_sso_hint">Meldet sich an wie aws sso login: Nichts Langlebiges wird gespeichert. Der Berechtigungssatz der Rolle braucht die Aktionen der Richtlinie oben.</string>
+    <string name="aws_sso_ec2_region">EC2-Region (leer: die Identity-Center-Region)</string>
+    <string name="aws_sso_signed_in">Mit IAM Identity Center angemeldet als %1$s</string>
+    <string name="aws_sso_session_note">Die Schlüssel der Rolle werden erneuert, solange deine Identity-Center-Sitzung dauert (standardmäßig 8 Stunden, von deinem Administrator festgelegt); melde dich danach erneut an.</string>
     <string name="aws_region">Region</string>
     <string name="aws_check_ok">Die Schlüssel von Konto %1$s dürfen Instanzen in %2$s starten.</string>
     <string name="aws_check_no">Die Schlüssel von Konto %1$s dürfen keine Instanzen in %2$s starten: Gib ihrem IAM-Benutzer die Richtlinie (ec2:RunInstances).</string>

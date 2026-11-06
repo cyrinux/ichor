@@ -2,12 +2,20 @@ import Foundation
 
 // Mirrors go/ichorgo/cloud_aws.go, cloud_aws_options.go and cloud_aws_create.go.
 
-/// Access keys and their region, sealed on the device; what the core gets per call.
+/// Access keys and their region, sealed on the device; what the core gets per call. An IAM
+/// Identity Center sign-in has no keys but `ssoStartUrl` and the account and role: its tokens stay
+/// in the JSON the core returns, which the app seals as it is and never re-encodes from this type
+/// (it would drop them; see `moved(_:to:)`).
 public struct AWSCredential: Codable, Equatable, Sendable {
     public let accessKeyId: String
     public let secretAccessKey: String
     public let sessionToken: String
     public let region: String
+    public var ssoStartUrl = ""
+    public var ssoRegion = ""
+    public var accountId = ""
+    public var accountName = ""
+    public var roleName = ""
 
     public init(accessKeyId: String, secretAccessKey: String, sessionToken: String = "", region: String) {
         self.accessKeyId = accessKeyId
@@ -16,7 +24,10 @@ public struct AWSCredential: Codable, Equatable, Sendable {
         self.region = region
     }
 
-    private enum CodingKeys: String, CodingKey { case accessKeyId, secretAccessKey, sessionToken, region }
+    private enum CodingKeys: String, CodingKey {
+        case accessKeyId, secretAccessKey, sessionToken, region
+        case ssoStartUrl, ssoRegion, accountId, accountName, roleName
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -24,6 +35,30 @@ public struct AWSCredential: Codable, Equatable, Sendable {
         secretAccessKey = try c.field(.secretAccessKey, "")
         sessionToken = try c.field(.sessionToken, "")
         region = try c.field(.region, "")
+        ssoStartUrl = try c.field(.ssoStartUrl, "")
+        ssoRegion = try c.field(.ssoRegion, "")
+        accountId = try c.field(.accountId, "")
+        accountName = try c.field(.accountName, "")
+        roleName = try c.field(.roleName, "")
+    }
+
+    /// An IAM Identity Center sign-in, not access keys.
+    public var identityCenter: Bool { accessKeyId.isEmpty && !ssoStartUrl.isEmpty }
+
+    /// The signed-in role, as the role list shows it.
+    public var role: KubeSsoRoleChoice {
+        KubeSsoRoleChoice(accountId: accountId, accountName: accountName, roleName: roleName)
+    }
+
+    /// `json` with another region, every other field (an Identity Center sign-in's tokens) kept;
+    /// nil when it is not a JSON object.
+    public static func moved(_ json: String, to region: String) -> String? {
+        guard var object = (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [String: Any] else {
+            return nil
+        }
+        object["region"] = region
+        guard let data = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]) else { return nil }
+        return String(decoding: data, as: UTF8.self)
     }
 
     /// The same keys in another region.
@@ -40,8 +75,11 @@ public struct AWSCheck: Decodable, Equatable, Sendable {
     public let region: String
     public let canCreate: Bool
     public let checked: Bool
+    /// The renewed credential JSON to seal again, "" when nothing changed (as in `AWSOptions`,
+    /// `AWSPrice` and `AWSImageCost`).
+    public let credential: String
 
-    private enum CodingKeys: String, CodingKey { case account, arn, region, canCreate, checked }
+    private enum CodingKeys: String, CodingKey { case account, arn, region, canCreate, checked, credential }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -50,6 +88,7 @@ public struct AWSCheck: Decodable, Equatable, Sendable {
         region = try c.field(.region, "")
         canCreate = try c.field(.canCreate, false)
         checked = try c.field(.checked, false)
+        credential = try c.field(.credential, "")
     }
 }
 
@@ -65,9 +104,11 @@ public struct AWSOptions: Decodable, Equatable, Sendable {
     public let templateVersion: String
     public let templateSchematic: String
     public let warnings: [String]
+    public let credential: String
 
     private enum CodingKeys: String, CodingKey {
         case region, regions, types, subnets, securityGroups, images, templateVersion, templateSchematic, warnings
+        case credential
     }
 
     // Go encodes empty (nil) slices as null.
@@ -82,6 +123,7 @@ public struct AWSOptions: Decodable, Equatable, Sendable {
         templateVersion = try c.field(.templateVersion, "")
         templateSchematic = try c.field(.templateSchematic, "")
         warnings = try c.field(.warnings, [])
+        credential = try c.field(.credential, "")
     }
 
     /// The architectures the instance types run, amd64 first.
@@ -216,18 +258,21 @@ public struct AWSImage: Decodable, Equatable, Hashable, Identifiable, Sendable {
 public struct AWSPrice: Decodable, Equatable, Sendable {
     public let hourly: String
     public let currency: String
+    public let credential: String
 
-    public init(hourly: String = "", currency: String = "") {
+    public init(hourly: String = "", currency: String = "", credential: String = "") {
         self.hourly = hourly
         self.currency = currency
+        self.credential = credential
     }
 
-    private enum CodingKeys: String, CodingKey { case hourly, currency }
+    private enum CodingKeys: String, CodingKey { case hourly, currency, credential }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         hourly = try c.field(.hourly, "")
         currency = try c.field(.currency, "")
+        credential = try c.field(.credential, "")
     }
 }
 
@@ -293,11 +338,14 @@ public struct AWSImageCost: Decodable, Equatable, Sendable {
     public let currency: String
     public let snapshotMonthlyPerGB: String
     public let minutes: Int
+    public let credential: String
 
     /// Both prices are known.
     public var priced: Bool { !hourly.isEmpty && !snapshotMonthlyPerGB.isEmpty }
 
-    private enum CodingKeys: String, CodingKey { case instanceType, hourly, currency, snapshotMonthlyPerGB, minutes }
+    private enum CodingKeys: String, CodingKey {
+        case instanceType, hourly, currency, snapshotMonthlyPerGB, minutes, credential
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -306,6 +354,7 @@ public struct AWSImageCost: Decodable, Equatable, Sendable {
         currency = try c.field(.currency, "")
         snapshotMonthlyPerGB = try c.field(.snapshotMonthlyPerGB, "")
         minutes = try c.field(.minutes, 0)
+        credential = try c.field(.credential, "")
     }
 }
 
@@ -349,5 +398,72 @@ public struct AWSCreateSpec: Encodable, Equatable, Sendable {
         self.templateNode = templateNode
         self.installDisk = installDisk
         self.labelsJson = labelsJson
+    }
+}
+
+/// AWSSignInStart: the code to approve at `verificationUriComplete`, and the credential for the next step.
+public struct AWSSignInStart: Decodable, Equatable, Sendable {
+    public let verificationUri: String
+    public let verificationUriComplete: String
+    public let userCode: String
+    public let expiresIn: Int
+    public let credential: String
+
+    private enum CodingKeys: String, CodingKey {
+        case verificationUri, verificationUriComplete, userCode, expiresIn, credential
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        verificationUri = try c.field(.verificationUri, "")
+        verificationUriComplete = try c.field(.verificationUriComplete, "")
+        userCode = try c.field(.userCode, "")
+        expiresIn = try c.field(.expiresIn, 0)
+        credential = try c.field(.credential, "")
+    }
+
+    /// The page to open: the one with the code in it when there is one.
+    public var openURL: String { verificationUriComplete.isEmpty ? verificationUri : verificationUriComplete }
+}
+
+/// AWSSignInFinish: the accounts and roles to pick from.
+public struct AWSSignInFinish: Decodable, Equatable, Sendable {
+    public let credential: String
+    public let roles: [KubeSsoRoleChoice]
+
+    private enum CodingKeys: String, CodingKey { case credential, roles }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        credential = try c.field(.credential, "")
+        roles = try c.field(.roles, [])
+    }
+}
+
+/// AWSSignInChoose: the picked role's credential, and whose it is.
+public struct AWSSignInChoice: Decodable, Equatable, Sendable {
+    public let credential: String
+    public let account: String
+    public let arn: String
+
+    private enum CodingKeys: String, CodingKey { case credential, account, arn }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        credential = try c.field(.credential, "")
+        account = try c.field(.account, "")
+        arn = try c.field(.arn, "")
+    }
+}
+
+/// AWSRenew: the credential to seal and give a run, "" when the stored one is good as it is.
+public struct AWSRenewed: Decodable, Equatable, Sendable {
+    public let credential: String
+
+    private enum CodingKeys: String, CodingKey { case credential }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        credential = try c.field(.credential, "")
     }
 }
