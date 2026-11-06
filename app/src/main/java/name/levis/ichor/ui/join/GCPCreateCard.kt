@@ -44,6 +44,7 @@ import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.GCPCheck
 import name.levis.ichor.model.GCPCreateSpec
 import name.levis.ichor.model.GCPCredential
+import name.levis.ichor.model.GCPImageEstimate
 import name.levis.ichor.model.GCPMachineType
 import name.levis.ichor.model.GCPOptions
 import name.levis.ichor.model.GCPPrice
@@ -142,6 +143,20 @@ class GCPCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
         }
     }
 
+    /** Lists the options again, keeping the shown form (and what is picked in it) meanwhile. */
+    fun refresh() {
+        val account = _account.value
+        if (account.isBlank()) return
+        viewModelScope.launch {
+            val state = uiStateOf { lifecycle.gcpOptions(credential(account)) }
+            if (state is UiState.Loaded) _options.value = state
+        }
+    }
+
+    /** The cost line of an image run. Creates nothing. */
+    suspend fun estimate(arch: String, zone: String): GCPImageEstimate =
+        lifecycle.gcpImageEstimate(credential(_account.value), arch, zone)
+
     suspend fun credential(account: String): String = withContext(Dispatchers.IO) { store.token(CloudProviderStore.GCP, account) }
 
     suspend fun test(credentialJson: String): GCPCheck = lifecycle.gcpTest(credentialJson)
@@ -189,6 +204,8 @@ fun GCPCreateCard(
     val price by vm.price.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var adding by remember { mutableStateOf(false) }
+    var imageFor by remember { mutableStateOf<GCPImageAsk?>(null) }
+    var madeImage by rememberSaveable { mutableStateOf("") }
     LaunchedEffect(demo) { vm.load(demo) }
 
     SectionCard(stringResource(R.string.gcp_title)) {
@@ -196,6 +213,13 @@ fun GCPCreateCard(
         if (current?.request?.gcp != null) {
             JoinRunView(current, onStop = app.joinManager::stop, onOpenNode = null, onClose = app.joinManager::dismiss, onAllocate = onAllocate)
         } else {
+            if (current?.request?.gcpImage != null) {
+                ImageRunView(current, onStop = app.joinManager::stop) {
+                    madeImage = current.madeImage?.imageId ?: madeImage
+                    app.joinManager.dismiss()
+                    vm.refresh()
+                }
+            }
             if (demo) {
                 InfoNotice(stringResource(R.string.hetzner_demo))
             } else {
@@ -222,6 +246,9 @@ fun GCPCreateCard(
                     state.data, form, labelsJson, busy = current?.running == true, price = price,
                     onType = vm::loadPrice,
                     onPlace = if (demo) null else { project, zone -> vm.switchPlace(project, zone) },
+                    canMakeImage = !demo && account.isNotBlank(),
+                    madeImage = madeImage,
+                    onMakeImage = { imageFor = it },
                 ) { request ->
                     // The key is read only now, and goes to the run alone.
                     scope.launch { app.joinManager.start(request, if (account.isBlank()) "" else vm.credential(account)) }
@@ -230,6 +257,23 @@ fun GCPCreateCard(
         }
     }
     if (adding) GCPKeyDialog(vm) { adding = false }
+    imageFor?.let { ask ->
+        GCPImageSheet(
+            ask = ask,
+            template = form?.template.orEmpty(),
+            estimate = vm::estimate,
+            onStart = { spec ->
+                imageFor = null
+                val request = JoinRequest(
+                    address = "", template = spec.templateNode, role = "", hostname = "Talos ${spec.arch}", disk = "",
+                    staticAddress = "", gcpImage = spec,
+                )
+                // The key is read only now, and goes to the run alone.
+                scope.launch { app.joinManager.start(request, vm.credential(account)) }
+            },
+            onDismiss = { imageFor = null },
+        )
+    }
 }
 
 /** "e2-medium · 2 CPU · 4 GB". */
@@ -254,6 +298,10 @@ private fun VMForm(
     price: UiState<GCPPrice>?,
     onType: (zone: String, machineType: String) -> Unit,
     onPlace: ((project: String?, zone: String?) -> Unit)?,
+    canMakeImage: Boolean,
+    /** The selfLink of the image the last run made: picked once it is listed. */
+    madeImage: String,
+    onMakeImage: (GCPImageAsk) -> Unit,
     onCreate: (JoinRequest) -> Unit,
 ) {
     val colors = LocalStatusColors.current
@@ -279,6 +327,15 @@ private fun VMForm(
     val disk = diskText.toIntOrNull()?.takeIf { it in GCP_MIN_DISK_GB..GCP_MAX_DISK_GB }
     val hostname = form?.hostname?.trim() ?: omniName.trim()
     LaunchedEffect(options.zone, typeName) { onType(options.zone, typeName) }
+    LaunchedEffect(madeImage, options) {
+        val made = options.images.firstOrNull { it.selfLink == madeImage || it.name == madeImage } ?: return@LaunchedEffect
+        // Made for the picked type's arch; another arch picked since: its types are listed again.
+        if (made.arch != arch) {
+            arch = made.arch
+            typeName = ""
+        }
+        imageLink = made.selfLink
+    }
 
     if (form == null) {
         OutlinedTextField(
@@ -329,11 +386,17 @@ private fun VMForm(
         typeName = it
     }
     if (type != null) {
-        if (images.isEmpty()) {
-            InfoNotice(stringResource(R.string.gcp_no_image, type.arch))
-            IchorOutlinedButton(onClick = {}, enabled = false) { Text(stringResource(R.string.gcp_make_image)) }
-            MutedText(stringResource(R.string.gcp_make_image_soon))
-        } else {
+        if (images.isEmpty() && !canMakeImage) InfoNotice(stringResource(R.string.gcp_no_image, type.arch))
+        if (canMakeImage) {
+            if (images.isEmpty()) InfoNotice(stringResource(R.string.gcp_image_missing, type.arch))
+            IchorOutlinedButton(
+                onClick = { if (subnet != null) onMakeImage(GCPImageAsk(options.project, options.zone, type.arch, subnet, publicIp)) },
+                enabled = !busy && subnet != null,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(stringResource(if (images.isEmpty()) R.string.gcp_make_image else R.string.azure_image_make_another)) }
+            if (subnet == null) MutedText(stringResource(R.string.gcp_image_need_subnet))
+        }
+        if (images.isNotEmpty()) {
             GCPDropdown(
                 stringResource(R.string.gcp_image),
                 images.map { i -> i.selfLink to listOf(i.name, i.talosVersion).filter { it.isNotBlank() }.joinToString(" · ") },

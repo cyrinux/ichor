@@ -6398,7 +6398,14 @@
     <string name="gcp_machine_type">Maschinentyp</string>
     <string name="gcp_no_image">Kein Talos-Image für %1$s in diesem Projekt: Registriere eines wie im Talos-Leitfaden oder wähle eine andere Architektur.</string>
     <string name="gcp_make_image">Ein Talos-Image erstellen</string>
-    <string name="gcp_make_image_soon">Demnächst: ein Image des Schematics des Clusters, vom Telefon aus erstellt.</string>
+    <string name="gcp_image_missing">Noch kein Talos-Image für %1$s in diesem Projekt: Ichor kann eines aus dem Image dieses Clusters erstellen.</string>
+    <string name="gcp_image_need_subnet">Wähle zuerst ein Subnetz: Die Hilfs-VM läuft darin.</string>
+    <string name="gcp_image_intro">Ichor startet eine Wegwerf-VM mit Debian, die das Talos-Image dieses Clusters auf einen leeren Datenträger schreibt, erstellt daraus ein Image und löscht dann die VM und den Datenträger. Das Image bleibt erhalten, mit der Talos-Version und dem Schematic gekennzeichnet. Am Cluster wird nichts verändert. Es dauert etwa zehn Minuten.</string>
+    <string name="gcp_image_place">Das Image kommt in das Projekt %1$s. Die Hilfs-VM läuft in %2$s, im Subnetz %3$s.</string>
+    <string name="gcp_image_nat_hint">Die Hilfs-VM erhält keine öffentliche Adresse: Sie lädt das Image über das Cloud NAT des Subnetzes von der Image Factory herunter.</string>
+    <string name="gcp_image_cost">Etwa %1$d Minuten %2$s (%3$s/h), danach %4$s pro GB und Monat für das Image, bis du es bei Google Cloud löschst, vor Steuern</string>
+    <string name="gcp_image_cost_unknown">Etwa %1$d Minuten %2$s, danach der Speicher des Images pro GB und Monat, bis du es bei Google Cloud löschst. Preise nicht verfügbar: siehe die Compute-Engine-Preise von Google Cloud.</string>
+    <string name="gcp_phase_image">Image aus dem Datenträger erstellen</string>
     <string name="gcp_no_subnet">Kein Netzwerk hat ein Subnetz in %1$s: Wähle eine andere Zone.</string>
     <string name="gcp_public_ip">Ihr eine öffentliche Adresse geben</string>
     <string name="gcp_disk">Startdatenträger (GB)</string>

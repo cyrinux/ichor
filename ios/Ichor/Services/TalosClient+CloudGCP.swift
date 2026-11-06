@@ -38,4 +38,21 @@ extension TalosClient {
             IchorgoStartGCPCreate(config, context, credential, specJSON, bridge)
         }
     }
+
+    /// The cost line of an image run. Creates nothing.
+    static func gcpImageEstimate(credential: String, arch: String, zone: String) async throws -> GCPImageEstimate {
+        try await json { IchorgoGCPImageEstimate(credential, arch, zone, $0) }
+    }
+
+    /// Makes a Talos image with a throwaway VM (StartGCPImage): `done`'s address is the result
+    /// JSON. `stop` deletes the helper, its data disk and an unfinished image, and so only `stop`
+    /// stops it, as above.
+    func startGCPImage(
+        _ spec: GCPImageSpec, credential: String
+    ) -> (events: AsyncStream<JoinEvent>, stop: @Sendable () -> Void) {
+        let specJSON = (try? JSONEncoder().encode(spec)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+        return hetznerRun { [config, context] bridge in
+            IchorgoStartGCPImage(config, context, credential, specJSON, bridge)
+        }
+    }
 }

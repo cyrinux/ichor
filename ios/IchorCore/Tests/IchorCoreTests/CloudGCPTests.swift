@@ -157,4 +157,67 @@ final class CloudGCPTests: XCTestCase {
         XCTAssertEqual(omni.phases, JoinPhase.cloudOmniRun)
         XCTAssertEqual(omni.withReplacing(true).gcp, spec)
     }
+
+    func testTheImageSpecUsesTheCoresNames() throws {
+        let spec = GCPImageSpec(
+            templateNode: "10.0.0.2", arch: "arm64", project: "example-project", zone: "europe-west1-b",
+            subnetwork: "https://example.test/subnetworks/default", associatePublicIp: false)
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(spec)) as? [String: Any])
+        XCTAssertEqual(object["templateNode"] as? String, "10.0.0.2")
+        XCTAssertEqual(object["arch"] as? String, "arm64")
+        XCTAssertEqual(object["project"] as? String, "example-project")
+        XCTAssertEqual(object["zone"] as? String, "europe-west1-b")
+        XCTAssertEqual(object["subnetwork"] as? String, "https://example.test/subnetworks/default")
+        XCTAssertEqual(object["associatePublicIp"] as? Bool, false)
+        XCTAssertEqual(object["machineType"] as? String, "")
+        XCTAssertEqual(object["name"] as? String, "")
+    }
+
+    func testTheImageResultAndItsEstimateDecode() throws {
+        let json = #"""
+            {"image":"talos-v1-12-0-gcp-amd64-0123456789ab",
+             "selfLink":"https://example.test/global/images/talos-v1-12-0-gcp-amd64-0123456789ab",
+             "arch":"amd64","talosVersion":"v1.12.0","schematic":"0123","sizeGB":12}
+            """#
+        let result = try JSONDecoder().decode(GCPImageResult.self, from: Data(json.utf8))
+        XCTAssertEqual(result.talosVersion, "v1.12.0")
+        XCTAssertEqual(result.sizeGB, 12)
+        XCTAssertEqual(
+            result.made,
+            MadeImage(
+                id: "https://example.test/global/images/talos-v1-12-0-gcp-amd64-0123456789ab",
+                name: "talos-v1-12-0-gcp-amd64-0123456789ab"))
+        let unlinked = try JSONDecoder().decode(GCPImageResult.self, from: Data(#"{"image":"talos-a"}"#.utf8))
+        XCTAssertEqual(unlinked.made.id, "talos-a")
+
+        let estimate = try JSONDecoder().decode(
+            GCPImageEstimate.self,
+            from: Data(
+                #"{"machineType":"e2-small","hourly":"0.0168","imageMonthlyPerGB":"0.0500","minutes":10}"#.utf8))
+        XCTAssertEqual(estimate.machineType, "e2-small")
+        XCTAssertEqual(estimate.hourly, "0.0168")
+        XCTAssertEqual(estimate.imageMonthlyPerGB, "0.0500")
+        XCTAssertEqual(estimate.diskMonthlyPerGB, "")
+        XCTAssertEqual(estimate.minutes, 10)
+    }
+
+    func testAnImageRunHasItsOwnSteps() {
+        let spec = GCPImageSpec(arch: "amd64", project: "example-project", zone: "europe-west1-b", subnetwork: "s")
+        let request = JoinRequest(
+            address: "", template: "", role: "", hostname: "Talos amd64", disk: "", staticAddress: "",
+            gcpImage: spec)
+        XCTAssertEqual(request.imageKind, .gcpImage)
+        XCTAssertEqual(request.phases, JoinPhase.gcpImageRun)
+        XCTAssertTrue(request.imageRun)
+        XCTAssertFalse(request.cloud)
+        XCTAssertEqual(request.withReplacing(true).gcpImage, spec)
+
+        let steps = joinTimeline(
+            [JoinProgress(phase: "creating"), JoinProgress(phase: "register")], phases: JoinPhase.gcpImageRun)
+        XCTAssertEqual(steps.map(\.phase), [.creating, .writing, .register, .cleanup, .done])
+        XCTAssertEqual(steps[1].state, .done)
+        XCTAssertEqual(steps[2].state, .current)
+        XCTAssertEqual(steps[3].state, .pending)
+    }
 }

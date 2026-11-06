@@ -6408,7 +6408,14 @@
     <string name="gcp_machine_type">Type de machine</string>
     <string name="gcp_no_image">Aucune image Talos pour %1$s dans ce projet : enregistrez-en une comme le dit le guide Talos, ou choisissez une autre architecture.</string>
     <string name="gcp_make_image">Créer une image Talos</string>
-    <string name="gcp_make_image_soon">Bientôt : une image du schematic du cluster, créée depuis le téléphone.</string>
+    <string name="gcp_image_missing">Pas encore d\'image Talos pour %1$s dans ce projet : Ichor peut en créer une de l\'image de ce cluster.</string>
+    <string name="gcp_image_need_subnet">Choisissez d\'abord un sous-réseau : la VM auxiliaire y tourne.</string>
+    <string name="gcp_image_intro">Ichor démarre une VM Debian jetable qui écrit l\'image Talos de ce cluster sur un disque de données vide, crée une image à partir du disque, puis supprime la VM et le disque. L\'image est conservée, étiquetée avec la version de Talos et le schematic. Rien du cluster n\'est touché. Cela prend une dizaine de minutes.</string>
+    <string name="gcp_image_place">L\'image va dans le projet %1$s. La VM auxiliaire tourne dans %2$s, sur le sous-réseau %3$s.</string>
+    <string name="gcp_image_nat_hint">La VM auxiliaire n\'a pas d\'adresse publique : elle télécharge l\'image depuis l\'Image Factory par le Cloud NAT du sous-réseau.</string>
+    <string name="gcp_image_cost">Environ %1$d minutes de %2$s (%3$s/h), puis %4$s par Go par mois pour l\'image jusqu\'à ce que vous la supprimiez chez Google Cloud, hors taxes</string>
+    <string name="gcp_image_cost_unknown">Environ %1$d minutes de %2$s, puis le stockage de l\'image par Go par mois jusqu\'à ce que vous la supprimiez chez Google Cloud. Prix indisponibles : voir les tarifs Compute Engine de Google Cloud.</string>
+    <string name="gcp_phase_image">Créer l\'image à partir du disque de données</string>
     <string name="gcp_no_subnet">Aucun réseau n\'a de sous-réseau dans %1$s : choisissez une autre zone.</string>
     <string name="gcp_public_ip">Lui donner une adresse publique</string>
     <string name="gcp_disk">Disque de démarrage (Go)</string>

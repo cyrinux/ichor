@@ -29,7 +29,8 @@ object JoinPresenter : OperationPresenter<JoinRunState> {
                 R.string.aws_image_notification_done,
                 R.string.aws_image_notification_failed,
             )
-            ImageRunKind.AZURE_IMAGE -> ImageTitles(
+            // The same words as Azure's: a helper VM makes "a Talos image" at both.
+            ImageRunKind.AZURE_IMAGE, ImageRunKind.GCP_IMAGE -> ImageTitles(
                 R.string.azure_image_notification_title,
                 R.string.azure_image_notification_done,
                 R.string.azure_image_notification_failed,

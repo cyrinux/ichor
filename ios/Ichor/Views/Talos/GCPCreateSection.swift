@@ -30,6 +30,7 @@ struct GCPCreateSection: View {
     @State private var omniName = ""
     @State private var confirming = false
     @State private var adding = false
+    @State private var makingImage = false
     @State private var confirmStop = false
     @State private var authError: String?
     private var job: JoinJob { .shared }
@@ -75,6 +76,12 @@ struct GCPCreateSection: View {
                 GCPKeySheet { added in
                     reloadAccounts()
                     pick(added)
+                }
+            }
+            if job.request?.gcpImage != nil {
+                ImageRunSections { outcome in
+                    guard case .imageMade(let made)? = outcome else { return }
+                    Task { await imageClosed(made) }
                 }
             }
             if let options { optionsSections(options) }
@@ -176,24 +183,59 @@ struct GCPCreateSection: View {
             }
             if let type {
                 let images = value.images(for: type)
-                if images.isEmpty {
+                let canMake = !demo && !account.isEmpty
+                if images.isEmpty, !canMake {
                     Text(
                         "No Talos image for \(type.arch) in this project: register one as the Talos guide says, or pick another architecture."
                     )
                     .font(.footnote).foregroundStyle(.orange)
-                    Button("Make a Talos image") {}
-                        .disabled(true)
-                    Text("Coming next: an image of the cluster's schematic, made from the phone.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                } else if images.isEmpty {
+                    Text(
+                        "No Talos image for \(type.arch) in this project yet: Ichor can make one of this cluster's image."
+                    )
+                    .font(.footnote).foregroundStyle(.secondary)
                 } else {
                     Picker("Talos image", selection: $imageLink) {
                         Text(verbatim: "—").tag("")
                         ForEach(images) { Text(verbatim: label($0)).tag($0.id) }
                     }
                 }
+                if canMake { makeImageRows(value, images: images) }
             }
         }
         .task(id: "\(value.zone)/\(typeName)") { await loadPrice(zone: value.zone) }
+        .sheet(isPresented: $makingImage) {
+            if let type, let subnet = helperSubnet(value) {
+                GCPImageSheet(
+                    project: value.project, zone: value.zone, arch: type.arch, subnet: subnet, publicIp: publicIp,
+                    template: omni ? "" : template, credential: credential
+                ) { spec in
+                    startImage(spec)
+                }
+            }
+        }
+    }
+
+    /// An image of the cluster's own schematic, made by a helper VM in the picked subnet.
+    @ViewBuilder
+    private func makeImageRows(_ value: GCPOptions, images: [GCPImage]) -> some View {
+        let subnet = helperSubnet(value)
+        if images.isEmpty {
+            Button("Make a Talos image") { makingImage = true }
+                .disabled(job.isActive || subnet == nil)
+        } else {
+            Button("Make another Talos image") { makingImage = true }
+                .disabled(job.isActive || subnet == nil)
+        }
+        if subnet == nil {
+            Text("Pick a subnet first: the helper VM runs in it.")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+
+    /// The subnet picked below, where the helper VM runs too.
+    private func helperSubnet(_ value: GCPOptions) -> GCPSubnet? {
+        value.subnets(in: networkName, region: value.region).first { $0.id == subnetLink }
     }
 
     /// The network, its subnet in the zone's region, the public address and the boot disk.
@@ -414,6 +456,25 @@ struct GCPCreateSection: View {
         let answer =
             (try? await TalosClient.gcpPrice(credential: credential, zone: zone, machineType: type)) ?? GCPPrice()
         if !Task.isCancelled { price = answer }
+    }
+
+    /// The helper VM's run: followed like a join, with no node to add at its end.
+    private func startImage(_ spec: GCPImageSpec) {
+        guard let client = model.client else { return }
+        let request = JoinRequest(
+            address: "", template: spec.templateNode, role: "", hostname: "Talos \(spec.arch)", disk: "",
+            staticAddress: "", gcpImage: spec)
+        job.start(client: client, request: request, providerToken: credential) { _ in }
+    }
+
+    /// The project's images again, with the new one picked (and a type of its arch).
+    private func imageClosed(_ made: MadeImage) async {
+        await loadOptions()
+        guard case .loaded(let value, _, _) = options,
+            let picked = value.images.first(where: { $0.id == made.id || $0.name == made.name })
+        else { return }
+        if value.machineTypes.first(where: { $0.name == typeName })?.arch != picked.arch { typeName = "" }
+        imageLink = picked.id
     }
 
     /// Face ID / passcode first when the app lock is on, then the run.

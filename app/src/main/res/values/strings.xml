@@ -6415,7 +6415,14 @@
     <string name="gcp_machine_type">Machine type</string>
     <string name="gcp_no_image">No Talos image for %1$s in this project: register one as the Talos guide says, or pick another architecture.</string>
     <string name="gcp_make_image">Make a Talos image</string>
-    <string name="gcp_make_image_soon">Coming next: an image of the cluster\'s schematic, made from the phone.</string>
+    <string name="gcp_image_missing">No Talos image for %1$s in this project yet: Ichor can make one of this cluster\'s image.</string>
+    <string name="gcp_image_need_subnet">Pick a subnet first: the helper VM runs in it.</string>
+    <string name="gcp_image_intro">Ichor starts a throwaway Debian VM that writes this cluster\'s Talos image to an empty data disk, makes an image from the disk, then deletes the VM and the disk. The image is kept, labelled with the Talos version and schematic. Nothing of the cluster is touched. It takes about ten minutes.</string>
+    <string name="gcp_image_place">The image goes in project %1$s. The helper VM runs in %2$s, on subnet %3$s.</string>
+    <string name="gcp_image_nat_hint">The helper VM gets no public address: it downloads the image from the Image Factory through the subnet\'s Cloud NAT.</string>
+    <string name="gcp_image_cost">About %1$d minutes of %2$s (%3$s/h), then %4$s per GB per month for the image until you delete it at Google Cloud, before tax</string>
+    <string name="gcp_image_cost_unknown">About %1$d minutes of %2$s, then the image\'s storage per GB per month until you delete it at Google Cloud. Prices unavailable: see Google Cloud\'s Compute Engine pricing.</string>
+    <string name="gcp_phase_image">Make the image from the data disk</string>
     <string name="gcp_no_subnet">No network has a subnet in %1$s: pick another zone.</string>
     <string name="gcp_public_ip">Give it a public address</string>
     <string name="gcp_disk">Boot disk (GB)</string>

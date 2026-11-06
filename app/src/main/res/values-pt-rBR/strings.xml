@@ -6403,7 +6403,14 @@
     <string name="gcp_machine_type">Tipo de máquina</string>
     <string name="gcp_no_image">Nenhuma imagem do Talos para %1$s neste projeto: registre uma como diz o guia do Talos ou escolha outra arquitetura.</string>
     <string name="gcp_make_image">Criar uma imagem do Talos</string>
-    <string name="gcp_make_image_soon">Em breve: uma imagem do schematic do cluster, criada pelo telefone.</string>
+    <string name="gcp_image_missing">Ainda não há imagem do Talos para %1$s neste projeto: o Ichor pode criar uma com a imagem deste cluster.</string>
+    <string name="gcp_image_need_subnet">Escolha primeiro uma sub-rede: a VM auxiliar roda nela.</string>
+    <string name="gcp_image_intro">O Ichor inicia uma VM descartável do Debian que grava a imagem do Talos deste cluster em um disco de dados vazio, cria uma imagem a partir do disco e depois exclui a VM e o disco. A imagem é mantida, rotulada com a versão do Talos e o schematic. Nada do cluster é alterado. Leva cerca de dez minutos.</string>
+    <string name="gcp_image_place">A imagem vai para o projeto %1$s. A VM auxiliar roda em %2$s, na sub-rede %3$s.</string>
+    <string name="gcp_image_nat_hint">A VM auxiliar não recebe endereço público: ela baixa a imagem da Image Factory pelo Cloud NAT da sub-rede.</string>
+    <string name="gcp_image_cost">Cerca de %1$d minutos de %2$s (%3$s/h), depois %4$s por GB por mês pela imagem até você excluí-la no Google Cloud, sem impostos</string>
+    <string name="gcp_image_cost_unknown">Cerca de %1$d minutos de %2$s, depois o armazenamento da imagem por GB por mês até você excluí-la no Google Cloud. Preços indisponíveis: veja os preços do Compute Engine do Google Cloud.</string>
+    <string name="gcp_phase_image">Criar a imagem a partir do disco de dados</string>
     <string name="gcp_no_subnet">Nenhuma rede tem sub-rede em %1$s: escolha outra zona.</string>
     <string name="gcp_public_ip">Dar a ela um endereço público</string>
     <string name="gcp_disk">Disco de inicialização (GB)</string>
