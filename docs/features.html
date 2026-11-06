@@ -74,11 +74,19 @@
           <a data-i18n href="features.html">Features</a>
           <a href="https://github.com/cyrinux/ichor" translate="no">GitHub</a>
         </span>
+        <button class="menu-button search-button" id="search-button" aria-label="Search the site" aria-controls="search-dialog" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m20 20-4.8-4.8" /></svg>
+        </button>
         <button class="menu-button" id="menu-button" aria-label="Menu" aria-controls="menu" aria-expanded="false">
           <span></span>
         </button>
       </nav>
     </header>
+
+    <dialog class="search-dialog" id="search-dialog" aria-label="Search the site">
+      <div id="search"></div>
+      <p class="search-error" hidden>Search could not load. Try again later.</p>
+    </dialog>
 
     <div class="overlay" id="menu" aria-label="What Ichor does">
       <ol>
@@ -149,7 +157,7 @@
     </section>
 
     <div class="wrap">
-      <main>
+      <main data-pagefind-body>
 
         <section id="providers" aria-labelledby="providers-title">
           <p class="eyebrow">Born on Talos · At home anywhere</p>

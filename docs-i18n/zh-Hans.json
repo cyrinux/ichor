@@ -420,5 +420,7 @@
   "Changes to this policy are published on this page, with a new effective date. Its history is in the <a href=\"https://github.com/cyrinux/ichor/commits/main/docs/privacy.html\">source repository</a>.": "本政策的变更会发布在此页面，并注明新的生效日期。其历史记录见<a href=\"https://github.com/cyrinux/ichor/commits/main/docs/privacy.html\">源代码仓库</a>。",
   "Contact": "联系方式",
   "Questions or requests: open an issue at <a href=\"https://github.com/cyrinux/ichor/issues\">github.com/cyrinux/ichor/issues</a>.": "问题或请求：请在 <a href=\"https://github.com/cyrinux/ichor/issues\">github.com/cyrinux/ichor/issues</a> 提交 issue。",
-  "Ichor is an independent project, not affiliated with Sidero Labs. Talos is a trademark of Sidero Labs, Inc.": "Ichor 是一个独立项目，与 Sidero Labs 无关联。Talos 是 Sidero Labs, Inc. 的商标。"
+  "Ichor is an independent project, not affiliated with Sidero Labs. Talos is a trademark of Sidero Labs, Inc.": "Ichor 是一个独立项目，与 Sidero Labs 无关联。Talos 是 Sidero Labs, Inc. 的商标。",
+  "Search the site": "搜索本站",
+  "Search could not load. Try again later.": "搜索无法加载，请稍后再试。"
 }
