@@ -164,6 +164,9 @@ data class NetMapNode(
         const val SERVICE = "Service"
         const val POD = "Pod"
         const val NODE = "Node"
+        const val EXTERNAL_NAME = "ExternalName"
+        const val PROXY_GROUP = "ProxyGroup"
+        const val PROXY = "Proxy"
 
         /** The kinds that route traffic to Services: drawn with the route icon. */
         val ROUTE_KINDS = setOf(INGRESS, HTTP_ROUTE, GRPC_ROUTE, TLS_ROUTE, INGRESS_ROUTE, INGRESS_ROUTE_TCP)

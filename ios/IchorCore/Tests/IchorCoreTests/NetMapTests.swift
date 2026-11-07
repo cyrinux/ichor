@@ -198,4 +198,28 @@ final class NetMapTests: XCTestCase {
         XCTAssertEqual(NetMapProblem(kind: .ingressRoute, name: "t").reason, .noHealthyBackend("IngressRoute", "t"))
         XCTAssertEqual(NetMapProblem(kind: .unknown, name: "x", detail: "d").reason, .other("", "x", "d"))
     }
+
+    // The Tailscale map's own kinds (go/ichorgo/kube_tailscale_network.go): an exposed Service
+    // served through a named proxy group and its proxy, down to a Service.
+    private let tailscaleJson = #"""
+        {"nodes":[
+          {"id":"ext/cloudflare/web","layer":0,"kind":"ExternalName","namespace":"","name":"web.example.com","detail":"cloudflare","health":"ok","url":"","managed":false},
+          {"id":"pg/tailscale/infra","layer":1,"kind":"ProxyGroup","namespace":"tailscale","name":"infra","detail":"2 proxies","health":"ok","url":"","managed":false},
+          {"id":"proxy/tailscale/infra-abc","layer":2,"kind":"Proxy","namespace":"tailscale","name":"infra-abc","detail":"100.64.0.9","health":"ok","url":"","managed":false},
+          {"id":"svc/demo/web","layer":3,"kind":"Service","namespace":"demo","name":"web","detail":"ClusterIP 10.96.0.7","health":"ok","url":"","managed":true}],
+         "edges":[
+          {"from":"ext/cloudflare/web","to":"pg/tailscale/infra","health":"ok"},
+          {"from":"pg/tailscale/infra","to":"proxy/tailscale/infra-abc","health":"ok"},
+          {"from":"proxy/tailscale/infra-abc","to":"svc/demo/web","health":"ok"}],
+         "problem":null}
+        """#
+
+    func testDecodesTailscaleKinds() throws {
+        let net = try decode(tailscaleJson)
+        XCTAssertEqual(net.node("ext/cloudflare/web")?.kind, .externalName)
+        XCTAssertEqual(net.node("pg/tailscale/infra")?.kind, .proxyGroup)
+        XCTAssertEqual(net.node("proxy/tailscale/infra-abc")?.kind, .proxy)
+        XCTAssertFalse(net.node("proxy/tailscale/infra-abc")?.shared ?? true, "a proxy is not shared")
+        XCTAssertEqual(net.edges.count, 3)
+    }
 }

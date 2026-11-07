@@ -100,6 +100,12 @@ var dataCommands = []command{
 	{name: "tailscale", args: "", run: func(e env) (string, error) {
 		return ichorgo.KubeTailscale(e.cfg, e.context, e.kubeServer)
 	}},
+	{name: "tailscale-network", args: "KIND NAMESPACE NAME", run: func(e env) (out string, err error) {
+		// KIND: Service or Ingress; the map of the one address the operator serves under that name.
+		out, err = ichorgo.KubeTailscaleNetwork(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+
+		return out, err
+	}},
 	{name: "cluster-api", args: "", run: func(e env) (string, error) {
 		return ichorgo.KubeClusterAPI(e.cfg, e.context, e.kubeServer)
 	}},

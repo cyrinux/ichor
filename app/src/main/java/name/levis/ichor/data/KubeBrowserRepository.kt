@@ -4,6 +4,7 @@ import name.levis.ichor.model.Crossplane
 import name.levis.ichor.model.KubeJobs
 import name.levis.ichor.model.KubeLoadBalancing
 import name.levis.ichor.model.KubeServices
+import name.levis.ichor.model.NetMap
 import name.levis.ichor.model.Tailscale
 import name.levis.ichor.model.ClusterLifecycle
 import name.levis.ichor.model.KubeStorage
@@ -201,6 +202,17 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     /** The Tailscale operator's connectors, proxy groups, proxy classes and DNS config, problems first. */
     suspend fun tailscale(): Tailscale = kubeCall { cfg, ctx, server ->
         TalosJson.decodeFromString(Tailscale.serializer(), Ichorgo.kubeTailscale(cfg, ctx, server))
+    }
+
+    /**
+     * How traffic crosses the tailnet for the [kind] ("Service" or [TailscaleExposed.INGRESS])
+     * [namespace]/[name] the operator serves (os:admin):
+     * the network map of that one address, from its tailnet name through the proxies to the
+     * pods and nodes, or out to the tailnet target. Never cached: the map screen reads again
+     * on every pull.
+     */
+    suspend fun tailscaleNetwork(kind: String, namespace: String, name: String): NetMap = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(NetMap.serializer(), Ichorgo.kubeTailscaleNetwork(cfg, ctx, server, kind, namespace, name))
     }
 
     /** Cluster API's clusters, machines and machine deployments, and Sidero Metal's servers, problems first. */

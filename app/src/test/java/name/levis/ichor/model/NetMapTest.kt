@@ -1,6 +1,8 @@
 package name.levis.ichor.model
 
+import name.levis.ichor.R
 import name.levis.ichor.data.TalosJson
+import name.levis.ichor.ui.components.netmap.columnTitle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -228,5 +230,15 @@ class NetMapTest {
         assertFalse(NetMapNode(id = "ir/edge/web", kind = NetMapNode.INGRESS_ROUTE, managed = true).shared)
         assertFalse(network.node("ing/demo/worker")!!.shared)
         assertFalse(network.node("pod/demo/worker-6f4b8-pqrst")!!.shared)
+    }
+
+    // The Tailscale map's three kinds (kube_tailscale_network.go) have column titles of their
+    // own; an unknown kind is still its own title (columnTitle is null for it).
+    @Test
+    fun titlesTheTailscaleColumnsByKind() {
+        assertEquals(R.string.argo_net_layer_external_names, columnTitle(NetMapNode.EXTERNAL_NAME))
+        assertEquals(R.string.argo_net_layer_proxy_groups, columnTitle(NetMapNode.PROXY_GROUP))
+        assertEquals(R.string.argo_net_layer_proxies, columnTitle(NetMapNode.PROXY))
+        assertNull(columnTitle("Connector"))
     }
 }

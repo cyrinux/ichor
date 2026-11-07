@@ -23,7 +23,7 @@ public extension NetMapProblem {
         case .service: .serviceWithoutPods(name)
         case .ingress, .httpRoute, .grpcRoute, .tlsRoute, .ingressRoute, .ingressRouteTCP, .gateway:
             .noHealthyBackend(kind.rawValue, name)
-        case .host, .loadBalancer, .unknown: .other(kind.rawValue, name, detail)
+        case .host, .loadBalancer, .externalName, .proxyGroup, .proxy, .unknown: .other(kind.rawValue, name, detail)
         }
     }
 }

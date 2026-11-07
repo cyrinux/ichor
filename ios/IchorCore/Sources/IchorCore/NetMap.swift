@@ -18,6 +18,9 @@ public enum NetMapKind: String, Sendable, CaseIterable, WireEnum {
     case service = "Service"
     case pod = "Pod"
     case node = "Node"
+    case externalName = "ExternalName"
+    case proxyGroup = "ProxyGroup"
+    case proxy = "Proxy"
     case unknown = ""
 
     public static let wireFallback: Self = .unknown
@@ -26,7 +29,7 @@ public enum NetMapKind: String, Sendable, CaseIterable, WireEnum {
     public var routesTraffic: Bool {
         switch self {
         case .gateway, .ingress, .httpRoute, .grpcRoute, .tlsRoute, .ingressRoute, .ingressRouteTCP: true
-        case .host, .loadBalancer, .service, .pod, .node, .unknown: false
+        case .host, .loadBalancer, .service, .pod, .node, .externalName, .proxyGroup, .proxy, .unknown: false
         }
     }
 }

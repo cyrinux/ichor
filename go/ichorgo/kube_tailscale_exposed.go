@@ -10,8 +10,8 @@ import (
 // Which way an exposed row carries traffic: tailnet → cluster (ingress) or cluster → tailnet
 // (egress).
 const (
-	tsDirectionIngress = "ingress"
-	tsDirectionEgress  = "egress"
+	tsDirectionIngress = externalIngress
+	tsDirectionEgress  = externalEgress
 )
 
 // The annotations and class names the operator reads on Services and Ingresses.

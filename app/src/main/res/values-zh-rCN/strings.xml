@@ -2825,6 +2825,10 @@
     <string name="argo_net_layer_services">服务</string>
     <string name="argo_net_layer_pods">Pod</string>
     <string name="argo_net_layer_nodes">节点</string>
+    <string name="argo_net_layer_external_names">外部名称</string>
+    <string name="argo_net_layer_proxy_groups">代理组</string>
+    <string name="argo_net_layer_proxies">代理</string>
+    <string name="tailscale_net_empty">operator 不再为该对象提供服务。</string>
     <string name="argo_net_kind_host">主机</string>
     <string name="argo_net_more">另有 +%1$d 个</string>
     <string name="argo_net_less">收起</string>

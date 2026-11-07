@@ -200,6 +200,15 @@ extension TalosClient {
         }
     }
 
+    /// The network map of the one address the Tailscale operator serves for [kind]
+    /// ("Service" or "Ingress") `namespace`/`name`: from the tailnet name through the proxies
+    /// to the pods and nodes, or out to the tailnet target (the exposed rows of tailscale()).
+    func tailscaleNetwork(kind: String, namespace: String, name: String) async throws -> NetMap {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeTailscaleNetwork(config, context, kubeServer, kind, namespace, name, $0)
+        }
+    }
+
     /// Cluster API's clusters, machines and machine deployments, and Sidero Metal's servers, problems first.
     func clusterLifecycle() async throws -> ClusterLifecycle {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
