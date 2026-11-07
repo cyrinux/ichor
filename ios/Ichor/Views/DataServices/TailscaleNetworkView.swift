@@ -48,7 +48,7 @@ struct TailscaleNetworkView: View {
                 if let problem = network.problem {
                     Section {
                         Label {
-                            let text = [problem.kind, problem.namespace, problem.name, problem.detail]
+                            let text = [problem.kind.rawValue, problem.namespace, problem.name, problem.detail]
                                 .filter { !$0.isEmpty }.joined(separator: " · ")
                             Text(verbatim: text).font(.callout).textSelection(.enabled)
                         } icon: {
