@@ -282,10 +282,7 @@ func serveTeleportLoopback(ctx context.Context, answers chan<- url.Values) (*tel
 
 	go func() { _ = srv.Serve(ln) }() //nolint:errcheck
 
-	lb.stop = func() {
-		_ = srv.Close() //nolint:errcheck
-		_ = ln.Close()  //nolint:errcheck
-	}
+	lb.stop = stopLoopback(srv, ln)
 
 	return lb, nil
 }
