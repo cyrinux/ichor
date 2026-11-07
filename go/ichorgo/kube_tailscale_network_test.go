@@ -321,11 +321,11 @@ func TestExternalEntries(t *testing.T) {
 	raw := json.RawMessage(`{"metadata":{"name":"web","namespace":"shop"},"spec":{"type":"LoadBalancer","loadBalancerClass":"tailscale","ports":[{"port":443}]},
 	  "status":{"loadBalancer":{"ingress":[{"hostname":"web.example-tailnet.ts.net","ip":"100.64.0.9"}]},"conditions":[{"type":"TailscaleProxyReady","status":"True"}]}}`)
 
-	if got := externalEntries(tsKindService, raw, map[string]string{}); len(got) != 0 {
+	if got := externalEntries(tsKindService, raw, map[string]string{}, externalObjects{}); len(got) != 0 {
 		t.Fatalf("without tailscale.com %+v", got)
 	}
 
-	got := externalEntries(tsKindService, raw, map[string]string{groupTailscale: "v1alpha1"})
+	got := externalEntries(tsKindService, raw, map[string]string{groupTailscale: "v1alpha1"}, externalObjects{})
 	want := externalEntry{
 		Provider: tsProvider, Kind: externalIngress, Name: "web.example-tailnet.ts.net", URL: "https://web.example-tailnet.ts.net",
 		Health: healthOK, Detail: "Tailscale · 100.64.0.9", Addresses: []string{"web.example-tailnet.ts.net", "100.64.0.9"},
@@ -336,7 +336,7 @@ func TestExternalEntries(t *testing.T) {
 	}
 
 	plain := json.RawMessage(`{"metadata":{"name":"web","namespace":"shop"},"spec":{"type":"ClusterIP"}}`)
-	if got := externalEntries(tsKindService, plain, map[string]string{groupTailscale: "v1alpha1"}); len(got) != 0 {
+	if got := externalEntries(tsKindService, plain, map[string]string{groupTailscale: "v1alpha1"}, externalObjects{}); len(got) != 0 {
 		t.Fatalf("not the operator's %+v", got)
 	}
 }
