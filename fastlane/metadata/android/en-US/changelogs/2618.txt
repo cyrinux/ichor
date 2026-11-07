@@ -1,0 +1,4 @@
+• Sign in to AWS with IAM Identity Center to create a node from the phone
+• Search box on the website
+• App Store screenshots in all ten languages, taken from the demo on a simulator
+• Make a Talos image at Google Cloud from the phone
