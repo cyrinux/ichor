@@ -36,7 +36,7 @@ extension NetMapKind {
         case .node: "cpu"
         case .externalName: "cloud"
         case .proxyGroup: "rectangle.stack"
-        case .proxy: "network"
+        case .proxy: "point.3.connected.trianglepath.dotted"
         case .unknown: "questionmark.square.dashed"
         }
     }

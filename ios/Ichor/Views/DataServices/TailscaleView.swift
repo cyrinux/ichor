@@ -198,7 +198,8 @@ private struct ExposedRow: View {
                 group.isEmpty ? nil : String(localized: "via \(group)"),
                 e.tags.joined(separator: ", "),
             ],
-            destination: AnyView(TailscaleNetworkView(kind: e.kind, namespace: e.namespace, name: e.name, title: title)))
+            destination: AnyView(
+                TailscaleNetworkView(kind: e.kind, namespace: e.namespace, name: e.name, title: title)))
     }
 }
 
