@@ -66,15 +66,15 @@ type awsNetworkRule struct {
 }
 
 type awsNetworkResult struct {
-	SubnetID        string           `json:"subnetId"`
-	SecurityGroupID string           `json:"securityGroupId"`
-	VPCID           string           `json:"vpcId"`
-	Created         bool             `json:"created"`
+	SubnetID        string `json:"subnetId"`
+	SecurityGroupID string `json:"securityGroupId"`
+	VPCID           string `json:"vpcId"`
+	Created         bool   `json:"created"`
 	// PhoneIP is the address port 50000 was opened to, "" on Omni or when it cannot be learned:
 	// the apps tell this phone's rule from older ones by it.
 	PhoneIP  string           `json:"phoneIp,omitempty"`
 	Rules    []awsNetworkRule `json:"rules"`
-	Warnings        []string         `json:"warnings"`
+	Warnings []string         `json:"warnings"`
 	// Credential is the credential JSON to seal again when the call renewed it, else "".
 	Credential string `json:"credential,omitempty"`
 }
