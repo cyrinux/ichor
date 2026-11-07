@@ -6589,6 +6589,15 @@
     <string name="aws_subnet_public">призначає публічну IP</string>
     <string name="aws_security_groups">Групи безпеки</string>
     <string name="aws_security_groups_none">Нічого не вибрано: застосовується типова група VPC.</string>
+    <string name="aws_network_guided">Використати мережу, яку налаштує Ichor (рекомендовано)</string>
+    <string name="aws_network_mine">Вибрати власні</string>
+    <string name="aws_network_working">Налаштування мережі…</string>
+    <string name="aws_network_created">Групу безпеки %1$s створено в типовій VPC.</string>
+    <string name="aws_network_reused">Повторно використано групу безпеки %1$s.</string>
+    <string name="aws_network_rule_self">Увесь трафік від самої групи</string>
+    <string name="aws_network_rule_phone">TCP 50000 з цього телефона (%1$s)</string>
+    <string name="aws_network_wide_open">Ця група відкрита для всього світу на всіх портах.</string>
+    <string name="aws_network_hint">Ichor один раз створює групу безпеки ichor-nodes у типовій VPC і використовує її повторно. Нічого не відкривається для світу; на Talos без Omni порт 50000 відкрито лише для адреси цього телефона.</string>
     <string name="aws_public_ip">Надати публічну IP-адресу</string>
     <string name="aws_cost">≈ $%1$s/год, без податків</string>
     <string name="aws_cost_unknown">Ціна недоступна: див. ціни EC2 на сайті AWS.</string>

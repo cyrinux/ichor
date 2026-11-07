@@ -85,6 +85,10 @@ type awsSecurityGroup struct {
 	VPCID       string `json:"vpcId"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	// Managed: the app made it (AWSNetworkPrepare's ichor-nodes). WideOpen: it lets the whole
+	// internet in on every port (the apps warn, they do not refuse).
+	Managed  bool `json:"managed"`
+	WideOpen bool `json:"wideOpen"`
 }
 
 // awsImage is a Talos AMI. An official one is the Image Factory's default schematic.
@@ -142,10 +146,12 @@ type awsAPISubnet struct {
 }
 
 type awsAPISecurityGroup struct {
-	ID          string `xml:"groupId"`
-	VPCID       string `xml:"vpcId"`
-	Name        string `xml:"groupName"`
-	Description string `xml:"groupDescription"`
+	ID          string             `xml:"groupId"`
+	VPCID       string             `xml:"vpcId"`
+	Name        string             `xml:"groupName"`
+	Description string             `xml:"groupDescription"`
+	Permissions []awsAPIPermission `xml:"ipPermissions>item"`
+	Tags        []awsTag           `xml:"tagSet>item"`
 }
 
 type awsAPIImage struct {
@@ -291,7 +297,10 @@ func (c *awsClient) options(ctx context.Context, version string) (awsOptions, er
 	}
 
 	for _, g := range groups.Items {
-		o.SecurityGroups = append(o.SecurityGroups, awsSecurityGroup(g))
+		o.SecurityGroups = append(o.SecurityGroups, awsSecurityGroup{
+			ID: g.ID, VPCID: g.VPCID, Name: g.Name, Description: g.Description,
+			Managed: awsTagValue(g.Tags, awsTagManaged) == "true", WideOpen: awsWideOpen(g.Permissions),
+		})
 	}
 
 	slices.Sort(o.Regions)

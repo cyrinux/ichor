@@ -245,4 +245,36 @@ final class CloudAWSTests: XCTestCase {
         XCTAssertEqual(steps[2].state, .done)
         XCTAssertEqual(steps[3].state, .current)
     }
+
+    // The same fixture as CloudAWSTest.theGuidedNetworkTellsThePhonesRule on Android.
+    func testGuidedNetwork() throws {
+        let json = """
+            {"subnetId":"subnet-a","securityGroupId":"sg-0123456789abcdef7","vpcId":"vpc-a","created":true,
+             "phoneIp":"203.0.113.7",
+             "rules":[{"protocol":"all","port":0,"source":"sg-0123456789abcdef7","self":true},
+                      {"protocol":"tcp","port":50000,"source":"203.0.113.7/32","self":false,
+                       "description":"Ichor phone 2026-11-07"},
+                      {"protocol":"tcp","port":50000,"source":"198.51.100.4/32","self":false,
+                       "description":"Ichor phone 2026-10-01"}],
+             "warnings":[]}
+            """
+        let network = try JSONDecoder().decode(AWSNetwork.self, from: Data(json.utf8))
+        XCTAssertTrue(network.created)
+        XCTAssertTrue(network.rules[0].isSelf)
+        XCTAssertEqual(network.rules.map { $0.isPhone(network.phoneIp) }, [false, true, false])
+        XCTAssertEqual(network.rules[2].plain, "tcp/50000 ← 198.51.100.4/32 · Ichor phone 2026-10-01")
+        XCTAssertEqual(network.rules[0].plain, "all ← sg-0123456789abcdef7")
+        // On Omni no address is opened: no rule is the phone's.
+        XCTAssertFalse(network.rules[1].isPhone(""))
+
+        let group = try JSONDecoder().decode(
+            AWSSecurityGroup.self, from: Data(#"{"id":"sg-a","managed":true,"wideOpen":true}"#.utf8))
+        XCTAssertTrue(group.managed && group.wideOpen)
+        XCTAssertFalse(try options().securityGroups.contains { $0.managed || $0.wideOpen })
+
+        let spec = try JSONEncoder().encode(AWSNetworkSpec(region: "eu-west-1", role: "worker", omni: true))
+        let decoded = try JSONSerialization.jsonObject(with: spec) as? [String: Any]
+        XCTAssertEqual(decoded?["role"] as? String, "worker")
+        XCTAssertEqual(decoded?["omni"] as? Bool, true)
+    }
 }

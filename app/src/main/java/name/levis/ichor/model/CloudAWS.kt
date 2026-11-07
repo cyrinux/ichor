@@ -116,7 +116,49 @@ data class AWSSecurityGroup(
     val vpcId: String = "",
     val name: String = "",
     val description: String = "",
+    /** Made by the app (the guided network's ichor-nodes). */
+    val managed: Boolean = false,
+    /** Lets the whole internet in on every port: warned about, not refused. */
+    val wideOpen: Boolean = false,
 )
+
+/** AWSNetworkPrepare's specJSON: the role and whether the cluster is Omni (no port 50000 then). */
+@Serializable
+data class AWSNetworkSpec(val region: String, val role: String, val omni: Boolean)
+
+/**
+ * The guided network: a public subnet of the default VPC and the ichor-nodes group, [created] by
+ * this call or reused, with its rules as they are now. [phoneIp] is the address port 50000 was
+ * opened to, "" on Omni or when it could not be learned (a warning says so).
+ */
+@Serializable
+data class AWSNetwork(
+    val subnetId: String = "",
+    val securityGroupId: String = "",
+    val vpcId: String = "",
+    val created: Boolean = false,
+    val phoneIp: String = "",
+    val rules: List<AWSNetworkRule> = emptyList(),
+    val warnings: List<String> = emptyList(),
+    val credential: String = "",
+)
+
+/** One inbound rule: [protocol] all or tcp, [port] 0 for every port, [source] a CIDR or a group id. */
+@Serializable
+data class AWSNetworkRule(
+    val protocol: String = "",
+    val port: Int = 0,
+    val source: String = "",
+    val self: Boolean = false,
+    val description: String = "",
+) {
+    /** Port 50000 opened to [phoneIp] by this call or an earlier one from the same address. */
+    fun isPhone(phoneIp: String): Boolean = phoneIp.isNotBlank() && protocol == "tcp" && port == 50000 && source == "$phoneIp/32"
+
+    /** A rule the app did not word: "tcp/443 ← 198.51.100.0/24", "all ← sg-…", the description after it. */
+    val plain: String
+        get() = listOf("$protocol${if (port == 0) "" else "/$port"} ← $source", description).filter { it.isNotBlank() }.joinToString(" · ")
+}
 
 @Serializable
 data class AWSImage(

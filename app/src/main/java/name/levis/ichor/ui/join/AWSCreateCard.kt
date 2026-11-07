@@ -55,6 +55,8 @@ import name.levis.ichor.model.AWSCreateSpec
 import name.levis.ichor.model.AWSCredential
 import name.levis.ichor.model.AWSImageCost
 import name.levis.ichor.model.AWSInstanceType
+import name.levis.ichor.model.AWSNetwork
+import name.levis.ichor.model.AWSNetworkSpec
 import name.levis.ichor.model.AWSOptions
 import name.levis.ichor.model.AWSPrice
 import name.levis.ichor.model.AWSSignInChoice
@@ -172,6 +174,15 @@ class AWSCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
         viewModelScope.launch {
             val state = uiStateOf { lifecycle.awsOptions(credential(account)).also { reseal(account, it.credential) } }
             if (state is UiState.Loaded) _options.value = state
+        }
+    }
+
+    /** The guided network (writes at AWS), then the options again so its group is listed. */
+    suspend fun prepareNetwork(spec: AWSNetworkSpec): AWSNetwork {
+        val account = _account.value
+        return lifecycle.awsNetworkPrepare(credential(account), spec).also {
+            reseal(account, it.credential)
+            refresh()
         }
     }
 
@@ -302,6 +313,7 @@ fun AWSCreateCard(
                     onType = vm::loadPrice, onRegion = if (demo) null else vm::switchRegion,
                     canMakeImage = !demo && account.isNotBlank(), madeImage = madeImage,
                     onMakeImage = { arch, subnet, group -> amiFor = AMIAsk(state.data, arch, subnet, group) },
+                    onPrepareNetwork = if (demo || account.isBlank()) null else vm::prepareNetwork,
                 ) { request ->
                     // The keys are read only now, and go to the run alone.
                     scope.launch { app.joinManager.start(request, vm.runCredential(account)) }
@@ -365,6 +377,8 @@ private fun InstanceForm(
     /** The AMI the last run made: picked once it is listed. */
     madeImage: String,
     onMakeImage: (arch: String, subnet: String, group: String) -> Unit,
+    /** The guided network; null where it cannot run (the demo, no account). */
+    onPrepareNetwork: (suspend (AWSNetworkSpec) -> AWSNetwork)?,
     onCreate: (JoinRequest) -> Unit,
 ) {
     val colors = LocalStatusColors.current
@@ -448,6 +462,14 @@ private fun InstanceForm(
         }
     }
 
+    if (onPrepareNetwork != null) {
+        GuidedNetwork(options.region, omni = form == null, role = form?.role.orEmpty(), enabled = !busy, prepare = onPrepareNetwork) { network ->
+            // Its subnet and group fill the pickers; the address is asked for even where the subnet gives none.
+            subnetId = network.subnetId
+            groupIds = listOf(network.securityGroupId)
+            publicIp = true
+        }
+    }
     Text(stringResource(R.string.aws_subnet), style = MaterialTheme.typography.labelLarge)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         options.subnets.forEach { s ->
@@ -475,6 +497,9 @@ private fun InstanceForm(
             }
         }
         if (groupIds.isEmpty()) MutedText(stringResource(R.string.aws_security_groups_none))
+        groups.filter { it.id in groupIds && it.wideOpen }.forEach { g ->
+            Text("${g.name.ifBlank { g.id }}: ${stringResource(R.string.aws_network_wide_open)}", color = colors.warn, style = MaterialTheme.typography.bodySmall)
+        }
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.aws_public_ip), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f).padding(end = 8.dp))
             IchorSwitch(checked = publicIp, onCheckedChange = { publicIp = it })

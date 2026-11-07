@@ -92,7 +92,7 @@ var cloudCommands = []command{
 		return "", errors.New("usage: scaleway test|options|policy|create …")
 	}},
 	{name: "aws", args: "test|options|policy|price TYPE|estimate ARCH REGION|image TEMPLATE ARCH SUBNET SG|- -yes|create TEMPLATE ROLE HOSTNAME DISK TYPE AMI SUBNET SG[,SG] -yes|" +
-		"signin START_URL SSO_REGION [ACCOUNT ROLE]", run: func(e env) (string, error) {
+		"signin START_URL SSO_REGION [ACCOUNT ROLE]|network ROLE [-omni] -yes", run: func(e env) (string, error) {
 		credJSON, err := json.Marshal(map[string]string{
 			"accessKeyId": os.Getenv("AWS_ACCESS_KEY_ID"), "secretAccessKey": os.Getenv("AWS_SECRET_ACCESS_KEY"),
 			"sessionToken": os.Getenv("AWS_SESSION_TOKEN"), "region": os.Getenv("AWS_REGION"),
@@ -118,9 +118,11 @@ var cloudCommands = []command{
 			return awsCreate(e, string(credJSON))
 		case "signin":
 			return awsSignIn()
+		case "network":
+			return awsNetwork(e, string(credJSON))
 		}
 
-		return "", errors.New("usage: aws test|options|policy|price TYPE|estimate|image|create|signin …")
+		return "", errors.New("usage: aws test|options|policy|price TYPE|estimate|image|create|signin|network …")
 	}},
 	{name: "azure", args: "test|options|role [RG]|price LOCATION SIZE|estimate ARCH LOCATION|image TEMPLATE ARCH RG LOCATION SUBNET_ID NSG_ID|- -yes|" +
 		"create TEMPLATE ROLE HOSTNAME DISK RG LOCATION SIZE IMAGE_ID SUBNET_ID NSG_ID|- -yes", run: func(e env) (string, error) {
@@ -318,6 +320,23 @@ func awsCreate(e env, credJSON string) (string, error) {
 	ichorgo.StartAWSCreate(e.cfg, e.context, credJSON, string(spec), j)
 
 	return "done: " + <-j.done, nil
+}
+
+// awsNetwork makes (or reuses) the ichor-nodes security group in the default VPC and opens TCP
+// 50000 to this machine's address unless -omni: it changes the account, so scratch accounts only,
+// and only with -yes.
+func awsNetwork(e env, credJSON string) (string, error) {
+	omni := flag.NArg() == 5 && flag.Arg(3) == "-omni"
+	if flag.Arg(flag.NArg()-1) != "-yes" || (flag.NArg() != 4 && !omni) {
+		return "", errors.New("usage: aws network ROLE [-omni] -yes (creates a security group and adds rules to it)")
+	}
+
+	spec, err := json.Marshal(map[string]any{"role": flag.Arg(2), "omni": omni, "region": os.Getenv("AWS_REGION")})
+	if err != nil {
+		return "", err
+	}
+
+	return ichorgo.AWSNetworkPrepare(e.cfg, e.context, credJSON, string(spec))
 }
 
 // awsImage makes a billable AMI with a throwaway helper instance: scratch accounts only, and only

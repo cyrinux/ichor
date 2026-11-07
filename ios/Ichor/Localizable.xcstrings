@@ -1,6 +1,132 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Use a network Ichor sets up (recommended)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein von Ichor eingerichtetes Netzwerk verwenden (empfohlen)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Usar una red que prepara Ichor (recomendado)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Utiliser un réseau préparé par Ichor (recommandé)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Usa una rete preparata da Ichor (consigliato)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor が用意するネットワークを使う(推奨)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Usar uma rede que o Ichor prepara (recomendado)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Использовать сеть, которую настроит Ichor (рекомендуется)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Використати мережу, яку налаштує Ichor (рекомендовано)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "使用 Ichor 设置的网络(推荐)" } }
+      }
+    },
+    "Pick mine" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eigene wählen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elegir los míos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisir les miens" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scegli i miei" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "自分で選ぶ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escolher os meus" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выбрать свои" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вибрати власні" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "自己选择" } }
+      }
+    },
+    "Setting up the network…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Netzwerk wird eingerichtet…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Preparando la red…" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Préparation du réseau…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Preparazione della rete…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ネットワークを準備しています…" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Preparando a rede…" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Настройка сети…" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Налаштування мережі…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在设置网络…" } }
+      }
+    },
+    "Made the security group %@ in the default VPC." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sicherheitsgruppe %@ in der Standard-VPC angelegt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Grupo de seguridad %@ creado en la VPC predeterminada." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Groupe de sécurité %@ créé dans le VPC par défaut." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Gruppo di sicurezza %@ creato nel VPC predefinito." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "デフォルト VPC にセキュリティグループ %@ を作成しました。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Grupo de segurança %@ criado na VPC padrão." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Группа безопасности %@ создана в VPC по умолчанию." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Групу безпеки %@ створено в типовій VPC." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已在默认 VPC 中创建安全组 %@。" } }
+      }
+    },
+    "Reusing the security group %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Sicherheitsgruppe %@ wird wiederverwendet." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Se reutiliza el grupo de seguridad %@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réutilisation du groupe de sécurité %@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Riutilizzo del gruppo di sicurezza %@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "セキュリティグループ %@ を再利用します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Reutilizando o grupo de segurança %@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Повторно используется группа безопасности %@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Повторно використано групу безпеки %@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复用安全组 %@。" } }
+      }
+    },
+    "All traffic from the group itself" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gesamter Verkehr aus der Gruppe selbst" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Todo el tráfico del propio grupo" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tout le trafic venant du groupe lui-même" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutto il traffico dal gruppo stesso" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "グループ自身からのすべての通信" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Todo o tráfego do próprio grupo" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Весь трафик от самой группы" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Увесь трафік від самої групи" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "来自该安全组自身的所有流量" } }
+      }
+    },
+    "TCP 50000 from this phone (%@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "TCP 50000 von diesem Telefon (%@)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "TCP 50000 desde este teléfono (%@)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "TCP 50000 depuis ce téléphone (%@)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "TCP 50000 da questo telefono (%@)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "この端末からの TCP 50000(%@)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "TCP 50000 a partir deste telefone (%@)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "TCP 50000 с этого телефона (%@)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "TCP 50000 з цього телефона (%@)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "来自本手机的 TCP 50000(%@)" } }
+      }
+    },
+    "This group is open to the world on every port." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diese Gruppe ist auf allen Ports für die ganze Welt offen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este grupo está abierto a todo el mundo en todos los puertos." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ce groupe est ouvert au monde entier sur tous les ports." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questo gruppo è aperto a tutto il mondo su ogni porta." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このグループはすべてのポートが全世界に開いています。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Este grupo está aberto para o mundo em todas as portas." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Эта группа открыта для всего мира на всех портах." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ця група відкрита для всього світу на всіх портах." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此安全组的所有端口都对全网开放。" } }
+      }
+    },
+    "Ichor makes the security group ichor-nodes once in the default VPC and reuses it. Nothing is opened to the world; on plain Talos, port 50000 is opened to this phone's address only." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor legt die Sicherheitsgruppe ichor-nodes einmal in der Standard-VPC an und verwendet sie wieder. Nichts wird für die Welt geöffnet; bei Talos ohne Omni wird Port 50000 nur für die Adresse dieses Telefons geöffnet." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea una vez el grupo de seguridad ichor-nodes en la VPC predeterminada y lo reutiliza. No se abre nada al mundo; en Talos sin Omni, el puerto 50000 se abre solo a la dirección de este teléfono." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crée une fois le groupe de sécurité ichor-nodes dans le VPC par défaut et le réutilise. Rien n'est ouvert au monde ; sur Talos sans Omni, le port 50000 n'est ouvert qu'à l'adresse de ce téléphone." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea una volta il gruppo di sicurezza ichor-nodes nel VPC predefinito e lo riutilizza. Nulla viene aperto al mondo; su Talos senza Omni, la porta 50000 è aperta solo all'indirizzo di questo telefono." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor はデフォルト VPC にセキュリティグループ ichor-nodes を一度だけ作成し、再利用します。全世界には何も開きません。Omni を使わない Talos では、ポート 50000 をこの端末のアドレスにのみ開きます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor cria uma vez o grupo de segurança ichor-nodes na VPC padrão e o reutiliza. Nada é aberto para o mundo; no Talos sem Omni, a porta 50000 é aberta apenas para o endereço deste telefone." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor один раз создаёт группу безопасности ichor-nodes в VPC по умолчанию и использует её повторно. Ничего не открывается для всего мира; в Talos без Omni порт 50000 открыт только для адреса этого телефона." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor один раз створює групу безпеки ichor-nodes у типовій VPC і використовує її повторно. Нічого не відкривається для світу; на Talos без Omni порт 50000 відкрито лише для адреси цього телефона." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 在默认 VPC 中创建一次安全组 ichor-nodes 并重复使用。不会对全网开放任何端口;在不使用 Omni 的 Talos 上,端口 50000 仅对本手机的地址开放。" } }
+      }
+    },
     "External names" : {
       "extractionState" : "manual",
       "localizations" : {

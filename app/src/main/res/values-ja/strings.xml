@@ -6191,6 +6191,15 @@
     <string name="aws_subnet_public">パブリック IP を割り当て</string>
     <string name="aws_security_groups">セキュリティグループ</string>
     <string name="aws_security_groups_none">未選択:VPC のデフォルトグループが適用されます。</string>
+    <string name="aws_network_guided">Ichor が用意するネットワークを使う(推奨)</string>
+    <string name="aws_network_mine">自分で選ぶ</string>
+    <string name="aws_network_working">ネットワークを準備しています…</string>
+    <string name="aws_network_created">デフォルト VPC にセキュリティグループ %1$s を作成しました。</string>
+    <string name="aws_network_reused">セキュリティグループ %1$s を再利用します。</string>
+    <string name="aws_network_rule_self">グループ自身からのすべての通信</string>
+    <string name="aws_network_rule_phone">この端末からの TCP 50000(%1$s)</string>
+    <string name="aws_network_wide_open">このグループはすべてのポートが全世界に開いています。</string>
+    <string name="aws_network_hint">Ichor はデフォルト VPC にセキュリティグループ ichor-nodes を一度だけ作成し、再利用します。全世界には何も開きません。Omni を使わない Talos では、ポート 50000 をこの端末のアドレスにのみ開きます。</string>
     <string name="aws_public_ip">パブリック IP アドレスを付与</string>
     <string name="aws_cost">≈ $%1$s/時(税抜)</string>
     <string name="aws_cost_unknown">料金は取得できません。AWS の EC2 料金ページを参照してください。</string>

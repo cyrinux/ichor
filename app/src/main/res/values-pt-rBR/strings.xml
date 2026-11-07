@@ -6326,6 +6326,15 @@
     <string name="aws_subnet_public">atribui um IP público</string>
     <string name="aws_security_groups">Grupos de segurança</string>
     <string name="aws_security_groups_none">Nenhum escolhido: vale o grupo padrão da VPC.</string>
+    <string name="aws_network_guided">Usar uma rede que o Ichor prepara (recomendado)</string>
+    <string name="aws_network_mine">Escolher os meus</string>
+    <string name="aws_network_working">Preparando a rede…</string>
+    <string name="aws_network_created">Grupo de segurança %1$s criado na VPC padrão.</string>
+    <string name="aws_network_reused">Reutilizando o grupo de segurança %1$s.</string>
+    <string name="aws_network_rule_self">Todo o tráfego do próprio grupo</string>
+    <string name="aws_network_rule_phone">TCP 50000 a partir deste telefone (%1$s)</string>
+    <string name="aws_network_wide_open">Este grupo está aberto para o mundo em todas as portas.</string>
+    <string name="aws_network_hint">O Ichor cria uma vez o grupo de segurança ichor-nodes na VPC padrão e o reutiliza. Nada é aberto para o mundo; no Talos sem Omni, a porta 50000 é aberta apenas para o endereço deste telefone.</string>
     <string name="aws_public_ip">Dar um endereço IP público</string>
     <string name="aws_cost">≈ US$ %1$s/h, sem impostos</string>
     <string name="aws_cost_unknown">Preço indisponível: veja os preços do EC2 da AWS.</string>

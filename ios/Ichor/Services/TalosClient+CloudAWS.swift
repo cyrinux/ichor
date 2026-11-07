@@ -17,6 +17,16 @@ extension TalosClient {
         }
     }
 
+    /// Finds or makes the guided network in the default VPC: a public subnet and the ichor-nodes
+    /// group, opened to nothing but the group itself and (plain Talos) this phone on port 50000.
+    /// Writes at AWS; refused in the demo and without a default VPC.
+    func awsNetworkPrepare(credential: String, spec: AWSNetworkSpec) async throws -> AWSNetwork {
+        let specJSON = (try? JSONEncoder().encode(spec)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+        return try await Self.json { [config, context] in
+            IchorgoAWSNetworkPrepare(config, context, credential, specJSON, $0)
+        }
+    }
+
     /// The IAM policy to give the keys' user: only the calls Ichor makes.
     static func awsPolicy() -> String {
         IchorgoAWSIAMPolicy()

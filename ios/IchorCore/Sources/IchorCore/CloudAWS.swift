@@ -213,8 +213,12 @@ public struct AWSSecurityGroup: Decodable, Equatable, Hashable, Identifiable, Se
     public let vpcId: String
     public let name: String
     public let description: String
+    /// Made by the app (the guided network's ichor-nodes).
+    public let managed: Bool
+    /// Lets the whole internet in on every port: warned about, not refused.
+    public let wideOpen: Bool
 
-    private enum CodingKeys: String, CodingKey { case id, vpcId, name, description }
+    private enum CodingKeys: String, CodingKey { case id, vpcId, name, description, managed, wideOpen }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -222,6 +226,85 @@ public struct AWSSecurityGroup: Decodable, Equatable, Hashable, Identifiable, Se
         vpcId = try c.field(.vpcId, "")
         name = try c.field(.name, "")
         description = try c.field(.description, "")
+        managed = try c.field(.managed, false)
+        wideOpen = try c.field(.wideOpen, false)
+    }
+}
+
+/// AWSNetworkPrepare's specJSON: the role and whether the cluster is Omni (no port 50000 then).
+public struct AWSNetworkSpec: Encodable, Equatable, Sendable {
+    public let region: String
+    public let role: String
+    public let omni: Bool
+
+    public init(region: String, role: String, omni: Bool) {
+        self.region = region
+        self.role = role
+        self.omni = omni
+    }
+}
+
+/// The guided network: a public subnet of the default VPC and the ichor-nodes group, `created` by
+/// this call or reused, with its rules as they are now. `phoneIp` is the address port 50000 was
+/// opened to, "" on Omni or when it could not be learned (a warning says so).
+public struct AWSNetwork: Decodable, Equatable, Sendable {
+    public let subnetId: String
+    public let securityGroupId: String
+    public let vpcId: String
+    public let created: Bool
+    public let phoneIp: String
+    public let rules: [AWSNetworkRule]
+    public let warnings: [String]
+    public let credential: String
+
+    private enum CodingKeys: String, CodingKey {
+        case subnetId, securityGroupId, vpcId, created, phoneIp, rules, warnings, credential
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        subnetId = try c.field(.subnetId, "")
+        securityGroupId = try c.field(.securityGroupId, "")
+        vpcId = try c.field(.vpcId, "")
+        created = try c.field(.created, false)
+        phoneIp = try c.field(.phoneIp, "")
+        rules = try c.field(.rules, [])
+        warnings = try c.field(.warnings, [])
+        credential = try c.field(.credential, "")
+    }
+}
+
+/// One inbound rule: `protocol` all or tcp, `port` 0 for every port, `source` a CIDR or a group id.
+public struct AWSNetworkRule: Decodable, Equatable, Hashable, Sendable {
+    public let `protocol`: String
+    public let port: Int
+    public let source: String
+    public let isSelf: Bool
+    public let description: String
+
+    private enum CodingKeys: String, CodingKey {
+        case `protocol`, port, source, description
+        case isSelf = "self"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        `protocol` = try c.field(.protocol, "")
+        port = try c.field(.port, 0)
+        source = try c.field(.source, "")
+        isSelf = try c.field(.isSelf, false)
+        description = try c.field(.description, "")
+    }
+
+    /// Port 50000 opened to `phoneIp` by this call or an earlier one from the same address.
+    public func isPhone(_ phoneIp: String) -> Bool {
+        !phoneIp.isEmpty && `protocol` == "tcp" && port == 50000 && source == "\(phoneIp)/32"
+    }
+
+    /// A rule the app did not word: "tcp/443 ← 198.51.100.0/24", "all ← sg-…", the description after it.
+    public var plain: String {
+        let head = "\(`protocol`)\(port == 0 ? "" : "/\(port)") ← \(source)"
+        return [head, description].filter { !$0.isEmpty }.joined(separator: " · ")
     }
 }
 
