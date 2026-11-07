@@ -51,10 +51,10 @@ func TestLoopbackKeepsTheDonePage(t *testing.T) {
 }
 
 // TestLoopbackStopDoesNotHang is the other half: stop() waits for the answer, so it must not
-// wait for anything else. A redirect without state is a 404 that does not answer on codes,
-// and the browser's next request (a favicon) arrives after stop() was asked: Shutdown must
-// let it be answered (404) and the stop return, and a stale keep-alive connection must be
-// dropped at once rather than hold the sign-in's return.
+// wait for anything else. An in-flight request (the browser's, whose handler answers first)
+// is finished, a stale keep-alive connection is dropped at once rather than hold the
+// sign-in's return, and the listener stays open until stop() returns so a late request
+// (favicon) is refused cleanly, not mid-connection.
 func TestLoopbackStopDoesNotHang(t *testing.T) {
 	m := &oidcMethod{method: authOIDC, listen: []string{"127.0.0.1:0"}, redirectHost: "127.0.0.1"}
 
@@ -77,11 +77,45 @@ func TestLoopbackStopDoesNotHang(t *testing.T) {
 
 	// Keep-alive: no Close(), so the connection stays in the pool and in the server's idle set.
 
+	inflight := make(chan int, 1)
+	stopAsked := make(chan struct{})
+
+	go func() {
+		// The browser's request: answered (200) and handed over, its response still in flight
+		// when stop() is asked. Read after stop() is called (below): with the old Close the
+		// body read fails with an EOF on a request the server had already answered.
+		resp, err := http.Get(redirect + "/?code=good-code&state=s-2") //nolint:noctx
+		if err != nil {
+			t.Error(err)
+
+			inflight <- 0
+
+			return
+		}
+
+		select {
+		case <-stopAsked:
+		default:
+		}
+
+		_, _ = io.ReadAll(resp.Body)
+
+		_ = resp.Body.Close()
+
+		inflight <- resp.StatusCode
+	}()
+
+	select {
+	case <-codes:
+	case <-time.After(3 * time.Second):
+		t.Fatal("the browser's answer did not reach the loopback")
+	}
+
 	stopped := make(chan struct{})
 
 	go func() {
-		// The 404 request lands while stop() is in Shutdown.
-		time.Sleep(50 * time.Millisecond)
+		// The request that lands just after stop() was asked is answered before the server goes.
+		time.Sleep(20 * time.Millisecond)
 
 		resp, err := http.Get(redirect + "/favicon.ico") //nolint:noctx
 		if err != nil {
@@ -103,17 +137,26 @@ func TestLoopbackStopDoesNotHang(t *testing.T) {
 
 	done := make(chan struct{})
 
-	go func() { stop(); close(done) }()
+	go func() { close(stopAsked); stop(); close(done) }()
 
 	select {
 	case <-done:
 	case <-time.After(3 * time.Second):
-		t.Fatal("stop() hangs on an idle connection or a late request")
+		t.Fatal("stop() hangs on an idle connection or an in-flight request")
+	}
+
+	if code := <-inflight; code != http.StatusOK {
+		t.Errorf("the browser's answer: %d", code)
 	}
 
 	select {
 	case <-stopped:
 	case <-time.After(3 * time.Second):
 		t.Fatal("the request that arrived during stop() is never answered")
+	}
+
+	// stop() returned: the address is free again, so a later request is refused, not left hanging.
+	if _, err := http.Get(redirect + "/"); err == nil { //nolint:noctx
+		t.Error("the listener is still open after stop()")
 	}
 }
