@@ -68,8 +68,8 @@ type argoNetInput struct {
 
 // addExternal records the external entries of the Service or Ingress raw (kind) for the
 // matchers groups serves.
-func (in *argoNetInput) addExternal(kind, namespace, name string, raw json.RawMessage, groups map[string]string) {
-	if entries := externalEntries(kind, raw, groups); len(entries) > 0 {
+func (in *argoNetInput) addExternal(kind, namespace, name string, raw json.RawMessage, groups map[string]string, objs externalObjects) {
+	if entries := externalEntries(kind, raw, groups, objs); len(entries) > 0 {
 		if in.external == nil {
 			in.external = map[string][]externalEntry{}
 		}
@@ -99,9 +99,11 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 	namespaces := argoNetNamespaces(in.app)
 
 	var (
-		mu    sync.Mutex
-		errs  []error
-		tasks []func()
+		mu      sync.Mutex
+		errs    []error
+		tasks   []func()
+		svcRaws []json.RawMessage
+		objs    externalObjects
 	)
 
 	fail := func(err error) {
@@ -130,7 +132,7 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 				var svc netmap.Service
 				if json.Unmarshal(raw, &svc) == nil {
 					in.services = append(in.services, svc)
-					in.addExternal(tsKindService, svc.Metadata.Namespace, svc.Metadata.Name, raw, groups)
+					svcRaws = append(svcRaws, raw)
 				}
 			}
 		})
@@ -181,6 +183,14 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 			in.traefik = traefik
 			mu.Unlock()
 		},
+		// The providers' own objects, from the served groups only. They only name the box in
+		// front of a Service: a failed list leaves those boxes out, the rest still draws.
+		func() {
+			o, _ := readExternalObjects(ctx, k, groups)
+			mu.Lock()
+			objs = o
+			mu.Unlock()
+		},
 		// Node readiness only colours the last column: without it the graph still shows.
 		func() { _ = getList(ctx, k, "/api/v1/nodes", &nodes) },
 	)
@@ -190,11 +200,18 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 		return netmap.Map{}, errs[0]
 	}
 
+	for _, raw := range svcRaws {
+		var svc netmap.Service
+		if json.Unmarshal(raw, &svc) == nil {
+			in.addExternal(tsKindService, svc.Metadata.Namespace, svc.Metadata.Name, raw, groups, objs)
+		}
+	}
+
 	for _, raw := range ingresses {
 		var ing ingressObject
 		if json.Unmarshal(raw, &ing) == nil {
 			in.ingresses = append(in.ingresses, ing)
-			in.addExternal(tsKindIngress, ing.Metadata.Namespace, ing.Metadata.Name, raw, groups)
+			in.addExternal(tsKindIngress, ing.Metadata.Namespace, ing.Metadata.Name, raw, groups, objs)
 		}
 	}
 

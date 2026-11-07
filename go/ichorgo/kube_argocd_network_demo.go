@@ -28,12 +28,22 @@ func demoArgoNetwork(app string) netmap.Map {
 		in.pods = append(in.pods, netmap.Pod{Pod: p, Labels: map[string]string{"app": app}})
 	}
 
+	// Published through a private-network provider: the objects of the provider and the
+	// Service, read by the same matchers as a real cluster's.
+	provider := func(ns, name string, groups map[string]string, objs externalObjects) {
+		in.addExternal(tsKindService, ns, name, json.RawMessage(`{"metadata":{"name":"`+name+`","namespace":"`+ns+`"}}`), groups, objs)
+	}
+
 	switch app {
 	case "hello-ichor":
 		svc("demo", "hello-ichor", "ClusterIP", "10.96.14.20", "hello-ichor", `{"port":80,"targetPort":8080}`, "")
 		pod("demo", "hello-ichor-7d9c5-abcde", "hello-ichor", "demo-worker-1", "Running", 1, 0)
 		pod("demo", "hello-ichor-7d9c5-fghij", "hello-ichor", "demo-worker-2", "Running", 1, 0)
 		pod("demo", "hello-ichor-7d9c5-klmno", "hello-ichor", "demo-worker-1", "Running", 1, 0)
+		provider("demo", "hello-ichor", map[string]string{groupNetBird: "v1alpha1"}, externalObjects{
+			"networkresources": {json.RawMessage(`{"metadata":{"name":"hello","namespace":"demo"},"spec":{"serviceRef":{"name":"hello-ichor"},"networkRouterRef":{"name":"edge","namespace":"demo"}},"status":{"resourceID":"res-1"}}`)},
+			"networkrouters":   {json.RawMessage(`{"metadata":{"name":"edge","namespace":"demo"},"spec":{"dnsZoneRef":{"name":"homelab.example"}}}`)},
+		})
 		resources = append(resources, argoResourceStatus{Group: "networking.k8s.io", Kind: "Ingress", Namespace: "demo", Name: "hello-ichor"})
 		in.ingresses = []ingressObject{demoNetObject[ingressObject](`{"metadata":{"name":"hello-ichor","namespace":"demo"},
 		  "spec":{"tls":[{"hosts":["hello.homelab.lan"]}],"rules":[{"host":"hello.homelab.lan","http":{"paths":[{"path":"/","pathType":"Prefix","backend":{"service":{"name":"hello-ichor"}}}]}}]},
@@ -42,13 +52,16 @@ func demoArgoNetwork(app string) netmap.Map {
 		svc("demo", "worker", "ClusterIP", "10.96.31.7", "worker", `{"name":"metrics","port":9090,"targetPort":"metrics"}`, "")
 		pod("demo", "worker-6f4b8-pqrst", "worker", "demo-worker-2", "Running", 1, 0)
 		pod("demo", "worker-6f4b8-uvwxy", "worker", "demo-worker-3", "CrashLoopBackOff", 0, 14)
+		provider("demo", "worker", map[string]string{groupTwingate: "v1beta"}, externalObjects{
+			"twingateresources": {json.RawMessage(`{"metadata":{"name":"worker","namespace":"demo"},"spec":{"id":"res-2","address":"worker.demo.svc.cluster.local","alias":"worker.homelab.example"}}`)},
+		})
 	case "grafana":
 		svc("monitoring", "grafana", "ClusterIP", "10.96.80.3", "grafana", `{"name":"http","port":80,"targetPort":3000}`, "")
 		pod("monitoring", "grafana-6d8b-9fz2t", "grafana", "demo-worker-2", "Running", 1, 0)
 		// Also on the tailnet, through a proxy of its own (the demo Tailscale screen's row).
 		in.addExternal(tsKindService, "monitoring", "grafana", json.RawMessage(`{"metadata":{"name":"grafana","namespace":"monitoring",
 		  "annotations":{"tailscale.com/expose":"true","tailscale.com/hostname":"grafana"}},"spec":{"type":"ClusterIP","ports":[{"port":80}]},
-		  "status":{"conditions":[{"type":"TailscaleProxyReady","status":"True"}]}}`), map[string]string{groupTailscale: "v1alpha1"})
+		  "status":{"conditions":[{"type":"TailscaleProxyReady","status":"True"}]}}`), map[string]string{groupTailscale: "v1alpha1"}, nil)
 		resources = append(resources, argoResourceStatus{Group: "gateway.networking.k8s.io", Kind: "HTTPRoute", Namespace: "monitoring", Name: "grafana"})
 		httpRoute := demoNetObject[gatewayRouteObject](`{"metadata":{"name":"grafana","namespace":"monitoring"},
 		  "spec":{"parentRefs":[{"name":"homelab","namespace":"traefik"}],"hostnames":["grafana.homelab.lan"],"rules":[{"backendRefs":[{"name":"grafana","port":80}]}]}}`)

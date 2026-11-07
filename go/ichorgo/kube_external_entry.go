@@ -45,22 +45,32 @@ type externalEntry struct {
 type externalMatcher struct {
 	provider string
 	group    string
-	match    func(kind string, raw json.RawMessage) []externalEntry
+	lists    []externalList // the provider's own kinds the matcher reads (readExternalObjects)
+	match    func(kind string, raw json.RawMessage, objs externalObjects) []externalEntry
 }
 
 // externalMatchers is every provider the maps know.
 var externalMatchers = []externalMatcher{
-	{provider: tsProvider, group: groupTailscale, match: tsExternalEntries},
+	{provider: tsProvider, group: groupTailscale, match: func(kind string, raw json.RawMessage, _ externalObjects) []externalEntry {
+		return tsExternalEntries(kind, raw)
+	}},
+	{provider: nbProvider, group: groupNetBird, match: nbExternalEntries, lists: []externalList{
+		{plural: "networkresources"}, {plural: "networkrouters"}, {plural: "nbresources", version: "v1"},
+	}},
+	{provider: tgProvider, group: groupTwingate, match: tgExternalEntries, lists: []externalList{{plural: "twingateresources"}}},
+	{provider: ngProvider, group: groupNgrok, match: ngExternalEntries, lists: []externalList{{plural: "agentendpoints"}}},
+	{provider: cfProvider, group: groupCloudflare, match: cfExternalEntries, lists: []externalList{{plural: "tunnelbindings"}}},
 }
 
 // externalEntries are the external entries of the Service or Ingress raw (kind), from the
-// matchers whose API group groups (readAPIGroups) serves.
-func externalEntries(kind string, raw json.RawMessage, groups map[string]string) []externalEntry {
+// matchers whose API group groups (readAPIGroups) serves, from the provider objects objs
+// (readExternalObjects).
+func externalEntries(kind string, raw json.RawMessage, groups map[string]string, objs externalObjects) []externalEntry {
 	var out []externalEntry
 
 	for _, m := range externalMatchers {
 		if _, served := groups[m.group]; served {
-			out = append(out, m.match(kind, raw)...)
+			out = append(out, m.match(kind, raw, objs)...)
 		}
 	}
 
