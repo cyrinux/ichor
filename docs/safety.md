@@ -88,6 +88,17 @@ Part of the [Ichor documentation](../README.md#documentation).
   and tag only on `RunInstances`. The one case that needs the AWS console is a terminate that
   fails: the message names the instance id and the region, and the instance stays billed until
   it is terminated there.
+- **The guided network at AWS (Use a network Ichor sets up):** not billable, but it changes the
+  account, so it runs only when tapped, and the probe's `aws network` only with `-yes`. In the
+  default VPC it makes one security group, `ichor-nodes`, tagged `ichor-managed`, or reuses it;
+  it adds only two kinds of inbound rule: all traffic from the group itself, and, on plain Talos,
+  TCP 50000 from the phone's current public IPv4 as a /32, described `Ichor phone <date>`. It never
+  opens anything to `0.0.0.0/0` or `::/0`, never opens 6443, and never deletes a rule or the
+  group. The phone's address changes (mobile networks, NAT): each run adds today's address and
+  keeps the old ones, so remove the stale `Ichor phone` rules at AWS from time to time. A group
+  named `ichor-nodes` that the app did not tag is used as it is and never changed, and the
+  printed policy lets the keys add rules only to `ichor-managed` groups. Recorded in the action
+  log (`aws-network-prepare`, with the region and the group id).
 - **Making a Talos AMI at AWS (from the Go core and the probe for now):** billable, so the
   estimate gives the helper's hourly price and the snapshot's storage price first, and the probe's
   `aws image` runs only with `-yes`. Nothing of the cluster is touched: the schematic comes from

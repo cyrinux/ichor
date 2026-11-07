@@ -70,7 +70,10 @@ type awsNetworkResult struct {
 	SecurityGroupID string           `json:"securityGroupId"`
 	VPCID           string           `json:"vpcId"`
 	Created         bool             `json:"created"`
-	Rules           []awsNetworkRule `json:"rules"`
+	// PhoneIP is the address port 50000 was opened to, "" on Omni or when it cannot be learned:
+	// the apps tell this phone's rule from older ones by it.
+	PhoneIP  string           `json:"phoneIp,omitempty"`
+	Rules    []awsNetworkRule `json:"rules"`
 	Warnings        []string         `json:"warnings"`
 	// Credential is the credential JSON to seal again when the call renewed it, else "".
 	Credential string `json:"credential,omitempty"`
@@ -246,20 +249,24 @@ func (c *awsClient) prepareNetwork(ctx context.Context, spec awsNetworkSpec, pho
 	}
 
 	if !spec.Omni {
-		if warning := c.openTalosAPI(ctx, group, phoneIP); warning != "" {
+		ip, warning := c.openTalosAPI(ctx, group, phoneIP)
+		if warning != "" {
 			result.Warnings = append(result.Warnings, warning)
 		}
+
+		result.PhoneIP = ip
 	}
 
 	return c.withRules(ctx, result)
 }
 
-// openTalosAPI adds TCP 50000 from the phone's /32, dated, unless the group has it. It returns a
-// warning instead of an error: the node can still be made, the follow may not reach it.
-func (c *awsClient) openTalosAPI(ctx context.Context, group *awsAPISecurityGroup, phoneIP func(context.Context) (string, error)) string {
+// openTalosAPI adds TCP 50000 from the phone's /32, dated, unless the group has it, and says
+// which address that is ("" when none). Trouble is a warning, not an error: the node can still
+// be made, the follow may not reach it.
+func (c *awsClient) openTalosAPI(ctx context.Context, group *awsAPISecurityGroup, phoneIP func(context.Context) (string, error)) (opened, warning string) {
 	ip, err := phoneIP(ctx)
 	if err != nil {
-		return "could not learn this phone's address: port 50000 is not opened; the follow may not reach the node"
+		return "", "could not learn this phone's address: port 50000 is not opened; the follow may not reach the node"
 	}
 
 	cidr := ip + "/32"
@@ -267,7 +274,7 @@ func (c *awsClient) openTalosAPI(ctx context.Context, group *awsAPISecurityGroup
 	if slices.ContainsFunc(group.Permissions, func(p awsAPIPermission) bool {
 		return p.Protocol == awsProtocolTCP && p.FromPort <= awsTalosAPIPort && p.ToPort >= awsTalosAPIPort && p.fromCIDR(cidr)
 	}) {
-		return ""
+		return ip, ""
 	}
 
 	port := strconv.Itoa(awsTalosAPIPort)
@@ -279,10 +286,10 @@ func (c *awsClient) openTalosAPI(ctx context.Context, group *awsAPISecurityGroup
 	}
 
 	if err := c.authorize(ctx, params); err != nil {
-		return "port 50000 could not be opened to this phone (" + friendlyError(err) + "): the follow may not reach the node"
+		return "", "port 50000 could not be opened to this phone (" + friendlyError(err) + "): the follow may not reach the node"
 	}
 
-	return ""
+	return ip, ""
 }
 
 // authorize adds inbound rules; one the group already has is not an error.

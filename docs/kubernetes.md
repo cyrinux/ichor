@@ -374,10 +374,18 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     (the instance's hourly price, then the snapshot's price per GB-month); the instance is billed
     by AWS, and the snapshot stays, billed per GB-month, until you delete it at AWS. Stop
     terminates the instance and deletes an unfinished snapshot or AMI; see [safety](safety.md).
-    The instance's subnet must reach the internet (one that assigns a public IP). Only existing
-    subnets and security groups are
-    listed: a group that allows traffic from itself is enough for Omni, while a plain Talos node
-    must be reachable from the phone on port 50000 of the address the app follows. The user data
+    The instance's subnet must reach the internet (one that assigns a public IP). **Use a network
+    Ichor sets up** picks one for you in the region's default VPC: its first subnet that assigns a
+    public IP, and a security group `ichor-nodes` that the app makes once (tagged `ichor-managed`)
+    and reuses, allowing all traffic from the group itself (the nodes reach each other) and, for a
+    plain Talos cluster, TCP 50000 from the phone's public address of the day only (learned from
+    `checkip.amazonaws.com`; each rule names the address and the date). Nothing is opened to the
+    world, 6443 is never opened, and the group is kept: the app never deletes it. An account
+    without a default VPC is refused with the step to take at AWS (VPC → Actions → Create default
+    VPC); no VPC, subnet or gateway is made. **Pick mine** lists the existing subnets and security
+    groups instead: a group that allows traffic from itself is enough for Omni, while a plain Talos
+    node must be reachable from the phone on port 50000 of the address the app follows, and a
+    picked group open to the world on every port is flagged. The user data
     must fit EC2's 16 KB. The hourly price in USD before tax comes from the AWS Price List, or
     says "price unavailable". The app creates the instance with the user data, follows it until it
     runs, then follows the node until it joins, or until the machine appears in Omni. A failed or

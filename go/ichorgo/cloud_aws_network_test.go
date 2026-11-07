@@ -240,6 +240,15 @@ func TestAWSNetworkPrepare(t *testing.T) {
 				t.Errorf("rules = %v, want %v", got, c.wantRules)
 			}
 
+			wantIP := ""
+			if slices.ContainsFunc(c.wantRules, func(s string) bool { return strings.HasPrefix(s, "tcp:") }) {
+				wantIP = awsTestPhoneIP
+			}
+
+			if r.PhoneIP != wantIP {
+				t.Errorf("phoneIp = %q, want %q", r.PhoneIP, wantIP)
+			}
+
 			warned := slices.ContainsFunc(r.Warnings, func(w string) bool { return c.wantWarn != "" && strings.Contains(w, c.wantWarn) })
 			if warned != (c.wantWarn != "") || (c.wantWarn == "" && len(r.Warnings) != 0) {
 				t.Errorf("warnings = %v, want %q", r.Warnings, c.wantWarn)

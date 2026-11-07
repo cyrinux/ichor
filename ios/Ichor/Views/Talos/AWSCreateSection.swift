@@ -25,6 +25,8 @@ struct AWSCreateSection: View {
     @State private var subnetId = ""
     @State private var groupIds: [String] = []
     @State private var publicIp = false
+    /// The guided network's group, picked once its subnet is (the subnet's change clears the groups).
+    @State private var pendingGroup: String?
     @State private var price: AWSPrice?
     @State private var omniName = ""
     @State private var confirming = false
@@ -247,6 +249,14 @@ struct AWSCreateSection: View {
     private func networkSection(_ value: AWSOptions) -> some View {
         let subnet = value.subnets.first { $0.id == subnetId }
         Section {
+            if !demo, !account.isEmpty {
+                AWSGuidedNetworkRows(
+                    region: value.region, omni: omni, role: omni ? "" : role, credential: credential,
+                    disabled: job.isActive
+                ) { network in
+                    Task { await guidedNetworkReady(network) }
+                }
+            }
             Picker("Subnet", selection: $subnetId) {
                 Text(verbatim: "—").tag("")
                 ForEach(value.subnets) { subnetLabel($0).tag($0.id) }
@@ -256,6 +266,12 @@ struct AWSCreateSection: View {
                 let vpc = { (id: String) in value.subnets.first { $0.id == id }?.vpcId }
                 if vpc(old) != vpc(new) { groupIds = [] }
                 publicIp = value.subnets.first { $0.id == new }?.public ?? false
+                if let pendingGroup {
+                    // The guided network: its group, and an address even where the subnet gives none.
+                    groupIds = [pendingGroup]
+                    publicIp = true
+                    self.pendingGroup = nil
+                }
             }
             if let subnet {
                 ForEach(value.securityGroups(in: subnet.vpcId)) { group in
@@ -269,6 +285,10 @@ struct AWSCreateSection: View {
                         )
                     ) {
                         Text(verbatim: group.name.isEmpty ? group.id : group.name)
+                    }
+                    if group.wideOpen, groupIds.contains(group.id) {
+                        Text("This group is open to the world on every port.")
+                            .font(.footnote).foregroundStyle(.orange)
                     }
                 }
                 Toggle("Give it a public IP address", isOn: $publicIp)
@@ -449,6 +469,24 @@ struct AWSCreateSection: View {
         options = .loading
         options = await LoadState.from { try await client.awsOptions(credential: credential) }
         if case .loaded(let value, _, _) = options { reseal(value.credential) }
+    }
+
+    /// The guided network is ready: its group is listed after a refresh that keeps the form on
+    /// screen, then its subnet and group are picked.
+    private func guidedNetworkReady(_ network: AWSNetwork) async {
+        reseal(network.credential)
+        if let client = model.client {
+            let credential = self.credential
+            let fresh = await LoadState.from { try await client.awsOptions(credential: credential) }
+            if case .loaded = fresh { options = fresh }
+        }
+        if subnetId == network.subnetId {
+            groupIds = [network.securityGroupId]
+            publicIp = true
+        } else {
+            pendingGroup = network.securityGroupId
+            subnetId = network.subnetId
+        }
     }
 
     /// The Price List's answer for the picked type; a failure (the demo has no keys) is "price unavailable".

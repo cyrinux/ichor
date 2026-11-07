@@ -199,4 +199,34 @@ class CloudAWSTest {
         assertEquals("{}", TalosJson.decodeFromString(AWSCheck.serializer(), """{"account":"123456789012","credential":"{}"}""").credential)
         assertEquals("", TalosJson.decodeFromString(AWSRenewed.serializer(), "{}").credential)
     }
+
+    // The same fixture as CloudAWSTests.testGuidedNetwork on iOS.
+    @Test
+    fun theGuidedNetworkTellsThePhonesRule() {
+        val network = TalosJson.decodeFromString(
+            AWSNetwork.serializer(),
+            """
+            {"subnetId":"subnet-a","securityGroupId":"sg-0123456789abcdef7","vpcId":"vpc-a","created":true,"phoneIp":"203.0.113.7",
+             "rules":[{"protocol":"all","port":0,"source":"sg-0123456789abcdef7","self":true},
+                      {"protocol":"tcp","port":50000,"source":"203.0.113.7/32","self":false,"description":"Ichor phone 2026-11-07"},
+                      {"protocol":"tcp","port":50000,"source":"198.51.100.4/32","self":false,"description":"Ichor phone 2026-10-01"}],
+             "warnings":[]}
+            """,
+        )
+        assertTrue(network.created)
+        assertTrue(network.rules[0].self)
+        assertEquals(listOf(false, true, false), network.rules.map { it.isPhone(network.phoneIp) })
+        assertEquals("tcp/50000 ← 198.51.100.4/32 · Ichor phone 2026-10-01", network.rules[2].plain)
+        assertEquals("all ← sg-0123456789abcdef7", network.rules[0].plain)
+        // On Omni no address is opened: no rule is the phone's.
+        assertFalse(network.rules[1].isPhone(""))
+
+        val group = TalosJson.decodeFromString(AWSSecurityGroup.serializer(), """{"id":"sg-a","managed":true,"wideOpen":true}""")
+        assertTrue(group.managed && group.wideOpen)
+        assertFalse(options.securityGroups.any { it.managed || it.wideOpen })
+        assertEquals(
+            """{"region":"eu-west-1","role":"worker","omni":true}""",
+            TalosJson.encodeToString(AWSNetworkSpec.serializer(), AWSNetworkSpec("eu-west-1", "worker", omni = true)),
+        )
+    }
 }

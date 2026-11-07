@@ -6191,6 +6191,15 @@
     <string name="aws_subnet_public">分配公网 IP</string>
     <string name="aws_security_groups">安全组</string>
     <string name="aws_security_groups_none">未选择:将使用 VPC 的默认安全组。</string>
+    <string name="aws_network_guided">使用 Ichor 设置的网络(推荐)</string>
+    <string name="aws_network_mine">自己选择</string>
+    <string name="aws_network_working">正在设置网络…</string>
+    <string name="aws_network_created">已在默认 VPC 中创建安全组 %1$s。</string>
+    <string name="aws_network_reused">复用安全组 %1$s。</string>
+    <string name="aws_network_rule_self">来自该安全组自身的所有流量</string>
+    <string name="aws_network_rule_phone">来自本手机的 TCP 50000(%1$s)</string>
+    <string name="aws_network_wide_open">此安全组的所有端口都对全网开放。</string>
+    <string name="aws_network_hint">Ichor 在默认 VPC 中创建一次安全组 ichor-nodes 并重复使用。不会对全网开放任何端口;在不使用 Omni 的 Talos 上,端口 50000 仅对本手机的地址开放。</string>
     <string name="aws_public_ip">分配公网 IP 地址</string>
     <string name="aws_cost">≈ $%1$s/小时(税前)</string>
     <string name="aws_cost_unknown">价格不可用:请查看 AWS 的 EC2 定价。</string>
