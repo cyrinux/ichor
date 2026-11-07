@@ -48,9 +48,9 @@ struct TailscaleNetworkView: View {
                 if let problem = network.problem {
                     Section {
                         Label {
-                            Text(verbatim: [problem.kind, problem.namespace, problem.name, problem.detail]
-                                .filter { !$0.isEmpty }.joined(separator: " · "))
-                                .font(.callout).textSelection(.enabled)
+                            let text = [problem.kind, problem.namespace, problem.name, problem.detail]
+                                .filter { !$0.isEmpty }.joined(separator: " · ")
+                            Text(verbatim: text).font(.callout).textSelection(.enabled)
                         } icon: {
                             Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red)
                         }
