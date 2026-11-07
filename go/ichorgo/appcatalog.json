@@ -58,6 +58,8 @@
 {"id":"gluetun","name":"Gluetun","cat":"networking"},
 {"id":"tor","name":"Tor","cat":"networking"},
 {"id":"netbird","name":"NetBird","cat":"networking","prefixes":["netbirdio/","docker.io/netbirdio/"]},
+{"id":"twingate","name":"Twingate","cat":"networking","prefixes":["twingate/","docker.io/twingate/","ghcr.io/twingate/"]},
+{"id":"ngrok","name":"ngrok","cat":"networking","prefixes":["ngrok/","docker.io/ngrok/"]},
 {"id":"headplane","name":"Headplane","cat":"networking"},
 {"id":"technitium","name":"Technitium DNS","cat":"networking","images":["technitium/dns-server"]},
 {"id":"rustdesk","name":"RustDesk","cat":"networking","prefixes":["rustdesk/"]},

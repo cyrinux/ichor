@@ -90,7 +90,7 @@ func TestArgoNetworkTailscaleIngressURL(t *testing.T) {
 
 	// With it, the tailnet name is the entry, through the same helper as the Tailscale map.
 	raw, _ := json.Marshal(in.ingresses[0])
-	in.addExternal(tsKindIngress, "shop", "web", raw, map[string]string{groupTailscale: "v1alpha1"})
+	in.addExternal(tsKindIngress, "shop", "web", raw, map[string]string{groupTailscale: "v1alpha1"}, nil)
 	n = buildArgoNetwork(in)
 
 	name := netNode(t, n, "ext/Tailscale/web.tail123.ts.net")
@@ -114,12 +114,32 @@ func TestArgoNetworkTailnetService(t *testing.T) {
 		t.Fatalf("edges %s", got)
 	}
 
-	for _, app := range []string{"hello-ichor", "demo-worker", "traefik", "longhorn"} {
+	for _, app := range []string{"traefik", "longhorn"} {
 		for _, node := range demoArgoNetwork(app).Nodes {
 			if node.Kind == netKindExternalName {
 				t.Errorf("%s has %+v", app, node)
 			}
 		}
+	}
+}
+
+// The demo hello-ichor Service is published through NetBird (by its router's zone) and the
+// worker through Twingate (by its alias), through the same matchers as a real cluster's.
+func TestArgoNetworkProviderServices(t *testing.T) {
+	n := demoArgoNetwork("hello-ichor")
+	if nb := netNode(t, n, "ext/NetBird/hello-ichor.demo.homelab.example"); nb.Layer != argoLayerHost || nb.Detail != "NetBird" {
+		t.Fatalf("netbird %+v", nb)
+	}
+	if got := netEdges(n); !strings.Contains(got, "ext/NetBird/hello-ichor.demo.homelab.example>svc/demo/hello-ichor") {
+		t.Fatalf("edges %s", got)
+	}
+
+	n = demoArgoNetwork("demo-worker")
+	if tg := netNode(t, n, "ext/Twingate/worker.homelab.example"); tg.Layer != argoLayerHost || tg.Detail != "Twingate" {
+		t.Fatalf("twingate %+v", tg)
+	}
+	if got := netEdges(n); !strings.Contains(got, "ext/Twingate/worker.homelab.example>svc/demo/worker") {
+		t.Fatalf("edges %s", got)
 	}
 }
 
@@ -129,7 +149,7 @@ func TestArgoNetworkTailnetLoadBalancer(t *testing.T) {
 	  "status":{"loadBalancer":{"ingress":[{"hostname":"web.example-tailnet.ts.net","ip":"100.64.0.9"}]},"conditions":[{"type":"TailscaleProxyReady","status":"False","reason":"ProxyFailed"}]}}`
 	in := argoNetInput{services: []netmap.Service{demoNetObject[netmap.Service](raw)}}
 	in.app.Status.Resources = []argoResourceStatus{{Kind: "Service", Namespace: "shop", Name: "web"}}
-	in.addExternal(tsKindService, "shop", "web", json.RawMessage(raw), map[string]string{groupTailscale: "v1alpha1"})
+	in.addExternal(tsKindService, "shop", "web", json.RawMessage(raw), map[string]string{groupTailscale: "v1alpha1"}, nil)
 
 	n := buildArgoNetwork(in)
 	for _, node := range n.Nodes {
@@ -305,11 +325,13 @@ func TestArgoNetworkServiceWithoutPods(t *testing.T) {
 	}
 }
 
-func TestReadArgoNetwork(t *testing.T) {
+// argoNetAnswers is a cluster with the Argo CD app web: an Ingress, a Service, its pods, and
+// the extra API groups groups (JSON objects of /apis).
+func argoNetAnswers(groups ...string) map[string]string {
 	const app = "/apis/argoproj.io/v1alpha1/namespaces/argocd/applications/web"
 
-	f := newFakeKubeAPI(t, map[string]string{
-		"GET /apis": `{"groups":[{"name":"argoproj.io","preferredVersion":{"version":"v1alpha1"}}]}`,
+	return map[string]string{
+		"GET /apis": `{"groups":[` + strings.Join(append([]string{`{"name":"argoproj.io","preferredVersion":{"version":"v1alpha1"}}`}, groups...), ",") + `]}`,
 		"GET " + app: `{"metadata":{"name":"web","namespace":"argocd"},"spec":{"destination":{"namespace":"web"}},
 		  "status":{"resources":[{"kind":"Service","namespace":"web","name":"web"},{"group":"networking.k8s.io","kind":"Ingress","namespace":"web","name":"web"}]}}`,
 		"GET /api/v1/namespaces/web/services": `{"items":[{"metadata":{"name":"web","namespace":"web"},"spec":{"type":"ClusterIP","clusterIP":"10.96.0.9","selector":{"app":"web"},"ports":[{"port":80,"targetPort":8080}]}}]}`,
@@ -320,7 +342,11 @@ func TestReadArgoNetwork(t *testing.T) {
 		"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[{"metadata":{"name":"web","namespace":"web"},
 		  "spec":{"rules":[{"host":"web.example.com","http":{"paths":[{"path":"/","pathType":"Prefix","backend":{"service":{"name":"web"}}}]}}]}}]}`,
 		"GET /api/v1/nodes": `{"items":[{"metadata":{"name":"node-1"},"status":{"conditions":[{"type":"Ready","status":"True"}]}}]}`,
-	})
+	}
+}
+
+func readArgoNetworkFrom(t *testing.T, f *fakeKubeAPI) netmap.Map {
+	t.Helper()
 
 	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
 	if err != nil {
@@ -330,6 +356,22 @@ func TestReadArgoNetwork(t *testing.T) {
 	n, err := readArgoNetwork(context.Background(), k, "argocd", "web")
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	return n
+}
+
+func TestReadArgoNetwork(t *testing.T) {
+	f := newFakeKubeAPI(t, argoNetAnswers())
+	n := readArgoNetworkFrom(t, f)
+
+	// No provider group served: not one request to a provider's API, no box in front.
+	for _, r := range f.recorded() {
+		for _, m := range externalMatchers {
+			if strings.HasPrefix(r.path, "/apis/"+m.group+"/") {
+				t.Errorf("request %s", r.path)
+			}
+		}
 	}
 
 	got := netEdges(n)
@@ -358,5 +400,33 @@ func TestKubeArgoNetworkDemoAndValidation(t *testing.T) {
 
 	if _, err := KubeArgoNetwork(cfg, "", "", " ", "x"); err == nil {
 		t.Fatal("empty namespace accepted")
+	}
+}
+
+// A served provider names the box in front of the Service it publishes; a provider list the
+// kubeconfig may not read leaves its boxes out and the rest of the map draws.
+func TestReadArgoNetworkProviders(t *testing.T) {
+	f := newFakeKubeAPI(t, argoNetAnswers(
+		`{"name":"twingate.com","preferredVersion":{"version":"v1beta"}}`,
+		`{"name":"ngrok.k8s.ngrok.com","preferredVersion":{"version":"v1alpha1"}}`))
+	f.answerWith("GET /apis/twingate.com/v1beta/twingateresources", 200,
+		`{"items":[{"metadata":{"name":"web-resource","namespace":"web"},"spec":{"id":"r1","address":"web.web.svc.cluster.local","alias":"web.demo-lab.example"}}]}`)
+	f.answerWith("GET /apis/ngrok.k8s.ngrok.com/v1alpha1/agentendpoints", 403,
+		`{"kind":"Status","message":"agentendpoints is forbidden","reason":"Forbidden","code":403}`)
+
+	n := readArgoNetworkFrom(t, f)
+
+	front := netNode(t, n, "ext/Twingate/web.demo-lab.example")
+	if front.Kind != netKindExternalName || front.Detail != "Twingate" {
+		t.Fatalf("front %+v", front)
+	}
+
+	netNode(t, n, "svc/web/web")
+}
+
+// The demo apps published through NetBird and Twingate show their outside name in front.
+func TestArgoNetworkDemoProviders(t *testing.T) {
+	for app, name := range map[string]string{"hello-ichor": "ext/NetBird/hello-ichor.demo.homelab.example", "demo-worker": "ext/Twingate/worker.homelab.example"} {
+		netNode(t, demoArgoNetwork(app), name)
 	}
 }
