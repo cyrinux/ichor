@@ -193,8 +193,9 @@ type nbResource struct {
 		Address string `json:"address"` // the legacy NBResource
 	} `json:"spec"`
 	Status struct {
-		ResourceID string         `json:"resourceID"`
-		Conditions []extCondition `json:"conditions"`
+		ResourceID        string         `json:"resourceID"`
+		NetworkResourceID string         `json:"networkResourceID"` // the legacy NBResource's
+		Conditions        []extCondition `json:"conditions"`
 	} `json:"status"`
 }
 
@@ -250,7 +251,7 @@ func nbEntry(name string, r nbResource) externalEntry {
 		return extEntry(nbProvider, name, healthCritical, c.problem())
 	}
 
-	if r.Status.ResourceID == "" {
+	if r.Status.ResourceID == "" && r.Status.NetworkResourceID == "" {
 		return extEntry(nbProvider, name, healthWarning, "not published yet")
 	}
 

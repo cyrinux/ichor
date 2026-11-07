@@ -114,12 +114,32 @@ func TestArgoNetworkTailnetService(t *testing.T) {
 		t.Fatalf("edges %s", got)
 	}
 
-	for _, app := range []string{"hello-ichor", "demo-worker", "traefik", "longhorn"} {
+	for _, app := range []string{"traefik", "longhorn"} {
 		for _, node := range demoArgoNetwork(app).Nodes {
 			if node.Kind == netKindExternalName {
 				t.Errorf("%s has %+v", app, node)
 			}
 		}
+	}
+}
+
+// The demo hello-ichor Service is published through NetBird (by its router's zone) and the
+// worker through Twingate (by its alias), through the same matchers as a real cluster's.
+func TestArgoNetworkProviderServices(t *testing.T) {
+	n := demoArgoNetwork("hello-ichor")
+	if nb := netNode(t, n, "ext/NetBird/hello-ichor.demo.homelab.example"); nb.Layer != argoLayerHost || nb.Detail != "NetBird" {
+		t.Fatalf("netbird %+v", nb)
+	}
+	if got := netEdges(n); !strings.Contains(got, "ext/NetBird/hello-ichor.demo.homelab.example>svc/demo/hello-ichor") {
+		t.Fatalf("edges %s", got)
+	}
+
+	n = demoArgoNetwork("demo-worker")
+	if tg := netNode(t, n, "ext/Twingate/worker.homelab.example"); tg.Layer != argoLayerHost || tg.Detail != "Twingate" {
+		t.Fatalf("twingate %+v", tg)
+	}
+	if got := netEdges(n); !strings.Contains(got, "ext/Twingate/worker.homelab.example>svc/demo/worker") {
+		t.Fatalf("edges %s", got)
 	}
 }
 

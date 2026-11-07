@@ -1,6 +1,11 @@
 {
   "edges": [
     {
+      "from": "ext/Twingate/worker.homelab.example",
+      "health": "warning",
+      "to": "svc/demo/worker"
+    },
+    {
       "from": "svc/demo/worker",
       "health": "critical",
       "to": "pod/demo/worker-6f4b8-uvwxy"
@@ -9,14 +14,20 @@
       "from": "svc/demo/worker",
       "health": "ok",
       "to": "pod/demo/worker-6f4b8-pqrst"
-    },
-    {
-      "from": "pod/demo/worker-6f4b8-uvwxy",
-      "health": "critical",
-      "to": "node/demo-worker-3"
     }
   ],
   "nodes": [
+    {
+      "detail": "Twingate",
+      "health": "warning",
+      "id": "ext/Twingate/worker.homelab.example",
+      "kind": "ExternalName",
+      "layer": 0,
+      "managed": false,
+      "name": "worker.homelab.example",
+      "namespace": "",
+      "url": ""
+    },
     {
       "detail": "ClusterIP 10.96.31.7 · 9090→metrics",
       "health": "warning",
@@ -36,17 +47,6 @@
       "layer": 4,
       "managed": false,
       "name": "worker-6f4b8-uvwxy",
-      "namespace": "demo",
-      "url": ""
-    },
-    {
-      "detail": "Running",
-      "health": "ok",
-      "id": "pod/demo/worker-6f4b8-pqrst",
-      "kind": "Pod",
-      "layer": 4,
-      "managed": false,
-      "name": "worker-6f4b8-pqrst",
       "namespace": "demo",
       "url": ""
     }

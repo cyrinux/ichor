@@ -56,7 +56,7 @@ func TestExternalProviderMatchers(t *testing.T) {
 		{name: "netbird wrong namespace", kind: tsKindService, svc: extSvc,
 			objs: extObjs("networkresources", nbRes("demo-lab", "shop", `"resourceID":"r1"`)), wantNil: true},
 		{name: "netbird legacy resource by address", kind: tsKindService, svc: extSvc,
-			objs: extObjs("nbresources", `{"metadata":{"name":"legacy","namespace":"demo-shop"},"spec":{"address":"shop.demo-shop.svc.cluster.local"}}`),
+			objs: extObjs("nbresources", `{"metadata":{"name":"legacy","namespace":"demo-shop"},"spec":{"address":"shop.demo-shop.svc.cluster.local"},"status":{"networkResourceID":"r1"}}`),
 			want: []externalEntry{{Provider: "NetBird", Kind: externalIngress, Name: "legacy", Health: healthOK, Detail: "NetBird"}}},
 		{name: "twingate resource by address", kind: tsKindService, svc: extSvc,
 			objs: extObjs("twingateresources", `{"metadata":{"name":"shop-resource","namespace":"demo-lab"},"spec":{"id":"abc","address":"shop.demo-shop.svc.cluster.local"}}`),
@@ -153,9 +153,11 @@ func TestReadExternalObjects(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	opened := len(f.recorded()) // openKubeClient's own /version
+
 	objs, err := readExternalObjects(context.Background(), k, map[string]string{groupTailscale: "v1alpha1", "argoproj.io": "v1alpha1"})
-	if err != nil || len(objs) != 0 || len(f.recorded()) != 0 {
-		t.Fatalf("objs %v err %v requests %v", objs, err, f.recorded())
+	if err != nil || len(objs) != 0 || len(f.recorded()) != opened {
+		t.Fatalf("objs %v err %v requests %v", objs, err, f.recorded()[opened:])
 	}
 
 	f = newFakeKubeAPI(t, map[string]string{
@@ -173,7 +175,7 @@ func TestReadExternalObjects(t *testing.T) {
 	}
 
 	for _, r := range f.recorded() {
-		if !strings.HasPrefix(r.path, "/apis/netbird.io/") {
+		if r.path != "/version" && !strings.HasPrefix(r.path, "/apis/netbird.io/") {
 			t.Fatalf("request %s", r.path)
 		}
 	}
