@@ -45,6 +45,7 @@ type fakeEC2 struct {
 	privateOnly   bool
 	onRunning     func()
 	helper        *fakeAWSHelper // the AMI run's side, nil for a node create
+	network       *fakeAWSNetwork
 
 	scopes      []string // region/service of each signed call
 	actions     []string
@@ -144,6 +145,10 @@ func (f *fakeEC2) handle(w http.ResponseWriter, r *http.Request) {
 
 func (f *fakeEC2) ec2(w http.ResponseWriter, action string, form url.Values) {
 	const ns = ` xmlns="http://ec2.amazonaws.com/doc/2016-11-15/"`
+
+	if f.network != nil && f.network.handle(w, action, form) {
+		return
+	}
 
 	switch action {
 	case "DescribeRegions":

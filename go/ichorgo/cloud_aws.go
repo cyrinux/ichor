@@ -403,7 +403,7 @@ type awsPolicyStatement struct {
 
 // AWSIAMPolicy is the IAM policy to attach to the keys' user or role: only the calls the app
 // makes. Tags may be set only by the calls that create (RunInstances, CreateSnapshot,
-// RegisterImage), and the terminate, stop and delete calls reach only what is tagged ichor-run:
+// RegisterImage, CreateSecurityGroup), rules are added only to the group the app made, and the terminate, stop and delete calls reach only what is tagged ichor-run:
 // the app can remove what it created, nothing else. The person pastes it.
 func AWSIAMPolicy() string {
 	// Plain values: it always encodes.
@@ -425,7 +425,14 @@ func AWSIAMPolicy() string {
 			{Sid: "IchorRun", Effect: "Allow", Resource: "*", Action: []string{"ec2:RunInstances", "ec2:CreateSnapshot", "ec2:RegisterImage"}},
 			{
 				Sid: "IchorTagOnCreate", Effect: "Allow", Resource: "*", Action: []string{"ec2:CreateTags"},
-				Condition: map[string]any{"StringEquals": map[string][]string{"ec2:CreateAction": {"RunInstances", "CreateSnapshot", "RegisterImage"}}},
+				Condition: map[string]any{"StringEquals": map[string][]string{"ec2:CreateAction": {"RunInstances", "CreateSnapshot", "RegisterImage", "CreateSecurityGroup"}}},
+			},
+			// The guided network (AWSNetworkPrepare): the ichor-nodes group is made once, and only
+			// a group tagged ichor-managed gets rules from the app.
+			{Sid: "IchorNetworkGroup", Effect: "Allow", Resource: "*", Action: []string{"ec2:CreateSecurityGroup"}},
+			{
+				Sid: "IchorNetworkRules", Effect: "Allow", Resource: "*", Action: []string{"ec2:AuthorizeSecurityGroupIngress"},
+				Condition: map[string]any{"StringEquals": map[string]string{"aws:ResourceTag/" + awsTagManaged: "true"}},
 			},
 			{
 				Sid: "IchorTerminateOwn", Effect: "Allow", Resource: "*", Action: []string{"ec2:TerminateInstances"},
