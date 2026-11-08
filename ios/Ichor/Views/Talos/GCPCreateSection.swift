@@ -53,6 +53,14 @@ struct GCPCreateSection: View {
         account.isEmpty ? "" : CloudProviderStore.token(provider: CloudProviderStore.gcp, project: account)
     }
 
+    /// The picked project's Google-account sign-in, nil for a key.
+    private var signedIn: GCPCredential? {
+        guard let stored = try? JSONDecoder().decode(GCPCredential.self, from: Data(credential.utf8)),
+            stored.googleAccount
+        else { return nil }
+        return stored
+    }
+
     private var demo: Bool { model.activeSummary?.demo == true }
     // The VM is named after it: Compute Engine takes lowercase only.
     private var name: String { omni ? omniName.trimmingCharacters(in: .whitespaces).lowercased() : hostname }
@@ -90,13 +98,17 @@ struct GCPCreateSection: View {
 
     @ViewBuilder private var accountRows: some View {
         if !accounts.isEmpty {
-            Picker("Service account key (JSON)", selection: Binding(get: { account }, set: { pick($0) })) {
+            Picker("Project", selection: Binding(get: { account }, set: { pick($0) })) {
                 ForEach(accounts, id: \.self) { Text(verbatim: $0).tag($0) }
             }
         }
-        Button("Add a service account key") { adding = true }
+        if let signedIn {
+            Text("Signed in with Google as \(signedIn.account)")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+        Button("Add a Google Cloud account") { adding = true }
         if !account.isEmpty {
-            Button("Remove this key", role: .destructive) {
+            Button(signedIn == nil ? "Remove this key" : "Sign out", role: .destructive) {
                 try? CloudProviderStore.save(provider: CloudProviderStore.gcp, project: account, token: "")
                 reloadAccounts()
                 pick(accounts.first ?? "")
@@ -418,15 +430,14 @@ struct GCPCreateSection: View {
         }
     }
 
-    /// The same key in another project or zone: re-sealed with them, then their options.
+    /// The same key or sign-in in another project or zone: re-sealed with them (edited as JSON:
+    /// `GCPCredential` does not keep a sign-in's session), then their options.
     private func switchPlace(project: String? = nil, zone: String? = nil) {
-        guard !account.isEmpty,
-            let current = try? JSONDecoder().decode(GCPCredential.self, from: Data(credential.utf8)),
-            let json = try? JSONEncoder().encode(current.with(project: project, zone: zone))
-        else { return }
+        guard !account.isEmpty, let json = GCPCredential.edited(credential, project: project, zone: zone) else {
+            return
+        }
         do {
-            try CloudProviderStore.save(
-                provider: CloudProviderStore.gcp, project: account, token: String(decoding: json, as: UTF8.self))
+            try CloudProviderStore.save(provider: CloudProviderStore.gcp, project: account, token: json)
         } catch {
             authError = error.localizedDescription
             return
@@ -437,10 +448,20 @@ struct GCPCreateSection: View {
     private func loadOptions() async {
         guard let client = model.client else { return }
         let credential = self.credential
+        let picked = account
         options = .loading
         options = await LoadState.from { try await client.gcpOptions(credential: credential) }
+        guard case .loaded(let value, _, _)? = options else { return }
+        // The core renewed a Google account's session: seal the new one into what is stored now,
+        // under the project it belongs to (another may be picked meanwhile).
+        if !value.credential.isEmpty, !picked.isEmpty {
+            let stored = CloudProviderStore.token(provider: CloudProviderStore.gcp, project: picked)
+            if let json = GCPCredential.renewed(stored, from: value.credential) {
+                try? CloudProviderStore.save(provider: CloudProviderStore.gcp, project: picked, token: json)
+            }
+        }
         // The only network is the obvious pick, and its only subnet.
-        if case .loaded(let value, _, _)? = options, value.usableNetworks.count == 1 {
+        if value.usableNetworks.count == 1 {
             networkName = value.usableNetworks[0].name
             let subnets = value.subnets(in: networkName, region: value.region)
             subnetLink = subnets.count == 1 ? subnets[0].id : ""

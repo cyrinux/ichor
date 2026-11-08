@@ -165,7 +165,8 @@ extension TalosClient {
         try await run { IchorgoDiscoverOmniClusters(endpoint, identity, $0) }
     }
 
-    private static func signInRun(_ start: (SignInBridge) -> IchorgoSignInRun?) -> SignInRun {
+    /// Bridges a Go sign-in run (its listener and its `complete`/`cancel`) to a SignInRun.
+    static func signInRun(_ start: (SignInBridge) -> IchorgoSignInRun?) -> SignInRun {
         let (stream, continuation) = AsyncStream.makeStream(of: KubeSignInEvent.self)
         let bridge = SignInBridge(
             prompt: { continuation.yield(.prompt($0)) },
@@ -183,7 +184,7 @@ extension TalosClient {
     }
 }
 
-private final class SignInBridge: NSObject, IchorgoSignInListenerProtocol, Sendable {
+final class SignInBridge: NSObject, IchorgoSignInListenerProtocol, Sendable {
     private let prompt: @Sendable (KubeSignInPrompt) -> Void
     private let done: @Sendable (String?) -> Void
 

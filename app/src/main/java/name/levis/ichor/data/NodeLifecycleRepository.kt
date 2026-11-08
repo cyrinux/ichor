@@ -1,9 +1,12 @@
 package name.levis.ichor.data
 
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer
@@ -55,6 +58,8 @@ import name.levis.ichor.model.GCPImageEstimate
 import name.levis.ichor.model.GCPImageSpec
 import name.levis.ichor.model.GCPOptions
 import name.levis.ichor.model.GCPPrice
+import name.levis.ichor.model.GCPSignInResult
+import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.OVHCheck
 import name.levis.ichor.model.OVHCreateSpec
 import name.levis.ichor.model.OVHOptions
@@ -79,6 +84,8 @@ import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.K8sUpgradeListener
 import name.levis.ichorgo.MaintenanceListener
 import name.levis.ichorgo.MaintenanceRun
+import name.levis.ichorgo.SignInListener
+import name.levis.ichorgo.SignInRun
 
 /**
  * A node's life in the cluster: maintenance (cordon, drain, then an action), power, reset and
@@ -581,6 +588,51 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** See [TalosStreams.gcpImage]. */
     fun gcpImage(credentialJson: String, spec: GCPImageSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.gcpImage(credentialJson, TalosJson.encodeToString(GCPImageSpec.serializer(), spec), stop)
+
+    /** The Google sign-ins this build offers for the create, in the order shown ("native" never on Android). */
+    suspend fun gcpSignInChoices(): List<String> = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(ListSerializer(String.serializer()), Ichorgo.gcpSignInChoices())
+    }
+
+    /** The Google sign-in in progress, to hand it the code the redirect page shows. */
+    private val gcpSignIn = AtomicReference<SignInRun?>(null)
+
+    /**
+     * Signs a Google account in, in the browser, with the [kind]'s [secrets] (as the GKE discovery
+     * does); then [gcpSignInCredential] takes the result. Cancelling the collector stops it.
+     */
+    fun gcpSignInStart(kind: String, secrets: Map<String, String>): Flow<SignInEvent> = callbackFlow {
+        val listener = object : SignInListener {
+            override fun onPrompt(json: String) {
+                runCatching { TalosJson.decodeFromString(SignInPrompt.serializer(), json) }
+                    .onSuccess { trySend(SignInEvent.Prompt(it)) }
+            }
+
+            override fun onDone(errMessage: String) {
+                trySend(SignInEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+                close()
+            }
+        }
+        val secretsJson = if (secrets.isEmpty()) "" else TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), secrets)
+        val run = Ichorgo.gcpSignInStart(kind, secretsJson, listener)
+        gcpSignIn.set(run)
+        awaitClose {
+            gcpSignIn.compareAndSet(run, null)
+            run.cancel()
+        }
+    }
+
+    /** Hands [code] (or the URL the browser came back with) to the Google sign-in in progress; false when none is. */
+    fun gcpSignInComplete(code: String): Boolean {
+        val run = gcpSignIn.get() ?: return false
+        run.complete(code)
+        return true
+    }
+
+    /** The account, its credential (no project yet) and its projects, once after a successful [gcpSignInStart]. */
+    suspend fun gcpSignInCredential(): GCPSignInResult = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(GCPSignInResult.serializer(), Ichorgo.gcpSignInCredential())
+    }
 
     private fun hetznerTokenJson(token: String): String =
         TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), mapOf("token" to token))

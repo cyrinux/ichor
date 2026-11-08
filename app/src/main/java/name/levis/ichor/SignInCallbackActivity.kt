@@ -14,7 +14,9 @@ class SignInCallbackActivity : Activity() {
         super.onCreate(savedInstanceState)
         val uri = intent?.data
         if (intent?.action == Intent.ACTION_VIEW && uri?.scheme == "ichor" && uri.host == "signin") {
-            (application as TalosApp).kubeAuthRepository.completeSignIn(uri.toString())
+            val app = application as TalosApp
+            // A cluster's or discovery's sign-in, else the Google Cloud card's.
+            if (!app.kubeAuthRepository.completeSignIn(uri.toString())) app.nodeLifecycleRepository.gcpSignInComplete(uri.toString())
         }
         // Back to the app, closing the browser tab above it.
         startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP))

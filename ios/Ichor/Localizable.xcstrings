@@ -1,6 +1,146 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Paste a key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schlüssel einfügen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Pegar una clave" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Coller une clé" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Incolla una chiave" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キーを貼り付け" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Colar uma chave" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вставить ключ" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вставити ключ" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "粘贴密钥" } }
+      }
+    },
+    "Add a Google Cloud account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Google-Cloud-Konto hinzufügen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir una cuenta de Google Cloud" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter un compte Google Cloud" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi un account Google Cloud" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Google Cloud アカウントを追加" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Adicionar uma conta do Google Cloud" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавить аккаунт Google Cloud" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додати обліковий запис Google Cloud" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加 Google Cloud 账号" } }
+      }
+    },
+    "Signed in with Google as %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mit Google angemeldet als %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sesión iniciada con Google como %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Connecté avec Google en tant que %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Accesso con Google come %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Google で %@ としてサインイン済み" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Conectado com o Google como %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вход через Google выполнен как %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вхід через Google виконано як %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已通过 Google 登录为 %@" } }
+      }
+    },
+    "The sign-in can do what your account may on every project, not only the role Ichor prints. It stays sealed on this device and is not in backups: prefer a key with only that role when you have one." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Anmeldung kann in jedem Projekt alles, was Ihr Konto darf, nicht nur die von Ichor ausgegebene Rolle. Sie bleibt versiegelt auf diesem Gerät und ist nicht in Backups: Nutzen Sie lieber einen Schlüssel mit nur dieser Rolle, wenn Sie einen haben." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El inicio de sesión puede hacer lo que tu cuenta pueda en todos los proyectos, no solo el rol que muestra Ichor. Queda sellado en este dispositivo y no está en las copias de seguridad: si tienes una clave con solo ese rol, mejor úsala." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La connexion peut faire ce que votre compte peut faire sur chaque projet, pas seulement le rôle qu'Ichor affiche. Elle reste scellée sur cet appareil et n'est pas dans les sauvegardes : préférez une clé avec seulement ce rôle si vous en avez une." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'accesso può fare ciò che il tuo account può fare su ogni progetto, non solo il ruolo mostrato da Ichor. Resta sigillato su questo dispositivo e non è nei backup: se ne hai una, preferisci una chiave con solo quel ruolo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このサインインは、Ichor が示すロールに限らず、アカウントに許可されたことをすべてのプロジェクトで行えます。この端末に封印され、バックアップには含まれません。そのロールだけを持つキーがあれば、そちらを使ってください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O login pode fazer o que sua conta pode em todos os projetos, não só o papel que o Ichor mostra. Ele fica selado neste dispositivo e não entra nos backups: se tiver uma chave com só esse papel, prefira-a." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вход может делать всё, что разрешено вашему аккаунту, в каждом проекте, а не только роль, которую показывает Ichor. Он запечатан на этом устройстве и не попадает в резервные копии: если у вас есть ключ только с этой ролью, лучше используйте его." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вхід може робити все, що дозволено вашому обліковому запису, у кожному проєкті, а не лише роль, яку показує Ichor. Він запечатаний на цьому пристрої й не потрапляє в резервні копії: якщо маєте ключ лише з цією роллю, краще використайте його." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此登录可以在每个项目中执行你的账号被允许的所有操作，而不仅是 Ichor 给出的角色。它密封保存在此设备上，不包含在备份中：如果有仅含该角色的密钥，请优先使用。" } }
+      }
+    },
+    "Once Google ends the sign-in: %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wenn Google die Anmeldung beendet: %@." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cuando Google termine la sesión: %@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Quand Google met fin à la connexion : %@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Quando Google chiude l'accesso: %@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Google がサインインを終了したら: %@。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Quando o Google encerrar o login: %@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Когда Google завершит вход: %@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Коли Google завершить вхід: %@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Google 结束登录后：%@。" } }
+      }
+    },
+    "Pick another project" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Anderes Projekt wählen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elegir otro proyecto" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisir un autre projet" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scegli un altro progetto" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "別のプロジェクトを選択" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escolher outro projeto" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выбрать другой проект" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вибрати інший проєкт" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择其他项目" } }
+      }
+    },
+    "The project the calls are billed to (the quota project):" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Projekt, dem die Aufrufe berechnet werden (das Kontingentprojekt):" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El proyecto al que se facturan las llamadas (el proyecto de cuota):" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le projet auquel les appels sont facturés (le projet de quota) :" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il progetto a cui sono addebitate le chiamate (il progetto di quota):" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "呼び出しが課金されるプロジェクト (割り当てプロジェクト):" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O projeto cobrado pelas chamadas (o projeto de cota):" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Проект, на который выставляется счёт за вызовы (проект квоты):" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Проєкт, на який виставляється рахунок за виклики (проєкт квоти):" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "调用计费的项目（配额项目）：" } }
+      }
+    },
+    "Project ID" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekt-ID" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "ID del proyecto" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "ID du projet" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "ID progetto" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プロジェクト ID" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "ID do projeto" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ID проекта" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "ID проєкту" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "项目 ID" } }
+      }
+    },
+    "Use this project" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dieses Projekt verwenden" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Usar este proyecto" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Utiliser ce projet" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Usa questo progetto" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このプロジェクトを使用" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Usar este projeto" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Использовать этот проект" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Використати цей проєкт" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "使用此项目" } }
+      }
+    },
+    "Your Google account (Ichor's sign-in)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ihr Google-Konto (Anmeldung von Ichor)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tu cuenta de Google (inicio de sesión de Ichor)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Votre compte Google (connexion d'Ichor)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il tuo account Google (accesso di Ichor)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Google アカウント (Ichor のサインイン)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sua conta do Google (login do Ichor)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ваш аккаунт Google (вход Ichor)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ваш обліковий запис Google (вхід Ichor)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "你的 Google 账号（Ichor 登录）" } }
+      }
+    },
     "Make a network for the node (recommended)" : {
       "extractionState" : "manual",
       "localizations" : {

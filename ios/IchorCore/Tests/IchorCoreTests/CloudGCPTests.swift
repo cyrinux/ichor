@@ -110,6 +110,78 @@ final class CloudGCPTests: XCTestCase {
         XCTAssertEqual(moved.zone, "europe-west1-c")
         let decoded = try JSONDecoder().decode(GCPCredential.self, from: JSONEncoder().encode(moved))
         XCTAssertEqual(decoded, moved)
+        XCTAssertFalse(decoded.googleAccount)
+        XCTAssertEqual(decoded.account, "")
+    }
+
+    // An invented sign-in, shaped as GCPSignInCredential's credential.
+    private let signedIn = #"""
+        {"googleSignIn":{"method":"gke","secrets":{"gcpGcloudSignIn":"1"},"session":{"refreshToken":"r1"}},
+         "account":"someone@example.com","project":"","zone":""}
+        """#
+
+    func testTheSignInIsToldFromAKey() throws {
+        let credential = try JSONDecoder().decode(GCPCredential.self, from: Data(signedIn.utf8))
+        XCTAssertTrue(credential.googleAccount)
+        XCTAssertEqual(credential.account, "someone@example.com")
+        XCTAssertEqual(credential.serviceAccountJson, "")
+        let key = try JSONDecoder().decode(
+            GCPCredential.self, from: Data(#"{"serviceAccountJson":"{}","project":"p","googleSignIn":null}"#.utf8))
+        XCTAssertFalse(key.googleAccount)
+    }
+
+    func testAProjectIsBoundAsJSONKeepingTheSignIn() throws {
+        let bound = try XCTUnwrap(GCPCredential.withProject(signedIn, project: "example-project"))
+        let object = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(bound.utf8)) as? [String: Any])
+        XCTAssertEqual(object["project"] as? String, "example-project")
+        XCTAssertEqual(object["account"] as? String, "someone@example.com")
+        let signIn = try XCTUnwrap(object["googleSignIn"] as? [String: Any])
+        XCTAssertEqual((signIn["session"] as? [String: String])?["refreshToken"], "r1")
+        XCTAssertNil(GCPCredential.withProject("not json", project: "example-project"))
+
+        let moved = try XCTUnwrap(GCPCredential.edited(bound, zone: "europe-west1-c"))
+        let decoded = try JSONDecoder().decode(GCPCredential.self, from: Data(moved.utf8))
+        XCTAssertEqual(decoded.project, "example-project")
+        XCTAssertEqual(decoded.zone, "europe-west1-c")
+        XCTAssertTrue(decoded.googleAccount)
+    }
+
+    func testARenewalTakesOnlyTheNewSignIn() throws {
+        let stored = try XCTUnwrap(GCPCredential.edited(signedIn, project: "example-project", zone: "europe-west1-c"))
+        let updated = #"""
+            {"googleSignIn":{"method":"gke","secrets":{"gcpGcloudSignIn":"1"},"session":{"refreshToken":"r2"}},
+             "account":"someone@example.com","project":"other-project","zone":"europe-west1-b"}
+            """#
+        let renewed = try XCTUnwrap(GCPCredential.renewed(stored, from: updated))
+        let object = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(renewed.utf8)) as? [String: Any])
+        let signIn = try XCTUnwrap(object["googleSignIn"] as? [String: Any])
+        XCTAssertEqual((signIn["session"] as? [String: String])?["refreshToken"], "r2")
+        XCTAssertEqual(object["project"] as? String, "example-project")
+        XCTAssertEqual(object["zone"] as? String, "europe-west1-c")
+        XCTAssertNil(GCPCredential.renewed(stored, from: "{}"))
+        XCTAssertNil(GCPCredential.renewed("not json", from: updated))
+    }
+
+    func testTheSignInResultAndARenewedCheckDecode() throws {
+        let json = #"""
+            {"credential":"{}","account":"someone@example.com",
+             "projects":[{"id":"example-project","name":"Example project"}],"more":true}
+            """#
+        let result = try JSONDecoder().decode(GCPSignInResult.self, from: Data(json.utf8))
+        XCTAssertEqual(result.account, "someone@example.com")
+        XCTAssertEqual(result.projects.map(\.id), ["example-project"])
+        XCTAssertTrue(result.more)
+        let empty = try JSONDecoder().decode(GCPSignInResult.self, from: Data(#"{"projects":null}"#.utf8))
+        XCTAssertEqual(empty.projects, [])
+        XCTAssertFalse(empty.more)
+
+        let check = try JSONDecoder().decode(
+            GCPCheck.self,
+            from: Data(#"{"account":"someone@example.com","credential":"{}","renewHint":"sign in again"}"#.utf8))
+        XCTAssertEqual(check.credential, "{}")
+        XCTAssertEqual(check.renewHint, "sign in again")
+        let options = try JSONDecoder().decode(GCPOptions.self, from: Data(#"{"credential":"{}"}"#.utf8))
+        XCTAssertEqual(options.credential, "{}")
     }
 
     func testTheKeyShowsItsEmailAndProjectOnly() {

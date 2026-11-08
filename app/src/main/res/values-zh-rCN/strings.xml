@@ -6279,7 +6279,16 @@
     <string name="gcp_title">在 Google Cloud 创建虚拟机</string>
     <string name="gcp_howto">1. 选择要复制的成员,然后选择新节点的主机名和安装磁盘。\n2. 添加服务账号密钥,该账号需拥有 Ichor 显示的角色,并在其项目中启用 Compute Engine API。\n3. 选择可用区、机器类型、项目中的 Talos 镜像(在 Ichor 能创建之前,请按 Talos 指南注册一个)、网络及其子网。\n4. 创建:Ichor 先显示价格,然后跟踪直到节点加入。手机必须能访问虚拟机的 50000 端口。</string>
     <string name="gcp_howto_omni">1. 添加服务账号密钥,该账号需拥有 Ichor 显示的角色,并在其项目中启用 Compute Engine API。\n2. 为虚拟机命名,然后选择可用区、机器类型、项目中的 Talos 镜像、网络及其子网。\n3. 创建:Ichor 先显示价格,然后跟踪直到机器出现在 Omni 中。将其分配给集群。</string>
-    <string name="gcp_add_key">添加服务账号密钥</string>
+    <string name="gcp_add_account">添加账号</string>
+    <string name="gcp_signin_option_key">粘贴密钥</string>
+    <string name="gcp_signin_option_google">使用 Google 登录</string>
+    <string name="gcp_signin_warning">登录信息会加密保存在此设备上，不会进入备份。它可以在所有项目中执行你的账号被允许的操作，而不仅是 Ichor 输出的角色：如果有只带该角色的密钥，请优先使用。</string>
+    <string name="gcp_signin_signed_in">已使用 Google 登录为 %1$s</string>
+    <string name="gcp_signin_project">调用计费所在的项目</string>
+    <string name="gcp_signin_more">并未列出所有项目：请输入其他项目的 ID。</string>
+    <string name="gcp_signin_project_id">项目 ID</string>
+    <string name="gcp_signin_use_project">使用此项目</string>
+    <string name="gcp_signin_other_project">选择其他项目</string>
     <string name="gcp_remove">移除此密钥</string>
     <string name="gcp_key_warning">服务账号密钥不会过期,并可执行其角色允许的操作。它密封保存在本设备上,不会进入备份:建议使用仅拥有 Ichor 显示的角色的密钥。</string>
     <string name="gcp_role_hint">在项目中创建此自定义角色并授予服务账号:仅包含 Ichor 发出的调用。启用 Compute Engine API;启用 Cloud Resource Manager 后测试可检查角色,启用 Cloud Billing 后会显示价格。</string>

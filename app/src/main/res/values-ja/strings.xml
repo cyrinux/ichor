@@ -6279,7 +6279,16 @@
     <string name="gcp_title">Google Cloud で VM を作成</string>
     <string name="gcp_howto">1. コピーするメンバーを選び、新しいノードのホスト名とインストールディスクを選びます。\n2. Ichor が表示するロールを持つサービスアカウントキーを追加します。そのプロジェクトで Compute Engine API を有効にしてください。\n3. ゾーン、マシンタイプ、プロジェクトの Talos イメージ(Ichor が作成できるようになるまでは Talos ガイドに従って登録)、ネットワークとそのサブネットを選びます。\n4. 作成します。Ichor は先に料金を表示し、ノードが参加するまで追跡します。スマートフォンから VM のポート 50000 に到達できる必要があります。</string>
     <string name="gcp_howto_omni">1. Ichor が表示するロールを持つサービスアカウントキーを追加します。そのプロジェクトで Compute Engine API を有効にしてください。\n2. VM に名前を付け、ゾーン、マシンタイプ、プロジェクトの Talos イメージ、ネットワークとそのサブネットを選びます。\n3. 作成します。Ichor は先に料金を表示し、マシンが Omni に現れるまで追跡します。クラスターに割り当ててください。</string>
-    <string name="gcp_add_key">サービスアカウントキーを追加</string>
+    <string name="gcp_add_account">アカウントを追加</string>
+    <string name="gcp_signin_option_key">キーを貼り付け</string>
+    <string name="gcp_signin_option_google">Google でサインイン</string>
+    <string name="gcp_signin_warning">サインインはこのデバイスに封印され、バックアップには含まれません。Ichor が出力するロールだけでなく、アカウントがすべてのプロジェクトで許可されていることを実行できます。そのロールだけを持つキーがあれば、そちらを使ってください。</string>
+    <string name="gcp_signin_signed_in">%1$s として Google でサインイン済み</string>
+    <string name="gcp_signin_project">呼び出しの課金先プロジェクト</string>
+    <string name="gcp_signin_more">すべてのプロジェクトが表示されているわけではありません。別のプロジェクトの ID を入力してください。</string>
+    <string name="gcp_signin_project_id">プロジェクト ID</string>
+    <string name="gcp_signin_use_project">このプロジェクトを使用</string>
+    <string name="gcp_signin_other_project">別のプロジェクトを選択</string>
     <string name="gcp_remove">このキーを削除</string>
     <string name="gcp_key_warning">サービスアカウントキーは失効せず、ロールで許可された操作ができます。この端末に封印して保存され、バックアップには含まれません。Ichor が表示するロールだけを持つキーをおすすめします。</string>
     <string name="gcp_role_hint">このカスタムロールをプロジェクトに作成し、サービスアカウントに付与してください。Ichor が行う呼び出しだけです。Compute Engine API を有効にしてください。Cloud Resource Manager があればテストでロールを確認でき、Cloud Billing があれば料金が表示されます。</string>
