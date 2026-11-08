@@ -5,6 +5,7 @@ go 1.27.1
 require (
 	filippo.io/age v1.3.2
 	github.com/ProtonMail/gopenpgp/v3 v3.5.2
+	github.com/SherClockHolmes/webpush-go v1.4.0
 	github.com/cosi-project/runtime v1.16.4
 	github.com/fluxcd/pkg/envsubst v1.9.0
 	github.com/gopacket/gopacket v1.7.4
