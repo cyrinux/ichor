@@ -294,8 +294,10 @@ public struct AzureSecurityGroup: Decodable, Equatable, Hashable, Identifiable, 
     public let resourceGroup: String
     /// The Internet reaches port 50000 (the Talos API).
     public let wideOpen: Bool
+    /// The rule that opens it and its source ("talos-api ← *"), "" when none does.
+    public let wideOpenRule: String
 
-    private enum CodingKeys: String, CodingKey { case id, name, resourceGroup, wideOpen }
+    private enum CodingKeys: String, CodingKey { case id, name, resourceGroup, wideOpen, wideOpenRule }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -303,6 +305,51 @@ public struct AzureSecurityGroup: Decodable, Equatable, Hashable, Identifiable, 
         name = try c.field(.name, "")
         resourceGroup = try c.field(.resourceGroup, "")
         wideOpen = try c.field(.wideOpen, false)
+        wideOpenRule = try c.field(.wideOpenRule, "")
+    }
+}
+
+/// AzureNetworkPrepare's specJSON: where, and whether the cluster is Omni (no port 50000 then).
+public struct AzureNetworkSpec: Encodable, Equatable, Sendable {
+    public let resourceGroup: String
+    public let location: String
+    public let omni: Bool
+
+    public init(resourceGroup: String, location: String, omni: Bool) {
+        self.resourceGroup = resourceGroup
+        self.location = location
+        self.omni = omni
+    }
+}
+
+/// The guided network: the ichor-nodes security group and virtual network, each "nsg" or "vnet" in
+/// `created` or `reused`. `phoneIp` is the /32 port 50000 is open to, "" on Omni or when it could
+/// not be learned (a warning says so).
+public struct AzureNetworkResult: Decodable, Equatable, Sendable {
+    public let networkId: String
+    public let subnetId: String
+    public let securityGroupId: String
+    public let phoneIp: String
+    public let created: [String]
+    public let reused: [String]
+    public let warnings: [String]
+    public let credential: String
+
+    private enum CodingKeys: String, CodingKey {
+        case networkId, subnetId, securityGroupId, phoneIp, created, reused, warnings, credential
+    }
+
+    // Go encodes empty (nil) slices as null.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        networkId = try c.field(.networkId, "")
+        subnetId = try c.field(.subnetId, "")
+        securityGroupId = try c.field(.securityGroupId, "")
+        phoneIp = try c.field(.phoneIp, "")
+        created = try c.field(.created, [])
+        reused = try c.field(.reused, [])
+        warnings = try c.field(.warnings, [])
+        credential = try c.field(.credential, "")
     }
 }
 

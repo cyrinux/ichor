@@ -6264,6 +6264,12 @@
     <string name="azure_nsg">ネットワークセキュリティグループ</string>
     <string name="azure_nsg_none">未選択:サブネットにグループがあればそれが適用されます。</string>
     <string name="azure_nsg_wide_open">このグループはインターネットからポート 50000(Talos API)への到達を許可します。</string>
+    <string name="azure_network_guided">ノード用のネットワークを作成 (推奨)</string>
+    <string name="azure_network_none_yet">この場所にはまだ仮想ネットワークがありません: Ichor が作成できます。</string>
+    <string name="azure_network_hint">Ichor はリソース グループにセキュリティ グループと仮想ネットワーク ichor-nodes を一度だけ作成し、再利用します。外部には何も公開しません。ポート 50000 はこの電話のアドレスにのみ開きます。ノードにはパブリック IP が割り当てられます。別の場所にあるクラスターから到達するにはピアリングが必要な場合があります。</string>
+    <string name="azure_network_hint_omni">Ichor はリソース グループにセキュリティ グループと仮想ネットワーク ichor-nodes を一度だけ作成し、再利用します。受信は何も開きません: Omni に必要なのは送信のみで、ノードにはパブリック IP が割り当てられます。</string>
+    <string name="azure_network_created">セキュリティ グループと仮想ネットワーク ichor-nodes を作成しました。</string>
+    <string name="azure_network_reused">ネットワーク ichor-nodes を再利用しています。</string>
     <string name="azure_public_ip">パブリック IP アドレスを付与</string>
     <string name="azure_disk">OS ディスク(GB)</string>
     <string name="azure_cost_unknown">価格は取得できません。Azure の VM 料金を参照してください。</string>

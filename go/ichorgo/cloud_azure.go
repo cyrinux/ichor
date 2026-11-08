@@ -707,6 +707,9 @@ func AzureRoleDefinition(subscriptionID, resourceGroup string) string {
 			"Microsoft.Network/networkInterfaces/delete", "Microsoft.Network/publicIPAddresses/read",
 			"Microsoft.Network/publicIPAddresses/write", "Microsoft.Network/publicIPAddresses/join/action",
 			"Microsoft.Network/publicIPAddresses/delete", "Microsoft.Authorization/permissions/read",
+			// The guided network (AzureNetworkPrepare): the shared VNet and security group, never deleted.
+			"Microsoft.Network/virtualNetworks/write", "Microsoft.Network/networkSecurityGroups/write",
+			"Microsoft.Network/networkSecurityGroups/securityRules/write",
 		}, azureImageActions...),
 		NotActions:       []string{},
 		AssignableScopes: []string{"/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup},

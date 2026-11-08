@@ -6394,6 +6394,12 @@
     <string name="azure_nsg">Netzwerksicherheitsgruppe</string>
     <string name="azure_nsg_none">Keine gewählt: Es gilt die Gruppe des Subnetzes, falls es eine hat.</string>
     <string name="azure_nsg_wide_open">Diese Gruppe lässt das Internet Port 50000 erreichen, die Talos-API.</string>
+    <string name="azure_network_guided">Netzwerk für den Knoten anlegen (empfohlen)</string>
+    <string name="azure_network_none_yet">An diesem Standort gibt es noch kein virtuelles Netzwerk: Ichor kann eines anlegen.</string>
+    <string name="azure_network_hint">Ichor legt die Sicherheitsgruppe und das virtuelle Netzwerk ichor-nodes einmal in der Ressourcengruppe an und verwendet sie wieder. Nichts wird für die Welt geöffnet; Port 50000 ist nur für die Adresse dieses Telefons offen. Der Knoten erhält eine öffentliche IP; ein Cluster anderswo braucht eventuell Peering, um ihn zu erreichen.</string>
+    <string name="azure_network_hint_omni">Ichor legt die Sicherheitsgruppe und das virtuelle Netzwerk ichor-nodes einmal in der Ressourcengruppe an und verwendet sie wieder. Eingehend wird nichts geöffnet: Omni braucht nur ausgehenden Zugriff, und der Knoten erhält eine öffentliche IP.</string>
+    <string name="azure_network_created">Sicherheitsgruppe und virtuelles Netzwerk ichor-nodes angelegt.</string>
+    <string name="azure_network_reused">Das Netzwerk ichor-nodes wird wiederverwendet.</string>
     <string name="azure_public_ip">Ihr eine öffentliche IP-Adresse geben</string>
     <string name="azure_disk">Betriebssystemdisk (GB)</string>
     <string name="azure_cost_unknown">Preis nicht verfügbar: siehe die VM-Preise von Azure.</string>

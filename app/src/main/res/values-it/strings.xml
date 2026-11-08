@@ -6404,6 +6404,12 @@
     <string name="azure_nsg">Gruppo di sicurezza di rete</string>
     <string name="azure_nsg_none">Nessuno scelto: vale il gruppo della subnet, se ne ha uno.</string>
     <string name="azure_nsg_wide_open">Questo gruppo lascia raggiungere da Internet la porta 50000, l\'API di Talos.</string>
+    <string name="azure_network_guided">Crea una rete per il nodo (consigliato)</string>
+    <string name="azure_network_none_yet">Questa località non ha ancora una rete virtuale: Ichor può crearne una.</string>
+    <string name="azure_network_hint">Ichor crea una volta il gruppo di sicurezza e la rete virtuale ichor-nodes nel gruppo di risorse e li riutilizza. Nulla viene aperto al mondo; la porta 50000 è aperta solo all\'indirizzo di questo telefono. Il nodo riceve un IP pubblico; un cluster altrove può aver bisogno di un peering per raggiungerlo.</string>
+    <string name="azure_network_hint_omni">Ichor crea una volta il gruppo di sicurezza e la rete virtuale ichor-nodes nel gruppo di risorse e li riutilizza. Nulla viene aperto in ingresso: Omni ha bisogno solo dell\'accesso in uscita, e il nodo riceve un IP pubblico.</string>
+    <string name="azure_network_created">Gruppo di sicurezza e rete virtuale ichor-nodes creati.</string>
+    <string name="azure_network_reused">Riutilizzo della rete ichor-nodes.</string>
     <string name="azure_public_ip">Assegnale un indirizzo IP pubblico</string>
     <string name="azure_disk">Disco del sistema (GB)</string>
     <string name="azure_cost_unknown">Prezzo non disponibile: vedi i prezzi delle VM di Azure.</string>

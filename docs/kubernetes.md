@@ -411,10 +411,15 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     image version, tagged with the cluster's Talos version first), a VM size that boots the
     image's architecture and Hyper-V generation, a virtual network and subnet, an optional network
     security group, whether the VM gets a public address (on by default unless the subnet has a NAT
-    gateway) and the OS disk size (20 GB by default). Only existing networks and groups are listed:
-    a group that allows the virtual network is enough for Omni, while a plain Talos node must be
-    reachable from the phone on port 50000 of the address the app follows, and a group that lets
-    the Internet reach that port is flagged. The custom data must fit Azure's 64 KB once encoded.
+    gateway) and the OS disk size (20 GB by default). **Make a network for the node** (offered
+    first when the location has none) makes, or reuses, the security group and the virtual network
+    `ichor-nodes` in the resource group, then picks them with a public address for the VM: nothing
+    is opened to the world, Azure's default rules let the network reach itself, and on plain Talos
+    one rule more opens port 50000 to this phone's public address only (Omni needs outbound access
+    only). A plain-Talos cluster elsewhere may need peering to reach the node. Or pick an existing
+    network and group: one that allows the virtual network is enough for Omni, while a plain Talos
+    node must be reachable from the phone on port 50000 of the address the app follows, and a group
+    that lets the Internet reach that port is flagged with the rule that does. The custom data must fit Azure's 64 KB once encoded.
     The hourly price in USD before tax comes from Azure's Retail Prices API (public cloud only), or
     says "price unavailable". The app creates the public address, the network interface and the
     VM, follows it until it runs, then follows the node until it joins, or until the machine

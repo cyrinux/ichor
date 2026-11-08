@@ -157,6 +157,18 @@ Part of the [Ichor documentation](../README.md#documentation).
   unfinished image. A finished image stays, billed as a managed disk of its size per month until
   you delete it. The one case that needs the Azure portal is a delete that fails: the message
   names each resource left (its id without the subscription) and the resource group.
+- **The guided network at Azure (Make a network for the node):** not billable, but it changes the
+  subscription, so it runs only when tapped, and the probe's `azure network` only with `-yes`. In
+  the picked resource group it makes one network security group and one virtual network, both
+  `ichor-nodes` and tagged `ichor-managed`, or reuses them. The group keeps Azure's default rules
+  (the network reaches itself, everything else inbound is refused) and adds one rule on plain
+  Talos only: TCP 50000 from the phone's current public IPv4 as a /32 (`talos-api-from-phone`),
+  refreshed to today's address on each run. It never opens anything to `*` or `Internet`, never
+  opens 6443 or 50001, and never deletes the group or the network: nodes share them, so delete
+  them in the Azure portal when no node uses them. A group or network named `ichor-nodes` that the
+  app did not tag is used as it is and never changed. The run checks the role's network writes
+  first and names a missing one. Recorded in the action log (`azure-network-prepare`, with the
+  resource group and location).
 - **Creating a VM at Google Cloud (Add a node… → A server at a cloud provider → Google Cloud):**
   billable, so the hourly price shows first when the Billing Catalog answers, the host name is
   typed to confirm, and Stop asks once more (the VM and its disk are billed until deleted); the

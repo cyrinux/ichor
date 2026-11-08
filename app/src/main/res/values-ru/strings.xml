@@ -6666,6 +6666,12 @@
     <string name="azure_nsg">Группа безопасности сети</string>
     <string name="azure_nsg_none">Не выбрана: действует группа подсети, если она есть.</string>
     <string name="azure_nsg_wide_open">Эта группа открывает из Интернета порт 50000 — API Talos.</string>
+    <string name="azure_network_guided">Создать сеть для узла (рекомендуется)</string>
+    <string name="azure_network_none_yet">В этом расположении ещё нет виртуальной сети: Ichor может её создать.</string>
+    <string name="azure_network_hint">Ichor один раз создаёт группу безопасности и виртуальную сеть ichor-nodes в группе ресурсов и использует их повторно. Ничего не открывается для всего мира; порт 50000 открыт только для адреса этого телефона. Узел получает публичный IP; кластеру в другом месте может понадобиться пиринг, чтобы до него добраться.</string>
+    <string name="azure_network_hint_omni">Ichor один раз создаёт группу безопасности и виртуальную сеть ichor-nodes в группе ресурсов и использует их повторно. Входящие подключения не открываются: Omni нужен только исходящий доступ, а узел получает публичный IP.</string>
+    <string name="azure_network_created">Группа безопасности и виртуальная сеть ichor-nodes созданы.</string>
+    <string name="azure_network_reused">Повторно используется сеть ichor-nodes.</string>
     <string name="azure_public_ip">Выдать ей публичный IP-адрес</string>
     <string name="azure_disk">Системный диск (ГБ)</string>
     <string name="azure_cost_unknown">Цена недоступна: см. цены на ВМ Azure.</string>

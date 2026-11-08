@@ -260,4 +260,18 @@ final class CloudAzureTests: XCTestCase {
         XCTAssertEqual(check.credential, "{}")
         XCTAssertEqual(try decode(AzureOptions.self, "{}").credential, "")
     }
+
+    func testTheGuidedNetworkDecodes() throws {
+        let network = try decode(
+            AzureNetworkResult.self,
+            #"{"networkId":"vnet","subnetId":"vnet/subnets/nodes","securityGroupId":"nsg","created":["nsg","vnet"]}"#)
+        XCTAssertEqual(network.subnetId, "vnet/subnets/nodes")
+        XCTAssertEqual(network.created, ["nsg", "vnet"])
+        XCTAssertEqual(network.reused, [])
+        let group = try decode(AzureSecurityGroup.self, #"{"id":"g","wideOpen":true,"wideOpenRule":"talos-api ← *"}"#)
+        XCTAssertEqual(group.wideOpenRule, "talos-api ← *")
+        let spec = AzureNetworkSpec(resourceGroup: "talos", location: "westeurope", omni: true)
+        let encoded = String(decoding: try JSONEncoder().encode(spec), as: UTF8.self)
+        XCTAssertTrue(encoded.contains(#""omni":true"#))
+    }
 }

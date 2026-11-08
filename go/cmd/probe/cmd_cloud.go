@@ -125,7 +125,7 @@ var cloudCommands = []command{
 		return "", errors.New("usage: aws test|options|policy|price TYPE|estimate|image|create|signin|network …")
 	}},
 	{name: "azure", args: "test|options|role [RG]|price LOCATION SIZE|estimate ARCH LOCATION|image TEMPLATE ARCH RG LOCATION SUBNET_ID NSG_ID|- -yes|" +
-		"create TEMPLATE ROLE HOSTNAME DISK RG LOCATION SIZE IMAGE_ID SUBNET_ID NSG_ID|- -yes|signin [TENANT [SUBSCRIPTION_ID]]", run: func(e env) (string, error) {
+		"create TEMPLATE ROLE HOSTNAME DISK RG LOCATION SIZE IMAGE_ID SUBNET_ID NSG_ID|- -yes|signin [TENANT [SUBSCRIPTION_ID]]|network RG LOCATION [-omni] -yes", run: func(e env) (string, error) {
 		if flag.Arg(1) == "signin" {
 			return azureSignIn()
 		}
@@ -153,9 +153,11 @@ var cloudCommands = []command{
 			return azureImage(e, string(credJSON))
 		case "create":
 			return azureCreate(e, string(credJSON))
+		case "network":
+			return azureNetwork(e, string(credJSON))
 		}
 
-		return "", errors.New("usage: azure test|options|role [RG]|price LOCATION SIZE|estimate|image|create|signin …")
+		return "", errors.New("usage: azure test|options|role [RG]|price LOCATION SIZE|estimate|image|create|signin|network …")
 	}},
 	{name: "gcp", args: "test|options|role|price ZONE TYPE|estimate ARCH ZONE|image TEMPLATE ARCH ZONE SUBNET -yes|" +
 		"create TEMPLATE ROLE HOSTNAME DISK PROJECT ZONE TYPE IMAGE SUBNET -yes", run: func(e env) (string, error) {
@@ -341,6 +343,22 @@ func awsNetwork(e env, credJSON string) (string, error) {
 	}
 
 	return ichorgo.AWSNetworkPrepare(e.cfg, e.context, credJSON, string(spec))
+}
+
+// azureNetwork makes (or reuses) the ichor-nodes security group and virtual network: it writes at
+// Azure (nothing billable), so only with -yes.
+func azureNetwork(e env, credJSON string) (string, error) {
+	omni := flag.NArg() == 6 && flag.Arg(4) == "-omni"
+	if flag.Arg(flag.NArg()-1) != "-yes" || (flag.NArg() != 5 && !omni) {
+		return "", errors.New("usage: azure network RG LOCATION [-omni] -yes (creates a security group and a virtual network)")
+	}
+
+	spec, err := json.Marshal(map[string]any{"resourceGroup": flag.Arg(2), "location": flag.Arg(3), "omni": omni})
+	if err != nil {
+		return "", err
+	}
+
+	return ichorgo.AzureNetworkPrepare(e.cfg, e.context, credJSON, string(spec))
 }
 
 // awsImage makes a billable AMI with a throwaway helper instance: scratch accounts only, and only

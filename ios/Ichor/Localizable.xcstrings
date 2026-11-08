@@ -1,6 +1,90 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Make a network for the node (recommended)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Netzwerk für den Knoten anlegen (empfohlen)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear una red para el nodo (recomendado)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer un réseau pour le nœud (recommandé)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea una rete per il nodo (consigliato)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノード用のネットワークを作成 (推奨)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar uma rede para o nó (recomendado)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать сеть для узла (рекомендуется)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити мережу для вузла (рекомендовано)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为节点创建网络（推荐）" } }
+      }
+    },
+    "This location has no virtual network yet: Ichor can make one." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "An diesem Standort gibt es noch kein virtuelles Netzwerk: Ichor kann eines anlegen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esta ubicación aún no tiene red virtual: Ichor puede crear una." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cet emplacement n'a pas encore de réseau virtuel : Ichor peut en créer un." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questa località non ha ancora una rete virtuale: Ichor può crearne una." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "この場所にはまだ仮想ネットワークがありません: Ichor が作成できます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Este local ainda não tem rede virtual: o Ichor pode criar uma." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В этом расположении ещё нет виртуальной сети: Ichor может её создать." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "У цьому розташуванні ще немає віртуальної мережі: Ichor може її створити." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此位置还没有虚拟网络：Ichor 可以创建一个。" } }
+      }
+    },
+    "Ichor makes the security group and the virtual network ichor-nodes once in the resource group and reuses them. Nothing is opened to the world; port 50000 is opened to this phone's address only. The node gets a public IP; a cluster elsewhere may need peering to reach it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor legt die Sicherheitsgruppe und das virtuelle Netzwerk ichor-nodes einmal in der Ressourcengruppe an und verwendet sie wieder. Nichts wird für die Welt geöffnet; Port 50000 ist nur für die Adresse dieses Telefons offen. Der Knoten erhält eine öffentliche IP; ein Cluster anderswo braucht eventuell Peering, um ihn zu erreichen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea una vez el grupo de seguridad y la red virtual ichor-nodes en el grupo de recursos y los reutiliza. No se abre nada al mundo; el puerto 50000 solo se abre a la dirección de este teléfono. El nodo recibe una IP pública; un clúster en otro lugar puede necesitar peering para alcanzarlo." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crée une fois le groupe de sécurité et le réseau virtuel ichor-nodes dans le groupe de ressources et les réutilise. Rien n'est ouvert au monde ; le port 50000 n'est ouvert qu'à l'adresse de ce téléphone. Le nœud reçoit une IP publique ; un cluster ailleurs peut avoir besoin d'un peering pour le joindre." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea una volta il gruppo di sicurezza e la rete virtuale ichor-nodes nel gruppo di risorse e li riutilizza. Nulla viene aperto al mondo; la porta 50000 è aperta solo all'indirizzo di questo telefono. Il nodo riceve un IP pubblico; un cluster altrove può aver bisogno di un peering per raggiungerlo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor はリソース グループにセキュリティ グループと仮想ネットワーク ichor-nodes を一度だけ作成し、再利用します。外部には何も公開しません。ポート 50000 はこの電話のアドレスにのみ開きます。ノードにはパブリック IP が割り当てられます。別の場所にあるクラスターから到達するにはピアリングが必要な場合があります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor cria uma vez o grupo de segurança e a rede virtual ichor-nodes no grupo de recursos e os reutiliza. Nada é aberto para o mundo; a porta 50000 só é aberta para o endereço deste telefone. O nó recebe um IP público; um cluster em outro lugar pode precisar de peering para alcançá-lo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor один раз создаёт группу безопасности и виртуальную сеть ichor-nodes в группе ресурсов и использует их повторно. Ничего не открывается для всего мира; порт 50000 открыт только для адреса этого телефона. Узел получает публичный IP; кластеру в другом месте может понадобиться пиринг, чтобы до него добраться." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor один раз створює групу безпеки й віртуальну мережу ichor-nodes у групі ресурсів і повторно їх використовує. Нічого не відкривається для всього світу; порт 50000 відкрито лише для адреси цього телефона. Вузол отримує публічну IP; кластеру деінде може знадобитися пірінг, щоб до нього дістатися." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 会在资源组中一次性创建安全组和虚拟网络 ichor-nodes 并重复使用。不会向外界开放任何端口；端口 50000 仅对这部手机的地址开放。节点会获得公共 IP；其他位置的集群可能需要对等互连才能访问它。" } }
+      }
+    },
+    "Ichor makes the security group and the virtual network ichor-nodes once in the resource group and reuses them. Nothing is opened inbound: Omni needs outbound access only, and the node gets a public IP." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor legt die Sicherheitsgruppe und das virtuelle Netzwerk ichor-nodes einmal in der Ressourcengruppe an und verwendet sie wieder. Eingehend wird nichts geöffnet: Omni braucht nur ausgehenden Zugriff, und der Knoten erhält eine öffentliche IP." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea una vez el grupo de seguridad y la red virtual ichor-nodes en el grupo de recursos y los reutiliza. No se abre nada de entrada: Omni solo necesita acceso saliente, y el nodo recibe una IP pública." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crée une fois le groupe de sécurité et le réseau virtuel ichor-nodes dans le groupe de ressources et les réutilise. Rien n'est ouvert en entrée : Omni n'a besoin que d'un accès sortant, et le nœud reçoit une IP publique." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea una volta il gruppo di sicurezza e la rete virtuale ichor-nodes nel gruppo di risorse e li riutilizza. Nulla viene aperto in ingresso: Omni ha bisogno solo dell'accesso in uscita, e il nodo riceve un IP pubblico." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor はリソース グループにセキュリティ グループと仮想ネットワーク ichor-nodes を一度だけ作成し、再利用します。受信は何も開きません: Omni に必要なのは送信のみで、ノードにはパブリック IP が割り当てられます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor cria uma vez o grupo de segurança e a rede virtual ichor-nodes no grupo de recursos e os reutiliza. Nada é aberto na entrada: o Omni só precisa de acesso de saída, e o nó recebe um IP público." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor один раз создаёт группу безопасности и виртуальную сеть ichor-nodes в группе ресурсов и использует их повторно. Входящие подключения не открываются: Omni нужен только исходящий доступ, а узел получает публичный IP." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor один раз створює групу безпеки й віртуальну мережу ichor-nodes у групі ресурсів і повторно їх використовує. Вхідні з’єднання не відкриваються: Omni потрібен лише вихідний доступ, а вузол отримує публічну IP." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 会在资源组中一次性创建安全组和虚拟网络 ichor-nodes 并重复使用。不开放任何入站端口：Omni 只需要出站访问，节点会获得公共 IP。" } }
+      }
+    },
+    "Made the security group and the virtual network ichor-nodes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sicherheitsgruppe und virtuelles Netzwerk ichor-nodes angelegt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Grupo de seguridad y red virtual ichor-nodes creados." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Groupe de sécurité et réseau virtuel ichor-nodes créés." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Gruppo di sicurezza e rete virtuale ichor-nodes creati." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "セキュリティ グループと仮想ネットワーク ichor-nodes を作成しました。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Grupo de segurança e rede virtual ichor-nodes criados." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Группа безопасности и виртуальная сеть ichor-nodes созданы." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Групу безпеки й віртуальну мережу ichor-nodes створено." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已创建安全组和虚拟网络 ichor-nodes。" } }
+      }
+    },
+    "Reusing the network ichor-nodes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Netzwerk ichor-nodes wird wiederverwendet." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Se reutiliza la red ichor-nodes." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réutilisation du réseau ichor-nodes." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Riutilizzo della rete ichor-nodes." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ネットワーク ichor-nodes を再利用しています。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Reutilizando a rede ichor-nodes." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Повторно используется сеть ichor-nodes." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Повторно використовується мережа ichor-nodes." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在重复使用网络 ichor-nodes。" } }
+      }
+    },
     "Service principal" : {
       "extractionState" : "manual",
       "localizations" : {
