@@ -71,40 +71,34 @@ func (m *oidcMethod) serveLoopbackTo(ctx context.Context, codes chan<- url.Value
 // stop() is benign.
 func stopLoopback(srv *http.Server, ln net.Listener) func() {
 	return func() {
-		// "already closed" is known before Shutdown runs: on a closed server Shutdown only
-		// returns ErrServerClosed, so it has nothing left to diagnose. A live server whose
-		// listener is gone still reaches Shutdown below, where the listener's "use of
-		// closed" error names the cause. And once Close has run, Shutdown has nothing to
-		// wait for: the second stop() of a double stop returns at once rather than holding
-		// the sign-in's return.
-		alreadyClosed := errors.Is(srv.Close(), net.ErrClosed)
-
-		if alreadyClosed {
-			_ = ln.Close() //nolint:errcheck
-
-			diag(slog.LevelInfo, "auth", "loopback stop", nil, "cause", "already closed", "stage", "server")
-
-			return
-		}
-
 		started := time.Now()
 
 		ctx, cancel := context.WithTimeout(context.Background(), loopbackStopTimeout)
 		defer cancel()
 
+		// Shutdown runs first and alone: a probing Close before it would cut the listener
+		// and every live connection at once, leave nothing for Shutdown to report and turn
+		// every cause below into silence. A server already closed answers ErrServerClosed
+		// here - the second stop() of a double stop, which is benign.
 		err := srv.Shutdown(ctx)
 
-		// A stuck handler is closed at once after the deadline, so Shutdown can still return
-		// nothing here: a stop that took the whole budget without a clean early return was
-		// cut by the deadline, whether or not Shutdown says so (Go has no documented promise
-		// about that), and the same budget rules out a clock that merely ran late. Read the
-		// verdict before Close runs: a server already Shutdown still answers ErrServerClosed
-		// to a later Close, which would otherwise drown a deadline cut in the "already
-		// closed" cause.
+		// A stuck handler is closed at once below, so Shutdown can still return nothing
+		// here: a stop that took the whole budget without a clean early return was cut by
+		// the deadline, whether or not Shutdown says so (Go has no documented promise about
+		// that), and the same budget rules out a clock that merely ran late.
 		deadlineCut := err == nil && time.Since(started) >= loopbackStopTimeout
 
 		_ = srv.Close() //nolint:errcheck
-		_ = ln.Close()  //nolint:errcheck
+
+		// The listener's verdict is part of the diagnosis: where the server had nothing to
+		// say (never served, or already shut down), a listener that failed to close under
+		// the server - or was already closed - is the only error left to hear, and
+		// swallowing it was the silence of CYR-597.
+		lerr := ln.Close()
+
+		if err == nil {
+			err = lerr
+		}
 
 		if deadlineCut {
 			diag(slog.LevelWarn, "auth", "loopback stop", context.DeadlineExceeded, "cause", "deadline reached")
@@ -113,12 +107,18 @@ func stopLoopback(srv *http.Server, ln net.Listener) func() {
 		}
 
 		if err == nil {
+			// A clean stop stays silent: every sign-in stops its loopback, and the ring is
+			// for what went wrong.
 			return
 		}
 
 		switch {
+		case errors.Is(err, http.ErrServerClosed):
+			diag(slog.LevelInfo, "auth", "loopback stop", nil, "cause", "already closed", "stage", "server")
 		case errors.Is(err, net.ErrClosed):
 			diag(slog.LevelInfo, "auth", "loopback stop", nil, "cause", "already closed", "stage", "listener")
+		case errors.Is(err, context.DeadlineExceeded):
+			diag(slog.LevelWarn, "auth", "loopback stop", err, "cause", "deadline reached")
 		default:
 			diag(slog.LevelWarn, "auth", "loopback stop", err, "cause", "shutdown error")
 		}
