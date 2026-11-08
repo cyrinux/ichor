@@ -160,7 +160,8 @@ var cloudCommands = []command{
 		return "", errors.New("usage: azure test|options|role [RG]|price LOCATION SIZE|estimate|image|create|signin|network …")
 	}},
 	{name: "gcp", args: "test|options|role|price ZONE TYPE|estimate ARCH ZONE|image TEMPLATE ARCH ZONE SUBNET -yes|" +
-		"create TEMPLATE ROLE HOSTNAME DISK PROJECT ZONE TYPE IMAGE SUBNET -yes|signin gcloud|oauth|workforce [SECRETS_JSON]", run: func(e env) (string, error) {
+		"create TEMPLATE ROLE HOSTNAME DISK PROJECT ZONE TYPE IMAGE SUBNET -yes|signin gcloud|oauth|workforce [SECRETS_JSON]|" +
+		"network ROLE [-omni] -yes", run: func(e env) (string, error) {
 		switch flag.Arg(1) {
 		case "role":
 			return ichorgo.GCPRoleDefinition(os.Getenv("GCP_PROJECT")), nil
@@ -186,9 +187,11 @@ var cloudCommands = []command{
 			return gcpImage(e, credJSON)
 		case "create":
 			return gcpCreate(e, credJSON)
+		case "network":
+			return gcpNetwork(e, credJSON)
 		}
 
-		return "", errors.New("usage: gcp test|options|role|price ZONE TYPE|estimate|image|create|signin …")
+		return "", errors.New("usage: gcp test|options|role|price ZONE TYPE|estimate|image|create|signin|network …")
 	}},
 }
 
@@ -402,6 +405,23 @@ func azureNetwork(e env, credJSON string) (string, error) {
 	}
 
 	return ichorgo.AzureNetworkPrepare(e.cfg, e.context, credJSON, string(spec))
+}
+
+// gcpNetwork adds the firewall rules ichor-nodes-internal and, unless -omni, ichor-phone-50000
+// (TCP 50000 from this machine's address) to GCP_PROJECT's default network, for GCP_ZONE's
+// region: it changes the project, so scratch projects only, never in CI, and only with -yes.
+func gcpNetwork(e env, credJSON string) (string, error) {
+	omni := flag.NArg() == 5 && flag.Arg(3) == "-omni"
+	if flag.Arg(flag.NArg()-1) != "-yes" || (flag.NArg() != 4 && !omni) {
+		return "", errors.New("usage: gcp network ROLE [-omni] -yes (adds firewall rules to the default network)")
+	}
+
+	spec, err := json.Marshal(map[string]any{"role": flag.Arg(2), "omni": omni, "project": os.Getenv("GCP_PROJECT"), "zone": os.Getenv("GCP_ZONE")})
+	if err != nil {
+		return "", err
+	}
+
+	return ichorgo.GCPNetworkPrepare(e.cfg, e.context, credJSON, string(spec))
 }
 
 // awsImage makes a billable AMI with a throwaway helper instance: scratch accounts only, and only

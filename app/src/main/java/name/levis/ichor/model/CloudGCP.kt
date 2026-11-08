@@ -8,7 +8,8 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-// Mirrors go/ichorgo/cloud_gcp.go, cloud_gcp_signin.go, cloud_gcp_options.go and cloud_gcp_create.go.
+// Mirrors go/ichorgo/cloud_gcp.go, cloud_gcp_signin.go, cloud_gcp_options.go, cloud_gcp_create.go
+// and cloud_gcp_network.go.
 
 /**
  * A service account key or a Google account's sign-in ([googleSignIn], opaque), its project and
@@ -114,7 +115,53 @@ data class GCPNetwork(
     val autoSubnets: Boolean = false,
     /** Only the zone's region's. */
     val subnets: List<GCPSubnet> = emptyList(),
+    /** A firewall rule lets the world reach a node's port 50000 (or every port): warned about, not refused. */
+    val wideOpen: Boolean = false,
+    /** The guided network's ichor-nodes-internal rule is on it. */
+    val managed: Boolean = false,
 )
+
+/** GCPNetworkPrepare's specJSON: the role and whether the cluster is Omni (no port 50000 then). */
+@Serializable
+data class GCPNetworkSpec(val project: String, val zone: String, val role: String, val omni: Boolean)
+
+/**
+ * The guided network: the default network and its subnet of the zone's region, the firewall rules
+ * [created] or [updated] by this call, and the rules aimed at the ichor-node tag as they are now.
+ * [phoneIp] is the address port 50000 is open to, "" on Omni or when it could not be learned.
+ */
+@Serializable
+data class GCPNetworkResult(
+    val network: String = "",
+    val networkLink: String = "",
+    val subnetwork: String = "",
+    val subnetworkLink: String = "",
+    val phoneIp: String = "",
+    val created: List<String> = emptyList(),
+    val updated: List<String> = emptyList(),
+    val rules: List<GCPNetworkRule> = emptyList(),
+    val warnings: List<String> = emptyList(),
+    /** A Google account's session the core renewed, to seal again; "" when nothing changed. */
+    val credential: String = "",
+)
+
+/** One source of a rule: [protocol] all or tcp, [ports] "" for every port, [source] a CIDR or "tag:<tag>". */
+@Serializable
+data class GCPNetworkRule(
+    val name: String = "",
+    val protocol: String = "",
+    val ports: String = "",
+    val source: String = "",
+    val self: Boolean = false,
+    val description: String = "",
+) {
+    /** Port 50000 open to [phoneIp]. */
+    fun isPhone(phoneIp: String): Boolean = phoneIp.isNotBlank() && protocol == "tcp" && ports == "50000" && source == "$phoneIp/32"
+
+    /** A rule the app did not word: "tcp/50000 ← 198.51.100.4/32 · Ichor phone 2026-10-01". */
+    val plain: String
+        get() = listOf("$protocol${if (ports.isBlank()) "" else "/$ports"} ← $source", description).filter { it.isNotBlank() }.joinToString(" · ")
+}
 
 @Serializable
 data class GCPSubnet(

@@ -48,6 +48,8 @@ import name.levis.ichor.model.GCPCreateSpec
 import name.levis.ichor.model.GCPCredential
 import name.levis.ichor.model.GCPImageEstimate
 import name.levis.ichor.model.GCPMachineType
+import name.levis.ichor.model.GCPNetworkResult
+import name.levis.ichor.model.GCPNetworkSpec
 import name.levis.ichor.model.GCPOptions
 import name.levis.ichor.model.GCPPrice
 import name.levis.ichor.model.GCPSignInResult
@@ -196,6 +198,18 @@ class GCPCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
         }
     }
 
+    /**
+     * The guided network (writes at Google Cloud), sealing again the Google sign-in the core
+     * renewed, then the options again so its flags are listed.
+     */
+    suspend fun prepareNetwork(spec: GCPNetworkSpec): GCPNetworkResult {
+        val account = _account.value
+        return lifecycle.gcpNetworkPrepare(credential(account), spec).also {
+            sealRenewed(account, it.credential)
+            refresh()
+        }
+    }
+
     /** The cost line of an image run. Creates nothing. */
     suspend fun estimate(arch: String, zone: String): GCPImageEstimate =
         lifecycle.gcpImageEstimate(credential(_account.value), arch, zone)
@@ -296,6 +310,7 @@ fun GCPCreateCard(
                     canMakeImage = !demo && account.isNotBlank(),
                     madeImage = madeImage,
                     onMakeImage = { imageFor = it },
+                    onPrepareNetwork = if (demo || account.isBlank()) null else vm::prepareNetwork,
                 ) { request ->
                     // The key is read only now, and goes to the run alone.
                     scope.launch { app.joinManager.start(request, if (account.isBlank()) "" else vm.credential(account)) }
@@ -349,6 +364,8 @@ private fun VMForm(
     /** The selfLink of the image the last run made: picked once it is listed. */
     madeImage: String,
     onMakeImage: (GCPImageAsk) -> Unit,
+    /** The guided network; null where it cannot run (the demo, no key). */
+    onPrepareNetwork: (suspend (GCPNetworkSpec) -> GCPNetworkResult)?,
     onCreate: (JoinRequest) -> Unit,
 ) {
     val colors = LocalStatusColors.current
@@ -452,6 +469,13 @@ private fun VMForm(
         }
     }
 
+    if (onPrepareNetwork != null) {
+        GCPGuidedNetwork(options.project, options.zone, omni = form == null, role = form?.role.orEmpty(), enabled = !busy, prepare = onPrepareNetwork) { ready ->
+            // The default network and its subnet of the region fill the pickers.
+            networkName = ready.network
+            subnetLink = ready.subnetworkLink
+        }
+    }
     if (networks.isEmpty()) {
         InfoNotice(stringResource(R.string.gcp_no_subnet, region))
     } else {
@@ -459,6 +483,9 @@ private fun VMForm(
             if (it != networkName) subnetLink = ""
             networkName = it
         }
+    }
+    if (network?.wideOpen == true) {
+        Text(stringResource(R.string.gcp_network_wide_open), color = colors.warn, style = MaterialTheme.typography.bodySmall)
     }
     if (network != null) {
         LaunchedEffect(network.name) { network.subnets.singleOrNull()?.let { subnetLink = it.selfLink } }

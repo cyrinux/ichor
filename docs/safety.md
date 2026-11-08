@@ -196,6 +196,21 @@ Part of the [Ichor documentation](../README.md#documentation).
   is reported as still billed, never as done. The one case that needs the Google Cloud console is
   a delete that fails: the message names the instance and the zone, and it stays billed until it
   is deleted there.
+- **The guided network at Google Cloud (Use a network Ichor sets up):** not billable, but it
+  changes the project, so it runs only when tapped, and the probe's `gcp network` only with
+  `-yes` (scratch projects only, never in CI). It uses the project's `default` network and makes
+  no network or subnet; it adds two VPC firewall rules once, both aimed at the `ichor-node`
+  network tag only, so they touch no other VM: `ichor-nodes-internal` (all traffic from tagged
+  nodes to tagged nodes) and, on plain Talos, `ichor-phone-50000` (TCP 50000 from the phone's
+  current public IPv4 as a /32, described `Ichor phone <date>`). It never opens anything to
+  `0.0.0.0/0` or `::/0`, never opens 6443, and never deletes a rule: they are kept, not a run's
+  resources, and carry no `ichor-run` label. The phone's address changes (mobile networks, NAT):
+  each run adds today's /32 to the rule and keeps the old ones, and the date in its description
+  is the last one added, so remove the stale addresses at Google Cloud (VPC network → Firewall)
+  when they change. A node that runs but cannot be reached from a new address needs the guided
+  network again, never a wider rule. The run asks `testIamPermissions` for the firewall
+  permissions before any write and names a missing one. Recorded in the action log
+  (`gcp-network-prepare`, with the project, the zone and the rules made).
 - **Making a Talos image at Google Cloud (from the Go core and the probe for now):** billable, so
   the estimate gives the helper's hourly price and the disk's and image's storage prices first,
   and the probe's `gcp image` runs only with `-yes`. Nothing of the cluster is touched: the

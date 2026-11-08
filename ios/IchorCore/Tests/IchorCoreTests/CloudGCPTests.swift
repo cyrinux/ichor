@@ -292,4 +292,41 @@ final class CloudGCPTests: XCTestCase {
         XCTAssertEqual(steps[2].state, .current)
         XCTAssertEqual(steps[3].state, .pending)
     }
+
+    // The same fixture as CloudGCPTest.theGuidedNetworkTellsThePhonesRule on Android.
+    func testGuidedNetwork() throws {
+        let json = """
+            {"network":"default","networkLink":"https://example.test/networks/default",
+             "subnetwork":"regions/europe-west1/subnetworks/default",
+             "subnetworkLink":"https://example.test/subnetworks/default","phoneIp":"203.0.113.7",
+             "created":["ichor-nodes-internal"],"updated":["ichor-phone-50000"],
+             "rules":[{"name":"ichor-nodes-internal","protocol":"all","ports":"","source":"tag:ichor-node","self":true},
+                      {"name":"ichor-phone-50000","protocol":"tcp","ports":"50000","source":"198.51.100.4/32",
+                       "description":"Ichor phone 2026-10-01"},
+                      {"name":"ichor-phone-50000","protocol":"tcp","ports":"50000","source":"203.0.113.7/32",
+                       "description":"Ichor phone 2026-11-07"}],
+             "warnings":[]}
+            """
+        let network = try JSONDecoder().decode(GCPNetworkResult.self, from: Data(json.utf8))
+        XCTAssertEqual(network.subnetwork, "regions/europe-west1/subnetworks/default")
+        XCTAssertEqual(network.created, ["ichor-nodes-internal"])
+        XCTAssertEqual(network.updated, ["ichor-phone-50000"])
+        XCTAssertTrue(network.rules[0].isSelf)
+        XCTAssertEqual(network.rules.map { $0.isPhone(network.phoneIp) }, [false, false, true])
+        XCTAssertEqual(network.rules[1].plain, "tcp/50000 ← 198.51.100.4/32 · Ichor phone 2026-10-01")
+        XCTAssertEqual(network.rules[0].plain, "all ← tag:ichor-node")
+        // On Omni no address is opened: no rule is the phone's.
+        XCTAssertFalse(network.rules[2].isPhone(""))
+
+        let flagged = try JSONDecoder().decode(
+            GCPNetwork.self, from: Data(#"{"name":"open","wideOpen":true,"managed":true}"#.utf8))
+        XCTAssertTrue(flagged.wideOpen && flagged.managed)
+        XCTAssertFalse(try options().networks.contains { $0.wideOpen || $0.managed })
+
+        let spec = try JSONEncoder().encode(
+            GCPNetworkSpec(project: "example-project", zone: "europe-west1-b", role: "worker", omni: true))
+        let decoded = try JSONSerialization.jsonObject(with: spec) as? [String: Any]
+        XCTAssertEqual(decoded?["zone"] as? String, "europe-west1-b")
+        XCTAssertEqual(decoded?["omni"] as? Bool, true)
+    }
 }

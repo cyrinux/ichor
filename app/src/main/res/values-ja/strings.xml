@@ -6317,6 +6317,11 @@
     <string name="gcp_image_cost_unknown">%2$s を約 %1$d 分、その後 Google Cloud で削除するまでイメージの保存料が 1 GB あたり月額で課金されます。価格は取得できません。Google Cloud の Compute Engine の料金をご覧ください。</string>
     <string name="gcp_phase_image">データディスクからイメージを作成</string>
     <string name="gcp_no_subnet">%1$s にサブネットを持つネットワークがありません。別のゾーンを選んでください。</string>
+    <string name="gcp_network_hint">Ichor はプロジェクトの default ネットワークとこのリージョンのサブネットを使い、作成するノードの ichor-node タグを対象にしたファイアウォールルールを一度だけ 2 つ追加します。Ichor ノード間のすべての通信と、Omni なしの Talos ではこの電話のアドレスからの TCP 50000 です。外部全体には何も開かず、アプリがルールを削除することはありません。</string>
+    <string name="gcp_network_created">ファイアウォールルールを追加しました: %1$s。</string>
+    <string name="gcp_network_reused">ファイアウォールルールは既にありました。何も追加していません。</string>
+    <string name="gcp_network_rule_self">Ichor ノード間のすべての通信</string>
+    <string name="gcp_network_wide_open">このネットワークのファイアウォールルールがポート 50000（またはすべて）を全世界に開いています。</string>
     <string name="gcp_public_ip">パブリックアドレスを付与</string>
     <string name="gcp_disk">ブートディスク(GB)</string>
     <string name="gcp_disk_hint">10〜65536 GB。Talos には 20 で十分です。</string>

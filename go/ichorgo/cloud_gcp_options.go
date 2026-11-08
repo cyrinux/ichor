@@ -65,6 +65,10 @@ type gcpNetwork struct {
 	SelfLink    string      `json:"selfLink"`
 	AutoSubnets bool        `json:"autoSubnets"`
 	Subnets     []gcpSubnet `json:"subnets"`
+	// WideOpen: a firewall rule lets the world reach the Talos API (or every port, or every
+	// protocol) of a node. Managed: the guided network's ichor-nodes-internal rule is on it.
+	WideOpen bool `json:"wideOpen"`
+	Managed  bool `json:"managed"`
 }
 
 type gcpSubnet struct {
@@ -198,12 +202,14 @@ func gcpRegionOf(zone string) string {
 // projects the key sees, the zones that are up, and in one zone (credJSON's "zone", else the
 // first of them, with a warning): the zone's machine types (deprecated ones dropped, by vCPUs
 // then memory), the VPC networks with the region's subnets (a warning for a network with no Cloud
-// NAT there: without a public address the node has no route out), and the project's ready
+// NAT there: without a public address the node has no route out; wideOpen when a firewall rule
+// opens a node's Talos API to the world, managed when the guided network's rule is on it, a
+// warning when the rules cannot be read), and the project's ready
 // images, labelled ichor-talos-version first. A listing Google refuses is a warning, never an
 // error, except the zones: the key's own. The demo context answers with samples, without a
 // credential. JSON: {"project","zone","projects":[{"id","name"}],"zones":[{"name","region"}],
 // "machineTypes":[{"name","vcpus","memoryGB","arch"}],"networks":[{"name","selfLink",
-// "autoSubnets","subnets":[{"name","selfLink","region","cidr"}]}],"images":[{"name","selfLink",
+// "autoSubnets","subnets":[{"name","selfLink","region","cidr"}],"wideOpen","managed"}],"images":[{"name","selfLink",
 // "arch","sizeGB","talosVersion","schematic","uefi"}],"warnings"}.
 func GCPOptions(configYAML, contextName, credJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -387,6 +393,10 @@ func (c *gcpClient) networks(ctx context.Context, region string, warnings *[]str
 	}
 
 	slices.SortFunc(out, func(a, b gcpNetwork) int { return strings.Compare(a.Name, b.Name) })
+
+	if len(out) > 0 {
+		c.markFirewalls(ctx, out, warnings)
+	}
 
 	return out
 }
