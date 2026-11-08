@@ -8,9 +8,7 @@ import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.share.PinButton
 import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.ui.share.ShareLinkButton
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import name.levis.ichor.ui.design.IchorScaffold
@@ -58,6 +57,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.gitops.GitOpsSourceSection
 import name.levis.ichor.ui.gitops.ProposalsCard
 import name.levis.ichor.ui.gitops.SOURCE_TOOL_FLUX
+import name.levis.ichor.ui.nav.LocalOpenPod
 import name.levis.ichor.ui.workloads.KubeEventsList
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
@@ -67,7 +67,7 @@ import name.levis.ichor.ui.components.pageContent
 
 /**
  * One Kustomization or HelmRelease: the hero, its actions (each confirmed), its conditions, the
- * pods that are not ready (opening their node's pods through [onNode], with the tab), a
+ * pods that are not ready (each opening its logs and actions, its node's pods through [onNode]), a
  * Kustomization's inventory by kind (rollout restarts) and a release's history. Polls while
  * something reconciles. [onDiff] opens a Kustomization's diff. [initialReconcile]: its reconcile
  * confirmation opens once the object is read (an alert's Reconcile button).
@@ -212,11 +212,17 @@ private fun AppDetail(
         if (app.unhealthyPods.isNotEmpty()) {
             item(key = "pods-title") { SectionTitle(stringResource(R.string.argo_unhealthy_pods)) }
             items(app.unhealthyPods, key = { "pod/${it.key}" }) { pod ->
-                // The pod's node, on its Pods tab, when Talos knows it.
+                // The row opens the pod's logs and actions; its node, on its Pods tab, from the trailing button when Talos knows it.
+                val onOpen = LocalOpenPod.current?.let { open -> { open(pod.namespace, pod.name) } }
                 val node = nodesByName[pod.node]?.takeIf { onNode != null }
-                Box(if (node != null) Modifier.clickable(onClickLabel = stringResource(R.string.argo_net_open_node)) { onNode?.invoke(node, PODS_TAB) } else Modifier) {
-                    UnhealthyPodRow(pod, pod.node.isNotEmpty() && pod.node in downNodes)
-                }
+                UnhealthyPodRow(
+                    pod,
+                    pod.node.isNotEmpty() && pod.node in downNodes,
+                    onOpen = onOpen,
+                    trailing = if (node == null) null else {
+                        { TooltipIconButton(Icons.Outlined.Dns, stringResource(R.string.argo_net_open_node), onClick = { onNode?.invoke(node, PODS_TAB) }) }
+                    },
+                )
             }
         }
         resources(app) { restart = vm.workloadFor(it) }

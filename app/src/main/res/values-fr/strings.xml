@@ -2939,6 +2939,7 @@
     <string name="argo_net_open">Ouvrir dans le navigateur</string>
     <string name="argo_net_pod_containers">Conteneurs sur %1$s</string>
     <string name="argo_net_open_node">Ouvrir le nœud</string>
+    <string name="pod_open">Ouvrir le pod</string>
     <string name="argo_net_pod_delete_text">Il est retiré de %1$s après son délai de grâce ; son contrôleur, s’il en a un, en démarre un nouveau.</string>
     <string name="argo_net_runs_on">Tourne sur %1$s</string>
     <string name="argo_net_managed">Géré par cette app</string>

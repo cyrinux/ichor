@@ -2930,6 +2930,7 @@
     <string name="argo_net_open">Im Browser öffnen</string>
     <string name="argo_net_pod_containers">Container auf %1$s</string>
     <string name="argo_net_open_node">Node öffnen</string>
+    <string name="pod_open">Pod öffnen</string>
     <string name="argo_net_pod_delete_text">Er wird nach seiner Schonfrist aus %1$s entfernt; sein Controller startet, falls vorhanden, einen neuen.</string>
     <string name="argo_net_runs_on">Läuft auf %1$s</string>
     <string name="argo_net_managed">Von dieser App verwaltet</string>

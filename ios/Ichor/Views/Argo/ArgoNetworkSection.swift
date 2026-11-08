@@ -60,6 +60,8 @@ struct ArgoNetworkSection: View {
     /// The app's pods that are not ready, for the owner a deletion names.
     let pods: [KubePod]
     let openNode: (NodeRef) -> Void
+    /// Opens a pod box's logs and actions (the Kubernetes screen focused on it).
+    let openPod: (KubePod) -> Void
     /// Something changed (a pod deleted): read again.
     let changed: () -> Void
 
@@ -112,7 +114,11 @@ struct ArgoNetworkSection: View {
                     presented = nil
                     openNode(ref)
                 },
-                delete: delete)
+                delete: delete,
+                openPod: { pod in
+                    presented = nil
+                    openPod(pod)
+                })
         }
     }
 
