@@ -451,11 +451,26 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     address (on by default) and the boot disk size (20 GB by default). An image labelled
     `ichor-talos-version` with the cluster's version is listed first; an image registered by hand
     as the Talos guide for GCP says is listed too. An Arm machine type boots only a
-    `UEFI_COMPATIBLE` image. Only existing networks
-    and subnets are listed: the `default` network's `default-allow-internal` rule is enough for
-    Omni, while a plain Talos node must be reachable from the phone on port 50000 of the address
-    the app follows; without a public address, a network with no Cloud NAT in the region is
-    flagged, since the node then has no route out. The VM is named after the host name, so the
+    `UEFI_COMPATIBLE` image. **Use a network Ichor sets up** (above the network picker) picks the
+    project's `default` network and its subnet in the zone's region, and adds two VPC firewall
+    rules once, both aimed at the `ichor-node` network tag every node the app makes carries:
+    `ichor-nodes-internal` (all traffic from tagged nodes to tagged nodes) and, for a plain Talos
+    cluster, `ichor-phone-50000` (TCP 50000 from the phone's public address of the day only,
+    learned from `checkip.amazonaws.com`; the description carries the date, and a later run from
+    another address adds it to the same rule). Nothing is opened to the world, 6443 is never
+    opened, and the rules are kept and reused: the app never deletes them. The rules row lists
+    the VPC firewall rules aimed at the tag; a hierarchical or network firewall policy of your
+    organisation may still deny what they allow. The service account needs the firewall
+    permissions of the printed role (`compute.networks.updatePolicy` is what lets it add rules to
+    the project's networks), checked before any write. A project without the `default` network
+    (the `compute.skipDefaultNetworkCreation` organisation policy) is refused with the steps to
+    take at Google Cloud (VPC network → Create VPC network → automatic subnets); no network or
+    subnet is made. **Pick mine** lists the existing networks and subnets instead: the `default`
+    network's `default-allow-internal` rule is enough for Omni, while a plain Talos node must be
+    reachable from the phone on port 50000 of the address the app follows, and a network with a
+    firewall rule that opens port 50000 (or everything) to the world is flagged; without a public
+    address, a network with no Cloud NAT in the region is flagged, since the node then has no
+    route out. The VM is named after the host name, so the
     host name follows Compute Engine's rule (lowercase letters, digits and hyphens). The user data
     must fit Compute Engine's 256 KiB metadata value. The hourly price in USD before tax comes from
     the Cloud Billing Catalog, or says "price unavailable". The app creates the VM with the user

@@ -18,6 +18,16 @@ extension TalosClient {
         }
     }
 
+    /// Readies the default network: its subnet of the zone's region and the firewall rules aimed at
+    /// the ichor-node tag (the nodes to each other, and on plain Talos port 50000 from this phone).
+    /// Writes at Google Cloud; refused without the default network.
+    func gcpNetworkPrepare(credential: String, spec: GCPNetworkSpec) async throws -> GCPNetworkResult {
+        let specJSON = (try? JSONEncoder().encode(spec)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+        return try await Self.json { [config, context] in
+            IchorgoGCPNetworkPrepare(config, context, credential, specJSON, $0)
+        }
+    }
+
     /// The custom role to create in `project` and grant the service account: only the calls Ichor makes.
     static func gcpRole(project: String) -> String {
         IchorgoGCPRoleDefinition(project)

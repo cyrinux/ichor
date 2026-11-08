@@ -192,9 +192,13 @@ public struct GCPNetwork: Decodable, Equatable, Hashable, Identifiable, Sendable
     public let autoSubnets: Bool
     /// Only the zone's region's.
     public let subnets: [GCPSubnet]
+    /// A firewall rule lets the world reach a node's port 50000 (or every port): warned about, not refused.
+    public let wideOpen: Bool
+    /// The guided network's ichor-nodes-internal rule is on it.
+    public let managed: Bool
     public var id: String { name }
 
-    private enum CodingKeys: String, CodingKey { case name, selfLink, autoSubnets, subnets }
+    private enum CodingKeys: String, CodingKey { case name, selfLink, autoSubnets, subnets, wideOpen, managed }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -202,6 +206,91 @@ public struct GCPNetwork: Decodable, Equatable, Hashable, Identifiable, Sendable
         selfLink = try c.field(.selfLink, "")
         autoSubnets = try c.field(.autoSubnets, false)
         subnets = try c.field(.subnets, [])
+        wideOpen = try c.field(.wideOpen, false)
+        managed = try c.field(.managed, false)
+    }
+}
+
+/// GCPNetworkPrepare's specJSON: the role and whether the cluster is Omni (no port 50000 then).
+public struct GCPNetworkSpec: Encodable, Equatable, Sendable {
+    public let project: String
+    public let zone: String
+    public let role: String
+    public let omni: Bool
+
+    public init(project: String, zone: String, role: String, omni: Bool) {
+        self.project = project
+        self.zone = zone
+        self.role = role
+        self.omni = omni
+    }
+}
+
+/// The guided network: the default network and its subnet of the zone's region, the firewall rules
+/// `created` or `updated` by this call, and the rules aimed at the ichor-node tag as they are now.
+/// `phoneIp` is the address port 50000 is open to, "" on Omni or when it could not be learned.
+public struct GCPNetworkResult: Decodable, Equatable, Sendable {
+    public let network: String
+    public let networkLink: String
+    public let subnetwork: String
+    public let subnetworkLink: String
+    public let phoneIp: String
+    public let created: [String]
+    public let updated: [String]
+    public let rules: [GCPNetworkRule]
+    public let warnings: [String]
+
+    private enum CodingKeys: String, CodingKey {
+        case network, networkLink, subnetwork, subnetworkLink, phoneIp, created, updated, rules, warnings
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        network = try c.field(.network, "")
+        networkLink = try c.field(.networkLink, "")
+        subnetwork = try c.field(.subnetwork, "")
+        subnetworkLink = try c.field(.subnetworkLink, "")
+        phoneIp = try c.field(.phoneIp, "")
+        created = try c.field(.created, [])
+        updated = try c.field(.updated, [])
+        rules = try c.field(.rules, [])
+        warnings = try c.field(.warnings, [])
+    }
+}
+
+/// One source of a rule: `protocol` all or tcp, `ports` "" for every port, `source` a CIDR or "tag:<tag>".
+public struct GCPNetworkRule: Decodable, Equatable, Hashable, Sendable {
+    public let name: String
+    public let `protocol`: String
+    public let ports: String
+    public let source: String
+    public let isSelf: Bool
+    public let description: String
+
+    private enum CodingKeys: String, CodingKey {
+        case name, `protocol`, ports, source, description
+        case isSelf = "self"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.field(.name, "")
+        `protocol` = try c.field(.protocol, "")
+        ports = try c.field(.ports, "")
+        source = try c.field(.source, "")
+        isSelf = try c.field(.isSelf, false)
+        description = try c.field(.description, "")
+    }
+
+    /// Port 50000 open to `phoneIp`.
+    public func isPhone(_ phoneIp: String) -> Bool {
+        !phoneIp.isEmpty && `protocol` == "tcp" && ports == "50000" && source == "\(phoneIp)/32"
+    }
+
+    /// A rule the app did not word: "tcp/50000 ← 198.51.100.4/32 · Ichor phone 2026-10-01".
+    public var plain: String {
+        let head = "\(`protocol`)\(ports.isEmpty ? "" : "/\(ports)") ← \(source)"
+        return [head, description].filter { !$0.isEmpty }.joined(separator: " · ")
     }
 }
 

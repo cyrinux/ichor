@@ -6448,6 +6448,11 @@
     <string name="gcp_image_cost_unknown">Environ %1$d minutes de %2$s, puis le stockage de l\'image par Go par mois jusqu\'à ce que vous la supprimiez chez Google Cloud. Prix indisponibles : voir les tarifs Compute Engine de Google Cloud.</string>
     <string name="gcp_phase_image">Créer l\'image à partir du disque de données</string>
     <string name="gcp_no_subnet">Aucun réseau n\'a de sous-réseau dans %1$s : choisissez une autre zone.</string>
+    <string name="gcp_network_hint">Ichor utilise le réseau default du projet et son sous-réseau dans cette région, et ajoute une fois deux règles de pare-feu visant le tag ichor-node des nœuds qu\'il crée : tout le trafic entre nœuds Ichor et, sur Talos sans Omni, TCP 50000 depuis l\'adresse de ce téléphone. Rien n\'est ouvert au monde, et l\'app ne supprime jamais ces règles.</string>
+    <string name="gcp_network_created">Règles de pare-feu ajoutées : %1$s.</string>
+    <string name="gcp_network_reused">Les règles de pare-feu étaient déjà là : rien n\'a été ajouté.</string>
+    <string name="gcp_network_rule_self">Tout le trafic entre nœuds Ichor</string>
+    <string name="gcp_network_wide_open">Une règle de pare-feu de ce réseau ouvre le port 50000 (ou tout) au monde entier.</string>
     <string name="gcp_public_ip">Lui donner une adresse publique</string>
     <string name="gcp_disk">Disque de démarrage (Go)</string>
     <string name="gcp_disk_hint">De 10 à 65536 Go ; 20 suffisent pour Talos.</string>

@@ -197,4 +197,38 @@ class CloudGCPTest {
         assertEquals(StepStatus.CURRENT, steps[2].status)
         assertEquals(StepStatus.PENDING, steps[3].status)
     }
+
+    // The same fixture as CloudGCPTests.testGuidedNetwork on iOS.
+    @Test
+    fun theGuidedNetworkTellsThePhonesRule() {
+        val network = TalosJson.decodeFromString(
+            GCPNetworkResult.serializer(),
+            """
+            {"network":"default","networkLink":"https://example.test/networks/default","subnetwork":"regions/europe-west1/subnetworks/default",
+             "subnetworkLink":"https://example.test/subnetworks/default","phoneIp":"203.0.113.7","created":["ichor-nodes-internal"],
+             "updated":["ichor-phone-50000"],
+             "rules":[{"name":"ichor-nodes-internal","protocol":"all","ports":"","source":"tag:ichor-node","self":true},
+                      {"name":"ichor-phone-50000","protocol":"tcp","ports":"50000","source":"198.51.100.4/32","description":"Ichor phone 2026-10-01"},
+                      {"name":"ichor-phone-50000","protocol":"tcp","ports":"50000","source":"203.0.113.7/32","description":"Ichor phone 2026-11-07"}],
+             "warnings":[]}
+            """,
+        )
+        assertEquals("regions/europe-west1/subnetworks/default", network.subnetwork)
+        assertEquals(listOf("ichor-nodes-internal"), network.created)
+        assertEquals(listOf("ichor-phone-50000"), network.updated)
+        assertTrue(network.rules[0].self)
+        assertEquals(listOf(false, false, true), network.rules.map { it.isPhone(network.phoneIp) })
+        assertEquals("tcp/50000 ← 198.51.100.4/32 · Ichor phone 2026-10-01", network.rules[1].plain)
+        assertEquals("all ← tag:ichor-node", network.rules[0].plain)
+        // On Omni no address is opened: no rule is the phone's.
+        assertFalse(network.rules[2].isPhone(""))
+
+        val flagged = TalosJson.decodeFromString(GCPNetwork.serializer(), """{"name":"open","wideOpen":true,"managed":true}""")
+        assertTrue(flagged.wideOpen && flagged.managed)
+        assertFalse(options.networks.any { it.wideOpen || it.managed })
+        assertEquals(
+            """{"project":"example-project","zone":"europe-west1-b","role":"worker","omni":true}""",
+            TalosJson.encodeToString(GCPNetworkSpec.serializer(), GCPNetworkSpec("example-project", "europe-west1-b", "worker", omni = true)),
+        )
+    }
 }

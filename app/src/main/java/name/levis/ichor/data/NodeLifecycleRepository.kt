@@ -53,6 +53,8 @@ import name.levis.ichor.model.GCPCheck
 import name.levis.ichor.model.GCPCreateSpec
 import name.levis.ichor.model.GCPImageEstimate
 import name.levis.ichor.model.GCPImageSpec
+import name.levis.ichor.model.GCPNetworkResult
+import name.levis.ichor.model.GCPNetworkSpec
 import name.levis.ichor.model.GCPOptions
 import name.levis.ichor.model.GCPPrice
 import name.levis.ichor.model.OVHCheck
@@ -559,6 +561,16 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** Projects, zones, and the zone's machine types, networks and images ([credentialJson] may be empty on the demo). */
     suspend fun gcpOptions(credentialJson: String): GCPOptions = call { cfg, ctx ->
         TalosJson.decodeFromString(GCPOptions.serializer(), Ichorgo.gcpOptions(cfg, ctx, credentialJson))
+    }
+
+    /**
+     * Readies the default network: its subnet of the zone's region and the firewall rules aimed at
+     * the ichor-node tag (the nodes to each other, and on plain Talos port 50000 from this phone).
+     * Writes at Google Cloud; refused without the default network.
+     */
+    suspend fun gcpNetworkPrepare(credentialJson: String, spec: GCPNetworkSpec): GCPNetworkResult = call { cfg, ctx ->
+        val specJson = TalosJson.encodeToString(GCPNetworkSpec.serializer(), spec)
+        TalosJson.decodeFromString(GCPNetworkResult.serializer(), Ichorgo.gcpNetworkPrepare(cfg, ctx, credentialJson, specJson))
     }
 
     /** The custom role to create in [project] and grant the service account: only the calls Ichor makes. */

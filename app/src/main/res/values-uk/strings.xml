@@ -6706,6 +6706,11 @@
     <string name="gcp_image_cost_unknown">Близько %1$d хвилин %2$s, потім зберігання образу за ГБ на місяць, доки ви не видалите його в Google Cloud. Ціни недоступні: див. ціни Compute Engine у Google Cloud.</string>
     <string name="gcp_phase_image">Створити образ з диска даних</string>
     <string name="gcp_no_subnet">Жодна мережа не має підмережі в %1$s: виберіть іншу зону.</string>
+    <string name="gcp_network_hint">Ichor використовує мережу default проєкту та її підмережу в цьому регіоні й один раз додає два правила брандмауера для тегу ichor-node своїх вузлів: увесь трафік між вузлами Ichor і, на Talos без Omni, TCP 50000 з адреси цього телефона. Нічого не відкривається всьому світу, і застосунок ніколи не видаляє ці правила.</string>
+    <string name="gcp_network_created">Додано правила брандмауера: %1$s.</string>
+    <string name="gcp_network_reused">Правила брандмауера вже були: нічого не додано.</string>
+    <string name="gcp_network_rule_self">Увесь трафік між вузлами Ichor</string>
+    <string name="gcp_network_wide_open">Правило брандмауера цієї мережі відкриває порт 50000 (або все) всьому світу.</string>
     <string name="gcp_public_ip">Надати їй публічну адресу</string>
     <string name="gcp_disk">Завантажувальний диск (ГБ)</string>
     <string name="gcp_disk_hint">Від 10 до 65536 ГБ; для Talos вистачить 20.</string>

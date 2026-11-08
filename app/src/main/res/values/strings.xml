@@ -6455,6 +6455,11 @@
     <string name="gcp_image_cost_unknown">About %1$d minutes of %2$s, then the image\'s storage per GB per month until you delete it at Google Cloud. Prices unavailable: see Google Cloud\'s Compute Engine pricing.</string>
     <string name="gcp_phase_image">Make the image from the data disk</string>
     <string name="gcp_no_subnet">No network has a subnet in %1$s: pick another zone.</string>
+    <string name="gcp_network_hint">Ichor uses the project\'s default network and its subnet in this region, and adds two firewall rules once, aimed at the ichor-node tag of the nodes it makes: all traffic between Ichor nodes and, on plain Talos, TCP 50000 from this phone\'s address. Nothing is opened to the world, and the app never deletes the rules.</string>
+    <string name="gcp_network_created">Added the firewall rules: %1$s.</string>
+    <string name="gcp_network_reused">The firewall rules were already there: nothing was added.</string>
+    <string name="gcp_network_rule_self">All traffic between Ichor nodes</string>
+    <string name="gcp_network_wide_open">A firewall rule of this network opens port 50000 (or everything) to the world.</string>
     <string name="gcp_public_ip">Give it a public address</string>
     <string name="gcp_disk">Boot disk (GB)</string>
     <string name="gcp_disk_hint">From 10 to 65536 GB; 20 is enough for Talos.</string>

@@ -6438,6 +6438,11 @@
     <string name="gcp_image_cost_unknown">Etwa %1$d Minuten %2$s, danach der Speicher des Images pro GB und Monat, bis du es bei Google Cloud löschst. Preise nicht verfügbar: siehe die Compute-Engine-Preise von Google Cloud.</string>
     <string name="gcp_phase_image">Image aus dem Datenträger erstellen</string>
     <string name="gcp_no_subnet">Kein Netzwerk hat ein Subnetz in %1$s: Wähle eine andere Zone.</string>
+    <string name="gcp_network_hint">Ichor nutzt das Netzwerk default des Projekts und dessen Subnetz in dieser Region und legt einmalig zwei Firewall-Regeln für das Tag ichor-node seiner Knoten an: gesamter Verkehr zwischen Ichor-Knoten und, bei reinem Talos, TCP 50000 von der Adresse dieses Telefons. Nichts wird für die Welt geöffnet, und die App löscht die Regeln nie.</string>
+    <string name="gcp_network_created">Firewall-Regeln hinzugefügt: %1$s.</string>
+    <string name="gcp_network_reused">Die Firewall-Regeln waren schon da: nichts wurde hinzugefügt.</string>
+    <string name="gcp_network_rule_self">Gesamter Verkehr zwischen Ichor-Knoten</string>
+    <string name="gcp_network_wide_open">Eine Firewall-Regel dieses Netzwerks öffnet Port 50000 (oder alles) für die ganze Welt.</string>
     <string name="gcp_public_ip">Ihr eine öffentliche Adresse geben</string>
     <string name="gcp_disk">Startdatenträger (GB)</string>
     <string name="gcp_disk_hint">10 bis 65536 GB; 20 reichen für Talos.</string>

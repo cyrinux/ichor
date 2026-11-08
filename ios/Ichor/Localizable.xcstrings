@@ -207183,6 +207183,76 @@
         "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sem watchdog. Um nó travado continua travado até alguém reiniciá-lo." } },
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Нет watchdog-таймера. Зависший узел остаётся зависшим, пока его кто-нибудь не перезагрузит." } }
       }
+    },
+    "Ichor uses the project's default network and its subnet in this region, and adds two firewall rules once, aimed at the ichor-node tag of the nodes it makes: all traffic between Ichor nodes and, on plain Talos, TCP 50000 from this phone's address. Nothing is opened to the world, and the app never deletes the rules." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor utilise le réseau default du projet et son sous-réseau dans cette région, et ajoute une fois deux règles de pare-feu visant le tag ichor-node des nœuds qu'il crée : tout le trafic entre nœuds Ichor et, sur Talos sans Omni, TCP 50000 depuis l'adresse de ce téléphone. Rien n'est ouvert au monde, et l'app ne supprime jamais ces règles." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor usa la red default del proyecto y su subred en esta región, y añade una vez dos reglas de firewall dirigidas a la etiqueta ichor-node de los nodos que crea: todo el tráfico entre nodos de Ichor y, en Talos sin Omni, TCP 50000 desde la dirección de este teléfono. Nada se abre al mundo y la app nunca borra las reglas." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor nutzt das Netzwerk default des Projekts und dessen Subnetz in dieser Region und legt einmalig zwei Firewall-Regeln für das Tag ichor-node seiner Knoten an: gesamter Verkehr zwischen Ichor-Knoten und, bei reinem Talos, TCP 50000 von der Adresse dieses Telefons. Nichts wird für die Welt geöffnet, und die App löscht die Regeln nie." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor usa la rete default del progetto e la sua subnet in questa regione, e aggiunge una volta due regole firewall rivolte al tag ichor-node dei nodi che crea: tutto il traffico tra nodi Ichor e, su Talos senza Omni, TCP 50000 dall'indirizzo di questo telefono. Niente viene aperto al mondo e l'app non elimina mai le regole." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor використовує мережу default проєкту та її підмережу в цьому регіоні й один раз додає два правила брандмауера для тегу ichor-node своїх вузлів: увесь трафік між вузлами Ichor і, на Talos без Omni, TCP 50000 з адреси цього телефона. Нічого не відкривається всьому світу, і застосунок ніколи не видаляє ці правила." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 使用项目的 default 网络及其在此区域的子网，并一次性添加两条针对其所建节点 ichor-node 标签的防火墙规则：Ichor 节点之间的所有流量，以及（纯 Talos 时）来自此手机地址的 TCP 50000。不向全网开放任何端口，应用也从不删除这些规则。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor はプロジェクトの default ネットワークとこのリージョンのサブネットを使い、作成するノードの ichor-node タグを対象にしたファイアウォールルールを一度だけ 2 つ追加します。Ichor ノード間のすべての通信と、Omni なしの Talos ではこの電話のアドレスからの TCP 50000 です。外部全体には何も開かず、アプリがルールを削除することはありません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor usa a rede default do projeto e sua sub-rede nesta região, e adiciona uma vez duas regras de firewall voltadas à tag ichor-node dos nós que cria: todo o tráfego entre nós Ichor e, no Talos sem Omni, TCP 50000 a partir do endereço deste telefone. Nada é aberto ao mundo, e o app nunca apaga as regras." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor использует сеть default проекта и её подсеть в этом регионе и один раз добавляет два правила брандмауэра для тега ichor-node своих узлов: весь трафик между узлами Ichor и, на Talos без Omni, TCP 50000 с адреса этого телефона. Ничего не открывается всему миру, и приложение никогда не удаляет эти правила." } }
+      }
+    },
+    "Added the firewall rules: %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Règles de pare-feu ajoutées : %@." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Reglas de firewall añadidas: %@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Firewall-Regeln hinzugefügt: %@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Regole firewall aggiunte: %@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додано правила брандмауера: %@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已添加防火墙规则：%@。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ファイアウォールルールを追加しました: %@。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Regras de firewall adicionadas: %@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавлены правила брандмауэра: %@." } }
+      }
+    },
+    "The firewall rules were already there: nothing was added." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les règles de pare-feu étaient déjà là : rien n'a été ajouté." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las reglas de firewall ya estaban: no se añadió nada." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Firewall-Regeln waren schon da: nichts wurde hinzugefügt." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Le regole firewall c'erano già: non è stato aggiunto nulla." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Правила брандмауера вже були: нічого не додано." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "防火墙规则已存在：未添加任何内容。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ファイアウォールルールは既にありました。何も追加していません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "As regras de firewall já existiam: nada foi adicionado." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Правила брандмауэра уже были на месте: ничего не добавлено." } }
+      }
+    },
+    "All traffic between Ichor nodes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tout le trafic entre nœuds Ichor" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Todo el tráfico entre nodos de Ichor" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gesamter Verkehr zwischen Ichor-Knoten" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutto il traffico tra nodi Ichor" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Увесь трафік між вузлами Ichor" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 节点之间的所有流量" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor ノード間のすべての通信" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Todo o tráfego entre nós Ichor" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Весь трафик между узлами Ichor" } }
+      }
+    },
+    "A firewall rule of this network opens port 50000 (or everything) to the world." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Une règle de pare-feu de ce réseau ouvre le port 50000 (ou tout) au monde entier." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Una regla de firewall de esta red abre el puerto 50000 (o todo) a todo el mundo." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eine Firewall-Regel dieses Netzwerks öffnet Port 50000 (oder alles) für die ganze Welt." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Una regola firewall di questa rete apre la porta 50000 (o tutto) al mondo intero." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Правило брандмауера цієї мережі відкриває порт 50000 (або все) всьому світу." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此网络的一条防火墙规则向全网开放了端口 50000（或全部端口）。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このネットワークのファイアウォールルールがポート 50000（またはすべて）を全世界に開いています。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Uma regra de firewall desta rede abre a porta 50000 (ou tudo) para o mundo todo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Правило брандмауэра этой сети открывает порт 50000 (или всё) всему миру." } }
+      }
     }
   },
   "version" : "1.0"

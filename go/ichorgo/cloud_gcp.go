@@ -40,7 +40,7 @@ const (
 	gcpLabelTalosVersion = "ichor-talos-version"
 	gcpLabelSchematic    = "ichor-schematic"
 	gcpLabelArch         = "ichor-arch"
-	// gcpNetworkTag is what the guided network's firewall rules will target.
+	// gcpNetworkTag is what the guided network's firewall rules target.
 	gcpNetworkTag = "ichor-node"
 
 	gcpReasonDisabled  = "SERVICE_DISABLED"
@@ -421,6 +421,8 @@ func gcpPermissionOf(method, raw string) string {
 		return "compute." + collection[0] + ".list"
 	case method == http.MethodDelete:
 		return "compute." + collection[0] + ".delete"
+	case method == http.MethodPatch:
+		return "compute." + collection[0] + ".update"
 	}
 
 	return "compute." + collection[0] + ".get"
@@ -618,7 +620,7 @@ func gcpImagePermissions() []string {
 func gcpRolePermissions() []string {
 	out := []string{}
 
-	for _, p := range slices.Concat(gcpCreatePermissions(true), gcpOptionsPermissions(), gcpImagePermissions()) {
+	for _, p := range slices.Concat(gcpCreatePermissions(true), gcpOptionsPermissions(), gcpImagePermissions(), gcpNetworkPermissions()) {
 		if !slices.Contains(out, p) {
 			out = append(out, p)
 		}
@@ -703,8 +705,9 @@ func (c *gcpClient) readProject(ctx context.Context) error {
 // makes, the image run's included. GCP IAM cannot limit a delete to labelled instances: the app
 // deletes only the instance its run named after the host name and labelled ichor-run, and the
 // helper, the data disk and an unfinished image of its own image run. The Talos and Omni guides'
-// roles/compute.instanceAdmin.v1 is wider. A placeholder stands for an empty project. The person
-// pastes it.
+// roles/compute.instanceAdmin.v1 is wider. The guided network's firewall permissions are in it:
+// compute.networks.updatePolicy is what lets the app add rules, and only on the project's
+// networks. A placeholder stands for an empty project. The person pastes it.
 func GCPRoleDefinition(project string) string {
 	project = cmp.Or(strings.TrimSpace(project), "PROJECT_ID")
 

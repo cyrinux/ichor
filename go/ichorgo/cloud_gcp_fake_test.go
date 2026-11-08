@@ -88,7 +88,8 @@ type fakeGCE struct {
 	nat             bool   // the default network has a Cloud NAT
 	slowDelete      bool   // an accepted delete never finishes, and the instance stays
 	onRunning       func()
-	image           *fakeGCEImage // the image run's helper, data disk and images (cloud_gcp_image_test.go)
+	image           *fakeGCEImage   // the image run's helper, data disk and images (cloud_gcp_image_test.go)
+	network         *fakeGCENetwork // the default network and its firewall rules (cloud_gcp_network_test.go)
 
 	tokens        int
 	badScope      int
@@ -248,7 +249,8 @@ func (f *fakeGCE) permissions(w http.ResponseWriter, r *http.Request) {
 
 	granted := slices.DeleteFunc(body.Permissions, func(p string) bool {
 		return (f.noCreateRight && (p == "compute.instances.create" || p == "compute.disks.create")) ||
-			(f.image != nil && f.image.noImageRight && p == "compute.images.create")
+			(f.image != nil && f.image.noImageRight && p == "compute.images.create") ||
+			(f.network != nil && slices.Contains(f.network.missing, p))
 	})
 
 	gceJSON(w, http.StatusOK, map[string]any{"permissions": granted})
@@ -376,6 +378,7 @@ func (f *fakeGCE) static(r *http.Request, rest string) (any, bool) {
 		"/regions/" + gcpTestRegion + "/subnetworks/nodes": subnet,
 		"/regions/us-central1/subnetworks/far":             far,
 		"/regions/" + gcpTestRegion + "/routers":           list(routers...),
+		"/global/firewalls":                                list(),
 		"/global/images":                                   list(byHand, labelled, map[string]any{"name": "talos-uploading", "status": "PENDING"}),
 		"/global/images/talos-by-hand":                     byHand,
 		"/global/images/talos-v1-14-2-arm64":               labelled,
@@ -403,6 +406,10 @@ func (f *fakeGCE) compute(w http.ResponseWriter, r *http.Request, rest string) {
 	instances := "/zones/" + gcpTestZone + "/instances"
 
 	if f.image != nil && f.image.handle(f, w, r, rest) {
+		return
+	}
+
+	if f.network != nil && f.network.handle(f, w, r, rest) {
 		return
 	}
 

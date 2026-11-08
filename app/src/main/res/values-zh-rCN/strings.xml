@@ -6308,6 +6308,11 @@
     <string name="gcp_image_cost_unknown">约 %1$d 分钟的 %2$s,之后镜像存储按每 GB 每月计费，直到你在 Google Cloud 删除它。价格不可用：请参阅 Google Cloud 的 Compute Engine 定价。</string>
     <string name="gcp_phase_image">用数据磁盘制作镜像</string>
     <string name="gcp_no_subnet">没有网络在 %1$s 中有子网:请选择其他可用区。</string>
+    <string name="gcp_network_hint">Ichor 使用项目的 default 网络及其在此区域的子网，并一次性添加两条针对其所建节点 ichor-node 标签的防火墙规则：Ichor 节点之间的所有流量，以及（纯 Talos 时）来自此手机地址的 TCP 50000。不向全网开放任何端口，应用也从不删除这些规则。</string>
+    <string name="gcp_network_created">已添加防火墙规则：%1$s。</string>
+    <string name="gcp_network_reused">防火墙规则已存在：未添加任何内容。</string>
+    <string name="gcp_network_rule_self">Ichor 节点之间的所有流量</string>
+    <string name="gcp_network_wide_open">此网络的一条防火墙规则向全网开放了端口 50000（或全部端口）。</string>
     <string name="gcp_public_ip">为其分配公网地址</string>
     <string name="gcp_disk">启动磁盘(GB)</string>
     <string name="gcp_disk_hint">10 到 65536 GB;Talos 用 20 就够了。</string>
