@@ -44,6 +44,8 @@ type azureOptions struct {
 	SecurityGroups []azureSecurityGroup `json:"securityGroups"`
 	Images         []azureImage         `json:"images"`
 	Warnings       []string             `json:"warnings"`
+	// Credential is the credential JSON to seal again when the call rotated its refresh token.
+	Credential string `json:"credential,omitempty"`
 }
 
 type azureSubscription struct {
@@ -303,7 +305,8 @@ func azureResourceGroupOf(id string) string {
 // [{"name","location"}],"sizes":[{"name","vcpus","memoryGB","arch","generations"}],"networks":
 // [{"id","name","resourceGroup","location","subnets":[{"id","name","cidr","nsgId","natGateway"}]}],
 // "securityGroups":[{"id","name","resourceGroup","wideOpen"}],"images":[{"id","name",
-// "resourceGroup","source","arch","generation","talosVersion","schematic"}],"warnings"}.
+// "resourceGroup","source","arch","generation","talosVersion","schematic"}],"warnings",
+// "credential"}.
 func AzureOptions(configYAML, contextName, credJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -333,6 +336,8 @@ func AzureOptions(configYAML, contextName, credJSON string) (out string, err err
 	if err != nil {
 		return "", err
 	}
+
+	options.Credential = c.updated()
 
 	return toJSON(options)
 }

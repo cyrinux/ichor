@@ -44,6 +44,9 @@ import name.levis.ichor.model.AzureImageSpec
 import name.levis.ichor.model.AzureCreateSpec
 import name.levis.ichor.model.AzureOptions
 import name.levis.ichor.model.AzurePrice
+import name.levis.ichor.model.AzureSignInChoice
+import name.levis.ichor.model.AzureSignInFinish
+import name.levis.ichor.model.AzureSignInStart
 import name.levis.ichor.model.GCPCheck
 import name.levis.ichor.model.GCPCreateSpec
 import name.levis.ichor.model.GCPImageEstimate
@@ -504,6 +507,23 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** The hourly price of [size] in [location]; an empty hourly when unknown. */
     suspend fun azurePrice(credentialJson: String, location: String, size: String): AzurePrice = withContext(Dispatchers.IO) {
         TalosJson.decodeFromString(AzurePrice.serializer(), Ichorgo.azurePrice(credentialJson, location, size))
+    }
+
+    /** Starts a Microsoft-account sign-in: the device code to enter. */
+    suspend fun azureSignInStart(credentialJson: String): AzureSignInStart = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AzureSignInStart.serializer(), Ichorgo.azureSignInStart(credentialJson))
+    }
+
+    /** Waits for the code to be entered (minutes; ended by [azureSignInCancel]), then lists the subscriptions. */
+    suspend fun azureSignInFinish(credentialJson: String): AzureSignInFinish = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AzureSignInFinish.serializer(), Ichorgo.azureSignInFinish(credentialJson))
+    }
+
+    fun azureSignInCancel() = Ichorgo.azureSignInCancel()
+
+    /** The credential bound to one subscription of the list. */
+    suspend fun azureSignInChoose(credentialJson: String, subscriptionId: String): AzureSignInChoice = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AzureSignInChoice.serializer(), Ichorgo.azureSignInChoose(credentialJson, subscriptionId))
     }
 
     /** See [TalosStreams.azureCreate]. */

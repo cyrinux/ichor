@@ -7,7 +7,9 @@ import kotlinx.serialization.Serializable
 /**
  * A service principal (az ad sp create-for-rbac's output plus the subscription), sealed on the
  * device; what the core gets per call. [resourceGroup] scopes Test's permission check and
- * [location] the options listed; both follow the person's picks.
+ * [location] the options listed; both follow the person's picks. A Microsoft-account sign-in has
+ * [kind] "user" and no secret: its refresh token stays in the JSON the core returns, which the
+ * app seals as it is and never re-encodes from this class (it would drop it).
  */
 @Serializable
 data class AzureCredential(
@@ -19,9 +21,17 @@ data class AzureCredential(
     val environment: String = "",
     val resourceGroup: String = "",
     val location: String = "",
-)
+    val kind: String = "",
+    val account: String = "",
+) {
+    val microsoftAccount: Boolean get() = kind == "user"
+}
 
-/** Whose principal this is and whether it may create VMs; [checked] is false when that could not be told. */
+/**
+ * Whose principal or account this is and whether it may create VMs; [checked] is false when that
+ * could not be told. [account] is the signed-in Microsoft account, "" for a principal;
+ * [credential] is the credential JSON to seal again when the core rotated its refresh token.
+ */
 @Serializable
 data class AzureCheck(
     val tenant: String = "",
@@ -29,7 +39,41 @@ data class AzureCheck(
     val subscriptionName: String = "",
     val canCreate: Boolean = false,
     val checked: Boolean = false,
+    val account: String = "",
+    val credential: String = "",
 )
+
+/** AzureSignInStart: the code to enter at [verificationUri], and the credential for the next step. */
+@Serializable
+data class AzureSignInStart(
+    val verificationUri: String = "",
+    val userCode: String = "",
+    val expiresIn: Int = 0,
+    val interval: Int = 0,
+    val credential: String = "",
+) {
+    /** As the kube sign-in's device code, to show it the same way. */
+    val prompt: SignInPrompt
+        get() = SignInPrompt(SignInPrompt.KIND_DEVICE, verificationUri, userCode, verificationUri, expiresIn = expiresIn)
+}
+
+/** One subscription the signed-in account sees. */
+@Serializable
+data class AzureSubscriptionChoice(val id: String = "", val name: String = "", val tenantId: String = "") {
+    val label: String get() = name.ifBlank { id }
+}
+
+/** AzureSignInFinish: who signed in, and the subscriptions to pick from. */
+@Serializable
+data class AzureSignInFinish(
+    val credential: String = "",
+    val account: String = "",
+    val subscriptions: List<AzureSubscriptionChoice> = emptyList(),
+)
+
+/** AzureSignInChoose: the credential bound to the picked subscription. */
+@Serializable
+data class AzureSignInChoice(val credential: String = "", val account: String = "", val subscriptionName: String = "")
 
 /** What a VM can be created from in [location]; [warnings] are the core's, shown as they are. */
 @Serializable
@@ -44,6 +88,7 @@ data class AzureOptions(
     val securityGroups: List<AzureSecurityGroup> = emptyList(),
     val images: List<AzureImage> = emptyList(),
     val warnings: List<String> = emptyList(),
+    val credential: String = "",
 )
 
 @Serializable

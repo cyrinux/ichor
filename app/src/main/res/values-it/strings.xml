@@ -6349,7 +6349,15 @@
     <string name="azure_title">Creare la VM su Azure</string>
     <string name="azure_howto">1. Scegli un membro da copiare, poi il nome host e il disco di installazione del nuovo nodo.\n2. Aggiungi un\'entità servizio che abbia sul gruppo di risorse il ruolo che Ichor stampa.\n3. Carica una volta l\'immagine Talos nella sottoscrizione, da un computer (crearla dal telefono arriverà dopo).\n4. Scegli un gruppo di risorse, l\'immagine, una dimensione di VM, una subnet e un gruppo di sicurezza di rete, poi creala: Ichor mostra prima il prezzo e la segue finché il nodo non si unisce. Il telefono deve raggiungere la porta 50000 della VM.</string>
     <string name="azure_howto_omni">1. Aggiungi un\'entità servizio che abbia sul gruppo di risorse il ruolo che Ichor stampa.\n2. Carica una volta l\'immagine Talos per Omni nella sottoscrizione, da un computer (crearla dal telefono arriverà dopo).\n3. Dai un nome alla VM, poi scegli un gruppo di risorse, l\'immagine, una dimensione di VM, una subnet e un gruppo di sicurezza di rete.\n4. Creala: Ichor mostra prima il prezzo, poi la segue finché la macchina non compare in Omni. Assegnala al cluster.</string>
-    <string name="azure_add_principal">Aggiungi un\'entità servizio di Azure</string>
+    <string name="azure_add_account">Aggiungi un account Azure</string>
+    <string name="azure_signin_option_principal">Entità servizio</string>
+    <string name="azure_signin_option_account">Account Microsoft</string>
+    <string name="azure_signin_hint">Accede come az login --use-device-code, con il client pubblico di Azure CLI a meno che tu non inserisca il tuo. Assegna il ruolo sopra al tuo account o a uno dei suoi gruppi nel gruppo di risorse.</string>
+    <string name="azure_signin_tenant">ID o dominio del tenant (vuoto: qualsiasi account aziendale o dell\'istituto)</string>
+    <string name="azure_signin_client_id">ID client di una registrazione app pubblica (vuoto: quello di Azure CLI)</string>
+    <string name="azure_signin_choose_subscription">Sottoscrizione</string>
+    <string name="azure_signin_signed_in">Accesso con account Microsoft come %1$s</string>
+    <string name="azure_signin_session_note">L\'accesso resta sigillato su questo dispositivo e non è nei backup. Dura finché lo usi (90 giorni di inattività per impostazione predefinita, fissati dall\'amministratore); poi accedi di nuovo.</string>
     <string name="azure_remove">Rimuovi questa entità</string>
     <string name="azure_warning">Un segreto client scade alla data impostata alla sua creazione e può fare ciò che il suo ruolo consente. Resta sigillato su questo dispositivo e non è nei backup.</string>
     <string name="azure_role_hint">Crea questo ruolo personalizzato (az role definition create) e assegnalo all\'entità sul gruppo di risorse: solo le chiamate che Ichor fa.</string>

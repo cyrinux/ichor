@@ -398,7 +398,15 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     custom role to create (`az role definition create`) and assign to it on that resource group
     (`az role assignment create --role "Ichor node creator" --scope /subscriptions/…/resourceGroups/…`),
     only the calls it makes, and Test reads the principal's permissions there (Azure has no dry
-    run; nothing is created). Then pick the resource group (its location is listed; another
+    run; nothing is created). Or sign in with a **Microsoft account** instead, as
+    `az login --use-device-code` does: the code to enter in any browser, then the subscription from
+    a list. It uses Azure CLI's public client and any work or school account unless you enter a
+    tenant (a personal Microsoft account needs the tenant of its subscription) or the client id of
+    your own app registration that allows public client flows (when a tenant blocks Azure CLI's).
+    Assign the printed role to the account, or to one of its groups, on the resource group. The
+    refresh token is sealed on the device like a secret, never in backups or logs, and renewed as
+    the app uses it; after 90 days without use (the default, set by your administrator) the card
+    asks you to sign in again. Then pick the resource group (its location is listed; another
     location can be picked), the Talos image the subscription holds (a managed image or a gallery
     image version, tagged with the cluster's Talos version first), a VM size that boots the
     image's architecture and Hyper-V generation, a virtual network and subnet, an optional network

@@ -60,6 +60,12 @@ struct AzureCreateSection: View {
         try? JSONDecoder().decode(AzureCredential.self, from: Data(credential.utf8))
     }
 
+    /// The picked subscription's Microsoft-account sign-in, nil for a principal.
+    private var signedIn: AzureCredential? {
+        guard let stored, stored.microsoftAccount else { return nil }
+        return stored
+    }
+
     private var demo: Bool { model.activeSummary?.demo == true }
     private var name: String { omni ? omniName.trimmingCharacters(in: .whitespaces) : hostname }
 
@@ -79,7 +85,7 @@ struct AzureCreateSection: View {
             }
             .task { await load() }
             .sheet(isPresented: $adding) {
-                AzurePrincipalSheet { added in
+                AzureAccountSheet { added in
                     reloadSubscriptions()
                     pick(added)
                 }
@@ -100,9 +106,13 @@ struct AzureCreateSection: View {
                 ForEach(subscriptions, id: \.self) { Text(verbatim: $0).tag($0) }
             }
         }
-        Button("Add an Azure service principal") { adding = true }
+        if let signedIn {
+            Text("Signed in with a Microsoft account as \(signedIn.account)")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+        Button("Add an Azure account") { adding = true }
         if !subscription.isEmpty {
-            Button("Remove this principal", role: .destructive) {
+            Button(signedIn == nil ? "Remove this principal" : "Sign out", role: .destructive) {
                 try? CloudProviderStore.save(provider: CloudProviderStore.azure, project: subscription, token: "")
                 reloadSubscriptions()
                 pick(subscriptions.first ?? "")
@@ -413,9 +423,9 @@ struct AzureCreateSection: View {
     /// group's location listed when it is another one. The demo only remembers it.
     private func chooseGroup(_ name: String, _ value: AzureOptions) {
         group = name
-        guard !subscription.isEmpty, !name.isEmpty, let principal = stored else { return }
+        guard !subscription.isEmpty, !name.isEmpty else { return }
         let location = value.location(of: name)
-        guard reseal(principal.with(resourceGroup: name, location: location)) else { return }
+        guard reseal(AzureCredential.edited(credential, resourceGroup: name, location: location)) else { return }
         if location != value.location {
             resetPicks()
             Task { await loadOptions() }
@@ -425,17 +435,17 @@ struct AzureCreateSection: View {
     /// The same principal listing another location.
     private func switchLocation(_ location: String) {
         guard !subscription.isEmpty, let principal = stored, principal.location != location,
-            reseal(principal.with(location: location))
+            reseal(AzureCredential.edited(credential, location: location))
         else { return }
         resetPicks()
         Task { await loadOptions() }
     }
 
-    private func reseal(_ principal: AzureCredential) -> Bool {
-        guard let json = try? JSONEncoder().encode(principal) else { return false }
+    /// Seals `json` (edited as JSON: a sign-in holds a token `AzureCredential` does not keep).
+    private func reseal(_ json: String?) -> Bool {
+        guard let json, !json.isEmpty else { return false }
         do {
-            try CloudProviderStore.save(
-                provider: CloudProviderStore.azure, project: subscription, token: String(decoding: json, as: UTF8.self))
+            try CloudProviderStore.save(provider: CloudProviderStore.azure, project: subscription, token: json)
             return true
         } catch {
             authError = error.localizedDescription
@@ -446,8 +456,16 @@ struct AzureCreateSection: View {
     private func loadOptions() async {
         guard let client = model.client else { return }
         let credential = self.credential
+        let picked = subscription
         options = .loading
         options = await LoadState.from { try await client.azureOptions(credential: credential) }
+        // The core rotated a Microsoft account's refresh token: seal the new one into what is
+        // stored now, under the subscription it belongs to (another may be picked meanwhile).
+        guard case .loaded(let value, _, _) = options, !value.credential.isEmpty, !picked.isEmpty else { return }
+        let stored = CloudProviderStore.token(provider: CloudProviderStore.azure, project: picked)
+        if let json = AzureCredential.renewed(stored, from: value.credential) {
+            try? CloudProviderStore.save(provider: CloudProviderStore.azure, project: picked, token: json)
+        }
     }
 
     /// The Retail Prices API's answer for the picked size; a failure is "price unavailable".
@@ -496,169 +514,6 @@ struct AzureCreateSection: View {
         let context = model.activeContext
         job.start(client: client, request: request, providerToken: credential) { address in
             try await model.addNodes([address], to: context)
-        }
-    }
-}
-
-/// The Azure clouds a principal can belong to; `environment` is the core's name ("" = public).
-private enum AzureCloud: String, CaseIterable, Identifiable {
-    case `public` = ""
-    case china = "AzureChinaCloud"
-    case usGovernment = "AzureUSGovernmentCloud"
-    var id: String { rawValue }
-
-    var label: String {
-        switch self {
-        case .public: "Azure"
-        case .china: "Azure China"
-        case .usGovernment: "Azure US Government"
-        }
-    }
-}
-
-/// The principal's ids, its secret (masked), its cloud and resource group, the role to give it, a
-/// test, then sealed under the subscription id.
-private struct AzurePrincipalSheet: View {
-    let onSaved: (String) -> Void
-
-    @Environment(\.dismiss) private var dismiss
-    @State private var tenantId = ""
-    @State private var clientId = ""
-    @State private var secret = ""
-    @State private var subscriptionId = ""
-    @State private var resourceGroup = ""
-    @State private var cloud = AzureCloud.public
-    @State private var check: LoadState<AzureCheck>?
-    @State private var saveError: String?
-
-    // Explicit: the private @State makes the memberwise init private.
-    init(onSaved: @escaping (String) -> Void) {
-        self.onSaved = onSaved
-    }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Text(
-                        "A client secret expires on the date set when it was made and can do what its role allows. It stays sealed on this device and is not in backups."
-                    )
-                    .font(.footnote).foregroundStyle(.orange)
-                    Text(
-                        "Create this custom role (az role definition create) and assign it to the principal on the resource group: only the calls Ichor makes."
-                    )
-                    .font(.footnote).foregroundStyle(.secondary)
-                    Button("Copy the role definition") {
-                        UIPasteboard.general.string = TalosClient.azureRole(
-                            subscription: trim(subscriptionId), resourceGroup: trim(resourceGroup))
-                    }
-                }
-                Section {
-                    Picker("Cloud", selection: $cloud) {
-                        ForEach(AzureCloud.allCases) { Text(verbatim: $0.label).tag($0) }
-                    }
-                    .onChange(of: cloud) { check = nil }
-                    field("Tenant ID", text: $tenantId)
-                    field("Client ID (appId)", text: $clientId)
-                    SecureField("Client secret (password)", text: $secret)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .onChange(of: secret) { check = nil }
-                    field("Subscription ID", text: $subscriptionId)
-                    field("Resource group", text: $resourceGroup)
-                    Button("Test") { Task { await test() } }
-                        .disabled(tenantId.isEmpty || clientId.isEmpty || secret.isEmpty || subscriptionId.isEmpty)
-                } footer: {
-                    Text("The resource group the role is assigned on: Test checks the principal's rights there.")
-                }
-                if let check {
-                    Section { result(check) }
-                }
-                if let saveError {
-                    Section { Text(verbatim: saveError).foregroundStyle(.statusBad) }
-                }
-            }
-            .navigationTitle("Add an Azure service principal")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
-                        .disabled(!canSave)
-                }
-            }
-        }
-    }
-
-    private func field(_ title: LocalizedStringKey, text: Binding<String>) -> some View {
-        TextField(title, text: text)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .onChange(of: text.wrappedValue) { check = nil }
-    }
-
-    @ViewBuilder
-    private func result(_ state: LoadState<AzureCheck>) -> some View {
-        switch state {
-        case .loading:
-            ProgressView().frame(maxWidth: .infinity)
-        case .failed(let error):
-            Text(verbatim: error).foregroundStyle(.statusBad)
-        case .loaded(let value, _, _):
-            let name = value.subscriptionName.isEmpty ? value.subscription : value.subscriptionName
-            let place = trim(resourceGroup).isEmpty ? name : trim(resourceGroup)
-            if !value.checked {
-                Text("Principal of subscription \(name). Whether it may create VMs in \(place) shows when it tries.")
-            } else if value.canCreate {
-                Text("The principal of subscription \(name) may create VMs in \(place).")
-                    .foregroundStyle(.statusOK)
-            } else {
-                Text(
-                    "The principal of subscription \(name) may not create VMs in \(place): assign it the role (Microsoft.Compute/virtualMachines/write)."
-                )
-                .foregroundStyle(.orange)
-            }
-        }
-    }
-
-    private var tested: AzureCheck? {
-        guard case .loaded(let value, _, _) = check else { return nil }
-        return value
-    }
-
-    private var canSave: Bool {
-        guard let tested, tested.canCreate || !tested.checked else { return false }
-        return !tested.subscription.isEmpty
-    }
-
-    private func trim(_ text: String) -> String {
-        text.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private func credentialJSON() -> String {
-        let principal = AzureCredential(
-            tenantId: trim(tenantId), clientId: trim(clientId), clientSecret: trim(secret),
-            subscriptionId: trim(subscriptionId), environment: cloud.rawValue, resourceGroup: trim(resourceGroup))
-        return (try? JSONEncoder().encode(principal)).map { String(decoding: $0, as: UTF8.self) } ?? ""
-    }
-
-    private func test() async {
-        let credential = credentialJSON()
-        check = .loading
-        check = await LoadState.from { try await TalosClient.azureTest(credential: credential) }
-    }
-
-    private func save() {
-        guard let subscription = tested?.subscription else { return }
-        do {
-            try CloudProviderStore.save(
-                provider: CloudProviderStore.azure, project: subscription, token: credentialJSON())
-            onSaved(subscription)
-            dismiss()
-        } catch {
-            saveError = error.localizedDescription
         }
     }
 }
