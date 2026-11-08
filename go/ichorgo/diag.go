@@ -40,7 +40,7 @@ const (
 
 var (
 	diagLevels     = []string{"debug", "info", "warn", "error"}
-	diagComponents = []string{"kube", "talos", "gitops", "net", "store", "trace", "api", "android", "ios"}
+	diagComponents = []string{"kube", "talos", "gitops", "net", "store", "trace", "api", "android", "ios", "auth"}
 )
 
 // diagEntry is one line of the ring. At is unix ms.
@@ -185,7 +185,8 @@ func exportedCaller() string {
 }
 
 // DiagLog adds an entry to the diagnostics ring for the apps: level is debug, info, warn or
-// error, component one of kube, talos, gitops, net, store, trace, api, android, ios, msg a
+// error, component one of kube, talos, gitops, net, store, trace, api, android, ios, auth,
+// msg a
 // constant text and attrsJSON a flat JSON object of numbers, bools and short words ("" or
 // "{}" for none; one that is not is recorded as {"bad_attrs": true}). Never pass a cluster
 // name, a node, a namespace, an object name or a URL: they are masked, but a log is not

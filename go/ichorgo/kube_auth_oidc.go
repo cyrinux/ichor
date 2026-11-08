@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
@@ -651,19 +652,63 @@ func (m *oidcMethod) finish(state kubeAuthState, t oidcTokens, nonce string) (ku
 // stopLoopback closes a loopback server so that the response being written when the sign-in
 // is received is fully flushed first: Shutdown waits for active handlers to finish their
 // answer, Close would cut the connection and leave the browser with an EOF on a sign-in that
-// worked. A handler stuck on anything else is given a second, then closed at once.
+// worked. A handler stuck on anything else is given loopbackStopTimeout, then closed at once.
+//
+// When the graceful close does not work, the diagnostics ring says which of the three
+// causes it was (CYR-597): Shutdown returned an error, the deadline was reached, or the
+// server or listener was already closed - the last one is not worth an alarm, a double
+// stop() is benign.
 func stopLoopback(srv *http.Server, ln net.Listener) func() {
 	return func() {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		defer cancel()
+		// "already closed" is known before Shutdown runs: on a closed server Shutdown only
+		// returns ErrServerClosed, so it has nothing left to diagnose. A live server whose
+		// listener is gone still reaches Shutdown below, where the listener's "use of
+		// closed" error names the cause. And once Close has run, Shutdown has nothing to
+		// wait for: the second stop() of a double stop returns at once rather than holding
+		// the sign-in's return.
+		alreadyClosed := errors.Is(srv.Close(), net.ErrClosed)
 
-		if err := srv.Shutdown(ctx); err != nil {
-			_ = srv.Close() //nolint:errcheck
+		if alreadyClosed {
+			_ = ln.Close() //nolint:errcheck
+
+			diag(slog.LevelInfo, "auth", "loopback stop", nil, "cause", "already closed", "stage", "server")
+
+			return
 		}
 
-		_ = ln.Close() //nolint:errcheck
+		started := time.Now()
+
+		ctx, cancel := context.WithTimeout(context.Background(), loopbackStopTimeout)
+		defer cancel()
+
+		err := srv.Shutdown(ctx)
+
+		_ = srv.Close() //nolint:errcheck
+		_ = ln.Close()  //nolint:errcheck
+
+		// A stuck handler is closed at once after the deadline, so Shutdown can still return
+		// nothing here: a stop that took the whole budget without a clean early return was
+		// cut by the deadline, whether or not Shutdown says so (Go has no documented promise
+		// about that), and the same budget rules out a clock that merely ran late.
+		if err == nil {
+			if time.Since(started) >= loopbackStopTimeout {
+				diag(slog.LevelWarn, "auth", "loopback stop", context.DeadlineExceeded, "cause", "deadline reached")
+			}
+
+			return
+		}
+
+		switch {
+		case errors.Is(err, net.ErrClosed):
+			diag(slog.LevelInfo, "auth", "loopback stop", nil, "cause", "already closed", "stage", "listener")
+		default:
+			diag(slog.LevelWarn, "auth", "loopback stop", err, "cause", "shutdown error")
+		}
 	}
 }
+
+// loopbackStopTimeout is how long stopLoopback gives Shutdown before closing at once.
+const loopbackStopTimeout = time.Second
 
 // listenFirst listens on the first free address of addrs (kubelogin tries them in order).
 func listenFirst(ctx context.Context, addrs []string) (net.Listener, error) {
