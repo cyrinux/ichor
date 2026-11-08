@@ -51,6 +51,7 @@ import name.levis.ichor.ui.components.netmap.NetMapGraph
 import name.levis.ichor.ui.components.netmap.NetMapLegend
 import name.levis.ichor.ui.dataservices.CauseBanner
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.nav.LocalOpenPod
 
 /**
  * The app detail's "Network" section: how traffic reaches the app, as a layered graph with the
@@ -117,6 +118,7 @@ private fun NetworkBody(
             node = hostname?.let { h -> talosNodes.firstOrNull { it.hostname == h } },
             onNode = onNode,
             onDeletePod = if (shown.canDelete && "${shown.namespace}/${shown.name}" !in inFlight && deleteDenial == null) ({ deleting = shown }) else null,
+            onOpenPod = LocalOpenPod.current,
         )
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             ArgoNetDetails(shown, podNode, actions, onClose = { selected = null })

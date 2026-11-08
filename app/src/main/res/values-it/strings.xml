@@ -2939,6 +2939,7 @@
     <string name="argo_net_open">Apri nel browser</string>
     <string name="argo_net_pod_containers">Container su %1$s</string>
     <string name="argo_net_open_node">Apri nodo</string>
+    <string name="pod_open">Apri pod</string>
     <string name="argo_net_pod_delete_text">Viene rimosso da %1$s dopo il periodo di tolleranza; il suo controller, se ne ha uno, ne avvia uno nuovo.</string>
     <string name="argo_net_runs_on">In esecuzione su %1$s</string>
     <string name="argo_net_managed">Gestito da questa app</string>

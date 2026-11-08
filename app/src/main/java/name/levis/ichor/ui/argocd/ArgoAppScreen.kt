@@ -83,6 +83,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.gitops.GitOpsSourceSection
 import name.levis.ichor.ui.gitops.ProposalsCard
 import name.levis.ichor.ui.gitops.SOURCE_TOOL_ARGO
+import name.levis.ichor.ui.nav.LocalOpenPod
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
 import name.levis.ichor.ui.workloads.RolloutStatusSheet
@@ -330,7 +331,10 @@ private fun AppDetail(
         }
         if (app.unhealthyPods.isNotEmpty()) {
             item(key = "pods-title") { SectionTitle(stringResource(R.string.argo_unhealthy_pods)) }
-            items(app.unhealthyPods, key = { "pod/${it.key}" }) { UnhealthyPodRow(it, it.node.isNotEmpty() && it.node in downNodes) }
+            items(app.unhealthyPods, key = { "pod/${it.key}" }) { pod ->
+                val onOpen = LocalOpenPod.current?.let { open -> { open(pod.namespace, pod.name) } }
+                UnhealthyPodRow(pod, pod.node.isNotEmpty() && pod.node in downNodes, onOpen = onOpen)
+            }
         }
         if (app.resources.isNotEmpty()) {
             item(key = "waves-title") {

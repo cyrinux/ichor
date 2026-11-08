@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.nav
 
 import android.os.Bundle
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -32,14 +33,16 @@ import name.levis.ichor.ui.updates.UpdatesScreen
 /** Argo CD and Flux: their apps, sync windows and diffs. */
 internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks) {
     composable(Routes.ARGO_CD) {
-        ArgoListDetail(
-            onBack = { nav.popBackStack() },
-            onOpenApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
-            onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
-            onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
-            onDiff = { ns, name -> nav.navigate(Routes.argoDiff(ns, name)) },
-            onSource = { ns, name, idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_ARGO, "Application", ns, name, idx)) },
-        )
+        CompositionLocalProvider(LocalOpenPod provides nav::openPod) {
+            ArgoListDetail(
+                onBack = { nav.popBackStack() },
+                onOpenApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
+                onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
+                onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
+                onDiff = { ns, name -> nav.navigate(Routes.argoDiff(ns, name)) },
+                onSource = { ns, name, idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_ARGO, "Application", ns, name, idx)) },
+            )
+        }
     }
     composable(Routes.ARGO_WINDOWS) {
         ArgoWindowsScreen(onBack = { nav.popBackStack() })
@@ -55,17 +58,19 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
         val ns = entry.arguments?.getString("ns").orEmpty()
         val name = entry.arguments?.getString("name").orEmpty()
         RecordOpened(app, ShareTarget.argoApp(ns, name).takeIf { name.isNotEmpty() }, name, ns)
-        ArgoAppScreen(
-            namespace = ns,
-            name = name,
-            initialSync = entry.arguments?.getBoolean("sync") == true,
-            onBack = { nav.popBackStack() },
-            onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
-            onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
-            onDiff = { nav.navigate(Routes.argoDiff(ns, name)) },
-            onSource = { idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_ARGO, "Application", ns, name, idx)) },
-            onDiffOf = { focus -> nav.navigate(Routes.argoDiff(ns, name, focus)) },
-        )
+        CompositionLocalProvider(LocalOpenPod provides nav::openPod) {
+            ArgoAppScreen(
+                namespace = ns,
+                name = name,
+                initialSync = entry.arguments?.getBoolean("sync") == true,
+                onBack = { nav.popBackStack() },
+                onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
+                onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
+                onDiff = { nav.navigate(Routes.argoDiff(ns, name)) },
+                onSource = { idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_ARGO, "Application", ns, name, idx)) },
+                onDiffOf = { focus -> nav.navigate(Routes.argoDiff(ns, name, focus)) },
+            )
+        }
     }
     composable(
         Routes.ARGO_DIFF,
@@ -90,13 +95,15 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
         )
     }
     composable(Routes.FLUX) {
-        FluxListDetail(
-            onBack = { nav.popBackStack() },
-            onOpenApp = { kind, ns, name -> nav.navigate(Routes.fluxApp(kind, ns, name)) },
-            onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
-            onDiff = { kind, ns, name -> nav.navigate(Routes.fluxDiff(kind, ns, name)) },
-            onSource = { kind, ns, name, idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_FLUX, kind, ns, name, idx)) },
-        )
+        CompositionLocalProvider(LocalOpenPod provides nav::openPod) {
+            FluxListDetail(
+                onBack = { nav.popBackStack() },
+                onOpenApp = { kind, ns, name -> nav.navigate(Routes.fluxApp(kind, ns, name)) },
+                onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
+                onDiff = { kind, ns, name -> nav.navigate(Routes.fluxDiff(kind, ns, name)) },
+                onSource = { kind, ns, name, idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_FLUX, kind, ns, name, idx)) },
+            )
+        }
     }
     composable(
         Routes.FLUX_APP,
@@ -111,17 +118,19 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
         val ns = entry.arguments?.getString("ns").orEmpty()
         val name = entry.arguments?.getString("name").orEmpty()
         RecordOpened(app, ShareTarget.fluxApp(kind, ns, name).takeIf { name.isNotEmpty() }, name, ns)
-        FluxAppScreen(
-            kind = kind,
-            namespace = ns,
-            name = name,
-            initialReconcile = entry.arguments?.getBoolean("reconcile") == true,
-            onBack = { nav.popBackStack() },
-            onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
-            onDiff = { nav.navigate(Routes.fluxDiff(kind, ns, name)) },
-            onApp = { other -> nav.navigate(Routes.fluxApp(other.kind, other.namespace, other.name)) },
-            onSource = { idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_FLUX, kind, ns, name, idx)) },
-        )
+        CompositionLocalProvider(LocalOpenPod provides nav::openPod) {
+            FluxAppScreen(
+                kind = kind,
+                namespace = ns,
+                name = name,
+                initialReconcile = entry.arguments?.getBoolean("reconcile") == true,
+                onBack = { nav.popBackStack() },
+                onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
+                onDiff = { nav.navigate(Routes.fluxDiff(kind, ns, name)) },
+                onApp = { other -> nav.navigate(Routes.fluxApp(other.kind, other.namespace, other.name)) },
+                onSource = { idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_FLUX, kind, ns, name, idx)) },
+            )
+        }
     }
     composable(
         Routes.FLUX_DIFF,

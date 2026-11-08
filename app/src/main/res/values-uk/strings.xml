@@ -3108,6 +3108,7 @@
     <string name="argo_net_open">Відкрити в браузері</string>
     <string name="argo_net_pod_containers">Контейнери на %1$s</string>
     <string name="argo_net_open_node">Відкрити вузол</string>
+    <string name="pod_open">Відкрити под</string>
     <string name="argo_net_pod_delete_text">Його буде видалено з %1$s після пільгового періоду; його контролер, якщо він є, запустить новий.</string>
     <string name="argo_net_runs_on">Працює на %1$s</string>
     <string name="argo_net_managed">Керується цим застосунком</string>

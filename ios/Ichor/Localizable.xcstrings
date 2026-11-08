@@ -207393,6 +207393,20 @@
         "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Uma regra de firewall desta rede abre a porta 50000 (ou tudo) para o mundo todo." } },
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Правило брандмауэра этой сети открывает порт 50000 (или всё) всему миру." } }
       }
+    },
+    "Open pod" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir le pod" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abrir pod" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Pod öffnen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Apri pod" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Відкрити под" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开 Pod" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Podを開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir pod" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открыть под" } }
+      }
     }
   },
   "version" : "1.0"

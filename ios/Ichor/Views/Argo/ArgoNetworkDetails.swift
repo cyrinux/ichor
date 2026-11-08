@@ -3,7 +3,8 @@ import IchorCore
 
 /// What a tapped box of the network graph is, as a popover beside it: kind, name, namespace,
 /// detail and health, then what can be done from there. A host opens in the browser, a node
-/// opens its screen, a pod can be deleted so its controller starts a fresh one.
+/// opens its screen, a pod opens its logs and actions or can be deleted so its controller starts
+/// a fresh one.
 struct ArgoNetDetails: View {
     let node: NetMapNode
     /// The Talos node a Node box stands for, nil when unknown or unreachable.
@@ -13,6 +14,8 @@ struct ArgoNetDetails: View {
     let openNode: (NodeRef) -> Void
     /// Deletes the pod: nil once done, else why not.
     let delete: (KubePod) async -> String?
+    /// Opens the pod's logs and actions, the popover closed first; nil where nothing can.
+    var openPod: ((KubePod) -> Void)?
 
     @Environment(\.openURL) private var openURL
     @State private var confirmDelete = false
@@ -84,6 +87,14 @@ struct ArgoNetDetails: View {
                 openNode(nodeRef)
             } label: {
                 Label("Open node", systemImage: "cpu")
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        if let pod, let openPod {
+            Button {
+                openPod(pod)
+            } label: {
+                Label("Open pod", systemImage: "cube")
             }
             .buttonStyle(.borderedProminent)
         }

@@ -30,6 +30,8 @@ struct ArgoAppView: View {
     @State private var network = ArgoNetworkModel()
     /// The node a box of the network graph opens.
     @State private var openNode: NodeRef?
+    /// The pod a box of the network graph opens, on the Kubernetes screen.
+    @State private var openPod: KubeFocus?
     @State private var freezeSheet = false
     @State private var confirmUnfreeze = false
     /// Where the app's files are (the Source rows); nil until read.
@@ -69,6 +71,9 @@ struct ArgoAppView: View {
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)
         .navigationDestination(item: $openNode) { NodeDetailView(ref: $0) }
+        .navigationDestination(item: $openPod) {
+            KubernetesView(focus: $0).recordsOpened($0.shareTarget, label: $0.name, detail: $0.namespace)
+        }
         .navigationDestination(for: ArgoWindowsRoute.self) { _ in ArgoWindowsView() }
         .loadsKubeActionAccess(namespace: namespace)
         .onChange(of: NotificationRouter.shared.alertActionRequest) { _, _ in takeAlertAction() }
@@ -123,7 +128,8 @@ struct ArgoAppView: View {
             }
             ArgoNetworkSection(
                 model: network, downNodes: downNodes, pods: app.unhealthyPods,
-                openNode: { openNode = $0 }, changed: { Task { await load() } })
+                openNode: { openNode = $0 }, openPod: { openPod = .pod(namespace: $0.namespace, name: $0.name) },
+                changed: { Task { await load() } })
             if !app.resources.isEmpty { timeline(app) }
             if !app.unhealthyPods.isEmpty { ArgoPodsSection(pods: app.unhealthyPods, downNodes: downNodes) }
             if !app.history.isEmpty { ArgoHistorySection(app: app) { confirmRollback = $0 } }
