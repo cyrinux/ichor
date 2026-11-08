@@ -228,7 +228,7 @@ func TestAzureOptionsNameTheWideOpenRule(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got := g.wideOpenRule(); got != "talos-api from Internet" || !g.wideOpen() {
+	if got := g.wideOpenRule(); got != "talos-api ← Internet" || !g.wideOpen() {
 		t.Fatalf("rule %q", got)
 	}
 

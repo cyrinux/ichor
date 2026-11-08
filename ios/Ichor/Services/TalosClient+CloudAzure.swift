@@ -18,6 +18,15 @@ extension TalosClient {
         }
     }
 
+    /// Finds or makes the guided network in the resource group: the ichor-nodes security group
+    /// and virtual network. Writes at Azure; the demo answers samples.
+    func azureNetworkPrepare(credential: String, spec: AzureNetworkSpec) async throws -> AzureNetworkResult {
+        let specJSON = (try? JSONEncoder().encode(spec)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+        return try await Self.json { [config, context] in
+            IchorgoAzureNetworkPrepare(config, context, credential, specJSON, $0)
+        }
+    }
+
     /// Starts a Microsoft-account sign-in: the device code to enter.
     static func azureSignInStart(request: String) async throws -> AzureSignInStart {
         try await json { IchorgoAzureSignInStart(request, $0) }

@@ -6264,6 +6264,12 @@
     <string name="azure_nsg">网络安全组</string>
     <string name="azure_nsg_none">未选择:如果子网有安全组,则使用子网的安全组。</string>
     <string name="azure_nsg_wide_open">此安全组允许互联网访问 50000 端口,即 Talos API。</string>
+    <string name="azure_network_guided">为节点创建网络（推荐）</string>
+    <string name="azure_network_none_yet">此位置还没有虚拟网络：Ichor 可以创建一个。</string>
+    <string name="azure_network_hint">Ichor 会在资源组中一次性创建安全组和虚拟网络 ichor-nodes 并重复使用。不会向外界开放任何端口；端口 50000 仅对这部手机的地址开放。节点会获得公共 IP；其他位置的集群可能需要对等互连才能访问它。</string>
+    <string name="azure_network_hint_omni">Ichor 会在资源组中一次性创建安全组和虚拟网络 ichor-nodes 并重复使用。不开放任何入站端口：Omni 只需要出站访问，节点会获得公共 IP。</string>
+    <string name="azure_network_created">已创建安全组和虚拟网络 ichor-nodes。</string>
+    <string name="azure_network_reused">正在重复使用网络 ichor-nodes。</string>
     <string name="azure_public_ip">为其分配公网 IP 地址</string>
     <string name="azure_disk">系统盘(GB)</string>
     <string name="azure_cost_unknown">价格不可用:请参阅 Azure 的 VM 定价。</string>

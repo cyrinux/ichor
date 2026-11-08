@@ -27,6 +27,8 @@ struct AzureCreateSection: View {
     @State private var networkId = ""
     @State private var subnetId = ""
     @State private var nsgId = ""
+    /// The guided network, applied once its network is picked (picking one clears the subnet).
+    @State private var pendingNetwork: AzureNetworkResult?
     @State private var publicIp = true
     @State private var diskGB = String(AzureDisk.defaultGB)
     @State private var price: AzurePrice?
@@ -243,11 +245,23 @@ struct AzureCreateSection: View {
         let nsg = value.securityGroups.first { $0.id == nsgId }
         let subnetNsg = value.securityGroups.first { $0.id == subnet?.nsgId }
         Section {
+            if !demo, !subscription.isEmpty {
+                AzureGuidedNetworkRows(
+                    resourceGroup: group, location: value.location, omni: omni, noNetwork: value.networks.isEmpty,
+                    credential: credential, disabled: job.isActive
+                ) { network in
+                    Task { await guidedNetworkReady(network) }
+                }
+            }
             Picker("Virtual network", selection: $networkId) {
                 Text(verbatim: "—").tag("")
                 ForEach(value.networks) { Text(verbatim: "\($0.name) · \($0.resourceGroup)").tag($0.id) }
             }
-            .onChange(of: networkId) { subnetId = "" }
+            .onChange(of: networkId) {
+                subnetId = pendingNetwork?.subnetId ?? ""
+                if let pendingNetwork { applyGroup(pendingNetwork) }
+                pendingNetwork = nil
+            }
             if !networkId.isEmpty {
                 Picker("Subnet", selection: $subnetId) {
                     Text(verbatim: "—").tag("")
@@ -263,9 +277,12 @@ struct AzureCreateSection: View {
                     Text(verbatim: "—").tag("")
                     ForEach(value.securityGroups) { Text(verbatim: "\($0.name) · \($0.resourceGroup)").tag($0.id) }
                 }
-                if (nsg ?? subnetNsg)?.wideOpen == true {
+                if let open = nsg ?? subnetNsg, open.wideOpen {
                     Text("This group lets the Internet reach port 50000, the Talos API.")
                         .font(.footnote).foregroundStyle(.orange)
+                    if !open.wideOpenRule.isEmpty {
+                        Text(verbatim: open.wideOpenRule).font(.footnote).foregroundStyle(.orange)
+                    }
                 }
                 Toggle("Give it a public IP address", isOn: $publicIp)
                 TextField("OS disk (GB)", text: $diskGB)
@@ -451,6 +468,35 @@ struct AzureCreateSection: View {
             authError = error.localizedDescription
             return false
         }
+    }
+
+    /// The guided network is made: the options again so it is listed, then its network, subnet and
+    /// group picked, with a public address.
+    private func guidedNetworkReady(_ network: AzureNetworkResult) async {
+        let picked = subscription
+        if !network.credential.isEmpty, !picked.isEmpty {
+            let stored = CloudProviderStore.token(provider: CloudProviderStore.azure, project: picked)
+            if let json = AzureCredential.renewed(stored, from: network.credential) {
+                try? CloudProviderStore.save(provider: CloudProviderStore.azure, project: picked, token: json)
+            }
+        }
+        if let client = model.client {
+            let credential = self.credential
+            let fresh = await LoadState.from { try await client.azureOptions(credential: credential) }
+            if case .loaded = fresh { options = fresh }
+        }
+        if networkId == network.networkId {
+            subnetId = network.subnetId
+            applyGroup(network)
+        } else {
+            pendingNetwork = network
+            networkId = network.networkId
+        }
+    }
+
+    private func applyGroup(_ network: AzureNetworkResult) {
+        nsgId = network.securityGroupId
+        publicIp = true
     }
 
     private func loadOptions() async {

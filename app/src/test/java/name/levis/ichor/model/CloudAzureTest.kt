@@ -193,6 +193,23 @@ class CloudAzureTest {
     }
 
     @Test
+    fun theGuidedNetworkDecodes() {
+        val network = TalosJson.decodeFromString(
+            AzureNetworkResult.serializer(),
+            """{"networkId":"vnet","subnetId":"vnet/subnets/nodes","securityGroupId":"nsg","phoneIp":"203.0.113.7/32","created":["nsg","vnet"],"reused":[],"warnings":[]}""",
+        )
+        assertEquals("vnet/subnets/nodes", network.subnetId)
+        assertEquals(listOf("nsg", "vnet"), network.created)
+        assertEquals("", network.credential)
+        val group = TalosJson.decodeFromString(AzureSecurityGroup.serializer(), """{"id":"g","wideOpen":true,"wideOpenRule":"talos-api ← *"}""")
+        assertEquals("talos-api ← *", group.wideOpenRule)
+        assertEquals(
+            """{"resourceGroup":"talos","location":"westeurope","omni":true}""",
+            TalosJson.encodeToString(AzureNetworkSpec.serializer(), AzureNetworkSpec("talos", "westeurope", omni = true)),
+        )
+    }
+
+    @Test
     fun theSignInStepsDecode() {
         val start = TalosJson.decodeFromString(
             AzureSignInStart.serializer(),

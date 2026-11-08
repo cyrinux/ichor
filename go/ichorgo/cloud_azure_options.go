@@ -94,7 +94,7 @@ type azureSecurityGroup struct {
 	ResourceGroup string `json:"resourceGroup"`
 	WideOpen      bool   `json:"wideOpen"`
 	// WideOpenRule names the rule that opens the Talos API to the world and its source
-	// ("allow-talos from *"), "" when none does.
+	// ("allow-talos ← *"), "" when none does.
 	WideOpenRule string `json:"wideOpenRule,omitempty"`
 }
 
@@ -201,7 +201,7 @@ type azureAPISecurityGroup struct {
 func (g azureAPISecurityGroup) wideOpen() bool { return g.wideOpenRule() != "" }
 
 // wideOpenRule is the first inbound Allow rule from anywhere that reaches the Talos API port, as
-// "name from source", "" when there is none.
+// "name ← source", "" when there is none.
 func (g azureAPISecurityGroup) wideOpenRule() string {
 	for _, r := range g.Properties.SecurityRules {
 		p := r.Properties
@@ -214,7 +214,7 @@ func (g azureAPISecurityGroup) wideOpenRule() string {
 
 		ports := append([]string{p.DestinationPortRange}, p.DestinationPortRanges...)
 		if i >= 0 && slices.ContainsFunc(ports, func(r string) bool { return azurePortIn(r, azureTalosAPIPort) }) {
-			return cmp.Or(r.Name, "a rule") + " from " + sources[i]
+			return cmp.Or(r.Name, "*") + " ← " + sources[i]
 		}
 	}
 

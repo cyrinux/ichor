@@ -138,6 +138,29 @@ data class AzureSecurityGroup(
     val resourceGroup: String = "",
     /** The Internet reaches port 50000 (the Talos API). */
     val wideOpen: Boolean = false,
+    /** The rule that opens it and its source ("talos-api ← *"), "" when none does. */
+    val wideOpenRule: String = "",
+)
+
+/** AzureNetworkPrepare's specJSON: where, and whether the cluster is Omni (no port 50000 then). */
+@Serializable
+data class AzureNetworkSpec(val resourceGroup: String, val location: String, val omni: Boolean)
+
+/**
+ * The guided network: the ichor-nodes security group and virtual network, each "nsg" or "vnet" in
+ * [created] or [reused]. [phoneIp] is the /32 port 50000 is open to, "" on Omni or when it could
+ * not be learned (a warning says so).
+ */
+@Serializable
+data class AzureNetworkResult(
+    val networkId: String = "",
+    val subnetId: String = "",
+    val securityGroupId: String = "",
+    val phoneIp: String = "",
+    val created: List<String> = emptyList(),
+    val reused: List<String> = emptyList(),
+    val warnings: List<String> = emptyList(),
+    val credential: String = "",
 )
 
 @Serializable

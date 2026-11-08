@@ -1,16 +1,12 @@
 package name.levis.ichor.ui.join
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenu
@@ -26,15 +22,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -61,6 +55,8 @@ import name.levis.ichor.model.AzureCheck
 import name.levis.ichor.model.AzureCreateSpec
 import name.levis.ichor.model.AzureCredential
 import name.levis.ichor.model.AzureImageEstimate
+import name.levis.ichor.model.AzureNetworkResult
+import name.levis.ichor.model.AzureNetworkSpec
 import name.levis.ichor.model.AzureOptions
 import name.levis.ichor.model.AzurePrice
 import name.levis.ichor.model.AzureSignInChoice
@@ -80,8 +76,6 @@ import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionCard
-import name.levis.ichor.ui.components.copyToClipboard
-import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorFilterChip
 import name.levis.ichor.ui.design.IchorOutlinedButton
@@ -172,6 +166,15 @@ class AzureCreateViewModel(private val lifecycle: NodeLifecycleRepository, priva
         val token = runCatching { TalosJson.parseToJsonElement(updated).jsonObject["refreshToken"] }.getOrNull() ?: return
         val current = runCatching { TalosJson.parseToJsonElement(credential(subscription)).jsonObject }.getOrNull() ?: return
         withContext(Dispatchers.IO) { store.save(CloudProviderStore.AZURE, subscription, JsonObject(current + ("refreshToken" to token)).toString()) }
+    }
+
+    /** The guided network (writes at Azure), then the options again so it is listed. */
+    suspend fun prepareNetwork(spec: AzureNetworkSpec): AzureNetworkResult {
+        val subscription = _subscription.value
+        return lifecycle.azureNetworkPrepare(credential(subscription), spec).also {
+            sealRenewed(subscription, it.credential)
+            refresh()
+        }
     }
 
     suspend fun signInStart(request: String): AzureSignInStart = lifecycle.azureSignInStart(request)
@@ -339,6 +342,7 @@ fun AzureCreateCard(
                     canMakeImage = !demo && subscription.isNotBlank(),
                     madeImage = madeImage,
                     onMakeImage = { imageFor = it },
+                    onPrepareNetwork = if (demo || subscription.isBlank()) null else vm::prepareNetwork,
                 ) { request ->
                     // The principal is read only now, and goes to the run alone.
                     scope.launch { app.joinManager.start(request, if (subscription.isBlank()) "" else vm.credential(subscription)) }
@@ -405,6 +409,8 @@ private fun VMForm(
     /** The image the last run made: picked once it is listed. */
     madeImage: String,
     onMakeImage: (AzureImageAsk) -> Unit,
+    /** The guided network; null where it cannot run (the demo, no account). */
+    onPrepareNetwork: (suspend (AzureNetworkSpec) -> AzureNetworkResult)?,
     onCreate: (JoinRequest) -> Unit,
 ) {
     val colors = LocalStatusColors.current
@@ -506,6 +512,15 @@ private fun VMForm(
     }
 
     Text(stringResource(R.string.azure_network), style = MaterialTheme.typography.labelLarge)
+    if (onPrepareNetwork != null) {
+        AzureGuidedNetwork(group, options.location, omni = form == null, noNetwork = options.networks.isEmpty(), enabled = !busy, prepare = onPrepareNetwork) {
+            // Its network, subnet and group fill the pickers once listed; the VM gets a public address.
+            networkId = it.networkId
+            subnetId = it.subnetId
+            nsgId = it.securityGroupId
+            publicIp = true
+        }
+    }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         options.networks.forEach { n ->
             IchorFilterChip(
@@ -546,8 +561,9 @@ private fun VMForm(
             }
         }
         if (nsg == null) MutedText(stringResource(R.string.azure_nsg_none))
-        if ((nsg ?: subnetNsg)?.wideOpen == true) {
-            Text(stringResource(R.string.azure_nsg_wide_open), color = colors.warn, style = MaterialTheme.typography.bodySmall)
+        (nsg ?: subnetNsg)?.takeIf { it.wideOpen }?.let { open ->
+            val rule = open.wideOpenRule.ifBlank { null }?.let { " ($it)" }.orEmpty()
+            Text(stringResource(R.string.azure_nsg_wide_open) + rule, color = colors.warn, style = MaterialTheme.typography.bodySmall)
         }
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.azure_public_ip), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f).padding(end = 8.dp))
@@ -639,151 +655,4 @@ private fun Choice(label: String, selected: String, items: List<Pair<String, Str
             }
         }
     }
-}
-
-/**
- * The principal's ids, its secret (masked), its cloud and resource group, or a Microsoft-account
- * sign-in; the role to give it, a test, then sealed under the subscription id.
- */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun PrincipalDialog(vm: AzureCreateViewModel, onDismiss: () -> Unit) {
-    val colors = LocalStatusColors.current
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var microsoftAccount by remember { mutableStateOf(false) }
-    var accountReady by remember { mutableStateOf<Pair<String, AzureCheck>?>(null) }
-    var tenantId by remember { mutableStateOf("") }
-    var clientId by remember { mutableStateOf("") }
-    var secret by remember { mutableStateOf("") }
-    var subscriptionId by remember { mutableStateOf("") }
-    var resourceGroup by remember { mutableStateOf("") }
-    var cloud by remember { mutableStateOf(AzureCloud.PUBLIC) }
-    var check by remember { mutableStateOf<UiState<AzureCheck>?>(null) }
-    var saveFailed by remember { mutableStateOf(false) }
-    val tested = (check as? UiState.Loaded)?.data
-    val roleTitle = stringResource(R.string.azure_copy_role)
-
-    fun credential() = TalosJson.encodeToString(
-        AzureCredential.serializer(),
-        AzureCredential(tenantId.trim(), clientId.trim(), secret.trim(), subscriptionId.trim(), cloud.environment, resourceGroup.trim()),
-    )
-
-    fun runTest() {
-        check = UiState.Loading
-        scope.launch { check = uiStateOf { vm.test(credential()) } }
-    }
-
-    IchorAlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.azure_add_account)) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(false to R.string.azure_signin_option_principal, true to R.string.azure_signin_option_account).forEach { (account, label) ->
-                        IchorFilterChip(
-                            selected = microsoftAccount == account,
-                            onClick = {
-                                microsoftAccount = account
-                                accountReady = null
-                            },
-                            label = { Text(stringResource(label)) },
-                        )
-                    }
-                }
-                MutedText(stringResource(R.string.azure_role_hint))
-                IchorOutlinedButton(onClick = { scope.launch { copyToClipboard(context, roleTitle, vm.role(subscriptionId.trim(), resourceGroup.trim())) } }) {
-                    Text(roleTitle)
-                }
-                if (microsoftAccount) {
-                    MicrosoftAccountSide(vm) { credential, check -> accountReady = if (credential != null && check != null) credential to check else null }
-                    if (saveFailed) NotSaved()
-                    return@Column
-                }
-                Text(stringResource(R.string.azure_warning), color = colors.warn, style = MaterialTheme.typography.bodySmall)
-                Text(stringResource(R.string.azure_cloud), style = MaterialTheme.typography.labelLarge)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AzureCloud.entries.forEach { c ->
-                        IchorFilterChip(
-                            selected = c == cloud,
-                            onClick = {
-                                cloud = c
-                                check = null
-                            },
-                            label = { Text(c.label) },
-                        )
-                    }
-                }
-                IdField(tenantId, R.string.azure_tenant_id, secret = false) {
-                    tenantId = it
-                    check = null
-                }
-                IdField(clientId, R.string.azure_client_id, secret = false) {
-                    clientId = it
-                    check = null
-                }
-                IdField(secret, R.string.azure_client_secret, secret = true) {
-                    secret = it
-                    check = null
-                }
-                IdField(subscriptionId, R.string.azure_subscription_id, secret = false) {
-                    subscriptionId = it
-                    check = null
-                }
-                IdField(resourceGroup, R.string.azure_resource_group, secret = false) {
-                    resourceGroup = it
-                    check = null
-                }
-                MutedText(stringResource(R.string.azure_resource_group_hint))
-                IchorOutlinedButton(
-                    onClick = ::runTest,
-                    enabled = tenantId.isNotBlank() && clientId.isNotBlank() && secret.isNotBlank() && subscriptionId.isNotBlank() && check != UiState.Loading,
-                ) {
-                    Text(stringResource(R.string.hetzner_test))
-                }
-                when (val state = check) {
-                    null -> Unit
-                    UiState.Loading -> LoadingBox()
-                    is UiState.Failed -> ErrorBox(state.message, ::runTest)
-                    is UiState.Loaded -> AzureCheckLine(state.data, resourceGroup.trim())
-                }
-                if (saveFailed) NotSaved()
-            }
-        },
-        confirmButton = {
-            // What the test passed: the principal, or the sign-in (renewed by the core when it says so).
-            val ready = if (microsoftAccount) accountReady else tested?.let { credential() to it }
-            val readyCheck = ready?.second
-            IchorButton(
-                onClick = {
-                    val (json, passed) = ready ?: return@IchorButton
-                    scope.launch {
-                        if (vm.save(passed.subscription, json)) onDismiss() else saveFailed = true
-                    }
-                },
-                enabled = readyCheck != null && readyCheck.subscription.isNotBlank() && (readyCheck.canCreate || !readyCheck.checked),
-            ) { Text(stringResource(R.string.hetzner_save)) }
-        },
-        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
-    )
-}
-
-/** The store could not seal the account. */
-@Composable
-private fun NotSaved() {
-    Text(stringResource(R.string.hetzner_token_not_saved), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
-}
-
-/** One field of the principal dialog; the secret is masked and never suggested. */
-@Composable
-internal fun IdField(value: String, @StringRes label: Int, secret: Boolean, onChange: (String) -> Unit) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onChange,
-        label = { Text(stringResource(label)) },
-        singleLine = true,
-        visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
-        keyboardOptions = KeyboardOptions(keyboardType = if (secret) KeyboardType.Password else KeyboardType.Ascii, autoCorrectEnabled = false),
-        modifier = Modifier.fillMaxWidth(),
-    )
 }

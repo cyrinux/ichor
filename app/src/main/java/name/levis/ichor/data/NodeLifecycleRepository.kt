@@ -43,6 +43,8 @@ import name.levis.ichor.model.AzureImageEstimate
 import name.levis.ichor.model.AzureImageSpec
 import name.levis.ichor.model.AzureCreateSpec
 import name.levis.ichor.model.AzureOptions
+import name.levis.ichor.model.AzureNetworkResult
+import name.levis.ichor.model.AzureNetworkSpec
 import name.levis.ichor.model.AzurePrice
 import name.levis.ichor.model.AzureSignInChoice
 import name.levis.ichor.model.AzureSignInFinish
@@ -507,6 +509,16 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** The hourly price of [size] in [location]; an empty hourly when unknown. */
     suspend fun azurePrice(credentialJson: String, location: String, size: String): AzurePrice = withContext(Dispatchers.IO) {
         TalosJson.decodeFromString(AzurePrice.serializer(), Ichorgo.azurePrice(credentialJson, location, size))
+    }
+
+    /**
+     * Finds or makes the guided network in the resource group: the ichor-nodes security group and
+     * virtual network, opened to nothing but (plain Talos) this phone on port 50000. Writes at
+     * Azure; the demo answers samples.
+     */
+    suspend fun azureNetworkPrepare(credentialJson: String, spec: AzureNetworkSpec): AzureNetworkResult = call { cfg, ctx ->
+        val specJson = TalosJson.encodeToString(AzureNetworkSpec.serializer(), spec)
+        TalosJson.decodeFromString(AzureNetworkResult.serializer(), Ichorgo.azureNetworkPrepare(cfg, ctx, credentialJson, specJson))
     }
 
     /** Starts a Microsoft-account sign-in: the device code to enter. */
