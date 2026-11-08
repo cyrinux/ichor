@@ -94,18 +94,25 @@ func stopLoopback(srv *http.Server, ln net.Listener) func() {
 
 		err := srv.Shutdown(ctx)
 
-		_ = srv.Close() //nolint:errcheck
-		_ = ln.Close()  //nolint:errcheck
-
 		// A stuck handler is closed at once after the deadline, so Shutdown can still return
 		// nothing here: a stop that took the whole budget without a clean early return was
 		// cut by the deadline, whether or not Shutdown says so (Go has no documented promise
-		// about that), and the same budget rules out a clock that merely ran late.
-		if err == nil {
-			if time.Since(started) >= loopbackStopTimeout {
-				diag(slog.LevelWarn, "auth", "loopback stop", context.DeadlineExceeded, "cause", "deadline reached")
-			}
+		// about that), and the same budget rules out a clock that merely ran late. Read the
+		// verdict before Close runs: a server already Shutdown still answers ErrServerClosed
+		// to a later Close, which would otherwise drown a deadline cut in the "already
+		// closed" cause.
+		deadlineCut := err == nil && time.Since(started) >= loopbackStopTimeout
 
+		_ = srv.Close() //nolint:errcheck
+		_ = ln.Close()  //nolint:errcheck
+
+		if deadlineCut {
+			diag(slog.LevelWarn, "auth", "loopback stop", context.DeadlineExceeded, "cause", "deadline reached")
+
+			return
+		}
+
+		if err == nil {
 			return
 		}
 
