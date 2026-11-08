@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -65,8 +66,11 @@ func TestLoopbackStopDoesNotHang(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// One connection the browser keeps alive: Shutdown must close it, not wait on it.
-	keep, err := (&http.Client{}).Get(redirect + "/?state=s-1") //nolint:noctx
+	// One connection the browser keeps alive: Shutdown must close it, not wait on it. Its own
+	// client (never closed) keeps the pooled connection idle in the server's set when stop() runs.
+	keepClient := &http.Client{} //nolint:noctx
+
+	keep, err := keepClient.Get(redirect + "/?state=s-1") //nolint:noctx
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,35 +79,16 @@ func TestLoopbackStopDoesNotHang(t *testing.T) {
 
 	_ = keep.Body.Close()
 
-	// Keep-alive: no Close(), so the connection stays in the pool and in the server's idle set.
+	// The browser's request goes first and its answer reaches the test before anything else:
+	// codes is buffered, so the handler returns even though nothing reads the body yet.
+	inflight := make(chan string, 1)
 
-	inflight := make(chan int, 1)
-	stopAsked := make(chan struct{})
+	resp, err := (&http.Client{}).Get(redirect + "/?code=good-code&state=s-2") //nolint:noctx
+	if err != nil {
+		t.Fatalf("the browser's request: %v", err)
+	}
 
-	go func() {
-		// The browser's request: answered (200) and handed over, its response still in flight
-		// when stop() is asked. Read after stop() is called (below): with the old Close the
-		// body read fails with an EOF on a request the server had already answered.
-		resp, err := http.Get(redirect + "/?code=good-code&state=s-2") //nolint:noctx
-		if err != nil {
-			t.Error(err)
-
-			inflight <- 0
-
-			return
-		}
-
-		select {
-		case <-stopAsked:
-		default:
-		}
-
-		_, _ = io.ReadAll(resp.Body)
-
-		_ = resp.Body.Close()
-
-		inflight <- resp.StatusCode
-	}()
+	inflight <- fmt.Sprintf("response %v", resp.StatusCode)
 
 	select {
 	case <-codes:
@@ -111,33 +96,36 @@ func TestLoopbackStopDoesNotHang(t *testing.T) {
 		t.Fatal("the browser's answer did not reach the loopback")
 	}
 
-	stopped := make(chan struct{})
+	// The request that lands just after stop() was asked is answered before the server goes,
+	// so it starts while stop() still holds the listener open.
+	stopped := make(chan error, 1)
 
 	go func() {
-		// The request that lands just after stop() was asked is answered before the server goes.
 		time.Sleep(20 * time.Millisecond)
 
-		resp, err := http.Get(redirect + "/favicon.ico") //nolint:noctx
+		late, err := (&http.Client{}).Get(redirect + "/favicon.ico") //nolint:noctx
 		if err != nil {
-			t.Error(err)
+			stopped <- err
 
 			return
 		}
 
-		_, _ = io.ReadAll(resp.Body)
+		_, _ = io.ReadAll(late.Body)
 
-		_ = resp.Body.Close()
+		_ = late.Body.Close()
 
-		if resp.StatusCode != http.StatusNotFound {
-			t.Errorf("favicon: %d", resp.StatusCode)
+		if late.StatusCode != http.StatusNotFound {
+			stopped <- fmt.Errorf("favicon: %d", late.StatusCode)
+
+			return
 		}
 
-		close(stopped)
+		stopped <- nil
 	}()
 
 	done := make(chan struct{})
 
-	go func() { close(stopAsked); stop(); close(done) }()
+	go func() { stop(); close(done) }()
 
 	select {
 	case <-done:
@@ -145,12 +133,15 @@ func TestLoopbackStopDoesNotHang(t *testing.T) {
 		t.Fatal("stop() hangs on an idle connection or an in-flight request")
 	}
 
-	if code := <-inflight; code != http.StatusOK {
-		t.Errorf("the browser's answer: %d", code)
+	if got := <-inflight; got != "response 200" {
+		t.Errorf("the browser's answer: %s", got)
 	}
 
 	select {
-	case <-stopped:
+	case err := <-stopped:
+		if err != nil {
+			t.Errorf("the request that arrived during stop(): %v", err)
+		}
 	case <-time.After(3 * time.Second):
 		t.Fatal("the request that arrived during stop() is never answered")
 	}
