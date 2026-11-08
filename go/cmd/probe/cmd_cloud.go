@@ -160,9 +160,13 @@ var cloudCommands = []command{
 		return "", errors.New("usage: azure test|options|role [RG]|price LOCATION SIZE|estimate|image|create|signin|network …")
 	}},
 	{name: "gcp", args: "test|options|role|price ZONE TYPE|estimate ARCH ZONE|image TEMPLATE ARCH ZONE SUBNET -yes|" +
-		"create TEMPLATE ROLE HOSTNAME DISK PROJECT ZONE TYPE IMAGE SUBNET -yes|network ROLE [-omni] -yes", run: func(e env) (string, error) {
-		if flag.Arg(1) == "role" {
+		"create TEMPLATE ROLE HOSTNAME DISK PROJECT ZONE TYPE IMAGE SUBNET -yes|network ROLE [-omni] -yes|" +
+		"signin gcloud|oauth|workforce [SECRETS_JSON]", run: func(e env) (string, error) {
+		switch flag.Arg(1) {
+		case "role":
 			return ichorgo.GCPRoleDefinition(os.Getenv("GCP_PROJECT")), nil
+		case "signin":
+			return gcpSignIn()
 		}
 
 		credJSON, err := gcpCredential()
@@ -187,13 +191,53 @@ var cloudCommands = []command{
 			return gcpNetwork(e, credJSON)
 		}
 
-		return "", errors.New("usage: gcp test|options|role|price ZONE TYPE|estimate|image|create|network …")
+		return "", errors.New("usage: gcp test|options|role|price ZONE TYPE|estimate|image|create|network|signin …")
 	}},
 }
 
-// gcpCredential is the GCP credential JSON: the key file GOOGLE_APPLICATION_CREDENTIALS names,
-// else GCP_SERVICE_ACCOUNT_JSON's text.
+// gcpSignIn runs a Google sign-in for the create in the browser and prints the credential JSON
+// once, on stdout (it holds a refresh token: keep it out of logs), with the account's projects
+// on stderr. GCP_USER_CREDENTIALS_JSON=<that JSON> GCP_PROJECT=<one of them> then drives the
+// other commands.
+func gcpSignIn() (string, error) {
+	listener := &probeSignInListener{done: make(chan string, 1)}
+	ichorgo.GCPSignInStart(flag.Arg(2), flag.Arg(3), listener)
+
+	if msg := <-listener.done; msg != "" {
+		return "", errors.New(msg)
+	}
+
+	var result struct {
+		Credential string          `json:"credential"`
+		Account    string          `json:"account"`
+		Projects   json.RawMessage `json:"projects"`
+	}
+
+	if err := probeJSON(ichorgo.GCPSignInCredential())(&result); err != nil {
+		return "", err
+	}
+
+	fmt.Fprintln(os.Stderr, "signed in as", result.Account, "projects:", string(result.Projects))
+
+	return result.Credential, nil
+}
+
+// gcpCredential is the GCP credential JSON: GCP_USER_CREDENTIALS_JSON (gcp signin's output) with
+// GCP_PROJECT, else the key file GOOGLE_APPLICATION_CREDENTIALS names, else
+// GCP_SERVICE_ACCOUNT_JSON's text.
 func gcpCredential() (string, error) {
+	if signed := os.Getenv("GCP_USER_CREDENTIALS_JSON"); signed != "" {
+		var cred map[string]any
+		if err := json.Unmarshal([]byte(signed), &cred); err != nil {
+			return "", errors.New("GCP_USER_CREDENTIALS_JSON is not gcp signin's output")
+		}
+
+		cred["project"], cred["zone"] = os.Getenv("GCP_PROJECT"), os.Getenv("GCP_ZONE")
+		out, err := json.Marshal(cred)
+
+		return string(out), err
+	}
+
 	key := os.Getenv("GCP_SERVICE_ACCOUNT_JSON")
 
 	if path := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); path != "" {

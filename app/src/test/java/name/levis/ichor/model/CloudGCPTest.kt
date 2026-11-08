@@ -1,5 +1,6 @@
 package name.levis.ichor.model
 
+import kotlinx.serialization.json.JsonPrimitive
 import name.levis.ichor.data.JoinRequest
 import name.levis.ichor.data.TalosJson
 import org.junit.Assert.assertEquals
@@ -99,6 +100,77 @@ class CloudGCPTest {
         )
         assertEquals("{}", moved.serviceAccountJson)
         assertEquals("europe-west1-c", moved.zone)
+    }
+
+    // An invented sign-in state: the app never reads inside it.
+    private val signedIn =
+        """{"googleSignIn":{"method":"gke","secrets":{"gcpGcloudSignIn":"1"},"session":{"refresh":"r-1"},"user":"someone@example.org"},""" +
+            """"account":"someone@example.org","project":"","zone":""}"""
+
+    @Test
+    fun aGoogleSignInIsToldFromAKey() {
+        val google = TalosJson.decodeFromString(GCPCredential.serializer(), signedIn)
+        assertTrue(google.googleAccount)
+        assertEquals("someone@example.org", google.account)
+        val key = TalosJson.decodeFromString(GCPCredential.serializer(), """{"serviceAccountJson":"{}","project":"example-project","zone":""}""")
+        assertFalse(key.googleAccount)
+        // A key is still encoded without the sign-in's fields.
+        val json = TalosJson.encodeToString(GCPCredential.serializer(), key)
+        assertFalse(json, json.contains("googleSignIn") || json.contains("account"))
+    }
+
+    @Test
+    fun theSignInResultDecodes() {
+        val result = TalosJson.decodeFromString(
+            GCPSignInResult.serializer(),
+            """{"credential":${JsonPrimitive(signedIn)},"account":"someone@example.org",
+               "projects":[{"id":"example-project","name":"example-project"},{"id":"other-project","name":"Other"}],"more":true}""",
+        )
+        assertEquals(signedIn, result.credential)
+        assertEquals("someone@example.org", result.account)
+        assertEquals(listOf("example-project", "other-project"), result.projects.map { it.id })
+        assertTrue(result.more)
+        val none = TalosJson.decodeFromString(GCPSignInResult.serializer(), """{"credential":"{}","account":"a","projects":null}""")
+        assertTrue(none.projects.isEmpty())
+        assertFalse(none.more)
+    }
+
+    @Test
+    fun theCheckAndOptionsCarryARenewedSignIn() {
+        val check = TalosJson.decodeFromString(
+            GCPCheck.serializer(),
+            """{"account":"someone@example.org","project":"example-project","canCreate":true,"checked":true,"missing":null,
+               "credential":"{\"googleSignIn\":{}}","renewHint":"sign in with Google again from the Google Cloud card"}""",
+        )
+        assertEquals("{\"googleSignIn\":{}}", check.credential)
+        assertEquals("sign in with Google again from the Google Cloud card", check.renewHint)
+        val key = TalosJson.decodeFromString(GCPCheck.serializer(), """{"account":"a","project":"p","canCreate":true,"checked":true}""")
+        assertEquals("", key.credential)
+        assertEquals("", key.renewHint)
+        assertEquals("", TalosJson.decodeFromString(GCPOptions.serializer(), """{"project":"p"}""").credential)
+        assertEquals("{}", TalosJson.decodeFromString(GCPOptions.serializer(), """{"project":"p","credential":"{}"}""").credential)
+    }
+
+    @Test
+    fun settingTheProjectKeepsTheSignInState() {
+        val withProject = gcpCredentialWith(signedIn, "project" to "example-project", "zone" to "europe-west1-b")!!
+        val parsed = TalosJson.decodeFromString(GCPCredential.serializer(), withProject)
+        assertEquals("example-project", parsed.project)
+        assertEquals("europe-west1-b", parsed.zone)
+        assertEquals(TalosJson.decodeFromString(GCPCredential.serializer(), signedIn).googleSignIn, parsed.googleSignIn)
+        assertNull(gcpCredentialWith("not json", "project" to "p"))
+    }
+
+    @Test
+    fun aRenewedSignInKeepsTheProjectAndZonePickedMeanwhile() {
+        val stored = gcpCredentialWith(signedIn, "project" to "example-project", "zone" to "europe-west1-c")!!
+        val renewed = signedIn.replace("r-1", "r-2")
+        val merged = TalosJson.decodeFromString(GCPCredential.serializer(), gcpMergeRenewed(stored, renewed)!!)
+        assertEquals("example-project", merged.project)
+        assertEquals("europe-west1-c", merged.zone)
+        assertTrue(merged.googleSignIn.toString().contains("r-2"))
+        assertNull(gcpMergeRenewed(stored, ""))
+        assertNull(gcpMergeRenewed(stored, """{"project":"p"}"""))
     }
 
     @Test

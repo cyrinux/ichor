@@ -3,10 +3,17 @@ import Foundation
 // Mirrors go/ichorgo/cloud_gcp.go, cloud_gcp_options.go and cloud_gcp_create.go.
 
 /// A service account key, its project and zone, sealed on the device; what the core gets per call.
+/// A Google-account sign-in has no key but a `googleSignIn` object (its session, refresh token
+/// included) and the signed-in `account`: the app seals the JSON the core returns as it is and
+/// never re-encodes it from this type (it would drop the sign-in; see `edited(_:…)`).
 public struct GCPCredential: Codable, Equatable, Sendable {
     public let serviceAccountJson: String
     public let project: String
     public let zone: String
+    /// The signed-in Google account's email, "" for a key.
+    public var account = ""
+    /// A Google-account sign-in (the JSON has `googleSignIn`), not a service account key.
+    public private(set) var googleAccount = false
 
     public init(serviceAccountJson: String, project: String = "", zone: String = "") {
         self.serviceAccountJson = serviceAccountJson
@@ -14,18 +21,64 @@ public struct GCPCredential: Codable, Equatable, Sendable {
         self.zone = zone
     }
 
-    private enum CodingKeys: String, CodingKey { case serviceAccountJson, project, zone }
+    private enum CodingKeys: String, CodingKey { case serviceAccountJson, project, zone, account, googleSignIn }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         serviceAccountJson = try c.field(.serviceAccountJson, "")
         project = try c.field(.project, "")
         zone = try c.field(.zone, "")
+        account = try c.field(.account, "")
+        googleAccount = c.contains(.googleSignIn) && (try? c.decodeNil(forKey: .googleSignIn)) == false
+    }
+
+    // A key only: a sign-in is never encoded from here.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(serviceAccountJson, forKey: .serviceAccountJson)
+        try c.encode(project, forKey: .project)
+        try c.encode(zone, forKey: .zone)
+        if !account.isEmpty { try c.encode(account, forKey: .account) }
     }
 
     /// The same key in another project or zone (nil keeps the current one).
     public func with(project: String? = nil, zone: String? = nil) -> GCPCredential {
         GCPCredential(serviceAccountJson: serviceAccountJson, project: project ?? self.project, zone: zone ?? self.zone)
+    }
+
+    /// `json` with another project and zone (nil keeps the current one), every other field (a
+    /// sign-in's `googleSignIn`) kept; nil when it is not a JSON object.
+    public static func edited(_ json: String, project: String? = nil, zone: String? = nil) -> String? {
+        guard var object = jsonObject(json) else { return nil }
+        if let project { object["project"] = project }
+        if let zone { object["zone"] = zone }
+        return encoded(object)
+    }
+
+    /// A sign-in's credential (GCPSignInCredential's, no project yet) bound to `project`, the
+    /// quota project the calls are billed to.
+    public static func withProject(_ json: String, project: String) -> String? {
+        edited(json, project: project)
+    }
+
+    /// `stored` with the `googleSignIn` of `updated` (a call's renewed credential), every other
+    /// field of `stored` kept: a project or zone picked while the call ran stays. nil when either
+    /// is not a JSON object or `updated` has no sign-in.
+    public static func renewed(_ stored: String, from updated: String) -> String? {
+        guard var current = jsonObject(stored),
+            let signIn = jsonObject(updated)?["googleSignIn"] as? [String: Any]
+        else { return nil }
+        current["googleSignIn"] = signIn
+        return encoded(current)
+    }
+
+    private static func jsonObject(_ json: String) -> [String: Any]? {
+        (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [String: Any]
+    }
+
+    private static func encoded(_ object: [String: Any]) -> String? {
+        guard let data = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]) else { return nil }
+        return String(decoding: data, as: UTF8.self)
     }
 }
 
@@ -48,15 +101,21 @@ public struct GCPKeyIdentity: Equatable, Sendable {
     }
 }
 
-/// Whose key this is and what of the printed role it lacks; `checked` is false when that could not be told.
+/// Whose key or sign-in this is and what of the printed role it lacks; `checked` is false when
+/// that could not be told. `credential` is a sign-in the core renewed, to seal again ("" when it
+/// did not); `renewHint` says how to sign in again once it ends ("" for a key).
 public struct GCPCheck: Decodable, Equatable, Sendable {
     public let account: String
     public let project: String
     public let canCreate: Bool
     public let checked: Bool
     public let missing: [String]
+    public let credential: String
+    public let renewHint: String
 
-    private enum CodingKeys: String, CodingKey { case account, project, canCreate, checked, missing }
+    private enum CodingKeys: String, CodingKey {
+        case account, project, canCreate, checked, missing, credential, renewHint
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -65,6 +124,27 @@ public struct GCPCheck: Decodable, Equatable, Sendable {
         canCreate = try c.field(.canCreate, false)
         checked = try c.field(.checked, false)
         missing = try c.field(.missing, [])
+        credential = try c.field(.credential, "")
+        renewHint = try c.field(.renewHint, "")
+    }
+}
+
+/// GCPSignInCredential's answer: the sign-in (no project yet), the account, and the projects it
+/// sees for the quota-project pick; `more` when the list was cut short.
+public struct GCPSignInResult: Decodable, Equatable, Sendable {
+    public let credential: String
+    public let account: String
+    public let projects: [GCPProject]
+    public let more: Bool
+
+    private enum CodingKeys: String, CodingKey { case credential, account, projects, more }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        credential = try c.field(.credential, "")
+        account = try c.field(.account, "")
+        projects = try c.field(.projects, [])
+        more = try c.field(.more, false)
     }
 }
 
@@ -78,9 +158,11 @@ public struct GCPOptions: Decodable, Equatable, Sendable {
     public let networks: [GCPNetwork]
     public let images: [GCPImage]
     public let warnings: [String]
+    /// A sign-in the core renewed, to seal again; "" when it did not.
+    public let credential: String
 
     private enum CodingKeys: String, CodingKey {
-        case project, zone, projects, zones, machineTypes, networks, images, warnings
+        case project, zone, projects, zones, machineTypes, networks, images, warnings, credential
     }
 
     // Go encodes empty (nil) slices as null.
@@ -94,6 +176,7 @@ public struct GCPOptions: Decodable, Equatable, Sendable {
         networks = try c.field(.networks, [])
         images = try c.field(.images, [])
         warnings = try c.field(.warnings, [])
+        credential = try c.field(.credential, "")
     }
 
     /// The architectures the machine types run, amd64 first.

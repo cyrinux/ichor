@@ -6409,7 +6409,16 @@
     <string name="gcp_title">Die VM bei Google Cloud erstellen</string>
     <string name="gcp_howto">1. Wähle ein Mitglied als Vorlage, dann Hostname und Installationsdatenträger des neuen Knotens.\n2. Füge einen Dienstkontoschlüssel mit der Rolle hinzu, die Ichor ausgibt, mit aktivierter Compute Engine API in seinem Projekt.\n3. Wähle eine Zone, einen Maschinentyp, das Talos-Image des Projekts (registriere eines wie im Talos-Leitfaden, bis Ichor es erstellt), ein Netzwerk und sein Subnetz.\n4. Erstelle sie: Ichor zeigt zuerst den Preis und verfolgt sie, bis der Knoten beitritt. Das Telefon muss Port 50000 der VM erreichen.</string>
     <string name="gcp_howto_omni">1. Füge einen Dienstkontoschlüssel mit der Rolle hinzu, die Ichor ausgibt, mit aktivierter Compute Engine API in seinem Projekt.\n2. Benenne die VM, dann wähle eine Zone, einen Maschinentyp, das Talos-Image des Projekts, ein Netzwerk und sein Subnetz.\n3. Erstelle sie: Ichor zeigt zuerst den Preis und verfolgt sie, bis die Maschine in Omni erscheint. Weise sie dem Cluster zu.</string>
-    <string name="gcp_add_key">Dienstkontoschlüssel hinzufügen</string>
+    <string name="gcp_add_account">Konto hinzufügen</string>
+    <string name="gcp_signin_option_key">Schlüssel einfügen</string>
+    <string name="gcp_signin_option_google">Mit Google anmelden</string>
+    <string name="gcp_signin_warning">Die Anmeldung bleibt versiegelt auf diesem Gerät und ist nicht in Backups. Sie kann in jedem Projekt, was dein Konto darf, nicht nur die Rolle, die Ichor ausgibt: Nimm lieber einen Schlüssel mit nur dieser Rolle, wenn du einen hast.</string>
+    <string name="gcp_signin_signed_in">Mit Google angemeldet als %1$s</string>
+    <string name="gcp_signin_project">Projekt, dem die Aufrufe berechnet werden</string>
+    <string name="gcp_signin_more">Nicht alle Projekte sind aufgeführt: Gib die ID eines anderen ein.</string>
+    <string name="gcp_signin_project_id">Projekt-ID</string>
+    <string name="gcp_signin_use_project">Dieses Projekt verwenden</string>
+    <string name="gcp_signin_other_project">Anderes Projekt wählen</string>
     <string name="gcp_remove">Diesen Schlüssel entfernen</string>
     <string name="gcp_key_warning">Ein Dienstkontoschlüssel läuft nicht ab und darf, was seine Rollen erlauben. Er bleibt versiegelt auf diesem Gerät und ist nicht in Backups: Nimm lieber einen Schlüssel nur mit der Rolle, die Ichor ausgibt.</string>
     <string name="gcp_role_hint">Erstelle diese benutzerdefinierte Rolle im Projekt und weise sie dem Dienstkonto zu: nur die Aufrufe, die Ichor macht. Aktiviere die Compute Engine API; mit Cloud Resource Manager prüft Test die Rolle, Cloud Billing zeigt den Preis.</string>

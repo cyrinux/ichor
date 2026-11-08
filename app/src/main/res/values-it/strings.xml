@@ -6419,7 +6419,16 @@
     <string name="gcp_title">Crea la VM su Google Cloud</string>
     <string name="gcp_howto">1. Scegli un membro da copiare, poi il nome host e il disco di installazione del nuovo nodo.\n2. Aggiungi una chiave di account di servizio con il ruolo che Ichor mostra e l\'API Compute Engine abilitata nel suo progetto.\n3. Scegli una zona, un tipo di macchina, l\'immagine Talos del progetto (registrane una come dice la guida di Talos finché Ichor non la crea), una rete e la sua subnet.\n4. Creala: Ichor mostra prima il prezzo e la segue finché il nodo si unisce. Il telefono deve raggiungere la porta 50000 della VM.</string>
     <string name="gcp_howto_omni">1. Aggiungi una chiave di account di servizio con il ruolo che Ichor mostra e l\'API Compute Engine abilitata nel suo progetto.\n2. Dai un nome alla VM, poi scegli una zona, un tipo di macchina, l\'immagine Talos del progetto, una rete e la sua subnet.\n3. Creala: Ichor mostra prima il prezzo, poi la segue finché la macchina compare in Omni. Assegnala al cluster.</string>
-    <string name="gcp_add_key">Aggiungi una chiave di account di servizio</string>
+    <string name="gcp_add_account">Aggiungi un account</string>
+    <string name="gcp_signin_option_key">Incolla una chiave</string>
+    <string name="gcp_signin_option_google">Accedi con Google</string>
+    <string name="gcp_signin_warning">L\'accesso resta sigillato su questo dispositivo e non è nei backup. Può fare ciò che il tuo account può su ogni progetto, non solo il ruolo che Ichor stampa: preferisci una chiave con solo quel ruolo quando ne hai una.</string>
+    <string name="gcp_signin_signed_in">Accesso con Google come %1$s</string>
+    <string name="gcp_signin_project">Progetto a cui sono addebitate le chiamate</string>
+    <string name="gcp_signin_more">Non tutti i progetti sono elencati: inserisci l\'ID di un altro.</string>
+    <string name="gcp_signin_project_id">ID del progetto</string>
+    <string name="gcp_signin_use_project">Usa questo progetto</string>
+    <string name="gcp_signin_other_project">Scegli un altro progetto</string>
     <string name="gcp_remove">Rimuovi questa chiave</string>
     <string name="gcp_key_warning">Una chiave di account di servizio non scade e può fare ciò che i suoi ruoli consentono. Resta sigillata su questo dispositivo e non è nei backup: preferisci una chiave con solo il ruolo che Ichor mostra.</string>
     <string name="gcp_role_hint">Crea questo ruolo personalizzato nel progetto e assegnalo all\'account di servizio: solo le chiamate che Ichor fa. Abilita l\'API Compute Engine; Cloud Resource Manager permette a Prova di verificare il ruolo e Cloud Billing mostra il prezzo.</string>

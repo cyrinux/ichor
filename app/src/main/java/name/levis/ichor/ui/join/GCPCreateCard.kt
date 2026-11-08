@@ -30,6 +30,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,6 +41,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.CloudProviderStore
 import name.levis.ichor.data.JoinRequest
 import name.levis.ichor.data.NodeLifecycleRepository
+import name.levis.ichor.data.SignInEvent
 import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.GCPCheck
 import name.levis.ichor.model.GCPCreateSpec
@@ -50,10 +52,13 @@ import name.levis.ichor.model.GCPNetworkResult
 import name.levis.ichor.model.GCPNetworkSpec
 import name.levis.ichor.model.GCPOptions
 import name.levis.ichor.model.GCPPrice
+import name.levis.ichor.model.GCPSignInResult
 import name.levis.ichor.model.GCP_DEFAULT_DISK_GB
 import name.levis.ichor.model.GCP_MAX_DISK_GB
 import name.levis.ichor.model.GCP_MIN_DISK_GB
 import name.levis.ichor.model.arches
+import name.levis.ichor.model.gcpCredentialWith
+import name.levis.ichor.model.gcpMergeRenewed
 import name.levis.ichor.model.gcpValidName
 import name.levis.ichor.model.imagesFor
 import name.levis.ichor.model.natWarnings
@@ -78,8 +83,8 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiStateOf
 
 /**
- * The stored service account keys (one per project id, with the picked project and zone) and what
- * a VM can be created from. The key never reaches the screen.
+ * The stored service account keys or Google sign-ins (one per project id, with the picked project
+ * and zone) and what a VM can be created from. The key or sign-in never reaches the screen.
  */
 class GCPCreateViewModel(private val lifecycle: NodeLifecycleRepository, private val store: CloudProviderStore) : ViewModel() {
     private val _accounts = MutableStateFlow<List<String>>(emptyList())
@@ -91,6 +96,10 @@ class GCPCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
     private val _price = MutableStateFlow<UiState<GCPPrice>?>(null)
     val price: StateFlow<UiState<GCPPrice>?> = _price.asStateFlow()
     private var priceJob: Job? = null
+
+    /** The picked project's Google sign-in (its state is opaque, never shown), null for a key. */
+    private val _signedIn = MutableStateFlow<GCPCredential?>(null)
+    val signedIn: StateFlow<GCPCredential?> = _signedIn.asStateFlow()
 
     /** Reads the stored keys; the demo lists its samples without any. */
     fun load(demo: Boolean) {
@@ -107,16 +116,50 @@ class GCPCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
     fun pick(account: String) {
         _account.value = account
         _price.value = null
-        if (account.isBlank()) _options.value = null else reload()
+        _signedIn.value = null
+        if (account.isBlank()) {
+            _options.value = null
+            return
+        }
+        viewModelScope.launch {
+            _signedIn.value = runCatching { TalosJson.decodeFromString(GCPCredential.serializer(), credential(account)) }
+                .getOrNull()?.takeIf { it.googleAccount }
+            reload()
+        }
     }
 
     fun reload() {
         val account = _account.value
         viewModelScope.launch {
             _options.value = UiState.Loading
-            _options.value = uiStateOf { lifecycle.gcpOptions(if (account.isBlank()) "" else credential(account)) }
+            _options.value = uiStateOf { loadOptions(account) }
         }
     }
+
+    /** The options, sealing again the Google sign-in the core renewed. */
+    private suspend fun loadOptions(account: String): GCPOptions {
+        if (account.isBlank()) return lifecycle.gcpOptions("")
+        return lifecycle.gcpOptions(credential(account)).also { sealRenewed(account, it.credential) }
+    }
+
+    /**
+     * Seals the sign-in state the core renewed into the stored credential; "" is nothing to do.
+     * Only "googleSignIn" is taken: a project or zone picked while the call ran stays.
+     */
+    private suspend fun sealRenewed(account: String, renewed: String) {
+        val merged = gcpMergeRenewed(credential(account), renewed) ?: return
+        withContext(Dispatchers.IO) { store.save(CloudProviderStore.GCP, account, merged) }
+    }
+
+    suspend fun signInChoices(): List<String> = lifecycle.gcpSignInChoices()
+
+    fun signInStart(kind: String, secrets: Map<String, String>): Flow<SignInEvent> = lifecycle.gcpSignInStart(kind, secrets)
+
+    fun signInComplete(code: String) {
+        if (code.isNotBlank()) lifecycle.gcpSignInComplete(code.trim())
+    }
+
+    suspend fun signInCredential(): GCPSignInResult = lifecycle.gcpSignInCredential()
 
     /** Asks the Billing Catalog for [machineType] in [zone]; a failure (the demo has no key) is "price unavailable". */
     fun loadPrice(zone: String, machineType: String) {
@@ -137,10 +180,10 @@ class GCPCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
     fun switchPlace(project: String? = null, zone: String? = null) {
         val account = _account.value
         if (account.isBlank()) return
+        // Edited as JSON: a Google sign-in holds a state GCPCredential does not keep.
+        val fields = listOfNotNull(project?.let { "project" to it }, zone?.let { "zone" to it }).toTypedArray()
         viewModelScope.launch {
-            val current = runCatching { TalosJson.decodeFromString(GCPCredential.serializer(), credential(account)) }.getOrNull() ?: return@launch
-            val moved = current.copy(project = project ?: current.project, zone = zone ?: current.zone)
-            val updated = TalosJson.encodeToString(GCPCredential.serializer(), moved)
+            val updated = gcpCredentialWith(credential(account), *fields) ?: return@launch
             if (withContext(Dispatchers.IO) { store.save(CloudProviderStore.GCP, account, updated) }) pick(account)
         }
     }
@@ -150,7 +193,7 @@ class GCPCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
         val account = _account.value
         if (account.isBlank()) return
         viewModelScope.launch {
-            val state = uiStateOf { lifecycle.gcpOptions(credential(account)) }
+            val state = uiStateOf { loadOptions(account) }
             if (state is UiState.Loaded) _options.value = state
         }
     }
@@ -208,6 +251,7 @@ fun GCPCreateCard(
     val account by vm.account.collectAsStateWithLifecycle()
     val options by vm.options.collectAsStateWithLifecycle()
     val price by vm.price.collectAsStateWithLifecycle()
+    val signedIn by vm.signedIn.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var adding by remember { mutableStateOf(false) }
     var imageFor by remember { mutableStateOf<GCPImageAsk?>(null) }
@@ -234,10 +278,13 @@ fun GCPCreateCard(
                         IchorFilterChip(selected = name == account, onClick = { vm.pick(name) }, label = { Text(name) })
                     }
                 }
+                signedIn?.let { MutedText(stringResource(R.string.gcp_signin_signed_in, it.account)) }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    IchorOutlinedButton(onClick = { adding = true }) { Text(stringResource(R.string.gcp_add_key)) }
+                    IchorOutlinedButton(onClick = { adding = true }) { Text(stringResource(R.string.gcp_add_account)) }
                     if (account.isNotBlank()) {
-                        IchorTextButton(onClick = { vm.remove(account) }) { Text(stringResource(R.string.gcp_remove)) }
+                        IchorTextButton(onClick = { vm.remove(account) }) {
+                            Text(stringResource(if (signedIn != null) R.string.kube_signin_sign_out else R.string.gcp_remove))
+                        }
                     }
                 }
             }
@@ -263,7 +310,7 @@ fun GCPCreateCard(
             }
         }
     }
-    if (adding) GCPKeyDialog(vm) { adding = false }
+    if (adding) GCPAccountDialog(vm) { adding = false }
     imageFor?.let { ask ->
         GCPImageSheet(
             ask = ask,

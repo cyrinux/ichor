@@ -443,6 +443,14 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     `gcloud iam roles create ichorNodeCreator --project PROJECT_ID --file role.yaml` and grant it
     with `gcloud projects add-iam-policy-binding PROJECT_ID --member
     serviceAccount:SERVICE_ACCOUNT_EMAIL --role projects/PROJECT_ID/roles/ichorNodeCreator`.
+    Or **sign in with your Google account** instead, with the sign-ins GKE uses: gcloud's own
+    client in the browser, an OAuth client of your own, a workforce login config, or, on iOS
+    builds that carry one, the app's own "Sign in with Google" (on Android the native button is
+    not offered here yet). Then pick the project the calls are billed to (the quota project):
+    grant the printed role to your account (`--member user:YOUR_EMAIL`), and the account needs
+    `serviceusage.services.use` on that project (Service Usage Consumer), else Test names the
+    project it may not use. A session from gcloud's client ends after 7 days while Google keeps
+    its consent screen in Testing; the card then says to sign in again.
     Enable the Compute Engine API in the project; Test also needs Cloud Resource Manager to check
     the role (`testIamPermissions`), and the price needs Cloud Billing. Test says whether the key
     may create VMs, or names the permissions it lacks, or links to the page that enables a missing

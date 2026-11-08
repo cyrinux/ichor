@@ -46,6 +46,8 @@ const (
 	gcpReasonDisabled  = "SERVICE_DISABLED"
 	gcpReasonForbidden = "forbidden"
 	gcpReasonNotFound  = "notFound"
+	// gcpReasonUserProjectDenied: the signed-in account may not bill calls to the quota project.
+	gcpReasonUserProjectDenied = "USER_PROJECT_DENIED"
 
 	gcpOpDone = "DONE"
 )
@@ -87,7 +89,9 @@ func (e *gcpError) Error() string {
 
 		return line
 	case gcpReasonForbidden, "PERMISSION_DENIED", "insufficientPermissions":
-		return "Google Cloud refused " + e.action + ": grant the printed role to the service account"
+		return "Google Cloud refused " + e.action + ": grant the printed role to the service account (or the signed-in account)"
+	case gcpReasonUserProjectDenied:
+		return "you may not bill calls to project " + e.project + ": ask for serviceusage.services.use on it (the Service Usage Consumer role), or pick another project"
 	case "quotaExceeded", "QUOTA_EXCEEDED", "ZONE_RESOURCE_POOL_EXHAUSTED", "ZONE_RESOURCE_POOL_EXHAUSTED_WITH_DETAILS":
 		return "quota exceeded in " + cmp.Or(e.zone, "this zone") + ": pick another zone or machine type (" + e.message + ")"
 	case gcpReasonNotFound:
@@ -118,11 +122,15 @@ type gcpScrubbed struct {
 func (e *gcpScrubbed) Error() string { return e.message }
 func (e *gcpScrubbed) Unwrap() error { return e.err }
 
-// gcpCredential is credJSON: {"serviceAccountJson":"<the key file's text>","project","zone"}.
+// gcpCredential is credJSON: {"serviceAccountJson":"<the key file's text>","project","zone"}, or a
+// Google-account sign-in: {"googleSignIn":<its state>,"account","project" (the quota project),
+// "zone"} (cloud_gcp_signin.go).
 type gcpCredential struct {
-	ServiceAccountJSON string `json:"serviceAccountJson"`
-	Project            string `json:"project"`
-	Zone               string `json:"zone"`
+	ServiceAccountJSON string         `json:"serviceAccountJson,omitempty"`
+	Project            string         `json:"project"`
+	Zone               string         `json:"zone"`
+	GoogleSignIn       *kubeAuthState `json:"googleSignIn,omitempty"`
+	Account            string         `json:"account,omitempty"`
 }
 
 // gcpClient calls Compute Engine with one service account key. The key goes only to its
@@ -135,6 +143,9 @@ type gcpClient struct {
 	sa            gcpServiceAccount
 	raw           string // the key file's text, for mint
 	number        string // the project number, learned from Compute: scrubbed from messages
+	// user is the Google-account sign-in (cloud_gcp_signin.go), nil for a key; account its email.
+	user    *gcpUser
+	account string
 }
 
 func newGCPClient(credJSON string) (*gcpClient, error) {
@@ -144,6 +155,10 @@ func newGCPClient(credJSON string) (*gcpClient, error) {
 		if err := json.Unmarshal([]byte(credJSON), &c); err != nil {
 			return nil, errors.New("invalid Google Cloud credential data") //nolint:nilerr // the parser's message may quote the key
 		}
+	}
+
+	if c.usesGoogleAccount() {
+		return newGCPUserClient(c)
 	}
 
 	if strings.TrimSpace(c.ServiceAccountJSON) == "" {
@@ -175,7 +190,7 @@ func newGCPClient(credJSON string) (*gcpClient, error) {
 // scrub drops what a message must not carry: the private key, the token, the key's email and id,
 // the project number.
 func (c *gcpClient) scrub(message string) string {
-	for _, secret := range []string{c.sa.PrivateKey, c.token, c.sa.ClientEmail, c.sa.KeyID, c.number} {
+	for _, secret := range append([]string{c.sa.PrivateKey, c.token, c.sa.ClientEmail, c.sa.KeyID, c.number}, c.userSecrets()...) {
 		if secret != "" {
 			message = strings.ReplaceAll(message, secret, "…")
 		}
@@ -191,6 +206,17 @@ func (c *gcpClient) scrub(message string) string {
 // run (minted again under the refresh margin).
 func (c *gcpClient) mint(ctx context.Context) error {
 	if c.token != "" && time.Until(c.expiry) > tokenRefreshMargin {
+		return nil
+	}
+
+	if c.user != nil {
+		token, expiry, err := c.mintUser(ctx)
+		if err != nil {
+			return &gcpScrubbed{message: "Google sign-in: " + c.scrub(err.Error()), err: err}
+		}
+
+		c.token, c.expiry = token, expiry
+
 		return nil
 	}
 
@@ -321,6 +347,10 @@ func (c *gcpClient) apiError(method, u string, status int, data []byte) *gcpErro
 		if d.Reason == gcpReasonDisabled {
 			e.reason, e.service = gcpReasonDisabled, d.Metadata["service"]
 			e.activationURL = c.activation(d.Metadata["activationUrl"])
+		}
+
+		if d.Reason == gcpReasonUserProjectDenied {
+			e.reason = gcpReasonUserProjectDenied
 		}
 	}
 
@@ -648,6 +678,10 @@ type gcpTestResult struct {
 	CanCreate bool     `json:"canCreate"`
 	Checked   bool     `json:"checked"`
 	Missing   []string `json:"missing"`
+	// Credential is the credential JSON to seal again when a Google sign-in changed, else "";
+	// RenewHint says how to sign in again once Google refuses it ("" for a key).
+	Credential string `json:"credential,omitempty"`
+	RenewHint  string `json:"renewHint,omitempty"`
 }
 
 // GCPTest checks a service account key. JSON: {"account","project","canCreate","checked",
@@ -672,7 +706,7 @@ func GCPTest(credJSON string) (out string, err error) {
 		return "", err
 	}
 
-	result := gcpTestResult{Account: c.sa.ClientEmail, Project: c.project, Missing: []string{}}
+	result := gcpTestResult{Account: cmp.Or(c.sa.ClientEmail, c.account), Project: c.project, Missing: []string{}, RenewHint: c.renewHint()}
 
 	granted, err := c.testPermissions(ctx, c.project, gcpRolePermissions())
 	if err == nil {
@@ -680,6 +714,8 @@ func GCPTest(credJSON string) (out string, err error) {
 		result.Missing = missingPermissions(granted, gcpRolePermissions())
 		result.CanCreate = len(missingPermissions(granted, gcpCreatePermissions(false))) == 0
 	}
+
+	result.Credential = c.updated()
 
 	return toJSON(result)
 }
@@ -716,6 +752,7 @@ func GCPRoleDefinition(project string) string {
 	b.WriteString("# gcloud iam roles create ichorNodeCreator --project " + project + " --file this-file.yaml\n")
 	b.WriteString("# gcloud projects add-iam-policy-binding " + project + " --member serviceAccount:SERVICE_ACCOUNT_EMAIL" +
 		" --role projects/" + project + "/roles/ichorNodeCreator\n")
+	b.WriteString("# Signed in with a Google account instead: --member user:YOUR_EMAIL (and roles/serviceusage.serviceUsageConsumer).\n")
 	b.WriteString("# Wider, as the Talos and Omni guides say: roles/compute.instanceAdmin.v1. GCP IAM cannot limit a delete to\n")
 	b.WriteString("# labelled instances: Ichor deletes only the instance its run named after the host name and labelled ichor-run.\n")
 	b.WriteString("title: Ichor node creator\n")

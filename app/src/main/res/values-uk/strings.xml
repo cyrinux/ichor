@@ -6677,7 +6677,16 @@
     <string name="gcp_title">Створити ВМ у Google Cloud</string>
     <string name="gcp_howto">1. Виберіть учасника для копіювання, потім ім\'я хоста та інсталяційний диск нового вузла.\n2. Додайте ключ сервісного облікового запису з роллю, яку показує Ichor, і ввімкненим Compute Engine API в його проєкті.\n3. Виберіть зону, тип машини, образ Talos із проєкту (зареєструйте його за посібником Talos, доки Ichor не вміє його створювати), мережу та її підмережу.\n4. Створіть її: Ichor спершу покаже ціну й стежитиме, доки вузол не приєднається. Телефон має досягати порту 50000 ВМ.</string>
     <string name="gcp_howto_omni">1. Додайте ключ сервісного облікового запису з роллю, яку показує Ichor, і ввімкненим Compute Engine API в його проєкті.\n2. Назвіть ВМ, потім виберіть зону, тип машини, образ Talos із проєкту, мережу та її підмережу.\n3. Створіть її: Ichor спершу покаже ціну, потім стежитиме, доки машина не з\'явиться в Omni. Виділіть її кластеру.</string>
-    <string name="gcp_add_key">Додати ключ сервісного облікового запису</string>
+    <string name="gcp_add_account">Додати обліковий запис</string>
+    <string name="gcp_signin_option_key">Вставити ключ</string>
+    <string name="gcp_signin_option_google">Увійти через Google</string>
+    <string name="gcp_signin_warning">Вхід зберігається зашифрованим на цьому пристрої й не потрапляє до резервних копій. Він може все, що дозволено вашому обліковому запису в усіх проєктах, а не лише роль, яку виводить Ichor: якщо маєте ключ лише з цією роллю, краще використайте його.</string>
+    <string name="gcp_signin_signed_in">Виконано вхід через Google як %1$s</string>
+    <string name="gcp_signin_project">Проєкт, на який виставляється рахунок за виклики</string>
+    <string name="gcp_signin_more">Показано не всі проєкти: введіть ID іншого.</string>
+    <string name="gcp_signin_project_id">ID проєкту</string>
+    <string name="gcp_signin_use_project">Використати цей проєкт</string>
+    <string name="gcp_signin_other_project">Вибрати інший проєкт</string>
     <string name="gcp_remove">Вилучити цей ключ</string>
     <string name="gcp_key_warning">Ключ сервісного облікового запису не спливає і може робити те, що дозволяють його ролі. Він зберігається запечатаним на цьому пристрої й не потрапляє в резервні копії: краще ключ лише з роллю, яку показує Ichor.</string>
     <string name="gcp_role_hint">Створіть цю власну роль у проєкті та надайте її сервісному обліковому запису: лише виклики, які робить Ichor. Увімкніть Compute Engine API; з Cloud Resource Manager перевірка покаже роль, а Cloud Billing — ціну.</string>

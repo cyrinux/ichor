@@ -88,8 +88,9 @@ type fakeGCE struct {
 	nat             bool   // the default network has a Cloud NAT
 	slowDelete      bool   // an accepted delete never finishes, and the instance stays
 	onRunning       func()
-	image           *fakeGCEImage   // the image run's helper, data disk and images (cloud_gcp_image_test.go)
-	network         *fakeGCENetwork // the default network and its firewall rules (cloud_gcp_network_test.go)
+	image   *fakeGCEImage   // the image run's helper, data disk and images (cloud_gcp_image_test.go)
+	network *fakeGCENetwork // the default network and its firewall rules (cloud_gcp_network_test.go)
+	user    *fakeGCEUser    // the Google-account side (cloud_gcp_signin_test.go), nil for a key
 
 	tokens        int
 	badScope      int
@@ -163,6 +164,10 @@ func (f *fakeGCE) handle(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 
 	if path == "/token" {
+		if f.user != nil && f.user.token(w, r) {
+			return
+		}
+
 		f.token(w, r)
 
 		return
@@ -177,6 +182,12 @@ func (f *fakeGCE) handle(w http.ResponseWriter, r *http.Request) {
 
 	if r.Header.Get("X-Goog-User-Project") != gcpTestProject {
 		f.noQuotaHeader++
+	}
+
+	if f.user != nil && f.user.denyQuota && strings.HasPrefix(path, gcpTestBase) {
+		gceUserProjectDenied(w)
+
+		return
 	}
 
 	switch {

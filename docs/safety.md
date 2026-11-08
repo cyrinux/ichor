@@ -176,7 +176,10 @@ Part of the [Ichor documentation](../README.md#documentation).
   and out of backups, and the sheet shows only its email and project; it does not expire and can
   do what its roles allow, so give it only the role the app prints. The token
   it mints (the cloud-platform scope) is kept for the run only, and the key, the token, the key's
-  email and id and the project number never appear in a message or the activity log. A key that
+  email and id and the project number never appear in a message or the activity log. A Google
+  account signed in instead is sealed the same way (its refresh token, out of backups and logs),
+  but it reaches what the account may do on every project, not only the printed role: prefer a
+  key with only that role when you can have one. Sign out from the card to drop it. A key that
   signs in to GKE may still be refused by Compute Engine, so before any write the run checks the
   image (ready, the machine type's architecture, `UEFI_COMPATIBLE` for Arm), the subnet against
   the zone's region, that no instance of the host's name is in the zone, the user data against
