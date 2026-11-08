@@ -25,7 +25,7 @@ aboutLibraries = "15.3.0"
 billing = "9.1.0"
 appUpdate = "2.1.0"
 playServicesAuth = "22.0.0"
-yubikit = "3.2.1"
+yubikit = "3.3.0"
 slf4j = "2.0.20"
 # Wear OS: the watch app (:wear) and the phone's Data Layer sync (Play build only).
 playServicesWearable = "20.0.1"
