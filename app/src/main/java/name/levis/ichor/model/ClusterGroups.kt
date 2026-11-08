@@ -49,7 +49,7 @@ fun clusterGroupKey(context: ContextSummary, masked: Boolean): ClusterGroup {
     val (id, owner) = when {
         masked -> null to null
         context.omni -> context.authKey.ifBlank { context.identity }.ifBlank { null } to context.identity.ifBlank { null }
-        cloud != null -> cloud.owner to cloud.shortOwner
+        cloud != null && cloud.owner.isNotEmpty() -> cloud.owner to cloud.shortOwner
         else -> null to null
     }
     val key = listOfNotNull(provider.name.lowercase(), id).joinToString(":")

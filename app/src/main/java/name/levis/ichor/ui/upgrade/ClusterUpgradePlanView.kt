@@ -1,8 +1,9 @@
 package name.levis.ichor.ui.upgrade
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,10 +11,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorAssistChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +25,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import name.levis.ichor.ui.components.SMOKE_UPGRADE
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -31,6 +35,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.ClusterUpgradeNode
 import name.levis.ichor.model.ClusterUpgradePlan
 import name.levis.ichor.model.TalosRelease
+import name.levis.ichor.model.offeredVersions
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.ErrorBox
@@ -65,7 +70,8 @@ fun ClusterUpgradePlanView(
     var understood by rememberSaveable(version) { mutableStateOf(false) }
 
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)
+            .then(if (plan is UiState.Loaded) Modifier.testTag(SMOKE_UPGRADE) else Modifier),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (demo) InfoNotice(stringResource(R.string.cluster_upgrade_demo))
@@ -90,14 +96,14 @@ fun ClusterUpgradePlanView(
                     )
                 }
                 SectionTitle(stringResource(R.string.cluster_upgrade_order, p.done, p.nodes.size))
-                Card(Modifier.fillMaxWidth()) {
+                IchorCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(vertical = 8.dp)) { p.nodes.forEachIndexed { i, n -> PlanNodeRow(i + 1, n) } }
                 }
                 Checks(p.allBlockers(), warnings, understood) { understood = it }
                 if (p.upToDate) Text(stringResource(R.string.cluster_upgrade_up_to_date, p.version), color = colors.ok)
                 if (busyWith != null) Text(busyWith, color = colors.warn, style = MaterialTheme.typography.bodySmall)
                 MutedText(stringResource(R.string.cluster_upgrade_keep_open))
-                Button(
+                IchorButton(
                     onClick = { onStart(ClusterUpgradeChoice(p.version, drain && !p.drain, warnings.isEmpty() || understood)) },
                     enabled = p.canStart && busyWith == null && (warnings.isEmpty() || understood),
                     modifier = Modifier.fillMaxWidth(),
@@ -109,6 +115,7 @@ fun ClusterUpgradePlanView(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun VersionPicker(releases: UiState<List<TalosRelease>>, version: String, onVersion: (String) -> Unit) {
     when (releases) {
@@ -117,15 +124,21 @@ private fun VersionPicker(releases: UiState<List<TalosRelease>>, version: String
         is UiState.Failed -> MutedText(releases.message.asString())
         is UiState.Loaded -> Unit
     }
-    val offered = ((releases as? UiState.Loaded)?.data.orEmpty().map { it.version } + version).filter { it.isNotEmpty() }.distinct().take(MAX_VERSIONS)
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        offered.forEach { v ->
-            FilterChip(selected = v == version, onClick = { onVersion(v) }, label = { Text(v, fontFamily = FontFamily.Monospace) })
+    var showAll by rememberSaveable { mutableStateOf(false) }
+    val offered = offeredVersions((releases as? UiState.Loaded)?.data.orEmpty().map { it.version }, version, showAll)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        offered.versions.forEach { v ->
+            IchorFilterChip(selected = v == version, onClick = { onVersion(v) }, label = { Text(v, fontFamily = FontFamily.Monospace) })
+        }
+        if (offered.hidden > 0) {
+            IchorAssistChip(onClick = { showAll = true }, label = { Text(stringResource(R.string.cluster_upgrade_more_versions, offered.hidden)) })
         }
     }
+    // Not while the list is still loading: nothing says yet that it is absent.
+    if (offered.selectedUnlisted && releases !is UiState.Loading) {
+        MutedText(stringResource(R.string.cluster_upgrade_version_unlisted, version))
+    }
 }
-
-private const val MAX_VERSIONS = 6
 
 @Composable
 private fun PlanNodeRow(position: Int, node: ClusterUpgradeNode) {
@@ -149,7 +162,7 @@ private fun PlanNodeRow(position: Int, node: ClusterUpgradeNode) {
 @Composable
 private fun Checks(blockers: List<String>, warnings: List<String>, understood: Boolean, onUnderstood: (Boolean) -> Unit) {
     val colors = LocalStatusColors.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SectionTitle(stringResource(R.string.upgrade_checks))
             blockers.forEach { Text("✕ $it", color = colors.bad, style = MaterialTheme.typography.bodyMedium) }

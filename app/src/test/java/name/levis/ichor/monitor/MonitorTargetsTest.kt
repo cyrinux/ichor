@@ -55,6 +55,15 @@ class MonitorTargetsTest {
     }
 
     @Test
+    fun aClusterSettingReachesAContextAddedLater() {
+        // "fa" was set before "fr", another context of the same cluster, was added.
+        assertEquals(setOf("fa", "fr"), wholeClusters(setOf("fa"), summary))
+        // A removed cluster's fingerprint goes; the other clusters are untouched.
+        assertEquals(setOf("fp"), wholeClusters(setOf("fp", "gone"), summary))
+        assertEquals(emptySet<String>(), wholeClusters(emptySet(), summary))
+    }
+
+    @Test
     fun unreachableAlertsAtTheNthFailureOnce() {
         var reach: Reach? = null
         val alerts = (1..5).map {

@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.flux
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -64,7 +65,10 @@ fun FluxSourcesTab(status: FluxStatus, busy: Set<String>, onAct: (FluxSource, Fl
         if (listDenial != null) item(key = "denied") { KubeDenialNote(listDenial, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
         if (sources.isEmpty() && status.sourcesError.isEmpty()) item(key = "sources-empty") { EmptyText(stringResource(R.string.flux_no_sources)) }
         items(sources, key = { it.key }) { src ->
-            SourceRow(src, src.key in busy) { onAct(src, it) }
+            val sourceBusy = src.key in busy
+            FluxSourceQuickActions(src, sourceBusy, onAct = { onAct(src, it) }) {
+                SourceRow(src, sourceBusy) { onAct(src, it) }
+            }
             HorizontalDivider()
         }
     }
@@ -78,7 +82,7 @@ fun FluxSourcesTab(status: FluxStatus, busy: Set<String>, onAct: (FluxSource, Fl
 private fun SourceRow(src: FluxSource, busy: Boolean, onAct: (FluxAction) -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val state = FluxState.of(src.serviceHealth, src.suspended, src.isBusy)
-    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(start = 16.dp, end = 4.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(src.kindIcon, contentDescription = src.kind, tint = muted, modifier = Modifier.size(24.dp))
         Spacer(Modifier.size(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

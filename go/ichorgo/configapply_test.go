@@ -37,8 +37,11 @@ type fakeApply struct {
 	tryFor time.Duration
 }
 
-// fakeConfigNode is a node holding a config: a try replaces it until revert is called.
+// fakeConfigNode is a node holding a config: a try replaces it until revert is called. mu
+// guards what a test's own goroutine (Talos reverting, a cancel) reads or changes while the
+// try runs.
 type fakeConfigNode struct {
+	mu       sync.Mutex
 	t        *testing.T
 	active   []byte
 	previous []byte
@@ -65,7 +68,11 @@ func newFakeConfigNode(t *testing.T) *fakeConfigNode {
 }
 
 func (n *fakeConfigNode) current(context.Context) (configSnapshot, error) {
-	provider, err := configloader.NewFromBytes(n.active)
+	n.mu.Lock()
+	active := n.active
+	n.mu.Unlock()
+
+	provider, err := configloader.NewFromBytes(active)
 	if err != nil {
 		return configSnapshot{}, err
 	}
@@ -74,6 +81,9 @@ func (n *fakeConfigNode) current(context.Context) (configSnapshot, error) {
 }
 
 func (n *fakeConfigNode) apply(_ context.Context, data []byte, mode machineapi.ApplyConfigurationRequest_Mode, dryRun bool, tryFor time.Duration) (configApplyResult, error) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.calls = append(n.calls, fakeApply{string(data), mode, dryRun, tryFor})
 
 	result := configApplyResult{mode: machineapi.ApplyConfigurationRequest_NO_REBOOT}
@@ -110,8 +120,19 @@ func (n *fakeConfigNode) apply(_ context.Context, data []byte, mode machineapi.A
 	return result, nil
 }
 
+// callCount is how many applies the node has had (read from a test's own goroutine).
+func (n *fakeConfigNode) callCount() int {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
+	return len(n.calls)
+}
+
 // revert is what Talos does when a try times out.
 func (n *fakeConfigNode) revert() {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	if n.previous != nil {
 		n.active, n.previous = n.previous, nil
 	}
@@ -453,7 +474,7 @@ func TestTryTimesOutAndReverts(t *testing.T) {
 
 	go func() {
 		// Talos reverts, then the app's own timer fires.
-		for len(h.node.calls) < 2 {
+		for h.node.callCount() < 2 {
 			time.Sleep(time.Millisecond)
 		}
 
@@ -534,7 +555,7 @@ func TestTryRefusals(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 
 		go func() {
-			for len(h.node.calls) < 2 {
+			for h.node.callCount() < 2 {
 				time.Sleep(time.Millisecond)
 			}
 

@@ -36,12 +36,22 @@ func TestReadIntegrations(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, err := readIntegrations(context.Background(), k)
+	progress := startReadProgress("test-integrations", "", integrationsSteps...)
+
+	res, err := readIntegrations(withReadProgress(context.Background(), progress), k)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !slices.Equal(res.Supported, []string{"argoproj.io", "longhorn.io"}) {
+	progress.finish()
+	checkFinishedProgress(t, "test-integrations", integrationsSteps)
+
+	if kinds := readProgressFor(t, "test-integrations").Steps[1]; kinds.Count == 0 || kinds.Count != kinds.Total {
+		t.Errorf("kinds step counted %d/%d documents", kinds.Count, kinds.Total)
+	}
+
+	// Cluster API's core group is read; its infrastructure providers' are not (a request).
+	if !slices.Equal(res.Supported, []string{"argoproj.io", "cluster.x-k8s.io", "longhorn.io"}) {
 		t.Errorf("supported: %v", res.Supported)
 	}
 
@@ -55,11 +65,12 @@ func TestReadIntegrations(t *testing.T) {
 	}
 
 	istio := res.Families[2].Groups
-	if len(istio) != 2 || istio[0].Name != "networking.istio.io" || !slices.Equal(istio[0].Kinds, []string{"Gateway", "VirtualService"}) {
+	if len(istio) != 2 || istio[0].Name != "networking.istio.io" || !slices.Equal(istio[0].Kinds, []string{"Gateway", "VirtualService"}) ||
+		!slices.Equal(istio[0].Resources, []string{"gateways", "virtualservices"}) {
 		t.Errorf("istio: %+v", istio)
 	}
 
-	if capi := res.Families[0].Groups; len(capi) != 2 || !slices.Equal(capi[1].Kinds, []string{"TalosCluster"}) {
+	if capi := res.Families[0].Groups; len(capi) != 1 || !slices.Equal(capi[0].Kinds, []string{"TalosCluster"}) {
 		t.Errorf("cluster api: %+v", capi)
 	}
 
@@ -100,7 +111,7 @@ func TestIsBuiltinGroup(t *testing.T) {
 
 func TestIntegrationIssueURL(t *testing.T) {
 	family, _ := json.Marshal(integrationFamily{ID: "istio.io", Groups: []integrationGroup{
-		{Name: "networking.istio.io", Version: "v1", Kinds: []string{"Gateway", "VirtualService"}},
+		{Name: "networking.istio.io", Version: "v1", Kinds: []string{"Gateway", "VirtualService"}, Resources: []string{"gateways", "virtualservices"}},
 		{Name: "telemetry.istio.io", Version: "v1", Kinds: []string{}},
 	}})
 
@@ -115,13 +126,17 @@ func TestIntegrationIssueURL(t *testing.T) {
 	}
 
 	q := u.Query()
-	if u.Host != "github.com" || u.Path != "/owner/repo/issues/new" || q.Get("template") != "integration.yml" ||
-		q.Get("title") != "Integration: istio.io" || q.Get("operator") != "istio.io" || q.Get("app") != "Ichor 1.0 (Android)" {
+	if u.Host != "github.com" || u.Path != "/owner/repo/issues/new" || q.Get("template") != "crd-request.yml" ||
+		q.Get("title") != "Plugin request: istio.io" || q.Get("operator") != "istio.io" || q.Has("crd_url") {
 		t.Errorf("url: %s", raw)
 	}
 
-	if want := "networking.istio.io/v1: Gateway, VirtualService\ntelemetry.istio.io/v1"; q.Get("groups") != want {
-		t.Errorf("groups: %q", q.Get("groups"))
+	if want := "API groups and kinds served by the cluster:\nnetworking.istio.io/v1: Gateway, VirtualService\ntelemetry.istio.io/v1\n\nFrom Ichor 1.0 (Android)"; q.Get("notes") != want {
+		t.Errorf("notes: %q", q.Get("notes"))
+	}
+
+	if want := "gateways.networking.istio.io\nvirtualservices.networking.istio.io"; q.Get("crds") != want {
+		t.Errorf("crds: %q", q.Get("crds"))
 	}
 
 	if _, err := IntegrationIssueURL("owner/repo", "{", ""); err == nil {
@@ -158,7 +173,7 @@ func TestIntegrationsDemoSorted(t *testing.T) {
 
 	for _, fam := range d.Families {
 		for _, g := range fam.Groups {
-			if integrationSupported[g.Name] || isBuiltinGroup(g.Name) || integrationFamilyOf(g.Name) != fam.ID {
+			if integrationSupported()[g.Name] || isBuiltinGroup(g.Name) || integrationFamilyOf(g.Name) != fam.ID {
 				t.Errorf("demo group %s in %s", g.Name, fam.ID)
 			}
 		}

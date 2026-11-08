@@ -2,6 +2,9 @@ package name.levis.ichor.ui.live
 
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.testTag
+import name.levis.ichor.ui.components.LoadFailureRow
+import name.levis.ichor.ui.components.SMOKE_GRAPHS
 import name.levis.ichor.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -28,7 +31,6 @@ import name.levis.ichor.ui.app
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.pollEvery
 import name.levis.ichor.ui.theme.LocalChartColors
-import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
 import name.levis.ichor.util.formatBytes
 import java.util.Locale
@@ -83,9 +85,10 @@ fun LiveStatsTab(
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().then(if (points.isEmpty()) Modifier else Modifier.testTag(SMOKE_GRAPHS)),
     ) {
-        state.error?.let { item { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) } }
+        // No Retry: the next poll, a few seconds away, reads again on its own.
+        state.error?.let { item { LoadFailureRow(it, onRetry = null, compact = true) } }
         // An error says why nothing comes: "collecting" would claim otherwise.
         if (points.isEmpty() && state.error == null) {
             item { Text(stringResource(R.string.node_live_collecting, POLL_SECONDS.toInt()), color = MaterialTheme.colorScheme.onSurfaceVariant) }

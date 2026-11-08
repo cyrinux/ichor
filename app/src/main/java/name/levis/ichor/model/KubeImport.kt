@@ -37,11 +37,14 @@ fun kubeImportRows(summary: ConfigSummary, conflicts: List<ImportConflict>, choi
         )
     }
 
+/** The core's auth method for a kubeconfig context with a bearer token (a ServiceAccount's, say). */
+const val KUBE_AUTH_TOKEN = "token"
+
 /** How a kubeconfig context signs in, for the preview; null for a method the app does not know. */
 @StringRes
 fun kubeAuthLabel(auth: String): Int? = when (auth) {
     "cert" -> R.string.kube_auth_cert
-    "token" -> R.string.kube_auth_token
+    KUBE_AUTH_TOKEN -> R.string.kube_auth_token
     "eks" -> R.string.kube_auth_eks
     "gke" -> R.string.kube_auth_gke
     "oidc" -> R.string.kube_auth_oidc
@@ -65,7 +68,19 @@ fun kubeProblemText(problem: String): Int = when (problem) {
     "kube-proxy-url" -> R.string.kube_problem_proxy
     "kube-basic-auth" -> R.string.kube_problem_basic_auth
     "kube-sign-in-later" -> R.string.kube_problem_sign_in_later
-    "kube-exec-unsupported" -> R.string.kube_problem_exec
+    KUBE_PROBLEM_EXEC -> R.string.kube_problem_exec
     "kube-no-credentials" -> R.string.kube_problem_no_credentials
     else -> R.string.kube_problem_invalid
+}
+
+/** The ParseKubeconfig problem code for an exec plugin the phone cannot run. */
+const val KUBE_PROBLEM_EXEC = "kube-exec-unsupported"
+
+/** What to do instead of an exec plugin the phone cannot run (ParseKubeconfig's execHint). */
+@StringRes
+fun kubeExecHintText(hint: String): Int = when (hint) {
+    "teleport" -> R.string.kube_exec_hint_teleport
+    "token-wrapper" -> R.string.kube_exec_hint_token_wrapper
+    "oidc-no-issuer" -> R.string.kube_exec_hint_oidc_no_issuer
+    else -> R.string.kube_exec_hint_unknown
 }

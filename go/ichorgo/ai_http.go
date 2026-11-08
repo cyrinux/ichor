@@ -9,6 +9,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 const (
@@ -21,7 +23,7 @@ var (
 	// aiHTTPClient is replaced in tests by a TLS test server's own client.
 	// Provider APIs do not redirect, and following one would carry the API key to wherever it
 	// points: a redirect is an error for aiDo. The context bounds the streamed answer.
-	aiHTTPClient = newHTTPClient(httpClientOpts{})
+	aiHTTPClient = httpx.New(httpx.Opts{})
 	// A busy provider (429, 5xx) gets one more try after this long.
 	aiRetryDelay = 2 * time.Second
 )

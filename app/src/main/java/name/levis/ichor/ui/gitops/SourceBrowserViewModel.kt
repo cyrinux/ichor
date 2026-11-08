@@ -1,0 +1,286 @@
+package name.levis.ichor.ui.gitops
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import name.levis.ichor.R
+import name.levis.ichor.data.GitHostMissing
+import name.levis.ichor.data.GitOpsRepository
+import name.levis.ichor.data.MachineConfigRepository
+import name.levis.ichor.data.StagedEdits
+import name.levis.ichor.model.GitFile
+import name.levis.ichor.model.GitRepoSearch
+import name.levis.ichor.model.GitSource
+import name.levis.ichor.model.GitTree
+import name.levis.ichor.model.ProposeBlock
+import name.levis.ichor.model.MAX_PATCH_BYTES
+import name.levis.ichor.model.QuickEditTargets
+import name.levis.ichor.model.TalosPatchInfo
+import name.levis.ichor.model.isYamlPath
+import name.levis.ichor.model.SopsInfo
+import name.levis.ichor.model.SourceReadPath
+import name.levis.ichor.model.cleanSourceDir
+import name.levis.ichor.ui.LocalizedException
+import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.cancellableCatching
+import name.levis.ichor.ui.refreshFailed
+import name.levis.ichor.ui.uiText
+
+/** Whose files are browsed: an Argo CD or Flux app's source, or the active cluster's own repository. */
+sealed interface SourceTarget {
+    /** The GitOps tool that applies the files ("argocd", "flux"), "" for the cluster repository. */
+    val tool: String
+
+    /** The app's source [index] among `GitOpsSource`'s. */
+    data class App(override val tool: String, val kind: String, val namespace: String, val name: String, val index: Int) : SourceTarget
+
+    /** The repository saved for the active cluster, from its root at the branch head. */
+    data object Repo : SourceTarget {
+        override val tool: String = ""
+    }
+}
+
+/**
+ * Find in repository: [open] shows the field; [query] the text searched for [result] (null
+ * before the first search).
+ */
+data class SourceSearch(
+    val open: Boolean = false,
+    val query: String = "",
+    val result: UiState<GitRepoSearch>? = null,
+)
+
+/** The directory on screen; [missingHost]: no token is saved for that Git host. */
+data class SourceListing(
+    val dir: String = "",
+    val tree: UiState<GitTree> = UiState.Loading,
+    val missingHost: String? = null,
+)
+
+/**
+ * The source [index] of an app [target]'s, or the active cluster's repository at its branch
+ * head; a localized error when the app has no such source or the cluster no repository.
+ */
+internal suspend fun GitOpsRepository.sourceOf(target: SourceTarget): GitSource = when (target) {
+    is SourceTarget.App -> source(target.tool, target.kind, target.namespace, target.name).sources.getOrNull(target.index)
+        ?: throw LocalizedException(UiText.Res(R.string.gitops_source_not_browsable))
+    SourceTarget.Repo -> clusterRepoSource()
+}
+
+/**
+ * The source browser: the app's source read once per [load] key (the context and config
+ * generation), then one directory at a time. The directories walked are kept, so back goes up
+ * the way the user came down before leaving the screen. The cluster repository's files staged
+ * for one pull request are [staged]'s.
+ */
+class SourceBrowserViewModel(private val gitOps: GitOpsRepository, stagedEdits: StagedEdits? = null) : ViewModel() {
+    /** The Staged changes sheet, null when nothing can be staged. */
+    val staged: StagedChanges? = stagedEdits?.let { StagedChanges(gitOps, it, viewModelScope) }
+    private val _source = MutableStateFlow<UiState<GitSource>>(UiState.Loading)
+    val source: StateFlow<UiState<GitSource>> = _source.asStateFlow()
+    private val _listing = MutableStateFlow(SourceListing())
+    val listing: StateFlow<SourceListing> = _listing.asStateFlow()
+    private val _trail = MutableStateFlow<List<String>>(emptyList())
+
+    /** The directories back goes to, the last one first. */
+    val trail: StateFlow<List<String>> = _trail.asStateFlow()
+    private var key: Any? = null
+    private var target: SourceTarget? = null
+    private val _search = MutableStateFlow(SourceSearch())
+    val search: StateFlow<SourceSearch> = _search.asStateFlow()
+    private var sourceJob: Job? = null
+    private var listJob: Job? = null
+    private var searchJob: Job? = null
+
+    /** [startDir]: where to open, null for the source's own path. */
+    fun load(target: SourceTarget, startDir: String?, key: Any) {
+        if (key == this.key) return
+        this.key = key
+        this.target = target
+        _trail.value = emptyList()
+        closeSearch()
+        fetchSource(startDir)
+    }
+
+    fun openSearch() {
+        _search.update { it.copy(open = true) }
+    }
+
+    /** Back to the directory listing; a search running stops. */
+    fun closeSearch() {
+        searchJob?.cancel()
+        _search.value = SourceSearch()
+    }
+
+    /** Finds [query] across the whole repository of the source on screen. */
+    fun search(query: String) {
+        val src = (_source.value as? UiState.Loaded)?.data ?: return
+        val text = query.trim()
+        if (text.isEmpty()) return
+        searchJob?.cancel()
+        _search.value = SourceSearch(open = true, query = text, result = UiState.Loading)
+        searchJob = viewModelScope.launch {
+            val result = cancellableCatching { gitOps.repoSearch(src, text) }
+                .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
+            _search.update { it.copy(result = result) }
+        }
+    }
+
+    /** Opens [dir], remembering the one on screen for back. */
+    fun open(dir: String) {
+        val clean = cleanSourceDir(dir)
+        val current = _listing.value.dir
+        if (clean == current) return
+        _trail.value = _trail.value + current
+        list(clean)
+    }
+
+    /** Back to the directory before; false when there is none (back leaves the screen). */
+    fun back(): Boolean {
+        val trail = _trail.value
+        if (trail.isEmpty()) return false
+        _trail.value = trail.dropLast(1)
+        list(trail.last())
+        return true
+    }
+
+    fun refresh() {
+        if (_source.value is UiState.Loaded) list(_listing.value.dir) else fetchSource(null)
+    }
+
+    private fun fetchSource(startDir: String?) {
+        val t = target ?: return
+        sourceJob?.cancel()
+        listJob?.cancel()
+        sourceJob = viewModelScope.launch {
+            try {
+                val src = gitOps.sourceOf(t)
+                if (t == SourceTarget.Repo) staged?.attach(src)
+                _source.value = UiState.Loaded(src)
+                if (src.readPath != SourceReadPath.NONE) list(cleanSourceDir(startDir ?: src.path))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: GitHostMissing) {
+                // The cluster repository asks its forge before any directory: no token, no source.
+                _source.value = UiState.Failed(e.uiText())
+                _listing.value = SourceListing(missingHost = e.host)
+            } catch (e: Throwable) {
+                _source.value = _source.value.refreshFailed(e.uiText())
+            }
+        }
+    }
+
+    private fun list(dir: String) {
+        val src = (_source.value as? UiState.Loaded)?.data ?: return
+        listJob?.cancel()
+        val previous = _listing.value
+        _listing.value = if (previous.dir == dir && previous.tree is UiState.Loaded) {
+            previous.copy(tree = previous.tree.copy(refreshing = true))
+        } else {
+            SourceListing(dir)
+        }
+        listJob = viewModelScope.launch {
+            _listing.value = try {
+                SourceListing(dir, UiState.Loaded(gitOps.tree(src, dir)))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: GitHostMissing) {
+                SourceListing(dir, UiState.Loading, missingHost = e.host)
+            } catch (e: Throwable) {
+                SourceListing(dir, _listing.value.tree.refreshFailed(e.uiText()))
+            }
+        }
+    }
+}
+
+/** A file of a source, with the source it was read from (for its links). */
+data class SourceFileView(val source: GitSource, val file: GitFile)
+
+/**
+ * The file on screen; [missingHost]: no token is saved for that Git host. [editBlock]: why
+ * Edit is disabled (no token to propose with, no forge), null when it is offered.
+ */
+data class SourceFileState(
+    val file: UiState<SourceFileView> = UiState.Loading,
+    val missingHost: String? = null,
+    val editBlock: ProposeBlock? = null,
+    /** What the file offers to quick edits, null when nothing (or not a YAML file). */
+    val quick: QuickEditTargets? = null,
+    /** The file is a Talos patch (on a Talos cluster): whether and why it can be tried on a node. */
+    val talosPatch: TalosPatchInfo? = null,
+    /** The file is encrypted with SOPS: shown, never edited on the phone. */
+    val sops: SopsInfo? = null,
+)
+
+/**
+ * One file of an app's source, read once per [load] key, again on refresh; its quick edits
+ * through [quick].
+ */
+class SourceFileViewModel(private val gitOps: GitOpsRepository, private val machineConfigs: MachineConfigRepository) : ViewModel() {
+    private val _state = MutableStateFlow(SourceFileState())
+    val state: StateFlow<SourceFileState> = _state.asStateFlow()
+
+    /** The quick edit sheets of the file on screen. */
+    val quick = QuickEditController(gitOps, viewModelScope) { (_state.value.file as? UiState.Loaded)?.data?.file?.content }
+    private var key: Any? = null
+    private var target: SourceTarget? = null
+    private var path: String = ""
+    private var talosCluster = false
+    private var job: Job? = null
+
+    /** [talosCluster]: the cluster on screen has the Talos API, so a patch file can be tried. */
+    fun load(target: SourceTarget, path: String, key: Any, talosCluster: Boolean = false) {
+        if (key == this.key) return
+        this.key = key
+        this.target = target
+        this.path = path
+        this.talosCluster = talosCluster
+        quick.target = target
+        refresh()
+    }
+
+    fun refresh() {
+        val t = target ?: return
+        job?.cancel()
+        val current = _state.value
+        (current.file as? UiState.Loaded)?.let { _state.value = current.copy(file = it.copy(refreshing = true)) }
+        job = viewModelScope.launch {
+            _state.value = try {
+                val src = gitOps.sourceOf(t)
+                val file = gitOps.file(src, path)
+                val block = cancellableCatching { gitOps.proposeBlockOf(src) }.getOrDefault(ProposeBlock.NotEditable)
+                val quick = if (block == null && !file.truncated && isYamlPath(path)) {
+                    cancellableCatching { gitOps.quickEditTargets(file.content) }.getOrNull()?.takeUnless { it.isEmpty }
+                } else {
+                    null
+                }
+                val patch = if (talosCluster && !file.truncated && isYamlPath(path) && file.content.toByteArray().size <= MAX_PATCH_BYTES) {
+                    cancellableCatching { machineConfigs.talosPatchDetect(file.content) }.getOrNull()?.takeIf { it.talos }
+                } else {
+                    null
+                }
+                val sops = if (!file.truncated) cancellableCatching { gitOps.sopsInspect(file.content) }.getOrNull()?.takeIf { it.encrypted } else null
+                SourceFileState(
+                    UiState.Loaded(SourceFileView(src, file)),
+                    editBlock = block,
+                    quick = quick.takeIf { sops == null },
+                    talosPatch = patch.takeIf { sops == null },
+                    sops = sops,
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: GitHostMissing) {
+                SourceFileState(missingHost = e.host)
+            } catch (e: Throwable) {
+                SourceFileState(_state.value.file.refreshFailed(e.uiText()))
+            }
+        }
+    }
+}

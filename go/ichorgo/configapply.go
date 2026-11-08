@@ -353,6 +353,7 @@ func StartConfigTry(configYAML, contextName, node, baseYAML, draftYAML string, t
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		var outcome string
 

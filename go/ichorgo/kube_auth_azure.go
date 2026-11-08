@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // AKS with Entra ID, as Azure's kubelogin does it: an Entra access token for the AKS server
@@ -27,7 +29,7 @@ var azureLoginHosts = map[string]string{
 }
 
 // azureTLS is the TLS setup for Entra ID, overridable in tests.
-var azureTLS = func() *tls.Config { return baseTLS(nil, false) }
+var azureTLS = func() *tls.Config { return httpx.BaseTLS(nil, false) }
 
 // azureAuthority is overridable in tests.
 var azureAuthority = func(environment, tenant string) string {

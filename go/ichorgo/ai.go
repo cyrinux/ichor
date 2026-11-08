@@ -4,14 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/netip"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 )
 
 // The AI diagnosis sends a report about the cluster to a model the user chose, with their
 // own API key: Anthropic's Claude API, OpenAI's API, or any server speaking one of those
-// two protocols when a base URL is given (a gateway, a local model). It is off until the
+// two protocols when a base URL is given (a gateway, a local model). The "device" provider
+// keeps it on the phone instead: a model file run by the app itself (see ai_device.go). It is off until the
 // user turns it on, nothing is sent before they ask, and the key only passes through: it
 // is never stored, logged or put in an error message here.
 //
@@ -36,6 +39,9 @@ const (
 	answerIncomplete = "the answer was cut off before the end; try again"
 )
 
+// Names only a local network serves.
+var localNameSuffixes = []string{".local", ".internal", ".lan", ".localhost"}
+
 // The providers' own APIs; tests point them at a fake.
 var (
 	anthropicAPIURL = "https://api.anthropic.com"
@@ -52,6 +58,11 @@ type aiProvider struct {
 var aiProviders = []aiProvider{
 	{ID: aiAnthropic, Name: "Anthropic (Claude)", DefaultModel: defaultAnthropicModel, KeyURL: "https://console.anthropic.com/settings/keys"},
 	{ID: aiOpenAI, Name: "OpenAI", DefaultModel: defaultOpenAIModel, KeyURL: "https://platform.openai.com/api-keys"},
+	// No key, no server: DefaultModel is filled in from the catalog (AIProviders).
+	{ID: aiDevice, Name: "This phone"},
+	// OpenAI's protocol through a port-forward to the cluster's Ollama (KubeOllamaForward):
+	// no key, and no default model, the server's first one answers.
+	{ID: aiOllamaCluster, Name: "Ollama in the cluster"},
 }
 
 type aiModel struct {
@@ -70,6 +81,11 @@ type aiRequest struct {
 	// messages, when set, is the whole conversation sent instead of the single user turn
 	// (system stays apart); the last one is the user's.
 	messages []chatMessage
+	// tools are what the model may ask for, rounds what it already asked and got. With
+	// forceAnswer, the tools stay declared (the rounds refer to them) but it may not use them.
+	tools       []aiToolDef
+	rounds      []aiToolRound
+	forceAnswer bool
 }
 
 // turns is what the model gets after the system prompt.
@@ -96,11 +112,24 @@ type chatMessage struct {
 }
 
 // AIProviders lists the providers the diagnosis can use, as JSON
-// [{"id","name","defaultModel","keyUrl"}], so both apps show the same defaults.
+// [{"id","name","defaultModel","keyUrl"}], so both apps show the same defaults. "device"
+// is listed in every build: an app without the engine leaves it out of its settings.
 func AIProviders() (out string, err error) {
 	defer maskResult(&out, &err)
 
-	return toJSON(aiProviders)
+	return toJSON(listedProviders())
+}
+
+func listedProviders() []aiProvider {
+	out := slices.Clone(aiProviders)
+
+	for i := range out {
+		if out[i].ID == aiDevice {
+			out[i].DefaultModel = defaultLocalModel()
+		}
+	}
+
+	return out
 }
 
 // AIModels lists the models the key can use, newest first, as JSON [{"id","name"}], to pick
@@ -118,9 +147,12 @@ func AIModels(provider, apiKey, baseURL string) (out string, err error) {
 
 	var models []aiModel
 
-	if req.provider.ID == aiAnthropic {
+	switch req.provider.ID {
+	case aiDevice:
+		models = localModelList(req.model)
+	case aiAnthropic:
 		models, err = anthropicModels(ctx, req)
-	} else {
+	default:
 		models, err = openAIModels(ctx, req)
 	}
 
@@ -133,10 +165,11 @@ func AIModels(provider, apiKey, baseURL string) (out string, err error) {
 
 // newAIRequest validates what the user typed in the settings. An empty model means the
 // provider's default; the key may only be empty with a base URL (local servers need none).
+// The device provider takes neither: whatever is set for them is ignored.
 func newAIRequest(provider, apiKey, model, baseURL string) (aiRequest, error) {
 	req := aiRequest{apiKey: strings.TrimSpace(apiKey), model: strings.TrimSpace(model)}
 
-	for _, p := range aiProviders {
+	for _, p := range listedProviders() {
 		if p.ID == provider {
 			req.provider = p
 		}
@@ -146,7 +179,30 @@ func newAIRequest(provider, apiKey, model, baseURL string) (aiRequest, error) {
 		return aiRequest{}, fmt.Errorf("unknown AI provider %q", provider)
 	}
 
+	if req.provider.ID == aiDevice {
+		req.apiKey = ""
+		if req.model == "" {
+			req.model = req.provider.DefaultModel
+		}
+
+		if req.model == "" {
+			return aiRequest{}, errors.New("no model on this phone yet: download or import one in Settings, AI diagnosis")
+		}
+
+		return req, nil
+	}
+
 	baseURL = strings.TrimSpace(baseURL)
+
+	if req.provider.ID == aiOllamaCluster {
+		// Ollama ignores a key, and none may travel over the forward's plain http.
+		req.apiKey = ""
+
+		if baseURL == "" {
+			return aiRequest{}, errors.New("no Ollama server chosen: tap Use for AI diagnosis on a server in Data services, Ollama")
+		}
+	}
+
 	if baseURL != "" {
 		u, err := url.Parse(baseURL)
 		if err != nil || u.Host == "" || u.Scheme != "http" && u.Scheme != "https" {
@@ -158,6 +214,10 @@ func newAIRequest(provider, apiKey, model, baseURL string) (aiRequest, error) {
 			return aiRequest{}, errors.New("an API key is only sent over https: use an https base URL, or leave the key empty")
 		}
 
+		if u.Scheme == "http" && !onLocalNetwork(u.Hostname()) {
+			return aiRequest{}, errors.New("a report only travels over https; plain http is for a server on your own network")
+		}
+
 		req.baseURL = strings.TrimRight(baseURL, "/")
 	}
 
@@ -165,6 +225,8 @@ func newAIRequest(provider, apiKey, model, baseURL string) (aiRequest, error) {
 		return aiRequest{}, errors.New("no API key set for " + req.provider.Name)
 	}
 
+	// Still empty for a provider with no default (the cluster's Ollama): streamTurn asks the
+	// server for its models and uses the first.
 	if req.model == "" {
 		req.model = req.provider.DefaultModel
 	}
@@ -172,13 +234,25 @@ func newAIRequest(provider, apiKey, model, baseURL string) (aiRequest, error) {
 	return req, nil
 }
 
-// streamAnswer asks the model and calls emit with each piece of the answer as it arrives.
-func streamAnswer(ctx context.Context, req aiRequest, emit func(string)) error {
-	if req.provider.ID == aiAnthropic {
-		return streamAnthropic(ctx, req, emit)
+// onLocalNetwork tells whether a host is on the phone's own network, the only place a report
+// may cross in clear: loopback, link-local, a private range, or a name only such a network serves.
+func onLocalNetwork(host string) bool {
+	if addr, err := netip.ParseAddr(host); err == nil {
+		addr = addr.Unmap()
+
+		return addr.IsLoopback() || addr.IsLinkLocalUnicast() || addr.IsPrivate()
 	}
 
-	return streamOpenAI(ctx, req, emit)
+	host = strings.ToLower(strings.TrimSuffix(host, "."))
+
+	return host == "localhost" || slices.ContainsFunc(localNameSuffixes, func(suffix string) bool { return strings.HasSuffix(host, suffix) })
+}
+
+// streamAnswer asks the model and calls emit with each piece of the answer as it arrives.
+func streamAnswer(ctx context.Context, req aiRequest, emit func(string)) error {
+	_, err := streamTurn(ctx, req, emit)
+
+	return err
 }
 
 // aiError turns a failed call into a short message for the UI. status is the HTTP status
@@ -219,7 +293,7 @@ func aiError(ctx context.Context, provider aiProvider, status int, message strin
 		reason += ": " + clipUTF8(message, maxProviderMessage)
 	}
 
-	return fmt.Errorf("%s: %s", provider.Name, reason)
+	return aiStatusError{fmt.Errorf("%s: %s", provider.Name, reason), status, message}
 }
 
 // transportCause drops the method and URL net/http wraps around a failed request.

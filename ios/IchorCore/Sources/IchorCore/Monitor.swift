@@ -56,23 +56,49 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     /// sensorIssuesOf), kept like dataIssues.
     public var sensorIssues: [String: String]
     public var sensorPending: [String]
+    /// Watching the KubeSpan tunnels was on for this check (on by default, Talos clusters only), and
+    /// the mesh could be read.
+    public var kubespanWatched: Bool
+    public var kubespanChecked: Bool
+    /// Broken tunnels ("<idA>|<idB>" → KubeSpanIssue value, see kubespanIssuesOf), kept like dataIssues.
+    public var kubespanIssues: [String: String]
+    public var kubespanPending: [String]
+    /// Watching the plugins' findings was on for this check (with the data services, opt-in), and
+    /// they could be read.
+    public var pluginWatched: Bool
+    public var pluginChecked: Bool
+    /// Plugin findings (their key → PluginIssue value, see pluginIssuesOf), kept like dataIssues.
+    public var pluginIssues: [String: String]
+    public var pluginPending: [String]
     /// The cluster was added from a kubeconfig: its nodes come from the Kubernetes API (ready or
     /// not, never unreachable), there is no etcd, and `certNotAfter` is the kubeconfig's credentials.
     public var kube: Bool
+    /// When each problem alert this snapshot still holds (see firingAlerts) was first seen, and
+    /// when it was last posted (unix ms, by alert key): what a repeat counts from (withAlertTimes).
+    public var firstSeen: [String: Int64]
+    public var lastNotified: [String: Int64]
 
-    public init(context: String, takenAt: Date, nodes: [String: NodeState], etcdAlarms: [String] = [],
-                etcdChecked: Bool = false, certNotAfter: Int64 = 0, lastCertWarnDay: Int64 = -1,
-                dataWatched: Bool = false, dataChecked: Bool = false, dataIssues: [String: String] = [:], dataPending: [String] = [],
-                gitopsWatched: Bool = false, gitopsChecked: Bool = false, gitopsIssues: [String: String] = [:],
-                gitopsPending: [String] = [],
-                checkupWatched: Bool = false, checkupChecked: Bool = false, checkupIssues: [String: String] = [:],
-                checkupPending: [String] = [],
-                amWatched: Bool = false, amChecked: Bool = false, amIssues: [String: String] = [:], amPending: [String] = [],
-                storageWatched: Bool = false, storageChecked: Bool = false, storageIssues: [String: String] = [:],
-                storagePending: [String] = [], storageWarn: Int = storageWarnDefault,
-                storageTrends: [String: String] = [:],
-                sensorWatched: Bool = false, sensorChecked: Bool = false, sensorIssues: [String: String] = [:],
-                sensorPending: [String] = [], kube: Bool = false) {
+    public init(
+        context: String, takenAt: Date, nodes: [String: NodeState], etcdAlarms: [String] = [],
+        etcdChecked: Bool = false, certNotAfter: Int64 = 0, lastCertWarnDay: Int64 = -1,
+        dataWatched: Bool = false, dataChecked: Bool = false, dataIssues: [String: String] = [:],
+        dataPending: [String] = [],
+        gitopsWatched: Bool = false, gitopsChecked: Bool = false, gitopsIssues: [String: String] = [:],
+        gitopsPending: [String] = [],
+        checkupWatched: Bool = false, checkupChecked: Bool = false, checkupIssues: [String: String] = [:],
+        checkupPending: [String] = [],
+        amWatched: Bool = false, amChecked: Bool = false, amIssues: [String: String] = [:], amPending: [String] = [],
+        storageWatched: Bool = false, storageChecked: Bool = false, storageIssues: [String: String] = [:],
+        storagePending: [String] = [], storageWarn: Int = storageWarnDefault,
+        storageTrends: [String: String] = [:],
+        sensorWatched: Bool = false, sensorChecked: Bool = false, sensorIssues: [String: String] = [:],
+        sensorPending: [String] = [],
+        kubespanWatched: Bool = false, kubespanChecked: Bool = false, kubespanIssues: [String: String] = [:],
+        kubespanPending: [String] = [],
+        pluginWatched: Bool = false, pluginChecked: Bool = false, pluginIssues: [String: String] = [:],
+        pluginPending: [String] = [], kube: Bool = false,
+        firstSeen: [String: Int64] = [:], lastNotified: [String: Int64] = [:]
+    ) {
         self.context = context
         self.takenAt = takenAt
         self.nodes = nodes
@@ -106,10 +132,21 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.sensorChecked = sensorChecked
         self.sensorIssues = sensorIssues
         self.sensorPending = sensorPending
+        self.kubespanWatched = kubespanWatched
+        self.kubespanChecked = kubespanChecked
+        self.kubespanIssues = kubespanIssues
+        self.kubespanPending = kubespanPending
+        self.pluginWatched = pluginWatched
+        self.pluginChecked = pluginChecked
+        self.pluginIssues = pluginIssues
+        self.pluginPending = pluginPending
         self.kube = kube
+        self.firstSeen = firstSeen
+        self.lastNotified = lastNotified
     }
 
-    /// Snapshots saved by older versions lack the data-service, GitOps, checkup, Alertmanager, storage and kube fields.
+    /// Snapshots saved by older versions lack the data-service, GitOps, checkup, Alertmanager,
+    /// storage, plugin, kube and alert-time fields.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         context = try c.decode(String.self, forKey: .context)
@@ -145,38 +182,95 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         sensorChecked = try c.field(.sensorChecked, false)
         sensorIssues = try c.field(.sensorIssues, [:])
         sensorPending = try c.field(.sensorPending, [])
+        kubespanWatched = try c.field(.kubespanWatched, false)
+        kubespanChecked = try c.field(.kubespanChecked, false)
+        kubespanIssues = try c.field(.kubespanIssues, [:])
+        kubespanPending = try c.field(.kubespanPending, [])
+        pluginWatched = try c.field(.pluginWatched, false)
+        pluginChecked = try c.field(.pluginChecked, false)
+        pluginIssues = try c.field(.pluginIssues, [:])
+        pluginPending = try c.field(.pluginPending, [])
         kube = try c.field(.kube, false)
+        firstSeen = try c.field(.firstSeen, [:])
+        lastNotified = try c.field(.lastNotified, [:])
     }
 
     var dataTrack: IssueTrack {
         get { IssueTrack(watched: dataWatched, checked: dataChecked, issues: dataIssues, pending: dataPending) }
-        set { (dataWatched, dataChecked, dataIssues, dataPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
+        set {
+            (dataWatched, dataChecked, dataIssues, dataPending) = (
+                newValue.watched, newValue.checked, newValue.issues, newValue.pending
+            )
+        }
     }
 
     var gitopsTrack: IssueTrack {
         get { IssueTrack(watched: gitopsWatched, checked: gitopsChecked, issues: gitopsIssues, pending: gitopsPending) }
-        set { (gitopsWatched, gitopsChecked, gitopsIssues, gitopsPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
+        set {
+            (gitopsWatched, gitopsChecked, gitopsIssues, gitopsPending) = (
+                newValue.watched, newValue.checked, newValue.issues, newValue.pending
+            )
+        }
     }
 
     var checkupTrack: IssueTrack {
-        get { IssueTrack(watched: checkupWatched, checked: checkupChecked, issues: checkupIssues, pending: checkupPending) }
-        set { (checkupWatched, checkupChecked, checkupIssues, checkupPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
+        get {
+            IssueTrack(watched: checkupWatched, checked: checkupChecked, issues: checkupIssues, pending: checkupPending)
+        }
+        set {
+            (checkupWatched, checkupChecked, checkupIssues, checkupPending) = (
+                newValue.watched, newValue.checked, newValue.issues, newValue.pending
+            )
+        }
     }
 
     var amTrack: IssueTrack {
         get { IssueTrack(watched: amWatched, checked: amChecked, issues: amIssues, pending: amPending) }
-        set { (amWatched, amChecked, amIssues, amPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
+        set {
+            (amWatched, amChecked, amIssues, amPending) = (
+                newValue.watched, newValue.checked, newValue.issues, newValue.pending
+            )
+        }
+    }
+
+    var kubespanTrack: IssueTrack {
+        get {
+            IssueTrack(
+                watched: kubespanWatched, checked: kubespanChecked, issues: kubespanIssues, pending: kubespanPending)
+        }
+        set {
+            (kubespanWatched, kubespanChecked, kubespanIssues, kubespanPending) = (
+                newValue.watched, newValue.checked, newValue.issues, newValue.pending
+            )
+        }
     }
 
     var sensorTrack: IssueTrack {
         get { IssueTrack(watched: sensorWatched, checked: sensorChecked, issues: sensorIssues, pending: sensorPending) }
-        set { (sensorWatched, sensorChecked, sensorIssues, sensorPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
+        set {
+            (sensorWatched, sensorChecked, sensorIssues, sensorPending) = (
+                newValue.watched, newValue.checked, newValue.issues, newValue.pending
+            )
+        }
+    }
+
+    var pluginTrack: IssueTrack {
+        get { IssueTrack(watched: pluginWatched, checked: pluginChecked, issues: pluginIssues, pending: pluginPending) }
+        set {
+            (pluginWatched, pluginChecked, pluginIssues, pluginPending) = (
+                newValue.watched, newValue.checked, newValue.issues, newValue.pending
+            )
+        }
     }
 
     var storageTrack: IssueTrack {
-        get { IssueTrack(watched: storageWatched, checked: storageChecked, issues: storageIssues, pending: storagePending) }
+        get {
+            IssueTrack(watched: storageWatched, checked: storageChecked, issues: storageIssues, pending: storagePending)
+        }
         set {
-            (storageWatched, storageChecked, storageIssues, storagePending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending)
+            (storageWatched, storageChecked, storageIssues, storagePending) = (
+                newValue.watched, newValue.checked, newValue.issues, newValue.pending
+            )
         }
     }
 
@@ -209,14 +303,20 @@ public struct NodeState: Codable, Equatable, Sendable {
 /// storageWatched: watching node storage was on; storageIssues (see storageIssuesOf): nil when unreadable;
 /// storageWarn: the warning threshold they were read with.
 /// sensorWatched: watching node temperatures was on; sensorIssues (see sensorIssuesOf): nil when unreadable.
-public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNotAfter: Int64, takenAt: Date,
-                       dataWatched: Bool = false, dataServices: DataServices? = nil,
-                       gitopsWatched: Bool = false, gitopsIssues: [String: String]? = nil,
-                       checkupWatched: Bool = false, checkupIssues: [String: String]? = nil,
-                       alertmanagerWatched: Bool = false, alertmanagerIssues: [String: String]? = nil,
-                       storageWatched: Bool = false, storageIssues: [String: String]? = nil,
-                       storageWarn: Int = storageWarnDefault,
-                       sensorWatched: Bool = false, sensorIssues: [String: String]? = nil) -> ClusterSnapshot {
+/// kubespanWatched: watching the KubeSpan tunnels was on; kubespanIssues (see kubespanIssuesOf): nil when unreadable.
+/// pluginWatched: watching the plugins' findings was on; pluginIssues (see pluginIssuesWithGaps): nil when unreadable.
+public func snapshotOf(
+    _ overview: ClusterOverview, etcd: EtcdOverview?, certNotAfter: Int64, takenAt: Date,
+    dataWatched: Bool = false, dataServices: DataServices? = nil,
+    gitopsWatched: Bool = false, gitopsIssues: [String: String]? = nil,
+    checkupWatched: Bool = false, checkupIssues: [String: String]? = nil,
+    alertmanagerWatched: Bool = false, alertmanagerIssues: [String: String]? = nil,
+    storageWatched: Bool = false, storageIssues: [String: String]? = nil,
+    storageWarn: Int = storageWarnDefault,
+    sensorWatched: Bool = false, sensorIssues: [String: String]? = nil,
+    kubespanWatched: Bool = false, kubespanIssues: [String: String]? = nil,
+    pluginWatched: Bool = false, pluginIssues: [String: String]? = nil
+) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
     for n in overview.nodes {
         let reason = n.error ?? n.unmetConditions.map { "\($0.name): \($0.reason)" }.joined(separator: "; ")
@@ -248,22 +348,35 @@ public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNot
         storageWarn: storageWarn,
         sensorWatched: sensorWatched,
         sensorChecked: sensorWatched && sensorIssues != nil,
-        sensorIssues: sensorWatched ? sensorIssues ?? [:] : [:]
+        sensorIssues: sensorWatched ? sensorIssues ?? [:] : [:],
+        kubespanWatched: kubespanWatched,
+        kubespanChecked: kubespanWatched && kubespanIssues != nil,
+        kubespanIssues: kubespanWatched ? kubespanIssues ?? [:] : [:],
+        pluginWatched: pluginWatched,
+        pluginChecked: pluginWatched && pluginIssues != nil,
+        pluginIssues: pluginWatched ? pluginIssues ?? [:] : [:]
     )
 }
 
 /// The snapshot of a cluster added from a kubeconfig, from the nodes as the Kubernetes API lists
 /// them: a node is ready or not (Kubernetes reports a lost kubelet as not ready), its pressure
 /// conditions are the reason. No etcd. Credentials that may not list nodes give no node at all,
-/// so the opt-in tracks still alert. The other parameters are `snapshotOf`'s.
-public func kubeSnapshotOf(_ overview: KubeNodesOverview, context: String, certNotAfter: Int64, takenAt: Date,
-                           dataWatched: Bool = false, dataServices: DataServices? = nil,
-                           gitopsWatched: Bool = false, gitopsIssues: [String: String]? = nil,
-                           checkupWatched: Bool = false, checkupIssues: [String: String]? = nil,
-                           alertmanagerWatched: Bool = false, alertmanagerIssues: [String: String]? = nil) -> ClusterSnapshot {
+/// so the opt-in tracks still alert. Node storage comes from the kubelets (storageIssues(of:warn:critical:)).
+/// The other parameters are `snapshotOf`'s.
+public func kubeSnapshotOf(
+    _ overview: KubeNodesOverview, context: String, certNotAfter: Int64, takenAt: Date,
+    dataWatched: Bool = false, dataServices: DataServices? = nil,
+    gitopsWatched: Bool = false, gitopsIssues: [String: String]? = nil,
+    checkupWatched: Bool = false, checkupIssues: [String: String]? = nil,
+    alertmanagerWatched: Bool = false, alertmanagerIssues: [String: String]? = nil,
+    storageWatched: Bool = false, storageIssues: [String: String]? = nil,
+    storageWarn: Int = storageWarnDefault,
+    pluginWatched: Bool = false, pluginIssues: [String: String]? = nil
+) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
     for n in overview.nodes {
-        nodes[n.name] = NodeState(hostname: n.name, health: n.ready ? .ready : .notReady, reason: n.pressure.joined(separator: "; "))
+        nodes[n.name] = NodeState(
+            hostname: n.name, health: n.ready ? .ready : .notReady, reason: n.pressure.joined(separator: "; "))
     }
     return ClusterSnapshot(
         context: context,
@@ -282,6 +395,13 @@ public func kubeSnapshotOf(_ overview: KubeNodesOverview, context: String, certN
         amWatched: alertmanagerWatched,
         amChecked: alertmanagerWatched && alertmanagerIssues != nil,
         amIssues: alertmanagerWatched ? alertmanagerIssues ?? [:] : [:],
+        storageWatched: storageWatched,
+        storageChecked: storageWatched && storageIssues != nil,
+        storageIssues: storageWatched ? storageIssues ?? [:] : [:],
+        storageWarn: storageWarn,
+        pluginWatched: pluginWatched,
+        pluginChecked: pluginWatched && pluginIssues != nil,
+        pluginIssues: pluginWatched ? pluginIssues ?? [:] : [:],
         kube: true
     )
 }
@@ -297,13 +417,16 @@ public let dataWarning = "warning"
 /// replica is usually planned and does not alert. An expired certificate (or one not ready a week
 /// before it expires) is critical; one expiring, overdue or not ready, or an issuer not ready, is a
 /// warning. A Velero schedule whose last backup failed or whose storage location is unavailable is
-/// critical, a stale, partially failed or invalid one a warning. A Ceph cluster alerts when
-/// critical, or on HEALTH_WARN, near-full capacity or an OSD down; a pool only when failed. A CAST AI
-/// recommendation alerts only when the autoscaler cannot apply it.
+/// critical, a stale, partially failed or invalid one a warning. A CAST AI recommendation alerts
+/// only when the autoscaler cannot apply it.
 public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     var out: [String: String] = [:]
     for v in services.longhorn?.volumes ?? [] {
-        if v.health == .critical { out["longhorn|\(v.label)"] = dataCritical } else if v.health == .warning { out["longhorn|\(v.label)"] = dataWarning }
+        if v.health == .critical {
+            out["longhorn|\(v.label)"] = dataCritical
+        } else if v.health == .warning {
+            out["longhorn|\(v.label)"] = dataWarning
+        }
     }
     for g in services.garage?.instances ?? [] {
         if g.state == .unavailable {
@@ -312,38 +435,37 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
             out["garage|\(g.label)"] = dataWarning
         }
     }
+    // The garage-operator's layer: a failed or degraded cluster, a failed bucket and a
+    // disconnected or roleless node declaration alert like the instances above. A cluster has
+    // its own key: it usually shares its instance's name, and one must not overwrite the
+    // other's severity.
+    for c in services.garage?.clusters ?? [] {
+        if c.health == .critical {
+            out["garage|cluster/\(c.label)"] = dataCritical
+        } else if c.health == .warning {
+            out["garage|cluster/\(c.label)"] = dataWarning
+        }
+    }
+    for b in services.garage?.buckets ?? [] {
+        if b.health == .critical {
+            out["garage|bucket/\(b.label)"] = dataCritical
+        } else if b.health == .warning {
+            out["garage|bucket/\(b.label)"] = dataWarning
+        }
+    }
+    for n in services.garage?.nodes ?? [] {
+        if n.health == .critical {
+            out["garage|node/\(n.label)"] = dataCritical
+        } else if n.health == .warning {
+            out["garage|node/\(n.label)"] = dataWarning
+        }
+    }
     let alerting: Set<CnpgReason> = [.archiving, .backupFailed, .backupStale]
     for c in services.cnpg?.clusters ?? [] {
         if c.health == .critical {
             out["cnpg|\(c.label)"] = dataCritical
         } else if c.reasons.contains(where: alerting.contains) {
             out["cnpg|\(c.label)"] = dataWarning
-        }
-    }
-    for d in services.dragonfly?.instances ?? [] {
-        if d.health == .critical {
-            out["dragonfly|\(d.label)"] = dataCritical
-        } else if d.reasons.contains(.pods) || d.reasons.contains(.masters) {
-            // A rolling update is planned; a replica down or two masters are not.
-            out["dragonfly|\(d.label)"] = dataWarning
-        }
-    }
-    // A replica rolling out or a busy operator is usually planned; a Galera recovery or backups are not.
-    let mariadbAlerting: Set<MariaDbReason> = [.galeraRecovery, .backupFailed, .backupStale]
-    for m in services.mariadb?.clusters ?? [] {
-        if m.health == .critical {
-            out["mariadb|\(m.label)"] = dataCritical
-        } else if m.reasons.contains(where: mariadbAlerting.contains) {
-            out["mariadb|\(m.label)"] = dataWarning
-        }
-    }
-    // The operator still initializing is not worth an alert; a member lost or backups failing are.
-    let perconaAlerting: Set<PerconaReason> = [.members, .backupFailed, .backupStale]
-    for c in services.percona?.clusters ?? [] {
-        if c.health == .critical {
-            out["percona|\(c.label)"] = dataCritical
-        } else if c.reasons.contains(where: perconaAlerting.contains) {
-            out["percona|\(c.label)"] = dataWarning
         }
     }
     // An issuer not ready alerts on its own, not through each of its certificates.
@@ -370,19 +492,20 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     for l in services.velero?.locations ?? [] where l.health == .critical {
         out["velero|BackupStorageLocation/\(l.label)"] = dataCritical
     }
-    // A mon down or a reconcile in progress shows in Ceph's health anyway.
-    let cephAlerting: Set<CephReason> = [.healthWarn, .nearFull, .osds]
-    for c in services.ceph?.clusters ?? [] {
-        if c.health == .critical {
-            out["ceph|\(c.label)"] = dataCritical
-        } else if c.reasons.contains(where: cephAlerting.contains) {
-            out["ceph|\(c.label)"] = dataWarning
+    // A recommendation CAST AI cannot apply is critical; a read-only or HPA one was chosen: shown, not alerted.
+    for r in services.castai?.recommendations ?? [] where r.health == .critical {
+        out["castai|\(r.label)"] = dataCritical
+    }
+    if services.snapshots?.error.isEmpty != false {
+        for c in services.snapshots?.claims ?? [] where c.watched && c.stale {
+            out["snapshots|\(c.namespace)/\(c.name)"] = dataWarning
         }
     }
-    // A pool alerts only when Rook reports it failed.
-    for p in services.ceph?.pools ?? [] where p.health == .critical { out["ceph|\(p.kind)/\(p.label)"] = dataCritical }
-    // A recommendation CAST AI cannot apply is critical; a read-only or HPA one was chosen: shown, not alerted.
-    for r in services.castai?.recommendations ?? [] where r.health == .critical { out["castai|\(r.label)"] = dataCritical }
+    if services.backupJobs?.jobsError.isEmpty != false {
+        for j in services.backupJobs?.jobs ?? [] where !j.suspended && j.failureStreak >= 3 {
+            out["backupjobs|\(j.namespace)/\(j.name)"] = dataCritical
+        }
+    }
     return out
 }
 
@@ -392,18 +515,22 @@ public func dataSystemTitle(_ key: String) -> String {
     switch key.split(separator: "|", maxSplits: 1).first.map(String.init) ?? "" {
     case "longhorn": "Longhorn"
     case "garage": "Garage"
-    case "dragonfly": "Dragonfly"
-    case "mariadb": "MariaDB"
-    case "percona": "Percona XtraDB Cluster"
+    case "dragonfly": "Dragonfly"  // an older snapshot's, now a plugin's
+    case "mariadb": "MariaDB"  // an older snapshot's, now a plugin's
+    case "percona": "Percona XtraDB Cluster"  // an older snapshot's, now a plugin's
     case "certmanager": "cert-manager"
     case "velero": "Velero"
+    case "externaldns": "ExternalDNS"  // an older snapshot's, now a plugin's
+    case "sealedsecrets": "Sealed Secrets"  // an older snapshot's, now a plugin's
     case "ceph": "Rook Ceph"
+    case "snapshots": "CSI VolumeSnapshots"
+    case "backupjobs": "Backup CronJobs"
     case "castai": "CAST AI"
     default: "CloudNativePG"
     }
 }
 
-/// One opt-in track of issues as a snapshot carries it (data services, GitOps apps, the checkup, Alertmanager).
+/// One opt-in track of issues as a snapshot carries it (data services, GitOps apps, the checkup, Alertmanager, plugins).
 struct IssueTrack: Equatable {
     var watched: Bool
     var checked: Bool
@@ -416,9 +543,11 @@ struct IssueTrack: Equatable {
 /// seen on two checks in a row; an issue that clears says so once. The first check (or a context
 /// switch, or turning watching on) is a silent baseline; a check that could not read them keeps
 /// what was known; turning watching off forgets it.
-func evaluateTrack(previous: IssueTrack?, current: IssueTrack, comparable: Bool, severity: (String) -> String,
-                   problem: (_ key: String, _ value: String) -> Alert, cleared: (_ key: String) -> Alert,
-                   alerts: inout [Alert]) -> IssueTrack {
+func evaluateTrack(
+    previous: IssueTrack?, current: IssueTrack, comparable: Bool, severity: (String) -> String,
+    problem: (_ key: String, _ value: String) -> Alert, cleared: (_ key: String) -> Alert,
+    alerts: inout [Alert]
+) -> IssueTrack {
     guard current.watched else { return IssueTrack(watched: false, checked: false, issues: [:], pending: []) }
     let known = previous.flatMap { comparable && $0.watched && $0.checked ? $0 : nil }
     guard current.checked else {
@@ -451,14 +580,22 @@ func evaluateTrack(previous: IssueTrack?, current: IssueTrack, comparable: Bool,
 }
 
 /// Longhorn, Garage, CloudNativePG… issues (see evaluateTrack), keyed "data:system|label".
-private func evaluateData(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert]) -> IssueTrack {
+private func evaluateData(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert])
+    -> IssueTrack
+{
     func subject(_ key: String) -> String { String(key.split(separator: "|", maxSplits: 1).last ?? Substring(key)) }
     return evaluateTrack(
         previous: previous?.dataTrack, current: current.dataTrack, comparable: comparable, severity: { $0 },
         problem: { key, severity in
-            Alert(key: "data:\(key)", title: "\(subject(key)) needs attention", text: "\(dataSystemTitle(key)) · \(severity)", problem: true)
+            Alert(
+                key: "data:\(key)", title: "\(subject(key)) needs attention",
+                text: "\(dataSystemTitle(key)) · \(severity)", problem: true)
         },
-        cleared: { key in Alert(key: "data:\(key)", title: "\(subject(key)) is healthy again", text: dataSystemTitle(key), problem: false) },
+        cleared: { key in
+            Alert(
+                key: "data:\(key)", title: "\(subject(key)) is healthy again", text: dataSystemTitle(key),
+                problem: false)
+        },
         alerts: &alerts)
 }
 
@@ -477,7 +614,9 @@ public let certWarnDays = 7
 /// silent baseline, and the certificate warning fires at most once a day. A check where no
 /// node answered says nothing about the cluster (the phone is off its network): it alerts
 /// nothing and keeps the previous snapshot.
-public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: Date) -> (alerts: [Alert], next: ClusterSnapshot) {
+public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: Date) -> (
+    alerts: [Alert], next: ClusterSnapshot
+) {
     var alerts: [Alert] = []
     var next = current
     let comparable = previous.map { $0.context == current.context && !$0.unreachableAsAWhole } ?? false
@@ -488,28 +627,45 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
     } else {
         next.dataTrack = evaluateData(previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.gitopsTrack = evaluateGitOps(previous: previous, current: current, comparable: comparable, alerts: &alerts)
-        next.checkupTrack = evaluateCheckup(previous: previous, current: current, comparable: comparable, alerts: &alerts)
-        next.amTrack = evaluateAlertmanager(previous: previous, current: current, comparable: comparable, alerts: &alerts)
-        next.storageTrack = evaluateStorage(previous: previous, current: current, comparable: comparable, alerts: &alerts)
-        next.sensorTrack = evaluateSensors(previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.checkupTrack = evaluateCheckup(
+            previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.amTrack = evaluateAlertmanager(
+            previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.storageTrack = evaluateStorage(
+            previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.sensorTrack = evaluateSensors(
+            previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.kubespanTrack = evaluateKubespan(
+            previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.pluginTrack = evaluatePlugins(
+            previous: previous, current: current, comparable: comparable, alerts: &alerts)
         // The trend alerts are evaluated once the history ring has this check (evaluateStorageTrends).
         next.storageTrends = comparable && current.storageWatched ? previous?.storageTrends ?? [:] : [:]
     }
     if let previous, comparable, !current.unreachableAsAWhole {
         for addr in current.nodes.keys.sorted() {
-            guard let state = current.nodes[addr], let before = previous.nodes[addr], before.health != state.health else { continue }
+            guard let state = current.nodes[addr], let before = previous.nodes[addr], before.health != state.health
+            else { continue }
             let reason = state.reason.isEmpty ? addr : state.reason
             switch state.health {
-            case .ready: alerts.append(Alert(key: "node:\(addr)", title: "\(state.hostname) is ready again", text: addr, problem: false))
-            case .notReady: alerts.append(Alert(key: "node:\(addr)", title: "\(state.hostname) is not ready", text: reason, problem: true))
-            case .unreachable: alerts.append(Alert(key: "node:\(addr)", title: "\(state.hostname) is unreachable", text: reason, problem: true))
+            case .ready:
+                alerts.append(
+                    Alert(key: "node:\(addr)", title: "\(state.hostname) is ready again", text: addr, problem: false))
+            case .notReady:
+                alerts.append(
+                    Alert(key: "node:\(addr)", title: "\(state.hostname) is not ready", text: reason, problem: true))
+            case .unreachable:
+                alerts.append(
+                    Alert(key: "node:\(addr)", title: "\(state.hostname) is unreachable", text: reason, problem: true))
             }
         }
         if current.etcdChecked && previous.etcdChecked {
             for alarm in current.etcdAlarms where !previous.etcdAlarms.contains(alarm) {
                 let parts = alarm.split(separator: ":", maxSplits: 1).map(String.init)
-                alerts.append(Alert(key: "etcd:\(alarm)", title: "etcd alarm raised",
-                                    text: "\(parts.last ?? alarm) on member \(parts.first ?? "")", problem: true))
+                alerts.append(
+                    Alert(
+                        key: "etcd:\(alarm)", title: "etcd alarm raised",
+                        text: "\(parts.last ?? alarm) on member \(parts.first ?? "")", problem: true))
             }
         }
     }
@@ -524,11 +680,15 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
             let title: String
             if current.kube {
                 title = "kubeconfig credentials"
-                text = days < 0 ? "The kubeconfig credentials expired \(-days) days ago."
+                text =
+                    days < 0
+                    ? "The kubeconfig credentials expired \(-days) days ago."
                     : "The kubeconfig credentials expire in \(days) days. Import a new kubeconfig."
             } else {
                 title = "talosconfig certificate"
-                text = days < 0 ? "The client certificate expired \(-days) days ago."
+                text =
+                    days < 0
+                    ? "The client certificate expired \(-days) days ago."
                     : "The client certificate expires in \(days) days. Generate a new talosconfig."
             }
             alerts.append(Alert(key: "cert", title: title, text: text, problem: true))

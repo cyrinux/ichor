@@ -21,6 +21,13 @@ const (
 type DiagnosisListener interface {
 	// OnAnswer gets the whole answer so far, not only what is new.
 	OnAnswer(text string)
+	// OnTool is the model asking for more (see ai_tools.go): the tool's name, "unknown" for one
+	// that does not exist, and its arguments as JSON, with the placeholders the model used.
+	OnTool(name, argsJSON string)
+	// OnToolDone follows each OnTool: result is exactly the text sent to the model and bytes its
+	// size; errMessage says why nothing was read, and that too is what the model gets. An empty
+	// name, without a matching OnTool, tells once that the server takes no tools.
+	OnToolDone(name string, bytes int, result, errMessage string)
 	// OnDone is called exactly once; errMessage is empty on success and when cancelled.
 	OnDone(errMessage string)
 }
@@ -45,8 +52,12 @@ type Diagnosis struct {
 	// wrong names (real ones in screenshot mode, or fakes nobody can map back).
 	screenshotMode   bool
 	screenshotResets int
+	// names hides the Kubernetes names in report, nil unless it was asked to be anonymized.
+	names *diagnosisNames
 	// kind picks the instructions sent with the report; the zero value is the full diagnosis.
 	kind diagnosisKind
+	// tools is what the model may read more of; nil for a report that takes no tools.
+	tools *diagnosisToolTarget
 }
 
 // diagnosisKind tells which question a report answers.
@@ -55,19 +66,27 @@ type diagnosisKind int
 const (
 	diagnosisFull   diagnosisKind = iota // the full cluster report (CollectDiagnosis)
 	diagnosisHealth                      // a failed health check (CollectHealthExplanation)
+	diagnosisKube                        // the report of a kubeconfig cluster, without Talos
 )
 
 // CollectDiagnosis reads the state of the cluster (os:reader calls only) into a report.
-// Nothing leaves the phone here. With anonymize, the nodes' names, addresses and domain
-// are replaced with placeholders, and answers get the real ones back before they are
-// shown; in screenshot mode the report is masked like everything else on screen.
+// Nothing leaves the phone here. With anonymize, the nodes' names, addresses and domain and
+// the Kubernetes namespaces and pod names are replaced with placeholders, and answers get
+// the real ones back before they are shown; in screenshot mode the report is masked like
+// everything else on screen. What looks like a secret is stripped either way.
 //
 // kubeServer is the cluster's Kubernetes API address the user set ("" for the kubeconfig's):
-// with os:admin, the Argo CD and Flux apps that are not fine are added (see collectGitOps).
+// with os:admin, the Argo CD and Flux apps that are not fine are added (see collectGitOps), and
+// the workloads not ready and the pods in trouble. A kubeconfig context has no Talos to read: its
+// report is what the Kubernetes API knows (see collectKubeDiagnosis).
 func CollectDiagnosis(configYAML, contextName, kubeServer string, anonymize bool) (d *Diagnosis, err error) {
 	defer maskErr(&err)
 
 	contextName = unmaskContext(configYAML, contextName)
+
+	if isKubeconfig(configYAML) {
+		return collectKubeReport(configYAML, contextName, kubeServer, anonymize)
+	}
 
 	d = &Diagnosis{}
 	d.screenshotMode, d.screenshotResets = privacy.state()
@@ -81,6 +100,7 @@ func CollectDiagnosis(configYAML, contextName, kubeServer string, anonymize bool
 
 	d.report = renderDiagnosis(data)
 	d.applyMask(configYAML, anonymize, data)
+	d.tools = talosToolTarget(kubeTarget{configYAML, contextName, kubeServer}, data)
 
 	return d, nil
 }
@@ -88,6 +108,11 @@ func CollectDiagnosis(configYAML, contextName, kubeServer string, anonymize bool
 // applyMask hides the cluster's names and addresses in d.report: with screenshot mode's
 // mask when it is on, else with a mask of its own when anonymize is set.
 func (d *Diagnosis) applyMask(configYAML string, anonymize bool, data diagnosisData) {
+	if anonymize {
+		d.names = newDiagnosisNames(data, d.report)
+		d.report = d.names.mask(d.report)
+	}
+
 	switch {
 	case d.screenshotMode:
 		d.mask = privacy
@@ -112,7 +137,28 @@ func (d *Diagnosis) systemPrompt(language string) string {
 		return healthExplainSystemPrompt(language, d.mask != nil)
 	}
 
+	if d.kind == diagnosisKube {
+		return kubeDiagnosisSystemPrompt(language, d.mask != nil)
+	}
+
 	return diagnosisSystemPrompt(language, d.mask != nil)
+}
+
+// systemPromptFor is systemPrompt, shorter for the model on the phone.
+func (d *Diagnosis) systemPromptFor(provider, language string) string {
+	if provider != aiDevice {
+		return d.systemPrompt(language)
+	}
+
+	if d.kind == diagnosisHealth {
+		return healthExplainSystemPromptSmall(language, d.mask != nil)
+	}
+
+	if d.kind == diagnosisKube {
+		return kubeDiagnosisSystemPromptSmall(language, d.mask != nil)
+	}
+
+	return diagnosisSystemPromptSmall(language, d.mask != nil)
 }
 
 // Report is the text that would be sent, to show to the user first.
@@ -133,9 +179,10 @@ func (d *Diagnosis) Prompt(language, note string) string {
 }
 
 // Ask sends the report and the user's optional note to the model and streams its answer
-// to listener. provider is "anthropic" or "openai"; an empty model means the provider's
-// default, an empty baseURL its own API.
-func (d *Diagnosis) Ask(provider, apiKey, model, baseURL, language, note string, listener DiagnosisListener) *DiagnosisRun {
+// to listener. provider is "anthropic", "openai" or "device"; an empty model means the
+// provider's default, an empty baseURL its own API. With allowTools, a provider on the network
+// may ask for a little more (see ai_tools.go).
+func (d *Diagnosis) Ask(provider, apiKey, model, baseURL, language, note string, allowTools bool, listener DiagnosisListener) *DiagnosisRun {
 	listener = maskedDiagnosisListener{listener}
 
 	ctx, cancel := context.WithTimeout(context.Background(), aiAnswerTimeout)
@@ -144,23 +191,26 @@ func (d *Diagnosis) Ask(provider, apiKey, model, baseURL, language, note string,
 		defer cancel()
 		defer onPanic(listener.OnDone)
 
-		listener.OnDone(strings.ToValidUTF8(d.ask(ctx, provider, apiKey, model, baseURL, language, note, listener), "�"))
+		listener.OnDone(strings.ToValidUTF8(d.ask(ctx, provider, apiKey, model, baseURL, language, note, allowTools, listener), "�"))
 	}()
 
 	return &DiagnosisRun{cancel: cancel}
 }
 
-func (d *Diagnosis) ask(ctx context.Context, provider, apiKey, model, baseURL, language, note string, listener DiagnosisListener) string {
+func (d *Diagnosis) ask(ctx context.Context, provider, apiKey, model, baseURL, language, note string, allowTools bool, listener DiagnosisListener) string {
 	if d.outOfDate() {
 		return reportOutOfDate
 	}
+
+	// Tool results teach the mask new names: this question's own, like its conversation.
+	d = d.forQuestion()
 
 	req, err := newAIRequest(provider, apiKey, model, baseURL)
 	if err != nil {
 		return err.Error()
 	}
 
-	req.system = d.systemPrompt(language)
+	req.system = d.systemPromptFor(req.provider.ID, language)
 	req.user = diagnosisUserMessage(d.report, d.maskNote(note))
 
 	ctx, stop := context.WithCancel(ctx)
@@ -178,7 +228,7 @@ func (d *Diagnosis) ask(ctx context.Context, provider, apiKey, model, baseURL, l
 		shown, shownAt = answer.Len(), time.Now()
 	}
 
-	err = streamAnswer(ctx, req, func(piece string) {
+	emit := func(piece string) {
 		if tooLong {
 			return
 		}
@@ -196,7 +246,14 @@ func (d *Diagnosis) ask(ctx context.Context, provider, apiKey, model, baseURL, l
 		if time.Since(shownAt) >= answerUpdateEvery {
 			show()
 		}
-	})
+	}
+
+	if allowTools && d.tools != nil && req.provider.ID != aiDevice {
+		req.system += "\n\n" + toolInstructions
+		err = newToolRun(d, listener, req.user).converse(ctx, req, emit)
+	} else {
+		err = streamAnswer(ctx, req, emit)
+	}
 
 	if answer.Len() != shown {
 		show()
@@ -216,6 +273,14 @@ func (d *Diagnosis) ask(ctx context.Context, provider, apiKey, model, baseURL, l
 	}
 }
 
+// forQuestion is a copy of d for one question, with a mask of names it can add to.
+func (d *Diagnosis) forQuestion() *Diagnosis {
+	c := *d
+	c.names = d.names.clone()
+
+	return &c
+}
+
 // outOfDate tells that screenshot mode changed since the report was collected.
 func (d *Diagnosis) outOfDate() bool {
 	on, resets := privacy.state()
@@ -227,6 +292,10 @@ func (d *Diagnosis) outOfDate() bool {
 // names or the placeholders they read in the report: placeholders are first turned back
 // into what they stand for, so both end up as the report's placeholders.
 func (d *Diagnosis) maskNote(note string) string {
+	if d.names != nil {
+		note = d.names.mask(d.names.reveal(note))
+	}
+
 	if d.mask == nil {
 		return note
 	}
@@ -237,6 +306,10 @@ func (d *Diagnosis) maskNote(note string) string {
 // reveal puts the real names and addresses back in an answer written about placeholders.
 // (In screenshot mode the listener then masks them again, like everything displayed.)
 func (d *Diagnosis) reveal(answer string) string {
+	if d.names != nil {
+		answer = d.names.reveal(answer)
+	}
+
 	if d.mask == nil {
 		return answer
 	}

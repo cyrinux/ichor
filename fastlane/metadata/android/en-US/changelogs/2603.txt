@@ -1,0 +1,7 @@
+• Create a Google Cloud VM for a new node from the phone
+• Mark the AWS AMI that matches the cluster's image
+• Make a Talos image of the cluster's image at Azure from the phone
+• Create a Scaleway Instance for a new node from the Go core
+• Make a Talos AMI of the cluster's image at AWS from the phone
+• IOS search explains itself and offers the cluster's screens before you type
+• Make a Talos image for the cluster's schematic at Google Cloud from the Go core

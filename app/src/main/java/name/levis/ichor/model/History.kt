@@ -35,7 +35,7 @@ data class HistoryNodeEntry(
 @Serializable
 data class HistoryVolumeEntry(val key: String, val name: String, val node: String, val usedPercent: Double)
 
-/** An issue open after the run; [track] etcd, data, gitops, checkup, am, storage or cert. */
+/** An issue open after the run; [track] etcd, data, gitops, checkup, am, storage, plugin or cert. */
 @Serializable
 data class HistoryAlertEntry(
     val key: String,
@@ -150,4 +150,20 @@ fun uptimeSegments(span: HistoryNodeSpan, from: Long, to: Long): List<UptimeSegm
         if (end <= start) return@mapNotNull null
         UptimeSegment(interval.state, ((start - from) / length).toFloat(), ((end - from) / length).toFloat())
     }
+}
+
+/**
+ * How long the end of the window has gone without a check of a node before the uptime strip
+ * says so: past the usual spacing of the background checks.
+ */
+const val HISTORY_TAIL_GAP_MILLIS = 60 * 60 * 1000L
+
+/**
+ * How long [span] has gone unchecked at the end of this window: from its last interval to
+ * [HistoryQuery.to], when that is over [HISTORY_TAIL_GAP_MILLIS]; null otherwise, and for a
+ * node never observed. Its uptime % only covers the time before.
+ */
+fun HistoryQuery.uncheckedTail(span: HistoryNodeSpan): Long? {
+    val last = span.intervals.maxOfOrNull { it.to } ?: return null
+    return (to - last).takeIf { it > HISTORY_TAIL_GAP_MILLIS }
 }

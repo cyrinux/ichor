@@ -18,7 +18,7 @@ ENV ANDROID_HOME=/opt/android-sdk \
 ENV PATH=${GOROOT}/bin:${GOPATH}/bin:${GRADLE_HOME}/bin:${ANDROID_HOME}/cmdline-tools/latest/bin:${PATH}
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends curl unzip git ca-certificates \
+ && apt-get install -y --no-install-recommends curl unzip git ca-certificates cmake ninja-build \
  && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xz

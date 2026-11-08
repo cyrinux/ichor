@@ -7,7 +7,8 @@ import IchorCore
 extension TalosClient {
     /// Query APIs among the cluster's Services, the likeliest first.
     func promDiscover() async throws -> [PromSource] {
-        let found: PromDiscovery = try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        let found: PromDiscovery = try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoPromDiscover(config, context, kubeServer, $0)
         }
         return found.sources
@@ -16,7 +17,8 @@ extension TalosClient {
     /// `query` from `start` to `end` (unix seconds) against `source`, about 250 points.
     func promRange(_ source: PromSource, query: String, start: Int64, end: Int64) async throws -> PromResult {
         let sourceJSON = try Self.encode(source)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoPromQueryRange(config, context, kubeServer, sourceJSON, query, start, end, 0, $0)
         }
     }
@@ -24,7 +26,8 @@ extension TalosClient {
     /// The rule groups of `source`, troubled first, each naming its PrometheusRule when known.
     func promRules(_ source: PromSource) async throws -> PromRules {
         let sourceJSON = try Self.encode(source)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoPromRules(config, context, kubeServer, sourceJSON, $0)
         }
     }
@@ -32,7 +35,8 @@ extension TalosClient {
     /// The active scrape pools of `source` with their down targets, most down first.
     func promTargets(_ source: PromSource) async throws -> PromTargets {
         let sourceJSON = try Self.encode(source)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoPromTargets(config, context, kubeServer, sourceJSON, $0)
         }
     }
@@ -53,7 +57,8 @@ extension TalosClient {
     static func normalizePromSource(_ source: PromSource) async throws -> PromSource {
         let sourceJSON = try encode(source)
         var checked: PromSource = try await json { IchorgoNormalizePromSource(sourceJSON, $0) }
-        checked.secret = checked.auth == PromSource.authNone ? "" : source.secret.trimmingCharacters(in: .whitespacesAndNewlines)
+        checked.secret =
+            checked.auth == PromSource.authNone ? "" : source.secret.trimmingCharacters(in: .whitespacesAndNewlines)
         return checked
     }
 

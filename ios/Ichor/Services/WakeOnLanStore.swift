@@ -52,7 +52,8 @@ final class WakeOnLanStore {
 
     /// Where "Wake" sends magic packets for `node` (see wakeTargets); empty: nothing known yet.
     func wakeTargets(fingerprint: String, node: String) -> [WolTarget] {
-        IchorCore.wakeTargets(saved: target(fingerprint: fingerprint, node: node), seen: seenMacs(fingerprint: fingerprint, node: node))
+        IchorCore.wakeTargets(
+            saved: target(fingerprint: fingerprint, node: node), seen: seenMacs(fingerprint: fingerprint, node: node))
     }
 
     /// Saves how to wake `node`; nil forgets it.
@@ -84,7 +85,9 @@ final class WakeOnLanStore {
     /// Forgets the nodes of the clusters no longer in `fingerprints`.
     func keep(fingerprints: [String]) {
         loadIfNeeded()
-        store(targets: keepWolTargets(targets, fingerprints: fingerprints), seen: keepWolTargets(seen, fingerprints: fingerprints))
+        store(
+            targets: keepWolTargets(targets, fingerprints: fingerprints),
+            seen: keepWolTargets(seen, fingerprints: fingerprints))
     }
 
     /// Restored from a backup: replaces every setting (the config was replaced too).
@@ -112,7 +115,8 @@ final class WakeOnLanStore {
         if stored.targets.isEmpty && stored.seen.isEmpty {
             Keychain.delete(Self.account)
         } else if let data = try? JSONEncoder().encode(stored) {
-            try? Keychain.write(data, account: Self.account, accessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
+            try? Keychain.write(
+                data, account: Self.account, accessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
         }
     }
 }

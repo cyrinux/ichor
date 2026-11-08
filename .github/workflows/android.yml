@@ -4,9 +4,9 @@ on:
   # Website-only changes (pages.yml's paths) build nothing here.
   push:
     branches: [main]
-    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", ".github/workflows/pages.yml"]
+    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", "scripts/site-reference.py", ".github/workflows/pages.yml"]
   pull_request:
-    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", ".github/workflows/pages.yml"]
+    paths-ignore: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", "scripts/site-reference.py", ".github/workflows/pages.yml"]
   # Tags: release.yml calls this, then publishes the release once with all files.
   # Artifacts are only uploaded then (github.ref is the caller's tag); pushes and PRs
   # just build.
@@ -22,31 +22,161 @@ on:
 permissions:
   contents: read
 
+# Four jobs in parallel rather than four build.sh runs in a row: the run takes as long as the
+# slowest variant instead of their sum. Each job binds the Go core itself (seconds with a warm
+# Go cache, see .github/actions/android-toolchain) and runs one Gradle build; the checks and
+# the Go and Kotlin unit tests run once, in `check`, so the others skip them
+# (ICHOR_SKIP_TESTS). A newer push to a pull request cancels its running jobs; main and tag
+# runs each get their own concurrency group, so they neither queue nor cancel each other
+# (auto-release.yml reads main's conclusions).
 jobs:
-  build:
+  check:
+    name: Check (gofmt, vet, staticcheck, Go and Kotlin unit tests, Lint)
     runs-on: ubuntu-latest
-    # The signing secrets live in the `release` environment, which only v* tags may use:
-    # pull request and main builds get no secrets and come out unsigned.
-    environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || '' }}
+    permissions:
+      contents: read
+      actions: write # cache-prune deletes the cache entries this job replaces
+    concurrency:
+      group: ${{ github.workflow }}-check-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # scripts/version.sh derives the version from tags and history
           persist-credentials: false
 
-      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
+      - id: toolchain
+        uses: ./.github/actions/android-toolchain
+        with:
+          save: "true"
 
-      - name: Check (gofmt, vet, staticcheck, Go and Kotlin unit tests)
-        run: ./build.sh check
+      - run: ./build.sh check
+
+      # A new Lint finding fails the check: the reports say which, with the code around it.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: lint-reports
+          path: |
+            app/build/reports/lint-results-debug.*
+            wear/build/reports/lint-results-debug.*
+          if-no-files-found: ignore
+
+      # The Go cache is written here only, on main: pull requests read it, so the cache does
+      # not fill with one entry per push. The entry it replaces is deleted right after.
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.ref == 'refs/heads/main' && steps.toolchain.outputs.go-cache-hit != 'true'
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ steps.toolchain.outputs.go-cache-key }}
+
+      - uses: ./.github/actions/cache-prune
+        if: github.ref == 'refs/heads/main' && steps.toolchain.outputs.go-cache-hit != 'true'
+        with:
+          prefix: go-${{ runner.os }}-
+          keep: ${{ steps.toolchain.outputs.go-cache-key }}
+
+  debug:
+    name: Debug APK
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-debug-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/android-toolchain
 
       - name: Build debug APK
+        env:
+          ICHOR_SKIP_TESTS: "1"
         run: ./build.sh debug
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: android-debug
+          path: app/build/outputs/apk/debug/*.apk
+
+  # The demo cluster walked on an emulator (app/src/androidTest/.../DemoSmokeTest.kt): the
+  # crash-on-launch and blank-screen regressions unit tests cannot see. After check, so a red
+  # check does not spend an emulator boot. The AVD is not cached (the cache is near its 10 GB
+  # quota): a cold aosp_atd boot takes a couple of minutes.
+  ui-smoke:
+    name: Demo smoke test (emulator)
+    runs-on: ubuntu-latest
+    needs: [check]
+    # Not in release runs (release.yml calls this workflow for v* tags): pull requests and main.
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    timeout-minutes: 30
+    concurrency:
+      group: ${{ github.workflow }}-ui-smoke-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/android-toolchain
+
+      - name: Build the app and its smoke test
+        env:
+          ICHOR_SKIP_TESTS: "1"
+          ICHOR_LOCAL_MODEL: "0"
+        run: ./build.sh smoke
+
+      # The hosted runner has /dev/kvm; this lets the runner user open it.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # The runner's own Android SDK boots it (no third-party action): API 34 aosp_atd x86_64.
+      - name: Run the smoke test on an emulator
+        run: scripts/ci-emulator.sh scripts/ui-smoke.sh
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: ui-smoke-report
+          path: |
+            app/build/reports/ui-smoke.txt
+            ${{ runner.temp }}/emulator.log
+          if-no-files-found: ignore
+
+  release:
+    name: Release APKs
+    runs-on: ubuntu-latest
+    # The signing secrets live in the `release` environment, which only v* tags may use:
+    # pull request and main builds get no secrets and come out unsigned.
+    environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || '' }}
+    concurrency:
+      group: ${{ github.workflow }}-release-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/android-toolchain
 
       # Signed when the ICHOR_KEYSTORE_BASE64 / ICHOR_KEYSTORE_PASSWORD / ICHOR_KEY_ALIAS
       # secrets of the `release` environment are available (base64 of the .jks from
       # `just android-keystore-gen`), so on tags only; else unsigned.
       - name: Build release APK
         env:
+          ICHOR_SKIP_TESTS: "1"
+          # More headroom than gradle.properties on the 16 GB runner for the three packaged splits;
+          # only the -Dorg.gradle.jvmargs property reaches the forked daemon (a bare -Xmx would not).
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8"
           ICHOR_KEYSTORE_BASE64: ${{ secrets.ICHOR_KEYSTORE_BASE64 }}
           ICHOR_KEYSTORE_PASSWORD: ${{ secrets.ICHOR_KEYSTORE_PASSWORD }}
           ICHOR_KEY_ALIAS: ${{ secrets.ICHOR_KEY_ALIAS }}
@@ -56,20 +186,6 @@ jobs:
             export ICHOR_KEYSTORE="$RUNNER_TEMP/release.jks"
           fi
           ./build.sh release
-
-      # Google Play App Bundle: the release build without the self-updater and donation
-      # links, signed with the same key (Play's upload key). Kept out of the GitHub release.
-      - name: Build Play bundle
-        env:
-          ICHOR_KEYSTORE_BASE64: ${{ secrets.ICHOR_KEYSTORE_BASE64 }}
-          ICHOR_KEYSTORE_PASSWORD: ${{ secrets.ICHOR_KEYSTORE_PASSWORD }}
-          ICHOR_KEY_ALIAS: ${{ secrets.ICHOR_KEY_ALIAS }}
-        run: |
-          if [ -n "$ICHOR_KEYSTORE_BASE64" ]; then
-            echo "$ICHOR_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
-            export ICHOR_KEYSTORE="$RUNNER_TEMP/release.jks"
-          fi
-          ./build.sh play
 
       # ichor-v<version>-<abi>.apk; the in-app updater only picks signed ones,
       # so unsigned builds get an explicit -unsigned suffix.
@@ -82,6 +198,12 @@ jobs:
             abi="${file#app-}"; abi="${abi%%-release*}"
             suffix=""; [[ "$file" == *unsigned* ]] && suffix="-unsigned"
             cp "$apk" "dist/ichor-v${version}-${abi}${suffix}.apk"
+          done
+          # The Wear OS tile (no ABI suffix, so the in-app updater never picks it). Its file
+          # name does not say whether it is signed (v2+ only, minSdk 30): look for the block.
+          for apk in wear/build/outputs/apk/release/wear-release*.apk; do
+            suffix=""; LC_ALL=C grep -qaF "APK Sig Block 42" "$apk" || suffix="-unsigned"
+            cp "$apk" "dist/ichor-wear-v${version}${suffix}.apk"
           done
           # Published with the release, so installed apps can show what an update brings.
           scripts/changelog.py --limit 30 -o dist/changelog.json
@@ -102,6 +224,36 @@ jobs:
           name: android-mapping
           path: app/build/outputs/mapping/release/mapping.txt
 
+  # Google Play App Bundle: the release build without the self-updater and donation links,
+  # signed with the same key (Play's upload key). Kept out of the GitHub release.
+  play:
+    name: Play bundle
+    runs-on: ubuntu-latest
+    environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || '' }}
+    concurrency:
+      group: ${{ github.workflow }}-play-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/android-toolchain
+
+      - name: Build Play bundle
+        env:
+          ICHOR_SKIP_TESTS: "1"
+          ICHOR_KEYSTORE_BASE64: ${{ secrets.ICHOR_KEYSTORE_BASE64 }}
+          ICHOR_KEYSTORE_PASSWORD: ${{ secrets.ICHOR_KEYSTORE_PASSWORD }}
+          ICHOR_KEY_ALIAS: ${{ secrets.ICHOR_KEY_ALIAS }}
+        run: |
+          if [ -n "$ICHOR_KEYSTORE_BASE64" ]; then
+            echo "$ICHOR_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export ICHOR_KEYSTORE="$RUNNER_TEMP/release.jks"
+          fi
+          ./build.sh play
+
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
@@ -110,8 +262,34 @@ jobs:
             app/build/outputs/bundle/play/*.aab
             app/build/outputs/mapping/play/mapping.txt
 
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: startsWith(github.ref, 'refs/tags/v')
-        with:
-          name: android-debug
-          path: app/build/outputs/apk/debug/*.apk
+  # setup-gradle saves a Gradle home entry per job (gradle-home-v2|<os>|<job>[…]) that names the
+  # extracted entries it restores (gradle-dependencies-v2-*, gradle-transforms-v2-*, …), and
+  # never deletes any. Once every job of a main run has saved, this keeps the newest home of
+  # each job and the extracted entries this run restored or wrote (last accessed after the run
+  # started); the rest only a previous run used.
+  gradle-cache-prune:
+    name: Gradle cache prune
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [check, debug, release, play]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        # A failed delete only leaves the entry for LRU eviction: never fail the run on it.
+        run: |
+          started="$(gh api "repos/$GH_REPO/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT" --jq .run_started_at)"
+          gh api --paginate "repos/$GH_REPO/actions/caches?ref=refs/heads/main&key=gradle-&per_page=100" \
+            --jq '.actions_caches[]' |
+            jq -rs --arg started "$started" '
+              (map(select(.key | startswith("gradle-home-")))
+                | group_by(.key | sub("\\].*"; "]"))
+                | map(sort_by(.created_at) | .[:-1][])),
+              map(select((.key | startswith("gradle-home-") | not) and .last_accessed_at < $started))
+              | .[] | "\(.id) \(.key)"' |
+            while read -r id key; do
+              echo "deleting $key"
+              gh cache delete "$id" || echo "::warning::could not delete cache $key"
+            done

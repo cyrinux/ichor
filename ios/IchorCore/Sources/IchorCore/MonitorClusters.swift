@@ -36,8 +36,10 @@ public func watchedInBackground(_ context: ContextSummary, contexts: [ContextSum
 }
 
 /// `unwatched` once `context`'s cluster is watched (`on`: none of its contexts left in it) or not.
-public func settingWatched(_ on: Bool, for context: ContextSummary, contexts: [ContextSummary],
-                           unwatched: Set<String>) -> Set<String> {
+public func settingWatched(
+    _ on: Bool, for context: ContextSummary, contexts: [ContextSummary],
+    unwatched: Set<String>
+) -> Set<String> {
     guard !context.fingerprint.isEmpty else { return unwatched }
     guard on else { return unwatched.union([context.fingerprint]) }
     let key = monitorClusterKey(context)
@@ -45,10 +47,47 @@ public func settingWatched(_ on: Bool, for context: ContextSummary, contexts: [C
     return unwatched.subtracting(ofCluster + [context.fingerprint])
 }
 
+/// Whether `context`'s cluster is in `members` (by fingerprint): a per-cluster setting that is
+/// off by default, on once any of its contexts is.
+public func clusterFlagged(_ context: ContextSummary, contexts: [ContextSummary], members: Set<String>) -> Bool {
+    let key = monitorClusterKey(context)
+    return members.contains(context.fingerprint)
+        || contexts.contains { monitorClusterKey($0) == key && members.contains($0.fingerprint) }
+}
+
+/// `members` once `context`'s cluster is in it (`on`: every context of the cluster) or not (none).
+public func settingClusterFlag(
+    _ on: Bool, for context: ContextSummary, contexts: [ContextSummary],
+    members: Set<String>
+) -> Set<String> {
+    guard !context.fingerprint.isEmpty else { return members }
+    let key = monitorClusterKey(context)
+    let ofCluster = (contexts.filter { monitorClusterKey($0) == key }.map(\.fingerprint) + [context.fingerprint])
+        .filter { !$0.isEmpty }
+    return on ? members.union(ofCluster) : members.subtracting(ofCluster)
+}
+
+/// `members` (by fingerprint) widened to every context of each cluster one of them is of, and
+/// narrowed to `contexts`: a context added to a cluster later gets its setting, as Go keys it.
+public func wholeClusters(_ members: Set<String>, contexts: [ContextSummary]) -> Set<String> {
+    let keys = Set(contexts.filter { members.contains($0.fingerprint) }.map(monitorClusterKey))
+    return Set(contexts.filter { keys.contains(monitorClusterKey($0)) && !$0.fingerprint.isEmpty }.map(\.fingerprint))
+}
+
+/// The clusters that record actions after the update from the app-wide switch: every cluster
+/// but the demo when it was on (`legacyOn`), none when it was off or never set.
+public func seededAuditEventClusters(legacyOn: Bool?, contexts: [ContextSummary]) -> Set<String> {
+    guard legacyOn == true else { return [] }
+    return Set(contexts.filter { !$0.demo && !$0.fingerprint.isEmpty }.map(\.fingerprint))
+}
+
 /// The contexts a background run checks: one per cluster (clusterContexts), but not the
 /// clusters turned off.
-public func monitoredContexts(_ contexts: [ContextSummary], active: String?, unwatched: Set<String>) -> [ContextSummary] {
-    clusterContexts(contexts, active: active).filter { watchedInBackground($0, contexts: contexts, unwatched: unwatched) }
+public func monitoredContexts(_ contexts: [ContextSummary], active: String?, unwatched: Set<String>) -> [ContextSummary]
+{
+    clusterContexts(contexts, active: active).filter {
+        watchedInBackground($0, contexts: contexts, unwatched: unwatched)
+    }
 }
 
 // MARK: - Snapshots per cluster
@@ -56,9 +95,13 @@ public func monitoredContexts(_ contexts: [ContextSummary], active: String?, unw
 /// `snapshots` (by monitor key) with the single snapshot older versions kept (`legacy`) given
 /// to the active cluster, so the first run after the update compares it instead of taking a
 /// silent baseline. Unchanged when that cluster already has one.
-public func migratedSnapshots(_ snapshots: [String: ClusterSnapshot], legacy: ClusterSnapshot?,
-                              activeCluster: String?) -> [String: ClusterSnapshot] {
-    guard let legacy, let activeCluster, !activeCluster.isEmpty, snapshots[activeCluster] == nil else { return snapshots }
+public func migratedSnapshots(
+    _ snapshots: [String: ClusterSnapshot], legacy: ClusterSnapshot?,
+    activeCluster: String?
+) -> [String: ClusterSnapshot] {
+    guard let legacy, let activeCluster, !activeCluster.isEmpty, snapshots[activeCluster] == nil else {
+        return snapshots
+    }
     var migrated = snapshots
     migrated[activeCluster] = legacy
     return migrated
@@ -87,9 +130,13 @@ public struct WidgetCluster: Codable, Equatable, Hashable, Sendable {
 
 /// The clusters the widget can show, one per cluster, named as on screen; `link` makes the
 /// share link of a context's cluster (the app builds it through Go).
-public func widgetClusters(_ contexts: [ContextSummary], active: String?, labels: ClusterLabels,
-                           link: (ContextSummary) -> String? = { _ in nil }) -> [WidgetCluster] {
-    clusterContexts(contexts, active: active).map { WidgetCluster(id: monitorClusterKey($0), name: labels.of($0), link: link($0)) }
+public func widgetClusters(
+    _ contexts: [ContextSummary], active: String?, labels: ClusterLabels,
+    link: (ContextSummary) -> String? = { _ in nil }
+) -> [WidgetCluster] {
+    clusterContexts(contexts, active: active).map {
+        WidgetCluster(id: monitorClusterKey($0), name: labels.of($0), link: link($0))
+    }
 }
 
 /// The in-app form (ichor://open?…) of a web share link (https://…/open/#…): what a widget tap
@@ -107,7 +154,9 @@ extension SharedSnapshot {
     public static let activeKey = "activeCluster"
 
     public static func loadAll(from defaults: UserDefaults?) -> [String: ClusterSnapshot] {
-        defaults?.data(forKey: snapshotsKey).flatMap { try? JSONDecoder().decode([String: ClusterSnapshot].self, from: $0) } ?? [:]
+        defaults?.data(forKey: snapshotsKey).flatMap {
+            try? JSONDecoder().decode([String: ClusterSnapshot].self, from: $0)
+        } ?? [:]
     }
 
     public static func clusters(from defaults: UserDefaults?) -> [WidgetCluster] {
@@ -151,12 +200,17 @@ public struct Reachability: Codable, Equatable, Sendable {
 /// `runs` in a row (clamped to unreachableRunsRange), and "reachable again" once when it answers
 /// after it. `enabled` off counts without alerting. A run that did not try the cluster (waiting
 /// for its VPN) is not counted at all: callers skip it.
-public func evaluateReachability(previous: Reachability?, reachable: Bool, runs: Int,
-                                 enabled: Bool) -> (alert: Alert?, next: Reachability) {
+public func evaluateReachability(
+    previous: Reachability?, reachable: Bool, runs: Int,
+    enabled: Bool
+) -> (alert: Alert?, next: Reachability) {
     let before = previous ?? Reachability()
     if reachable {
-        let alert = before.alerted && enabled
-            ? Alert(key: "unreachable", title: "Cluster reachable again", text: "It answers the background checks again.", problem: false)
+        let alert =
+            before.alerted && enabled
+            ? Alert(
+                key: "unreachable", title: "Cluster reachable again", text: "It answers the background checks again.",
+                problem: false)
             : nil
         return (alert, Reachability())
     }
@@ -164,7 +218,11 @@ public func evaluateReachability(previous: Reachability?, reachable: Bool, runs:
     var next = Reachability(misses: before.misses + 1, alerted: before.alerted)
     guard enabled, !before.alerted, next.misses >= threshold else { return (nil, next) }
     next.alerted = true
-    return (Alert(key: "unreachable", title: "Cluster unreachable", text: "No answer to the last \(threshold) checks.", problem: true), next)
+    return (
+        Alert(
+            key: "unreachable", title: "Cluster unreachable", text: "No answer to the last \(threshold) checks.",
+            problem: true), next
+    )
 }
 
 // MARK: - Budget
@@ -174,9 +232,27 @@ public func evaluateReachability(previous: Reachability?, reachable: Bool, runs:
 public let monitorBudget: TimeInterval = 25
 public let monitorParallel = 4
 
+/// The order a run checks `contexts` in (CYR-190), at most monitorParallel at a time: the
+/// clusters that did not answer last time (`lastFailed`, monitor keys) first, so a down cluster's
+/// alert is not pushed past the refresh budget; with the app in front (`appActive`), the active
+/// context (`active`, a name) last, so the screen's own calls are not raced by the monitor's.
+/// Otherwise the stored order, unchanged.
+public func monitorOrder(
+    _ contexts: [ContextSummary], active: String?, appActive: Bool,
+    lastFailed: Set<String>
+) -> [ContextSummary] {
+    let isLast: (ContextSummary) -> Bool = { appActive && active != nil && $0.name == active }
+    let rest = contexts.filter { !isLast($0) }
+    let failed = rest.filter { lastFailed.contains(monitorClusterKey($0)) }
+    let others = rest.filter { !lastFailed.contains(monitorClusterKey($0)) }
+    return failed + others + contexts.filter(isLast)
+}
+
 /// How long one cluster may take: the budget split over the waves of `monitorParallel`, between
 /// 8 s and 20 s (a Go call gives up after 20 s). Past that it counts as unreachable for the run.
-public func monitorClusterTimeout(clusters: Int, budget: TimeInterval = monitorBudget, parallel: Int = monitorParallel) -> TimeInterval {
+public func monitorClusterTimeout(clusters: Int, budget: TimeInterval = monitorBudget, parallel: Int = monitorParallel)
+    -> TimeInterval
+{
     let width = max(1, parallel)
     let waves = max(1, (clusters + width - 1) / width)
     return min(20, max(8, budget / Double(waves)))
@@ -203,35 +279,33 @@ public func withDeadline<T: Sendable>(_ seconds: TimeInterval, _ work: @escaping
 }
 
 /// Resumes a continuation with the first result given, once, whichever comes first.
-private final class FirstResult<T: Sendable>: @unchecked Sendable {
-    private let lock = NSLock()
-    private var continuation: CheckedContinuation<T?, Never>?
-    private var done = false
-    private var value: T?
+private final class FirstResult<T: Sendable>: Sendable {
+    private struct State {
+        var continuation: CheckedContinuation<T?, Never>?
+        var done = false
+        var value: T?
+    }
+
+    private let state = Locked(State())
 
     func wait(_ continuation: CheckedContinuation<T?, Never>) {
-        lock.lock()
-        if done {
-            let value = value
-            lock.unlock()
-            continuation.resume(returning: value)
-            return
+        // Already finished: resume at once with its result, outside the lock.
+        let finished: T?? = state.withLock { s in
+            if s.done { return .some(s.value) }
+            s.continuation = continuation
+            return .none
         }
-        self.continuation = continuation
-        lock.unlock()
+        if case .some(let value) = finished { continuation.resume(returning: value) }
     }
 
     func finish(_ result: T?) {
-        lock.lock()
-        guard !done else {
-            lock.unlock()
-            return
+        let waiting: CheckedContinuation<T?, Never>? = state.withLock { s in
+            guard !s.done else { return nil }
+            s.done = true
+            s.value = result
+            defer { s.continuation = nil }
+            return s.continuation
         }
-        done = true
-        value = result
-        let waiting = continuation
-        continuation = nil
-        lock.unlock()
         waiting?.resume(returning: result)
     }
 }

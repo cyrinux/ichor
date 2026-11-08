@@ -19,8 +19,10 @@ public struct NodeEvent: Codable, Equatable, Identifiable, Sendable {
     public var eventKind: EventKind { EventKind(rawValue: kind) ?? .other }
     public var eventSeverity: EventSeverity { EventSeverity(rawValue: severity) ?? .info }
 
-    public init(node: String, eventId: String, at: Int64, kind: String, subject: String = "",
-                action: String = "", message: String = "", severity: String = "info") {
+    public init(
+        node: String, eventId: String, at: Int64, kind: String, subject: String = "",
+        action: String = "", message: String = "", severity: String = "info"
+    ) {
         self.node = node
         self.eventId = eventId
         self.at = at

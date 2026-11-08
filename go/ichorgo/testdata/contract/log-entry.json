@@ -1,0 +1,34 @@
+{
+  "fields": [
+    {
+      "k": "peer",
+      "v": "10.0.0.7"
+    }
+  ],
+  "level": "error",
+  "msg": "upstream timeout",
+  "raw": "level=error msg=\"upstream timeout\" peer=10.0.0.7",
+  "source": "",
+  "spans": [
+    {
+      "b": true,
+      "bg": -1,
+      "fg": -1,
+      "fgRgb": "#ff8700",
+      "t": "level"
+    },
+    {
+      "bg": -1,
+      "fg": -1,
+      "t": "=error "
+    },
+    {
+      "bg": -1,
+      "fg": 6,
+      "i": true,
+      "t": "msg",
+      "u": true
+    }
+  ],
+  "ts": 0
+}

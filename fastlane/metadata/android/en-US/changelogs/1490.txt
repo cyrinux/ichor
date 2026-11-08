@@ -1,0 +1,5 @@
+• The checkup warns when a web address's certificate expires or does not name its host
+• The plugin file format: strict loader, validator, compiler, embedded built-ins and a JSON Schema
+• Data services, integrations, network policies and API health show what they are reading while they load
+• Data services, integrations, network policies and API health report their read steps from Go
+• The checkup words the Sealed Secrets findings on Android and iOS

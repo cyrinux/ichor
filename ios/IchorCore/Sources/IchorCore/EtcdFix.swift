@@ -23,7 +23,8 @@ public struct EtcdFixMember: Decodable, Equatable, Identifiable, Sendable {
     public var id: String { node }
     public var memberState: State { State(rawValue: state) ?? .pending }
 
-    public init(node: String, hostname: String = "", state: String = State.pending.rawValue, reclaimedBytes: Int64 = 0) {
+    public init(node: String, hostname: String = "", state: String = State.pending.rawValue, reclaimedBytes: Int64 = 0)
+    {
         self.node = node
         self.hostname = hostname
         self.state = state
@@ -50,7 +51,9 @@ public struct EtcdFixProgress: Decodable, Equatable, Sendable {
     public let steps: Int
     public let members: [EtcdFixMember]
 
-    public init(phase: String, message: String = "", at: Int64 = 0, step: Int = 0, steps: Int = 0, members: [EtcdFixMember] = []) {
+    public init(
+        phase: String, message: String = "", at: Int64 = 0, step: Int = 0, steps: Int = 0, members: [EtcdFixMember] = []
+    ) {
         self.phase = phase
         self.message = message
         self.at = at
@@ -82,7 +85,10 @@ public enum EtcdFixPhase: String, CaseIterable, Comparable, Sendable {
 }
 
 /// Timeline of the fix's steps from the events so far, like maintenanceTimeline.
-public func etcdFixTimeline(_ events: [EtcdFixProgress], finished: Bool = false, failure: String? = nil) -> [TimelineStep<EtcdFixPhase>] {
-    foldTimeline(events, phases: EtcdFixPhase.allCases, finished: finished, failure: failure,
-                 phase: { EtcdFixPhase(rawValue: $0.phase) }, at: \.at, message: \.message)
+public func etcdFixTimeline(_ events: [EtcdFixProgress], finished: Bool = false, failure: String? = nil)
+    -> [TimelineStep<EtcdFixPhase>]
+{
+    foldTimeline(
+        events, phases: EtcdFixPhase.allCases, finished: finished, failure: failure,
+        phase: { EtcdFixPhase(rawValue: $0.phase) }, at: \.at, message: \.message)
 }

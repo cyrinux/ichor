@@ -1,0 +1,1 @@
+• Refresh an ExternalSecret now from its row, as the first built-in plugin action

@@ -12,19 +12,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,13 +79,12 @@ fun FundingScreen(
     val store by app.featureStore.state.collectAsStateWithLifecycle()
     val result by app.featureStore.result.collectAsStateWithLifecycle()
     val backed by app.fundingHistory.backed.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     result?.let { PurchaseResultDialog(it, app.featureStore::dismiss) }
     val buy: (String) -> Unit = { id -> context.findFragmentActivity()?.let { app.featureStore.buy(it, id) } }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.funding_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
@@ -118,7 +116,7 @@ private fun FundingList(roadmap: Roadmap, store: StoreState, backed: Set<String>
             )
         }
         if (store == StoreState.Unavailable) item { InfoNotice(stringResource(R.string.funding_unavailable)) }
-        if (roadmap.features.isEmpty()) item { InfoNotice(stringResource(R.string.funding_empty)) }
+        if (!roadmap.anyFundable) item { InfoNotice(stringResource(R.string.funding_empty)) }
         items(roadmap.features, key = { it.id }) { feature ->
             FeatureCard(
                 feature = feature,
@@ -153,7 +151,7 @@ private fun FeatureCard(
 ) {
     val colors = LocalStatusColors.current
     val lang = locale.language
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(feature.title.localized(lang), style = MaterialTheme.typography.titleMedium)
             when (feature.status) {
@@ -182,7 +180,7 @@ private fun FeatureCard(
             }
             if (feature.fundable) PriceButtons(priced(feature.products, prices), onBuy)
             feature.issue?.let { url ->
-                TextButton(onClick = { onDiscuss(url) }) { Text(stringResource(R.string.funding_discuss)) }
+                IchorTextButton(onClick = { onDiscuss(url) }) { Text(stringResource(R.string.funding_discuss)) }
             }
         }
     }
@@ -206,11 +204,11 @@ private fun PurchaseResultDialog(result: PurchaseResult, onDismiss: () -> Unit) 
         PurchaseResult.Pending -> stringResource(R.string.funding_title) to stringResource(R.string.funding_pending)
         is PurchaseResult.Failed -> stringResource(R.string.funding_title) to stringResource(R.string.funding_failed, result.message.asString())
     }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { Text(body) },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) } },
+        confirmButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) } },
     )
 }
 

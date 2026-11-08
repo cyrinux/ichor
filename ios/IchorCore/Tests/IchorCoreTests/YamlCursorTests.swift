@@ -3,30 +3,30 @@ import XCTest
 
 final class YamlCursorTests: XCTestCase {
     private let yaml = """
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: web
-      labels:
-        app.kubernetes.io/name: web
-    spec:
-      replicas: 2
-      template:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: web
+          labels:
+            app.kubernetes.io/name: web
         spec:
-          containers:
-          - name: app
-            image: example/app:1
-            ports:
-              - containerPort: 80
-                protocol: TCP
-            env:
-            - name: MODE
-              value: "fast"
-          # a comment: not a key
-          volumes: []
-    ---
-    kind: ConfigMap
-    """
+          replicas: 2
+          template:
+            spec:
+              containers:
+              - name: app
+                image: example/app:1
+                ports:
+                  - containerPort: 80
+                    protocol: TCP
+                env:
+                - name: MODE
+                  value: "fast"
+              # a comment: not a key
+              volumes: []
+        ---
+        kind: ConfigMap
+        """
 
     /// The cursor just after the first `marker` in `text`.
     private func at(_ marker: String, in text: String? = nil) -> YamlCursor {
@@ -100,13 +100,15 @@ final class YamlCursorTests: XCTestCase {
         XCTAssertEqual(inside.text, "spec:\n  selector: \n  replicas: 2\n")
 
         let blank = "spec:\n  containers:\n    \n"
-        let item = insertYamlField(blank, utf16Offset: offset(of: "    \n", in: blank) + 4, name: "name", listItem: true)
+        let item = insertYamlField(
+            blank, utf16Offset: offset(of: "    \n", in: blank) + 4, name: "name", listItem: true)
         XCTAssertEqual(item.text, "spec:\n  containers:\n    - name: \n")
         XCTAssertEqual(item.cursor, offset(of: "name: ", in: item.text) + 6)
     }
 
     func testDecodeExplainJSON() throws {
-        let json = #"{"path":"spec.strategy","type":"DeploymentStrategy","description":"How.","required":false,"children":[{"name":"type","type":"string","description":"Type.","required":false,"enum":["Recreate","RollingUpdate"]}]}"#
+        let json =
+            #"{"path":"spec.strategy","type":"DeploymentStrategy","description":"How.","required":false,"children":[{"name":"type","type":"string","description":"Type.","required":false,"enum":["Recreate","RollingUpdate"]}]}"#
         let explain = try TalosJSON.decode(KubeExplain.self, from: json)
         XCTAssertEqual(explain.children.first?.enumValues, ["Recreate", "RollingUpdate"])
         XCTAssertTrue(explain.enumValues.isEmpty)

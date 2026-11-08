@@ -11,11 +11,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -77,13 +77,13 @@ internal fun OmniCard(
         MutedText(stringResource(R.string.omni_add_body))
         if (prefilled) MutedText(stringResource(R.string.omni_prefilled))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
+            IchorFilterChip(
                 selected = !serviceAccount,
                 onClick = { serviceAccount = false },
                 label = { Text(stringResource(R.string.omni_mode_account)) },
                 enabled = !state.running,
             )
-            FilterChip(
+            IchorFilterChip(
                 selected = serviceAccount,
                 onClick = { serviceAccount = true },
                 label = { Text(stringResource(R.string.kube_signin_method_omni_sa)) },
@@ -96,12 +96,12 @@ internal fun OmniCard(
                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                 Text(stringResource(R.string.kube_signin_waiting_browser))
             }
-            OutlinedButton(onClick = { openInBrowser(context, prompt.url) }) { Text(stringResource(R.string.kube_signin_open_again)) }
+            IchorOutlinedButton(onClick = { openInBrowser(context, prompt.url) }) { Text(stringResource(R.string.kube_signin_open_again)) }
         }
         state.error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
-            Button(
+            IchorOutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
+            IchorButton(
                 onClick = {
                     val url = values[FIELD_URL].orEmpty().trim()
                     if (serviceAccount) onServiceAccount(url, values[FIELD_KEY].orEmpty().trim()) else onAccount(url, values[FIELD_EMAIL].orEmpty().trim())

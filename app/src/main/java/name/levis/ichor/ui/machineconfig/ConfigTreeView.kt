@@ -21,7 +21,7 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -96,7 +96,7 @@ fun ConfigTreeView(
                         onOpen = { sheet = it },
                         onRemove = { removing = Removal(row.doc, row.node) },
                     )
-                    editing && row.node.canGrow -> TextButton(enabled = enabled, onClick = { sheet = ConfigSheet.Add(row.doc, row.node) }) {
+                    editing && row.node.canGrow -> IchorTextButton(enabled = enabled, onClick = { sheet = ConfigSheet.Add(row.doc, row.node) }) {
                         Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                         Text(stringResource(R.string.machine_config_add_field), Modifier.padding(start = 4.dp))
                     }

@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cyrinux/ichor/go/internal/httpx"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 	"google.golang.org/protobuf/encoding/protowire"
 )
@@ -69,7 +70,7 @@ func omniHTTPClient(cfgCtx *clientconfig.Context) (*http.Client, error) {
 
 	// The authorization request answers with a redirect to Omni's login page: the client
 	// returns it instead of following it.
-	return newHTTPClient(httpClientOpts{tls: tlsConfig, timeout: oidcHTTPTimeout}), nil
+	return httpx.New(httpx.Opts{TLS: tlsConfig, Timeout: oidcHTTPTimeout}), nil
 }
 
 // omniOIDCToken is an ID token for cluster's Kubernetes proxy and its expiry.
@@ -82,6 +83,10 @@ func omniOIDCToken(ctx context.Context, cfgCtx *clientconfig.Context, signer omn
 	var d oidcDiscovery
 	if err := omniGetJSON(ctx, httpc, strings.TrimSuffix(issuer, "/")+"/.well-known/openid-configuration", &d); err != nil || d.AuthorizationEndpoint == "" || d.TokenEndpoint == "" {
 		return "", time.Time{}, fmt.Errorf("discover Omni OIDC endpoints: %w", errors.Join(err, errors.New("no endpoints")))
+	}
+
+	if err := d.check(); err != nil {
+		return "", time.Time{}, fmt.Errorf("discover Omni OIDC endpoints: %w", err)
 	}
 
 	verifier := randomToken() + randomToken()

@@ -3,8 +3,10 @@ package ichorgo
 import (
 	"context"
 	"encoding/json"
+	"slices"
 	"strings"
 	"testing"
+	"time"
 )
 
 type readProgressOut struct {
@@ -152,5 +154,45 @@ func TestReadProgressInContext(t *testing.T) {
 
 	if got := readProgressFor(t, "test-ctx"); got.Steps[0].State != readStepDone {
 		t.Errorf("tracked step = %+v", got.Steps[0])
+	}
+}
+
+// checkFinishedProgress checks that op's read is over with the steps want, in order, each
+// ended (done, or failed when listed in failed).
+func checkFinishedProgress(t *testing.T, op string, want []string, failed ...string) {
+	t.Helper()
+
+	p := readProgressFor(t, op)
+	if p.Running || p.Total != len(want) || p.Done != len(want) {
+		t.Fatalf("progress = %+v, want %d steps ended", p, len(want))
+	}
+
+	for i, s := range p.Steps {
+		wantState := readStepDone
+		if slices.Contains(failed, s.ID) {
+			wantState = readStepFailed
+		}
+
+		if s.ID != want[i] || s.State != wantState {
+			t.Errorf("step %d = %s %s, want %s %s", i, s.ID, s.State, want[i], wantState)
+		}
+	}
+}
+
+func TestReadProgressWaitCountsFromTheClock(t *testing.T) {
+	p := startReadProgress("test-wait", "", "wait")
+	defer p.finish()
+
+	p.wait("wait", time.Now().Add(-2500*time.Millisecond), 5*time.Second)
+
+	got := readProgressFor(t, "test-wait")
+	if s := got.Steps[0]; s.State != readStepRunning || s.Count != 2 || s.Total != 5 {
+		t.Fatalf("wait step = %+v, want running 2/5", s)
+	}
+
+	p.done("wait")
+
+	if s := readProgressFor(t, "test-wait").Steps[0]; s.State != readStepDone || s.Count != 0 {
+		t.Fatalf("finished wait = %+v", s)
 	}
 }

@@ -2,6 +2,7 @@ package name.levis.ichor.ui.argocd
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,12 +12,13 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.StopCircle
 import androidx.compose.material.icons.outlined.Sync
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -31,6 +33,7 @@ import kotlinx.coroutines.delay
 import name.levis.ichor.R
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoOperation
+import name.levis.ichor.model.ArgoResult
 import name.levis.ichor.model.shortRevision
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.localizedDuration
@@ -38,17 +41,18 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
  * The running or last sync: phase, message, how long it ran, "5 / 9 resources" with a bar, the
- * resources that failed with Argo CD's message, and Terminate while it runs.
+ * resources that failed with Argo CD's message ([onCompare]: each opens the diff at it, to fix
+ * its manifest in Git), and Terminate while it runs.
  */
 @Composable
-fun ArgoOperationCard(app: ArgoApp, op: ArgoOperation, busy: Boolean, onTerminate: () -> Unit) {
+fun ArgoOperationCard(app: ArgoApp, op: ArgoOperation, busy: Boolean, onCompare: ((ArgoResult) -> Unit)? = null, onTerminate: () -> Unit) {
     val colors = LocalStatusColors.current
     val (icon, color) = when {
         op.isRunning -> Icons.Outlined.Sync to MaterialTheme.colorScheme.primary
         op.isFailed -> Icons.Outlined.ErrorOutline to colors.bad
         else -> Icons.Outlined.CheckCircle to colors.ok
     }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(22.dp))
@@ -67,10 +71,13 @@ fun ArgoOperationCard(app: ArgoApp, op: ArgoOperation, busy: Boolean, onTerminat
                 Column(Modifier.padding(top = 2.dp)) {
                     Text("${f.kind}/${f.name}", style = MaterialTheme.typography.labelLarge, fontFamily = FontFamily.Monospace, color = colors.bad)
                     if (f.message.isNotEmpty()) MutedText(f.message)
+                    if (onCompare != null && f.name.isNotEmpty()) {
+                        IchorTextButton(onClick = { onCompare(f) }, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.gitops_compare_with_git)) }
+                    }
                 }
             }
             if (op.phase == "Running") {
-                OutlinedButton(onClick = onTerminate, enabled = !busy) {
+                IchorOutlinedButton(onClick = onTerminate, enabled = !busy) {
                     Icon(Icons.Outlined.StopCircle, contentDescription = null, tint = colors.bad, modifier = Modifier.size(18.dp))
                     Text(stringResource(R.string.argo_terminate), color = colors.bad, modifier = Modifier.padding(start = 6.dp))
                 }

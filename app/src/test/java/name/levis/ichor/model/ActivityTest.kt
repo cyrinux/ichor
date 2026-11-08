@@ -26,6 +26,18 @@ class ActivityTest {
     }
 
     @Test
+    fun partialIsNeitherOkNorFailedAndUnknownFallsBackToFailed() {
+        val partial = ActivityEntry(action = "sanitize-pods", outcome = "partial", error = "1 of 2 pods not deleted")
+        assertTrue(partial.partial)
+        assertFalse(partial.failed)
+        assertTrue(partial.matches(ActivityFilter(failedOnly = true)))
+        val unknown = ActivityEntry(outcome = "something-new")
+        assertTrue(unknown.failed)
+        assertFalse(unknown.partial)
+        assertFalse(ActivityEntry().partial || ActivityEntry().failed)
+    }
+
+    @Test
     fun labelsTheActionKey() {
         assertEquals("Rollout restart", entries[2].actionLabel)
         assertEquals("Scale", entries[0].actionLabel)

@@ -12,19 +12,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,6 +51,7 @@ import name.levis.ichor.model.KubeObjectAction
 import name.levis.ichor.model.KubeObjectBar
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubePermission
+import name.levis.ichor.model.ObjectOwner
 import name.levis.ichor.model.hasConfigData
 import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.SecureWhile
@@ -98,6 +99,12 @@ fun KubeObjectScreen(
     onDeleted: () -> Unit,
     /** Opens the scale dialog once, as the screen opens (a Capacity screen suggestion). */
     openScale: Boolean = false,
+    /** The vulnerability scan reports kept for a cluster (its context name). */
+    onScanReports: (String) -> Unit = {},
+    /** The diff of the Argo CD or Flux app applying the object, scrolled to it ([focus] "kind/namespace/name"). */
+    onGitOpsDiff: ((owner: ObjectOwner, focus: String) -> Unit)? = null,
+    /** Shown above the tabs, outside the editor (a node's actions beside the node list). */
+    header: (@Composable () -> Unit)? = null,
     vm: KubeObjectViewModel = viewModel(
         key = "kube-object-${ref.group}/${ref.resource}/${ref.namespace}/${ref.name}",
         factory = factory { KubeObjectViewModel(app.kubeBrowser, ref) },
@@ -131,6 +138,9 @@ fun KubeObjectScreen(
         null
     }
     val dataRevealed = dataVm?.revealed?.collectAsStateWithLifecycle()?.value
+    // A pod's or a workload's images scanned from its summary, for a role with the Kubernetes API.
+    val scanExtra: (@Composable () -> Unit)? =
+        if (offersObjectScan(ref)) { { KubeObjectScanSection(ref, onScanReports) } } else null
 
     SecureWhile(revealed || dataRevealed != null)
     // A Secret value read on the data tab leaves memory once another tab shows.
@@ -221,13 +231,13 @@ fun KubeObjectScreen(
         )
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            if (customizing) TopAppBar(
+            if (customizing) IchorTopAppBar(
                 title = { Text(stringResource(R.string.bar_edit_title)) },
-                actions = { TextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
-            ) else TopAppBar(
+                actions = { IchorTextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
+            ) else IchorTopAppBar(
                 title = {
                     Column {
                         Text(ref.name, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -235,7 +245,7 @@ fun KubeObjectScreen(
                             listOf(ref.kind, ref.namespace).filter { it.isNotEmpty() }.joinToString("  ·  "),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
                         )
                     }
                 },
@@ -259,7 +269,7 @@ fun KubeObjectScreen(
                             },
                             onCustomize = { customizing = true },
                         )
-                        current.review == null -> TextButton(onClick = vm::review) { Text(stringResource(R.string.kb_review)) }
+                        current.review == null -> IchorTextButton(onClick = vm::review) { Text(stringResource(R.string.kb_review)) }
                     }
                 },
             )
@@ -267,7 +277,7 @@ fun KubeObjectScreen(
     ) { padding ->
         if (customizing) {
             ActionBarEditor(bar, kubeObjectActionLook, app.uiPreferences::setKubeObjectBar, Modifier.padding(padding))
-            return@Scaffold
+            return@IchorScaffold
         }
         // Asked while editing: an update the credentials cannot run cannot be saved.
         val saveDenial = if (current != null) rememberKubeCanDenial("update", ref.group, ref.resource, ref.namespace, ref.name) else null
@@ -288,6 +298,7 @@ fun KubeObjectScreen(
                     )
                 }
                 else -> {
+                    header?.invoke()
                     PrimaryTabRow(selectedTabIndex = tabIndex(tab, hasData = dataVm != null)) {
                         AppTab(selected = tab == TAB_SUMMARY, onClick = { tab = TAB_SUMMARY }, text = { Text(stringResource(R.string.kb_tab_summary)) })
                         if (dataVm != null) {
@@ -309,6 +320,8 @@ fun KubeObjectScreen(
                                 }
                             },
                             modifier = Modifier.weight(1f),
+                            extra = scanExtra,
+                            onGitOpsDiff = onGitOpsDiff?.let { open -> { owner -> open(owner, "${ref.kind}/${ref.namespace}/${ref.name}") } },
                         )
                     } else {
                         if (ref.isSecret) SecretReveal(revealed, ::toggleReveal)
@@ -407,15 +420,15 @@ private fun ReviewContent(edit: ObjectEdit, saveDenial: KubePermission?, onBack:
         is UiState.Failed -> Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             ErrorCard(review.message.asString())
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onBack) { Text(stringResource(R.string.kb_back_to_editor)) }
-                TextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+                IchorOutlinedButton(onClick = onBack) { Text(stringResource(R.string.kb_back_to_editor)) }
+                IchorTextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
             }
         }
         is UiState.Loaded -> {
             if (!review.data.changed) {
                 Column(Modifier.fillMaxSize()) {
                     InfoBox(stringResource(R.string.kb_no_changes), Modifier.weight(1f))
-                    OutlinedButton(onClick = onBack, modifier = Modifier.padding(16.dp).navigationBarsPadding()) { Text(stringResource(R.string.kb_back_to_editor)) }
+                    IchorOutlinedButton(onClick = onBack, modifier = Modifier.padding(16.dp).navigationBarsPadding()) { Text(stringResource(R.string.kb_back_to_editor)) }
                 }
                 return
             }
@@ -427,8 +440,8 @@ private fun ReviewContent(edit: ObjectEdit, saveDenial: KubePermission?, onBack:
                     edit.saveError?.let { ErrorCard(it.asString()) }
                     KubeDenialNote(saveDenial)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedButton(onClick = onBack, enabled = !edit.saving) { Text(stringResource(R.string.kb_back_to_editor)) }
-                        Button(onClick = onSave, enabled = !edit.saving && saveDenial == null) { Text(stringResource(R.string.kb_save)) }
+                        IchorOutlinedButton(onClick = onBack, enabled = !edit.saving) { Text(stringResource(R.string.kb_back_to_editor)) }
+                        IchorButton(onClick = onSave, enabled = !edit.saving && saveDenial == null) { Text(stringResource(R.string.kb_save)) }
                         if (edit.saving) CircularProgressIndicator(Modifier.padding(start = 8.dp))
                     }
                 }

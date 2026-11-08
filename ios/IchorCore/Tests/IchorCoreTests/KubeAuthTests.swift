@@ -3,7 +3,8 @@ import XCTest
 
 final class KubeAuthTests: XCTestCase {
     func testDiscoverNeedsSignIn() {
-        XCTAssertTrue(kubeDiscoverNeedsSignIn(["gcpOAuthClientId", "gcpOAuthClientSecret", "gcpOAuthRedirectUrl", "gcpProjects"]))
+        XCTAssertTrue(
+            kubeDiscoverNeedsSignIn(["gcpOAuthClientId", "gcpOAuthClientSecret", "gcpOAuthRedirectUrl", "gcpProjects"]))
         XCTAssertTrue(kubeDiscoverNeedsSignIn([kubeGoogleSignInField, "gcpProjects"]))
         XCTAssertFalse(kubeDiscoverNeedsSignIn(["gcpServiceAccountJson"]))
         XCTAssertFalse(kubeDiscoverNeedsSignIn(["gcpUserCredentialsJson", "gcpProjects"]))
@@ -11,12 +12,16 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertFalse(kubeDiscoverNeedsSignIn([]))
         // EKS's IAM Identity Center signs in first; its regions may be left empty.
         XCTAssertTrue(kubeDiscoverNeedsSignIn([kubeAWSStartURLField, kubeAWSRegionField, kubeAWSRegionsField]))
-        XCTAssertTrue(kubeFieldsComplete([kubeAWSStartURLField, kubeAWSRegionField, kubeAWSRegionsField],
-                                         values: [kubeAWSStartURLField: "https://example.awsapps.com/start", kubeAWSRegionField: "eu-west-3"]))
+        XCTAssertTrue(
+            kubeFieldsComplete(
+                [kubeAWSStartURLField, kubeAWSRegionField, kubeAWSRegionsField],
+                values: [kubeAWSStartURLField: "https://example.awsapps.com/start", kubeAWSRegionField: "eu-west-3"]))
     }
 
     func testDiscoverRoleSelection() {
-        let choices = decodeKubeSsoRoleChoices(#"[{"accountId":"123456789012","accountName":"Production","roleName":"ReadOnly"},{"accountId":"210987654321","roleName":"Admin"}]"#)
+        let choices = decodeKubeSsoRoleChoices(
+            #"[{"accountId":"123456789012","accountName":"Production","roleName":"ReadOnly"},{"accountId":"210987654321","roleName":"Admin"}]"#
+        )
         XCTAssertEqual(choices.count, 2)
         XCTAssertEqual(choices[1].label, "210987654321 · Admin")
         XCTAssertEqual(kubeRoleSelection(choices), "123456789012/ReadOnly 210987654321/Admin")
@@ -26,14 +31,18 @@ final class KubeAuthTests: XCTestCase {
     func testGcloudSignInIsAMarker() throws {
         // Nothing to type: complete as it is, submitted as its marker, browser first in discovery.
         XCTAssertTrue(kubeFieldsComplete([kubeGcloudSignInField], values: [:]))
-        XCTAssertEqual(try TalosJSON.decode([String: String].self, from: kubeSecretsJSON(fields: [kubeGcloudSignInField], values: [:])),
-                       [kubeGcloudSignInField: "1"])
+        XCTAssertEqual(
+            try TalosJSON.decode(
+                [String: String].self, from: kubeSecretsJSON(fields: [kubeGcloudSignInField], values: [:])),
+            [kubeGcloudSignInField: "1"])
         let discovery = [kubeGcloudSignInField, "gcpProjects"]
         XCTAssertTrue(kubeDiscoverNeedsSignIn(discovery))
         XCTAssertTrue(kubeFieldsComplete(discovery, values: [:]))
-        XCTAssertEqual(try TalosJSON.decode([String: String].self,
-                                           from: kubeSecretsJSON(fields: discovery, values: ["gcpProjects": " sample-proj "])),
-                       [kubeGcloudSignInField: "1", "gcpProjects": "sample-proj"])
+        XCTAssertEqual(
+            try TalosJSON.decode(
+                [String: String].self,
+                from: kubeSecretsJSON(fields: discovery, values: ["gcpProjects": " sample-proj "])),
+            [kubeGcloudSignInField: "1", "gcpProjects": "sample-proj"])
     }
 
     func testWorkforceLoginConfigIsJSONAndSignsInFirst() {
@@ -46,11 +55,14 @@ final class KubeAuthTests: XCTestCase {
     func testGoogleDiscoverySecrets() throws {
         let empty = try TalosJSON.decode([String: String].self, from: kubeGoogleSignInSecretsJSON())
         XCTAssertEqual(empty, [kubeGoogleSignInField: "ios"])
-        let projects = try TalosJSON.decode([String: String].self,
-                                           from: kubeGoogleSignInSecretsJSON(projects: "  sample-proj-a, sample-proj-b  "))
+        let projects = try TalosJSON.decode(
+            [String: String].self,
+            from: kubeGoogleSignInSecretsJSON(projects: "  sample-proj-a, sample-proj-b  "))
         XCTAssertEqual(projects, [kubeGoogleSignInField: "ios", "gcpProjects": "sample-proj-a, sample-proj-b"])
-        XCTAssertEqual(try TalosJSON.decode([String: String].self,
-                                           from: kubeGoogleSignInSecretsJSON(projects: "  ")), empty)
+        XCTAssertEqual(
+            try TalosJSON.decode(
+                [String: String].self,
+                from: kubeGoogleSignInSecretsJSON(projects: "  ")), empty)
         // The Google marker is submitted by the app, never a required text field.
         let visible = [kubeGoogleSignInField, "gcpProjects"].filter { $0 != kubeGoogleSignInField }
         XCTAssertTrue(kubeFieldsComplete(visible, values: [:]))
@@ -62,39 +74,46 @@ final class KubeAuthTests: XCTestCase {
             let json = "{\"kind\":\"credentials\",\"provider\":\"gke\",\"field\":\"\(field)\"}"
             XCTAssertTrue(try TalosJSON.decode(ImportTextRoute.self, from: json).isGkeCredential)
         }
-        for json in ["{\"kind\":\"kubeconfig\"}", "{\"kind\":\"talosconfig\"}", "{\"kind\":\"unknown\"}",
-                     "{\"kind\":\"credentials\",\"provider\":\"gke\",\"field\":\"unknown\"}"] {
+        for json in [
+            "{\"kind\":\"kubeconfig\"}", "{\"kind\":\"talosconfig\"}", "{\"kind\":\"unknown\"}",
+            "{\"kind\":\"credentials\",\"provider\":\"gke\",\"field\":\"unknown\"}",
+        ] {
             XCTAssertFalse(try TalosJSON.decode(ImportTextRoute.self, from: json).isGkeCredential)
         }
     }
 
     func testAWSConfigRouteOpensEksDiscovery() throws {
         let json = """
-        {"kind":"credentials","provider":"eks","field":"awsSsoStartUrl","values":{"awsSsoStartUrl":"https://example.awsapps.com/start",\
-        "awsSsoRegion":"us-east-1","awsAccountId":"123456789012","awsRoleName":"ReadOnly","awsRegions":"eu-west-1"}}
-        """
+            {"kind":"credentials","provider":"eks","field":"awsSsoStartUrl","values":{"awsSsoStartUrl":"https://example.awsapps.com/start",\
+            "awsSsoRegion":"us-east-1","awsAccountId":"123456789012","awsRoleName":"ReadOnly","awsRegions":"eu-west-1"}}
+            """
         let route = try TalosJSON.decode(ImportTextRoute.self, from: json)
         XCTAssertTrue(route.isEksIdentityCenter)
         XCTAssertFalse(route.isGkeCredential)
         XCTAssertEqual(route.values["awsRegions"], "eu-west-1")
         XCTAssertTrue(KubeSsoRoleChoice(accountId: "123456789012", roleName: "ReadOnly").matches(route.values))
         XCTAssertFalse(KubeSsoRoleChoice(accountId: "123456789012", roleName: "Admin").matches(route.values))
-        let keys = try TalosJSON.decode(ImportTextRoute.self, from: "{\"kind\":\"refused\",\"provider\":\"eks\",\"field\":\"awsAccessKeyId\"}")
+        let keys = try TalosJSON.decode(
+            ImportTextRoute.self, from: "{\"kind\":\"refused\",\"provider\":\"eks\",\"field\":\"awsAccessKeyId\"}")
         XCTAssertTrue(keys.isAwsAccessKeys)
         XCTAssertFalse(keys.isEksIdentityCenter)
         XCTAssertTrue(keys.values.isEmpty)
     }
 
     func testOmniConfigRouteOpensOmniSignIn() throws {
-        let account = try TalosJSON.decode(ImportTextRoute.self, from: """
-        {"kind":"credentials","provider":"omni","field":"omniEmail","values":{"omniUrl":"https://acme.omni.siderolabs.io","omniEmail":"ops@example.com"}}
-        """)
+        let account = try TalosJSON.decode(
+            ImportTextRoute.self,
+            from: """
+                {"kind":"credentials","provider":"omni","field":"omniEmail","values":{"omniUrl":"https://acme.omni.siderolabs.io","omniEmail":"ops@example.com"}}
+                """)
         XCTAssertTrue(account.isOmni)
         XCTAssertFalse(account.isOmniServiceAccount)
         XCTAssertFalse(account.isEksIdentityCenter)
-        let sa = try TalosJSON.decode(ImportTextRoute.self, from: """
-        {"kind":"credentials","provider":"omni","field":"serviceAccountKey","values":{"omniUrl":"https://acme.omni.siderolabs.io"}}
-        """)
+        let sa = try TalosJSON.decode(
+            ImportTextRoute.self,
+            from: """
+                {"kind":"credentials","provider":"omni","field":"serviceAccountKey","values":{"omniUrl":"https://acme.omni.siderolabs.io"}}
+                """)
         XCTAssertTrue(sa.isOmniServiceAccount)
         XCTAssertFalse(try TalosJSON.decode(ImportTextRoute.self, from: "{\"kind\":\"talosconfig\"}").isOmni)
     }
@@ -110,9 +129,9 @@ final class KubeAuthTests: XCTestCase {
 
     func testRememberedValuesPickTheirOption() throws {
         let json = """
-        {"method":"eks","kind":"credentials","options":[["awsAccessKeyId","awsSecretAccessKey"],["awsSsoStartUrl","awsSsoRegion"]],
-         "values":{"awsSsoStartUrl":"https://acme.awsapps.com/start","awsSsoRegion":"eu-west-1"},"signedIn":false}
-        """
+            {"method":"eks","kind":"credentials","options":[["awsAccessKeyId","awsSecretAccessKey"],["awsSsoStartUrl","awsSsoRegion"]],
+             "values":{"awsSsoStartUrl":"https://acme.awsapps.com/start","awsSsoRegion":"eu-west-1"},"signedIn":false}
+            """
         let info = try XCTUnwrap(try KubeSignInInfo.decode(json))
         XCTAssertEqual(info.values["awsSsoRegion"], "eu-west-1")
         XCTAssertEqual(info.rememberedOption, 1)
@@ -121,10 +140,10 @@ final class KubeAuthTests: XCTestCase {
 
     func testSignInInfoDecodes() throws {
         let json = """
-        {"method":"eks","kind":"credentials","fields":["awsSsoStartUrl","awsSsoRegion","awsAccountId","awsRoleName"],
-         "options":[["awsSsoStartUrl","awsSsoRegion","awsAccountId","awsRoleName"],["awsAccessKeyId","awsSecretAccessKey","awsSessionToken"]],
-         "signedIn":true,"user":"arn:aws:iam::1:user/me","sessionExpires":1790000000}
-        """
+            {"method":"eks","kind":"credentials","fields":["awsSsoStartUrl","awsSsoRegion","awsAccountId","awsRoleName"],
+             "options":[["awsSsoStartUrl","awsSsoRegion","awsAccountId","awsRoleName"],["awsAccessKeyId","awsSecretAccessKey","awsSessionToken"]],
+             "signedIn":true,"user":"arn:aws:iam::1:user/me","sessionExpires":1790000000}
+            """
         let info = try XCTUnwrap(try KubeSignInInfo.decode(json))
         XCTAssertEqual(info.method, "eks")
         XCTAssertTrue(info.isCredentials)
@@ -148,17 +167,21 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertEqual(kubeFieldInput("gcpOAuthClientId"), .plain)
 
         // The OAuth client of the last sign-in reopens its option, filled.
-        let gke = try XCTUnwrap(try KubeSignInInfo.decode(#"""
-            {"method":"gke","kind":"credentials","options":[["gcpServiceAccountJson"],["gcpUserCredentialsJson"],["gcpOAuthClientId","gcpOAuthClientSecret"]],"values":{"gcpOAuthClientId":"123-abc.apps.googleusercontent.com","gcpOAuthClientSecret":"s"},"signedIn":false}
-            """#))
+        let gke = try XCTUnwrap(
+            try KubeSignInInfo.decode(
+                #"""
+                {"method":"gke","kind":"credentials","options":[["gcpServiceAccountJson"],["gcpUserCredentialsJson"],["gcpOAuthClientId","gcpOAuthClientSecret"]],"values":{"gcpOAuthClientId":"123-abc.apps.googleusercontent.com","gcpOAuthClientSecret":"s"},"signedIn":false}
+                """#))
         XCTAssertEqual(gke.rememberedOption, 2)
         XCTAssertTrue(kubeFieldsComplete(gke.fieldSets[2], values: gke.values))
 
         // "Sign in with Google" (a build with a Google client) is a marker the app does not
         // render yet: it decodes, and its option is never complete from typed values.
-        let native = try XCTUnwrap(try KubeSignInInfo.decode(#"""
-            {"method":"gke","kind":"credentials","options":[["gcpServiceAccountJson"],["gcpGoogleSignIn"]],"signedIn":false}
-            """#))
+        let native = try XCTUnwrap(
+            try KubeSignInInfo.decode(
+                #"""
+                {"method":"gke","kind":"credentials","options":[["gcpServiceAccountJson"],["gcpGoogleSignIn"]],"signedIn":false}
+                """#))
         XCTAssertEqual(native.fieldSets[1], ["gcpGoogleSignIn"])
         XCTAssertFalse(kubeFieldsComplete(native.fieldSets[1], values: [:]))
         XCTAssertTrue(kubeFieldsComplete(native.fieldSets[1], values: [kubeGoogleSignInField: "ios"]))
@@ -166,25 +189,38 @@ final class KubeAuthTests: XCTestCase {
     }
 
     func testIdentityCenterRoleChoices() throws {
-        let info = try XCTUnwrap(try KubeSignInInfo.decode(#"""
-            {"method":"eks","kind":"credentials","options":[["awsSsoStartUrl","awsSsoRegion","awsAccountId","awsRoleName"]],"values":{"awsSsoStartUrl":"https://example.awsapps.com/start","awsSsoRegion":"eu-west-1"},"signedIn":true,"choices":[{"accountId":"123456789012","accountName":"Production","roleName":"ReadOnly"},{"accountId":"210987654321","roleName":"Admin"}]}
-            """#))
+        let info = try XCTUnwrap(
+            try KubeSignInInfo.decode(
+                #"""
+                {"method":"eks","kind":"credentials","options":[["awsSsoStartUrl","awsSsoRegion","awsAccountId","awsRoleName"]],"values":{"awsSsoStartUrl":"https://example.awsapps.com/start","awsSsoRegion":"eu-west-1"},"signedIn":true,"choices":[{"accountId":"123456789012","accountName":"Production","roleName":"ReadOnly"},{"accountId":"210987654321","roleName":"Admin"}]}
+                """#))
         XCTAssertEqual(info.choices.count, 2)
         XCTAssertEqual(info.choices[0].label, "Production · ReadOnly")
         XCTAssertEqual(info.choices[1].label, "210987654321 · Admin")
         // JSONSerialization may escape the slashes: compare what Go decodes.
-        let sent = try JSONSerialization.jsonObject(with: Data(info.choices[0].secretsJSON(values: info.values).utf8)) as? [String: String]
-        XCTAssertEqual(sent, ["awsAccountId": "123456789012", "awsRoleName": "ReadOnly", "awsSsoRegion": "eu-west-1",
-                              "awsSsoStartUrl": "https://example.awsapps.com/start"])
+        let sent =
+            try JSONSerialization.jsonObject(with: Data(info.choices[0].secretsJSON(values: info.values).utf8))
+            as? [String: String]
+        XCTAssertEqual(
+            sent,
+            [
+                "awsAccountId": "123456789012", "awsRoleName": "ReadOnly", "awsSsoRegion": "eu-west-1",
+                "awsSsoStartUrl": "https://example.awsapps.com/start",
+            ])
         // Only the start URL and region are needed: the account and role come after the sign-in.
         XCTAssertTrue(kubeFieldsComplete(info.fieldSets[0], values: info.values))
-        XCTAssertFalse(kubeFieldsComplete(info.fieldSets[0], values: ["awsSsoStartUrl": "https://example.awsapps.com/start"]))
-        XCTAssertEqual(try XCTUnwrap(try KubeSignInInfo.decode(#"{"method":"eks","kind":"credentials","signedIn":false}"#)).choices, [])
+        XCTAssertFalse(
+            kubeFieldsComplete(info.fieldSets[0], values: ["awsSsoStartUrl": "https://example.awsapps.com/start"]))
+        XCTAssertEqual(
+            try XCTUnwrap(try KubeSignInInfo.decode(#"{"method":"eks","kind":"credentials","signedIn":false}"#))
+                .choices, [])
     }
 
     func testCallbackSchemeOfTheRedirect() {
         // Google's iOS client comes back to its reversed client ID; the session closes on it.
-        XCTAssertEqual(kubeCallbackScheme(of: "com.googleusercontent.apps.123-abc:/oauth2redirect"), "com.googleusercontent.apps.123-abc")
+        XCTAssertEqual(
+            kubeCallbackScheme(of: "com.googleusercontent.apps.123-abc:/oauth2redirect"),
+            "com.googleusercontent.apps.123-abc")
         XCTAssertEqual(kubeCallbackScheme(of: "http://127.0.0.1:4242"), "ichor")
         XCTAssertEqual(kubeCallbackScheme(of: "https://cyrinux.github.io/ichor/auth/google/"), "ichor")
         XCTAssertEqual(kubeCallbackScheme(of: nil), "ichor")
@@ -195,10 +231,12 @@ final class KubeAuthTests: XCTestCase {
     }
 
     func testPromptDecodes() throws {
-        let device = try TalosJSON.decode(KubeSignInPrompt.self, from: """
-        {"kind":"device","url":"https://login.example/device?code=AB","userCode":"AB-CD",
-         "verificationUrl":"https://login.example/device","expiresIn":900}
-        """)
+        let device = try TalosJSON.decode(
+            KubeSignInPrompt.self,
+            from: """
+                {"kind":"device","url":"https://login.example/device?code=AB","userCode":"AB-CD",
+                 "verificationUrl":"https://login.example/device","expiresIn":900}
+                """)
         XCTAssertTrue(device.isDevice)
         XCTAssertEqual(device.userCode, "AB-CD")
         XCTAssertEqual(device.openURL, "https://login.example/device?code=AB")
@@ -207,9 +245,11 @@ final class KubeAuthTests: XCTestCase {
         let bare = KubeSignInPrompt(kind: "device", url: "", verificationURL: "https://v.example")
         XCTAssertEqual(bare.openURL, "https://v.example")
 
-        let browser = try TalosJSON.decode(KubeSignInPrompt.self, from: """
-        {"kind":"browser","url":"https://idp.example/auth?x=1","redirectPrefix":"http://localhost:8000"}
-        """)
+        let browser = try TalosJSON.decode(
+            KubeSignInPrompt.self,
+            from: """
+                {"kind":"browser","url":"https://idp.example/auth?x=1","redirectPrefix":"http://localhost:8000"}
+                """)
         XCTAssertFalse(browser.isDevice)
         XCTAssertEqual(browser.redirectPrefix, "http://localhost:8000")
     }
@@ -226,8 +266,10 @@ final class KubeAuthTests: XCTestCase {
 
     func testSecretsJSONKeepsTheOptionFieldsTrimmed() throws {
         let fields = ["awsAccessKeyId", "awsSecretAccessKey", "awsSessionToken"]
-        let values = ["awsAccessKeyId": " AKIA ", "awsSecretAccessKey": "s3cr\"et", "awsSessionToken": "  ",
-                      "awsSsoStartUrl": "https://other"]
+        let values = [
+            "awsAccessKeyId": " AKIA ", "awsSecretAccessKey": "s3cr\"et", "awsSessionToken": "  ",
+            "awsSsoStartUrl": "https://other",
+        ]
         let json = kubeSecretsJSON(fields: fields, values: values)
         let decoded = try JSONDecoder().decode([String: String].self, from: Data(json.utf8))
         XCTAssertEqual(decoded, ["awsAccessKeyId": "AKIA", "awsSecretAccessKey": "s3cr\"et"])
@@ -238,28 +280,40 @@ final class KubeAuthTests: XCTestCase {
     }
 
     func testDiscoverFields() throws {
-        let fields = try decodeKubeDiscoverFields(#"{"eks":["awsRegion","awsAccessKeyId"],"gke":["gcpServiceAccountJson"]}"#)
+        let fields = try decodeKubeDiscoverFields(
+            #"{"eks":["awsRegion","awsAccessKeyId"],"gke":["gcpServiceAccountJson"]}"#)
         XCTAssertEqual(fields["eks"], ["awsRegion", "awsAccessKeyId"])
         XCTAssertEqual(kubeDiscoverProviders, ["eks", "gke", "aks", "digitalocean", "rancher"])
 
         // GKE takes a service account key or gcloud user credentials; the others their one set.
-        let options = try decodeKubeDiscoverOptions(#"{"gke":[["gcpServiceAccountJson"],["gcpUserCredentialsJson","gcpProjects"]]}"#)
-        XCTAssertEqual(kubeDiscoverOptionSets(provider: "gke", fields: fields, options: options),
-                       [["gcpServiceAccountJson"], ["gcpUserCredentialsJson", "gcpProjects"]])
-        XCTAssertEqual(kubeDiscoverOptionSets(provider: "eks", fields: fields, options: options), [["awsRegion", "awsAccessKeyId"]])
+        let options = try decodeKubeDiscoverOptions(
+            #"{"gke":[["gcpServiceAccountJson"],["gcpUserCredentialsJson","gcpProjects"]]}"#)
+        XCTAssertEqual(
+            kubeDiscoverOptionSets(provider: "gke", fields: fields, options: options),
+            [["gcpServiceAccountJson"], ["gcpUserCredentialsJson", "gcpProjects"]])
+        XCTAssertEqual(
+            kubeDiscoverOptionSets(provider: "eks", fields: fields, options: options),
+            [["awsRegion", "awsAccessKeyId"]])
         XCTAssertEqual(kubeDiscoverOptionSets(provider: "aks", fields: fields, options: options), [])
         // Every option supplied by Go is offered, including both browser sign-ins.
-        let withBrowser = try decodeKubeDiscoverOptions(#"{"gke":[["gcpServiceAccountJson"],["gcpUserCredentialsJson","gcpProjects"],"#
-            + #"["gcpOAuthClientId","gcpOAuthClientSecret","gcpOAuthRedirectUrl","gcpProjects"],["gcpGoogleSignIn","gcpProjects"]]}"#)
-        XCTAssertEqual(kubeDiscoverOptionSets(provider: "gke", fields: fields, options: withBrowser),
-                       [["gcpServiceAccountJson"], ["gcpUserCredentialsJson", "gcpProjects"],
-                        ["gcpOAuthClientId", "gcpOAuthClientSecret", "gcpOAuthRedirectUrl", "gcpProjects"],
-                        [kubeGoogleSignInField, "gcpProjects"]])
+        let withBrowser = try decodeKubeDiscoverOptions(
+            #"{"gke":[["gcpServiceAccountJson"],["gcpUserCredentialsJson","gcpProjects"],"#
+                + #"["gcpOAuthClientId","gcpOAuthClientSecret","gcpOAuthRedirectUrl","gcpProjects"],["gcpGoogleSignIn","gcpProjects"]]}"#
+        )
+        XCTAssertEqual(
+            kubeDiscoverOptionSets(provider: "gke", fields: fields, options: withBrowser),
+            [
+                ["gcpServiceAccountJson"], ["gcpUserCredentialsJson", "gcpProjects"],
+                ["gcpOAuthClientId", "gcpOAuthClientSecret", "gcpOAuthRedirectUrl", "gcpProjects"],
+                [kubeGoogleSignInField, "gcpProjects"],
+            ])
         // With no registered Google client, Go omits the marker; the app offers only
         // the sets supplied and never invents a Google sign-in option.
-        XCTAssertFalse(kubeDiscoverOptionSets(provider: "gke", fields: fields, options: options)
-            .contains { $0.contains(kubeGoogleSignInField) })
-        XCTAssertTrue(kubeFieldsComplete(["gcpUserCredentialsJson", "gcpProjects"], values: ["gcpUserCredentialsJson": "{}"]))
+        XCTAssertFalse(
+            kubeDiscoverOptionSets(provider: "gke", fields: fields, options: options)
+                .contains { $0.contains(kubeGoogleSignInField) })
+        XCTAssertTrue(
+            kubeFieldsComplete(["gcpUserCredentialsJson", "gcpProjects"], values: ["gcpUserCredentialsJson": "{}"]))
 
     }
 
@@ -274,11 +328,13 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertEqual(reading?.refused, [])
         XCTAssertNil(DiscoveryProgress.decode("not json"))
 
-        let regions = DiscoveryProgress.decode(#"{"running":true,"projects":4,"scanned":4,"clusters":2,"refused":["eu-north-1"]}"#)
+        let regions = DiscoveryProgress.decode(
+            #"{"running":true,"projects":4,"scanned":4,"clusters":2,"refused":["eu-north-1"]}"#)
         XCTAssertEqual(regions?.refused, ["eu-north-1"])
 
         let named = DiscoveryProgress.decode(
-            #"{"running":true,"projects":4,"scanned":1,"clusters":3,"current":["proj-a","proj-b"],"found":["web.europe-west1.gke"]}"#)
+            #"{"running":true,"projects":4,"scanned":1,"clusters":3,"current":["proj-a","proj-b"],"found":["web.europe-west1.gke"]}"#
+        )
         XCTAssertEqual(named?.current, ["proj-a", "proj-b"])
         XCTAssertEqual(named?.found, ["web.europe-west1.gke"])
         XCTAssertEqual(named?.foundMore, 2)
@@ -287,28 +343,36 @@ final class KubeAuthTests: XCTestCase {
     }
 
     func testSignInProgress() {
-        let running = SignInProgress.decode(#"{"running":true,"done":2,"total":8,"current":"web.europe-west1.gke","failed":["api.europe-west1.gke"]}"#)
-        XCTAssertEqual(running, SignInProgress(running: true, done: 2, total: 8, current: "web.europe-west1.gke", failed: ["api.europe-west1.gke"]))
+        let running = SignInProgress.decode(
+            #"{"running":true,"done":2,"total":8,"current":"web.europe-west1.gke","failed":["api.europe-west1.gke"]}"#)
+        XCTAssertEqual(
+            running,
+            SignInProgress(
+                running: true, done: 2, total: 8, current: "web.europe-west1.gke", failed: ["api.europe-west1.gke"]))
         XCTAssertEqual(running?.fraction, 0.25)
         XCTAssertEqual(SignInProgress.decode(#"{"running":false,"done":0,"total":0}"#)?.fraction, 0)
         XCTAssertNil(SignInProgress.decode("not json"))
 
-        XCTAssertEqual(try decodeSignInDiscovered(#"{"failed":[{"name":"api.europe-west1.gke","error":"the key was refused"}]}"#),
-                       ["api.europe-west1.gke: the key was refused"])
+        XCTAssertEqual(
+            try decodeSignInDiscovered(#"{"failed":[{"name":"api.europe-west1.gke","error":"the key was refused"}]}"#),
+            ["api.europe-west1.gke: the key was refused"])
         XCTAssertEqual(try decodeSignInDiscovered(#"{"failed":[]}"#), [])
         XCTAssertThrowsError(try decodeSignInDiscovered("not json"))
     }
 
     func testImportedSignInContexts() {
-        let summary = ConfigSummary(current: "a", contexts: [
-            ContextSummary(name: "eks-a", kind: ContextKind.kube, signIn: "eks"),
-            ContextSummary(name: "eks-b", kind: ContextKind.kube, signIn: "eks"),
-            ContextSummary(name: "static", kind: ContextKind.kube),
-            ContextSummary(name: "eks-c", kind: ContextKind.kube, signIn: "eks"),
-            ContextSummary(name: "broken", kind: ContextKind.kube, problem: "kube-invalid", signIn: "eks"),
-        ])
-        let names = importedSignInContexts(summary: summary, selected: [0, 1, 2, 4], replacing: [1],
-                                           conflicts: [(index: 0, suggested: "eks-a-1"), (index: 1, suggested: "eks-b-1")])
+        let summary = ConfigSummary(
+            current: "a",
+            contexts: [
+                ContextSummary(name: "eks-a", kind: ContextKind.kube, signIn: "eks"),
+                ContextSummary(name: "eks-b", kind: ContextKind.kube, signIn: "eks"),
+                ContextSummary(name: "static", kind: ContextKind.kube),
+                ContextSummary(name: "eks-c", kind: ContextKind.kube, signIn: "eks"),
+                ContextSummary(name: "broken", kind: ContextKind.kube, problem: "kube-invalid", signIn: "eks"),
+            ])
+        let names = importedSignInContexts(
+            summary: summary, selected: [0, 1, 2, 4], replacing: [1],
+            conflicts: [(index: 0, suggested: "eks-a-1"), (index: 1, suggested: "eks-b-1")])
         XCTAssertEqual(names, ["eks-a-1", "eks-b"])
         XCTAssertTrue(isNotCredentialsMethod("this cluster does not sign in with credentials"))
         XCTAssertFalse(isNotCredentialsMethod("enter a DigitalOcean API token"))
@@ -346,7 +410,8 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertNil(kubeAccessContext(of: omni, links: links, kubeContexts: [kube]))
         XCTAssertNil(kubeAccessContext(of: nil, links: links, kubeContexts: [kube]))
 
-        XCTAssertEqual(keepKubeAccess(["t1": "k1", "t2": "k1", "t1x": "gone"], talos: ["t1", "t1x"], kube: ["k1"]), ["t1": "k1"])
+        XCTAssertEqual(
+            keepKubeAccess(["t1": "k1", "t2": "k1", "t1x": "gone"], talos: ["t1", "t1x"], kube: ["k1"]), ["t1": "k1"])
     }
 
     func testLinkedTalosClusterAllowsKubernetes() {
@@ -368,18 +433,19 @@ final class KubeAuthTests: XCTestCase {
 
     func testBackupCarriesKubeAuthAndAccess() throws {
         let json = """
-        {"format":2,"platform":"android","talosconfig":"context: lab\\n","kubeconfig":"kind: Config\\n",
-         "clusters":{"t1":{"kubeAccess":"k1"},"t2":{"kubeAccess":"gone"},"k1":{"name":"OIDC"}},
-         "kubeAuth":{"k1":"{\\"method\\":\\"gke\\"}","gone":"{}","k2":""}}
-        """
+            {"format":2,"platform":"android","talosconfig":"context: lab\\n","kubeconfig":"kind: Config\\n",
+             "clusters":{"t1":{"kubeAccess":"k1"},"t2":{"kubeAccess":"gone"},"k1":{"name":"OIDC"}},
+             "kubeAuth":{"k1":"{\\"method\\":\\"gke\\"}","gone":"{}","k2":""}}
+            """
         let payload = try JSONDecoder().decode(BackupPayload.self, from: Data(json.utf8))
         XCTAssertEqual(payload.kubeAuth?["k1"], #"{"method":"gke"}"#)
         XCTAssertEqual(restoredKubeAuth(payload, fingerprints: ["t1", "t2", "k1", "k2"]), ["k1": #"{"method":"gke"}"#])
         let restored = restoredClusters(payload.clusters, fingerprints: ["t1", "t2", "k1"])
         XCTAssertEqual(restored.kubeAccess, ["t1": "k1"])
 
-        let clusters = backupClusters(fingerprints: ["t1", "k1"], names: [:], colors: [:], kubeServers: [:],
-                                      kubeAccess: ["t1": "k1", "gone": "k1"])
+        let clusters = backupClusters(
+            fingerprints: ["t1", "k1"], names: [:], colors: [:], kubeServers: [:],
+            kubeAccess: ["t1": "k1", "gone": "k1"])
         XCTAssertEqual(clusters["t1"]?.kubeAccess, "k1")
         XCTAssertNil(clusters["k1"]?.kubeAccess)
         XCTAssertNil(clusters["gone"])

@@ -41,11 +41,17 @@ class FluxViewModel(gitOps: GitOpsRepository, kube: KubeRepository) : PolledStat
     /** Something reconciles or waits for it. */
     override fun isBusy(data: FluxStatus): Boolean = data.anyBusy
 
-    /** Runs [action] on the object [kind] [namespace]/[name], then follows the outcome. */
-    fun act(kind: String, namespace: String, name: String, action: FluxAction) {
+    /**
+     * Runs [action] on the object [kind] [namespace]/[name], then follows the outcome; [onDone]
+     * runs once it went through (to follow a reconcile app-wide).
+     */
+    fun act(kind: String, namespace: String, name: String, action: FluxAction, onDone: () -> Unit = {}) {
         actions.launch(fluxKey(kind, namespace, name), { gitOps.fluxAction(kind, namespace, name, action) }, {
             FluxActionResult(action, name, it.exceptionOrNull()?.uiText())
-        }, ::boost)
+        }) {
+            boost()
+            onDone()
+        }
     }
 
     /**

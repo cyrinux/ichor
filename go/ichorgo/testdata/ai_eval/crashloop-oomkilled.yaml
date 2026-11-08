@@ -1,0 +1,25 @@
+id: crashloop-oomkilled
+kind: full
+report: |
+  Talos cluster report, collected 2026-10-01 18:04 UTC through the Talos API (client role: os:admin)
+
+  NODES (2: 2 ready, 0 not ready, 0 unreachable)
+  - cp-1 [10.0.0.7]: controlplane, Talos v1.14.1, stage running, ready
+  - worker-2 [10.0.0.8]: worker, Talos v1.14.1, stage running, ready
+
+  NODE worker-2
+    memory: 11.2 GiB available of 16.0 GiB
+    pods without a running container:
+      - demo-shop/cart-5c9-tt7x2 (cart waiting: CrashLoopBackOff, 23 restarts, last exit OOMKilled)
+
+  EVENTS
+    2026-10-01 18:03:00 10.0.0.8 warning: pod demo-shop/cart-5c9-tt7x2 restarted: OOMKilled (exit 137), limit 256Mi
+expect:
+  must:
+    - "OOMKilled"
+    - ["memory limit", "limits.memory", "256Mi"]
+  mustNot:
+    - "talosctl reset"
+    - "talosctl reboot"
+    - "etcd defrag"
+  maxWords: 300

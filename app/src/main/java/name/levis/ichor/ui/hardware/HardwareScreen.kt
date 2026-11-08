@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.hardware
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -8,16 +9,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Card
+import androidx.compose.foundation.lazy.rememberLazyListState
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -40,8 +42,12 @@ import name.levis.ichor.model.NodeSensors
 import name.levis.ichor.model.ProcessorInfo
 import name.levis.ichor.model.SecurityInfo
 import name.levis.ichor.model.SystemInfo
+import name.levis.ichor.model.TalosFeature
+import name.levis.ichor.model.WatchdogInfo
 import name.levis.ichor.model.sortedDisks
+import name.levis.ichor.model.support
 import name.levis.ichor.model.totalMemoryBytes
+import name.levis.ichor.model.watchdogInterval
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
@@ -49,10 +55,13 @@ import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.InfoRow
+import name.levis.ichor.ui.components.JumpSection
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.SectionJumpRail
 import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.components.rememberNodeState
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
@@ -85,15 +94,11 @@ fun HardwareScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val sensorsState by sensorsVm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) {
-        if (state == UiState.Loading) vm.refresh()
-        if (sensorsState == UiState.Loading) sensorsVm.refresh()
-    }
 
-    Scaffold(
+    IchorScaffold(
         bottomBar = { DataFreshness(state) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.hardware_title))
@@ -104,66 +109,90 @@ fun HardwareScreen(
             )
         },
     ) { padding ->
+        val (features, _) = rememberNodeState(node)
         Loaded(state, { vm.refresh(); sensorsVm.refresh() }, Modifier.pageContent(padding)) { data ->
-            HardwareContent(data, sensorsState)
+            HardwareContent(data, sensorsState, watchdog = features.support(TalosFeature.WATCHDOG).supported)
         }
     }
 }
 
 @Composable
-private fun HardwareContent(hw: NodeHardware, sensorsState: UiState<NodeSensors>) {
+private fun HardwareContent(hw: NodeHardware, sensorsState: UiState<NodeSensors>, watchdog: Boolean) {
     val sensors = (sensorsState as? UiState.Loaded)?.data
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
+    val parts = hardwareParts(
         // Sensors first: a hot or throttled node is why one opens this screen. Hidden on a VM.
-        if (sensors != null && sensors.showsSensorsCard()) item { SensorsCard(sensors) }
-        if (sensorsState is UiState.Failed) item {
-            Section(stringResource(R.string.hardware_sensors), sensorsState.message.asString(), empty = false) {}
+        sensors = sensors?.showsSensorsCard() == true || sensorsState is UiState.Failed,
+        pci = sensors?.showsPciCard() == true,
+        watchdog = watchdog,
+    )
+    val labels = parts.map { stringResource(it.title) }
+    val sections = remember(parts, labels) { parts.mapIndexed { i, part -> JumpSection(part.key, labels[i], i) } }
+    val listState = rememberLazyListState()
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(
+            state = listState,
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            parts.forEach { part -> item(key = part.key) { HardwareCard(part, hw, sensors, sensorsState) } }
         }
-        item {
-            Section(stringResource(R.string.hardware_system), hw.errors[HardwareSection.SYSTEM], hw.system == null) {
-                hw.system?.let { SystemRows(it) }
+        SectionJumpRail(sections, listState, Modifier.align(Alignment.CenterEnd))
+    }
+}
+
+@Composable
+private fun HardwareCard(part: HardwarePart, hw: NodeHardware, sensors: NodeSensors?, sensorsState: UiState<NodeSensors>) {
+    val title = stringResource(part.title)
+    when (part) {
+        HardwarePart.SENSORS -> when {
+            sensors != null -> SensorsCard(sensors)
+            sensorsState is UiState.Failed -> Section(title, sensorsState.message.asString(), empty = false) {}
+        }
+        HardwarePart.SYSTEM -> Section(title, hw.errors[HardwareSection.SYSTEM], hw.system == null) {
+            hw.system?.let {
+                SystemRows(it)
+                FindPartsButton("system", it.manufacturer, it.product, it.serial)
             }
         }
-        item {
-            Section(stringResource(R.string.hardware_processors), hw.errors[HardwareSection.PROCESSORS], hw.processors.isEmpty()) {
-                hw.processors.forEachIndexed { i, cpu ->
-                    if (i > 0) HorizontalDivider()
-                    ProcessorRow(cpu)
-                }
+        HardwarePart.PROCESSORS -> Section(title, hw.errors[HardwareSection.PROCESSORS], hw.processors.isEmpty()) {
+            hw.processors.forEachIndexed { i, cpu ->
+                if (i > 0) HorizontalDivider()
+                ProcessorRow(cpu)
             }
         }
-        item {
-            Section(stringResource(R.string.hardware_memory), hw.errors[HardwareSection.MEMORY], hw.memory.isEmpty()) {
-                InfoRow(stringResource(R.string.hardware_memory_total), formatBytes(hw.totalMemoryBytes))
-                hw.memory.forEach { MemoryRow(it) }
+        HardwarePart.MEMORY -> Section(title, hw.errors[HardwareSection.MEMORY], hw.memory.isEmpty()) {
+            InfoRow(stringResource(R.string.hardware_memory_total), formatBytes(hw.totalMemoryBytes))
+            hw.memory.forEach {
+                MemoryRow(it)
+                FindPartsButton("memory", it.manufacturer, it.type, it.serial)
             }
         }
-        item {
-            Section(stringResource(R.string.hardware_disks), hw.errors[HardwareSection.DISKS], hw.disks.isEmpty()) {
-                hw.sortedDisks.forEachIndexed { i, disk ->
-                    if (i > 0) HorizontalDivider()
-                    DiskRow(disk)
-                }
+        HardwarePart.DISKS -> Section(title, hw.errors[HardwareSection.DISKS], hw.disks.isEmpty()) {
+            hw.sortedDisks.forEachIndexed { i, disk ->
+                if (i > 0) HorizontalDivider()
+                DiskRow(disk)
+                FindPartsButton("disk", "", disk.model, disk.serial)
             }
         }
-        item {
-            Section(stringResource(R.string.hardware_extensions), hw.errors[HardwareSection.EXTENSIONS], hw.extensions.isEmpty()) {
-                hw.extensions.forEach { ext -> ExtensionRow(ext) }
-            }
+        HardwarePart.EXTENSIONS -> Section(title, hw.errors[HardwareSection.EXTENSIONS], hw.extensions.isEmpty()) {
+            hw.extensions.forEach { ext -> ExtensionRow(ext) }
         }
-        item {
-            Section(stringResource(R.string.hardware_security), hw.errors[HardwareSection.SECURITY], hw.security == null) {
-                hw.security?.let { SecurityRows(it) }
-            }
+        HardwarePart.SECURITY -> Section(title, hw.errors[HardwareSection.SECURITY], hw.security == null) {
+            hw.security?.let { SecurityRows(it) }
         }
-        if (sensors != null && sensors.showsPciCard()) item { PciCard(sensors) }
+        // No watchdog is an answer, not an empty section: say what it means.
+        HardwarePart.WATCHDOG -> Section(title, hw.errors[HardwareSection.WATCHDOG], empty = false) {
+            hw.watchdog?.let { WatchdogRows(it) } ?: MutedText(stringResource(R.string.hardware_watchdog_none))
+        }
+        HardwarePart.PCI -> sensors?.let { PciCard(it) }
     }
 }
 
 /** A card with a title, the section's error if it failed, "unavailable" when empty, else [content]. */
 @Composable
 private fun Section(title: String, error: String?, empty: Boolean, content: @Composable () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             SectionTitle(title)
             when {
@@ -274,6 +303,13 @@ private fun SecurityRows(s: SecurityInfo) {
     OptionalRow("FIPS", s.fipsState)
     OptionalRow(stringResource(R.string.hardware_uki_key), s.ukiSigningKeyFingerprint, mono = true)
     OptionalRow(stringResource(R.string.hardware_pcr_key), s.pcrSigningKeyFingerprint, mono = true)
+}
+
+@Composable
+private fun WatchdogRows(w: WatchdogInfo) {
+    OptionalRow(stringResource(R.string.hardware_watchdog_device), w.device, mono = true)
+    InfoRow(stringResource(R.string.hardware_watchdog_timeout), watchdogInterval(w.timeoutSec))
+    InfoRow(stringResource(R.string.hardware_watchdog_feed), watchdogInterval(w.feedIntervalSec))
 }
 
 @Composable

@@ -2,7 +2,7 @@ import Foundation
 
 // Mirrors the JSON produced by the Go core (go/ichorgo), like the Android models.
 
-public struct ConfigSummary: Decodable, Equatable, Sendable {
+public struct ConfigSummary: Codable, Equatable, Sendable {
     public let current: String
     public let contexts: [ContextSummary]
 
@@ -27,7 +27,8 @@ public struct ConfigSummary: Decodable, Equatable, Sendable {
     /// either end. Same rule as Android.
     public func adjacentContext(to active: String, step: Int) -> String? {
         guard step != 0, let index = contexts.firstIndex(where: { $0.name == active }),
-              contexts.indices.contains(index + step) else { return nil }
+            contexts.indices.contains(index + step)
+        else { return nil }
         return contexts[index + step].name
     }
 
@@ -54,7 +55,7 @@ public struct ConfigSummary: Decodable, Equatable, Sendable {
     }
 }
 
-public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
+public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
     public let name: String
     /// "talos" for a talosconfig context, "kube" for one added from a kubeconfig (no Talos API).
     public let kind: String
@@ -79,9 +80,14 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     public let insecure: Bool
     public let problem: String?
     public let problemDetail: String?
+    /// What to do instead of an exec plugin the phone cannot run (teleport, token-wrapper,
+    /// oidc-no-issuer, unknown) with kube-exec-unsupported; problemDetail is the plugin's name.
+    public let execHint: String?
     /// The method the app signs this kubeconfig context in with (oidc, eks, gke, azure,
     /// digitalocean, rancher), nil for static credentials (see KubeSignInInfo).
     public let signIn: String?
+    /// The kubeconfig's proxy-url as scheme://host:port (no credentials), nil without one.
+    public let proxyURL: String?
     /// A Talos context signed in through Sidero Omni (no certificate): who it signs as, and
     /// the Omni cluster. `signIn` is then omni or omni-service-account.
     public let omni: Bool
@@ -100,11 +106,22 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     /// addresses): nothing to reach until one is added or found on the network.
     public var needsEndpoint: Bool { endpoints.isEmpty && !demo && !isKube }
 
-    public init(name: String, kind: String = ContextKind.talos, fingerprint: String = "", clusterID: String = "",
-                endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0,
-                demo: Bool = false, namespace: String? = nil, auth: String? = nil, authDetail: String? = nil,
-                user: String? = nil, insecure: Bool = false, problem: String? = nil, problemDetail: String? = nil,
-                signIn: String? = nil, omni: Bool = false, identity: String? = nil, cluster: String? = nil, authKey: String? = nil) {
+    /// The proxy's host and port, what the cluster's row says it goes through.
+    public var proxyHost: String? {
+        guard let proxyURL, !proxyURL.isEmpty else { return nil }
+        return proxyURL.components(separatedBy: "://").last
+    }
+
+    public init(
+        name: String, kind: String = ContextKind.talos, fingerprint: String = "", clusterID: String = "",
+        endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0,
+        demo: Bool = false, namespace: String? = nil, auth: String? = nil, authDetail: String? = nil,
+        user: String? = nil, insecure: Bool = false, problem: String? = nil, problemDetail: String? = nil,
+        signIn: String? = nil, omni: Bool = false, identity: String? = nil, cluster: String? = nil,
+        authKey: String? = nil, proxyURL: String? = nil, execHint: String? = nil
+    ) {
+        self.proxyURL = proxyURL
+        self.execHint = execHint
         self.name = name
         self.kind = kind
         self.fingerprint = fingerprint
@@ -130,7 +147,8 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case name, kind, fingerprint, endpoints, nodes, roles, certNotAfter, demo
-        case namespace, auth, authDetail, user, insecure, problem, problemDetail, signIn
+        case namespace, auth, authDetail, user, insecure, problem, problemDetail, signIn, proxyURL
+        case execHint
         case omni, identity, cluster, authKey
         case clusterID = "clusterId"
     }
@@ -155,6 +173,8 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
         problem = try c.decodeIfPresent(String.self, forKey: .problem)
         problemDetail = try c.decodeIfPresent(String.self, forKey: .problemDetail)
         signIn = try c.decodeIfPresent(String.self, forKey: .signIn).flatMap { $0.isEmpty ? nil : $0 }
+        proxyURL = try c.decodeIfPresent(String.self, forKey: .proxyURL)
+        execHint = try c.decodeIfPresent(String.self, forKey: .execHint)
         omni = try c.field(.omni, false)
         identity = try c.decodeIfPresent(String.self, forKey: .identity)
         cluster = try c.decodeIfPresent(String.self, forKey: .cluster)
@@ -171,10 +191,25 @@ public enum ContextKind {
 public struct ClusterOverview: Codable, Equatable, Sendable {
     public let context: String
     public let nodes: [NodeOverview]
+    /// Only the nodes that answered so far, while a streamed overview loads (OverviewStream).
+    /// Never encoded: what is remembered, cached or handed to the monitor is complete.
+    public let partial: Bool
 
-    public init(context: String, nodes: [NodeOverview]) {
+    public init(context: String, nodes: [NodeOverview], partial: Bool = false) {
         self.context = context
         self.nodes = nodes
+        self.partial = partial
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case context, nodes
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        context = try container.decode(String.self, forKey: .context)
+        nodes = try container.decode([NodeOverview].self, forKey: .nodes)
+        partial = false
     }
 }
 
@@ -199,8 +234,8 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
     public let unmetConditions: [UnmetCondition]
     /// Capacity; 0 when the node did not say.
     public let cpuCount: Int
-    public let memTotal: UInt64 // bytes
-    public let memAvailable: UInt64 // bytes
+    public let memTotal: UInt64  // bytes
+    public let memAvailable: UInt64  // bytes
     /// Internet-facing addresses, IPv4 first; empty when none (or from an older core).
     public let publicIPs: [String]
     /// An unreachable node shown with what it said last: when that was (epoch ms). Never
@@ -220,7 +255,8 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
 
     /// Worth a full row even in the collapsed nodes section: down, not ready, or reporting a problem.
     public var needsAttention: Bool {
-        health != .ready || !unmetConditions.isEmpty || !(error ?? "").trimmingCharacters(in: .whitespaces).isEmpty || cordoned
+        health != .ready || !unmetConditions.isEmpty || !(error ?? "").trimmingCharacters(in: .whitespaces).isEmpty
+            || cordoned
     }
 
     public init(
@@ -294,7 +330,7 @@ public struct UnmetCondition: Codable, Equatable, Hashable, Sendable {
 public struct ServiceInfo: Decodable, Equatable, Identifiable, Sendable {
     public let id: String
     public let state: String
-    public let health: String // healthy | unhealthy | unknown
+    public let health: String  // healthy | unhealthy | unknown
     public let message: String?
     public let lastEvent: String?
     public let lastChange: Int64?
@@ -381,7 +417,8 @@ public struct LogTail: Decodable, Equatable, Sendable {
 
 /// Features gated by Talos RBAC (rules from Talos v1.14 machined.go).
 public enum Feature: CaseIterable, Sendable {
-    case power, health, kubeconfig, debugShell, etcdDefrag, machineConfig, etcdSnapshot, serviceControl, issueConfig, packetCapture, upgrade
+    case power, health, kubeconfig, debugShell, etcdDefrag, machineConfig, etcdSnapshot, serviceControl, issueConfig,
+        packetCapture, upgrade
     case etcdMemberActions, resourceBrowser, supportBundle, workloads, cgroups, reset, containerRestart
 
     public var label: String {
@@ -420,8 +457,10 @@ public enum Feature: CaseIterable, Sendable {
         // The Kubernetes API is reached with the admin kubeconfig Talos only issues to os:admin.
         // The cgroup tree is a MachineService/Copy of /sys/fs/cgroup, admin-only too.
         // Restarting one container (MachineService/Restart) is admin-only.
-        case .health, .kubeconfig, .debugShell, .machineConfig, .issueConfig, .upgrade, .etcdMemberActions, .workloads, .cgroups, .reset,
-             .containerRestart: ["os:admin"]
+        case .health, .kubeconfig, .debugShell, .machineConfig, .issueConfig, .upgrade, .etcdMemberActions, .workloads,
+            .cgroups, .reset,
+            .containerRestart:
+            ["os:admin"]
         // Reading resources (COSI state) is open to every role; Talos itself filters what a
         // reader may see of the sensitive ones. A support bundle too: the parts the role cannot
         // read (machine config: os:admin, etcd status: os:operator) are left out and noted in it.
@@ -475,21 +514,59 @@ public struct KubeSpanNode: Decodable, Equatable, Identifiable, Sendable {
     public let enabled: Bool
     public let up: Int
     public let down: Int
+    public let unknown: Int
+    /// Down, and unknown ones the core judges dead.
+    public let broken: Int
     public let peers: [KubeSpanPeer]
 
     public var id: String { node }
+
+    private enum CodingKeys: String, CodingKey { case node, error, enabled, up, down, unknown, broken, peers }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        node = try c.decode(String.self, forKey: .node)
+        error = try c.decodeIfPresent(String.self, forKey: .error)
+        enabled = try c.field(.enabled, false)
+        up = try c.field(.up, 0)
+        down = try c.field(.down, 0)
+        unknown = try c.field(.unknown, 0)
+        broken = try c.field(.broken, down)
+        peers = try c.field(.peers, [])
+    }
 }
 
 public struct KubeSpanPeer: Decodable, Equatable, Identifiable, Sendable {
     public let publicKey: String
     public let label: String
-    public let state: String // up | down | unknown
+    public let state: String  // up | down | unknown
+    /// The core's verdict: an "unknown" peer can be dead.
+    public let broken: Bool
+    /// Why it is broken: noEndpoint, neverHandshaked, staleHandshake or down.
+    public let reason: String
     public let endpoint: String
     public let rx: Int64
     public let tx: Int64
     public let lastHandshake: Int64
 
     public var id: String { publicKey }
+
+    private enum CodingKeys: String, CodingKey {
+        case publicKey, label, state, broken, reason, endpoint, rx, tx, lastHandshake
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        publicKey = try c.decode(String.self, forKey: .publicKey)
+        label = try c.field(.label, "")
+        state = try c.field(.state, "unknown")
+        broken = try c.field(.broken, state == "down")
+        reason = try c.field(.reason, "")
+        endpoint = try c.field(.endpoint, "")
+        rx = try c.field(.rx, 0)
+        tx = try c.field(.tx, 0)
+        lastHandshake = try c.field(.lastHandshake, 0)
+    }
 }
 
 public extension EtcdNodeStatus {

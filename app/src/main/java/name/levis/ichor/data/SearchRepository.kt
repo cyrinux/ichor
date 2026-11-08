@@ -9,6 +9,9 @@ import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ConfigSummary
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.FluxStatus
+import name.levis.ichor.model.ScreenEntries
+import name.levis.ichor.model.ScreenEntry
+import name.levis.ichor.model.ScreenMatches
 import name.levis.ichor.model.SearchResults
 import name.levis.ichor.model.isDemo
 import name.levis.ichorgo.Ichorgo
@@ -38,6 +41,9 @@ class SearchRepository(
     private val demoEntries: () -> String = { Ichorgo.demoSearchEntries() },
     private val rank: (entries: String, query: String, limit: Int) -> String = { entries, query, limit ->
         Ichorgo.searchSnapshots(entries, query, limit.toLong())
+    },
+    private val rankScreens: (screens: String, query: String, limit: Int) -> String = { screens, query, limit ->
+        Ichorgo.searchScreens(screens, query, limit.toLong())
     },
 ) {
     @Serializable
@@ -76,6 +82,16 @@ class SearchRepository(
         if (words.isEmpty()) return SearchResults()
         return withContext(Dispatchers.Default) {
             TalosJson.decodeFromString(SearchResults.serializer(), rank(snapshot.entries, words, limit))
+        }
+    }
+
+    /** The best matches of [query] among the active cluster's [screens]; none for a blank query. */
+    suspend fun screens(screens: List<ScreenEntry>, query: String, limit: Int = 20): ScreenMatches {
+        val words = query.trim().replace(WHITESPACE, " ")
+        if (words.isEmpty() || screens.isEmpty()) return ScreenMatches()
+        return withContext(Dispatchers.Default) {
+            val json = SearchJson.encodeToString(ScreenEntries.serializer(), ScreenEntries(screens))
+            TalosJson.decodeFromString(ScreenMatches.serializer(), rankScreens(json, words, limit))
         }
     }
 

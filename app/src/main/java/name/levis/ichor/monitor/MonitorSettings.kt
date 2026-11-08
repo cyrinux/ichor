@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
+import name.levis.ichor.model.AlertRules
+import name.levis.ichor.model.AlertRulesJson
 
 /**
  * Background monitoring preferences plus the last snapshot of each watched cluster (shared with
@@ -31,6 +33,19 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
     fun setDataServicesWatched(watched: Boolean) {
         prefs.edit().putBoolean(KEY_DATA_SERVICES, watched).apply()
         _dataServicesWatched.value = watched
+    }
+
+    private val _importedPluginAlerts = MutableStateFlow(prefs.getBoolean(KEY_IMPORTED_PLUGINS, false))
+
+    /**
+     * Opt-in: imported plugins' findings notify too. Off, only the built-in plugins' do: a plugin
+     * pasted in must not page anyone by itself.
+     */
+    val importedPluginAlerts: StateFlow<Boolean> = _importedPluginAlerts.asStateFlow()
+
+    fun setImportedPluginAlerts(on: Boolean) {
+        prefs.edit().putBoolean(KEY_IMPORTED_PLUGINS, on).apply()
+        _importedPluginAlerts.value = on
     }
 
     private val _gitopsWatched = MutableStateFlow(prefs.getBoolean(KEY_GITOPS, false))
@@ -81,6 +96,27 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
     fun setSensorsWatched(watched: Boolean) {
         prefs.edit().putBoolean(KEY_SENSORS, watched).apply()
         _sensorsWatched.value = watched
+    }
+
+    private val _kubespanWatched = MutableStateFlow(prefs.getBoolean(KEY_KUBESPAN, true))
+
+    /** On by default: also read every node's KubeSpan peers, to alert when a tunnel goes down (cheap, Talos only). */
+    val kubespanWatched: StateFlow<Boolean> = _kubespanWatched.asStateFlow()
+
+    fun setKubespanWatched(watched: Boolean) {
+        prefs.edit().putBoolean(KEY_KUBESPAN, watched).apply()
+        _kubespanWatched.value = watched
+    }
+
+    private val _signInNotified = MutableStateFlow(prefs.getStringSet(KEY_SIGN_IN_NOTIFIED, null)?.toSet().orEmpty())
+
+    /** The fingerprints of the clusters already told "sign in again", until each is signed in again. */
+    val signInNotified: StateFlow<Set<String>> = _signInNotified.asStateFlow()
+
+    fun setSignInNotified(fingerprints: Set<String>) {
+        if (fingerprints == _signInNotified.value) return
+        prefs.edit().putStringSet(KEY_SIGN_IN_NOTIFIED, fingerprints).apply()
+        _signInNotified.value = fingerprints
     }
 
     private val _sensorThreshold = MutableStateFlow(sensorThresholdOf(prefs.getInt(KEY_SENSOR_THRESHOLD, SENSOR_THRESHOLD_AUTO)))
@@ -160,6 +196,20 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         _unreachableRuns.value = kept
     }
 
+    private val _alertRules = MutableStateFlow(decodeAlertRules(prefs.getString(KEY_ALERT_RULES, null)))
+
+    /** Quiet hours, minimum severity and digest, by default and per cluster, read at post time (see [AlertRules]). */
+    val alertRules: StateFlow<AlertRules> = _alertRules.asStateFlow()
+
+    fun setAlertRules(rules: AlertRules) {
+        if (rules == _alertRules.value) return
+        prefs.edit().putString(KEY_ALERT_RULES, AlertRulesJson.encodeToString(AlertRules.serializer(), rules)).apply()
+        _alertRules.value = rules
+    }
+
+    /** Drops the overrides of the clusters not among [fingerprints]: a removed cluster's go with it. */
+    fun retainAlertRules(fingerprints: Collection<String>) = setAlertRules(_alertRules.value.retain(fingerprints))
+
     private val _state = MutableStateFlow(readState())
 
     /** What the last checks saw of each cluster, observable: the widget redraws from it while its session is alive. */
@@ -172,6 +222,11 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
     fun saveState(state: MonitorState) {
         runCatching { snapshotFile.write(TalosJson.encodeToString(MonitorState.serializer(), state)) }
         _state.value = state
+    }
+
+    /** Keeps [fleet], ranked from the snapshots stored now, for the fleet widget and the watch. */
+    fun saveFleet(fleet: FleetGlance) {
+        if (fleet != _state.value.fleet) saveState(_state.value.copy(fleet = fleet))
     }
 
     /** Forgets every cluster's snapshot (and how often it could not be read). */
@@ -197,6 +252,7 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_INTERVAL = "interval_minutes"
         private const val KEY_SNAPSHOT = "snapshot"
         private const val KEY_DATA_SERVICES = "data_services_watched"
+        private const val KEY_IMPORTED_PLUGINS = "monitor_imported_plugins"
         private const val KEY_GITOPS = "gitops_watched"
         private const val KEY_CHECKUP = "checkup_watched"
         private const val KEY_ALERTMANAGER = "alertmanager_watched"
@@ -206,7 +262,10 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_STORAGE_CRITICAL = "storage_critical_percent"
         private const val KEY_STORAGE_TREND = "storage_trend_alerts"
         private const val KEY_SENSORS = "sensors_watched"
+        private const val KEY_KUBESPAN = "kubespan_watched"
         private const val KEY_SENSOR_THRESHOLD = "sensor_threshold"
+        private const val KEY_SIGN_IN_NOTIFIED = "sign_in_notified"
+        private const val KEY_ALERT_RULES = "alert_rules"
 
         /** Automatic, or a °C in [SENSOR_THRESHOLD_RANGE]. */
         fun sensorThresholdOf(value: Int): Int = if (value == SENSOR_THRESHOLD_AUTO) value else value.coerceIn(SENSOR_THRESHOLD_RANGE)
@@ -217,14 +276,17 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
 /**
  * What the background checks keep: each watched cluster's last snapshot and [reach], by context
  * fingerprint, and [active], the fingerprint of the cluster on screen at the last check (what a
- * widget without a cluster of its own shows while the config is not loaded). [clusters] has no
- * default, so a single snapshot (an older version's file) never decodes as an empty state.
+ * widget without a cluster of its own shows while the config is not loaded), and [fleet], what
+ * the fleet widget and the watch show of every cluster. [clusters] has no default, so a single
+ * snapshot (an older version's file) never decodes as an empty state.
  */
 @Serializable
 data class MonitorState(
     val clusters: Map<String, ClusterSnapshot>,
     val reach: Map<String, Reach> = emptyMap(),
     val active: String = "",
+    /** The fleet as ranked after the last check (empty in an older version's file). */
+    val fleet: FleetGlance = FleetGlance(),
 ) {
     companion object {
         val EMPTY = MonitorState(emptyMap())
@@ -239,3 +301,7 @@ internal fun decodeMonitorState(json: String): MonitorState? {
     if (legacy.fingerprint.isBlank()) return MonitorState.EMPTY
     return MonitorState(clusters = mapOf(legacy.fingerprint to legacy), active = legacy.fingerprint)
 }
+
+/** The stored rules; none when absent or unreadable (an older or broken value notifies as before). */
+internal fun decodeAlertRules(json: String?): AlertRules =
+    json?.let { runCatching { AlertRulesJson.decodeFromString(AlertRules.serializer(), it) }.getOrNull() } ?: AlertRules.NONE

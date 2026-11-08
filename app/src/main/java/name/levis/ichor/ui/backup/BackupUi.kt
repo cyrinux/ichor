@@ -14,15 +14,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,7 +41,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
 import name.levis.ichor.i18n.AppLocale
+import name.levis.ichor.model.PluginRestoreResult
 import name.levis.ichor.model.backupFileName
+import name.levis.ichor.model.skippedText
 import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
@@ -83,9 +85,9 @@ fun BackupFlow(vm: BackupViewModel, onRestored: () -> Unit = {}, replaceWarning:
     }
 
     when (val state = state) {
-        BackupState.NewPassphrase -> NewPassphraseDialog(onConfirm = vm::seal, onDismiss = vm::reset)
+        BackupState.NewPassphrase -> NewBackupDialog(onConfirm = vm::seal, onDismiss = vm::reset)
         is BackupState.ReadyToSave -> LaunchedEffect(state) {
-            if (vm.openSaver()) saver.launch(backupFileName(LocalDate.now()))
+            if (vm.openSaver()) saver.launch(backupFileName(LocalDate.now(), state.format))
         }
         is BackupState.Passphrase -> UnlockDialog(state.error, working = false, replaceWarning, onConfirm = vm::restore, onDismiss = vm::reset)
         BackupState.Restoring -> UnlockDialog(null, working = true, replaceWarning, onConfirm = {}, onDismiss = {})
@@ -106,8 +108,9 @@ fun BackupFlow(vm: BackupViewModel, onRestored: () -> Unit = {}, replaceWarning:
 fun BackupStatus(state: BackupState) {
     val text = when (state) {
         BackupState.Sealing -> stringResource(R.string.backup_sealing)
-        BackupState.Saved -> stringResource(R.string.backup_saved)
-        is BackupState.Restored, BackupState.RestoreDone -> stringResource(R.string.backup_restored)
+        is BackupState.Saved -> stringResource(if (state.recipientsOnly) R.string.backup_saved_age_keys else R.string.backup_saved)
+        is BackupState.Restored -> stringResource(R.string.backup_restored)
+        is BackupState.RestoreDone -> restoredText(state.plugins, state.onCallTokenNeeded)
         is BackupState.Failed -> state.message.asString()
         else -> return
     }
@@ -118,30 +121,16 @@ fun BackupStatus(state: BackupState) {
     )
 }
 
+/** "Restored", with how many imported plugins came back and which were left out, and why; and an on-call token to set again. */
 @Composable
-private fun NewPassphraseDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
-    // Not saveable: the passphrase must not land in saved instance state.
-    var passphrase by remember { mutableStateOf("") }
-    var again by remember { mutableStateOf("") }
-    val error = newPassphraseError(passphrase, again)
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.backup_create_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.backup_create_desc, minPassphrase), style = MaterialTheme.typography.bodySmall)
-                PassphraseField(passphrase, { passphrase = it }, stringResource(R.string.backup_passphrase))
-                PassphraseField(again, { again = it }, stringResource(R.string.backup_passphrase_again))
-                if (error != null && again.isNotEmpty()) {
-                    Text(error.asString(), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(passphrase) }, enabled = error == null) { Text(stringResource(R.string.backup_create_confirm)) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+private fun restoredText(plugins: PluginRestoreResult?, onCallTokenNeeded: Boolean): String {
+    val lines = listOfNotNull(
+        stringResource(R.string.backup_restored),
+        plugins?.restored?.size?.takeIf { it > 0 }?.let { stringResource(R.string.backup_plugins_restored, it) },
+        plugins?.takeIf { it.errors.isNotEmpty() }?.let { stringResource(R.string.backup_plugins_skipped, it.skippedText) },
+        stringResource(R.string.oncall_restore_note).takeIf { onCallTokenNeeded },
     )
+    return lines.joinToString("\n")
 }
 
 @Composable
@@ -153,7 +142,7 @@ private fun UnlockDialog(
     onDismiss: () -> Unit,
 ) {
     var passphrase by remember { mutableStateOf("") }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = { if (!working) onDismiss() },
         title = { Text(stringResource(R.string.backup_restore_title)) },
         text = {
@@ -168,7 +157,7 @@ private fun UnlockDialog(
         },
         confirmButton = {
             // The progress sits on the button just pressed, so the dialog keeps its size.
-            TextButton(onClick = { onConfirm(passphrase) }, enabled = !working && passphrase.isNotEmpty()) {
+            IchorTextButton(onClick = { onConfirm(passphrase) }, enabled = !working && passphrase.isNotEmpty()) {
                 if (working) {
                     CircularProgressIndicator(Modifier.size(16.dp), color = LocalContentColor.current, strokeWidth = 2.dp)
                     Spacer(Modifier.width(8.dp))
@@ -178,7 +167,7 @@ private fun UnlockDialog(
                 }
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !working) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss, enabled = !working) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -194,7 +183,7 @@ internal fun PassphraseField(value: String, onValue: (String) -> Unit, label: St
         visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false, imeAction = ImeAction.Next),
         trailingIcon = {
-            IconButton(onClick = { visible = !visible }) {
+            IchorIconButton(onClick = { visible = !visible }) {
                 Icon(
                     if (visible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                     contentDescription = stringResource(if (visible) R.string.backup_passphrase_hide else R.string.backup_passphrase_show),

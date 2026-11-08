@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -79,7 +79,7 @@ private fun DiskHealthCard(disk: DiskHealth) {
             Text(warning, color = colors.bad, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 2.dp))
         }
         if (disk.attributes.isNotEmpty()) {
-            TextButton(onClick = { expanded = !expanded }) {
+            IchorTextButton(onClick = { expanded = !expanded }) {
                 Text(
                     if (expanded) {
                         stringResource(R.string.storage_health_hide_attributes)

@@ -6,7 +6,7 @@ import Foundation
 /// The kinds of AuditFinding, as Go names them.
 public enum AuditKind: String, Sendable {
     case throttled, hotClient, listLoop, watchChurn, forbidden, missingAPI, missingObject, conflicts,
-         alreadyExists, hotObject, eventSpam, slow, serverErrors
+        alreadyExists, hotObject, eventSpam, slow, serverErrors
     case widespreadErrors, widespreadSlow, widespreadWatchChurn, staleLog, unauthorized
 }
 

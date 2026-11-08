@@ -54,4 +54,13 @@ class UiStateTest {
         val shown = UiState.Loaded("fresh", fetchedAt = 2_000)
         assertEquals(shown, shown.orRestored("stored" to 1_000L, overFailure = true))
     }
+
+    @Test
+    fun theLastKnownValueReplacesTheBackgroundChecksSeed() {
+        val seed = UiState.Loaded("seed", refreshing = true, fetchedAt = 500, fromMonitor = true)
+        assertEquals(UiState.Loaded("stored", refreshing = true, fetchedAt = 1_000), seed.orRestored("stored" to 1_000L, overFailure = true))
+        // A failed refresh: the last known value, else the seed with the error.
+        assertEquals(UiState.Loaded("stored", fetchedAt = 1_000, error = error), seed.refreshFailed(error, "stored" to 1_000L))
+        assertEquals(seed.copy(refreshing = false, error = error), seed.refreshFailed(error))
+    }
 }

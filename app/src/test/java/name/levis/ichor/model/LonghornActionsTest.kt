@@ -54,4 +54,13 @@ class LonghornActionsTest {
         assertTrue(n.evictionRequested && !n.allowScheduling)
         assertEquals(4, n.replicas)
     }
+
+    @Test
+    fun eachActionAsksTheCheckOfWhatItChanges() {
+        assertEquals(KubeAction.LONGHORN_SNAPSHOT, LonghornAction.BACKUP.kubeAction)
+        assertEquals(KubeAction.LONGHORN_SNAPSHOT, LonghornAction.TRIM.kubeAction)
+        assertEquals(KubeAction.LONGHORN_REPLICAS, LonghornAction.REPLICAS.kubeAction)
+        listOf(LonghornAction.SCHEDULING_ON, LonghornAction.SCHEDULING_OFF, LonghornAction.EVICT, LonghornAction.CANCEL_EVICTION)
+            .forEach { assertEquals(KubeAction.LONGHORN_NODE, it.kubeAction) }
+    }
 }

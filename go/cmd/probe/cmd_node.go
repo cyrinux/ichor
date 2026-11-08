@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cyrinux/ichor/go/ichorgo"
@@ -63,6 +64,32 @@ var nodeCommands = []command{
 
 		return "done: " + <-j.done, nil
 	}},
+	{name: "boot-media", args: "[TEMPLATE|-] [amd64|arm64|-] [secure-boot]", run: func(e env) (out string, err error) {
+		// Read-only: what boots a new machine of the cluster (Image Factory links, booter
+		// command, Omni's join arguments). The Omni arguments carry the join token.
+		template, arch := flag.Arg(1), flag.Arg(2)
+		if template == "-" {
+			template = ""
+		}
+
+		if arch == "-" {
+			arch = ""
+		}
+
+		return ichorgo.NodeBootMedia(e.cfg, e.context, template, arch, flag.Arg(3) == "secure-boot")
+	}},
+	{name: "node-user-data", args: "[TEMPLATE|-] [worker|controlplane|-] [HOSTNAME|-] [DISK|-]", run: func(e env) (out string, err error) {
+		// Read-only, but the output is a credential: Omni's join config (its join token), or a
+		// new member's full config with the cluster's secrets (recorded in the activity log).
+		args := make([]string, 4)
+		for i := range args {
+			if a := flag.Arg(i + 1); a != "-" {
+				args[i] = a
+			}
+		}
+
+		return ichorgo.NodeCloudUserData(e.cfg, e.context, args[0], args[1], args[2], args[3], "")
+	}},
 	{name: "upgrade-ext", args: "NODE IMAGE", run: func(e env) (out string, err error) {
 		// Read-only: the node's extensions against the Image Factory's list for IMAGE's version.
 		return ichorgo.UpgradeExtensionCheck(e.cfg, e.context, flag.Arg(1), flag.Arg(2))
@@ -96,7 +123,11 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
-	{name: "overview", args: "", run: func(e env) (out string, err error) {
+	{name: "overview", args: "[-stream]", run: func(e env) (out string, err error) {
+		if e.stream {
+			return overviewStream(e.cfg, e.context)
+		}
+
 		out, err = ichorgo.ClusterOverview(e.cfg, e.context)
 
 		return out, err
@@ -129,6 +160,13 @@ var nodeCommands = []command{
 		out = logStats(e.cfg, e.context, flag.Arg(1), flag.Args()[2:])
 
 		return out, err
+	}},
+	{name: "parse-log", args: "LINE", noConfig: true, run: func(env) (out string, err error) {
+		if flag.NArg() != 2 {
+			fail(fmt.Errorf("usage: probe parse-log LINE"))
+		}
+
+		return ichorgo.ParseLogLine(flag.Arg(1)), nil
 	}},
 	{name: "machineconfig", args: "NODE", run: func(e env) (out string, err error) {
 		// Redacted: never print secrets from the probe.
@@ -232,13 +270,18 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "kubespan-mesh", run: func(e env) (string, error) {
+		// What the monitor's tunnel alert reads: the broken links of every node's peers.
+		return ichorgo.KubeSpanMeshHealth(e.cfg, e.context)
+	}},
 	{name: "stats", args: "NODE", run: func(e env) (out string, err error) {
 		out, err = ichorgo.NodeStats(e.cfg, e.context, flag.Arg(1))
 
 		return out, err
 	}},
-	{name: "clusterstats", args: "", run: func(e env) (out string, err error) {
-		out, err = ichorgo.ClusterStats(e.cfg, e.context)
+	{name: "clusterstats", args: "[-nodes A,B]", run: func(e env) (out string, err error) {
+		// The apps pass the node list newline-separated (gomobile: strings only).
+		out, err = ichorgo.ClusterStatsNodes(e.cfg, e.context, strings.ReplaceAll(e.nodes, ",", "\n"))
 
 		return out, err
 	}},

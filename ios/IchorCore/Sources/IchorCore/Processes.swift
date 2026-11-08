@@ -37,8 +37,10 @@ public struct NodeProcess: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: Int32 { pid }
 
-    public init(pid: Int32, ppid: Int32 = 0, state: String = "S", threads: Int32 = 1, cpuTime: Double = 0,
-                rss: UInt64 = 0, vms: UInt64 = 0, command: String, args: String = "") {
+    public init(
+        pid: Int32, ppid: Int32 = 0, state: String = "S", threads: Int32 = 1, cpuTime: Double = 0,
+        rss: UInt64 = 0, vms: UInt64 = 0, command: String, args: String = ""
+    ) {
         self.pid = pid
         self.ppid = ppid
         self.state = state

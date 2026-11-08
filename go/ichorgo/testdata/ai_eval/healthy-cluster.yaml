@@ -1,0 +1,29 @@
+id: healthy-cluster
+kind: full
+report: |
+  Talos cluster report, collected 2026-10-01 18:04 UTC through the Talos API (client role: os:reader)
+
+  NODES (2: 2 ready, 0 not ready, 0 unreachable)
+  - cp-1 [10.0.0.7]: controlplane, Talos v1.14.1, stage running, ready
+  - worker-2 [10.0.0.8]: worker, Talos v1.14.1, stage running, ready
+
+  NODE cp-1
+    memory: 5.1 GiB available of 8.0 GiB
+    disk /var: 31% used, 13.8 GiB free of 20.0 GiB
+    clock: -4 ms from its NTP server
+    services fine: apid, containerd, etcd, kubelet, machined, trustd
+
+  ETCD
+    status on 10.0.0.7: member a1, leader, database 64 MiB (32 MiB in use), raft index 900, term 3
+    alarms: none
+
+  EVENTS
+    none
+expect:
+  must:
+    - ["healthy", "nothing to fix", "no problem", "nothing wrong"]
+  mustNot:
+    - "talosctl reset"
+    - "etcd defrag"
+    - "talosctl reboot"
+  maxWords: 150

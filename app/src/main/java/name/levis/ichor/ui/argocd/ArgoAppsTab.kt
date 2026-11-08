@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.argocd
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,16 +19,18 @@ import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.ViewAgenda
-import androidx.compose.material3.AssistChip
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import name.levis.ichor.ui.design.IchorOutlinedButton
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,10 +42,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.ui.asString
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.denialText
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.ui.components.rememberKubeDenialAcross
 import name.levis.ichor.model.ArgoAction
@@ -55,6 +62,8 @@ import name.levis.ichor.model.filtered
 import name.levis.ichor.model.grouped
 import name.levis.ichor.model.sortedApps
 import name.levis.ichor.model.syncAllCandidates
+import name.levis.ichor.ui.components.ARGOCD_DOCS_URL
+import name.levis.ichor.ui.components.CustomIconHint
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.TooltipIconButton
@@ -132,25 +141,24 @@ fun ArgoAppsTab(
             }
             items(list, key = { it.key }) { app ->
                 val toggle = { onSelection(if (app.key in selection) selection - app.key else selection + app.key) }
-                val denied = rememberKubeDenial(KubeAction.ARGO_SYNC, app.namespace) != null
-                val swipeEnabled = !selecting && app.key !in busy && !app.isRunning && !denied
-                val sync = { onAct(app, ArgoAction.SYNC) }
-                val refresh = { onAct(app, ArgoAction.REFRESH) }
-                SwipeableArgoRow(swipeEnabled = swipeEnabled, onSync = sync, onRefresh = refresh) {
-                    ArgoAppRow(
-                        app = app,
-                        downNodes = downNodes,
-                        selected = app.key in selection,
-                        busy = app.key in busy,
-                        onClick = { if (selecting) toggle() else onOpen(app) },
-                        onLongClick = toggle,
-                        onClickLabel = if (selecting) null else stringResource(R.string.common_open),
-                        onSync = sync.takeIf { swipeEnabled },
-                        onRefresh = refresh.takeIf { swipeEnabled },
-                    )
+                val denial = rememberKubeDenial(KubeAction.ARGO_SYNC, app.namespace)
+                val swipeEnabled = !selecting && app.key !in busy && !app.isRunning && denial == null
+                SwipeableArgoRow(
+                    swipeEnabled = swipeEnabled,
+                    denial = denial?.denialText()?.asString(),
+                    onSync = { onAct(app, ArgoAction.SYNC) },
+                    onRefresh = { onAct(app, ArgoAction.REFRESH) },
+                    onSelect = toggle,
+                    onClick = { if (selecting) toggle() else onOpen(app) },
+                    onClickLabel = if (selecting) null else stringResource(R.string.common_open),
+                ) {
+                    ArgoAppRow(app = app, downNodes = downNodes, selected = app.key in selection, busy = app.key in busy)
                 }
                 HorizontalDivider()
             }
+        }
+        if (apps.isNotEmpty()) item(key = "icon-hint") {
+            CustomIconHint(stringResource(R.string.argo_icon_hint), ARGOCD_DOCS_URL, Modifier.padding(top = 8.dp))
         }
     }
 }
@@ -175,7 +183,7 @@ private fun Controls(
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(ArgoFilter.entries.filter { it != ArgoFilter.ALL }, key = { it.name }) { f ->
                 val count = counts[f] ?: 0
-                FilterChip(
+                IchorFilterChip(
                     selected = filter == f,
                     onClick = { onFilter(if (filter == f) ArgoFilter.ALL else f) },
                     enabled = count > 0 || filter == f,
@@ -199,7 +207,7 @@ private fun Controls(
  */
 @Composable
 private fun SelectButton(selecting: Boolean, onSelecting: (Boolean) -> Unit, enabled: Boolean) {
-    TextButton(onClick = { onSelecting(!selecting) }, enabled = enabled || selecting) {
+    IchorTextButton(onClick = { onSelecting(!selecting) }, enabled = enabled || selecting) {
         Text(stringResource(if (selecting) R.string.common_cancel else R.string.argo_select))
     }
 }
@@ -208,12 +216,24 @@ private fun SelectButton(selecting: Boolean, onSelecting: (Boolean) -> Unit, ena
 private fun GroupByMenu(groupBy: ArgoGroupBy, onGroupBy: (ArgoGroupBy) -> Unit, modifier: Modifier = Modifier) {
     var open by remember { mutableStateOf(false) }
     Box(modifier) {
-        AssistChip(
+        // Same height, corners and outline as the search field beside it, so the row reads as one.
+        IchorOutlinedButton(
             onClick = { open = true },
-            label = { Text(stringResource(groupBy.label)) },
-            leadingIcon = { Icon(Icons.Outlined.ViewAgenda, contentDescription = stringResource(R.string.argo_group_by), modifier = Modifier.size(18.dp)) },
-            trailingIcon = { Icon(Icons.Outlined.ArrowDropDown, contentDescription = null, modifier = Modifier.size(18.dp)) },
-        )
+            shape = OutlinedTextFieldDefaults.shape,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+            contentPadding = PaddingValues(start = 12.dp, end = 4.dp),
+            modifier = Modifier.heightIn(min = OutlinedTextFieldDefaults.MinHeight),
+        ) {
+            Icon(
+                Icons.Outlined.ViewAgenda,
+                contentDescription = stringResource(R.string.argo_group_by),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(stringResource(groupBy.label), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 8.dp))
+            Icon(Icons.Outlined.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             ArgoGroupBy.entries.forEach { g ->
                 DropdownMenuItem(text = { Text(stringResource(g.label)) }, onClick = { onGroupBy(g); open = false })

@@ -10,15 +10,23 @@ import (
 	"testing"
 )
 
-// Exported functions whose result is a credential or file the user saves: only their errors
-// are masked. The shells' terminal stream (debug and pod) is not masked at all, nor its snippets
+// Exported functions whose result is a credential or file the user saves (a new node's config,
+// its cloud user data): only their errors are masked. The shells' terminal stream (debug, pod and VM console) is not masked at all, nor its snippets
 // (fixed commands whose well-known addresses masking would break), nor the GitHub links of
 // integration requests (opened, not shown; built from already masked results), nor share
-// links (built from the masked names on screen).
-var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "JoinNodeConfigSealed", "BuildTalosconfig", "ReplaceContextCredentials", "MergeConfig", "RemoveContext", "MergeKubeconfig", "RemoveKubeContext", "ExportKubeContext", "MergeTalosconfig", "DecodeImportText", "QRCodeText", "KubeAuthForBackup", "DiscoverClusters", "AddContextNodes", "SetContextEndpoints", "AddContextEndpoint", "DemoConfig", "DemoKubeconfig", "DecryptBackup", "NormalizeKubeServer", "NormalizePromSource", "DebugSnippets", "IntegrationIssueURL", "IntegrationSearchURL", "BuildShareLink", "SearchSnapshots", "DemoSearchEntries", "DiscoverOmniClusters", "SetOmniServiceAccount"}
+// links (built from the masked names on screen), nor the alert rules' decisions (the app's own
+// fingerprints and keys, matched back), nor a config's digest (a hash, which masking
+// a word could corrupt), nor the name of a backup file format (a fixed word), nor the IAM policy
+// the person pastes at a provider (masking would corrupt it).
+var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "JoinNodeConfigSealed", "NodeCloudUserData", "NodeCloudUserDataOmni", "BuildTalosconfig", "ReplaceContextCredentials", "MergeConfig", "RemoveContext", "MergeKubeconfig", "RemoveKubeContext", "ExportKubeContext", "MergeTalosconfig", "DecodeImportText", "PluginFetchURL", "PluginUserExport", "PluginQRPayload", "RunbookStoreGet", "QRCodeText", "QRPart", "QRPartsJoin", "KubeAuthForBackup", "DiscoverClusters", "AddContextNodes", "RemoveContextNodes", "SetContextEndpoints", "AddContextEndpoint", "DemoConfig", "DemoKubeconfig", "DecryptBackup", "BackupFormatOf", "NormalizeKubeServer", "NormalizePromSource", "LogsPodQuery", "LogsWorkloadQuery", "LogsProbe", "DebugSnippets", "IntegrationIssueURL", "IntegrationSearchURL", "PartsLookupLink", "BuildShareLink", "SearchSnapshots", "SearchScreens", "DemoSearchEntries", "FleetSummary", "DemoFleetSummary", "AlertRulesApply", "ServiceAccountTemplates", "DiscoverOmniClusters", "SetOmniServiceAccount", "PluginIndexFetch", "PluginIndexDownload", "ConfigDigest", "OVHServiceAccountPolicy", "AWSIAMPolicy", "AzureRoleDefinition", "GCPRoleDefinition", "ScalewayPolicy"}
 
-// The shells wrap their listener in newDebugSession: status and exit masked, not the terminal.
-var unmaskedListeners = []string{"StartDebugShell", "StartNodeDebug", "StartPodDebug", "StartPodShell"}
+// The shells (and the VM console) wrap their listener in newDebugSession: status and exit
+// masked, not the terminal.
+var unmaskedListeners = []string{"StartDebugShell", "StartNodeDebug", "StartPodDebug", "StartPodShell", "StartVMConsole"}
+
+// privacyPrologues are internal helpers that unmask the context and mask the result for the
+// exported function delegating to them: each is checked like an exported function.
+var privacyPrologues = []string{"kubeNamedMutation", "readClusterNodes"}
 
 // TestExportedFuncsUsePrivacyHooks checks every exported function of the package: masked
 // context names and nodes coming from the app are unmasked on entry, and results, errors
@@ -41,7 +49,11 @@ func TestExportedFuncsUsePrivacyHooks(t *testing.T) {
 		for _, file := range pkg.Files {
 			for _, decl := range file.Decls {
 				fn, ok := decl.(*ast.FuncDecl)
-				if !ok || fn.Recv != nil || !fn.Name.IsExported() {
+				if !ok || fn.Recv != nil {
+					continue
+				}
+
+				if !fn.Name.IsExported() && !slices.Contains(privacyPrologues, fn.Name.Name) {
 					continue
 				}
 
@@ -71,7 +83,14 @@ func privacyHookProblems(fn *ast.FuncDecl) []string {
 
 	var problems []string
 
+	// Delegating to a privacy prologue unmasks the context and masks the result.
+	delegates := slices.ContainsFunc(calledNames(fn.Body), func(c string) bool { return slices.Contains(privacyPrologues, c) })
+
 	require := func(param string, helpers ...string) {
+		if delegates && param == "contextName" {
+			return
+		}
+
 		if slices.Contains(params, param) && !slices.Contains(helpers, assigned[param]) {
 			problems = append(problems, param+" must be reassigned from "+strings.Join(helpers, " or "))
 		}
@@ -89,6 +108,7 @@ func privacyHookProblems(fn *ast.FuncDecl) []string {
 	results := resultTypes(fn)
 
 	switch {
+	case delegates:
 	case slices.Contains(results, "string") && !slices.Contains(unmaskedResults, name):
 		if !slices.Contains(deferred, "maskResult") {
 			problems = append(problems, "missing defer maskResult(&out, &err)")

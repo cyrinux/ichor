@@ -2,8 +2,12 @@ import XCTest
 @testable import IchorCore
 
 final class NodeDensityTests: XCTestCase {
-    private func node(_ i: Int, reachable: Bool = true, ready: Bool = true, error: String? = nil, publicIPs: [String] = []) -> NodeOverview {
-        NodeOverview(node: "10.0.0.\(i)", hostname: "node-\(i)", reachable: reachable, error: error, ready: ready, publicIPs: publicIPs)
+    private func node(
+        _ i: Int, reachable: Bool = true, ready: Bool = true, error: String? = nil, publicIPs: [String] = []
+    ) -> NodeOverview {
+        NodeOverview(
+            node: "10.0.0.\(i)", hostname: "node-\(i)", reachable: reachable, error: error, ready: ready,
+            publicIPs: publicIPs)
     }
 
     private func cluster(_ size: Int) -> [NodeOverview] { (1...size).map { node($0) } }
@@ -73,7 +77,9 @@ final class NodeDensityTests: XCTestCase {
     }
 
     func testFiltersBySearchAndHealth() {
-        let nodes = [node(1), node(2, reachable: false), node(3, publicIPs: ["203.0.113.9"]), node(4), node(5, ready: false)]
+        let nodes = [
+            node(1), node(2, reachable: false), node(3, publicIPs: ["203.0.113.9"]), node(4), node(5, ready: false),
+        ]
         XCTAssertEqual(nodes.filtered(query: "", filter: nil), nodes)
         XCTAssertEqual(nodes.filtered(query: "", filter: .attention).map(\.hostname), ["node-2", "node-5"])
         XCTAssertEqual(nodes.filtered(query: "", filter: .notReady).map(\.hostname), ["node-5"])

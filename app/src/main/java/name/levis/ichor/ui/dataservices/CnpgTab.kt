@@ -3,7 +3,6 @@ package name.levis.ichor.ui.dataservices
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,17 +10,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
 import name.levis.ichor.model.CnpgCluster
 import name.levis.ichor.model.CnpgPod
@@ -41,11 +38,15 @@ import name.levis.ichor.model.CnpgReason
 import name.levis.ichor.model.CnpgStatus
 import name.levis.ichor.model.filtered
 import name.levis.ichor.model.pendingInstances
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.EmptyText
+import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
-import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.components.cardRows
+import name.levis.ichor.ui.components.color
 import name.levis.ichor.ui.components.expandable
+import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
  * Every CloudNativePG cluster, built for dozens: a summary, the ones that need a look by
@@ -54,6 +55,17 @@ import name.levis.ichor.ui.components.expandable
 @Composable
 fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
     val busy by actions.busy.collectAsStateWithLifecycle()
+    val lifecycleBusy by actions.lifecycleBusy.collectAsStateWithLifecycle()
+    var lifecycleTarget by remember { mutableStateOf<Pair<CnpgCluster, CnpgLifecycleAction>?>(null) }
+    lifecycleTarget?.let { (cluster, action) -> CnpgLifecycleConfirmDialog(cluster, action,
+        onDismiss = { lifecycleTarget = null }, onConfirm = { actions.lifecycle(cluster, action); lifecycleTarget = null }) }
+
+    val promoteBusy by actions.promoteBusy.collectAsStateWithLifecycle()
+    var promotion by remember { mutableStateOf<Pair<CnpgCluster, String>?>(null) }
+    promotion?.let { (cluster, instance) -> CnpgPromoteConfirmDialog(cluster, instance, actions, onDismiss = { promotion = null }, onConfirm = { actions.promote(cluster, instance); promotion = null }) }
+    val destroyBusy by actions.destroyBusy.collectAsStateWithLifecycle()
+    var removal by remember { mutableStateOf<Pair<CnpgCluster, String>?>(null) }
+    removal?.let { (cluster, instance) -> CnpgDestroyConfirmDialog(cluster, instance, actions, onDismiss = { removal = null }, onConfirm = { actions.destroy(cluster, instance); removal = null }) }
     var confirming by remember { mutableStateOf<CnpgCluster?>(null) }
     confirming?.let { c ->
         CnpgBackupConfirmDialog(
@@ -71,7 +83,7 @@ fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
     var expanded by rememberSaveable { mutableStateOf(setOf<String>()) }
     val rows = remember(status, problemsOnly, query) { status.clusters.filtered(problemsOnly, query) }
 
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
         item(key = "summary") {
             val total = status.clusters.size
@@ -97,7 +109,6 @@ fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
                 selected = problemsOnly,
                 onSelect = { problemsOnly = it },
             )
-            HorizontalDivider()
         }
         if (rows.isEmpty()) item(key = "empty") {
             EmptyText(
@@ -108,21 +119,25 @@ fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
                 },
             )
         }
-        items(rows, key = { it.label }) { c ->
+        cardRows(rows, key = { it.label }) { c ->
             ClusterRow(
                 c,
                 open = c.label in expanded,
                 onToggle = { expanded = if (c.label in expanded) expanded - c.label else expanded + c.label },
                 backingUp = c.label in busy,
                 onBackup = { confirming = c },
+                promoting = c.label in promoteBusy,
+                onPromote = { promotion = c to it },
+                lifecycleBusy = c.label in lifecycleBusy || c.label in destroyBusy,
+                onLifecycle = { lifecycleTarget = c to it },
+                onDestroy = { removal = c to it },
             )
-            HorizontalDivider()
         }
     }
 }
 
 @Composable
-private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit, backingUp: Boolean, onBackup: () -> Unit) {
+private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit, backingUp: Boolean, onBackup: () -> Unit, promoting: Boolean, onPromote: (String) -> Unit, lifecycleBusy: Boolean, onLifecycle: (CnpgLifecycleAction) -> Unit, onDestroy: (String) -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(Modifier.fillMaxWidth().expandable(open, onToggle = onToggle).animateContentSize().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -144,22 +159,27 @@ private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit, back
             }
             Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, contentDescription = null, tint = muted)
         }
-        if (open) Details(c, backingUp, onBackup)
+        if (open) Details(c, backingUp, onBackup, promoting, onPromote, lifecycleBusy, onLifecycle, onDestroy)
     }
 }
 
 @Composable
-private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit) {
+private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit, promoting: Boolean, onPromote: (String) -> Unit, lifecycleBusy: Boolean, onLifecycle: (CnpgLifecycleAction) -> Unit, onDestroy: (String) -> Unit) {
     Column(Modifier.padding(start = 22.dp, top = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         if (c.phase.isNotEmpty()) InfoRow(stringResource(R.string.cnpg_phase), listOf(c.phase, c.phaseReason).filter { it.isNotEmpty() }.joinToString(": "))
         if (c.currentPrimary.isNotEmpty()) {
             val primary = if (c.targetPrimary.isNotEmpty() && c.targetPrimary != c.currentPrimary) "${c.currentPrimary} → ${c.targetPrimary}" else c.currentPrimary
             InfoRow(stringResource(R.string.cnpg_primary), primary, mono = true)
         }
-        if (c.instancePods.isNotEmpty()) {
+        if (c.instancePods.isNotEmpty() || c.missingInstances.isNotEmpty()) {
             Text(stringResource(R.string.cnpg_instances), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
             c.instancePods.forEach { DataPodLine(it.name, it.ready, it.node, it.phase, it.role, indent = 8.dp) }
+            val noPod = stringResource(R.string.cnpg_instance_no_pod)
+            c.missingInstances.forEach { DataPodLine(it, ready = false, node = "", phase = noPod, indent = 8.dp) }
         }
+        CnpgLifecycleButtons(c, backingUp || promoting || lifecycleBusy, onLifecycle)
+        CnpgPromoteButtons(c, backingUp || promoting || lifecycleBusy, onPromote)
+        CnpgDestroyButtons(c, backingUp || promoting || lifecycleBusy, onDestroy)
         InfoRow(stringResource(R.string.cnpg_archiving), archivingText(c.archiving))
         InfoRow(
             stringResource(R.string.cnpg_backups),
@@ -174,7 +194,7 @@ private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit) {
         if (c.recoverableAt > 0) InfoRow(stringResource(R.string.cnpg_recoverable), agoOrNever(c.recoverableAt))
         // The Go core picks the method; a cluster set up for none of them is refused with a reason.
         if (!c.hibernated) {
-            OutlinedButton(onClick = onBackup, enabled = !backingUp, modifier = Modifier.padding(top = 8.dp)) {
+            IchorOutlinedButton(onClick = onBackup, enabled = !backingUp && !promoting && !lifecycleBusy, modifier = Modifier.padding(top = 8.dp)) {
                 Text(stringResource(R.string.cnpg_backup_now))
             }
         }

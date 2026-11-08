@@ -7,37 +7,47 @@ final class StorageAlertsTests: XCTestCase {
 
     /// The Go demo's answer, trimmed (storagehealth.go).
     private let demo = #"""
-    {"context":"Demo cluster","nodes":[
-      {"node":"192.0.2.20","hostname":"demo-worker-1",
-       "volumes":[
-         {"key":"192.0.2.20|STATE","name":"STATE","mount":"/system/state","usedPercent":6,"freeBytes":98566144,"sizeBytes":104857600,"level":"ok"},
-         {"key":"192.0.2.20|EPHEMERAL","name":"EPHEMERAL","mount":"/var","usedPercent":91,"freeBytes":9663676416,"sizeBytes":107374182400,"level":"warning"}],
-       "disks":[{"key":"192.0.2.20|smart|nvme0n1","device":"nvme0n1","model":"Demo NVMe","health":"ok"}]},
-      {"node":"192.0.2.21","hostname":"demo-worker-2","volumes":[],
-       "disks":[
-         {"key":"192.0.2.21|smart|nvme0n1","device":"nvme0n1","model":"Demo NVMe","health":"failing","reason":"available spare below threshold"},
-         {"key":"192.0.2.21|smart|vda","device":"vda","health":"unknown"}]},
-      {"node":"192.0.2.30","hostname":"192.0.2.30","volumes":[],"disks":[],"error":"connection refused"}]}
-    """#
+        {"context":"Demo cluster","nodes":[
+          {"node":"192.0.2.20","hostname":"demo-worker-1",
+           "volumes":[
+             {"key":"192.0.2.20|STATE","name":"STATE","mount":"/system/state","usedPercent":6,"freeBytes":98566144,"sizeBytes":104857600,"level":"ok"},
+             {"key":"192.0.2.20|EPHEMERAL","name":"EPHEMERAL","mount":"/var","usedPercent":91,"freeBytes":9663676416,"sizeBytes":107374182400,"level":"warning"}],
+           "disks":[{"key":"192.0.2.20|smart|nvme0n1","device":"nvme0n1","model":"Demo NVMe","health":"ok"}]},
+          {"node":"192.0.2.21","hostname":"demo-worker-2","volumes":[],
+           "disks":[
+             {"key":"192.0.2.21|smart|nvme0n1","device":"nvme0n1","model":"Demo NVMe","health":"failing","reason":"available spare below threshold"},
+             {"key":"192.0.2.21|smart|vda","device":"vda","health":"unknown"}]},
+          {"node":"192.0.2.30","hostname":"192.0.2.30","volumes":[],"disks":[],"error":"connection refused"}]}
+        """#
 
     private let eph = "192.0.2.20|EPHEMERAL"
     private let smart = "192.0.2.21|smart|nvme0n1"
 
-    private func decoded() throws -> ClusterStorageHealth { try TalosJSON.decode(ClusterStorageHealth.self, from: demo) }
-
-    private func health(ephemeral percent: Double) -> ClusterStorageHealth {
-        ClusterStorageHealth(context: "lab", nodes: [
-            StorageNode(node: "192.0.2.20", hostname: "demo-worker-1", volumes: [
-                StorageVolume(key: eph, name: "EPHEMERAL", usedPercent: percent, freeBytes: 2 << 30, sizeBytes: 100 << 30),
-            ]),
-        ])
+    private func decoded() throws -> ClusterStorageHealth {
+        try TalosJSON.decode(ClusterStorageHealth.self, from: demo)
     }
 
-    private func snap(_ issues: [String: String]?, watched: Bool = true, context: String = "lab", warn: Int = 85) -> ClusterSnapshot {
-        ClusterSnapshot(context: context, takenAt: now, nodes: ["192.0.2.20": NodeState(hostname: "demo-worker-1", health: .ready)],
-                        etcdChecked: true, certNotAfter: farCert,
-                        storageWatched: watched, storageChecked: watched && issues != nil, storageIssues: issues ?? [:],
-                        storageWarn: warn)
+    private func health(ephemeral percent: Double) -> ClusterStorageHealth {
+        ClusterStorageHealth(
+            context: "lab",
+            nodes: [
+                StorageNode(
+                    node: "192.0.2.20", hostname: "demo-worker-1",
+                    volumes: [
+                        StorageVolume(
+                            key: eph, name: "EPHEMERAL", usedPercent: percent, freeBytes: 2 << 30, sizeBytes: 100 << 30)
+                    ])
+            ])
+    }
+
+    private func snap(_ issues: [String: String]?, watched: Bool = true, context: String = "lab", warn: Int = 85)
+        -> ClusterSnapshot
+    {
+        ClusterSnapshot(
+            context: context, takenAt: now, nodes: ["192.0.2.20": NodeState(hostname: "demo-worker-1", health: .ready)],
+            etcdChecked: true, certNotAfter: farCert,
+            storageWatched: watched, storageChecked: watched && issues != nil, storageIssues: issues ?? [:],
+            storageWarn: warn)
     }
 
     private func issues(_ percent: Double, _ thresholds: StorageThresholds = StorageThresholds()) -> [String: String] {
@@ -95,10 +105,13 @@ final class StorageAlertsTests: XCTestCase {
 
     func testANodeThatDidNotAnswerKeepsItsIssues() throws {
         let gone = "192.0.2.30|EPHEMERAL"
-        let goneValue = StorageIssue(severity: dataCritical, kind: StorageIssue.fill, hostname: "demo-cp-1", name: "EPHEMERAL",
-                                     percent: "97").value
+        let goneValue = StorageIssue(
+            severity: dataCritical, kind: StorageIssue.fill, hostname: "demo-cp-1", name: "EPHEMERAL",
+            percent: "97"
+        ).value
         let other = "192.0.2.31|STATE"
-        let out = storageIssuesOf(try decoded(), thresholds: StorageThresholds(), known: [gone: goneValue, other: goneValue])
+        let out = storageIssuesOf(
+            try decoded(), thresholds: StorageThresholds(), known: [gone: goneValue, other: goneValue])
         XCTAssertEqual(out[gone], goneValue)
         // A node that answered is judged on what it says, one no longer listed resolves.
         XCTAssertNil(out[other])
@@ -117,8 +130,9 @@ final class StorageAlertsTests: XCTestCase {
     }
 
     func testIssueValueRoundTrips() {
-        let issue = StorageIssue(severity: dataCritical, kind: StorageIssue.smart, hostname: "w|1", name: "sda",
-                                 detail: "media errors | 3")
+        let issue = StorageIssue(
+            severity: dataCritical, kind: StorageIssue.smart, hostname: "w|1", name: "sda",
+            detail: "media errors | 3")
         let back = StorageIssue(value: issue.value)
         XCTAssertEqual(back.hostname, "w/1")
         XCTAssertEqual(back.detail, "media errors | 3")
@@ -172,7 +186,9 @@ final class StorageAlertsTests: XCTestCase {
         XCTAssertEqual(result.alerts.map(\.problem), [false])
         XCTAssertTrue(evaluate(previous: result.next, current: snap(issues(60)), now: now).alerts.isEmpty)
 
-        let disk = StorageIssue(severity: dataCritical, kind: StorageIssue.smart, hostname: "demo-worker-2", name: "sda").value
+        let disk = StorageIssue(
+            severity: dataCritical, kind: StorageIssue.smart, hostname: "demo-worker-2", name: "sda"
+        ).value
         let passed = evaluate(previous: snap([smart: disk]), current: snap([:]), now: now)
         XCTAssertEqual(passed.alerts.map(\.title), ["sda on demo-worker-2 passes SMART again"])
     }
@@ -189,16 +205,21 @@ final class StorageAlertsTests: XCTestCase {
 
     func testSnapshotsCarryTheTrack() throws {
         let overview = try TalosJSON.decode(ClusterOverview.self, from: #"{"context":"lab","nodes":[]}"#)
-        let unread = snapshotOf(overview, etcd: nil, certNotAfter: 0, takenAt: now, storageWatched: true, storageIssues: nil, storageWarn: 70)
+        let unread = snapshotOf(
+            overview, etcd: nil, certNotAfter: 0, takenAt: now, storageWatched: true, storageIssues: nil,
+            storageWarn: 70)
         XCTAssertTrue(unread.storageWatched)
         XCTAssertFalse(unread.storageChecked)
         XCTAssertEqual(unread.storageWarn, 70)
-        let read = snapshotOf(overview, etcd: nil, certNotAfter: 0, takenAt: now, storageWatched: true, storageIssues: issues(96))
+        let read = snapshotOf(
+            overview, etcd: nil, certNotAfter: 0, takenAt: now, storageWatched: true, storageIssues: issues(96))
         XCTAssertTrue(read.storageChecked)
-        let off = snapshotOf(overview, etcd: nil, certNotAfter: 0, takenAt: now, storageWatched: false, storageIssues: issues(96))
+        let off = snapshotOf(
+            overview, etcd: nil, certNotAfter: 0, takenAt: now, storageWatched: false, storageIssues: issues(96))
         XCTAssertTrue(off.storageIssues.isEmpty)
         // An older snapshot without the fields decodes.
-        let old = try JSONDecoder().decode(ClusterSnapshot.self, from: Data(#"{"context":"lab","takenAt":0,"nodes":{}}"#.utf8))
+        let old = try JSONDecoder().decode(
+            ClusterSnapshot.self, from: Data(#"{"context":"lab","takenAt":0,"nodes":{}}"#.utf8))
         XCTAssertFalse(old.storageWatched)
         XCTAssertEqual(old.storageWarn, storageWarnDefault)
         let back = try JSONDecoder().decode(ClusterSnapshot.self, from: JSONEncoder().encode(read))
@@ -209,22 +230,30 @@ final class StorageAlertsTests: XCTestCase {
 
     func testKeysLinksAndActions() {
         let snapshot = snap(issues(96))
-        XCTAssertEqual(ShareTarget.forAlert(key: "storage:\(eph)", snapshot: snapshot),
-                       .storage(address: "192.0.2.20", hostname: "demo-worker-1"))
+        XCTAssertEqual(
+            ShareTarget.forAlert(key: "storage:\(eph)", snapshot: snapshot),
+            .storage(address: "192.0.2.20", hostname: "demo-worker-1"))
         // Resolved: the hostname from the node's state.
-        XCTAssertEqual(ShareTarget.forAlert(key: "storage:\(eph)", snapshot: snap([:])),
-                       ShareTarget(target: .storage, host: "demo-worker-1", addr: "192.0.2.20"))
+        XCTAssertEqual(
+            ShareTarget.forAlert(key: "storage:\(eph)", snapshot: snap([:])),
+            ShareTarget(target: .storage, host: "demo-worker-1", addr: "192.0.2.20"))
         XCTAssertNil(ShareTarget.forAlert(key: "storage:", snapshot: snapshot))
         XCTAssertEqual(alertKind(key: "storage:\(smart)"), "storage")
         XCTAssertEqual(alertActions(key: "storage:\(smart)", problem: true, canWake: true), [.snooze])
         XCTAssertEqual(alertActions(key: "storage:\(smart)", problem: false, canWake: false), [])
-        XCTAssertEqual(alertCategory(kind: "storage", actions: [.snooze], hideDetails: true), "alert.storage.snooze.private")
+        XCTAssertEqual(
+            alertCategory(kind: "storage", actions: [.snooze], hideDetails: true), "alert.storage.snooze.private")
     }
 
     func testStorageLinksRoundTrip() throws {
-        let json = String(decoding: try JSONEncoder().encode(ShareTarget.storage(address: "10.0.0.5", hostname: "worker-1")), as: UTF8.self)
-        XCTAssertEqual(try TalosJSON.decode(ShareTarget.self, from: json), .storage(address: "10.0.0.5", hostname: "worker-1"))
-        XCTAssertEqual(try TalosJSON.decode(ShareTarget.self, from: #"{"target":"storage","host":"worker-1","addr":"10.0.0.5"}"#).target,
-                       .storage)
+        let json = String(
+            decoding: try JSONEncoder().encode(ShareTarget.storage(address: "10.0.0.5", hostname: "worker-1")),
+            as: UTF8.self)
+        XCTAssertEqual(
+            try TalosJSON.decode(ShareTarget.self, from: json), .storage(address: "10.0.0.5", hostname: "worker-1"))
+        XCTAssertEqual(
+            try TalosJSON.decode(ShareTarget.self, from: #"{"target":"storage","host":"worker-1","addr":"10.0.0.5"}"#)
+                .target,
+            .storage)
     }
 }

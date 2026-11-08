@@ -19,17 +19,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PauseCircle
 import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -37,11 +35,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,20 +58,28 @@ import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.rememberKubeActionAccess
 import name.levis.ichor.model.JobRunState
 import name.levis.ichor.model.KubeCronJob
+import name.levis.ichor.model.KubeGreenNamespace
 import name.levis.ichor.model.KubeJobRun
+import name.levis.ichor.model.historyCounts
+import name.levis.ichor.ui.components.RowAction
+import name.levis.ichor.ui.components.RowActionsMenu
+import name.levis.ichor.ui.design.IchorIconButton
 import name.levis.ichor.ui.apps.AppIconTile
 import name.levis.ichor.ui.components.StatusPill
-import name.levis.ichor.ui.components.TooltipIconButton
-import name.levis.ichor.model.ShareTarget
-import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
 
-/** One CronJob: who it is, when it runs, how its last runs went, Suspend/Resume and Run now. Tap for the runs. */
+/**
+ * One CronJob: who it is, when it runs, how its last runs went, Run now and a More menu
+ * (Suspend/Resume, Pin, Share, Add to home). Tap for the runs; swipe right to run it, left to
+ * suspend or resume it, long press for every action ([CronJobQuickActions]).
+ */
 @Composable
 internal fun CronJobCard(
     cronJob: KubeCronJob,
+    /** What kube-green has done to the namespace, when the scope is one; null otherwise. */
+    kubeGreen: KubeGreenNamespace?,
     showNamespace: Boolean,
     expanded: Boolean,
     triggering: Boolean,
@@ -75,32 +89,35 @@ internal fun CronJobCard(
     onSuspend: () -> Unit,
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Card(
-        onClick = onToggle,
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            CronJobHeader(cronJob, showNamespace)
-            if (cronJob.description.isNotBlank()) {
-                Text(cronJob.description, style = MaterialTheme.typography.bodySmall, color = muted)
-            }
-            CronJobTiming(cronJob)
-            val access = rememberKubeActionAccess(cronJob.namespace)
-            val suspendDenial = access?.denial(KubeAction.SUSPEND_CRON_JOB)
-            val runDenial = access?.denial(KubeAction.TRIGGER_CRON_JOB)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    val access = rememberKubeActionAccess(cronJob.namespace)
+    val suspendDenial = access?.denial(KubeAction.SUSPEND_CRON_JOB)
+    val runDenial = access?.denial(KubeAction.TRIGGER_CRON_JOB)
+    // The home's card shape and colour, like SectionCard; the tap belongs to the quick-actions row.
+    CronJobQuickActions(
+        cronJob, triggering, suspending, runDenial, suspendDenial, expanded,
+        onToggle = onToggle, onRun = onRun, onSuspend = onSuspend,
+    ) { more ->
+        IchorCard(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                CronJobHeader(cronJob, showNamespace)
+                if (cronJob.description.isNotBlank()) {
+                    Text(cronJob.description, style = MaterialTheme.typography.bodySmall, color = muted)
+                }
+                CronJobTiming(cronJob)
+                KubeGreenCronJobNote(kubeGreen, cronJob.suspended)
+                // On its own line: beside five actions the text had about 40dp and broke after every word.
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     RunHistoryStrip(cronJob.runs)
                     LastRunText(cronJob.runs.firstOrNull())
                 }
-                ShareLinkButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), icon = Icons.Outlined.Link)
-                SuspendButton(cronJob, suspending, enabled = suspendDenial == null, onSuspend)
-                RunNowButton(cronJob, triggering, enabled = runDenial == null, onRun)
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
+                    RunNowButton(cronJob, triggering, enabled = runDenial == null, onRun)
+                    MoreButton(cronJob, suspending, more)
+                }
+                // Suspend's denial shows under its item in the menu.
+                runDenial?.let { KubeDenialNote(it) }
+                AnimatedVisibility(expanded) { RunList(cronJob.runs) }
             }
-            listOfNotNull(suspendDenial, runDenial).forEach { KubeDenialNote(it) }
-            AnimatedVisibility(expanded) { RunList(cronJob.runs) }
         }
     }
 }
@@ -151,7 +168,8 @@ private fun CronJobTiming(cronJob: KubeCronJob) {
             cronJob.suspended -> MetaChip(Icons.Outlined.PauseCircle, stringResource(R.string.cronjobs_suspended), LocalStatusColors.current.warn)
             // Not from cached data that has gone by.
             cronJob.nextRun > System.currentTimeMillis() -> {
-                val next = timeAgo(cronJob.nextRun)
+                // Mid-sentence: "next in 3 minutes", not the "In 3 minutes" the platform gives.
+                val next = timeAgo(cronJob.nextRun).replaceFirstChar { it.lowercase() }
                 MetaChip(Icons.Outlined.Update, stringResource(R.string.cronjobs_next_run, next))
             }
         }
@@ -170,11 +188,15 @@ private fun MetaChip(icon: ImageVector, text: String, color: Color = MaterialThe
     }
 }
 
-/** The recent runs as small bars, oldest left; a manual run is drawn hollow. */
+/**
+ * The recent runs as small bars, oldest left; a manual run is drawn hollow. TalkBack reads one
+ * summary in words ("Last 5 runs: 3 succeeded, 1 failed"): the colours are only a hint.
+ */
 @Composable
 private fun RunHistoryStrip(runs: List<KubeJobRun>) {
     if (runs.isEmpty()) return
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    val summary = runHistorySummary(runs)
+    Row(Modifier.clearAndSetSemantics { contentDescription = summary }, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         runs.reversed().forEach { run ->
             val color = run.runState.color()
             val shape = RoundedCornerShape(3.dp)
@@ -182,6 +204,17 @@ private fun RunHistoryStrip(runs: List<KubeJobRun>) {
             Box(if (run.manual) bar.border(1.5.dp, color, shape) else bar.background(color, shape))
         }
     }
+}
+
+@Composable
+private fun runHistorySummary(runs: List<KubeJobRun>): String {
+    val counts = runs.historyCounts()
+    val parts = listOf(
+        counts.succeeded to JobRunState.SUCCEEDED,
+        counts.failed to JobRunState.FAILED,
+        counts.running to JobRunState.RUNNING,
+    ).filter { (n, _) -> n > 0 }.map { (n, state) -> "$n ${stringResource(state.label)}" }
+    return pluralStringResource(R.plurals.cronjobs_history_summary, counts.total, counts.total, parts.joinToString(", "))
 }
 
 @Composable
@@ -194,19 +227,20 @@ private fun LastRunText(run: KubeJobRun?) {
     Text(text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
-/** Pauses the schedule, or resumes it when suspended. */
+/** Suspend/Resume, Pin, Share and Add to home ([more]); a spinner while suspending or resuming. */
 @Composable
-private fun SuspendButton(cronJob: KubeCronJob, suspending: Boolean, enabled: Boolean, onSuspend: () -> Unit) {
+private fun MoreButton(cronJob: KubeCronJob, suspending: Boolean, more: List<RowAction>) {
     if (suspending) {
         CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
         return
     }
-    TooltipIconButton(
-        if (cronJob.suspended) Icons.Outlined.PlayCircle else Icons.Outlined.PauseCircle,
-        stringResource(if (cronJob.suspended) R.string.cronjobs_resume else R.string.cronjobs_suspend),
-        onClick = onSuspend,
-        enabled = enabled,
-    )
+    var open by remember { mutableStateOf(false) }
+    Box {
+        IchorIconButton(onClick = { open = true }) {
+            Icon(Icons.Outlined.MoreVert, stringResource(R.string.cronjobs_row_actions, cronJob.displayName))
+        }
+        RowActionsMenu(open, more, onDismiss = { open = false }, header = cronJob.name)
+    }
 }
 
 @Composable
@@ -241,7 +275,12 @@ private fun RunList(runs: List<KubeJobRun>) {
 @Composable
 private fun RunRow(run: KubeJobRun) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    // One TalkBack stop per run: its name, state, time, duration and "manual".
+    Row(
+        Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}.padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         Box(Modifier.size(8.dp).background(run.runState.color(), CircleShape))
         Column(Modifier.weight(1f)) {
             Text(run.name, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)

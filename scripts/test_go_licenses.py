@@ -5,6 +5,7 @@ import json
 import os
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -84,3 +85,20 @@ class SwiftTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LlamaTest(unittest.TestCase):
+    def test_android_entry_names_the_pinned_release(self):
+        root = Path(HERE).parent
+        pin = dict(line.split("=", 1) for line in (root / "native/llama-cpp.env").read_text().splitlines()
+                   if "=" in line and not line.startswith("#"))
+        entry = json.loads((root / "app/aboutlibraries/libraries/llama-cpp.json").read_text())
+        self.assertEqual(entry["artifactVersion"], pin["LLAMA_TAG"])
+
+    def test_missing_source_is_reported(self):
+        unknown = []
+        with unittest.mock.patch.object(go_licenses, "ROOT", Path(tempfile.mkdtemp())) as root:
+            (root / "native").mkdir()
+            (root / "native/llama-cpp.env").write_text("LLAMA_TAG=b1\nLLAMA_COMMIT=abc\n")
+            self.assertEqual(go_licenses.llama_library(unknown), [])
+        self.assertTrue(unknown and unknown[0].startswith("llama.cpp"))

@@ -1,0 +1,7 @@
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Restart, then wait
+description: Restart the ingest API, wait for its rollout, check it is back.
+steps:
+  - {id: restart, action: rolloutRestart, target: {namespace: demo-shop, name: ingest-api}}
+  - {id: rolled-out, action: wait, target: {namespace: demo-shop, name: ingest-api}, params: {until: rolloutDone, timeoutSeconds: 300}}
+  - {id: available, action: assert, target: {namespace: demo-shop, name: ingest-api}, params: {until: available}}

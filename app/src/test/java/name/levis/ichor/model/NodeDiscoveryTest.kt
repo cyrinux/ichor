@@ -28,6 +28,19 @@ class NodeDiscoveryTest {
     }
 
     @Test
+    fun forgottenMembersAreNotOfferedByAnotherAddressOrTheirHostname() {
+        assertEquals(listOf("10.0.0.12"), discovery.toOffer(setOf("fe80::1")).map { it.address })
+        assertEquals(listOf("10.0.0.11"), discovery.toOffer(setOf("worker-b")).map { it.address })
+    }
+
+    @Test
+    fun removalDecodes() {
+        val removal = TalosJson.decodeFromString(ContextNodeRemoval.serializer(), """{"allowed":true,"endpoint":true}""")
+        assertEquals(ContextNodeRemoval(allowed = true, endpoint = true), removal)
+        assertEquals(NodeForgetCheck(true), TalosJson.decodeFromString(NodeForgetCheck.serializer(), """{"forgettable":true}"""))
+    }
+
+    @Test
     fun allKnownOffersNothing() {
         val known = discovery.copy(nodes = discovery.nodes.map { it.copy(known = true) })
         assertEquals(emptyList<DiscoveredNode>(), known.toOffer(emptySet()))

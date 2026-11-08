@@ -7,10 +7,17 @@ interface HomeCard {
 
     /** Was pinned above the cards before it could be arranged: a layout saved then keeps it first. */
     val leadsWhenNew: Boolean
+
+    /** Starts hidden, also in a layout saved before it existed: shown from the editor. */
+    val hiddenByDefault: Boolean get() = false
 }
 
-/** The Talos overview's cards. */
+/**
+ * The Talos overview's cards. [PINNED]: the objects pinned on this cluster, absent without any.
+ * [TOOLS]: the Kubernetes home's screens card, hidden until shown from the editor.
+ */
 enum class OverviewCard : HomeCard {
+    PINNED,
     TALOS_UPDATE,
     SUMMARY,
     APPS,
@@ -20,11 +27,15 @@ enum class OverviewCard : HomeCard {
     NODES,
     TIME_DRIFT,
     ALERTS,
+    TOOLS,
     ;
 
-    override val whenDetected: Boolean get() = this == DATA_SERVICES || this == ARGO_CD || this == FLUX || this == ALERTS
+    override val whenDetected: Boolean
+        get() = this == PINNED || this == DATA_SERVICES || this == ARGO_CD || this == FLUX || this == ALERTS
 
-    override val leadsWhenNew: Boolean get() = this == TALOS_UPDATE
+    override val leadsWhenNew: Boolean get() = this == PINNED || this == TALOS_UPDATE
+
+    override val hiddenByDefault: Boolean get() = this == TOOLS
 
     companion object {
         val layout = CardLayoutKind(entries)
@@ -32,12 +43,15 @@ enum class OverviewCard : HomeCard {
 }
 
 /**
- * The cards of the Kubernetes home (a cluster added from a kubeconfig): the API server and the
- * credentials, the nodes as Kubernetes lists them, the Kubernetes screens, and the operators
- * (and the Alertmanager) found on the cluster.
+ * The cards of the Kubernetes home (a cluster added from a kubeconfig), as the Talos overview's
+ * where they can be: the objects pinned, the cluster at a glance, the apps (from the pods), the
+ * nodes as Kubernetes lists them, the Kubernetes screens, and the operators (and the
+ * Alertmanager) found on the cluster.
  */
 enum class KubeHomeCard : HomeCard {
+    PINNED,
     SUMMARY,
+    APPS,
     NODES,
     TOOLS,
     DATA_SERVICES,
@@ -46,9 +60,10 @@ enum class KubeHomeCard : HomeCard {
     ALERTS,
     ;
 
-    override val whenDetected: Boolean get() = this == DATA_SERVICES || this == ARGO_CD || this == FLUX || this == ALERTS
+    // The apps too: credentials that may not list every pod have no inventory to show.
+    override val whenDetected: Boolean get() = this == PINNED || this == APPS || this == DATA_SERVICES || this == ARGO_CD || this == FLUX || this == ALERTS
 
-    override val leadsWhenNew: Boolean get() = false
+    override val leadsWhenNew: Boolean get() = this == PINNED
 
     companion object {
         val layout = CardLayoutKind(entries)
@@ -57,9 +72,12 @@ enum class KubeHomeCard : HomeCard {
 
 /** One home's cards ([entries], in their default order), reading their saved layout. */
 class CardLayoutKind<C>(val entries: List<C>) where C : Enum<C>, C : HomeCard {
-    val default: CardLayout<C> get() = CardLayout(this, entries, emptySet())
+    val default: CardLayout<C> get() = CardLayout(this, entries, entries.filter { it.hiddenByDefault }.toSet())
 
-    /** Reads [CardLayout.encode]'s form; unknown or repeated names are skipped, missing cards added. */
+    /**
+     * Reads [CardLayout.encode]'s form; unknown or repeated names are skipped, missing cards added
+     * (hidden when [HomeCard.hiddenByDefault]).
+     */
     fun parse(text: String?): CardLayout<C> {
         if (text.isNullOrBlank()) return default
         val parsed = text.split(',').mapNotNull { raw ->
@@ -72,7 +90,7 @@ class CardLayoutKind<C>(val entries: List<C>) where C : Enum<C>, C : HomeCard {
         return CardLayout(
             this,
             order = leading + known + trailing,
-            hidden = parsed.filter { it.second }.map { it.first }.toSet(),
+            hidden = parsed.filter { it.second }.map { it.first }.toSet() + entries.filter { it !in known && it.hiddenByDefault },
         )
     }
 }

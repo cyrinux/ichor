@@ -44,7 +44,8 @@ final class K8sUpgradeJob {
         let run = client.startK8sUpgrade(version: version, dryRun: dryRun)
         handle = run
         task = Task {
-            var result: String? = String(localized: "The upgrade ended without an answer: open the plan again to see what changed.")
+            var result: String? = String(
+                localized: "The upgrade ended without an answer: open the plan again to see what changed.")
             for await event in run.events {
                 switch event {
                 case .progress(let update): events.append(update)
@@ -55,10 +56,15 @@ final class K8sUpgradeJob {
             task = nil
             handle = nil
             endBackgroundTask()
-            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [Self.foregroundNotification])
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [
+                Self.foregroundNotification
+            ])
             UIApplication.shared.isIdleTimerDisabled = UpgradeJob.shared.isActive || MaintenanceJob.shared.isActive
-            announce(result ?? (dryRun ? String(localized: "Every node accepted its change. Nothing was applied.")
-                                       : String(localized: "Every component runs \(version).")))
+            announce(
+                result
+                    ?? (dryRun
+                        ? String(localized: "Every node accepted its change. Nothing was applied.")
+                        : String(localized: "Every component runs \(version).")))
         }
         return true
     }
@@ -74,7 +80,9 @@ final class K8sUpgradeJob {
         guard isActive, !dryRun else { return }
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Keep Ichor open")
-        content.body = String(localized: "The Kubernetes upgrade stops while Ichor is in the background. Open it until every node is done.")
+        content.body = String(
+            localized:
+                "The Kubernetes upgrade stops while Ichor is in the background. Open it until every node is done.")
         content.sound = .default
         let request = UNNotificationRequest(identifier: Self.foregroundNotification, content: content, trigger: nil)
         Task { try? await UNUserNotificationCenter.current().add(request) }

@@ -23,9 +23,10 @@ public struct ClusterOutage: Equatable, Sendable {
 public let unreachableRetrySeconds = 15
 
 extension ClusterOverview {
-    /// Nil as long as one node answered (or there is none to try).
+    /// Nil as long as one node answered (or there is none to try), and while the overview is
+    /// partial: a slow first node is no outage.
     public var outage: ClusterOutage? {
-        guard !nodes.isEmpty, !nodes.contains(where: \.reachable) else { return nil }
+        guard !partial, !nodes.isEmpty, !nodes.contains(where: \.reachable) else { return nil }
         let kinds = Set(nodes.map(\.errorKind))
         let cause: OutageCause
         if kinds == ["network"] {

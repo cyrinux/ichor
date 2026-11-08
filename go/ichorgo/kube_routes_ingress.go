@@ -10,14 +10,17 @@ type ingressBackend struct {
 
 type ingressObject struct {
 	Metadata struct {
-		Name      string `json:"name"`
-		Namespace string `json:"namespace"`
+		Name string `json:"name"`
+		// Annotations carry the ExternalDNS hostname/target/ttl/controller ones.
+		Namespace   string            `json:"namespace"`
+		Annotations map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {
 		IngressClassName string          `json:"ingressClassName"`
 		DefaultBackend   *ingressBackend `json:"defaultBackend"`
 		TLS              []struct {
-			Hosts []string `json:"hosts"`
+			Hosts      []string `json:"hosts"`
+			SecretName string   `json:"secretName"`
 		} `json:"tls"`
 		Rules []struct {
 			Host string `json:"host"`
@@ -54,7 +57,9 @@ func ingressRoutes(ingresses []ingressObject, services map[serviceRef]bool) []ku
 			}
 
 			url := routeURL(ingressScheme(ing, host), host, 0, path)
-			routes = append(routes, kubeRoute{Kind: "Ingress", Namespace: ns, Name: ing.Metadata.Name, URL: url, Service: service})
+			r := routeRow("Ingress", ns, ing.Metadata.Name, url, service)
+			r.tlsSecret = ingressTLSSecret(ing, host)
+			routes = append(routes, r)
 		}
 
 		for _, rule := range ing.Spec.Rules {

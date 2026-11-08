@@ -110,7 +110,15 @@ val FluxAction.label: Int
     }
 
 /** A Flux action waiting for its confirmation: on which object, and who applies it from Git ([owner], "" when none). */
-data class FluxConfirm(val action: FluxAction, val kind: String, val namespace: String, val name: String, val owner: String = "")
+data class FluxConfirm(
+    val action: FluxAction,
+    val kind: String,
+    val namespace: String,
+    val name: String,
+    val owner: String = "",
+    /** A forced upgrade asked to correct the drift the helm-controller found. */
+    val correctDrift: Boolean = false,
+)
 
 /**
  * Asks before [confirm.action], saying what it does. Suspending or resuming an object a
@@ -127,10 +135,11 @@ fun FluxConfirmDialog(confirm: FluxConfirm, onConfirm: () -> Unit, onDismiss: ()
         FluxAction.RESET -> R.string.flux_reset_title to R.string.flux_reset_text
     }
     val gitWins = confirm.owner.isNotEmpty() && (confirm.action == FluxAction.SUSPEND || confirm.action == FluxAction.RESUME)
+    val body = if (confirm.correctDrift) R.string.flux_action_correct_drift_confirm else text
     ConfirmDialog(
         title = stringResource(title, confirm.name),
-        text = stringResource(text) + if (gitWins) "\n\n" + stringResource(R.string.flux_owner_wins, confirm.owner) else "",
-        confirm = stringResource(confirm.action.label),
+        text = stringResource(body) + if (gitWins) "\n\n" + stringResource(R.string.flux_owner_wins, confirm.owner) else "",
+        confirm = stringResource(if (confirm.correctDrift) R.string.flux_action_correct_drift else confirm.action.label),
         onConfirm = onConfirm,
         onDismiss = onDismiss,
         destructive = confirm.action == FluxAction.SUSPEND,

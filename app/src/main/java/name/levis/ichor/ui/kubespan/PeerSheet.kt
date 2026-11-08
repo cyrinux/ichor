@@ -10,7 +10,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,7 +28,7 @@ import name.levis.ichor.model.KubeSpanDiagPeer
 import name.levis.ichor.model.SiderolinkDiag
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
@@ -37,6 +37,8 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 
 /** Every node's KubeSpan diagnosis, read once the peers tab shows (KubeSpanDiagnosticsAll). */
 class KubeSpanDiagViewModel(private val talos: TalosRepository) : LoadingViewModel<KubeSpanDiagAll>() {
+    // Read when its tab is open: load.
+    override val loadsOnOpen = false
     override suspend fun fetch() = talos.kubespanDiagnostics()
 
     fun load() {
@@ -47,7 +49,7 @@ class KubeSpanDiagViewModel(private val talos: TalosRepository) : LoadingViewMod
 /** The peer as [node] sees it, with why its link is down. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PeerSheet(nodeName: String, peerName: String, diag: UiState<KubeSpanDiagAll>, node: String, publicKey: String, onDismiss: () -> Unit) {
+fun PeerSheet(nodeName: String, peerName: String, diag: UiState<KubeSpanDiagAll>, onRetry: () -> Unit, node: String, publicKey: String, onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 8.dp),
@@ -56,7 +58,7 @@ fun PeerSheet(nodeName: String, peerName: String, diag: UiState<KubeSpanDiagAll>
             Text("$nodeName → $peerName", style = MaterialTheme.typography.titleMedium)
             when (diag) {
                 UiState.Loading -> MutedText(stringResource(R.string.kubespan_diag_loading))
-                is UiState.Failed -> Text(diag.message.asString(), color = LocalStatusColors.current.bad)
+                is UiState.Failed -> LoadFailureRow(diag.message, onRetry)
                 is UiState.Loaded -> {
                     val all = diag.data
                     val ofNode = all.nodes.firstOrNull { it.node == node }
@@ -76,10 +78,13 @@ fun PeerSheet(nodeName: String, peerName: String, diag: UiState<KubeSpanDiagAll>
 private fun PeerDiagnosis(peer: KubeSpanDiagPeer, node: KubeSpanDiag) {
     val colors = LocalStatusColors.current
     val now = System.currentTimeMillis() / 1000
-    if (peer.verdicts.isEmpty()) {
-        Text(stringResource(R.string.kubespan_diag_ok), color = colors.ok)
-    } else {
-        peer.verdicts.forEach { Text(it.message, color = colors.bad, style = MaterialTheme.typography.bodyMedium) }
+    when {
+        peer.verdicts.isNotEmpty() -> peer.verdicts.forEach {
+            // A peer just added is no problem yet.
+            Text(it.message, color = if (it.kind == "justStarted") colors.muted else colors.bad, style = MaterialTheme.typography.bodyMedium)
+        }
+        peer.state == "up" -> Text(stringResource(R.string.kubespan_diag_ok), color = colors.ok)
+        else -> Text(stringResource(R.string.kubespan_diag_no_handshake), color = colors.bad)
     }
 
     SectionTitle(stringResource(R.string.kubespan_diag_endpoints))
@@ -97,7 +102,7 @@ private fun PeerDiagnosis(peer: KubeSpanDiagPeer, node: KubeSpanDiag) {
     }
 
     var details by remember { mutableStateOf(false) }
-    TextButton(onClick = { details = !details }) { Text(stringResource(R.string.kubespan_diag_details)) }
+    IchorTextButton(onClick = { details = !details }) { Text(stringResource(R.string.kubespan_diag_details)) }
     if (details) {
         val lines = listOfNotNull(
             "publicKey: ${peer.publicKey}",

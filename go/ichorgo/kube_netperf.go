@@ -193,6 +193,7 @@ func StartNetPerf(configYAML, contextName, kubeServer, serverNode, clientNode st
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		var (
 			report netPerfReport
@@ -215,26 +216,27 @@ func StartNetPerf(configYAML, contextName, kubeServer, serverNode, clientNode st
 // runNetPerfWith runs a test with target's client. A refusal is returned as is, outside
 // withKubeContext, which would take it for a failed call.
 func runNetPerfWith(ctx context.Context, target kubeTarget, opts netPerfOptions, emit func(netPerfProgress)) (netPerfReport, error) {
-	var (
-		report  netPerfReport
-		refusal error
-	)
+	return withKubeRefusal(ctx, target, func(ctx context.Context, k *kubeClient) (netPerfReport, error) {
+		return runNetPerf(ctx, k, opts, emit)
+	})
+}
 
+// withKubeRefusal preserves a run's refusal while the client cache handles other errors.
+func withKubeRefusal[T any](ctx context.Context, target kubeTarget, run func(context.Context, *kubeClient) (T, error)) (T, error) {
+	var report T
+	var refusal error
 	_, err := withKubeContext(ctx, target, func(ctx context.Context, k *kubeClient) (struct{}, error) {
 		var runErr error
-		report, runErr = runNetPerf(ctx, k, opts, emit)
-
+		report, runErr = run(ctx, k)
 		var r *netPerfRefusal
 		if errors.As(runErr, &r) {
 			refusal, runErr = runErr, nil
 		}
-
 		return struct{}{}, runErr
 	})
 	if refusal != nil {
 		err = refusal
 	}
-
 	return report, err
 }
 

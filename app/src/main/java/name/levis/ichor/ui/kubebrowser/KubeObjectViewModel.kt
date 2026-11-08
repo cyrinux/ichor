@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.kubebrowser
 
+import name.levis.ichor.data.MaskScoped
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
@@ -152,7 +153,31 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
      * whenever the object or its events change. A watch that ends is followed again after
      * [KUBE_WATCH_RETRY_MILLIS]; one refused leaves the one-shot read on screen.
      */
-    suspend fun followSummary() {
+    suspend fun followSummary() = mask.run(clear = ::forgetRead) {
+        if (yamlDropped) {
+            yamlDropped = false
+            refresh()
+        }
+        followSummaryOnce()
+    }
+
+    private val mask = MaskScoped()
+    private var yamlDropped = false
+
+    /**
+     * After a screenshot mode switch: the summary and the YAML read under the previous setting
+     * go (an edit in progress stays, it is the user's), read again once the switch is over.
+     */
+    private fun forgetRead() {
+        summaryLoad?.cancel()
+        _summary.value = UiState.Loading
+        if (_edit.value != null) return
+        load?.cancel()
+        _yaml.value = UiState.Loading
+        yamlDropped = true
+    }
+
+    private suspend fun followSummaryOnce() {
         watchForever(start = { browser.objectSummaryWatch(ref) }) { item ->
             when (item) {
                 is StreamItem.Item -> _summary.value = UiState.Loaded(item.value)

@@ -1,8 +1,11 @@
 package name.levis.ichor.security
 
 import android.content.SharedPreferences
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.isDemo
@@ -13,6 +16,12 @@ interface LockSettings {
 
     /** The enrolled security keys (public data only), null when none. */
     var securityKeys: SecurityKeyEnrolment?
+
+    /** The panic app the user connected (see PanicResponder.kt), null when none. */
+    var panicTriggerPackage: String?
+
+    /** What the connected panic app's trigger does; any other sender can only lock. */
+    var panicResponse: PanicResponse
 }
 
 class PrefsLockSettings(private val prefs: SharedPreferences) : LockSettings {
@@ -30,9 +39,26 @@ class PrefsLockSettings(private val prefs: SharedPreferences) : LockSettings {
             }.apply()
         }
 
+    override var panicTriggerPackage: String?
+        get() = prefs.getString(KEY_PANIC_TRIGGER, null)
+        set(value) {
+            prefs.edit().apply {
+                if (value == null) remove(KEY_PANIC_TRIGGER) else putString(KEY_PANIC_TRIGGER, value)
+            }.apply()
+        }
+
+    override var panicResponse: PanicResponse
+        // An unknown value must not widen to a delete.
+        get() = if (prefs.getString(KEY_PANIC_RESPONSE, null) == PanicResponse.DELETE_CONFIG.name) PanicResponse.DELETE_CONFIG else PanicResponse.LOCK
+        set(value) {
+            prefs.edit().putString(KEY_PANIC_RESPONSE, value.name).apply()
+        }
+
     private companion object {
         const val KEY = "app_lock_enabled"
         const val KEY_SECURITY_KEYS = "security_keys"
+        const val KEY_PANIC_TRIGGER = "panic_trigger_package"
+        const val KEY_PANIC_RESPONSE = "panic_response"
     }
 }
 
@@ -116,6 +142,39 @@ class AppLock(
     fun unlock() {
         _everUnlocked.value = true
         _locked.value = false
+    }
+
+    /**
+     * Locks now (a panic trigger), without touching the config. Does nothing without the lock on:
+     * no lock screen could open it again. A sealed config needs its key tapped again.
+     */
+    fun lock() {
+        if (!_enabled.value) return
+        _locked.value = true
+        if (requiresKey) clearDek()
+    }
+
+    // No replay: an activity created after the delete has nothing stale to drop.
+    private val _configDeleted = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val configDeleted: SharedFlow<Unit> = _configDeleted.asSharedFlow()
+
+    fun notifyConfigDeleted() {
+        _configDeleted.tryEmit(Unit)
+    }
+
+    private val _panicTriggerPackage = MutableStateFlow(settings.panicTriggerPackage)
+    /** The panic app the user connected, null when none. */
+    val panicTriggerPackage: StateFlow<String?> = _panicTriggerPackage.asStateFlow()
+
+    private val _panicResponse = MutableStateFlow(settings.panicResponse)
+    val panicResponse: StateFlow<PanicResponse> = _panicResponse.asStateFlow()
+
+    /** Callers must have authenticated the user before asking for [PanicResponse.DELETE_CONFIG]. */
+    fun setPanicConnection(triggerPackage: String?, response: PanicResponse) {
+        settings.panicTriggerPackage = triggerPackage
+        settings.panicResponse = response
+        _panicTriggerPackage.value = triggerPackage
+        _panicResponse.value = response
     }
 
     fun onBackground() {

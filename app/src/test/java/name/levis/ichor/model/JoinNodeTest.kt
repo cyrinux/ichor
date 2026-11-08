@@ -119,12 +119,12 @@ class JoinNodeTest {
             finished = false,
             failed = false,
         )
-        assertEquals(JoinPhase.entries, steps.map { it.phase })
+        assertEquals(JoinPhase.maintenanceRun, steps.map { it.phase })
         assertEquals(
             listOf(StepStatus.DONE, StepStatus.DONE, StepStatus.CURRENT, StepStatus.PENDING, StepStatus.PENDING, StepStatus.PENDING, StepStatus.PENDING),
             steps.map { it.status },
         )
-        val rebooting = steps[JoinPhase.REBOOTING.ordinal]
+        val rebooting = steps[JoinPhase.maintenanceRun.indexOf(JoinPhase.REBOOTING)]
         assertEquals(3L, rebooting.at)
         assertEquals("still down", rebooting.message)
     }
@@ -132,13 +132,49 @@ class JoinNodeTest {
     @Test
     fun aFailedJoinFailsItsLatestPhaseAndADoneOneIsAllDone() {
         val failed = joinTimeline(listOf(progress("applying"), progress("installing")), finished = true, failed = true)
-        assertEquals(StepStatus.FAILED, failed[JoinPhase.INSTALLING.ordinal].status)
-        assertEquals(StepStatus.PENDING, failed[JoinPhase.BOOTED.ordinal].status)
+        assertEquals(StepStatus.FAILED, failed[JoinPhase.maintenanceRun.indexOf(JoinPhase.INSTALLING)].status)
+        assertEquals(StepStatus.PENDING, failed[JoinPhase.maintenanceRun.indexOf(JoinPhase.BOOTED)].status)
 
         val refused = joinTimeline(emptyList(), finished = true, failed = true)
         assertEquals(StepStatus.FAILED, refused.first().status)
 
         val done = joinTimeline(listOf(progress("applying"), progress("done")), finished = true, failed = false)
         assertTrue(done.all { it.status == StepStatus.DONE })
+    }
+
+    @Test
+    fun aCloudRunKeepsItsOwnStepsAndItsFailureOnItsPhase() {
+        val running = joinTimeline(listOf(progress("creating"), progress("starting")), finished = false, failed = false, phases = JoinPhase.cloudRun)
+        assertEquals(JoinPhase.cloudRun, running.map { it.phase })
+        assertEquals(StepStatus.DONE, running[0].status)
+        assertEquals(StepStatus.CURRENT, running[1].status)
+
+        // The deletion after a failure has no step of its own.
+        val failed = joinTimeline(listOf(progress("creating"), progress("cleanup")), finished = true, failed = true, phases = JoinPhase.cloudOmniRun)
+        assertEquals(JoinPhase.cloudOmniRun, failed.map { it.phase })
+        assertEquals(StepStatus.FAILED, failed[0].status)
+    }
+
+    @Test
+    fun aSnapshotRunFollowsItsSteps() {
+        val phases = JoinPhase.snapshotRun
+        val running = joinTimeline(listOf(progress("key"), progress("creating"), progress("rescue"), progress("writing")), finished = false, failed = false, phases = phases)
+        assertEquals(phases, running.map { it.phase })
+        assertEquals(StepStatus.DONE, running[phases.indexOf(JoinPhase.RESCUE)].status)
+        assertEquals(StepStatus.CURRENT, running[phases.indexOf(JoinPhase.WRITING)].status)
+        assertEquals(StepStatus.PENDING, running[phases.indexOf(JoinPhase.CLEANUP)].status)
+    }
+
+    @Test
+    fun theSnapshotLocationsAreThoseOfTheArchitecture() {
+        val options = HetznerOptions(
+            serverTypes = listOf(
+                HetznerServerType(name = "cx23", arch = "amd64", prices = listOf(HetznerPrice(location = "fsn1"))),
+                HetznerServerType(name = "cax11", arch = "arm64", prices = listOf(HetznerPrice(location = "hel1"))),
+            ),
+            locations = listOf(HetznerLocation(name = "fsn1"), HetznerLocation(name = "hel1")),
+        )
+        assertEquals(listOf("fsn1"), options.locationsFor("amd64").map { it.name })
+        assertEquals(listOf("hel1"), options.locationsFor("arm64").map { it.name })
     }
 }

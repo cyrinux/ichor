@@ -31,8 +31,11 @@ public struct AMIssue: Equatable, Sendable {
 
     /// The stored form; the alert name loses any "|" so the parts still split.
     public var value: String {
-        [severity, alertname.replacingOccurrences(of: "|", with: "/"), subject.replacingOccurrences(of: "|", with: "/"), summary]
-            .joined(separator: "|")
+        [
+            severity, alertname.replacingOccurrences(of: "|", with: "/"),
+            subject.replacingOccurrences(of: "|", with: "/"), summary,
+        ]
+        .joined(separator: "|")
     }
 
     /// "namespace/pod · critical", the severity alone without a subject.
@@ -52,7 +55,8 @@ public func alertmanagerIssuesOf(_ alerts: AMAlerts) -> [String: String] {
         case .info: continue
         }
         let summary = String(alert.summary.prefix(200))
-        out[alert.fingerprint] = AMIssue(severity: severity, alertname: alert.alertname, subject: alert.subject, summary: summary).value
+        out[alert.fingerprint] =
+            AMIssue(severity: severity, alertname: alert.alertname, subject: alert.subject, summary: summary).value
     }
     return out
 }
@@ -85,10 +89,13 @@ func amClearedTitle(_ issue: AMIssue) -> String { "Alertmanager: \(issue.alertna
 
 /// Alertmanager alerts (see evaluateTrack), keyed "am:fingerprint". A resolved alert is named
 /// from what the previous snapshot kept of it.
-func evaluateAlertmanager(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert]) -> IssueTrack {
+func evaluateAlertmanager(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert])
+    -> IssueTrack
+{
     let known = previous?.amIssues ?? [:]
     return evaluateTrack(
-        previous: previous?.amTrack, current: current.amTrack, comparable: comparable, severity: { AMIssue(value: $0).severity },
+        previous: previous?.amTrack, current: current.amTrack, comparable: comparable,
+        severity: { AMIssue(value: $0).severity },
         problem: { key, value in
             let issue = AMIssue(value: value)
             var text = issue.line(severity: issue.severity)

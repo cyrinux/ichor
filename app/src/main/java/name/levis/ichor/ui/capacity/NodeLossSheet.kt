@@ -10,13 +10,14 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -35,15 +36,17 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
- * What losing a node costs: where its pods land, what they evict, what stays Pending, then what
- * to scale down, lowest priority first (system classes never). A suggestion opens the object's
- * scale dialog ([onScale]); the worst case offers the other nodes ([onNode]).
+ * What losing a node — or several picked together — costs: where their pods land, what they
+ * evict, what stays Pending, then what to scale down, lowest priority first (system classes
+ * never). A suggestion opens the object's scale dialog ([onScale]); the worst case offers the
+ * other nodes ([onToggle], several wait for [onSimulate]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NodeLossSheet(
     state: NodeLossState,
-    onNode: (String) -> Unit,
+    onToggle: (String) -> Unit,
+    onSimulate: () -> Unit,
     onRetry: () -> Unit,
     onScale: (KubeObjectRef) -> Unit,
     onDismiss: () -> Unit,
@@ -60,9 +63,9 @@ fun NodeLossSheet(
                 }
                 is UiState.Failed -> {
                     InlineError(s.message.asString())
-                    TextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+                    IchorTextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
                 }
-                is UiState.Loaded -> PlanBody(s.data, state, onNode, onScale)
+                is UiState.Loaded -> PlanBody(s.data, state, onToggle, onSimulate, onScale)
             }
         }
     }
@@ -70,20 +73,35 @@ fun NodeLossSheet(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun PlanBody(plan: NodeLossPlan, state: NodeLossState, onNode: (String) -> Unit, onScale: (KubeObjectRef) -> Unit) {
+private fun PlanBody(
+    plan: NodeLossPlan,
+    state: NodeLossState,
+    onToggle: (String) -> Unit,
+    onSimulate: () -> Unit,
+    onScale: (KubeObjectRef) -> Unit,
+) {
     val colors = LocalStatusColors.current
-    Text(stringResource(R.string.capacity_loss_title, plan.node), style = MaterialTheme.typography.titleMedium)
-    // Opened on the worst case: its candidates stay to compare the nodes.
+    Text(
+        stringResource(
+            if (plan.nodes.size > 1) R.string.capacity_loss_title_multi else R.string.capacity_loss_title,
+            plan.node,
+        ),
+        style = MaterialTheme.typography.titleMedium,
+    )
+    // Opened on the worst case: its candidates stay to compare the nodes, several at once.
     if (state.candidates.size > 1) {
         MutedText(stringResource(R.string.capacity_loss_worst, state.worst))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             state.candidates.forEach { c ->
-                FilterChip(
-                    selected = c.name == plan.node,
-                    onClick = { onNode(c.name) },
+                IchorFilterChip(
+                    selected = c.name in state.selected,
+                    onClick = { onToggle(c.name) },
                     label = { Text(stringResource(R.string.capacity_loss_candidate, c.name, c.pending.toString())) },
                 )
             }
+        }
+        if (state.selected.size > 1) {
+            IchorButton(onClick = onSimulate) { Text(stringResource(R.string.capacity_loss_simulate, state.selected.size)) }
         }
     }
     MutedText(

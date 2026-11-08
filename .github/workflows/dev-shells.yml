@@ -1,0 +1,33 @@
+name: Dev shells
+
+# The Nix dev shells must build on both Linux hosts, aarch64 included: CI only builds the
+# x86_64 shell (android-toolchain), so a flake bump that pulls an uncached i686 library into
+# the Android SDK, or a Swift toolchain marked broken on aarch64, broke `./build.sh check` on
+# aarch64 laptops unseen (2026-10-27). scripts/check-dev-shells.py evaluates every shell for
+# both hosts and asks Nix what it would build, without building it: a minute, no cache entry.
+# The weekly flake-update PR runs it once reopened (flake-update.yml).
+on:
+  push:
+    branches: [main]
+    paths: ["flake.nix", "flake.lock", "scripts/check-dev-shells.py", ".github/workflows/dev-shells.yml"]
+  pull_request:
+    paths: ["flake.nix", "flake.lock", "scripts/check-dev-shells.py", ".github/workflows/dev-shells.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    name: Evaluate the dev shells for x86_64 and aarch64 Linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The same installer as the Android toolchain.
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+
+      - name: Check the dev shells
+        run: python3 scripts/check-dev-shells.py

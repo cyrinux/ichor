@@ -2,7 +2,9 @@ package ichorgo
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"slices"
 	"sort"
 	"strings"
@@ -47,6 +49,12 @@ type diagnosisData struct {
 	EventsNote string
 	// GitOps: Argo CD and Flux, nil without os:admin or when neither runs.
 	GitOps *gitopsState
+	// DataServices: Longhorn, Garage, CloudNativePG… nil without os:admin or when none runs.
+	DataServices *dataServicesState
+	// Kube: what the Kubernetes API says: the two sections about workloads and pods of a Talos
+	// report (nil without os:admin), or the whole report of a kubeconfig cluster (KubeOnly).
+	Kube     *kubeDiagnosisData
+	KubeOnly bool
 
 	// What a mask has to learn to hide the cluster's names in the report.
 	hosts   []hostEntry
@@ -139,6 +147,8 @@ func collectDiagnosis(ctx context.Context, s *session, kube kubeTarget) diagnosi
 
 	wg.Go(func() { data.Events, data.EventsNote = recentProblemEvents(ctx, s.client, reachable) })
 	wg.Go(func() { data.GitOps = collectGitOps(ctx, kube, data.Roles) })
+	wg.Go(func() { data.DataServices = collectDataServices(ctx, kube, data.Roles) })
+	wg.Go(func() { data.Kube = collectKubeTrouble(ctx, kube, data.Roles) })
 
 	wg.Wait()
 
@@ -160,6 +170,12 @@ func learnDiagnosisHosts(mask *privacyMask, data diagnosisData) {
 	if data.Etcd != nil {
 		for _, m := range data.Etcd.Members {
 			mask.learnHost(m.Hostname, "controlplane")
+		}
+	}
+
+	if data.Kube != nil {
+		for host, role := range kubeHostNames(data.Kube) {
+			mask.learnHost(host, role)
 		}
 	}
 }
@@ -409,9 +425,11 @@ func recentProblemEvents(ctx context.Context, c *client.Client, nodes []string) 
 	ch := make(chan eventItem)
 	done := make(chan error, 1)
 
+	//lint:ignore SA1019 multi-node proxying, as in Events, until one stream per node
+	nodesCtx := client.WithNodes(ctx, nodes...)
+
 	go func() {
-		//lint:ignore SA1019 multi-node proxying, as in Events, until one stream per node
-		done <- safeCall(func() error { return watchEvents(client.WithNodes(ctx, nodes...), c, diagnosisEventTail, ch) })
+		done <- safeCall(func() error { return watchEvents(nodesCtx, c, client.WithTailEvents(diagnosisEventTail), ch) })
 	}()
 
 	var (
@@ -436,7 +454,8 @@ loop:
 
 			quiet.Reset(diagnosisEventsQuiet)
 		case err := <-done:
-			if err != nil && ctx.Err() == nil {
+			// A clean end (EOF) is the stream finishing early, not a failure.
+			if err != nil && !errors.Is(err, io.EOF) && ctx.Err() == nil {
 				note = "could not read the events: " + friendlyError(err)
 			}
 

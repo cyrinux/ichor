@@ -11,6 +11,8 @@ import name.levis.ichor.ui.LoadingViewModel
  * pointing to the Services that select its pods (os:admin).
  */
 class AppRoutesViewModel(private val kube: KubeRepository) : LoadingViewModel<List<KubeRoute>>() {
+    // Read once an app is picked: load.
+    override val loadsOnOpen = false
     private var app: InventoryApp? = null
 
     override suspend fun fetch(): List<KubeRoute> {

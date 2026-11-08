@@ -1,0 +1,61 @@
+# Invented: a cluster-scoped kind with a status.phase enum and a scale subresource.
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: widgetpools.widgets.demo.io
+spec:
+  group: widgets.demo.io
+  names:
+    kind: WidgetPool
+    listKind: WidgetPoolList
+    plural: widgetpools
+    singular: widgetpool
+  scope: Cluster
+  versions:
+    - name: v1beta1
+      served: true
+      storage: false
+    - name: v1
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - { name: Phase, type: string, jsonPath: .status.phase }
+        - { name: Replicas, type: integer, jsonPath: .spec.replicas }
+        - { name: Ready, type: integer, jsonPath: .status.readyReplicas, priority: 1 }
+        - { name: Age, type: date, jsonPath: .metadata.creationTimestamp }
+      subresources:
+        status: {}
+        scale:
+          specReplicasPath: .spec.replicas
+          statusReplicasPath: .status.replicas
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: [replicas, size]
+              properties:
+                replicas:
+                  type: integer
+                  default: 2
+                  description: How many widgets the pool keeps running. At least one.
+                size:
+                  type: string
+                  enum: [small, large]
+                  description: The size of each widget.
+                paused:
+                  type: boolean
+                  default: false
+                template:
+                  type: object
+                  properties:
+                    color: { type: string, description: The widgets' color. }
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum: [Pending, Running, Failed, Degraded]
+                replicas: { type: integer }
+                readyReplicas: { type: integer }

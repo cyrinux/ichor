@@ -1,0 +1,318 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "What is the state of my cluster in ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quel est l’état de mon cluster dans ${applicationName}"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuál es el estado de mi clúster en ${applicationName}"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie ist der Zustand meines Clusters in ${applicationName}"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qual è lo stato del mio cluster in ${applicationName}"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Який стан мого кластера в ${applicationName}"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} 中我的集群状态如何" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} でクラスターの状態は？" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Qual é o estado do meu cluster no ${applicationName}" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Какое состояние у моего кластера в ${applicationName}" } }
+      }
+    },
+    "What is the state of ${cluster} in ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quel est l’état de ${cluster} dans ${applicationName}"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuál es el estado de ${cluster} en ${applicationName}"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie ist der Zustand von ${cluster} in ${applicationName}"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qual è lo stato di ${cluster} in ${applicationName}"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Який стан ${cluster} в ${applicationName}"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} 中 ${cluster} 的状态如何" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} で ${cluster} の状態は？" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Qual é o estado de ${cluster} no ${applicationName}" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Какое состояние у ${cluster} в ${applicationName}" } }
+      }
+    },
+    "Open my cluster in ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir mon cluster dans ${applicationName}"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir mi clúster en ${applicationName}"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meinen Cluster in ${applicationName} öffnen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri il mio cluster in ${applicationName}"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити мій кластер у ${applicationName}"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中打开我的集群" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} でクラスターを開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir meu cluster no ${applicationName}" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открыть мой кластер в ${applicationName}" } }
+      }
+    },
+    "Open ${cluster} in ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir ${cluster} dans ${applicationName}"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir ${cluster} en ${applicationName}"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "${cluster} in ${applicationName} öffnen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri ${cluster} in ${applicationName}"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити ${cluster} у ${applicationName}"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中打开 ${cluster}" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} で ${cluster} を開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir ${cluster} no ${applicationName}" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открыть ${cluster} в ${applicationName}" } }
+      }
+    },
+    "Run a checkup in ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancer un bilan dans ${applicationName}"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hacer una revisión en ${applicationName}"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check-up in ${applicationName} starten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegui un controllo in ${applicationName}"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити перевірку в ${applicationName}"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中运行检查" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} でチェックを実行" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Fazer uma verificação no ${applicationName}" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запустить проверку в ${applicationName}" } }
+      }
+    },
+    "Run a checkup of ${cluster} in ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancer un bilan de ${cluster} dans ${applicationName}"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hacer una revisión de ${cluster} en ${applicationName}"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check-up von ${cluster} in ${applicationName} starten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegui un controllo di ${cluster} in ${applicationName}"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити перевірку ${cluster} в ${applicationName}"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中检查 ${cluster}" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} で ${cluster} のチェックを実行" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Fazer uma verificação de ${cluster} no ${applicationName}" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запустить проверку ${cluster} в ${applicationName}" } }
+      }
+    },
+    "Open ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "${applicationName} öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir ${applicationName}"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir ${applicationName}"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri ${applicationName}"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити ${applicationName}"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开 ${applicationName}" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} を開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir ${applicationName}" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открыть ${applicationName}" } }
+      }
+    },
+    "Open a link in ${applicationName}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einen Link in ${applicationName} öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir un enlace en ${applicationName}"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir un lien dans ${applicationName}"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri un link in ${applicationName}"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити посилання в ${applicationName}"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ${applicationName} 中打开链接" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "${applicationName} でリンクを開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir um link no ${applicationName}" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открыть ссылку в ${applicationName}" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

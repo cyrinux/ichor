@@ -19,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -30,8 +29,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.model.NodeResetPlan
 import name.levis.ichor.model.ResetRequest
 import name.levis.ichor.model.ResetWipe
@@ -53,7 +53,7 @@ sealed interface ResetState {
 }
 
 /** The reset plan of [node] and the reset itself (`talosctl reset`). */
-class ResetViewModel(private val talos: TalosRepository, private val node: String) : ViewModel() {
+class ResetViewModel(private val lifecycle: NodeLifecycleRepository, private val node: String) : ViewModel() {
     private val _plan = MutableStateFlow<UiState<NodeResetPlan>>(UiState.Loading)
     val plan: StateFlow<UiState<NodeResetPlan>> = _plan.asStateFlow()
     private val _state = MutableStateFlow<ResetState>(ResetState.Idle)
@@ -61,14 +61,14 @@ class ResetViewModel(private val talos: TalosRepository, private val node: Strin
 
     fun loadPlan() {
         _plan.value = UiState.Loading
-        viewModelScope.launch { _plan.value = uiStateOf { talos.resetPlan(node) } }
+        viewModelScope.launch { _plan.value = uiStateOf { lifecycle.resetPlan(node) } }
     }
 
     fun run(request: ResetRequest) {
         if (_state.value is ResetState.Running) return
         _state.value = ResetState.Running
         viewModelScope.launch {
-            _state.value = runCatching { talos.reset(node, request) }.fold(
+            _state.value = runCatching { lifecycle.reset(node, request) }.fold(
                 onSuccess = { ResetState.Done },
                 onFailure = { ResetState.Failed(it.uiText()) },
             )
@@ -122,11 +122,7 @@ fun ResetConfirmDialog(
                 CircularProgressIndicator(Modifier.padding(end = 8.dp))
                 Text(stringResource(R.string.reset_plan_loading), style = MaterialTheme.typography.bodyMedium)
             }
-            is UiState.Failed -> Text(
-                s.message.resolve(LocalContext.current),
-                color = LocalStatusColors.current.bad,
-                style = MaterialTheme.typography.bodyMedium,
-            )
+            is UiState.Failed -> LoadFailureRow(s.message, vm::loadPlan)
             is UiState.Loaded -> ResetPlanContent(s.data, request) { chosen = it }
         }
     }

@@ -65,7 +65,8 @@ public extension Array where Element == KubeNodeInfo {
     /// in their given order otherwise; at most `max` of them, the rest counted.
     func problemNodes(max: Int = denseMaxProblems) -> KubeProblemNodes {
         let problems = byStatus.filter { $0.status != .ready }.flatMap(\.nodes)
-        return KubeProblemNodes(shown: Array(problems.prefix(Swift.max(max, 0))), more: Swift.max(problems.count - max, 0))
+        return KubeProblemNodes(
+            shown: Array(problems.prefix(Swift.max(max, 0))), more: Swift.max(problems.count - max, 0))
     }
 
     /// The nodes whose name or address (internal or external) contains `query`, matching

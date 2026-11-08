@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +26,7 @@ import name.levis.ichor.model.PressureLevel
 import name.levis.ichor.model.pressureLevel
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.SectionLoaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -34,6 +34,8 @@ import name.levis.ichor.util.formatPercent
 
 /** One read of the node's cgroups for the pressure card: loaded with the Resources tab. */
 class PressureViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<CgroupReport>() {
+    // Read only where the role can read cgroups.
+    override val loadsOnOpen = false
     override suspend fun fetch() = talos.cgroups(node)
 }
 
@@ -43,23 +45,20 @@ class PressureViewModel(private val talos: TalosRepository, private val node: St
  * limit. The per-cgroup detail lives in the Cgroups tab ([onDetails]).
  */
 @Composable
-fun PressureCard(state: UiState<CgroupReport>, onDetails: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+fun PressureCard(state: UiState<CgroupReport>, onDetails: () -> Unit, onRetry: () -> Unit) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) { SectionTitle(stringResource(R.string.node_section_pressure)) }
-                TextButton(onClick = onDetails) { Text(stringResource(R.string.node_pressure_details)) }
+                IchorTextButton(onClick = onDetails) { Text(stringResource(R.string.node_pressure_details)) }
             }
             MutedText(stringResource(R.string.node_pressure_caption))
-            when (state) {
-                UiState.Loading -> Text("…", style = MaterialTheme.typography.bodyMedium)
-                is UiState.Failed -> Text(
-                    stringResource(R.string.node_pressure_unavailable, state.message.asString()),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = LocalStatusColors.current.bad,
-                )
-                is UiState.Loaded -> PressureContent(state.data)
-            }
+            SectionLoaded(
+                state,
+                onRetry,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                loading = { Text("…", style = MaterialTheme.typography.bodyMedium) },
+            ) { PressureContent(it) }
         }
     }
 }

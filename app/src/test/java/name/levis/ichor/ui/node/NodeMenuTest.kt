@@ -47,6 +47,28 @@ class NodeMenuTest {
     }
 
     @Test
+    fun railIndicesFollowTheItemsNodeSectionsEmits() {
+        // After the header (0): Status title + tiles, Inspect title + tiles, then one row per entry.
+        val groups = nodeMenuGroups(admin)
+        val jumps = nodeJumpSections(groups, power = true)
+        var index = 1
+        val expected = groups.map { (group, entries) ->
+            NodeJump(group.name, group.title, index).also {
+                index += 1 + if (group == NodeMenuGroup.STATUS || group == NodeMenuGroup.INSPECT) 1 else entries.size
+            }
+        } + NodeJump("power", R.string.node_menu_group_power, index)
+        assertEquals(expected, jumps)
+        assertEquals(listOf(1, 3, 5), jumps.take(3).map { it.index })
+    }
+
+    @Test
+    fun aReaderGetsNoPowerDot() {
+        val jumps = nodeJumpSections(nodeMenuGroups(null), power = false)
+        assertEquals(listOf(NodeMenuGroup.STATUS.name, NodeMenuGroup.INSPECT.name), jumps.map { it.key })
+        assertEquals(listOf(1, 3), jumps.map { it.index })
+    }
+
+    @Test
     fun onlyStatusEntriesOpenATab() {
         NodeMenuEntry.entries.forEach { entry ->
             if (entry.group == NodeMenuGroup.STATUS) assertNotNull(entry.name, entry.tab) else assertNull(entry.name, entry.tab)
@@ -66,5 +88,28 @@ class NodeMenuTest {
         assertEquals(R.string.node_menu_cordon, NodeMenuEntry.CORDON.label(cordoned = null, kubePods = false))
         assertEquals(R.string.apps_stat_containers, NodeMenuEntry.TAB_CONTAINERS.label(cordoned = null, kubePods = true))
         assertEquals(R.string.node_tab_pods, NodeMenuEntry.TAB_CONTAINERS.label(cordoned = null, kubePods = false))
+    }
+
+    @Test
+    fun onlyTheKubernetesEntriesAndSavedCapturesSkipTheTalosApi() {
+        val byTransport = NodeMenuEntry.entries.groupBy { it.transport }
+        assertEquals(
+            listOf(
+                NodeMenuEntry.TAB_KUBE_PODS, NodeMenuEntry.MAINTENANCE, NodeMenuEntry.DRAIN,
+                NodeMenuEntry.CORDON, NodeMenuEntry.TAINTS_LABELS,
+            ),
+            byTransport[NodeTransport.KUBE],
+        )
+        assertEquals(listOf(NodeMenuEntry.CAPTURES), byTransport[NodeTransport.LOCAL])
+        assertEquals(NodeMenuEntry.entries.size - 6, byTransport[NodeTransport.TALOS]?.size)
+    }
+
+    @Test
+    fun theWakeRowAtTheEndOfOperatePushesPowerDownByOne() {
+        val groups = nodeMenuGroups(admin)
+        val without = nodeJumpSections(groups, power = true)
+        val with = nodeJumpSections(groups, power = true, wake = true)
+        assertEquals(without.dropLast(1), with.dropLast(1))
+        assertEquals(without.last().index + 1, with.last().index)
     }
 }

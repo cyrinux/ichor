@@ -14,7 +14,8 @@ extension TalosClient {
     /// The metric names `source` knows, for the model to use metrics that exist.
     func promMetricNames(_ source: PromSource) async throws -> [String] {
         let sourceJSON = try TalosJSON.encode(source)
-        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        return try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoPromMetricNames(config, context, kubeServer, sourceJSON, $0)
         }
     }
@@ -25,8 +26,10 @@ extension TalosClient {
         let namesJSON = try TalosJSON.encode(metricNames)
         let edited = current.flatMap { $0.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
         let panelJSON = try edited.map { try promChatPanelJSON($0) } ?? ""
-        let session: PromChatSession? = try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoNewPromChat(config, context, kubeServer, sourceJSON, namesJSON, panelJSON, $0).map(PromChatSession.init)
+        let session: PromChatSession? = try await Self.run {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoNewPromChat(config, context, kubeServer, sourceJSON, namesJSON, panelJSON, $0).map(
+                PromChatSession.init)
         }
         guard let session else { throw TalosError(message: "NewPromChat returned no chat") }
         return session
@@ -34,17 +37,31 @@ extension TalosClient {
 }
 
 /// A conversation Go holds in memory: the turns so far, the source and its metric names.
-final class PromChatSession: @unchecked Sendable {
-    private let go: IchorgoPromChat
+final class PromChatSession: Sendable {
+    private let go: GoObject<IchorgoPromChat>
 
     fileprivate init(_ go: IchorgoPromChat) {
-        self.go = go
+        self.go = GoObject(go)
     }
 
     /// Sends `message` with the conversation so far and streams the answer; cancelling the
     /// consuming task stops waiting for it. An empty model means the provider's default, an
     /// empty baseURL its own API.
-    func ask(provider: String, settings: AIProviderSettings, language: String, message: String) -> AsyncStream<PromChatEvent> {
+    func ask(provider: String, settings: AIProviderSettings, language: String, message: String) -> AsyncStream<
+        PromChatEvent
+    > {
+        // The cluster's Ollama: its forward opens first.
+        guard provider != ollamaClusterProvider else {
+            return askThroughForward(settings, failed: { .done(panel: nil, error: $0) }) { [self] resolved in
+                askNow(provider: provider, settings: resolved, language: language, message: message)
+            }
+        }
+        return askNow(provider: provider, settings: settings, language: language, message: message)
+    }
+
+    private func askNow(provider: String, settings: AIProviderSettings, language: String, message: String)
+        -> AsyncStream<PromChatEvent>
+    {
         TalosClient.bridged { continuation in
             let bridge = PromChatBridge(
                 answer: { continuation.yield(.answer($0)) },
@@ -53,19 +70,20 @@ final class PromChatSession: @unchecked Sendable {
                     continuation.finish()
                 }
             )
-            let run = go.ask(provider, apiKey: settings.apiKey, model: settings.model, baseURL: settings.baseURL,
-                             language: language, message: message, listener: bridge)
+            let run = go.value.ask(
+                provider, apiKey: settings.apiKey, model: settings.model, baseURL: settings.baseURL,
+                language: language, message: message, listener: bridge)
             return BridgedRun(bridge) { run?.cancel() }
         }
     }
 
     /// Forgets the conversation; the source and its metric names stay.
     func reset() {
-        go.reset()
+        go.value.reset()
     }
 }
 
-private final class PromChatBridge: NSObject, IchorgoPromChatListenerProtocol, @unchecked Sendable {
+private final class PromChatBridge: NSObject, IchorgoPromChatListenerProtocol, Sendable {
     private let answer: @Sendable (String) -> Void
     private let done: @Sendable (PanelSuggestion?, String?) -> Void
 

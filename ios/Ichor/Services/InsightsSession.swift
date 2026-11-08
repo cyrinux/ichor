@@ -28,7 +28,9 @@ final class InsightsSession {
         do {
             baselineJSON = try store.read("baseline")
             if let baselineJSON { baselineAt = try TalosJSON.decode(DriftSnapshot.self, from: baselineJSON).at }
-            if let raw = try store.read("incident") { document = try TalosJSON.decode(IncidentDocument.self, from: raw) }
+            if let raw = try store.read("incident") {
+                document = try TalosJSON.decode(IncidentDocument.self, from: raw)
+            }
         } catch { self.error = error.localizedDescription }
         await refresh(client: client)
     }
@@ -46,8 +48,7 @@ final class InsightsSession {
             snapshotJSON = raw
             snapshot = value
             changes = differences
-        } catch is CancellationError { }
-        catch { self.error = error.localizedDescription }
+        } catch is CancellationError {} catch { self.error = error.localizedDescription }
     }
     func saveBaseline() {
         guard let raw = snapshotJSON else { return }
@@ -68,8 +69,7 @@ final class InsightsSession {
     }
     func deleteRecording() {
         guard !recording else { return }
-        do { try store.delete("incident"); document = nil }
-        catch { self.error = error.localizedDescription }
+        do { try store.delete("incident"); document = nil } catch { self.error = error.localizedDescription }
     }
     func stop() { recordingTask?.cancel() }
     func start(client: TalosClient) {
@@ -92,7 +92,10 @@ final class InsightsSession {
                         if let problem {
                             error = problem
                             let now = Date().epochMillis
-                            pending.append(NodeEvent(node: "", eventId: "stream-\(now)", at: now, kind: "recording", subject: "events", action: "unavailable", message: problem, severity: "warning"))
+                            pending.append(
+                                NodeEvent(
+                                    node: "", eventId: "stream-\(now)", at: now, kind: "recording", subject: "events",
+                                    action: "unavailable", message: problem, severity: "warning"))
                         }
                     }
                 }
@@ -110,12 +113,10 @@ final class InsightsSession {
                     try await checkpoint(raw)
                     try await Task.sleep(for: .seconds(5))
                 }
-            } catch is CancellationError { }
-            catch { self.error = error.localizedDescription }
+            } catch is CancellationError {} catch { self.error = error.localizedDescription }
             eventTask.cancel()
             if let lastObservation {
-                do { try await checkpoint(lastObservation) }
-                catch { self.error = error.localizedDescription }
+                do { try await checkpoint(lastObservation) } catch { self.error = error.localizedDescription }
             }
             recording = false
         }
@@ -125,7 +126,10 @@ final class InsightsSession {
         pending = []
         if pendingLost > 0 {
             let now = Date().epochMillis
-            events.append(NodeEvent(node: "", eventId: "overflow-\(now)", at: now, kind: "recording", subject: "events", action: "overflow", message: "{\"discarded\":\(pendingLost)}", severity: "warning"))
+            events.append(
+                NodeEvent(
+                    node: "", eventId: "overflow-\(now)", at: now, kind: "recording", subject: "events",
+                    action: "overflow", message: "{\"discarded\":\(pendingLost)}", severity: "warning"))
             pendingLost = 0
         }
         let raw = try await TalosClient.updateIncident(previous: documentJSON, observation: observation, events: events)

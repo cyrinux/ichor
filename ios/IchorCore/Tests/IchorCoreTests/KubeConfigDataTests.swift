@@ -4,13 +4,13 @@ import XCTest
 final class KubeConfigDataTests: XCTestCase {
     // A KubeConfigData answer (go/ichorgo/kube_configdata.go).
     private let json = #"""
-    {"kind":"Secret","type":"kubernetes.io/tls",
-     "keys":[{"key":"tls.crt","size":1200,"hint":"pem","cert":{"subject":"CN=shop.example.com","issuer":"CN=ca.example.com",
-              "notBefore":1000,"notAfter":2000000,"dnsNames":["shop.example.com"],"count":2}},
-             {"key":"token","size":16,"hint":"text"}],
-     "registries":[{"registry":"registry.example.com","username":"shopbot"}],
-     "usedBy":[{"pod":"web-1","via":["env","volume"]}],"future":"ignored"}
-    """#
+        {"kind":"Secret","type":"kubernetes.io/tls",
+         "keys":[{"key":"tls.crt","size":1200,"hint":"pem","cert":{"subject":"CN=shop.example.com","issuer":"CN=ca.example.com",
+                  "notBefore":1000,"notAfter":2000000,"dnsNames":["shop.example.com"],"count":2}},
+                 {"key":"token","size":16,"hint":"text"}],
+         "registries":[{"registry":"registry.example.com","username":"shopbot"}],
+         "usedBy":[{"pod":"web-1","via":["env","volume"]}],"future":"ignored"}
+        """#
 
     private func data() throws -> KubeConfigData { try TalosJSON.decode(KubeConfigData.self, from: json) }
 

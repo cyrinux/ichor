@@ -17,12 +17,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -53,6 +53,7 @@ import name.levis.ichor.model.CardLayout
 import name.levis.ichor.model.HomeCard
 import name.levis.ichor.model.KubeHomeCard
 import name.levis.ichor.model.OverviewCard
+import name.levis.ichor.ui.components.ActionGroups
 import name.levis.ichor.ui.components.ActionLook
 import name.levis.ichor.ui.components.BarDragState
 import name.levis.ichor.ui.components.MutedText
@@ -106,6 +107,7 @@ class CardLook<C>(val label: @Composable (C) -> String, val description: @Compos
 @Composable
 fun overviewCardLabel(card: OverviewCard): String = stringResource(
     when (card) {
+        OverviewCard.PINNED -> R.string.overview_card_pinned
         OverviewCard.TALOS_UPDATE -> R.string.overview_card_talos_update
         OverviewCard.SUMMARY -> R.string.overview_card_summary
         OverviewCard.APPS -> R.string.apps_title
@@ -115,6 +117,7 @@ fun overviewCardLabel(card: OverviewCard): String = stringResource(
         OverviewCard.NODES -> R.string.overview_stat_nodes
         OverviewCard.TIME_DRIFT -> R.string.time_drift_title
         OverviewCard.ALERTS -> R.string.alerts_title
+        OverviewCard.TOOLS -> R.string.kube_home_card_tools
     },
 )
 
@@ -122,6 +125,7 @@ fun overviewCardLabel(card: OverviewCard): String = stringResource(
 @Composable
 fun overviewCardDescription(card: OverviewCard): String = stringResource(
     when (card) {
+        OverviewCard.PINNED -> R.string.overview_card_desc_pinned
         OverviewCard.TALOS_UPDATE -> R.string.overview_card_desc_talos_update
         OverviewCard.SUMMARY -> R.string.overview_card_desc_summary
         OverviewCard.APPS -> R.string.overview_card_desc_apps
@@ -131,6 +135,7 @@ fun overviewCardDescription(card: OverviewCard): String = stringResource(
         OverviewCard.NODES -> R.string.overview_card_desc_nodes
         OverviewCard.TIME_DRIFT -> R.string.overview_card_desc_time_drift
         OverviewCard.ALERTS -> R.string.overview_card_desc_alerts
+        OverviewCard.TOOLS -> R.string.kube_home_card_desc_tools
     },
 )
 
@@ -142,7 +147,9 @@ val kubeHomeCardLook = CardLook<KubeHomeCard>(
     label = {
         stringResource(
             when (it) {
+                KubeHomeCard.PINNED -> R.string.overview_card_pinned
                 KubeHomeCard.SUMMARY -> R.string.overview_card_summary
+                KubeHomeCard.APPS -> R.string.apps_title
                 KubeHomeCard.NODES -> R.string.overview_stat_nodes
                 KubeHomeCard.TOOLS -> R.string.kube_home_card_tools
                 KubeHomeCard.DATA_SERVICES -> R.string.data_services_title
@@ -155,7 +162,9 @@ val kubeHomeCardLook = CardLook<KubeHomeCard>(
     description = {
         stringResource(
             when (it) {
+                KubeHomeCard.PINNED -> R.string.overview_card_desc_pinned
                 KubeHomeCard.SUMMARY -> R.string.kube_home_card_desc_summary
+                KubeHomeCard.APPS -> R.string.overview_card_desc_apps
                 KubeHomeCard.NODES -> R.string.kube_home_card_desc_nodes
                 KubeHomeCard.TOOLS -> R.string.kube_home_card_desc_tools
                 KubeHomeCard.DATA_SERVICES -> R.string.overview_card_desc_data_services
@@ -180,6 +189,8 @@ fun <C, A : Enum<A>> HomeEditor(
     look: CardLook<C>,
     bar: ActionBar<A>,
     barLook: ActionLook<A>,
+    /** The menu's sections: each menu row says which it is in. */
+    barGroups: ActionGroups<A>? = null,
     onBarChange: (ActionBar<A>) -> Unit,
     modifier: Modifier = Modifier,
     absent: Set<C> = emptySet(),
@@ -223,7 +234,7 @@ fun <C, A : Enum<A>> HomeEditor(
         verticalArrangement = Arrangement.spacedBy(ROW_SPACING),
         modifier = modifier.fillMaxSize(),
     ) {
-        actionBarItems(bar, barLook, { currentBar }, { changeBar(it) }, barDrag, spacing)
+        actionBarItems(bar, barLook, { currentBar }, { changeBar(it) }, barDrag, spacing, barGroups)
         item(key = "hint") {
             SectionTitle(stringResource(R.string.overview_edit_cards), stringResource(R.string.overview_edit_hint), Modifier.padding(top = 16.dp))
         }
@@ -276,7 +287,7 @@ fun <C, A : Enum<A>> HomeEditor(
         }
         if (!layout.isDefault) item(key = "reset") {
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth().animateItem()) {
-                TextButton(onClick = { change(layout.kind.default) }) { Text(stringResource(R.string.overview_edit_reset)) }
+                IchorTextButton(onClick = { change(layout.kind.default) }) { Text(stringResource(R.string.overview_edit_reset)) }
             }
         }
     }
@@ -291,7 +302,7 @@ private fun <C> ShownCardRow(
     modifier: Modifier,
     lifted: Boolean,
 ) where C : Enum<C>, C : HomeCard {
-    Card(
+    IchorCard(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = if (lifted) 8.dp else 0.dp),
     ) {
@@ -310,7 +321,7 @@ private fun <C> ShownCardRow(
 
 @Composable
 private fun <C> HiddenCardRow(card: C, look: CardLook<C>, onShow: () -> Unit, modifier: Modifier) where C : Enum<C>, C : HomeCard {
-    Card(modifier = modifier.fillMaxWidth()) {
+    IchorCard(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 16.dp, end = 4.dp)) {
             CardName(card, look, Modifier.weight(1f).alpha(0.6f))
             TooltipIconButton(Icons.Outlined.Add, stringResource(R.string.overview_edit_show), onClick = onShow)

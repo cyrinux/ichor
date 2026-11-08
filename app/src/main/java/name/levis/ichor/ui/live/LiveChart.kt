@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +39,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlin.math.max
+import name.levis.ichor.ui.components.rememberChartHeight
 import name.levis.ichor.ui.components.MutedText
 
 /** One line of a chart. Text never uses the series color; the legend dot carries identity. */
@@ -65,7 +66,7 @@ fun LiveChart(
     val index = selected?.coerceIn(0, count - 1)
     val shownAt = index ?: (count - 1)
 
-    Card(modifier.fillMaxWidth()) {
+    IchorCard(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
@@ -105,7 +106,7 @@ fun LiveChart(
                 Canvas(
                     Modifier
                         .fillMaxWidth()
-                        .height(120.dp)
+                        .height(rememberChartHeight(120.dp))
                         .semantics { contentDescription = chartDescription }
                         .pointerInput(count) {
                             detectTapGestures { offset -> selected = indexAt(offset.x, size.width.toFloat(), count, maxPoints) }

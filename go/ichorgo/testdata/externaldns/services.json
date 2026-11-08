@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "metadata": {"name": "shop", "namespace": "demo",
+                   "annotations": {"external-dns.alpha.kubernetes.io/hostname": "shop.example.com",
+                                   "external-dns.alpha.kubernetes.io/ttl": "60"}},
+      "spec": {"type": "LoadBalancer", "clusterIP": "10.96.0.20"},
+      "status": {"loadBalancer": {"ingress": [{"ip": "203.0.113.20"}]}}
+    },
+    {
+      "metadata": {"name": "internal", "namespace": "demo",
+                   "annotations": {"external-dns.alpha.kubernetes.io/internal-hostname": "internal.example.com"}},
+      "spec": {"type": "LoadBalancer", "clusterIP": "10.96.0.21", "externalIPs": ["203.0.113.80"]},
+      "status": {"loadBalancer": {"ingress": []}}
+    },
+    {
+      "metadata": {"name": "nohost", "namespace": "demo"},
+      "spec": {"type": "ClusterIP", "clusterIP": "10.96.0.22"},
+      "status": {"loadBalancer": {"ingress": []}}
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: demo-widgets
+name: Demo Widgets
+detect:
+  - group: widgets.example.com
+resources:
+  widget:
+    group: widgets.example.com
+    version: v1
+    resource: widgets
+    kind: Widget
+    scope: Namespaced
+    colour: blue
+cards:
+  summary:
+    title: dataServices.total
+    subtitle: nope
+samples:
+  widget:
+    - { metadata: { name: one, namespace: demo-shop } }

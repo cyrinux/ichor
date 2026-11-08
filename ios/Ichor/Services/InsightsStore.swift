@@ -4,8 +4,8 @@ import CryptoKit
 extension AppModel {
     /// Keeps what is saved while masked apart from the real data: "real", or a hash of the words.
     var privacyStorageKey: String {
-        guard privacyMask else { return "real" }
-        return SHA256.hash(data: Data(privacyWords.utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
+        guard settings.privacyMask else { return "real" }
+        return SHA256.hash(data: Data(settings.privacyWords.utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
     }
 }
 
@@ -14,7 +14,9 @@ extension AppModel {
 struct InsightsStore: Sendable {
     let scope: String
     private var sealed: SealedFile { SealedFile(account: "insights-key-\(scope)") }
-    private func url(_ kind: String) throws -> URL { try AppSupport.excludedFolder("insights").appendingPathComponent("\(scope)-\(kind)") }
+    private func url(_ kind: String) throws -> URL {
+        try AppSupport.excludedFolder("insights").appendingPathComponent("\(scope)-\(kind)")
+    }
     func read(_ kind: String) throws -> String? {
         let file = try url(kind)
         guard FileManager.default.fileExists(atPath: file.path) else { return nil }

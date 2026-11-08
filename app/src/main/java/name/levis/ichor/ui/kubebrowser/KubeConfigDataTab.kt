@@ -24,7 +24,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -227,7 +227,7 @@ private fun ValueBlock(k: ConfigKey, onCopy: (ConfigKey) -> Unit) {
                 fontFamily = FontFamily.Monospace,
             )
         }
-        TextButton(onClick = { onCopy(k) }) {
+        IchorTextButton(onClick = { onCopy(k) }) {
             Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.padding(end = 6.dp).size(18.dp))
             Text(stringResource(R.string.kb_data_copy_value))
         }

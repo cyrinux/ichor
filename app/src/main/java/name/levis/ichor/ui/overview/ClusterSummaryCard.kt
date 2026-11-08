@@ -1,41 +1,54 @@
 package name.levis.ichor.ui.overview
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Memory
-import androidx.compose.material.icons.outlined.SdCard
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.ViewInAr
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ClusterStatus
 import name.levis.ichor.model.ClusterSummary
 import name.levis.ichor.model.ClusterUsage
+import name.levis.ichor.model.ContextSummary
+import name.levis.ichor.model.NodesAnswered
+import name.levis.ichor.model.clusterLogo
 import name.levis.ichor.model.displayVersion
+import name.levis.ichor.ui.components.BundledLogo
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.StatTile
+import name.levis.ichor.ui.components.StatTileRow
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.UsageBar
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -45,86 +58,137 @@ import kotlin.math.roundToInt
 /** Unknown capacity (older core, or no node said): a dash rather than a misleading 0. */
 private const val UNKNOWN = "—"
 
+internal const val SUMMARY_SEPARATOR = "  ·  "
+
 /**
  * The cluster at a glance, above the nodes: its name and overall state, how many nodes on
  * which Talos version, and the capacity of the nodes that answered. With [live] usage, CPU
- * and memory follow it; without, they show the overview's snapshot. Tapping it opens the
- * cluster insights, which its footer names; the footer's Capacity link opens [onCapacity].
+ * and memory follow it; without, they show the overview's snapshot. The card itself does not
+ * open anything: its footer's two labelled buttons open the cluster insights ([onInsights])
+ * and the Capacity screen ([onCapacity]); a KubeSpan tunnel down is a row of its own that opens
+ * the map ([onKubeSpan]).
  */
 @Composable
 fun ClusterSummaryCard(
     name: String,
     summary: ClusterSummary,
     live: ClusterLiveState?,
+    /** While the overview streams in: how many nodes answered, shown instead of the health badge. */
+    answered: NodesAnswered?,
     onInsights: () -> Unit,
     onCapacity: () -> Unit,
+    onKubeSpan: () -> Unit,
+    /** The active context, for the provider logo before the name; none: no logo. */
+    context: ContextSummary? = null,
     modifier: Modifier = Modifier,
 ) {
-    Card(onClick = onInsights, modifier = modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
+    val troubles = troubles(summary)
+    IchorCard(modifier = modifier.fillMaxWidth()) {
+        // A fixed box, so the name does not shift once the logo has loaded.
+        SummaryIdentityBand(name, leading = context?.let { { BundledLogo(clusterLogo(it), Modifier.padding(end = 8.dp).size(24.dp)) } })
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    MutedText(headline(summary))
-                }
-                ClusterStatusPill(summary.status)
-            }
-            Breakdown(summary)
-            HorizontalDivider(Modifier.padding(vertical = 12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Stat(
-                    Icons.Outlined.ViewInAr,
-                    "${summary.ready}/${summary.total}",
-                    stringResource(R.string.overview_stat_nodes),
-                    Modifier.weight(1f),
+                // One trouble reads in the headline; two get their own line below it.
+                Text(
+                    headline(summary, troubles.singleOrNull()),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
                 )
-                CpuStat(summary.cpuCount, live, Modifier.weight(1f))
-                // Live memory only once it covers every node the overview reached, never fewer.
-                val reached = summary.total - summary.unreachable
-                MemoryStat(summary, live?.usage?.takeIf { it.nodes >= reached }, Modifier.weight(1f))
+                if (answered == null) ClusterStatusPill(summary.status)
             }
-            Footer(onCapacity)
+            if (answered != null) AnsweredProgress(answered) else if (troubles.size > 1) Breakdown(troubles)
+            if (summary.meshBroken > 0) TunnelsDown(summary, onKubeSpan)
+            HorizontalDivider(Modifier.padding(vertical = 12.dp))
+            // Live memory only once it covers every node the overview reached, never fewer.
+            val reached = summary.total - summary.unreachable
+            StatTileRow(
+                Modifier,
+                { StatTile(Icons.Outlined.ViewInAr, "${summary.ready}/${summary.total}", stringResource(R.string.overview_stat_nodes), it, iconTile = true) },
+                { CpuStat(summary.cpuCount, live, it) },
+                { MemoryStat(summary, live?.usage?.takeIf { usage -> usage.nodes >= reached }, it) },
+            )
+            // A large cluster between full samples: the totals still cover every node's last counters.
+            if (live?.partial == true && live.usage != null) {
+                MutedText(stringResource(R.string.live_partial_nodes, live.sampled, live.total), Modifier.padding(top = 8.dp))
+            }
+            Footer(onInsights, onCapacity)
         }
+    }
+}
+
+/** The card's two actions, each a labelled button so TalkBack reads them by name. */
+@Composable
+private fun Footer(onInsights: () -> Unit, onCapacity: () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        SummaryFooterButton(Icons.Outlined.Insights, stringResource(R.string.overview_action_insights), onInsights)
+        SummaryFooterButton(Icons.Outlined.Speed, stringResource(R.string.capacity_title), onCapacity)
+    }
+}
+
+@Composable
+internal fun SummaryFooterButton(icon: ImageVector, label: String, onClick: () -> Unit) {
+    IchorTextButton(onClick = onClick, modifier = Modifier.heightIn(min = 48.dp)) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+        Text(label, modifier = Modifier.padding(start = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
 /**
- * The way into the cluster insights, so the card reads as tappable, and a shortcut to the
- * Capacity screen beside it (its own button, so it does not open the insights).
+ * "7 of 8 nodes answered" over a thin bar (as the paged lists show their pages), or the count
+ * alone over a running bar when the context does not say how many nodes it has.
  */
 @Composable
-private fun Footer(onCapacity: () -> Unit) {
-    val color = MaterialTheme.colorScheme.primary
-    Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Outlined.Insights, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
-        Text(
-            stringResource(R.string.insights_title),
-            style = MaterialTheme.typography.labelLarge,
-            color = color,
-            modifier = Modifier.weight(1f, fill = false).padding(start = 8.dp),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+private fun AnsweredProgress(answered: NodesAnswered) {
+    val total = answered.total
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        MutedText(
+            if (total != null) stringResource(R.string.overview_nodes_answered, answered.answered, total)
+            else stringResource(R.string.overview_nodes_answered_unknown, answered.answered),
         )
-        Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = color)
-        Spacer(Modifier.weight(1f))
-        TextButton(onClick = onCapacity) {
-            Icon(Icons.Outlined.Speed, contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
-            Text(stringResource(R.string.capacity_title), maxLines = 1)
+        if (total != null) {
+            LinearProgressIndicator(progress = { answered.answered.toFloat() / total }, modifier = Modifier.fillMaxWidth())
+        } else {
+            LinearProgressIndicator(Modifier.fillMaxWidth())
         }
     }
 }
 
-/** "3 nodes · v1.11.2", or "v1.10.4 – v1.11.2" while the nodes run different versions. */
+/** A count of nodes in trouble ("1 unreachable") and its status colour. */
+private data class Trouble(val text: String, val color: Color)
+
+/** The nodes not ready, then those unreachable, each when there are any. */
 @Composable
-private fun headline(summary: ClusterSummary): String {
+private fun troubles(summary: ClusterSummary): List<Trouble> {
+    val colors = LocalStatusColors.current
+    return listOfNotNull(
+        summary.notReady.takeIf { it > 0 }
+            ?.let { Trouble("$it ${pluralStringResource(R.plurals.overview_summary_not_ready, it)}", colors.warn) },
+        summary.unreachable.takeIf { it > 0 }
+            ?.let { Trouble("$it ${pluralStringResource(R.plurals.overview_summary_unreachable, it)}", colors.bad) },
+    )
+}
+
+/**
+ * "8 nodes · 1 unreachable · v1.14.1 – v1.14.2": the node count, [trouble] in its colour when
+ * it is the only one, and the version, or the span while the nodes run different versions.
+ */
+@Composable
+private fun headline(summary: ClusterSummary, trouble: Trouble?): AnnotatedString {
     val versions = summary.versions.map(::displayVersion)
     val version = if (versions.size > 1) "${versions.first()} – ${versions.last()}" else versions.firstOrNull()
-    return listOfNotNull(pluralStringResource(R.plurals.overview_summary_nodes, summary.total, summary.total), version)
-        .joinToString("  ·  ")
+    return buildAnnotatedString {
+        append(pluralStringResource(R.plurals.overview_summary_nodes, summary.total, summary.total))
+        if (trouble != null) {
+            append(SUMMARY_SEPARATOR)
+            withStyle(SpanStyle(color = trouble.color)) { append(trouble.text) }
+        }
+        if (version != null) append(SUMMARY_SEPARATOR + version)
+    }
 }
 
 @Composable
-private fun ClusterStatusPill(status: ClusterStatus) {
+internal fun ClusterStatusPill(status: ClusterStatus) {
     val colors = LocalStatusColors.current
     when (status) {
         ClusterStatus.HEALTHY -> StatusPill(stringResource(R.string.overview_status_healthy), colors.ok)
@@ -133,22 +197,34 @@ private fun ClusterStatusPill(status: ClusterStatus) {
     }
 }
 
-/** Which nodes are in trouble, each count in its own status colour; nothing when all are ready. */
+/** Nodes both not ready and unreachable: each count in its own status colour, on its own line. */
 @Composable
-private fun Breakdown(summary: ClusterSummary) {
-    val colors = LocalStatusColors.current
-    val parts = listOfNotNull(
-        summary.notReady.takeIf { it > 0 }
-            ?.let { "$it ${pluralStringResource(R.plurals.overview_summary_not_ready, it)}" to colors.warn },
-        summary.unreachable.takeIf { it > 0 }
-            ?.let { "$it ${pluralStringResource(R.plurals.overview_summary_unreachable, it)}" to colors.bad },
-    )
-    if (parts.isEmpty()) return
+private fun Breakdown(troubles: List<Trouble>) {
     Row(Modifier.padding(top = 6.dp)) {
-        parts.forEachIndexed { i, (text, color) ->
-            if (i > 0) MutedText("  ·  ")
+        troubles.forEachIndexed { i, (text, color) ->
+            if (i > 0) MutedText(SUMMARY_SEPARATOR)
             Text(text, style = MaterialTheme.typography.bodySmall, color = color)
         }
+    }
+}
+
+/** The KubeSpan tunnels down and between which nodes: the way to the map that shows them. */
+@Composable
+private fun TunnelsDown(summary: ClusterSummary, onClick: () -> Unit) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = 6.dp)
+            .clickable(role = Role.Button, onClickLabel = stringResource(R.string.health_mesh_open_map), onClick = onClick)
+            .heightIn(min = 48.dp),
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            pluralStringResource(R.plurals.overview_summary_tunnels_down, summary.meshBroken, summary.meshBroken),
+            style = MaterialTheme.typography.bodyMedium,
+            color = LocalStatusColors.current.bad,
+        )
+        if (summary.meshPairs.isNotEmpty()) MutedText(summary.meshPairs.joinToString(", "))
     }
 }
 
@@ -157,18 +233,17 @@ private fun Breakdown(summary: ClusterSummary) {
 private fun CpuStat(cpuCount: Int, live: ClusterLiveState?, modifier: Modifier) {
     val used = live?.usage?.cpuFraction
     val cores = cpuCount.takeIf { it > 0 }
-    Column(modifier) {
-        if (used == null) {
-            Stat(Icons.Outlined.Memory, cores?.toString() ?: UNKNOWN, stringResource(R.string.overview_stat_cpu))
-        } else {
-            Stat(
-                Icons.Outlined.Memory,
-                stringResource(R.string.overview_stat_percent, (used * 100).roundToInt()),
-                cores?.let { pluralStringResource(R.plurals.overview_stat_cpu_of_cores, it, it) }
-                    ?: stringResource(R.string.overview_stat_cpu_used),
-            )
-            CpuSparkline(live.cpuHistory, Modifier.padding(top = 4.dp))
-        }
+    if (used == null) {
+        StatTile(Icons.Outlined.Memory, cores?.toString() ?: UNKNOWN, stringResource(R.string.overview_stat_cpu), modifier, iconTile = true)
+    } else {
+        StatTile(
+            Icons.Outlined.Memory,
+            stringResource(R.string.overview_stat_percent, (used * 100).roundToInt()),
+            cores?.let { pluralStringResource(R.plurals.overview_stat_cpu_of_cores, it, it) }
+                ?: stringResource(R.string.overview_stat_cpu_used),
+            modifier,
+            iconTile = true,
+        ) { CpuSparkline(live.cpuHistory, Modifier.padding(top = 4.dp)) }
     }
 }
 
@@ -178,30 +253,13 @@ private fun MemoryStat(summary: ClusterSummary, live: ClusterUsage?, modifier: M
     val used = live?.memUsedFraction ?: summary.memUsedFraction
     // Glide between samples rather than jump.
     val shown by animateFloatAsState(used ?: 0f, label = "memory")
-    Column(modifier) {
-        Stat(
-            Icons.Outlined.SdCard,
-            if (total > 0) formatBytes(total) else UNKNOWN,
-            used?.let { stringResource(R.string.overview_stat_memory_used, (it * 100).roundToInt()) }
-                ?: stringResource(R.string.overview_stat_memory),
-        )
-        if (used != null) UsageBar(shown, Modifier.padding(top = 6.dp))
-    }
-}
-
-@Composable
-private fun Stat(icon: ImageVector, value: String, label: String, modifier: Modifier = Modifier) {
-    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(end = 8.dp).size(20.dp),
-        )
-        // Narrow phones and long translations wrap rather than cut the label short.
-        Column {
-            Text(value, style = MaterialTheme.typography.titleMedium)
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
+    StatTile(
+        ImageVector.vectorResource(R.drawable.ic_memory_alt),
+        if (total > 0) formatBytes(total) else UNKNOWN,
+        used?.let { stringResource(R.string.overview_stat_memory_used, (it * 100).roundToInt()) }
+            ?: stringResource(R.string.overview_stat_memory),
+        modifier,
+        iconTile = true,
+        meter = used?.let { { UsageBar(shown, Modifier.padding(top = 6.dp)) } },
+    )
 }

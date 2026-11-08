@@ -39,6 +39,17 @@ func (l maskedSignInListener) OnDone(errMessage string) {
 	l.SignInListener.OnDone(privacy.maskPlain(errMessage))
 }
 
+func finishSignIn(listener SignInListener, err error) {
+	if errors.Is(err, context.Canceled) {
+		err = nil
+	}
+	if err != nil {
+		listener.OnDone(err.Error())
+	} else {
+		listener.OnDone("")
+	}
+}
+
 // StartKubeSignIn signs the named stored context in through its browser or device-code
 // method, then stores the result (see AuthStore).
 func StartKubeSignIn(storedYAML, contextName string, listener SignInListener) *SignInRun {
@@ -52,18 +63,10 @@ func StartKubeSignIn(storedYAML, contextName string, listener SignInListener) *S
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(storedYAML, contextName)()
 
 		err := runSignIn(ctx, storedYAML, contextName, listener, run.callbacks)
-		if errors.Is(err, context.Canceled) {
-			err = nil
-		}
-
-		msg := ""
-		if err != nil {
-			msg = err.Error()
-		}
-
-		listener.OnDone(msg)
+		finishSignIn(listener, err)
 	}()
 
 	return run
@@ -91,6 +94,7 @@ func runSignIn(ctx context.Context, storedYAML, contextName string, listener Sig
 	}
 
 	signed.Method = im.name()
+	signed = signed.signedNow()
 	kubeAuth.forget(sc.key)
 	kubeAuth.save(sc.key, signed)
 	kubeClients.forgetConfig(storedYAML, contextName)

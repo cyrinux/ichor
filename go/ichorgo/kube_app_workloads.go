@@ -94,8 +94,9 @@ func KubeWorkloadsNamed(configYAML, contextName, kubeServer, workloads string) (
 		})
 }
 
-func appWorkloads(ctx context.Context, k *kubeClient, pods []routePod) (kubeWorkloadList, error) {
-	wanted := map[string]map[string]bool{} // namespace -> pod names
+// wantedRoutePods groups valid pod names by namespace for route and workload reads.
+func wantedRoutePods(pods []routePod) map[string]map[string]bool {
+	wanted := map[string]map[string]bool{}
 
 	for _, p := range pods {
 		if validateKubeName("pod", p.Namespace, p.Pod) != nil {
@@ -108,7 +109,11 @@ func appWorkloads(ctx context.Context, k *kubeClient, pods []routePod) (kubeWork
 
 		wanted[p.Namespace][p.Pod] = true
 	}
+	return wanted
+}
 
+func appWorkloads(ctx context.Context, k *kubeClient, pods []routePod) (kubeWorkloadList, error) {
+	wanted := wantedRoutePods(pods)
 	var owners []kubePod
 
 	for _, ns := range slices.Sorted(maps.Keys(wanted)) {

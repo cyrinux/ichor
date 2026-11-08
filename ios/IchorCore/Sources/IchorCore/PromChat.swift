@@ -19,8 +19,10 @@ public struct PanelSuggestion: Decodable, Equatable, Sendable {
     /// Why the query was not checked, or its last error when the fixes ran out.
     public var notice: String
 
-    public init(title: String = "", query: String = "", unit: String = "", legend: String = "",
-                verified: Bool = false, empty: Bool = false, attempts: Int = 1, notice: String = "") {
+    public init(
+        title: String = "", query: String = "", unit: String = "", legend: String = "",
+        verified: Bool = false, empty: Bool = false, attempts: Int = 1, notice: String = ""
+    ) {
         self.title = title
         self.query = query
         self.unit = unit
@@ -33,9 +35,11 @@ public struct PanelSuggestion: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(title: try c.field(.title, ""), query: try c.field(.query, ""), unit: try c.field(.unit, ""),
-                  legend: try c.field(.legend, ""), verified: try c.field(.verified, false), empty: try c.field(.empty, false),
-                  attempts: try c.field(.attempts, 1), notice: try c.field(.notice, ""))
+        self.init(
+            title: try c.field(.title, ""), query: try c.field(.query, ""), unit: try c.field(.unit, ""),
+            legend: try c.field(.legend, ""), verified: try c.field(.verified, false),
+            empty: try c.field(.empty, false),
+            attempts: try c.field(.attempts, 1), notice: try c.field(.notice, ""))
     }
 
     private enum CodingKeys: String, CodingKey { case title, query, unit, legend, verified, empty, attempts, notice }

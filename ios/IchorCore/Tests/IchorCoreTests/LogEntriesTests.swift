@@ -8,14 +8,20 @@ final class LogEntriesTests: XCTestCase {
         return calendar
     }()
 
-    private func item(_ id: Int, ts: Int64 = 0, level: String = "info", source: String = "kubelet",
-                      msg: String = "ok", fields: [LogField] = []) -> LogItem {
-        LogItem(id: id, entry: LogEntry(ts: ts, level: level, source: source, msg: msg, fields: fields,
-                                        raw: "\(level) \(source) \(msg) #\(id)"))
+    private func item(
+        _ id: Int, ts: Int64 = 0, level: String = "info", source: String = "kubelet",
+        msg: String = "ok", fields: [LogField] = []
+    ) -> LogItem {
+        LogItem(
+            id: id,
+            entry: LogEntry(
+                ts: ts, level: level, source: source, msg: msg, fields: fields,
+                raw: "\(level) \(source) \(msg) #\(id)"))
     }
 
     func testDecodeTailWithEntries() throws {
-        let json = #"{"lines":["a","b"],"truncated":false,"entries":[{"ts":1800000000123,"level":"error","source":"kubelet","msg":"failed","fields":[{"k":"err","v":"boom"}],"raw":"a"},{"raw":"b"}]}"#
+        let json =
+            #"{"lines":["a","b"],"truncated":false,"entries":[{"ts":1800000000123,"level":"error","source":"kubelet","msg":"failed","fields":[{"k":"err","v":"boom"}],"raw":"a"},{"raw":"b"}]}"#
         let tail = try TalosJSON.decode(LogTail.self, from: json)
         let entries = tail.logEntries
         XCTAssertEqual(entries.count, 2)
@@ -36,23 +42,29 @@ final class LogEntriesTests: XCTestCase {
         let broken = try TalosJSON.decode(LogTail.self, from: #"{"lines":["a"],"truncated":false,"entries":"nope"}"#)
         XCTAssertEqual(broken.logEntries, [LogEntry(raw: "a")])
 
-        let mismatched = try TalosJSON.decode(LogTail.self, from: #"{"lines":["a","b"],"truncated":false,"entries":[{"raw":"a"}]}"#)
+        let mismatched = try TalosJSON.decode(
+            LogTail.self, from: #"{"lines":["a","b"],"truncated":false,"entries":[{"raw":"a"}]}"#)
         XCTAssertEqual(mismatched.logEntries.map(\.raw), ["a", "b"])
     }
 
     func testParseFollowedLine() {
-        let parsed = parseLogEntry(json: #"{"ts":5,"level":"warn","source":"etcd","msg":"slow","fields":[],"raw":"line"}"#, line: "line")
+        let parsed = parseLogEntry(
+            json: #"{"ts":5,"level":"warn","source":"etcd","msg":"slow","fields":[],"raw":"line"}"#, line: "line")
         XCTAssertEqual(parsed.logLevel, .warn)
         XCTAssertEqual(parsed.source, "etcd")
         XCTAssertEqual(parseLogEntry(json: "", line: "plain"), LogEntry(raw: "plain"))
         // Go encodes an empty field list as null.
-        XCTAssertEqual(parseLogEntry(json: #"{"ts":0,"level":"","source":"","msg":"m","fields":null,"raw":"m"}"#, line: "m").fields, [])
+        XCTAssertEqual(
+            parseLogEntry(json: #"{"ts":0,"level":"","source":"","msg":"m","fields":null,"raw":"m"}"#, line: "m")
+                .fields, [])
         XCTAssertEqual(parseLogEntry(json: #"{"msg":"m"}"#, line: "orig").raw, "orig")
         XCTAssertEqual(LogEntry(ts: 0, level: "fatal", msg: "x", raw: "x").logLevel, .none)
     }
 
     func testLevelFilterAndCounts() {
-        let items = [item(0, level: "error"), item(1, level: "warn"), item(2), item(3, level: "debug"), item(4, level: "")]
+        let items = [
+            item(0, level: "error"), item(1, level: "warn"), item(2), item(3, level: "debug"), item(4, level: ""),
+        ]
         XCTAssertEqual(logLevelCounts(items), LogLevelCounts(all: 5, warnings: 2, errors: 1))
         XCTAssertEqual(logLevelCounts(items).count(.warnings), 2)
         XCTAssertEqual(items.filter { LogLevelFilter.warnings.matches($0.entry.logLevel) }.map(\.id), [0, 1])
@@ -78,7 +90,7 @@ final class LogEntriesTests: XCTestCase {
         XCTAssertEqual(groups.map(\.id), [0, 3, 4])
         XCTAssertEqual(groups[0].firstTs, 1_000)
         XCTAssertEqual(groups[0].lastTs, 3_000)
-        XCTAssertEqual(groups[0].entry.raw, items[2].entry.raw) // the newest occurrence
+        XCTAssertEqual(groups[0].entry.raw, items[2].entry.raw)  // the newest occurrence
         XCTAssertEqual(collapseLogs([]), [])
     }
 
@@ -107,10 +119,12 @@ final class LogEntriesTests: XCTestCase {
     }
 
     func testDateDividers() {
-        let day1 = Int64(1_800_000_000_000) // 2027-01-15 08:00 UTC
+        let day1 = Int64(1_800_000_000_000)  // 2027-01-15 08:00 UTC
         let day2 = day1 + 86_400_000
-        let groups = collapseLogs([item(0), item(1, ts: day1, msg: "a"), item(2, ts: day1 + 1, msg: "b"),
-                                   item(3, msg: "undated"), item(4, ts: day2, msg: "c")])
+        let groups = collapseLogs([
+            item(0), item(1, ts: day1, msg: "a"), item(2, ts: day1 + 1, msg: "b"),
+            item(3, msg: "undated"), item(4, ts: day2, msg: "c"),
+        ])
         let rows = logRows(groups, calendar: utc)
         XCTAssertEqual(rows.map(\.id), [0, -2, 1, 2, 3, -5, 4])
         guard case .day(let first, _) = rows[1], case .day(let second, _) = rows[5] else {
@@ -123,13 +137,15 @@ final class LogEntriesTests: XCTestCase {
 
     func testPipelineFiltersBeforeCollapsing() {
         // Hiding the info line makes the two errors consecutive.
-        let items = [item(0, ts: 1, level: "error", msg: "x"), item(1, ts: 2), item(2, ts: 3, level: "error", msg: "x")]
+        let items = [
+            item(0, ts: 1, level: "error", msg: "x"), item(1, ts: 2), item(2, ts: 3, level: "error", msg: "x"),
+        ]
         let all = logRows(items, search: "", level: .all, calendar: utc)
         XCTAssertEqual(all.filter { if case .group = $0 { true } else { false } }.count, 3)
         let errors = logRows(items, search: "", level: .errors, calendar: utc)
         guard case .group(let group) = errors.last else { return XCTFail("expected a group") }
         XCTAssertEqual(group.count, 2)
-        XCTAssertEqual(errors.count, 2) // divider + group
+        XCTAssertEqual(errors.count, 2)  // divider + group
     }
 
     func testTimeOfDay() {

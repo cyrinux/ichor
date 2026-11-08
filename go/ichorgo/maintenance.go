@@ -123,7 +123,13 @@ func NodeMaintenancePlan(configYAML, contextName, kubeServer, node string) (out 
 }
 
 func gatherMaintenancePlan(ctx context.Context, s *session, kube kubeTarget, node string) (maintenancePlan, error) {
-	reboot := gatherPlan(ctx, s, node, kube)
+	return gatherMaintenancePlanFor(ctx, s, kube, node, "")
+}
+
+// gatherMaintenancePlanFor is gatherMaintenancePlan for the run holding the upgrade lock as
+// own (a rolling cluster upgrade's drained node): its own lock does not block it.
+func gatherMaintenancePlanFor(ctx context.Context, s *session, kube kubeTarget, node, own string) (maintenancePlan, error) {
+	reboot := gatherPlanFor(ctx, s, node, kube, own)
 
 	plan := maintenancePlan{
 		Node:             node,
@@ -192,7 +198,7 @@ func KubeCordon(configYAML, contextName, kubeServer, node string, on bool) (err 
 		return errDemoUnavailable
 	}
 
-	kubeNode, err := withNodeSession(configYAML, contextName, node, callTimeout, func(nodeCtx context.Context, s *session) (string, error) {
+	kubeNode, err := withNodeSessionFrom(context.Background(), configYAML, contextName, node, callTimeout, func(nodeCtx context.Context, s *session) (string, error) {
 		return kubeNodeNameOf(nodeCtx, s.client)
 	})
 	if err != nil {
@@ -226,6 +232,8 @@ func StartNodeMaintenance(configYAML, contextName, kubeServer, node, action stri
 	}
 
 	return runMaintenance(listener, func(ctx context.Context) error {
+		defer holdCalls(configYAML, contextName)()
+
 		return recordedRun(configYAML, contextName, func() auditAction {
 			return auditAction{Action: "maintenance-" + m.action, Node: node, Params: fmt.Sprintf("include-bare=%t", includeBare)}
 		}, func() error { return m.run(ctx) })

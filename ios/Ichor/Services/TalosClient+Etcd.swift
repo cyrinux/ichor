@@ -22,6 +22,8 @@ extension TalosClient {
     /// Polls etcd up to timeout seconds until it has more healthy voting members than
     /// membersBefore (os:reader).
     func controlPlaneReplaceWait(membersBefore: Int, timeout: Int) async throws -> CpReplaceWait {
-        try await Self.json { [config, context] in IchorgoControlPlaneReplaceWait(config, context, membersBefore, timeout, $0) }
+        try await Self.json { [config, context] in
+            IchorgoControlPlaneReplaceWait(config, context, membersBefore, timeout, $0)
+        }
     }
 }

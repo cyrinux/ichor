@@ -38,7 +38,7 @@ final class ImageScanJob {
         var started = ImageScanState(context: context, appID: appID, scanner: scanner)
         let scan: (events: AsyncStream<ImageScanEvent>, stop: @Sendable () -> Void)
         do {
-            scan = try client.imageScan(pods: pods, images: images, scanner: scanner)
+            scan = try client.imageScan(pods: pods, images: images, scanner: scanner, app: appID, cluster: context)
         } catch {
             started.finish(report: nil, json: "", error: error.localizedDescription)
             state = started

@@ -17,8 +17,16 @@ enum class AlertKind {
     STORAGE_TREND, STORAGE_TREND_OK,
     /** A node running hot or throttled ([Alert.detail]: a [SensorDetail]), or no longer. */
     SENSOR_PROBLEM, SENSOR_OK,
+    /** A KubeSpan tunnel between two nodes down ([Alert.detail]: a [KubeSpanDetail]), or back. */
+    KUBESPAN_DOWN, KUBESPAN_UP,
     /** The cluster could not be read for several checks in a row ([Alert.detail]: how many), or answers again. */
     CLUSTER_UNREACHABLE, CLUSTER_REACHABLE,
+    /** A CRD plugin's finding ([Alert.key] its key, [Alert.detail]: a [PluginIssue]), or no longer. */
+    PLUGIN_PROBLEM, PLUGIN_OK,
+    /** A pull request opened from the phone was merged, or closed without it ([Alert.detail]: a [ProposalDetail]). */
+    PROPOSAL_MERGED, PROPOSAL_CLOSED,
+    /** The identity provider ended the cluster's sign-in ([Alert.subject]: the cluster's name). */
+    SIGN_IN_REQUIRED,
 }
 
 /**
@@ -64,15 +72,7 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             if (before.health != state.health) alerts += nodeAlert(addr, state)
         }
         if (cur.etcdChecked && prev.etcdChecked) {
-            (cur.etcdAlarms - prev.etcdAlarms.toSet()).forEach { alarm ->
-                alerts += Alert(
-                    key = "etcd:$alarm",
-                    kind = AlertKind.ETCD_ALARM,
-                    problem = true,
-                    subject = alarm.substringAfter(':'),
-                    detail = alarm.substringBefore(':'),
-                )
-            }
+            (cur.etcdAlarms - prev.etcdAlarms.toSet()).forEach { alarm -> alerts += etcdAlert(alarm) }
         }
     }
 
@@ -97,6 +97,8 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
     val am = if (blind) prev.amTrack else evaluateTrack(prev?.amTrack, cur.amTrack, comparable, ::amSeverity, ::amAlert, alerts)
     val storage = if (blind) prev.storageTrack else evaluateTrack(prev?.storageTrack, cur.storageTrack, comparable, ::storageSeverity, ::storageAlert, alerts)
     val sensor = if (blind) prev.sensorTrack else evaluateTrack(prev?.sensorTrack, cur.sensorTrack, comparable, ::sensorSeverity, ::sensorAlert, alerts)
+    val kubespan = if (blind) prev.kubespanTrack else evaluateTrack(prev?.kubespanTrack, cur.kubespanTrack, comparable, ::kubespanSeverity, ::kubespanAlert, alerts)
+    val plugin = if (blind) prev.pluginTrack else evaluateTrack(prev?.pluginTrack, cur.pluginTrack, comparable, ::pluginSeverity, ::pluginAlert, alerts)
 
     val next = if (blind) prev.copy(certNotAfter = cur.certNotAfter) else cur
     return Evaluation(
@@ -127,6 +129,14 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             sensorChecked = sensor.checked,
             sensorIssues = sensor.issues,
             sensorPending = sensor.pending,
+            kubespanWatched = kubespan.watched,
+            kubespanChecked = kubespan.checked,
+            kubespanIssues = kubespan.issues,
+            kubespanPending = kubespan.pending,
+            pluginWatched = plugin.watched,
+            pluginChecked = plugin.checked,
+            pluginIssues = plugin.issues,
+            pluginPending = plugin.pending,
             // Stepped after the run's history record (see [withStorageTrends]); kept until then.
             storageTrends = prev?.takeIf { comparable && storage.watched }?.storageTrends.orEmpty(),
         ),
@@ -142,6 +152,8 @@ private val ClusterSnapshot.checkupTrack: Track get() = Track(checkupWatched, ch
 private val ClusterSnapshot.amTrack: Track get() = Track(amWatched, amChecked, amIssues, amPending)
 private val ClusterSnapshot.storageTrack: Track get() = Track(storageWatched, storageChecked, storageIssues, storagePending)
 private val ClusterSnapshot.sensorTrack: Track get() = Track(sensorWatched, sensorChecked, sensorIssues, sensorPending)
+private val ClusterSnapshot.kubespanTrack: Track get() = Track(kubespanWatched, kubespanChecked, kubespanIssues, kubespanPending)
+private val ClusterSnapshot.pluginTrack: Track get() = Track(pluginWatched, pluginChecked, pluginIssues, pluginPending)
 
 /**
  * Issues of one track (key → value, [severityOf] reading [DATA_CRITICAL] or [DATA_WARNING] from the
@@ -235,6 +247,24 @@ private fun sensorAlert(key: String, value: String, problem: Boolean): Alert = A
     detail = value,
 )
 
+/** [key] "idA|idB", [value] a [KubeSpanDetail]: both hostnames are the subject. */
+private fun kubespanAlert(key: String, value: String, problem: Boolean): Alert = Alert(
+    key = "kubespan:$key",
+    kind = if (problem) AlertKind.KUBESPAN_DOWN else AlertKind.KUBESPAN_UP,
+    problem = problem,
+    subject = KubeSpanDetail.parse(value).let { "${it.hostA} ↔ ${it.hostB}" },
+    detail = value,
+)
+
+/** [key] the finding's ("plugin:…", already an alert key), [value] a [PluginIssue]: its title is the subject. */
+private fun pluginAlert(key: String, value: String, problem: Boolean): Alert = Alert(
+    key = key,
+    kind = if (problem) AlertKind.PLUGIN_PROBLEM else AlertKind.PLUGIN_OK,
+    problem = problem,
+    subject = PluginIssue.parse(value).title,
+    detail = value,
+)
+
 private fun dataAlert(key: String, severity: String, problem: Boolean): Alert = Alert(
     key = "data:$key",
     kind = if (problem) AlertKind.DATA_PROBLEM else AlertKind.DATA_OK,
@@ -250,4 +280,35 @@ private fun nodeAlert(addr: String, state: NodeState): Alert {
         NodeHealth.NOT_READY -> Alert("node:$addr", AlertKind.NODE_NOT_READY, true, state.hostname, reason)
         NodeHealth.UNREACHABLE -> Alert("node:$addr", AlertKind.NODE_UNREACHABLE, true, state.hostname, reason)
     }
+}
+
+/** [alarm] "member:alarm": the alarm is the subject, the member the detail. */
+private fun etcdAlert(alarm: String): Alert = Alert(
+    key = "etcd:$alarm",
+    kind = AlertKind.ETCD_ALARM,
+    problem = true,
+    subject = alarm.substringAfter(':'),
+    detail = alarm.substringBefore(':'),
+)
+
+/**
+ * The problem alerts [snapshot] still holds, as they were posted: its nodes not ready, its etcd
+ * alarms and the issues of its tracks already notified (not the warnings still pending). What a
+ * repeat posts again; the certificate (warned daily already), the volume trends and an
+ * unreachable cluster are not among them.
+ */
+fun firingAlerts(snapshot: ClusterSnapshot): List<Alert> {
+    val nodes = snapshot.nodes.filterValues { it.health != NodeHealth.READY }.map { (addr, state) -> nodeAlert(addr, state) }
+    val etcd = if (snapshot.etcdChecked) snapshot.etcdAlarms.map(::etcdAlert) else emptyList()
+    fun track(issues: Map<String, String>, alertOf: (String, String, Boolean) -> Alert) =
+        issues.map { (key, value) -> alertOf(key, value, true) }
+    return nodes + etcd +
+        track(snapshot.dataIssues, ::dataAlert) +
+        track(snapshot.gitopsIssues, ::gitopsAlert) +
+        track(snapshot.checkupIssues, ::checkupAlert) +
+        track(snapshot.amIssues, ::amAlert) +
+        track(snapshot.storageIssues, ::storageAlert) +
+        track(snapshot.sensorIssues, ::sensorAlert) +
+        track(snapshot.kubespanIssues, ::kubespanAlert) +
+        track(snapshot.pluginIssues, ::pluginAlert)
 }

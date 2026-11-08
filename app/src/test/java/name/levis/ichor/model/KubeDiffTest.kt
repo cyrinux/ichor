@@ -92,4 +92,42 @@ class KubeDiffTest {
         val r = TalosJson.decodeFromString(KubeDiffResource.serializer(), """{"kind":"X","name":"x","change":"teleported"}""")
         assertEquals(DiffChange.UNCHANGED, r.change)
     }
+
+    @Test
+    fun forResourcesWithNoRefsKeepsEveryChange() {
+        assertEquals(listOf("migrate", "settings", "web", "creds"), diff.forResources(emptyList()).map { it.name })
+    }
+
+    @Test
+    fun forResourcesKeepsTheTickedOne() {
+        val picked = diff.forResources(listOf(ArgoResourceRef("apps", "Deployment", "web", "web")))
+        assertEquals(listOf("apps/Deployment/web/web"), picked.map { it.key })
+    }
+
+    @Test
+    fun forResourcesComparesCoreKindsWithoutTheirGroup() {
+        // "" on one side, "core" or "" on the other: kind, namespace and name decide.
+        assertEquals(listOf("settings"), diff.forResources(listOf(ArgoResourceRef("core", "ConfigMap", "web", "settings"))).map { it.name })
+        val other = FluxDiff(resources = listOf(KubeDiffResource(group = "v1", kind = "Secret", namespace = "web", name = "creds", change = DiffChange.CHANGED)))
+        assertEquals(1, other.forResources(listOf(ArgoResourceRef("", "Secret", "web", "creds"))).size)
+        // Two named groups must agree.
+        assertEquals(emptyList<KubeDiffResource>(), diff.forResources(listOf(ArgoResourceRef("extensions", "Deployment", "web", "web"))))
+    }
+
+    @Test
+    fun forResourcesMatchesClusterScopedObjects() {
+        val cluster = FluxDiff(
+            resources = listOf(
+                KubeDiffResource(group = "rbac.authorization.k8s.io", kind = "ClusterRole", name = "viewer", change = DiffChange.CREATED),
+                KubeDiffResource(kind = "Namespace", name = "web", change = DiffChange.UNCHANGED),
+            ),
+        )
+        val picked = cluster.forResources(listOf(ArgoResourceRef("rbac.authorization.k8s.io", "ClusterRole", "", "viewer"), ArgoResourceRef("", "Namespace", "", "web")))
+        assertEquals(listOf("viewer"), picked.map { it.name }) // unchanged objects are never listed
+    }
+
+    @Test
+    fun forResourcesWithNoMatchIsEmpty() {
+        assertTrue(diff.forResources(listOf(ArgoResourceRef("apps", "Deployment", "other", "web"))).isEmpty())
+    }
 }

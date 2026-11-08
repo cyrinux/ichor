@@ -5,12 +5,19 @@ iOS (ios/Ichor/**/*.swift):
 - a Button whose whole label is an SF Symbol needs .accessibilityLabel (or .help), else
   VoiceOver reads the symbol's name ("arrow.up");
 - a literal .system(size:) below 12 (in .font() or a Font constant) is too small and ignores
-  Dynamic Type: use a text style or a @ScaledMetric size.
+  Dynamic Type: use a text style or a @ScaledMetric size;
+- a Text of an error painted red on its line: a failed read is not a cluster state, use
+  LoadFailureRow (muted, with Retry).
 
 Android (app/src/main/java/**/*.kt):
 - a fixed .sp below 12 ignores the theme's typography: use MaterialTheme.typography;
 - an IconButton whose icon has contentDescription = null and no other label is read as
-  "button", with nothing saying what it does.
+  "button", with nothing saying what it does;
+- a Text in ui/ with maxLines = 1 and neither overflow nor autoSize cuts its last letters at a
+  large font scale or on a small phone: give it overflow = TextOverflow.Ellipsis, or autoSize
+  for a number (the widgets' Glance Text has no overflow);
+- a UiState.Failed branch painting a Text red (.bad or colorScheme.error) on its line or the
+  next three: a failed read is not a cluster state, use LoadFailureRow (muted, with Retry).
 
 Run: python3 scripts/check-accessibility.py
 """
@@ -30,12 +37,17 @@ ONE_LINE = re.compile(
     r"\bButton\s*(\([^{}]*\))?\s*\{\s*Image\(systemName:[^{}]*\}"
     r"|\blabel:\s*\{\s*Image\(systemName:[^{}]*\}\s*$"
 )
+RED_ERROR_TEXT = re.compile(r"\bText\([^)]*error[^)]*\).*\.foregroundStyle\(\.red\)", re.IGNORECASE)
 FIXED_SWIFT_FONT = re.compile(r"\.system\(size:\s*(\d+(?:\.\d+)?)\b(?!\s*\*)")
 SMALL_SP = re.compile(r"\b(\d+(?:\.\d+)?)\.sp\b")
 SP_EXEMPT = re.compile(r"(letterSpacing|minFontSize)\s*=\s*$")
 MIN_SP = 12
 ICON_BUTTON = re.compile(r"\b\w*IconButton\(")
 # A description on the icon or a label on the button itself.
+# Text( and BasicText(, not TextField( nor a wrapper such as MutedText( (no overflow there).
+TEXT_CALL = re.compile(r"(?<![\w.])(Basic)?Text\(")
+FAILED_BRANCH = re.compile(r"UiState\.Failed\s*->")
+RED = re.compile(r"\.bad\b|colorScheme\.error\b")
 ICON_LABEL = re.compile(r"contentDescription\s*=(?!\s*null)|semantics\s*[({]|onClickLabel")
 
 
@@ -70,6 +82,11 @@ def unlabeled_image_buttons(source: str) -> list[int]:
         if j < len(lines) and len(content) == 1 and IMAGE_ONLY.match(content[0]) and not _labelled(lines, j):
             found.append(i + 1)
     return found
+
+
+def red_error_texts(source: str) -> list[int]:
+    """1-based lines painting the text of an error red."""
+    return [i + 1 for i, line in enumerate(source.splitlines()) if RED_ERROR_TEXT.search(line)]
 
 
 def small_swift_fonts(source: str) -> list[int]:
@@ -120,6 +137,29 @@ def unlabeled_icon_buttons(source: str) -> list[int]:
     return found
 
 
+def single_line_texts_without_overflow(source: str) -> list[int]:
+    """1-based lines of Text calls held to one line with nothing saying how they end."""
+    found = []
+    for m in TEXT_CALL.finditer(source):
+        call = source[m.start() : _closing(source, m.end() - 1, "(", ")")]
+        if re.search(r"\bmaxLines\s*=\s*1\b", call) and "overflow" not in call and "autoSize" not in call:
+            found.append(source.count("\n", 0, m.start()) + 1)
+    return found
+
+
+def red_load_failures(source: str) -> list[int]:
+    """1-based lines of UiState.Failed branches whose Text is painted red within four lines."""
+    lines = source.splitlines()
+    found = []
+    for i, line in enumerate(lines):
+        if not FAILED_BRANCH.search(line):
+            continue
+        window = lines[i : i + 4]
+        if any(TEXT_CALL.search(w) for w in window) and any(RED.search(w) for w in window):
+            found.append(i + 1)
+    return found
+
+
 def main() -> int:
     problems = []
     for path in sorted(IOS_SOURCES.rglob("*.swift")):
@@ -127,11 +167,15 @@ def main() -> int:
         rel = path.relative_to(ROOT)
         problems += [f"{rel}:{n}: image-only Button without .accessibilityLabel" for n in unlabeled_image_buttons(text)]
         problems += [f"{rel}:{n}: .font(.system(size:)) below {MIN_SP}, use a text style" for n in small_swift_fonts(text)]
+        problems += [f"{rel}:{n}: an error in red text, use LoadFailureRow (muted, with Retry)" for n in red_error_texts(text)]
     for path in sorted(ANDROID_SOURCES.rglob("*.kt")):
         text = path.read_text()
         rel = path.relative_to(ROOT)
         problems += [f"{rel}:{n}: text below {MIN_SP}.sp, use MaterialTheme.typography" for n in small_sp(text)]
         problems += [f"{rel}:{n}: IconButton whose icon has no contentDescription" for n in unlabeled_icon_buttons(text)]
+        problems += [f"{rel}:{n}: red text for a failed read, use LoadFailureRow" for n in red_load_failures(text)]
+        if "ui" in rel.parts:
+            problems += [f"{rel}:{n}: Text with maxLines = 1 and no overflow" for n in single_line_texts_without_overflow(text)]
     for p in problems:
         print(p, file=sys.stderr)
     return 1 if problems else 0

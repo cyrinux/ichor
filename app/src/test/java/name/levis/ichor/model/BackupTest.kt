@@ -42,6 +42,26 @@ class BackupTest {
     }
 
     @Test
+    fun tagsRoundTripAndAreCheckedLikeTypedOnes() {
+        val saved = backupClusters(
+            listOf("aaaa", "bbbb"), emptyMap(), emptyMap(), emptySet(), emptyMap(), emptyMap(),
+            tags = mapOf("aaaa" to listOf("prod", "eu"), "gone" to listOf("old")),
+        )
+        assertEquals(listOf("prod", "eu"), saved.getValue("aaaa").tags)
+        assertTrue(saved.getValue("bbbb").tags.isEmpty())
+
+        val json = TalosJson.encodeToString(BackupCluster.serializer(), saved.getValue("aaaa"))
+        val back = TalosJson.decodeFromString(BackupCluster.serializer(), json)
+        assertEquals(mapOf("aaaa" to listOf("prod", "eu")), restoredClusters(mapOf("aaaa" to back), listOf("aaaa")).tags)
+
+        val messy = restoredClusters(mapOf("aaaa" to BackupCluster(tags = listOf(" PROD ", "prod", ""))), listOf("aaaa"))
+        assertEquals(mapOf("aaaa" to listOf("prod")), messy.tags)
+        // An older backup has no tags.
+        val older = TalosJson.decodeFromString(BackupCluster.serializer(), """{"name":"Home"}""")
+        assertTrue(restoredClusters(mapOf("aaaa" to older), listOf("aaaa")).tags.isEmpty())
+    }
+
+    @Test
     fun restoredClustersDropsUnknownAndInvalidEntries() {
         val restored = restoredClusters(
             mapOf(
@@ -83,25 +103,42 @@ class BackupTest {
 
         assertEquals(payload, TalosJson.decodeFromString(BackupPayload.serializer(), json))
         assertTrue("unset settings are left out", "\"privacyMask\"" !in json)
-        assertTrue("the Go core requires the format", "\"format\":1" in json)
+        assertTrue("the Go core requires the format", "\"format\":3" in json)
         assertTrue("iOS reads the same key", "\"remoteAppIcons\":true" in json)
     }
 
     @Test
-    fun formatTwoOnlyWithAKubeconfig() {
-        assertEquals(1, backupFormat(null))
-        assertEquals(1, backupFormat("  "))
-        assertEquals(2, backupFormat("apiVersion: v1\nkind: Config\n"))
+    fun newBackupsAreFormatThreeUnlessTheyHoldProposals() {
+        assertEquals(5, BACKUP_FORMAT)
+        assertEquals(3, BackupPayload().format)
+        val record = GitProposalRecord(repoURL = "https://git.example.org/example-org/cluster-config", number = 12, title = "Raise ingest replicas", state = "open")
+        assertEquals(3, backupFormatFor(null))
+        assertEquals(3, backupFormatFor(emptyMap()))
+        assertEquals(4, backupFormatFor(mapOf("fp" to listOf(record))))
+    }
+
+    @Test
+    fun proposalsTravelWithTheBackupOfTheirClusters() {
+        val record = GitProposalRecord(repoURL = "https://git.example.org/example-org/cluster-config", number = 12, title = "Raise ingest replicas", state = "open")
+        val kept = backupProposals(listOf("fp-a"), mapOf("fp-a" to listOf(record), "fp-gone" to listOf(record), "fp-empty" to emptyList()))
+        assertEquals(mapOf("fp-a" to listOf(record)), kept)
+        assertNull(backupProposals(listOf("fp-b"), mapOf("fp-a" to listOf(record))))
+
+        val payload = BackupPayload(format = backupFormatFor(kept), proposals = kept)
+        val back = TalosJson.decodeFromString(BackupPayload.serializer(), TalosJson.encodeToString(BackupPayload.serializer(), payload))
+        assertEquals(mapOf("fp-a" to listOf(record)), restoredProposals(back, listOf("fp-a", "fp-b")))
+        assertNull("a format 3 backup has none", restoredProposals(back.copy(format = 3), listOf("fp-a")))
+        assertTrue(restoredProposals(back, listOf("fp-b")).isNullOrEmpty())
     }
 
     @Test
     fun kubeconfigPayloadKeepsAnEmptyTalosconfig() {
         val kube = "apiVersion: v1\nkind: Config\n"
-        val payload = BackupPayload(format = backupFormat(kube), platform = "android", talosconfig = "", kubeconfig = kube)
+        val payload = BackupPayload(platform = "android", talosconfig = "", kubeconfig = kube)
 
         val json = TalosJson.encodeToString(BackupPayload.serializer(), payload)
 
-        assertTrue("\"format\":2" in json)
+        assertTrue("\"format\":3" in json)
         assertTrue("older apps require the field", "\"talosconfig\":\"\"" in json)
         assertEquals(payload, TalosJson.decodeFromString(BackupPayload.serializer(), json))
     }
@@ -110,7 +147,7 @@ class BackupTest {
     fun aTalosOnlyPayloadHasNoKubeconfigKey() {
         val json = TalosJson.encodeToString(BackupPayload.serializer(), BackupPayload(talosconfig = "context: lab\n"))
 
-        assertTrue("\"format\":1" in json)
+        assertTrue("\"format\":3" in json)
         assertTrue("\"kubeconfig\"" !in json)
         assertNull(TalosJson.decodeFromString(BackupPayload.serializer(), json).kubeconfig)
     }
@@ -162,6 +199,31 @@ class BackupTest {
         assertEquals(mapOf("t1" to "k1"), restoredClusters(decoded.clusters, listOf("t1", "k1")).kubeAccess)
         // A link to a cluster the backup does not restore is dropped.
         assertEquals(emptyMap<String, String>(), restoredClusters(decoded.clusters, listOf("t1")).kubeAccess)
+    }
+
+    @Test
+    fun recordActionsTravelsPerCluster() {
+        val payload = BackupPayload(
+            format = BACKUP_FORMAT_SETTINGS,
+            clusters = backupClusters(
+                listOf("on", "off"), emptyMap(), emptyMap(), emptySet(), emptyMap(), emptyMap(), auditEvents = setOf("on", "gone"),
+            ),
+        )
+        val decoded = TalosJson.decodeFromString(BackupPayload.serializer(), TalosJson.encodeToString(BackupPayload.serializer(), payload))
+
+        assertEquals(setOf("on"), restoredClusters(decoded.clusters, listOf("on", "off")).auditEvents)
+        assertEquals(emptySet<String>(), restoredClusters(decoded.clusters, listOf("off")).auditEvents)
+    }
+
+    @Test
+    fun anOlderBackupRestoresWithoutRecordingActions() {
+        val payload = TalosJson.decodeFromString(
+            BackupPayload.serializer(),
+            """{"format":3,"talosconfig":"","clusters":{"aaaa":{"name":"Home","vpnOnly":true}}}""",
+        )
+        val restored = restoredClusters(payload.clusters, listOf("aaaa"))
+        assertEquals(setOf("aaaa"), restored.vpnOnly)
+        assertEquals(emptySet<String>(), restored.auditEvents)
     }
 
     @Test

@@ -8,11 +8,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,7 +39,7 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.EtcdFixEvent
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.EtcdRepository
 import name.levis.ichor.model.EtcdFixMember
 import name.levis.ichor.model.EtcdFixPhase
 import name.levis.ichor.model.EtcdFixProgress
@@ -80,7 +80,7 @@ data class EtcdFixState(
  * The one-tap NOSPACE fix. Go writes the snapshot into the app cache (it needs a real path);
  * it is copied to the document the user picked once the run ends, and the cache copy deleted.
  */
-class EtcdFixViewModel(private val talos: TalosRepository, private val app: TalosApp) : ViewModel() {
+class EtcdFixViewModel(private val etcd: EtcdRepository, private val app: TalosApp) : ViewModel() {
     private val _state = MutableStateFlow(EtcdFixState())
     val state: StateFlow<EtcdFixState> = _state.asStateFlow()
     private var job: Job? = null
@@ -102,7 +102,7 @@ class EtcdFixViewModel(private val talos: TalosRepository, private val app: Talo
                 }
                 val dest = if (snapshot != null) temp.path else ""
                 val encryption = snapshot?.encryption ?: SnapshotEncryption.None
-                talos.etcdNospaceFix(snapshot?.target?.node.orEmpty(), dest, encryption).collect { event ->
+                etcd.etcdNospaceFix(snapshot?.target?.node.orEmpty(), dest, encryption).collect { event ->
                     when (event) {
                         is EtcdFixEvent.Progress -> _state.update { it.copy(events = it.events + event.progress) }
                         is EtcdFixEvent.Done -> _state.update { it.copy(error = event.error) }
@@ -198,7 +198,7 @@ fun rememberEtcdFixFlow(vm: EtcdFixViewModel, contextName: String, fingerprint: 
         SnapshotEncryptionDialog(
             hostname = target.hostname,
             savedKeys = savedKeys[fingerprint].orEmpty(),
-            checkKeys = app.talosRepository::checkSnapshotRecipients,
+            checkKeys = app.etcdRepository::checkSnapshotRecipients,
             onConfirm = { encryption ->
                 protecting = null
                 if (encryption is SnapshotEncryption.Keys) app.snapshotKeys.set(fingerprint, encryption.recipients)
@@ -217,7 +217,7 @@ fun rememberEtcdFixFlow(vm: EtcdFixViewModel, contextName: String, fingerprint: 
 @Composable
 private fun EtcdFixConfirmDialog(order: List<String>, canSnapshot: Boolean, onConfirm: (snapshot: Boolean) -> Unit, onDismiss: () -> Unit) {
     var snapshot by remember { mutableStateOf(canSnapshot) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.etcd_fix_confirm_title)) },
         text = {
@@ -233,8 +233,8 @@ private fun EtcdFixConfirmDialog(order: List<String>, canSnapshot: Boolean, onCo
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onConfirm(snapshot) }) { Text(stringResource(R.string.etcd_fix_start)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = { onConfirm(snapshot) }) { Text(stringResource(R.string.etcd_fix_start)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -259,7 +259,7 @@ private val EtcdFixMember.stateLabel: Int
 fun EtcdFixPanel(state: EtcdFixState, onCancel: () -> Unit, onDismiss: () -> Unit) {
     val colors = LocalStatusColors.current
     val failed = state.error != null
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.etcd_fix_title), style = MaterialTheme.typography.titleSmall)
             etcdFixTimeline(state.events, state.finished, failed).forEach { (phase, status) ->
@@ -276,14 +276,14 @@ fun EtcdFixPanel(state: EtcdFixState, onCancel: () -> Unit, onDismiss: () -> Uni
             }
             state.snapshotSaved?.let { Text(stringResource(R.string.etcd_fix_snapshot_saved, it), style = MaterialTheme.typography.bodySmall) }
             when {
-                state.running -> TextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
+                state.running -> IchorTextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
                 failed -> {
                     Text(state.error.orEmpty(), color = colors.bad, style = MaterialTheme.typography.bodySmall)
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
                 else -> {
                     Text(stringResource(R.string.etcd_fix_done), color = colors.ok)
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
             }
         }

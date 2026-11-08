@@ -17,12 +17,14 @@ import kotlinx.coroutines.delay
 import name.levis.ichor.R
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatTime
 
 /**
  * Screen footer saying how fresh the data is: "Updated 15:42:10 · 2 min ago", or, while a
  * refresh runs over cached data, "Refreshing… (showing data from 15:40:02)"; after a failed one,
- * the error and the age of the data still shown. Nothing until loaded.
+ * the error and the age of the data still shown; "From the background check at 15:30 (10 min ago)"
+ * for a seed. Nothing until loaded.
  */
 @Composable
 fun DataFreshness(state: UiState<*>, modifier: Modifier = Modifier, edgeToEdge: Boolean = true) {
@@ -38,14 +40,20 @@ fun DataFreshness(state: UiState<*>, modifier: Modifier = Modifier, edgeToEdge: 
     val ago = agoText(age(now - loaded.fetchedAt))
     val error = loaded.error?.takeUnless { loaded.refreshing }
     val text = when {
-        loaded.refreshing -> stringResource(R.string.common_refreshing_showing, time)
+        // Only the background check's view: said as such until the cluster answers.
+        loaded.fromMonitor -> listOfNotNull(
+            error?.let { stringResource(R.string.common_refresh_failed, it.asString()) },
+            stringResource(R.string.overview_seed_from_monitor, time, ago),
+        ).joinToString("\n")
+        loaded.refreshing ->stringResource(R.string.common_refreshing_showing, time)
         error != null -> stringResource(R.string.common_refresh_failed, error.asString()) + "\n" +
             stringResource(R.string.common_showing_data_from, time, ago)
         else -> stringResource(R.string.common_updated_ago, time, ago)
     }
-    // A failed refresh stands out: what is on screen may no longer be true.
+    // A failed refresh stands out in the warning tint (as on iOS): what is on screen may no longer
+    // be true, but the read failed, not the cluster. Text stays onSurface (the StatusPill rule).
     val (background, content) = if (error != null) {
-        MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+        LocalStatusColors.current.warn.copy(alpha = 0.15f) to MaterialTheme.colorScheme.onSurface
     } else {
         MaterialTheme.colorScheme.surfaceContainer to MaterialTheme.colorScheme.onSurfaceVariant
     }

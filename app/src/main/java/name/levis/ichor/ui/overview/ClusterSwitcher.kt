@@ -26,16 +26,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.EventAvailable
+import androidx.compose.material.icons.outlined.FolderCopy
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Router
+import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material.icons.outlined.VpnLock
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -43,19 +47,20 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorIconButton
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -77,22 +82,28 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.ui.fleet.AllClustersRow
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.adjacentContext
+import name.levis.ichor.data.usesOwnKubeServer
 import name.levis.ichor.model.CLUSTER_NAME_MAX
 import name.levis.ichor.model.CLUSTER_SEEDS
 import name.levis.ichor.model.ClusterGroup
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.ContextSummary
+import name.levis.ichor.model.KUBE_AUTH_TOKEN
 import name.levis.ichor.model.accessLabel
 import name.levis.ichor.model.clusterGroups
+import name.levis.ichor.model.clusterTagsOf
 import name.levis.ichor.model.hueOf
 import name.levis.ichor.model.isKube
 import name.levis.ichor.model.parseCloudContext
+import name.levis.ichor.model.proxyHost
 import name.levis.ichor.model.seedFromHue
 import name.levis.ichor.model.seedOf
 import name.levis.ichor.monitor.CERT_WARN_DAYS
+import name.levis.ichor.monitor.clusterFingerprints
 import name.levis.ichor.ui.components.BundledLogo
 import name.levis.ichor.ui.components.ClusterLogo
 import name.levis.ichor.ui.components.ConfirmDialog
@@ -102,6 +113,7 @@ import name.levis.ichor.ui.components.cloudDetail
 import name.levis.ichor.ui.components.clusterGroupTitle
 import name.levis.ichor.ui.importconfig.certExpiry
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.workloads.KubeServerDialog
 import name.levis.ichor.util.daysUntil
 
 /** Horizontal drag past which the header switches cluster. */
@@ -257,8 +269,23 @@ fun ClusterSheet(
     onActivity: ((ContextSummary) -> Unit)? = null,
     unwatched: Set<String> = emptySet(),
     onWatch: ((ContextSummary, Boolean) -> Unit)? = null,
+    auditEvents: Set<String> = emptySet(),
+    onAuditEvents: ((ContextSummary, Boolean) -> Unit)? = null,
+    onRepository: ((ContextSummary) -> Unit)? = null,
+    /** The Kubernetes API address set on this device per fingerprint, instead of the kubeconfig's. */
+    kubeServers: Map<String, String> = emptyMap(),
+    /** Saves a cluster's API address ("" to use the kubeconfig's again); null: not offered. */
+    onKubeServer: ((ContextSummary, String) -> Unit)? = null,
+    /** "All clusters" at the top (the fleet view); null: not offered. */
+    onFleet: (() -> Unit)? = null,
+    /** The tags given to clusters, by fingerprint. */
+    tags: Map<String, List<String>> = emptyMap(),
+    /** Saves a line of tags typed for a cluster; null: not offered. */
+    onTags: ((ContextSummary, String) -> Unit)? = null,
 ) {
+    var tagging by remember { mutableStateOf<ContextSummary?>(null) }
     var removing by remember { mutableStateOf<ContextSummary?>(null) }
+    var addressing by remember { mutableStateOf<ContextSummary?>(null) }
     var renaming by remember { mutableStateOf<ContextSummary?>(null) }
     var coloring by remember { mutableStateOf<ContextSummary?>(null) }
     val contexts = config.summary.contexts
@@ -274,6 +301,7 @@ fun ClusterSheet(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
             )
+            onFleet?.let { open -> AllClustersRow { scope.launch { sheetState.hide() }.invokeOnCompletion { open() } } }
             // A long list in sections, per provider and account; a short one as it is.
             val groups = remember(contexts, labels.masked) { clusterGroups(contexts, labels.masked) }
             val row: @Composable (ContextSummary) -> Unit = { context ->
@@ -288,10 +316,15 @@ fun ClusterSheet(
                     // Not in screenshot mode: the dialog would show the given name.
                     onRename = { renaming = context }.takeIf { !labels.masked && context.fingerprint.isNotBlank() },
                     onColor = { coloring = context },
+                    tags = clusterTagsOf(tags, clusterFingerprints(config.summary, context)),
+                    onTags = { tagging = context }.takeIf { onTags != null && context.fingerprint.isNotBlank() && !context.demo },
                     vpnOnly = context.fingerprint in vpnOnly,
                     onVpnOnly = { on: Boolean -> onVpnOnly(context, on) }.takeIf { context.fingerprint.isNotBlank() },
                     watched = context.fingerprint !in unwatched,
                     onWatch = onWatch?.let { set -> { on: Boolean -> set(context, on) } }?.takeIf { context.fingerprint.isNotBlank() && !context.demo },
+                    recordsActions = context.fingerprint in auditEvents,
+                    onRecordActions = onAuditEvents?.let { set -> { on: Boolean -> set(context, on) } }
+                        ?.takeIf { context.fingerprint.isNotBlank() && !context.demo },
                     onRemove = { removing = context },
                     // Not in screenshot mode (the endpoints shown are fake), nor for the demo, nor for a
                     // cluster added from a kubeconfig (its server is no Talos endpoint).
@@ -300,6 +333,13 @@ fun ClusterSheet(
                     account = onAccount?.let { open -> clusterAccount(context, contexts)?.let { it to { open(context) } } },
                     beingRemoved = context.name in removingNames,
                     onActivity = onActivity?.let { open -> { open(context) } },
+                    // The demo's repository is built in.
+                    onRepository = onRepository?.let { open -> { open(context) } }?.takeIf { context.fingerprint.isNotBlank() && !context.demo },
+                    // Not in screenshot mode (the dialog shows the real address), nor for the demo, nor
+                    // where the calls do not use it (Omni, a linked Kubernetes access).
+                    kubeServer = kubeServers[context.fingerprint]?.takeIf { it.isNotEmpty() && !labels.masked && context.usesOwnKubeServer },
+                    onKubeServer = { addressing = context }
+                        .takeIf { onKubeServer != null && context.fingerprint.isNotBlank() && !context.demo && !labels.masked && context.usesOwnKubeServer },
                 )
             }
             if (groups == null) {
@@ -323,11 +363,25 @@ fun ClusterSheet(
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
                 )
             }
-            OutlinedButton(onClick = onAdd, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
+            IchorOutlinedButton(onClick = onAdd, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
                 Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
                 Text(stringResource(R.string.clusters_add))
             }
         }
+    }
+
+    addressing?.let { context ->
+        // Screenshot mode turned on with the dialog open: closed, not just hidden until it is off.
+        LaunchedEffect(labels.masked) { if (labels.masked) addressing = null }
+        val saved = kubeServers[context.fingerprint].orEmpty()
+        KubeServerDialog(
+            saved = saved,
+            onSave = { server ->
+                addressing = null
+                if (server != saved) onKubeServer?.invoke(context, server)
+            },
+            onDismiss = { addressing = null },
+        )
     }
 
     removing?.let { context ->
@@ -353,6 +407,21 @@ fun ClusterSheet(
                 renaming = null
             },
             onDismiss = { renaming = null },
+        )
+    }
+
+    tagging?.let { context ->
+        val own = clusterFingerprints(config.summary, context)
+        ClusterTagsDialog(
+            label = labels.of(context),
+            current = clusterTagsOf(tags, own),
+            saved = tags,
+            own = own,
+            onSave = {
+                onTags?.invoke(context, it)
+                tagging = null
+            },
+            onDismiss = { tagging = null },
         )
     }
 
@@ -394,19 +463,27 @@ private fun ClusterRow(
     onSelect: () -> Unit,
     onRename: (() -> Unit)?,
     onColor: () -> Unit,
+    tags: List<String>,
+    onTags: (() -> Unit)?,
     vpnOnly: Boolean,
     onVpnOnly: ((Boolean) -> Unit)?,
     watched: Boolean,
     onWatch: ((Boolean) -> Unit)?,
+    recordsActions: Boolean,
+    onRecordActions: ((Boolean) -> Unit)?,
     onRemove: () -> Unit,
     onEndpoints: (() -> Unit)?,
     signInNeeded: Boolean,
     account: Pair<Int, () -> Unit>?,
     beingRemoved: Boolean,
     onActivity: (() -> Unit)?,
+    onRepository: (() -> Unit)?,
+    /** The API address set on this device, shown under the endpoints; null: the kubeconfig's. */
+    kubeServer: String?,
+    onKubeServer: (() -> Unit)?,
 ) {
     val label = labels.of(context)
-    ListItem(
+    IchorListItem(
         headlineContent = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = {
             Column {
@@ -430,6 +507,8 @@ private fun ClusterRow(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
+                context.proxyHost?.let { Text(stringResource(R.string.kube_proxy_via, it), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                kubeServer?.let { Text(stringResource(R.string.cluster_kube_server_set, it), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 // Which cluster needs a new talosconfig soon, without having to open each.
                 if (context.certNotAfter > 0 && daysUntil(context.certNotAfter) <= CERT_WARN_DAYS) {
                     Text(
@@ -438,6 +517,7 @@ private fun ClusterRow(
                     )
                 }
                 if (signInNeeded) Text(stringResource(R.string.kube_signin_needed), color = LocalStatusColors.current.warn)
+                if (tags.isNotEmpty()) ClusterTagChips(tags)
             }
         },
         leadingContent = { ClusterLogo(context, color, selected) },
@@ -448,13 +528,18 @@ private fun ClusterRow(
                 label = label,
                 onRename = onRename,
                 onColor = onColor,
+                onTags = onTags,
                 vpnOnly = vpnOnly,
                 onVpnOnly = onVpnOnly,
                 watched = watched,
                 onWatch = onWatch,
+                recordsActions = recordsActions,
+                onRecordActions = onRecordActions,
                 onEndpoints = onEndpoints,
                 account = account,
                 onActivity = onActivity,
+                onRepository = onRepository,
+                onKubeServer = onKubeServer,
                 onRemove = onRemove,
             )
         },
@@ -475,18 +560,23 @@ private fun ClusterRowMenu(
     label: String,
     onRename: (() -> Unit)?,
     onColor: () -> Unit,
+    onTags: (() -> Unit)?,
     vpnOnly: Boolean,
     onVpnOnly: ((Boolean) -> Unit)?,
     watched: Boolean,
     onWatch: ((Boolean) -> Unit)?,
+    recordsActions: Boolean,
+    onRecordActions: ((Boolean) -> Unit)?,
     onEndpoints: (() -> Unit)?,
     account: Pair<Int, () -> Unit>?,
     onActivity: (() -> Unit)?,
+    onRepository: (() -> Unit)?,
+    onKubeServer: (() -> Unit)?,
     onRemove: () -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
     Box {
-        IconButton(onClick = { open = true }) {
+        IchorIconButton(onClick = { open = true }) {
             Icon(Icons.Outlined.MoreVert, stringResource(R.string.clusters_options, label))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
@@ -507,6 +597,13 @@ private fun ClusterRowMenu(
                 leadingIcon = { Icon(Icons.Outlined.Palette, contentDescription = null) },
                 onClick = item(onColor),
             )
+            onTags?.let {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.clusters_menu_tags)) },
+                    leadingIcon = { Icon(Icons.Outlined.Sell, contentDescription = null) },
+                    onClick = item(it),
+                )
+            }
             onVpnOnly?.let { toggle ->
                 // A setting, not an action: the menu stays open to show it changed.
                 DropdownMenuItem(
@@ -525,10 +622,27 @@ private fun ClusterRowMenu(
                     onClick = { toggle(!watched) },
                 )
             }
+            onRecordActions?.let { toggle ->
+                // Off by default: a Kubernetes Event on each object the app changes in this cluster.
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.settings_audit_events)) },
+                    leadingIcon = { Icon(Icons.Outlined.EventAvailable, contentDescription = null) },
+                    trailingIcon = { Checkbox(checked = recordsActions, onCheckedChange = null) },
+                    onClick = { toggle(!recordsActions) },
+                )
+            }
             onEndpoints?.let {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.common_label_endpoints)) },
                     leadingIcon = { Icon(Icons.Outlined.Router, contentDescription = null) },
+                    onClick = item(it),
+                )
+            }
+            // Next to the endpoints: both say how this phone reaches the cluster.
+            onKubeServer?.let {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.cluster_kube_server_menu)) },
+                    leadingIcon = { Icon(Icons.Outlined.Dns, contentDescription = null) },
                     onClick = item(it),
                 )
             }
@@ -543,6 +657,13 @@ private fun ClusterRowMenu(
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.clusters_menu_activity)) },
                     leadingIcon = { Icon(Icons.Outlined.History, contentDescription = null) },
+                    onClick = item(it),
+                )
+            }
+            onRepository?.let {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.repo_settings_title)) },
+                    leadingIcon = { Icon(Icons.Outlined.FolderCopy, contentDescription = null) },
                     onClick = item(it),
                 )
             }
@@ -575,7 +696,7 @@ private fun Swatch(color: Color, selected: Boolean) {
 @Composable
 private fun ClusterNameDialog(context: ContextSummary, given: String, onRename: (String) -> Unit, onDismiss: () -> Unit) {
     var name by remember { mutableStateOf(given) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.clusters_rename, given.ifEmpty { parseCloudContext(context.name)?.cluster ?: context.name })) },
         text = {
@@ -591,8 +712,8 @@ private fun ClusterNameDialog(context: ContextSummary, given: String, onRename: 
                 Text(stringResource(R.string.clusters_rename_hint, context.name), style = MaterialTheme.typography.bodySmall)
             }
         },
-        confirmButton = { TextButton(onClick = { onRename(name) }) { Text(stringResource(R.string.common_ok)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = { onRename(name) }) { Text(stringResource(R.string.common_ok)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -600,7 +721,7 @@ private fun ClusterNameDialog(context: ContextSummary, given: String, onRename: 
 @Composable
 private fun ClusterColorDialog(name: String, color: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
     var picked by remember { mutableIntStateOf(color) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.clusters_color, name)) },
         text = {
@@ -641,8 +762,8 @@ private fun ClusterColorDialog(name: String, color: Int, onPick: (Int) -> Unit, 
                 Box(Modifier.fillMaxWidth().height(28.dp).background(Color(picked), MaterialTheme.shapes.small))
             }
         },
-        confirmButton = { TextButton(onClick = { onPick(picked) }) { Text(stringResource(R.string.common_ok)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = { onPick(picked) }) { Text(stringResource(R.string.common_ok)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -654,10 +775,11 @@ private val HUE_BAR: List<Color> = (0..MAX_HUE.toInt() step HUE_BAR_STEP).map { 
 
 /**
  * The account entry of [context]'s menu, if any: the sign-in of a kubeconfig cluster that
- * signs in through a method, the Kubernetes access of a Talos cluster once a kubeconfig
- * cluster is stored ([contexts]).
+ * signs in through a method, how to make a ServiceAccount token for one added with a token,
+ * the Kubernetes access of a Talos cluster once a kubeconfig cluster is stored ([contexts]).
  */
 private fun clusterAccount(context: ContextSummary, contexts: List<ContextSummary>): Int? = when {
+    context.isKube && !context.demo && context.signIn.isEmpty() && context.auth == KUBE_AUTH_TOKEN -> R.string.sa_help_menu
     context.isKube || context.omni -> R.string.kube_signin_menu.takeIf { context.signIn.isNotEmpty() }
     context.demo -> null
     else -> R.string.kube_access_menu.takeIf { contexts.any { it.isKube } }

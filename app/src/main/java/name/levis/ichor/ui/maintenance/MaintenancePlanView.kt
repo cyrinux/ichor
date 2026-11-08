@@ -14,8 +14,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -80,7 +80,7 @@ fun MaintenancePlanView(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (demo) InfoNotice(stringResource(R.string.maintenance_demo))
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 InfoRow(stringResource(R.string.maintenance_kube_node), plan.kubeNode.ifEmpty { "—" }, mono = true)
                 if (plan.controlPlane) InfoRow(stringResource(R.string.upgrade_role), stringResource(R.string.upgrade_control_plane))
@@ -110,7 +110,7 @@ fun MaintenancePlanView(
         if (!drainOnly) Checks(plan, action, ticked) { i, on -> ticked = if (on) ticked + i else ticked - i }
         if (busyWith != null) Text(busyWith, color = colors.warn, style = MaterialTheme.typography.bodySmall)
         KubeDenialNote(denial)
-        Button(
+        IchorButton(
             onClick = { onStart(MaintenanceChoice(action, includeBare, maintenanceAcknowledged(plan, action, ticked.size))) },
             enabled = maintenanceCanStart(plan, action, ticked.size, busyWith != null) && denial == null,
             modifier = Modifier.fillMaxWidth(),
@@ -140,7 +140,7 @@ private fun ActionPicker(selected: MaintenanceAction, onSelect: (MaintenanceActi
 
 @Composable
 private fun PodGroup(title: String, pods: List<DrainPod>, empty: String) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             SectionTitle(title)
             if (pods.isEmpty() && empty.isNotEmpty()) MutedText(empty)
@@ -153,7 +153,7 @@ private fun PodGroup(title: String, pods: List<DrainPod>, empty: String) {
 @Composable
 private fun LeftAlone(pods: List<DrainPod>) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth().expandable(expanded) { expanded = !expanded }, verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -170,7 +170,7 @@ private fun LeftAlone(pods: List<DrainPod>) {
 @Composable
 private fun Checks(plan: MaintenancePlan, action: MaintenanceAction, ticked: Set<Int>, onTick: (Int, Boolean) -> Unit) {
     val colors = LocalStatusColors.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SectionTitle(stringResource(R.string.upgrade_checks))
             plan.blockers.forEach { Text("✕ $it", color = colors.bad, style = MaterialTheme.typography.bodyMedium) }

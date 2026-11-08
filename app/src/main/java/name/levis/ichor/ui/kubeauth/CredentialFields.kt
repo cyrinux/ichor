@@ -15,9 +15,9 @@ import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -85,7 +85,7 @@ private fun SecretField(value: String, onValue: (String) -> Unit, label: String,
         visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false),
         trailingIcon = {
-            IconButton(onClick = { visible = !visible }) {
+            IchorIconButton(onClick = { visible = !visible }) {
                 Icon(
                     if (visible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                     contentDescription = stringResource(if (visible) R.string.kube_signin_hide else R.string.kube_signin_show),
@@ -125,7 +125,7 @@ private fun KeyFileField(value: String, onValue: (String) -> Unit, label: String
             keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
             modifier = Modifier.fillMaxWidth(),
         )
-        OutlinedButton(onClick = { picker.launch(arrayOf("application/json", "text/plain", "*/*")) }, enabled = enabled) {
+        IchorOutlinedButton(onClick = { picker.launch(arrayOf("application/json", "text/plain", "*/*")) }, enabled = enabled) {
             Icon(Icons.Outlined.FileOpen, contentDescription = null)
             Text(stringResource(R.string.kube_field_from_file))
         }

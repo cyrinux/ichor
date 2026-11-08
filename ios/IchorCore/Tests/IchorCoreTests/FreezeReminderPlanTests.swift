@@ -3,10 +3,14 @@ import XCTest
 
 final class FreezeReminderPlanTests: XCTestCase {
     func testIdentifier() {
-        let id = freezeReminderID(prefix: "argo-freeze|", cluster: "abc", namespace: "argocd", project: "default", window: "w1")
+        let id = freezeReminderID(
+            prefix: "argo-freeze|", cluster: "abc", namespace: "argocd", project: "default", window: "w1")
         XCTAssertEqual(id, "argo-freeze|abc|argocd/default/w1")
         XCTAssertTrue(id.hasPrefix("argo-freeze|abc|"))
-        XCTAssertNotEqual(id, freezeReminderID(prefix: "argo-freeze|", cluster: "abc", namespace: "argocd", project: "default", window: "w2"))
+        XCTAssertNotEqual(
+            id,
+            freezeReminderID(
+                prefix: "argo-freeze|", cluster: "abc", namespace: "argocd", project: "default", window: "w2"))
     }
 
     func testDelay() {

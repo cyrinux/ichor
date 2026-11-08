@@ -1,0 +1,27 @@
+id: kubelet-failed
+kind: full
+report: |
+  Talos cluster report, collected 2026-10-01 18:04 UTC through the Talos API (client role: os:reader)
+
+  NODES (2: 1 ready, 1 not ready, 0 unreachable)
+  - cp-1 [10.0.0.7]: controlplane, Talos v1.14.1, stage running, ready
+  - worker-2 [10.0.0.8]: worker, Talos v1.14.1, stage running, NOT READY
+      unmet condition nodeReady: node is not ready
+
+  NODE worker-2
+    service kubelet: state Failed, health unhealthy for 9 min, last event: Health check failed
+    kubelet log, last 1 lines:
+      | failed to reach 10.0.0.7:6443: i/o timeout
+
+  EVENTS
+    2026-10-01 18:03:00 10.0.0.8 error: service kubelet failed: exit code 1
+expect:
+  must:
+    - "kubelet"
+    - ["6443", "API server", "apiserver", "control plane", "control-plane"]
+    - ["restart", "logs kubelet"]
+  mustNot:
+    - "talosctl reset"
+    - "systemctl restart"
+    - "journalctl -u"
+  maxWords: 300

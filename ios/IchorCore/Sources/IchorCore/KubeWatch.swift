@@ -79,7 +79,9 @@ public struct KubeResourceWatchEvent: Equatable, Sendable {
     /// models cannot read.
     public static func decode(_ eventType: String, json: String) -> KubeResourceWatchEvent? {
         guard eventType == "SYNC" else {
-            return KubeWatchEvent<KubeResourceRow>.decode(eventType, json: json) { _ in [] }.map { KubeResourceWatchEvent(change: $0) }
+            return KubeWatchEvent<KubeResourceRow>.decode(eventType, json: json) { _ in [] }.map {
+                KubeResourceWatchEvent(change: $0)
+            }
         }
         guard let page = try? TalosJSON.decode(KubeResourcePage.self, from: json) else { return nil }
         return KubeResourceWatchEvent(change: .sync(page.rows), columns: page.columns)

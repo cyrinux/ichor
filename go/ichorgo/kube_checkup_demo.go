@@ -6,8 +6,9 @@ import (
 )
 
 // demoCheckup is the demo cluster's checkup: the crash-looping worker of demoPods, and one
-// finding of about every kind, so each section shows what it can say.
-func demoCheckup(now time.Time) checkupReport {
+// finding of about every kind, so each section shows what it can say; the plugins section is
+// the plugins' samples' findings, in locale.
+func demoCheckup(now time.Time, locale string) checkupReport {
 	ago := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
 
 	const gi = float64(1 << 30)
@@ -40,6 +41,7 @@ func demoCheckup(now time.Time) checkupReport {
 		newSection(checkWorkloads, 8, []checkupFinding{
 			{Kind: findPodCrashLoop, Severity: sevCritical, Namespace: "demo", Name: "worker-6f4b8-uvwxy", Node: "demo-worker-1", Count: 14, Reason: "Error (exit 1)", Since: ago(72 * time.Hour)},
 			{Kind: findPodUnschedulable, Severity: sevCritical, Namespace: "demo", Name: "batch-7c9d4-zzzzz", Reason: "Unschedulable", Message: "0/5 nodes are available: 1 node(s) were unschedulable, 3 node(s) had untolerated taint {node-role.kubernetes.io/control-plane: }, 1 Insufficient memory.", Since: ago(40 * time.Minute)},
+			{Kind: findPodImagePull, Severity: sevCritical, Namespace: "demo", Name: "reports-5b7c9-xkq2p", Node: "demo-worker-2", Reason: pullRateLimited, Message: demoPullMessage, Extra: demoPullImage, Since: ago(35 * time.Minute)},
 			{Kind: findPodOOMKilled, Severity: sevWarning, Namespace: "monitoring", Name: "prometheus-0", Node: "demo-worker-1", Count: 3, Reason: "OOMKilled (exit 137)", Since: ago(48 * time.Hour)},
 			{Kind: findJobFailed, Severity: sevWarning, Namespace: "demo", Name: "backup-29340120", Extra: "backup", Reason: "BackoffLimitExceeded", Message: "Job has reached the specified backoff limit", Since: ago(5 * time.Hour)},
 		}),
@@ -59,6 +61,10 @@ func demoCheckup(now time.Time) checkupReport {
 		newSection(checkWebhooks, 3, []checkupFinding{
 			{Kind: findWebhookDown, Severity: sevCritical, Name: "policy-validator", Extra: "policy/validator", Reason: "Validating", Count: 2},
 		}),
+		newSection(checkPolicies, 5, []checkupFinding{
+			{Kind: findPolicyBlocks, Severity: sevCritical, Namespace: "shop", Name: "checkout", Extra: "require-labels", Reason: "autogen-check-for-labels", Message: "validation error: Deployment labels are missing: app, version", Count: 6, Since: ago(25 * time.Minute)},
+			{Kind: findPolicyFailures, Severity: sevWarning, Namespace: "", Name: "require-labels", Count: 7, Extra: "shop", Message: "would be refused in Enforce mode"},
+		}),
 		newSection(checkCapacity, 6, []checkupFinding{
 			{Kind: findNodeRequestsHigh, Severity: sevWarning, Name: "demo-worker-1", Extra: "cpu", Value: 92.5},
 			{Kind: findNodeRequestsHigh, Severity: sevWarning, Name: "demo-worker-2", Extra: "memory", Value: 91.3},
@@ -67,22 +73,42 @@ func demoCheckup(now time.Time) checkupReport {
 		newSection(checkNodes, 5, []checkupFinding{
 			{Kind: findNodeCordoned, Severity: sevWarning, Name: "demo-worker-2", Since: ago(3 * 24 * time.Hour)},
 		}),
-		newSection(checkLoadBalancers, 3, []checkupFinding{
-			{Kind: findLBPending, Severity: sevCritical, Namespace: "demo", Name: "hello-ichor-public", Since: ago(50 * time.Minute)},
+		newSection(checkLoadBalancers, 6, []checkupFinding{
+			{Kind: findLBPending, Severity: sevCritical, Namespace: "demo", Name: "hello-ichor-public", Reason: lbCausePoolExhausted, Since: ago(50 * time.Minute)},
 			{Kind: findLBPoolExhausted, Severity: sevCritical, Name: "default-pool", Value: 2},
+			{Kind: findLBBGPPeerDown, Severity: sevCritical, Name: "upstream-router", Node: "demo-worker-2", Extra: "192.0.2.1"},
+			{Kind: findLBPoolUnadvertised, Severity: sevWarning, Name: "lab-pool"},
 		}),
 		newSection(checkTerminating, 20, []checkupFinding{
 			{Kind: findNamespaceTerminating, Severity: sevWarning, Name: "old-staging", Message: "Some resources are remaining: widgets.example.com has 2 resource instances. Some content in the namespace has finalizers remaining: example.com/cleanup in 2 resource instances.", Since: ago(6 * 24 * time.Hour)},
 			{Kind: findNetPerfLeftover, Severity: sevWarning, Name: "ichor-netperf-k7x2q", Since: ago(2 * 24 * time.Hour)},
 		}),
-		newSection(checkCertificates, 14, []checkupFinding{
+		newSection(checkCertificates, 18, []checkupFinding{
 			{Kind: findCSRPending, Severity: sevWarning, Name: "system:node:demo-worker-1", Extra: "kubernetes.io/kubelet-serving", Count: 12, Since: ago(3 * time.Hour)},
+			{Kind: findRouteCertExpiring, Severity: sevWarning, Namespace: "default", Name: "vaultwarden-tls", Extra: "Ingress default/vaultwarden",
+				Reason: "vault.home.example", Count: 9, Since: now.Add(9*24*time.Hour + time.Hour).UnixMilli()},
+			{Kind: findRouteCertHostMismatch, Severity: sevWarning, Namespace: "default", Name: "paperless-tls", Extra: "Ingress default/paperless",
+				Reason: "paperless.home.example", Message: "paperless.lan, *.lan"},
 		}),
-		newSection(checkSecrets, 9, []checkupFinding{
+		newSection(checkSecrets, 12, []checkupFinding{
 			{Kind: findExternalSecretFailed, Severity: sevWarning, Namespace: "demo", Name: "database-credentials", Extra: "vault", Reason: "SecretSyncedError", Message: "could not get secret data from provider: permission denied"},
+			{Kind: findSopsDecryptionFailed, Severity: sevCritical, Namespace: "flux-system", Name: "apps", Extra: "sops-age", Reason: fluxReasonBuildFailed, Message: "error decrypting sources: failed to decrypt: no key could decrypt the data"},
 		}),
 		newSection(checkHelm, len(releases), helmFindings(releases, now)),
 		demoCheckupMonitoring(now),
+		newSection(checkCrossplane, 12, []checkupFinding{
+			{Kind: findCrossplaneSyncFailed, Severity: sevCritical, Namespace: "apps", Name: "Database/app-db-primary", Extra: "default", Reason: "ReconcileError", Message: "cannot create database instance: quota exceeded for instances in this region"},
+			{Kind: findCrossplaneProviderUnhealthy, Severity: sevCritical, Name: "Provider/provider-storage", Extra: "xpkg.example.org/demo/provider-storage:v1.4.0", Reason: "UnhealthyPackageRevision", Message: "cannot pull package: manifest unknown"},
+			{Kind: findCrossplaneNotReady, Severity: sevWarning, Name: "Bucket/assets-bucket", Extra: "default", Reason: "Creating", Count: 42, Since: ago(42 * time.Minute)},
+		}),
+		newSection(checkTailscale, 6, []checkupFinding{
+			{Kind: findTailscaleConnectorNotReady, Severity: sevCritical, Name: "lab-router", Extra: tsRoleSubnetRouter, Reason: "ConnectorCreationFailed", Message: "failed to create the subnet router's StatefulSet: proxy class \"lab\" is not ready"},
+		}),
+		newSection(checkClusterAPI, 19, []checkupFinding{
+			{Kind: findSideroServerOff, Severity: sevCritical, Name: "srv-b2", Extra: "rack2-u02"},
+			{Kind: findCapiMachineStuck, Severity: sevWarning, Namespace: "fleet", Name: "staging-cp-x7k2p", Extra: "staging/Provisioning", Since: ago(95 * time.Minute)},
+		}),
+		demoCheckupPlugins(locale),
 	}
 
 	return checkupReport{Status: checkupVerdict(sections), KubeVersion: "v1.34.1", Sections: sections, Nodes: nodes, Volumes: volumes, Releases: releases}
@@ -108,7 +134,7 @@ func demoCheckupNode(name, role string, cores, memory, cpuRequests, memoryReques
 }
 
 // demoEvents are the demo cluster's events for an object: the crash-looping worker tells
-// its story, anything else is quiet.
+// its story, the drifted podinfo release its drift, anything else is quiet.
 func demoEvents(namespace, kind, name string, now time.Time) kubeEventList {
 	ago := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
 
@@ -119,6 +145,8 @@ func demoEvents(namespace, kind, name string, now time.Time) kubeEventList {
 		{Type: "Normal", Reason: "Pulled", Message: `Container image "busybox:1.37" already present on machine`, Kind: "Pod", Namespace: "demo", Name: pod, Count: 15, First: ago(72 * time.Hour), Last: ago(6 * time.Minute), Source: "kubelet"},
 		{Type: "Normal", Reason: "Created", Message: "Created container: worker", Kind: "Pod", Namespace: "demo", Name: pod, Count: 15, First: ago(72 * time.Hour), Last: ago(6 * time.Minute), Source: "kubelet"},
 		{Type: "Normal", Reason: "ScalingReplicaSet", Message: "Scaled up replica set worker-6f4b8 from 0 to 2", Kind: "Deployment", Namespace: "demo", Name: "worker", Count: 1, First: ago(72 * time.Hour), Last: ago(72 * time.Hour), Source: "deployment-controller"},
+		// The drifted HelmRelease of demoFlux.
+		{Type: "Warning", Reason: "DriftDetected", Message: demoFluxDriftMessage, Kind: "HelmRelease", Namespace: "demo", Name: "podinfo", Count: 1, First: ago(18 * time.Minute), Last: ago(18 * time.Minute), Source: "helm-controller"},
 	}
 
 	events := []kubeEvent{}

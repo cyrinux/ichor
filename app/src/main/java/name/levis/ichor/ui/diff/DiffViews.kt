@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,17 +17,23 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Save
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -73,7 +80,7 @@ fun DiffChangeBadge(change: DiffChange, count: Int? = null) {
         if (count == null) change.label() else "${change.label()} $count",
         style = MaterialTheme.typography.labelSmall,
         color = color,
-        maxLines = 1,
+        maxLines = 1, overflow = TextOverflow.Ellipsis,
         modifier = Modifier
             .background(color.copy(alpha = 0.14f), RoundedCornerShape(6.dp))
             .padding(horizontal = 6.dp, vertical = 2.dp),
@@ -91,10 +98,18 @@ fun DiffCounts(counts: List<Pair<DiffChange, Int>>) {
 
 /**
  * One object: its badge, kind, name and namespace; tapping unfolds its diff (or why it was
- * refused, or why it is not compared) when it has one.
+ * refused, or why it is not compared) when it has one. [onOpenSource]: "Open source file", for
+ * a GitOps diff whose app has a readable Git source; [searching] while that file is looked for.
  */
 @Composable
-fun DiffResourceCard(resource: KubeDiffResource, expanded: Boolean, onToggle: () -> Unit) {
+fun DiffResourceCard(
+    resource: KubeDiffResource,
+    expanded: Boolean,
+    onOpenSource: (() -> Unit)? = null,
+    searching: Boolean = false,
+    onKeepLive: (() -> Unit)? = null,
+    onToggle: () -> Unit,
+) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val detail = resource.diff.isNotEmpty() || resource.error.isNotEmpty() || resource.change.hint != null
     Column(
@@ -130,7 +145,48 @@ fun DiffResourceCard(resource: KubeDiffResource, expanded: Boolean, onToggle: ()
                 )
             }
         }
+        if (onOpenSource != null) OpenSourceAction(onOpenSource, searching)
+        if (onKeepLive != null && !searching) KeepLiveAction(resource, onKeepLive)
         if (expanded && detail) DiffDetail(resource)
+    }
+}
+
+/**
+ * "Keep live values in Git", above the values changed in the cluster by hand ("spec.replicas
+ * 2 → 5"): opens the manifest's editor with them written, for a pull request.
+ */
+@Composable
+private fun KeepLiveAction(resource: KubeDiffResource, onClick: () -> Unit) {
+    val values = resource.liveChanges.joinToString(", ") { "${it.label} ${it.wanted} → ${it.live}" }
+    Column(Modifier.padding(top = 4.dp)) {
+        Text(
+            stringResource(R.string.gitops_keep_live_values, values),
+            style = MaterialTheme.typography.labelSmall,
+            fontFamily = FontFamily.Monospace,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+        )
+        IchorTextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
+            Icon(Icons.Outlined.Save, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(stringResource(R.string.gitops_keep_live), modifier = Modifier.padding(start = 8.dp))
+        }
+    }
+}
+
+/** "Open source file", or a spinner and "Looking for the file…" while it is searched. */
+@Composable
+private fun OpenSourceAction(onClick: () -> Unit, searching: Boolean) {
+    if (searching) {
+        Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+            Text(stringResource(R.string.gitops_find_searching), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    } else {
+        IchorTextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
+            Icon(Icons.AutoMirrored.Outlined.InsertDriveFile, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(stringResource(R.string.gitops_find_open), modifier = Modifier.padding(start = 8.dp))
+        }
     }
 }
 
@@ -177,9 +233,16 @@ fun DiffLines(lines: List<DiffLine>) {
                 DiffLine.Kind.HUNK -> "" to muted
                 DiffLine.Kind.CONTEXT -> " " to Color.Unspecified
             }
+            // A screen reader says whether a line is added or removed, not "plus" or "minus".
+            val spoken = when (line.kind) {
+                DiffLine.Kind.ADDED -> stringResource(R.string.revision_diff_line_added, line.text)
+                DiffLine.Kind.REMOVED -> stringResource(R.string.revision_diff_line_removed, line.text)
+                else -> null
+            }
             Row(
                 Modifier
                     .background(if (line.kind == DiffLine.Kind.ADDED || line.kind == DiffLine.Kind.REMOVED) tint.copy(alpha = 0.12f) else Color.Transparent)
+                    .then(if (spoken != null) Modifier.clearAndSetSemantics { contentDescription = spoken } else Modifier)
                     .padding(horizontal = 8.dp),
             ) {
                 Text(sign, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall, color = tint, modifier = Modifier.width(12.dp))

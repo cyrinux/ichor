@@ -6,24 +6,44 @@ import IchorCore
 extension ContextSummary {
     /// How the context signs in, with what it signs in to when the core names it.
     var localizedAuthLabel: String {
-        let method = switch auth ?? "" {
-        case "cert": String(localized: "Client certificate")
-        case "token": String(localized: "Token")
-        case "eks": "AWS EKS"
-        case "gke": "Google GKE"
-        case "oidc": "OIDC"
-        case "azure": "Azure AKS"
-        case "digitalocean": "DigitalOcean"
-        case "rancher": "Rancher"
-        case "omni": "Sidero Omni"
-        case "omni-service-account": String(localized: "Omni service account")
-        case "exec": String(localized: "Exec plugin")
-        case "auth-provider": String(localized: "Auth provider")
-        case "basic": String(localized: "Username and password")
-        default: String(localized: "None")
-        }
+        let method =
+            switch auth ?? "" {
+            case "cert": String(localized: "Client certificate")
+            case "token": String(localized: "Token")
+            case "eks": "AWS EKS"
+            case "gke": "Google GKE"
+            case "oidc": "OIDC"
+            case "azure": "Azure AKS"
+            case "digitalocean": "DigitalOcean"
+            case "rancher": "Rancher"
+            case "omni": "Sidero Omni"
+            case "omni-service-account": String(localized: "Omni service account")
+            case "exec": String(localized: "Exec plugin")
+            case "auth-provider": String(localized: "Auth provider")
+            case "basic": String(localized: "Username and password")
+            default: String(localized: "None")
+            }
         guard let detail = authDetail, !detail.isEmpty else { return method }
         return "\(method) · \(detail)"
+    }
+
+    /// What to do instead of the exec plugin the phone cannot run.
+    private var localizedExecHint: String {
+        switch execHint {
+        case "teleport":
+            return String(
+                localized:
+                    "Teleport sign-in from the phone is planned; until then, export a kubeconfig with a client certificate."
+            )
+        case "token-wrapper":
+            return String(localized: "It only prints a token: paste that token, or use a client certificate.")
+        case "oidc-no-issuer":
+            return String(
+                localized: "Export it again with --oidc-issuer-url so the built-in OIDC sign-in can take over."
+            )
+        default:
+            return String(localized: "Use a client certificate or a token.")
+        }
     }
 
     /// Why the context cannot be added, nil when it can.
@@ -38,17 +58,20 @@ extension ContextSummary {
         case "kube-not-https":
             return String(localized: "The server is not https: Ichor only connects over TLS.")
         case "kube-file-path":
-            return String(localized: "Certificates or keys are file paths. Run kubectl config view --flatten --minify and import its output.")
+            return String(
+                localized:
+                    "Certificates or keys are file paths. Run kubectl config view --flatten --minify and import its output."
+            )
         case "kube-proxy-url":
-            return String(localized: "Connecting through a proxy (proxy-url) is not supported.")
+            return String(localized: "The proxy address in proxy-url is not valid.")
         case "kube-basic-auth":
             return String(localized: "Signing in with a username and password is not supported.")
         case "kube-sign-in-later":
             return String(localized: "Signing in with \(localizedAuthLabel) comes in a later version.")
         case "kube-exec-unsupported":
-            return detail.isEmpty
-                ? String(localized: "This exec plugin cannot run on a phone.")
-                : String(localized: "This exec plugin cannot run on a phone: \(detail)")
+            guard !detail.isEmpty else { return String(localized: "This exec plugin cannot run on a phone.") }
+            let named = String(localized: "The \(detail) credential plugin cannot run on a phone.")
+            return "\(named) \(localizedExecHint)"
         case "kube-no-credentials":
             return String(localized: "The user has no credentials: no client certificate and no token.")
         case "kube-invalid":
@@ -78,7 +101,10 @@ extension ClusterGroup {
 extension CloudContext {
     /// The location and owner under a cloud context's cluster name: "EKS · eu-north-1 · account 12…12".
     var localizedDetail: String {
-        let owner = provider == Self.eks ? String(localized: "account \(shortOwner)") : String(localized: "project \(shortOwner)")
+        guard !shortOwner.isEmpty else { return [provider, location].joined(separator: " · ") }
+        let owner =
+            provider == Self.eks
+            ? String(localized: "account \(shortOwner)") : String(localized: "project \(shortOwner)")
         return [provider, location, owner].joined(separator: " · ")
     }
 }

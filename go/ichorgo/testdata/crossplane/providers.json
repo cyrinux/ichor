@@ -1,0 +1,51 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "provider-storage",
+        "namespace": ""
+      },
+      "spec": {
+        "package": "registry.example.org/provider/storage:v1"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Installed",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          },
+          {
+            "type": "Healthy",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "provider-broken",
+        "namespace": ""
+      },
+      "spec": {
+        "package": "registry.example.org/provider/broken:v1"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Installed",
+            "status": "False",
+            "reason": "PullFailed",
+            "message": "cannot pull package",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          }
+        ]
+      }
+    }
+  ]
+}

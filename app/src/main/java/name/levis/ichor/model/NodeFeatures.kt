@@ -55,6 +55,7 @@ enum class TalosFeature(val key: String) {
     DEBUG_SHELL("debugShell"),
     RESET("reset"),
     META("meta"),
+    WATCHDOG("watchdog"),
 }
 
 /** Support of [feature] on this node; supported while unknown (features not loaded, new name). */

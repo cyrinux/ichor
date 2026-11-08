@@ -1,0 +1,4 @@
+• A redacted diagnostics log in the Go core and a local diagnostics zip the apps can share
+• On iPhone and iPad, select several updates and propose them as one pull request with a table of each bump
+• On Android, select several updates and propose them as one pull request from the staged changes sheet
+• The core plans one pull request for several selected updates, with a table of each bump and its source

@@ -1,0 +1,135 @@
+import SwiftUI
+import IchorCore
+
+/// The Deployments, StatefulSets and DaemonSets running an app, each with a rollout restart
+/// (os:admin): found through its pods' owners in the Kubernetes API when the sheet opens; only
+/// those pods and workloads are read, never a cluster-wide list.
+struct AppWorkloadsSection: View {
+    let app: InventoryApp
+
+    @Environment(AppModel.self) private var model
+    @State private var state: LoadState<[KubeWorkload]> = .loading
+    /// Those found for app: a restart replaces its pods, so after one the inventory's pod names
+    /// no longer lead to their workloads; only their state is fetched again.
+    @State private var found: [KubeWorkload]?
+    @State private var confirm: KubeWorkload?
+    @State private var restarting: Set<String> = []
+    @State private var resultMessage: String?
+    /// Just restarted: its rollout is shown live until the sheet is closed.
+    @State private var following: KubeWorkload?
+
+    var body: some View {
+        Section("Workloads") {
+            switch state {
+            case .loading:
+                Text("Finding its workloads…").note()
+            case .failed(let message):
+                Text("Could not list its workloads: \(message)").note()
+            case .loaded(let workloads, _, _):
+                if workloads.isEmpty {
+                    Text("No Deployment, StatefulSet or DaemonSet runs it.").note()
+                } else {
+                    ForEach(workloads) { workload in
+                        AppWorkloadLine(workload: workload, restarting: restarting.contains(workload.id)) {
+                            confirm = workload
+                        }
+                        KubeDeniedNote(KubeAction.restart(kind: workload.kind), in: workload.namespace)
+                        // A row of its own, not a link around the line: a List row that is a link
+                        // takes every tap, Restart's included. The sheet is a NavigationStack.
+                        if let selection = workload.podSelection {
+                            NavigationLink {
+                                WorkloadPodsView(workload: workload, selection: selection)
+                            } label: {
+                                Label("Pods", systemImage: "shippingbox")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .loadsKubeActionAccess(namespace: accessNamespace)
+        .task(id: app) {
+            found = nil
+            state = .loading
+            await load()
+        }
+        .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
+        .sheet(item: $following) { workload in RolloutStatusSheet(workload: workload) { await load() } }
+        .messageAlert($resultMessage)
+    }
+
+    /// The namespace of the app's workloads when they share one, else "" (asked cluster-wide,
+    /// which then says nothing about a namespace: the restarts stay offered).
+    private var accessNamespace: String {
+        guard case .loaded(let workloads, _, _) = state else { return "" }
+        return kubeSharedNamespace(workloads.map(\.namespace))
+    }
+
+    private func load() async {
+        guard let client = model.client else { return }
+        let known = found
+        let pods = app.routePods
+        // Those that run nothing have no pod to lead to them: the inventory names them.
+        let idle = app.workloads.map { WorkloadRef(kind: $0.kind, namespace: $0.namespace, name: $0.name) }
+        let result: LoadState<[KubeWorkload]> = await .from {
+            // One deleted since drops out.
+            if let known { return try await client.workloadsNamed(known.map(\.ref)) }
+            var fromPods: [KubeWorkload] = []
+            if !pods.isEmpty { fromPods = try await client.appWorkloads(pods: pods) }
+            var named: [KubeWorkload] = []
+            if !idle.isEmpty { named = try await client.workloadsNamed(idle) }
+            var seen = Set<WorkloadRef>()
+            return (fromPods + named).filter { seen.insert($0.ref).inserted }
+                .sorted { ($0.namespace, $0.name, $0.kind) < ($1.namespace, $1.name, $1.kind) }
+        }
+        if found == nil, case .loaded(let workloads, _, _) = result { found = workloads }
+        state = state.refreshed(with: result)
+    }
+
+    private func restart(_ workload: KubeWorkload) async {
+        guard let client = model.client, !restarting.contains(workload.id) else { return }
+        restarting.insert(workload.id)
+        defer { restarting.remove(workload.id) }
+        do {
+            try await client.rolloutRestart(workload)
+            following = workload
+            // Followed app-wide too, with its Live Activity, after the sheet closes.
+            RolloutJob.shared.start(client: client, workload: workload)
+            // Show the rollout starting: the controller already bumped the generation.
+            await load()
+        } catch {
+            resultMessage = String(localized: "Could not restart \(workload.name): \(error.localizedDescription)")
+        }
+    }
+}
+
+/// Name, "Deployment · 2/3 ready", and the restart button (a spinner while it runs).
+private struct AppWorkloadLine: View {
+    let workload: KubeWorkload
+    let restarting: Bool
+    let onRestart: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: workload.name)
+                    .font(.callout.monospaced())
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Text(verbatim: "\(workload.kind) · \(workload.ready)/\(workload.desired)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
+            Spacer(minLength: 8)
+            if restarting {
+                ProgressView()
+            } else {
+                Button("Restart", systemImage: "arrow.clockwise", action: onRestart)
+                    .buttonStyle(.bordered)
+                    .disabled(!workload.canRestart)
+                    .kubeGated(KubeAction.restart(kind: workload.kind), in: workload.namespace)
+            }
+        }
+    }
+}

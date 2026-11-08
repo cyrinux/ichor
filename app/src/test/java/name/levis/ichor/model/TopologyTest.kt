@@ -17,6 +17,44 @@ class TopologyTest {
     }
 
     @Test
+    fun decodesTheBrokenVerdictAndTheMesh() {
+        val json = """
+            {"links":[{"a":"node-a","b":"node-b","state":"unknown","broken":true,"reason":"neverHandshaked","since":0,"sides":[]},
+              {"a":"node-a","b":"node-c","state":"unknown","broken":false,"since":0,"sides":[]},
+              {"a":"node-b","b":"node-c","state":"up","broken":true,"reason":"oneSide","since":1800000000,"sides":[]}],
+             "mesh":{"checked":true,"links":3,"broken":2,"pairs":["node-a ↔ node-b","node-b ↔ node-c"]}}
+        """.trimIndent()
+        val topology = TalosJson.decodeFromString(ClusterTopology.serializer(), json)
+
+        assertEquals(listOf(true, false, true), topology.links.map { it.isBroken })
+        assertEquals(listOf(false, false, true), topology.links.map { it.isOneSided })
+        assertEquals("neverHandshaked", topology.links[0].reason)
+        assertEquals(1800000000L, topology.links[2].since)
+        assertEquals(TopologyMesh(true, 3, 2, listOf("node-a ↔ node-b", "node-b ↔ node-c")), topology.mesh)
+        assertEquals(2, topology.brokenLinks("node-b"))
+    }
+
+    @Test
+    fun aMapCachedBeforeTheVerdictJudgesByItsState() {
+        val json = """{"links":[{"a":"a","b":"b","state":"down"},{"a":"a","b":"c","state":"degraded"},
+            {"a":"b","b":"c","state":"unknown"},{"a":"c","b":"d","state":"up"}]}"""
+        val topology = TalosJson.decodeFromString(ClusterTopology.serializer(), json)
+
+        assertEquals(listOf(true, true, false, false), topology.links.map { it.isBroken })
+        assertEquals(listOf(false, true, false, false), topology.links.map { it.isOneSided })
+        assertEquals(TopologyMesh(), topology.mesh)
+    }
+
+    @Test
+    fun peersCachedBeforeTheVerdictJudgeByTheirState() {
+        val json = """{"node":"10.0.0.1","down":1,"peers":[{"publicKey":"k","label":"node-b","state":"down"}]}"""
+        val node = TalosJson.decodeFromString(KubeSpanNode.serializer(), json)
+
+        assertEquals(1, node.broken)
+        assertEquals(true, node.peers.single().broken)
+    }
+
+    @Test
     fun decodesTheGoCoreJson() {
         val json = """
             {"nodes":[{"id":"cp-1","node":"10.0.0.1","hostname":"cp-1","role":"controlplane","addresses":["10.0.0.1"],

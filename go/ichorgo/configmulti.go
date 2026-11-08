@@ -13,6 +13,7 @@ import (
 	"github.com/siderolabs/talos/pkg/machinery/client"
 	"github.com/siderolabs/talos/pkg/machinery/resources/config"
 	"github.com/siderolabs/talos/pkg/machinery/resources/network"
+	"go.yaml.in/yaml/v4"
 )
 
 // The same machine config change on several nodes: the edits made on one node's draft are
@@ -127,6 +128,7 @@ func StartConfigApplyMulti(configYAML, contextName, nodesCSV, editsJSON, mode st
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(configYAML, contextName)()
 
 		mode = strings.ToLower(strings.TrimSpace(mode))
 
@@ -213,17 +215,36 @@ func replayEdits(baseYAML string, edits []configEdit) (string, error) {
 		return "", fmt.Errorf("the config is not valid YAML: %w", err)
 	}
 
-	for _, edit := range edits {
-		if edit.Doc < 0 || edit.Doc >= len(docs) {
-			return "", fmt.Errorf("no document %d in this config", edit.Doc)
-		}
-
-		if err := applyConfigEdit(docs[edit.Doc], edit); err != nil {
-			return "", fmt.Errorf("%s: %w", strings.Join(edit.Path, "."), err)
-		}
+	if docs, err = applyConfigEdits(docs, edits); err != nil {
+		return "", err
 	}
 
 	return encodeConfigDocs(docs)
+}
+
+// applyConfigEdits applies edits, in order, to docs, made on another config: a new document
+// whose kind the config already has replaces it.
+func applyConfigEdits(docs []*yaml.Node, edits []configEdit) ([]*yaml.Node, error) {
+	for _, edit := range edits {
+		if edit.Op == configOpAddDoc {
+			var err error
+			if docs, err = addConfigDoc(docs, edit, true); err != nil {
+				return nil, err
+			}
+
+			continue
+		}
+
+		if edit.Doc < 0 || edit.Doc >= len(docs) {
+			return nil, fmt.Errorf("no document %d in this config", edit.Doc)
+		}
+
+		if err := applyConfigEdit(docs[edit.Doc], edit); err != nil {
+			return nil, fmt.Errorf("%s: %w", strings.Join(edit.Path, "."), err)
+		}
+	}
+
+	return docs, nil
 }
 
 func previewMultiConfig(ctx context.Context, cl multiConfigCluster, nodes []string, edits []configEdit) multiConfigPreview {

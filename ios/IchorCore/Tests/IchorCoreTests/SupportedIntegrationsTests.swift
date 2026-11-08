@@ -4,11 +4,11 @@ import XCTest
 final class SupportedIntegrationsTests: XCTestCase {
     func testDecodesCheckedList() throws {
         let json = #"""
-        {"checked":true,"items":[
-          {"id":"longhorn","name":"Longhorn","icon":"longhorn","website":"https://longhorn.io","groups":["longhorn.io"],"detected":true,"via":"api","version":"v1beta2"},
-          {"id":"garage","name":"Garage","icon":"garage","website":"https://garagehq.deuxfleurs.fr","groups":[],"detected":true,"via":"pods","version":"v2.3.0","namespace":"storage"}
-        ]}
-        """#
+            {"checked":true,"items":[
+              {"id":"longhorn","name":"Longhorn","icon":"longhorn","website":"https://longhorn.io","groups":["longhorn.io"],"detected":true,"via":"api","version":"v1beta2"},
+              {"id":"garage","name":"Garage","icon":"garage","website":"https://garagehq.deuxfleurs.fr","groups":[],"detected":true,"via":"pods","version":"v2.3.0","namespace":"storage"}
+            ]}
+            """#
         let list = try TalosJSON.decode(SupportedIntegrations.self, from: json)
         XCTAssertTrue(list.checked)
         XCTAssertEqual(list.items.map(\.id), ["longhorn", "garage"])
@@ -23,7 +23,8 @@ final class SupportedIntegrationsTests: XCTestCase {
     }
 
     func testDefaults() throws {
-        let list = try TalosJSON.decode(SupportedIntegrations.self, from: #"{"items":[{"id":"dragonfly","name":"Dragonfly","icon":""}]}"#)
+        let list = try TalosJSON.decode(
+            SupportedIntegrations.self, from: #"{"items":[{"id":"dragonfly","name":"Dragonfly","icon":""}]}"#)
         XCTAssertFalse(list.checked)
         XCTAssertNil(list.items[0].app.icon)
         XCTAssertFalse(list.items[0].detected)

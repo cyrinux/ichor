@@ -66,6 +66,7 @@ func StartSupportBundle(configYAML, contextName, kubeServer, nodes, destPath str
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", 0, msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		size, err := runSupportBundle(ctx, configYAML, contextName, kubeServer, nodes, destPath, listener)
 		if err != nil {
@@ -323,6 +324,7 @@ func (w *bundleWriter) summary(sections []bundleSection) []byte {
 	}
 
 	b.WriteString("\nThe machine configs have their secrets redacted. Logs and resources are copied as they are.\n")
+	b.WriteString("Data services (Longhorn, Garage, CloudNativePG, Velero…) in cluster/dataservices.json are their operators' status, read-only.\n")
 
 	if len(w.failures) == 0 {
 		b.WriteString("\nEvery step succeeded.\n")

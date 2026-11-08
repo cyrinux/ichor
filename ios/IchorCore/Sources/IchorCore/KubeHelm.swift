@@ -18,8 +18,10 @@ public struct HelmReleaseSummary: Decodable, Equatable, Hashable, Identifiable, 
 
     public var id: String { "\(namespace)/\(name)" }
 
-    public init(name: String, namespace: String, revision: Int = 1, status: String = "deployed", chart: String = "",
-                chartVersion: String = "", appVersion: String = "", updated: Int64 = 0) {
+    public init(
+        name: String, namespace: String, revision: Int = 1, status: String = "deployed", chart: String = "",
+        chartVersion: String = "", appVersion: String = "", updated: Int64 = 0
+    ) {
         self.name = name
         self.namespace = namespace
         self.revision = revision
@@ -30,7 +32,9 @@ public struct HelmReleaseSummary: Decodable, Equatable, Hashable, Identifiable, 
         self.updated = updated
     }
 
-    private enum CodingKeys: String, CodingKey { case name, namespace, revision, status, chart, chartVersion, appVersion, updated }
+    private enum CodingKeys: String, CodingKey {
+        case name, namespace, revision, status, chart, chartVersion, appVersion, updated
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -107,8 +111,10 @@ public struct HelmReleaseDetail: Decodable, Equatable, Sendable {
     /// Newest first.
     public let history: [HelmRevision]
 
-    public init(summary: HelmReleaseSummary, description: String = "", notes: String = "", values: String = "",
-                manifest: String = "", history: [HelmRevision] = []) {
+    public init(
+        summary: HelmReleaseSummary, description: String = "", notes: String = "", values: String = "",
+        manifest: String = "", history: [HelmRevision] = []
+    ) {
         self.summary = summary
         self.description = description
         self.notes = notes
@@ -137,7 +143,9 @@ public func filterHelmReleases(_ releases: [HelmReleaseSummary], query: String) 
     let needle = query.trimmingCharacters(in: .whitespaces)
     guard !needle.isEmpty else { return releases }
     return releases.filter { release in
-        [release.name, release.namespace, release.chart].contains { $0.range(of: needle, options: .caseInsensitive) != nil }
+        [release.name, release.namespace, release.chart].contains {
+            $0.range(of: needle, options: .caseInsensitive) != nil
+        }
     }
 }
 
@@ -158,7 +166,8 @@ public func sortHelmReleases(_ releases: [HelmReleaseSummary]) -> [HelmReleaseSu
 /// One object of a rollback (KubeHelmRollbackPlan): what happens to it, and the dry run's
 /// error when the API server refused the change.
 public struct HelmRollbackChange: Decodable, Equatable, Hashable, Identifiable, Sendable {
-    /// create, update, delete or keep (helm.sh/resource-policy: keep, left in place).
+    /// create, update, replace (Replace objects on: written whole), delete or keep
+    /// (helm.sh/resource-policy: keep, left in place).
     public let action: String
     public let kind: String
     public let namespace: String
@@ -193,6 +202,58 @@ public struct HelmRollbackChange: Decodable, Equatable, Hashable, Identifiable, 
     }
 }
 
+/// A chart hook the rollback runs (KubeHelmRollbackPlan): a Job or Pod created before the
+/// changes (pre-rollback) or after them (post-rollback), in weight order, its creation dry-run
+/// first. A refused hook stops the rollback.
+public struct HelmRollbackHook: Decodable, Equatable, Hashable, Identifiable, Sendable {
+    public let name: String
+    public let kind: String
+    /// "pre-rollback" or "post-rollback".
+    public let event: String
+    /// Helm's order inside an event: lower runs first.
+    public let weight: Int
+    /// helm.sh/hook-delete-policy: before-hook-creation, hook-succeeded, hook-failed.
+    public let deletePolicies: [String]
+    /// "" when the dry run passed.
+    public let error: String
+
+    public var id: String { "\(event)/\(kind)/\(name)" }
+
+    public init(
+        name: String, kind: String, event: String, weight: Int = 0, deletePolicies: [String] = [],
+        error: String = ""
+    ) {
+        self.name = name
+        self.kind = kind
+        self.event = event
+        self.weight = weight
+        self.deletePolicies = deletePolicies
+        self.error = error
+    }
+
+    private enum CodingKeys: String, CodingKey { case name, kind, event, weight, deletePolicies, error }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.field(.name, "")
+        kind = try c.field(.kind, "")
+        event = try c.field(.event, "")
+        weight = try c.field(.weight, 0)
+        deletePolicies = try c.field(.deletePolicies, [])
+        error = try c.field(.error, "")
+    }
+
+    /// Runs before the changes (pre-rollback); otherwise after them.
+    public var runsBefore: Bool { event == "pre-rollback" }
+
+    /// "Job site-migrate (weight -5)", or "Job site-notify" when the weight is 0. `weightLabel`
+    /// turns the number into the localized "weight N".
+    public func label(weightLabel: (String) -> String) -> String {
+        let base = "\(kind) \(name)"
+        return weight == 0 ? base : "\(base) (\(weightLabel(String(weight))))"
+    }
+}
+
 /// What rolling a release back to an older revision would do, every change dry-run first
 /// (KubeHelmRollbackPlan). Nothing has changed when it is read.
 public struct HelmRollbackPlan: Decodable, Equatable, Sendable {
@@ -213,10 +274,23 @@ public struct HelmRollbackPlan: Decodable, Equatable, Sendable {
     public let fluxOwner: String
     /// Why the rollback cannot run; empty when it can.
     public let blockers: [String]
+    /// The options the plan was made with (HelmRollbackOptions).
+    public let force: Bool
+    public let historyMax: Int
+    /// Revisions whose record the rollback deletes afterwards (history max), oldest first.
+    public let prune: [Int]
+    /// Deployments, StatefulSets and DaemonSets of the older revision: what a wait follows.
+    public let workloads: Int
+    /// The chart's pre- and post-rollback hooks, in Helm's order (event, weight, name).
+    public let hooks: [HelmRollbackHook]
 
-    public init(namespace: String = "", name: String = "", from: Int = 0, to: Int = 0, fromChart: String = "",
-                toChart: String = "", fromAppVersion: String = "", toAppVersion: String = "",
-                changes: [HelmRollbackChange] = [], unchanged: Int = 0, fluxOwner: String = "", blockers: [String] = []) {
+    public init(
+        namespace: String = "", name: String = "", from: Int = 0, to: Int = 0, fromChart: String = "",
+        toChart: String = "", fromAppVersion: String = "", toAppVersion: String = "",
+        changes: [HelmRollbackChange] = [], unchanged: Int = 0, fluxOwner: String = "", blockers: [String] = [],
+        force: Bool = false, historyMax: Int = 0, prune: [Int] = [], workloads: Int = 0,
+        hooks: [HelmRollbackHook] = []
+    ) {
         self.namespace = namespace
         self.name = name
         self.from = from
@@ -229,10 +303,17 @@ public struct HelmRollbackPlan: Decodable, Equatable, Sendable {
         self.unchanged = unchanged
         self.fluxOwner = fluxOwner
         self.blockers = blockers
+        self.force = force
+        self.historyMax = historyMax
+        self.prune = prune
+        self.workloads = workloads
+        self.hooks = hooks
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, from, to, fromChart, toChart, fromAppVersion, toAppVersion, changes, unchanged, fluxOwner, blockers
+        case namespace, name, from, to, fromChart, toChart, fromAppVersion, toAppVersion, changes, unchanged, fluxOwner,
+            blockers
+        case force, historyMax, prune, workloads, hooks
     }
 
     public init(from decoder: Decoder) throws {
@@ -249,11 +330,24 @@ public struct HelmRollbackPlan: Decodable, Equatable, Sendable {
         unchanged = try c.field(.unchanged, 0)
         fluxOwner = try c.field(.fluxOwner, "")
         blockers = try c.field(.blockers, [])
+        force = try c.field(.force, false)
+        historyMax = try c.field(.historyMax, 0)
+        prune = try c.field(.prune, [])
+        workloads = try c.field(.workloads, 0)
+        hooks = try c.field(.hooks, [])
     }
 
-    /// Nothing stops it: the confirm button is enabled.
-    public var canRun: Bool { blockers.isEmpty }
+    /// Nothing stops it: the confirm button is enabled. A hook the dry run refused stops it too.
+    public var canRun: Bool { blockers.isEmpty && hooks.allSatisfy { $0.error.isEmpty } }
 
     /// Some object is marked helm.sh/resource-policy: keep.
     public var keepsObjects: Bool { changes.contains { $0.action == "keep" } }
+
+    /// Some workload can be followed after the rollback: the Wait option is shown.
+    public var canWait: Bool { workloads > 0 }
+
+    /// "1, 2": the revisions history max deletes, nil when none.
+    public var pruneList: String? {
+        prune.isEmpty ? nil : prune.map { String($0) }.joined(separator: ", ")
+    }
 }

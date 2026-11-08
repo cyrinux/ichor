@@ -10,12 +10,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,6 +52,7 @@ import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.LoadingViewModel
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.FeatureGate
@@ -62,6 +63,8 @@ import name.levis.ichor.ui.components.rememberNodeFeatures
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.history.NodeUptime
 import name.levis.ichor.ui.live.LiveStatsTab
+import name.levis.ichor.ui.share.PinButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.ui.share.rememberShareLink
 import name.levis.ichor.ui.workloads.SelectedPodsList
 
@@ -202,10 +205,10 @@ fun NodeTabsScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(hostname)
@@ -217,9 +220,12 @@ fun NodeTabsScreen(
                     if (controlState is ServiceControlState.Running || restartState is ContainerRestartState.Running) {
                         CircularProgressIndicator(Modifier.size(20.dp).padding(end = 4.dp), strokeWidth = 2.dp)
                     }
+                    // Without the tab: the pin opens the node, like the overview's rows.
+                    PinButton(ShareTarget(target = ShareTarget.NODE, addr = node, host = hostname), hostname)
                     TooltipIconButton(Icons.Outlined.Share, stringResource(R.string.share_link), onClick = {
                         share(ShareTarget.node(node, hostname, tab))
                     })
+                    AddToHomeButton(ShareTarget.node(node, hostname, tab), hostname)
                 },
             )
         },
@@ -228,6 +234,8 @@ fun NodeTabsScreen(
             // Cgroups (admin configs) and Kubernetes pods (with an API server) may be hidden.
             val tabs = nodeTabs(canCgroups, canKubePods)
             val shownTab = shownNodeTab(tab, tabs)
+            // The live charts use the width: that tab rotates on a phone.
+            if (shownTab == 2) AllowLandscape()
             NodeUptime(node, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             PrimaryScrollableTabRow(selectedTabIndex = tabs.indexOf(shownTab), edgePadding = 0.dp) {
                 AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.node_tab_services)) })

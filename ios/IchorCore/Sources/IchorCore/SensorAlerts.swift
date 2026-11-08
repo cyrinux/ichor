@@ -33,7 +33,9 @@ public struct SensorNode: Decodable, Equatable, Sendable {
     /// The node could not be read.
     public let error: String?
 
-    public init(node: String, hostname: String, hottest: TemperatureSensor? = nil, throttled: Bool = false, error: String? = nil) {
+    public init(
+        node: String, hostname: String, hottest: TemperatureSensor? = nil, throttled: Bool = false, error: String? = nil
+    ) {
         self.node = node
         self.hostname = hostname
         self.hottest = hottest
@@ -63,7 +65,8 @@ public let sensorMargin = 5.0
 public let sensorHysteresis = 3.0
 
 /// A sensor issue's stored value, "severity|hot|hostname|label|celsius|limit" (running hot) or
-/// "severity|throttled|hostname||0.0|0.0", split up.
+/// "severity|throttled|hostname|label|celsius|0.0" (throttled, with its hottest sensor; "||0.0" on a
+/// node without any, as before it was kept), split up.
 public struct SensorIssue: Equatable, Sendable {
     public static let hot = "hot"
     public static let throttledKind = "throttled"
@@ -76,7 +79,9 @@ public struct SensorIssue: Equatable, Sendable {
     public let celsius: Double
     public let limit: Double
 
-    public init(severity: String, kind: String, hostname: String, label: String = "", celsius: Double = 0, limit: Double = 0) {
+    public init(
+        severity: String, kind: String, hostname: String, label: String = "", celsius: Double = 0, limit: Double = 0
+    ) {
         self.severity = severity
         self.kind = kind
         self.hostname = hostname
@@ -101,7 +106,8 @@ public struct SensorIssue: Equatable, Sendable {
     /// The stored form; the text fields lose any "|" so the parts still split.
     public var value: String {
         let safe = { (s: String) in s.replacingOccurrences(of: "|", with: "/") }
-        return [severity, kind, safe(hostname), safe(label), celsiusText(celsius), celsiusText(limit)].joined(separator: "|")
+        return [severity, kind, safe(hostname), safe(label), celsiusText(celsius), celsiusText(limit)].joined(
+            separator: "|")
     }
 }
 
@@ -112,7 +118,9 @@ public func celsiusText(_ value: Double) -> String {
 
 /// The temperature `sensor` alerts at: `threshold` when set, else crit − margin, else max; nil without either.
 public func sensorLimit(_ sensor: TemperatureSensor, threshold: Int) -> Double? {
-    if threshold != sensorThresholdAuto { return Double(min(max(threshold, sensorThresholdRange.lowerBound), sensorThresholdRange.upperBound)) }
+    if threshold != sensorThresholdAuto {
+        return Double(min(max(threshold, sensorThresholdRange.lowerBound), sensorThresholdRange.upperBound))
+    }
     if sensor.critCelsius > 0 { return sensor.critCelsius - sensorMargin }
     if sensor.maxCelsius > 0 { return sensor.maxCelsius }
     return nil
@@ -122,7 +130,9 @@ public func sensorLimit(_ sensor: TemperatureSensor, threshold: Int) -> Double? 
 /// hottest sensor reaches its limit runs hot, and stays so until it is sensorHysteresis °C under
 /// it (`known` says it was); a throttled node is a warning (alerted on its second check in a row).
 /// A node that did not answer keeps its `known` issues; a node without sensors has none.
-public func sensorIssuesOf(_ health: ClusterSensorHealth, threshold: Int, known: [String: String] = [:]) -> [String: String] {
+public func sensorIssuesOf(_ health: ClusterSensorHealth, threshold: Int, known: [String: String] = [:]) -> [String:
+    String]
+{
     var out: [String: String] = [:]
     for node in health.nodes {
         if let error = node.error, !error.isEmpty {
@@ -135,13 +145,19 @@ public func sensorIssuesOf(_ health: ClusterSensorHealth, threshold: Int, known:
             let key = "\(node.node)|\(SensorIssue.hot)"
             let wasHot = known[key] != nil
             if sensor.celsius >= limit || (wasHot && sensor.celsius > limit - sensorHysteresis) {
-                out[key] = SensorIssue(severity: dataCritical, kind: SensorIssue.hot, hostname: hostname, label: sensor.label,
-                                       celsius: sensor.celsius, limit: limit).value
+                out[key] =
+                    SensorIssue(
+                        severity: dataCritical, kind: SensorIssue.hot, hostname: hostname, label: sensor.label,
+                        celsius: sensor.celsius, limit: limit
+                    ).value
             }
         }
         if node.throttled {
             out["\(node.node)|\(SensorIssue.throttledKind)"] =
-                SensorIssue(severity: dataWarning, kind: SensorIssue.throttledKind, hostname: hostname).value
+                SensorIssue(
+                    severity: dataWarning, kind: SensorIssue.throttledKind, hostname: hostname,
+                    label: node.hottest?.label ?? "", celsius: node.hottest?.celsius ?? 0
+                ).value
         }
     }
     return out
@@ -156,6 +172,7 @@ public func knownSensorIssues(_ previous: ClusterSnapshot?, context: String) -> 
 /// English title of a sensor issue, or of its end.
 func sensorTitle(_ issue: SensorIssue, problem: Bool) -> String {
     switch (issue.isThrottled, problem) {
+    case (true, true) where issue.celsius > 0: "\(issue.hostname) is throttled (\(celsiusText(issue.celsius)) °C)"
     case (true, true): "\(issue.hostname) is throttled"
     case (true, false): "\(issue.hostname) no longer throttled"
     case (false, true): "\(issue.hostname) runs hot (\(celsiusText(issue.celsius)) °C)"
@@ -165,19 +182,24 @@ func sensorTitle(_ issue: SensorIssue, problem: Bool) -> String {
 
 /// English text of a sensor issue.
 func sensorText(_ issue: SensorIssue) -> String {
-    issue.isThrottled ? "Its cores run well below their speed: check its cooling." : "\(issue.label), alert at \(celsiusText(issue.limit)) °C"
+    issue.isThrottled
+        ? "Its cores run well below their speed: check its cooling."
+        : "\(issue.label), alert at \(celsiusText(issue.limit)) °C"
 }
 
 /// Node temperature issues (see evaluateTrack), keyed "sensor:<key>". A resolved one is named
 /// from what the previous snapshot kept of it.
-func evaluateSensors(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert]) -> IssueTrack {
+func evaluateSensors(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert])
+    -> IssueTrack
+{
     let known = previous?.sensorIssues ?? [:]
     return evaluateTrack(
         previous: previous?.sensorTrack, current: current.sensorTrack, comparable: comparable,
         severity: { SensorIssue(value: $0).severity },
         problem: { key, value in
             let issue = SensorIssue(value: value)
-            return Alert(key: "sensor:\(key)", title: sensorTitle(issue, problem: true), text: sensorText(issue), problem: true)
+            return Alert(
+                key: "sensor:\(key)", title: sensorTitle(issue, problem: true), text: sensorText(issue), problem: true)
         },
         cleared: { key in
             let issue = SensorIssue(value: known[key] ?? "")

@@ -1,0 +1,103 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# Draft written by probe plugin-from-crd from sleepinfos.kube-green.com (v1alpha1). Review the health rules, translate the labels (i18n), then move it to go/plugin/builtin/.
+
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: kube-green
+name: kube-green
+category: data-services
+detect:
+  - group: kube-green.com
+    resource: sleepinfos
+resources:
+  sleepinfo:
+    group: kube-green.com
+    version: v1alpha1
+    resource: sleepinfos
+    kind: SleepInfo
+    scope: Namespaced
+fields:
+  sleepinfo:
+    # Hours:Minutes.
+    sleepAt: $.spec.sleepAt
+    # If SuspendCronjobs is set to true, on sleep the cronjobs of the namespace will be suspended.
+    suspendCronJobs: $.spec.suspendCronJobs
+    # If SuspendDeployments is set to false, on sleep the deployment of the namespace will not be suspended.
+    suspendDeployments: $.spec.suspendDeployments
+    # If SuspendStatefulSets is set to false, on sleep the statefulset of the namespace will not be suspended.
+    suspendStatefulSets: $.spec.suspendStatefulSets
+    # Time zone to set the schedule, in IANA time zone identifier.
+    timeZone: $.spec.timeZone
+    # Hours:Minutes.
+    wakeUpAt: $.spec.wakeUpAt
+    # Weekdays are in cron notation.
+    weekdays: $.spec.weekdays
+    # Information when was the last time the run was successfully scheduled.
+    lastScheduleTime: $.status.lastScheduleTime
+    # The operation type handled in last schedule.
+    operation: $.status.operation
+dataServices:
+  summary:
+    aggregate:
+      total: count(sleepinfo)
+      warnings: 'count(sleepinfo, health == "warning")'
+      critical: 'count(sleepinfo, health == "critical")'
+    health: worst(sleepinfo.health)
+cards:
+  summary:
+    title:
+      count: dataServices.summary.total
+      one: "%d SleepInfo"
+      other: "%d SleepInfos"
+    health: dataServices.summary.health
+    badges:
+      - label: "warnings"
+        value: dataServices.summary.warnings
+        tone: warning
+        hideWhenZero: true
+      - label: "critical"
+        value: dataServices.summary.critical
+        tone: critical
+        hideWhenZero: true
+  list:
+    from: sleepinfo
+    sort:
+      - health desc
+      - $.metadata.namespace
+      - $.metadata.name
+    empty: "No SleepInfos."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: $.spec.weekdays
+      trailing:
+        text: $.status.lastScheduleTime | relativeTime()
+      detail:
+        - type: keyValues
+          items:
+            - label: "Weekdays"
+              value: $.spec.weekdays
+            - label: "Sleep At"
+              value: $.spec.sleepAt
+            - label: "Wake Up At"
+              value: $.spec.wakeUpAt
+            - label: "Operation"
+              value: $.status.operation
+# Invented names. The first sample is healthy, the second fails.
+samples:
+  sleepinfo:
+    - metadata:
+        creationTimestamp: now-4m
+        name: demo-one
+        namespace: demo-shop
+      spec:
+        sleepAt: demo-sleepat
+        weekdays: demo-weekdays
+    - metadata:
+        creationTimestamp: now-4m
+        name: demo-two
+        namespace: demo-lab
+      spec:
+        sleepAt: demo-sleepat
+        weekdays: demo-weekdays

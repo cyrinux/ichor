@@ -1,11 +1,17 @@
 package name.levis.ichor.ui.etcd
 
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.share.ShareLinkButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.rememberLazyListState
+import name.levis.ichor.ui.components.JumpSection
+import name.levis.ichor.ui.components.SectionJumpRail
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,12 +21,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +38,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import name.levis.ichor.data.EtcdRepository
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.ETCD
 import name.levis.ichor.data.OVERVIEW
@@ -54,11 +61,11 @@ import name.levis.ichor.ui.components.UsageBar
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -109,15 +116,15 @@ sealed interface DefragState {
     data class Failed(val message: String) : DefragState
 }
 
-class EtcdViewModel(private val talos: TalosRepository) : LoadingViewModel<EtcdOverview>() {
+class EtcdViewModel(private val etcd: EtcdRepository) : LoadingViewModel<EtcdOverview>() {
     override val keepsDataOnFailure = true
-    override fun cached(): TalosRepository.Timed<EtcdOverview>? = talos.cached(ETCD)
-    override val restores get() = talos.restores
-    override suspend fun fetch() = talos.etcd()
+    override fun cached(): TalosRepository.Timed<EtcdOverview>? = etcd.cached(ETCD)
+    override val restores get() = etcd.restores
+    override suspend fun fetch() = etcd.etcd()
 
     /** node address -> hostname, from the cached overview when available. */
     fun knownHostnames(): Map<String, String> =
-        talos.cached<ClusterOverview>(OVERVIEW)?.value?.nodes?.associate { it.node to it.hostname }.orEmpty()
+        etcd.cached<ClusterOverview>(OVERVIEW)?.value?.nodes?.associate { it.node to it.hostname }.orEmpty()
 
     private val _defrag = MutableStateFlow<DefragState>(DefragState.Idle)
     val defrag: StateFlow<DefragState> = _defrag.asStateFlow()
@@ -129,7 +136,7 @@ class EtcdViewModel(private val talos: TalosRepository) : LoadingViewModel<EtcdO
             targets.forEachIndexed { i, member ->
                 val name = hostnames[member.node] ?: member.node
                 _defrag.value = DefragState.Running(name, i + 1, targets.size)
-                val result = runCatching { talos.etcdDefragment(member.node) }
+                val result = runCatching { etcd.etcdDefragment(member.node) }
                 refresh()
                 result.exceptionOrNull()?.let {
                     _defrag.value = DefragState.Failed("$name: ${it.userMessage()}")
@@ -153,7 +160,7 @@ class EtcdViewModel(private val talos: TalosRepository) : LoadingViewModel<EtcdO
         if (_disarm.value == DisarmState.Running) return
         _disarm.value = DisarmState.Running
         viewModelScope.launch {
-            val result = runCatching { talos.etcdAlarmDisarm(node) }
+            val result = runCatching { etcd.etcdAlarmDisarm(node) }
             refresh()
             _disarm.value = result.fold(
                 onSuccess = { DisarmState.Idle },
@@ -178,11 +185,11 @@ sealed interface DisarmState {
 fun EtcdScreen(
     onBack: () -> Unit,
     onReplace: (EtcdMember) -> Unit = {},
-    vm: EtcdViewModel = viewModel(factory = factory { EtcdViewModel(app.talosRepository) }),
-    snapshotVm: EtcdSnapshotViewModel = viewModel(factory = factory { EtcdSnapshotViewModel(app.talosRepository, app) }),
-    memberVm: EtcdMemberActionsViewModel = viewModel(factory = factory { EtcdMemberActionsViewModel(app.talosRepository) }),
-    fixVm: EtcdFixViewModel = viewModel(factory = factory { EtcdFixViewModel(app.talosRepository, app) }),
-    recoverVm: EtcdRecoverViewModel = viewModel(factory = factory { EtcdRecoverViewModel(app.talosRepository, app) }),
+    vm: EtcdViewModel = viewModel(factory = factory { EtcdViewModel(app.etcdRepository) }),
+    snapshotVm: EtcdSnapshotViewModel = viewModel(factory = factory { EtcdSnapshotViewModel(app.etcdRepository, app) }),
+    memberVm: EtcdMemberActionsViewModel = viewModel(factory = factory { EtcdMemberActionsViewModel(app.etcdRepository) }),
+    fixVm: EtcdFixViewModel = viewModel(factory = factory { EtcdFixViewModel(app.etcdRepository, app) }),
+    recoverVm: EtcdRecoverViewModel = viewModel(factory = factory { EtcdRecoverViewModel(app.etcdRepository, app) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val defrag by vm.defrag.collectAsStateWithLifecycle()
@@ -190,7 +197,6 @@ fun EtcdScreen(
     val snapshot by snapshotVm.state.collectAsStateWithLifecycle()
     val fix by fixVm.state.collectAsStateWithLifecycle()
     val recover by recoverVm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     // The fix changed etcd (or stopped half-way): show what is true now.
     LaunchedEffect(fix.finished) { if (fix.finished) vm.refresh() }
     LaunchedEffect(recover.finished) { if (recover.finished) vm.refresh() }
@@ -248,13 +254,16 @@ fun EtcdScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         bottomBar = { DataFreshness(state) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text("etcd") },
                 navigationIcon = { BackButton(onBack) },
-                actions = { ShareLinkButton(ShareTarget.screen(ShareTarget.ETCD)) },
+                actions = {
+                    ShareLinkButton(ShareTarget.screen(ShareTarget.ETCD))
+                    AddToHomeButton(ShareTarget.screen(ShareTarget.ETCD), "etcd")
+                },
             )
         },
     ) { padding ->
@@ -269,6 +278,7 @@ fun EtcdScreen(
                 ) {
                     EtcdContent(
                         etcd = s.data,
+                        onRefresh = vm::refresh,
                         knownHostnames = remember { vm.knownHostnames() },
                         defrag = defrag,
                         canDefrag = canDefrag,
@@ -419,6 +429,7 @@ data class DefragRequest(val targets: List<EtcdNodeStatus>, val hostnames: Map<S
 @Composable
 private fun EtcdContent(
     etcd: EtcdOverview,
+    onRefresh: () -> Unit,
     knownHostnames: Map<String, String>,
     defrag: DefragState,
     canDefrag: Boolean,
@@ -436,105 +447,135 @@ private fun EtcdContent(
     val nodeNames = remember(etcd, knownHostnames) { etcd.nodeHostnames(knownHostnames) }
     val running = defrag is DefragState.Running
     val failed = remember(etcd) { etcd.replaceCandidates().associateBy { it.id } }
+    // Every optional item below, decided once: the list and its section rail read the same values.
+    val showDefrag = canDefrag || defrag != DefragState.Idle
+    val showMemberPanel = members.state is MemberActionState.Running || members.state is MemberActionState.Done || members.state is MemberActionState.Failed
+    val onRecover = recover.onRecover?.takeIf { recover.state.idle }
+    val onFix = fix.onFix?.takeIf { fix.state.idle }
+    val disarmFailed = alarms.state as? DisarmState.Failed
+    val lagging = laggingMembers(etcd.statuses)
+    val unprobed = etcd.members.filter { m -> etcd.statuses.none { it.memberId == m.id } }
+    val shape = EtcdListShape(
+        error = etcd.error != null,
+        defrag = showDefrag,
+        memberPanel = showMemberPanel,
+        snapshot = snapshot != null,
+        fixPanel = !fix.state.idle,
+        recoverPanel = !recover.state.idle,
+        recoverButton = onRecover != null,
+        alarmsError = etcd.alarmsError != null,
+        alarms = etcd.alarms.size,
+        fixButton = onFix != null,
+        disarmButton = alarms.onDisarm != null,
+        disarmFailed = disarmFailed != null,
+        lagging = lagging.isNotEmpty(),
+        statuses = etcd.statuses.size,
+        unprobed = unprobed.size,
+    )
+    val parts = etcdSections(shape)
+    val labels = parts.map { (part, _) -> stringResource(part.title) }
+    val sections = remember(parts, labels) { parts.mapIndexed { i, (part, index) -> JumpSection(part.key, labels[i], index) } }
+    val listState = rememberLazyListState()
 
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        etcd.error?.let { item { Text(it, color = colors.bad) } }
-        if (canDefrag || defrag != DefragState.Idle) {
-            item {
-                DefragPanel(
-                    defrag = defrag,
-                    order = defragOrder(etcd.statuses),
-                    hostnames = nodeNames,
-                    canDefrag = canDefrag,
-                    onDefrag = onDefrag,
-                    onDismiss = onDismissDefrag,
-                )
-            }
-        }
-        if (members.state is MemberActionState.Running || members.state is MemberActionState.Done || members.state is MemberActionState.Failed) {
-            item { MemberActionPanel(members.state, members.onDismiss) }
-        }
-        snapshot?.let { snap ->
-            item { SnapshotPanel(snap.state, snap.onSave, snap.onCancel, snap.onDismiss, snap.notice) }
-        }
-        if (!fix.state.idle) {
-            item { EtcdFixPanel(fix.state, fix.onCancel, fix.onDismiss) }
-        }
-        if (!recover.state.idle) {
-            item { EtcdRecoverPanel(recover.state, recover.onCancel, recover.onDismiss) }
-        }
-        recover.onRecover?.takeIf { recover.state.idle }?.let { onRecover ->
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(stringResource(R.string.etcd_recover_lost), color = colors.bad, style = MaterialTheme.typography.bodyMedium)
-                    OutlinedButton(onClick = onRecover, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_recover_button)) }
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            etcd.error?.let { item { LoadFailureRow(it, onRefresh) } }
+            if (showDefrag) {
+                item {
+                    DefragPanel(
+                        defrag = defrag,
+                        order = defragOrder(etcd.statuses),
+                        hostnames = nodeNames,
+                        canDefrag = canDefrag,
+                        onDefrag = onDefrag,
+                        onDismiss = onDismissDefrag,
+                    )
                 }
             }
-        }
-        etcd.alarmsError?.let { error ->
-            item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
-            item { Text(stringResource(R.string.etcd_alarms_check_failed, error), color = colors.bad) }
-        }
-        if (etcd.alarms.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
-            items(etcd.alarms) { alarm ->
-                Text("${hostnames[alarm.memberId] ?: alarm.memberId}: ${alarm.alarm}", color = colors.bad)
+            if (showMemberPanel) {
+                item { MemberActionPanel(members.state, members.onDismiss) }
             }
-            fix.onFix?.takeIf { fix.state.idle }?.let { onFix ->
-                item {
-                    Button(onClick = onFix, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_fix_button)) }
-                }
+            snapshot?.let { snap ->
+                item(key = EtcdPart.SNAPSHOT.key) { SnapshotPanel(snap.state, snap.onSave, snap.onCancel, snap.onDismiss, snap.notice) }
             }
-            alarms.onDisarm?.let { onDisarm ->
+            if (!fix.state.idle) {
+                item(key = EtcdPart.FIX.key) { EtcdFixPanel(fix.state, fix.onCancel, fix.onDismiss) }
+            }
+            if (!recover.state.idle) {
+                item(key = EtcdPart.RECOVER.key) { EtcdRecoverPanel(recover.state, recover.onCancel, recover.onDismiss) }
+            }
+            onRecover?.let { onRecover ->
                 item {
-                    OutlinedButton(onClick = onDisarm, enabled = alarms.state != DisarmState.Running, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(if (alarms.state == DisarmState.Running) R.string.etcd_disarming else R.string.etcd_disarm_alarms))
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(stringResource(R.string.etcd_recover_lost), color = colors.bad, style = MaterialTheme.typography.bodyMedium)
+                        IchorOutlinedButton(onClick = onRecover, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_recover_button)) }
                     }
                 }
             }
-        }
-        (alarms.state as? DisarmState.Failed)?.let { failed ->
-            item {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(failed.message, color = colors.bad, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                    TextButton(onClick = alarms.onDismiss) { Text(stringResource(R.string.common_ok)) }
+            etcd.alarmsError?.let { error ->
+                item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
+                item { Text(stringResource(R.string.etcd_alarms_check_failed, error), color = colors.bad) }
+            }
+            if (etcd.alarms.isNotEmpty()) {
+                item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
+                items(etcd.alarms) { alarm ->
+                    Text("${hostnames[alarm.memberId] ?: alarm.memberId}: ${alarm.alarm}", color = colors.bad)
+                }
+                onFix?.let { onFix ->
+                    item {
+                        IchorButton(onClick = onFix, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_fix_button)) }
+                    }
+                }
+                alarms.onDisarm?.let { onDisarm ->
+                    item {
+                        IchorOutlinedButton(onClick = onDisarm, enabled = alarms.state != DisarmState.Running, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(if (alarms.state == DisarmState.Running) R.string.etcd_disarming else R.string.etcd_disarm_alarms))
+                        }
+                    }
                 }
             }
-        }
-        item { SectionTitle(stringResource(R.string.etcd_section_members, etcd.members.size)) }
-        val lagging = laggingMembers(etcd.statuses)
-        if (lagging.isNotEmpty()) {
-            item {
-                val names = lagging.joinToString(", ") { hostnames[it.memberId] ?: it.node }
-                Text(pluralStringResource(R.plurals.etcd_lagging_members, lagging.size, lagging.size, names), color = colors.warn)
+            disarmFailed?.let { failed ->
+                item {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(failed.message, color = colors.bad, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                        IchorTextButton(onClick = alarms.onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    }
+                }
+            }
+            item(key = EtcdPart.MEMBERS.key) { SectionTitle(stringResource(R.string.etcd_section_members, etcd.members.size)) }
+            if (lagging.isNotEmpty()) {
+                item {
+                    val names = lagging.joinToString(", ") { hostnames[it.memberId] ?: it.node }
+                    Text(pluralStringResource(R.plurals.etcd_lagging_members, lagging.size, lagging.size, names), color = colors.warn)
+                }
+            }
+            items(etcd.statuses, key = { it.node }) { status ->
+                val hostname = nodeNames[status.node] ?: status.node
+                MemberStatusCard(
+                    status = status,
+                    hostname = hostname,
+                    lag = etcdLag(status, etcd.statuses),
+                    actions = members.actionsFor(status.memberId, hostname, status.takeIf { it.isLeader && it.error == null }, failed[status.memberId]),
+                    onDefrag = if (canDefrag && !running && status.error == null) {
+                        { onDefrag(DefragRequest(listOf(status), nodeNames)) }
+                    } else {
+                        null
+                    },
+                )
+            }
+            if (unprobed.isNotEmpty()) {
+                item(key = EtcdPart.UNPROBED.key) { SectionTitle(stringResource(R.string.etcd_section_unprobed)) }
+                items(unprobed, key = { it.id }) { MemberCard(it, members.actionsFor(it.id, it.hostname, leader = null, failed = failed[it.id])) }
             }
         }
-        items(etcd.statuses, key = { it.node }) { status ->
-            val hostname = nodeNames[status.node] ?: status.node
-            MemberStatusCard(
-                status = status,
-                hostname = hostname,
-                lag = etcdLag(status, etcd.statuses),
-                actions = members.actionsFor(status.memberId, hostname, status.takeIf { it.isLeader && it.error == null }, failed[status.memberId]),
-                onDefrag = if (canDefrag && !running && status.error == null) {
-                    { onDefrag(DefragRequest(listOf(status), nodeNames)) }
-                } else {
-                    null
-                },
-            )
-        }
-        val unprobed = etcd.members.filter { m -> etcd.statuses.none { it.memberId == m.id } }
-        if (unprobed.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.etcd_section_unprobed)) }
-            items(unprobed, key = { it.id }) { MemberCard(it, members.actionsFor(it.id, it.hostname, leader = null, failed = failed[it.id])) }
-        }
+        SectionJumpRail(sections, listState, Modifier.align(Alignment.CenterEnd))
     }
 }
 
 @Composable
 private fun MemberStatusCard(status: EtcdNodeStatus, hostname: String, lag: EtcdLag?, actions: MemberActions?, onDefrag: (() -> Unit)?) {
     val colors = LocalStatusColors.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -566,11 +607,11 @@ private fun MemberStatusCard(status: EtcdNodeStatus, hostname: String, lag: Etcd
             InfoRow(stringResource(R.string.etcd_storage_version), status.version)
             status.errors.forEach { Text(it, color = colors.bad, style = MaterialTheme.typography.bodySmall) }
             if (onDefrag != null && status.reclaimable > 0) {
-                TextButton(onClick = onDefrag) { Text(stringResource(R.string.etcd_defragment_member, formatBytes(status.reclaimable))) }
+                IchorTextButton(onClick = onDefrag) { Text(stringResource(R.string.etcd_defragment_member, formatBytes(status.reclaimable))) }
             }
             actions?.onForfeit?.let { onForfeit ->
                 val notice = actions.support.notice
-                TextButton(onClick = onForfeit, enabled = actions.enabled && notice == null) { Text(stringResource(R.string.etcd_forfeit)) }
+                IchorTextButton(onClick = onForfeit, enabled = actions.enabled && notice == null) { Text(stringResource(R.string.etcd_forfeit)) }
                 notice?.let { InfoNotice(it.text()) }
             }
         }
@@ -600,7 +641,7 @@ private fun entries(count: Long): String =
 
 @Composable
 private fun MemberCard(member: EtcdMember, actions: MemberActions?) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(member.hostname, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
@@ -623,7 +664,7 @@ private fun DefragPanel(
 ) {
     val colors = LocalStatusColors.current
     val reclaimable = order.sumOf { it.reclaimable }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             when (defrag) {
                 is DefragState.Running -> {
@@ -635,17 +676,17 @@ private fun DefragPanel(
                         pluralStringResource(R.plurals.etcd_defrag_done, defrag.members, defrag.members, formatBytes(defrag.reclaimed)),
                         color = colors.ok,
                     )
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
                 is DefragState.Failed -> {
                     Text(defrag.message, color = colors.bad)
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
                 DefragState.Idle -> {
                     Text(pluralStringResource(R.plurals.etcd_reclaimable_across, order.size, formatBytes(reclaimable), order.size), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.etcd_defrag_explainer))
                     if (canDefrag) {
-                        OutlinedButton(
+                        IchorOutlinedButton(
                             onClick = { onDefrag(DefragRequest(order, hostnames)) },
                             enabled = order.isNotEmpty() && reclaimable > 0,
                             modifier = Modifier.fillMaxWidth(),
@@ -660,7 +701,7 @@ private fun DefragPanel(
 @Composable
 private fun DefragConfirmDialog(request: DefragRequest, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val names = request.targets.map { request.hostnames[it.node] ?: it.node }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
@@ -678,7 +719,7 @@ private fun DefragConfirmDialog(request: DefragRequest, onConfirm: () -> Unit, o
                 Text(stringResource(R.string.etcd_confirm_reclaim, formatBytes(request.targets.sumOf { it.reclaimable })), style = MaterialTheme.typography.bodySmall)
             }
         },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.etcd_defragment)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = onConfirm) { Text(stringResource(R.string.etcd_defragment)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

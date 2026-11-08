@@ -1,19 +1,22 @@
 package name.levis.ichor.ui.apps
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -23,55 +26,63 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.monitor.freezeReminderHook
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.ARGO_CD
 import name.levis.ichor.data.OVERVIEW
+import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.data.activeSummary
-import name.levis.ichor.model.ClusterOverview
-import name.levis.ichor.model.Feature
-import name.levis.ichor.model.allows
-import name.levis.ichor.model.Inventory
-import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.ARGO_CD_CATALOG_ID
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoStatus
+import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.FLUX_CATALOG_ID
+import name.levis.ichor.model.Feature
+import name.levis.ichor.model.ImageScanReport
+import name.levis.ichor.model.Inventory
+import name.levis.ichor.model.InventoryApp
+import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.KubeWorkload
+import name.levis.ichor.model.NodeOverview
+import name.levis.ichor.model.PodSelection
+import name.levis.ichor.model.allows
 import name.levis.ichor.model.argoAppsFor
 import name.levis.ichor.model.hasArgoCD
-import name.levis.ichor.model.FLUX_CATALOG_ID
 import name.levis.ichor.model.hasFlux
-import name.levis.ichor.ui.components.Loaded
-import name.levis.ichor.ui.flux.FluxViewModel
 import name.levis.ichor.model.inventoryBadges
-import name.levis.ichor.data.ARGO_CD
+import name.levis.ichor.model.lastOf
+import name.levis.ichor.model.podSelection
+import name.levis.ichor.monitor.freezeReminderHook
+import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.app
 import name.levis.ichor.ui.argocd.ArgoActionToasts
 import name.levis.ichor.ui.argocd.ArgoPolling
 import name.levis.ichor.ui.argocd.ArgoViewModel
-import name.levis.ichor.model.KubeWorkload
-import name.levis.ichor.model.PodSelection
-import name.levis.ichor.model.podSelection
-import name.levis.ichor.model.NodeOverview
-import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.DataFreshness
+import name.levis.ichor.ui.components.Loaded
+import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.flux.FluxViewModel
+import name.levis.ichor.ui.imagescan.AppScanUi
+import name.levis.ichor.ui.imagescan.ImageScanReportOpen
+import name.levis.ichor.ui.imagescan.ImageScanViewModel
+import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
 import name.levis.ichor.ui.workloads.RolloutStatusSheet
 import name.levis.ichor.ui.workloads.WorkloadPodsSheet
-import name.levis.ichor.model.ImageScanReport
-import name.levis.ichor.ui.imagescan.AppScanUi
-import name.levis.ichor.ui.imagescan.ImageScanReportOpen
-import name.levis.ichor.ui.imagescan.ImageScanViewModel
-import name.levis.ichor.ui.components.TooltipIconButton
-import name.levis.ichor.ui.components.pageContent
+import name.levis.ichor.ui.workloads.rememberRolloutFollow
 
 /**
  * Every app running in the cluster as a grid of icons, with search and filters; tapping one
  * opens its details. [onNode] opens a node's pods (address, hostname, role); [onArgoCD] the Argo
  * CD screen and [onArgoApp] one of its apps (namespace, name); [onFlux] the Flux screen.
- * [attention] opens it on the "needs attention" chip.
+ * [onObject] a route of an app's Web access section, on its object screen.
+ * [attention] opens it on the "needs attention" chip. [onNodeImages] opens a node's Images
+ * screen (address, hostname) from the images report, on a Talos cluster.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,12 +93,17 @@ fun AppsScreen(
     onArgoCD: () -> Unit,
     onArgoApp: (namespace: String, name: String) -> Unit,
     onFlux: () -> Unit,
+    onObject: (KubeObjectRef) -> Unit,
+    /** The vulnerability scan reports kept for a cluster (its context name). */
+    onScanReports: (String) -> Unit = {},
+    onNodeImages: (addr: String, host: String) -> Unit = { _, _ -> },
     vm: AppsViewModel = viewModel(factory = factory { AppsViewModel(app.talosRepository) }),
     workloadsVm: AppWorkloadsViewModel = viewModel(factory = factory { AppWorkloadsViewModel(app.kubeRepository) }),
     routesVm: AppRoutesViewModel = viewModel(factory = factory { AppRoutesViewModel(app.kubeRepository) }),
     argoVm: ArgoViewModel = viewModel(key = "apps-argocd", factory = factory { ArgoViewModel(app.gitOpsRepository, app.kubeRepository, freezeReminderHook(app)) }),
     fluxVm: FluxViewModel = viewModel(key = "apps-flux", factory = factory { FluxViewModel(app.gitOpsRepository, app.kubeRepository) }),
     scanVm: ImageScanViewModel = viewModel(factory = factory { ImageScanViewModel(app.imageScanRepository) }),
+    reportVm: ImageReportViewModel = viewModel(factory = factory { ImageReportViewModel(app.talosRepository) }),
 ) {
     val application = LocalContext.current.applicationContext as TalosApp
     val state by vm.state.collectAsStateWithLifecycle()
@@ -102,6 +118,7 @@ fun AppsScreen(
         application.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.nodes.orEmpty().associateBy { it.node }
     }
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
+    var imagesReportShown by rememberSaveable { mutableStateOf(false) }
     // Rollout restarts and routes go through the Kubernetes API: only for a role that can reach it.
     val canRestart = config?.activeSummary?.allows(Feature.WORKLOADS) == true
     val workloads by workloadsVm.state.collectAsStateWithLifecycle()
@@ -111,13 +128,14 @@ fun AppsScreen(
     // A workload's pods, over the app's sheet.
     var podsOf by remember { mutableStateOf<PodSelection.OfWorkload?>(null) }
     RestartResultToasts(workloadsVm.restarts.results)
+    val followRollout = rememberRolloutFollow()
     RolloutStatusSheet(workloadsVm.restarts)
     confirm?.let { w ->
         RestartConfirmDialog(
             workload = w,
             onConfirm = {
                 confirm = null
-                workloadsVm.restarts.restart(w)
+                workloadsVm.restarts.restart(w, followRollout)
             },
             onDismiss = { confirm = null },
         )
@@ -142,15 +160,22 @@ fun AppsScreen(
     val scanner by application.uiPreferences.imageScanner.collectAsStateWithLifecycle()
     // The report open over the app's sheet, with the core's JSON to export it from.
     var reportOpen by remember { mutableStateOf<Pair<ImageScanReport, String>?>(null) }
+    // The reports kept on the phone, read again when a scan ends or the cluster changes.
+    val savedScans by scanVm.saved.collectAsStateWithLifecycle()
+    LaunchedEffect(config?.activeContext, scanSession?.running) {
+        config?.activeContext?.let(scanVm::loadSaved)
+    }
+    val scanScope = rememberCoroutineScope()
+    val scanContext = LocalContext.current
 
     // Flux: its own tile's sheet only, when the inventory shows it.
     val fluxOffered = canRestart && inventory?.hasFlux == true
     val fluxState by fluxVm.state.collectAsStateWithLifecycle()
 
-    Scaffold(
+    IchorScaffold(
         bottomBar = { DataFreshness(state) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.apps_title))
@@ -168,6 +193,9 @@ fun AppsScreen(
                 navigationIcon = { BackButton(onBack) },
                 actions = {
                     val busy = state == UiState.Loading || (state as? UiState.Loaded)?.refreshing == true
+                    if (state is UiState.Loaded) {
+                        TooltipIconButton(Icons.Outlined.Layers, stringResource(R.string.image_report_title), onClick = { imagesReportShown = true })
+                    }
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }, enabled = !busy)
                 },
             )
@@ -175,6 +203,20 @@ fun AppsScreen(
     ) { padding ->
         Loaded(state, vm::refresh, Modifier.pageContent(padding)) { data ->
             AppsGrid(data, onOpen = { selected = it.id }, argoBadges = argoBadges, attention = attention)
+            if (imagesReportShown) {
+                ImageReportOpen(
+                    inventory = data,
+                    isTalos = config?.activeIsKube == false,
+                    nodes = nodes,
+                    vm = reportVm,
+                    onApp = {
+                        imagesReportShown = false
+                        selected = it
+                    },
+                    onNodeImages = { addr -> onNodeImages(addr, nodes[addr]?.hostname ?: addr) },
+                    onDismiss = { imagesReportShown = false },
+                )
+            }
             data.apps.firstOrNull { it.id == selected }?.let { detail ->
                 if (canRestart) {
                     LaunchedEffect(detail) {
@@ -195,12 +237,12 @@ fun AppsScreen(
                     nodes = nodes,
                     routes = if (canRestart) routes else null,
                     restart = if (canRestart) {
-                        AppRestartUi(workloads, restarting, onRestart = { confirm = it }, onPods = { podsOf = it.podSelection })
+                        AppRestartUi(workloads, restarting, onRestart = { confirm = it }, onPods = { podsOf = it.podSelection }, onRetry = workloadsVm::refresh)
                     } else {
                         null
                     },
                     argo = if (argoOffered) argoUi(detail, argoState, argoBusy, argoVm, onArgoCD, onArgoApp) else null,
-                    flux = if (isFlux) AppFluxUi(fluxState, onFlux) else null,
+                    flux = if (isFlux) AppFluxUi(fluxState, onFlux, fluxVm::refresh) else null,
                     scan = if (canRestart) {
                         AppScanUi(
                             operator = operatorReports,
@@ -210,11 +252,24 @@ fun AppsScreen(
                             onScan = { scanVm.scan(detail) },
                             onStop = scanVm::stop,
                             onOpen = { report, json -> reportOpen = report to json },
+                            saved = savedScans.lastOf(detail.id),
+                            onOpenSaved = { saved ->
+                                scanScope.launch {
+                                    runCatching { scanVm.openSaved(saved.id) }
+                                        .onSuccess { reportOpen = it }
+                                        .onFailure { e ->
+                                            val reason = e.uiText().resolve(scanContext)
+                                            Toast.makeText(scanContext, scanContext.getString(R.string.imagescan_saved_open_failed, reason), Toast.LENGTH_LONG).show()
+                                        }
+                                }
+                            },
+                            onSavedList = { config?.activeContext?.let(onScanReports) },
                         )
                     } else {
                         null
                     },
                     onPodNode = { addr -> nodes.openNode(addr, onNode) },
+                    onObject = onObject,
                     onDismiss = { selected = null },
                 )
                 podsOf?.let { WorkloadPodsSheet(it, onDismiss = { podsOf = null }) }
@@ -244,6 +299,7 @@ private fun argoUi(
     onRefresh = { vm.act(listOf(it), ArgoAction.REFRESH) },
     onOpen = { onArgoApp(it.namespace, it.name) },
     onOpenArgoCD = onArgoCD,
+    onRetry = vm::refresh,
 )
 
 private fun Map<String, NodeOverview>.openNode(addr: String, onNode: (String, String, String) -> Unit) {
@@ -265,4 +321,28 @@ private fun screenSubtitle(inventory: Inventory): String {
         pluralStringResource(R.plurals.apps_containers, containers, containers),
         nodes,
     ).joinToString(" · ")
+}
+
+/** The images report sheet of [inventory], loaded when it opens. */
+@Composable
+private fun ImageReportOpen(
+    inventory: Inventory,
+    isTalos: Boolean,
+    nodes: Map<String, NodeOverview>,
+    vm: ImageReportViewModel,
+    onApp: (String) -> Unit,
+    onNodeImages: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    LaunchedEffect(inventory) { vm.load(inventory) }
+    val report by vm.state.collectAsStateWithLifecycle()
+    ImageReportSheet(
+        state = report,
+        talos = isTalos,
+        nodes = nodes,
+        onApp = onApp,
+        onNodeImages = if (isTalos) onNodeImages else null,
+        onRetry = vm::refresh,
+        onDismiss = onDismiss,
+    )
 }

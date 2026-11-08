@@ -13,7 +13,7 @@ import name.levis.ichor.model.CustomIcon
 import name.levis.ichor.model.MAX_ICON_SIDE
 import name.levis.ichor.model.bundledIconAsset
 import name.levis.ichor.model.iconSampleSize
-import name.levis.ichor.model.remoteIconUrl
+import name.levis.ichor.model.remoteIconUrls
 import name.levis.ichor.util.httpGetBounded
 import name.levis.ichor.util.readBounded
 import java.io.File
@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * App icons: the ones bundled in assets/appicons, and, only when the user allowed it, icons
- * downloaded from jsDelivr (Dashboard Icons) by their public slug or from the URL a resource
+ * downloaded from jsDelivr (Dashboard Icons, GitHub when jsDelivr refuses) by their public slug or from the URL a resource
  * names in its annotation, kept in the cache dir; inline (data: URI) icons are only decoded.
  * Decoded icons stay in memory so the grid does not decode them again while scrolling.
  */
@@ -62,13 +62,13 @@ class AppIconLoader(private val context: Context) {
      * user allowed downloads; an invalid slug is never requested. Null when unavailable.
      */
     suspend fun remote(slug: String): ImageBitmap? {
-        val url = remoteIconUrl(slug) ?: return null
+        val urls = remoteIconUrls(slug).ifEmpty { return null }
         val key = remoteKey(slug)
         memory.get(key)?.let { return it }
         if (slug in failed) return null
         // One download per slug even when several tiles ask for it at once.
         return locks.getOrPut(slug) { Mutex() }.withLock {
-            memory.get(key) ?: withContext(DOWNLOADS) { cachedOrDownload(slug, url) }
+            memory.get(key) ?: withContext(DOWNLOADS) { cachedOrDownload(slug, urls) }
                 ?.also { memory.put(key, it) }
         }
     }
@@ -86,14 +86,15 @@ class AppIconLoader(private val context: Context) {
                 val name = icon.key.replace('/', '-')
                 if (name in failed) return null
                 locks.getOrPut(name) { Mutex() }.withLock {
-                    memory.get(icon.key) ?: withContext(DOWNLOADS) { cachedOrDownload(name, icon.url) }
+                    memory.get(icon.key) ?: withContext(DOWNLOADS) { cachedOrDownload(name, listOf(icon.url)) }
                         ?.also { memory.put(icon.key, it) }
                 }
             }
         }
     }
 
-    private fun cachedOrDownload(slug: String, url: String): ImageBitmap? {
+    /** The cached icon, else the first of [urls] that answers. */
+    private fun cachedOrDownload(slug: String, urls: List<String>): ImageBitmap? {
         if (slug in failed) return null
         val file = File(remoteDir, "$slug.webp")
         if (file.isFile) {
@@ -103,7 +104,7 @@ class AppIconLoader(private val context: Context) {
             // Corrupt, truncated or not a sane icon: forget it and download again.
             file.delete()
         }
-        val bytes = runCatching { download(url) }.getOrNull()
+        val bytes = urls.firstNotNullOfOrNull { runCatching { download(it) }.getOrNull() }
         val bitmap = bytes?.let(::decodeBounded)
         if (bytes == null || bitmap == null) {
             failed += slug

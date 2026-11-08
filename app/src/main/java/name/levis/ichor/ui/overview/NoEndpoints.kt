@@ -11,10 +11,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.TravelExplore
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -47,9 +47,9 @@ fun NoEndpointsBox(onScan: () -> Unit, onAddEndpoint: (() -> Unit)?, modifier: M
         Spacer(Modifier.height(8.dp))
         Text(stringResource(R.string.no_endpoint_body), style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
         Spacer(Modifier.height(20.dp))
-        Button(onClick = onScan) { Text(stringResource(R.string.endpoint_scan_action)) }
+        IchorButton(onClick = onScan) { Text(stringResource(R.string.endpoint_scan_action)) }
         onAddEndpoint?.let {
-            OutlinedButton(onClick = it, modifier = Modifier.padding(top = 8.dp)) { Text(stringResource(R.string.endpoints_add_label)) }
+            IchorOutlinedButton(onClick = it, modifier = Modifier.padding(top = 8.dp)) { Text(stringResource(R.string.endpoints_add_label)) }
         }
     }
 }

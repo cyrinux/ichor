@@ -71,4 +71,17 @@ class ShareTargetTest {
         assertEquals(KubeFocus(2, "ops/backup", "ops", "backup"), ShareTarget.cronJob("ops", "backup").kubeFocus)
         assertNull(ShareTarget.argoApp("argocd", "guestbook").kubeFocus)
     }
+
+    @Test
+    fun aStorageOrHardwareLinkFallsBackToTheConfiguredNodesOnly() {
+        val ctx = ContextSummary(name = "admin@lab", endpoints = listOf("192.0.2.10"), nodes = listOf("192.0.2.20", "192.0.2.21"))
+        assertEquals("192.0.2.20", ShareTarget.hardware("192.0.2.20", "worker-1").configuredNode(ctx))
+        assertEquals("192.0.2.21", ShareTarget.storage("192.0.2.21", "worker-2").configuredNode(ctx))
+        assertNull(ShareTarget.hardware("203.0.113.9", "evil").configuredNode(ctx))
+        assertNull(ShareTarget.hardware("192.0.2.10", "cp").configuredNode(ctx)) // an endpoint, not a node, when nodes are set
+        assertNull(ShareTarget(target = ShareTarget.NODE, addr = "192.0.2.20").configuredNode(ctx)) // needs its role
+        assertNull(ShareTarget.hardware("192.0.2.20", "worker-1").configuredNode(null))
+        // Without nodes, the endpoints are the targets (as the Go core reads them).
+        assertEquals("192.0.2.10", ShareTarget.hardware("192.0.2.10", "cp").configuredNode(ctx.copy(nodes = emptyList())))
+    }
 }

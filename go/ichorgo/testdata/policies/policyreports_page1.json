@@ -1,0 +1,453 @@
+{
+ "kind": "PolicyReportList",
+ "apiVersion": "wgpolicyk8s.io/v1alpha2",
+ "metadata": {
+  "continue": "PDQ+"
+ },
+ "items": [
+  {
+   "metadata": {
+    "namespace": "shop"
+   },
+   "results": [
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-0"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000000
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-1"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000001
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-2"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000002
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-3"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000003
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-4"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000004
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-5"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000005
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-6"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000006
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-7"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000007
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-8"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000008
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-9"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000009
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-10"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000010
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-11"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000011
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "result": "pass",
+     "timestamp": {
+      "seconds": 1760000012
+     }
+    },
+    {
+     "source": "other-engine",
+     "policy": "require-labels",
+     "result": "error",
+     "timestamp": {
+      "seconds": 1760000013
+     }
+    }
+   ]
+  },
+  {
+   "metadata": {
+    "namespace": "shop"
+   },
+   "results": [
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-100"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000090
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-101"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000091
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-102"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000092
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-103"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000093
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-104"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000094
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-105"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000095
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-106"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000096
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-107"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000097
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-108"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000098
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "rule": "require-team",
+     "result": "fail",
+     "severity": "medium",
+     "message": "Validation error: missing label team",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "web-109"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000099
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "shop/audit-image-registry",
+     "rule": "check-registry",
+     "result": "warn",
+     "severity": "low",
+     "message": "Image tag is mutable: pin a digest",
+     "resources": [
+      {
+       "kind": "Pod",
+       "namespace": "shop",
+       "name": "api-1"
+      }
+     ],
+     "timestamp": {
+      "seconds": 1760000100
+     }
+    }
+   ]
+  }
+ ]
+}

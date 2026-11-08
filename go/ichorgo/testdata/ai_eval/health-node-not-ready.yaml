@@ -1,0 +1,27 @@
+id: health-node-not-ready
+kind: health
+report: |
+  Talos cluster health check, 2026-10-01 18:04 UTC
+
+  HEALTH CHECK
+    waiting for etcd to be healthy: OK
+    waiting for all k8s nodes to report ready: worker-2 not ready  ← failed
+  Failure: not healthy after 1m0s: waiting for all k8s nodes to report ready: worker-2 not ready
+
+  NODES (2: 1 ready, 1 not ready, 0 unreachable)
+  - cp-1 [10.0.0.7]: controlplane, Talos v1.14.1, stage running, ready
+  - worker-2 [10.0.0.8]: worker, Talos v1.14.1, stage running, NOT READY
+      unmet condition nodeReady: node is not ready
+
+  EVENTS
+    2026-10-01 18:03:00 10.0.0.8 warning: service kubelet waiting: Health check failed: connection refused
+expect:
+  must:
+    - "worker-2"
+    - "Check next"
+    - ["Node services", "Logs", "Nodes"]
+  mustNot:
+    - "talosctl reset"
+    - "systemctl"
+    - "journalctl"
+  maxWords: 180

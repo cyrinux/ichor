@@ -1,0 +1,56 @@
+{
+  "context": "demo",
+  "nodes": [
+    {
+      "arch": "amd64",
+      "cordonKnown": true,
+      "cordoned": false,
+      "cpuCount": 4,
+      "hostname": "demo-cp-1",
+      "memAvailable": 5153960755,
+      "memTotal": 8589934592,
+      "node": "192.0.2.10",
+      "platform": "metal",
+      "reachable": true,
+      "ready": true,
+      "role": "controlplane",
+      "stage": "running",
+      "unmetConditions": [],
+      "version": "v1.14.0"
+    },
+    {
+      "arch": "amd64",
+      "cordonKnown": true,
+      "cordoned": false,
+      "cpuCount": 4,
+      "hostname": "demo-cp-2",
+      "memAvailable": 5153960755,
+      "memTotal": 8589934592,
+      "node": "192.0.2.11",
+      "platform": "metal",
+      "reachable": true,
+      "ready": true,
+      "role": "controlplane",
+      "stage": "running",
+      "unmetConditions": [],
+      "version": "v1.14.0"
+    },
+    {
+      "arch": "amd64",
+      "cordonKnown": true,
+      "cordoned": false,
+      "cpuCount": 4,
+      "hostname": "demo-cp-3",
+      "memAvailable": 5153960755,
+      "memTotal": 8589934592,
+      "node": "192.0.2.12",
+      "platform": "metal",
+      "reachable": true,
+      "ready": true,
+      "role": "controlplane",
+      "stage": "running",
+      "unmetConditions": [],
+      "version": "v1.14.0"
+    }
+  ]
+}

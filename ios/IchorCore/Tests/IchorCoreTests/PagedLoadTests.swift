@@ -4,18 +4,14 @@ import XCTest
 
 /// Runs async code from a synchronous test: test-linux.sh lists plain test methods only.
 func runBlocking<T>(_ body: @escaping @Sendable () async throws -> T) throws -> T {
-    let box = ResultBox<T>()
+    let box = Locked<Result<T, Error>?>(nil)
     let done = DispatchSemaphore(value: 0)
     Task {
-        do { box.result = .success(try await body()) } catch { box.result = .failure(error) }
+        do { box.set(.success(try await body())) } catch { box.set(.failure(error)) }
         done.signal()
     }
     done.wait()
-    return try box.result!.get()
-}
-
-final class ResultBox<T>: @unchecked Sendable {
-    var result: Result<T, Error>?
+    return try box.get()!.get()
 }
 
 struct PageError: LocalizedError {
@@ -24,12 +20,18 @@ struct PageError: LocalizedError {
 }
 
 /// A list of `total` rows served `size` at a time; the token is the next row's index.
-final class PageServer: @unchecked Sendable {
+final class PageServer: Sendable {
     let total: Int
     let size: Int
     let counted: Bool
-    var calls = 0
-    var expireAt: String?
+    /// The calls served, and the token whose next request fails as expired (once).
+    private let served = Locked<(calls: Int, expireAt: String?)>((0, nil))
+
+    var calls: Int { served.get().calls }
+    var expireAt: String? {
+        get { served.get().expireAt }
+        set { served.withLock { $0.expireAt = newValue } }
+    }
 
     init(total: Int, size: Int, counted: Bool = true) {
         self.total = total
@@ -38,16 +40,21 @@ final class PageServer: @unchecked Sendable {
     }
 
     func page(_ token: String) throws -> KubePage<Int> {
-        calls += 1
-        if token == expireAt {
-            expireAt = nil
+        let expired = served.withLock { s in
+            s.calls += 1
+            guard token == s.expireAt else { return false }
+            s.expireAt = nil
+            return true
+        }
+        if expired {
             throw PageError(message: "\(kubeListExpired): The provided continue parameter is too old")
         }
         let from = Int(token.isEmpty ? "0" : token) ?? 0
         let to = min(from + size, total)
         let complete = to == total
-        return KubePage(items: Array(from..<to), continueToken: complete ? "" : String(to),
-                        remaining: complete ? 0 : (counted ? Int64(total - to) : -1), complete: complete)
+        return KubePage(
+            items: Array(from..<to), continueToken: complete ? "" : String(to),
+            remaining: complete ? 0 : (counted ? Int64(total - to) : -1), complete: complete)
     }
 }
 
@@ -86,10 +93,14 @@ final class PagedLoadTests: XCTestCase {
         XCTAssertEqual(load.estimatedTotal, 2_000)
 
         let more = try runBlocking { try await load.loadingMore { try server.page($0) } }
-        XCTAssertEqual(more.items, Array(0..<1_500)) // server order, appended
+        XCTAssertEqual(more.items, Array(0..<1_500))  // server order, appended
         let last = try runBlocking { try await more.loadingMore { try server.page($0) } }
         XCTAssertTrue(last.done)
-        let after = try runBlocking { try await last.loadingMore { _ in XCTFail("no page after the last"); throw PageError(message: "") } }
+        let after = try runBlocking {
+            try await last.loadingMore { _ in
+                XCTFail("no page after the last"); throw PageError(message: "")
+            }
+        }
         XCTAssertEqual(after, last)
     }
 
@@ -111,31 +122,38 @@ final class PagedLoadTests: XCTestCase {
             return (load, seen)
         }
         XCTAssertTrue(load.done)
-        XCTAssertEqual(load.items, Array(0..<1_500)) // no row twice
+        XCTAssertEqual(load.items, Array(0..<1_500))  // no row twice
         XCTAssertEqual(seen, [500, 1_000, 500, 1_000, 1_500])
         XCTAssertEqual(server.calls, 6)
     }
 
     func testOtherErrorsAndRepeatedExpiriesPropagate() throws {
-        XCTAssertThrowsError(try runBlocking {
-            try await loadPages(cap: 10_000, fetch: { (_: String) -> KubePage<Int> in
-                throw PageError(message: "Kubernetes API: permission denied")
-            })
-        }) { error in
+        XCTAssertThrowsError(
+            try runBlocking {
+                try await loadPages(
+                    cap: 10_000,
+                    fetch: { (_: String) -> KubePage<Int> in
+                        throw PageError(message: "Kubernetes API: permission denied")
+                    })
+            }
+        ) { error in
             XCTAssertEqual(error.localizedDescription, "Kubernetes API: permission denied")
         }
 
-        final class Counter: @unchecked Sendable { var calls = 0 }
-        let counter = Counter()
-        XCTAssertThrowsError(try runBlocking {
-            try await loadPages(cap: 10_000, maxRestarts: 2, fetch: { (_: String) -> KubePage<Int> in
-                counter.calls += 1
-                throw PageError(message: "\(kubeListExpired): gone")
-            })
-        }) { error in
+        let calls = Locked(0)
+        XCTAssertThrowsError(
+            try runBlocking {
+                try await loadPages(
+                    cap: 10_000, maxRestarts: 2,
+                    fetch: { (_: String) -> KubePage<Int> in
+                        calls.withLock { $0 += 1 }
+                        throw PageError(message: "\(kubeListExpired): gone")
+                    })
+            }
+        ) { error in
             XCTAssertTrue(isKubeListExpired(error))
         }
-        XCTAssertEqual(counter.calls, 3)
+        XCTAssertEqual(calls.get(), 3)
     }
 
     func testUnknownRemainingCount() throws {

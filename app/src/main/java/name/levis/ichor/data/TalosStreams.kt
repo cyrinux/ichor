@@ -7,7 +7,7 @@ import name.levis.ichorgo.EventListener
 import name.levis.ichorgo.HealthListener
 import name.levis.ichorgo.ImagePullListener
 import name.levis.ichorgo.JoinListener
-import name.levis.ichorgo.LogListener
+import name.levis.ichorgo.JoinRun
 import name.levis.ichorgo.NetToolListener
 import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
@@ -100,49 +100,29 @@ internal class TalosStreams(private val configs: ConfigRepository) {
         awaitClose { run.cancel() }
     }.buffer(Channel.UNLIMITED)
 
-    fun followLogs(node: String, service: String?, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
+    fun followLogs(node: String, service: String?, tailLines: Int): Flow<StreamItem<String>> = logFollowFlow { listener ->
         val stored = configs.forCall()
-        val run = Ichorgo.startLogFollow(
+        Ichorgo.startLogFollow(
             stored.yaml,
             stored.activeContext,
             node,
             service.orEmpty(),
             tailLines.toLong(),
-            object : LogListener {
-                override fun onLine(line: String) {
-                    trySend(StreamItem.Item(line))
-                }
-
-                override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
-                    close()
-                }
-            },
+            listener,
         )
-        awaitClose { run.cancel() }
-    }.buffer(Channel.UNLIMITED)
+    }
 
-    fun followContainerLogs(node: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
+    fun followContainerLogs(node: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = logFollowFlow { listener ->
         val stored = configs.forCall()
-        val run = Ichorgo.startContainerLogFollow(
+        Ichorgo.startContainerLogFollow(
             stored.yaml,
             stored.activeContext,
             node,
             containerId,
             tailLines.toLong(),
-            object : LogListener {
-                override fun onLine(line: String) {
-                    trySend(StreamItem.Item(line))
-                }
-
-                override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
-                    close()
-                }
-            },
+            listener,
         )
-        awaitClose { run.cancel() }
-    }.buffer(Channel.UNLIMITED)
+    }
 
     /**
      * StartNodeNetTool: [tool] against [target] from [node], in a privileged netshoot container
@@ -303,6 +283,86 @@ internal class TalosStreams(private val configs: ConfigRepository) {
         }
         awaitClose { run.cancel() }
     }.buffer(Channel.UNLIMITED) // every step is kept: the timeline needs them
+
+    /**
+     * Creates a Hetzner server with the new node's user data and follows it (StartHetznerCreate).
+     * Cancelling deletes the server it created, so a collector that goes away does not cancel:
+     * only [stop] does, and the run always ends by itself.
+     */
+    fun hetznerCreate(tokenJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startHetznerCreate(yaml, context, tokenJson, specJson, listener) }
+
+    /** Creates an OVHcloud instance and follows it (StartOVHCreate). As for [hetznerCreate], only [stop] cancels. */
+    fun ovhCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startOVHCreate(yaml, context, credentialJson, specJson, listener) }
+
+    /** Creates an AWS EC2 instance and follows it (StartAWSCreate). As for [hetznerCreate], only [stop] cancels: it terminates the instance. */
+    fun awsCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startAWSCreate(yaml, context, credentialJson, specJson, listener) }
+
+    /** Creates a Compute Engine VM and follows it (StartGCPCreate). As for [hetznerCreate], only [stop] cancels: it deletes the instance. */
+    fun gcpCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startGCPCreate(yaml, context, credentialJson, specJson, listener) }
+
+    /**
+     * Makes a Talos image with a throwaway Compute Engine VM (StartGCPImage). Done's address is the
+     * result JSON. As for [hetznerCreate], only [stop] cancels: it deletes the helper, its data disk
+     * and an unfinished image.
+     */
+    fun gcpImage(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startGCPImage(yaml, context, credentialJson, specJson, listener) }
+
+    /**
+     * Makes a Talos AMI with a throwaway instance (StartAWSImage). Done's address is the result
+     * JSON. As for [hetznerCreate], only [stop] cancels: it terminates the helper and deletes an
+     * unfinished snapshot or AMI.
+     */
+    fun awsImage(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startAWSImage(yaml, context, credentialJson, specJson, listener) }
+
+    /** Creates an Azure VM and follows it (StartAzureCreate). As for [hetznerCreate], only [stop] cancels: it deletes the VM. */
+    fun azureCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startAzureCreate(yaml, context, credentialJson, specJson, listener) }
+
+    /**
+     * Makes a Talos managed image with a throwaway Azure VM (StartAzureImage). Done's address is
+     * the result JSON. As for [hetznerCreate], only [stop] cancels: it deletes the helper, its data
+     * disk and an unfinished image.
+     */
+    fun azureImage(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startAzureImage(yaml, context, credentialJson, specJson, listener) }
+
+    /**
+     * Makes a Talos snapshot with a throwaway server (StartHetznerSnapshot). Done's address is the
+     * result JSON. As for [hetznerCreate], only [stop] cancels: it deletes what the run created.
+     */
+    fun hetznerSnapshot(tokenJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startHetznerSnapshot(yaml, context, tokenJson, specJson, listener) }
+
+    /** Puts a machine of Omni in the cluster and follows it (StartOmniAllocate). [stop] only stops following. */
+    fun omniAllocate(machineId: String, machineSetId: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startOmniAllocate(yaml, context, machineId, machineSetId, listener) }
+
+    private fun hetznerRun(stop: Flow<Any>, start: (String, String, JoinListener) -> JoinRun): Flow<JoinEvent> = callbackFlow {
+        val stored = configs.forCall()
+        val listener = object : JoinListener {
+            override fun onProgress(json: String) {
+                runCatching { TalosJson.decodeFromString(JoinProgress.serializer(), json) }.getOrNull()
+                    ?.let { trySend(JoinEvent.Progress(it)) }
+            }
+
+            override fun onDone(nodeAddress: String, errMessage: String) {
+                trySend(JoinEvent.Done(nodeAddress, errMessage.ifEmpty { null }?.let(::goErrorText)))
+                close()
+            }
+        }
+        val run = start(stored.yaml, stored.activeContext, listener)
+        launch {
+            stop.first()
+            run.cancel()
+        }
+        awaitClose { }
+    }.buffer(Channel.UNLIMITED)
 
     fun health(): Flow<HealthEvent> = callbackFlow {
         val stored = configs.forCall()

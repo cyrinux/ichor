@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/netip"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -33,6 +34,7 @@ const (
 	verdictMTUMismatch    = "mtuMismatch"
 	verdictFiltered       = "filtered"
 	verdictNoStatus       = "noStatus"
+	verdictJustStarted    = "justStarted"
 
 	// kubespanLink is the WireGuard link KubeSpan creates on a node.
 	kubespanLink = "kubespan"
@@ -114,7 +116,8 @@ type kubespanDiagInput struct {
 // KubeSpanDiagnostics tells why node's KubeSpan peers are up or down (os:reader): see
 // kubespanDiag for the JSON. Each peer carries verdicts: noEndpoint (no endpoint to try),
 // staleHandshake (down, no handshake for over 3 min), endpointFlapping (down, its endpoint
-// changed in the last 5 min), noStatus (a peer Talos knows of has no status yet). A section
+// changed in the last 5 min), noStatus (a peer Talos knows of has no status yet), justStarted
+// (unknown, listed under 5 min ago). Unknown peers get them too: see kubespanBrokenReason. A section
 // that cannot be read is reported in "errors" (a node without COSI, for one).
 func KubeSpanDiagnostics(configYAML, contextName, node string) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -199,7 +202,7 @@ func readKubeSpanDiag(nodeCtx context.Context, s *session, node string) kubespan
 
 	if statuses, err := safe.StateListAll[*kubespan.PeerStatus](nodeCtx, st); err == nil {
 		for res := range statuses.All() {
-			in.statuses = append(in.statuses, kubespanPeerInput{id: res.Metadata().ID(), spec: *res.TypedSpec()})
+			in.statuses = append(in.statuses, kubespanPeerInput{id: res.Metadata().ID(), created: res.Metadata().Created(), spec: *res.TypedSpec()})
 		}
 	} else {
 		in.errors["peerStatuses"] = s.friendly(node, err)
@@ -244,9 +247,9 @@ func buildKubeSpanDiag(in kubespanDiagInput) kubespanDiag {
 		}
 	}
 
-	statuses := map[string]kubespan.PeerStatusSpec{}
+	statuses := map[string]kubespanPeerInput{}
 	for _, s := range in.statuses {
-		statuses[s.id] = s.spec
+		statuses[s.id] = s
 	}
 
 	seen := map[string]bool{}
@@ -259,7 +262,7 @@ func buildKubeSpanDiag(in kubespanDiagInput) kubespanDiag {
 
 	for _, st := range in.statuses {
 		if !seen[st.id] {
-			out.Peers = append(out.Peers, diagPeer(st.id, nil, st.spec, true, in.now))
+			out.Peers = append(out.Peers, diagPeer(st.id, nil, st, true, in.now))
 		}
 	}
 
@@ -269,7 +272,8 @@ func buildKubeSpanDiag(in kubespanDiagInput) kubespanDiag {
 }
 
 // diagPeer is one peer from its spec (nil when only the status exists) and status.
-func diagPeer(id string, spec *kubespan.PeerSpecSpec, status kubespan.PeerStatusSpec, hasStatus bool, now time.Time) kubespanDiagPeer {
+func diagPeer(id string, spec *kubespan.PeerSpecSpec, input kubespanPeerInput, hasStatus bool, now time.Time) kubespanDiagPeer {
+	status := input.spec
 	p := kubespanDiagPeer{
 		PublicKey: id, Label: status.Label, State: "unknown",
 		AllowedIPs: []string{}, EndpointsTried: []string{}, Verdicts: []kubespanVerdict{},
@@ -312,12 +316,23 @@ func diagPeer(id string, spec *kubespan.PeerSpecSpec, status kubespan.PeerStatus
 		p.LastEndpointChange = status.LastEndpointChange.Unix()
 	}
 
-	if status.State != kubespan.PeerStateDown {
+	if status.State == kubespan.PeerStateUp {
 		return p
 	}
 
-	if spec != nil && len(spec.Endpoints) == 0 {
+	unknown := status.State == kubespan.PeerStateUnknown
+
+	if unknown && !input.created.IsZero() && now.Sub(input.created) < kubespanJoinGrace {
+		p.Verdicts = append(p.Verdicts, kubespanVerdict{verdictJustStarted, "Talos is still trying this peer's endpoints: look again in a minute"})
+
+		return p
+	}
+
+	switch {
+	case spec != nil && len(spec.Endpoints) == 0:
 		p.Verdicts = append(p.Verdicts, kubespanVerdict{verdictNoEndpoint, "no endpoint to try: the peer advertised none"})
+	case unknown && !status.LastUsedEndpoint.IsValid():
+		p.Verdicts = append(p.Verdicts, kubespanVerdict{verdictNoEndpoint, "no endpoint to try: Talos never selected one for this peer"})
 	}
 
 	switch {
@@ -398,7 +413,8 @@ func buildKubeSpanDiagAll(inputs []kubespanDiagInput) kubespanDiagAll {
 				})
 			}
 
-			if p.State == "down" && len(p.EndpointsTried) == 0 && len(peer.EndpointFilters) > 0 {
+			justStarted := slices.ContainsFunc(p.Verdicts, func(v kubespanVerdict) bool { return v.Kind == verdictJustStarted })
+			if p.State != "up" && !justStarted && len(p.EndpointsTried) == 0 && len(peer.EndpointFilters) > 0 {
 				p.Verdicts = append(p.Verdicts, kubespanVerdict{
 					verdictFiltered, fmt.Sprintf("%s filters the endpoints it advertises (%s): they may exclude all its addresses", p.Label, strings.Join(peer.EndpointFilters, ", ")),
 				})

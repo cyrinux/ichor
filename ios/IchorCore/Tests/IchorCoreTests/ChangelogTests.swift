@@ -3,14 +3,14 @@ import XCTest
 
 final class ChangelogTests: XCTestCase {
     private let json = """
-    {"generated_at":"2026-10-01T20:00:00+00:00","releases":[
-      {"version":"0.4.1","build_number":61,"published_at":"2026-10-01T18:25:00+00:00","sections":[
-        {"kind":"new","title":"New","items":["Support bundle","Resources browser"]},
-        {"kind":"security","title":"Security","items":["Hardened storage"]},
-        {"kind":"fixed","title":"Fixed","items":[]}]},
-      {"version":"0.4.0","build_number":52,"published_at":"2026-09-20T09:00:00+00:00","sections":[]},
-      {"version":"0.3.0","build_number":37,"published_at":"","sections":[{"kind":"breaking","title":"Breaking","items":["New config format"]}]}]}
-    """
+        {"generated_at":"2026-10-01T20:00:00+00:00","releases":[
+          {"version":"0.4.1","build_number":61,"published_at":"2026-10-01T18:25:00+00:00","sections":[
+            {"kind":"new","title":"New","items":["Support bundle","Resources browser"]},
+            {"kind":"security","title":"Security","items":["Hardened storage"]},
+            {"kind":"fixed","title":"Fixed","items":[]}]},
+          {"version":"0.4.0","build_number":52,"published_at":"2026-09-20T09:00:00+00:00","sections":[]},
+          {"version":"0.3.0","build_number":37,"published_at":"","sections":[{"kind":"breaking","title":"Breaking","items":["New config format"]}]}]}
+        """
 
     private var releases: [ChangelogRelease] { decodeChangelog(Data(json.utf8)).releases }
 
@@ -29,7 +29,9 @@ final class ChangelogTests: XCTestCase {
         XCTAssertEqual(decodeChangelog(nil), Changelog())
         XCTAssertEqual(decodeChangelog(Data("not json".utf8)), Changelog())
         XCTAssertEqual(decodeChangelog(Data("{}".utf8)), Changelog())
-        XCTAssertEqual(decodeChangelog(Data(#"{"releases":[{"version":"1.0.0"}]}"#.utf8)).releases, [ChangelogRelease(version: "1.0.0", buildNumber: 0)])
+        XCTAssertEqual(
+            decodeChangelog(Data(#"{"releases":[{"version":"1.0.0"}]}"#.utf8)).releases,
+            [ChangelogRelease(version: "1.0.0", buildNumber: 0)])
     }
 
     func testTitleByKind() {
@@ -60,7 +62,9 @@ final class ChangelogTests: XCTestCase {
         XCTAssertEqual(whatsNewReleases(previousBuild: 61, currentBuild: 61, releases: releases), [])
         XCTAssertEqual(whatsNewReleases(previousBuild: 61, currentBuild: 52, releases: releases), [])
         // An update: every release since the previous build, maintenance ones included.
-        XCTAssertEqual(whatsNewReleases(previousBuild: 37, currentBuild: 61, releases: releases).map(\.version), ["0.4.1", "0.4.0"])
+        XCTAssertEqual(
+            whatsNewReleases(previousBuild: 37, currentBuild: 61, releases: releases).map(\.version),
+            ["0.4.1", "0.4.0"])
         // Nothing newer in the bundled history, or no history at all.
         XCTAssertEqual(whatsNewReleases(previousBuild: 61, currentBuild: 70, releases: releases), [])
         XCTAssertEqual(whatsNewReleases(previousBuild: 37, currentBuild: 61, releases: []), [])

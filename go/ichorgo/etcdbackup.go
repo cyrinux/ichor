@@ -70,6 +70,7 @@ func startSnapshot(configYAML, contextName, node, destPath string, wrap snapshot
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", 0, "", msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		if setupErr != nil {
 			listener.OnDone("", 0, "", setupErr.Error())

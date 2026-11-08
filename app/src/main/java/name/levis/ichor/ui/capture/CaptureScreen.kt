@@ -10,17 +10,17 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FolderOpen
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorOutlinedButton
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import name.levis.ichor.ui.components.SMOKE_CAPTURE
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -46,6 +48,7 @@ import name.levis.ichor.model.formatElapsed
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.EmptyText
@@ -54,7 +57,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import name.levis.ichor.ui.components.TooltipIconButton
-import name.levis.ichor.ui.components.pageContent
+import name.levis.ichor.ui.components.readableWidth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +82,7 @@ fun CaptureScreen(
         factory = factory { CaptureLinksViewModel(app.talosRepository, node) },
     ),
 ) {
+    AllowLandscape()
     val context = LocalContext.current
     val captures = (context.applicationContext as TalosApp).captureRepository
     val links by linksVm.state.collectAsStateWithLifecycle()
@@ -94,10 +98,6 @@ fun CaptureScreen(
     var detail by remember { mutableStateOf<PacketSummary?>(null) }
     val save = rememberSaveCapture { message -> scope.launch { snackbar.showSnackbar(message.resolve(context)) } }
 
-    LaunchedEffect(Unit) {
-        if (links == UiState.Loading) linksVm.refresh()
-        if (peers == UiState.Loading) peersVm.refresh()
-    }
     LaunchedEffect(links) { (links as? UiState.Loaded)?.let { vm.linksLoaded(it.data) } }
 
     val running = session?.running == true
@@ -108,10 +108,10 @@ fun CaptureScreen(
         if (running) confirmLeave = true else onBack()
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.capture_title))
@@ -128,10 +128,12 @@ fun CaptureScreen(
         },
         bottomBar = { session?.let { s -> CaptureBar(s, onStop = vm::stop) } },
     ) { padding ->
-        Column(Modifier.pageContent(padding).fillMaxSize()) {
-            val s = session
+        val s = session
+        // The packets use the whole width (read sideways too); the setup form stays a readable column.
+        val shown = if (s?.packets.isNullOrEmpty()) Modifier else Modifier.testTag(SMOKE_CAPTURE)
+        Column(Modifier.padding(padding).then(if (s == null) Modifier.readableWidth() else Modifier).fillMaxSize().then(shown)) {
             if (s == null) {
-                CaptureSetup(links, options, filterError, filterChecking, onChange = vm::update, onStart = vm::start, peers = peers)
+                CaptureSetup(links, options, filterError, filterChecking, onChange = vm::update, onStart = vm::start, peers = peers, onRetryLinks = linksVm::refresh)
             } else {
                 if (!s.running) {
                     FinishedActions(
@@ -241,7 +243,7 @@ private fun CaptureBar(session: CaptureSession, onStop: () -> Unit) {
                     },
                 )
             }
-            if (session.running) Button(onClick = onStop) { Text(stringResource(R.string.capture_stop)) }
+            if (session.running) IchorButton(onClick = onStop) { Text(stringResource(R.string.capture_stop)) }
         }
     }
 }
@@ -251,10 +253,10 @@ private fun FinishedActions(session: CaptureSession, onSave: () -> Unit, onShare
     Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val hasFile = session.file.exists()
-            Button(onClick = onSave, enabled = hasFile) { Text(stringResource(R.string.capture_save)) }
-            OutlinedButton(onClick = onShare, enabled = hasFile) { Text(stringResource(R.string.capture_share)) }
-            TextButton(onClick = onDelete, enabled = hasFile) { Text(stringResource(R.string.common_delete)) }
+            IchorButton(onClick = onSave, enabled = hasFile) { Text(stringResource(R.string.capture_save)) }
+            IchorOutlinedButton(onClick = onShare, enabled = hasFile) { Text(stringResource(R.string.capture_share)) }
+            IchorTextButton(onClick = onDelete, enabled = hasFile) { Text(stringResource(R.string.common_delete)) }
         }
-        TextButton(onClick = onNew) { Text(stringResource(R.string.capture_new)) }
+        IchorTextButton(onClick = onNew) { Text(stringResource(R.string.capture_new)) }
     }
 }

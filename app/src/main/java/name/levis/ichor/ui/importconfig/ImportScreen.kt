@@ -1,5 +1,10 @@
 package name.levis.ichor.ui.importconfig
 
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import name.levis.ichor.bringToFront
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.MutedText
 import androidx.compose.ui.res.pluralStringResource
@@ -17,25 +22,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.ui.platform.LocalContext
 import name.levis.ichor.TalosApp
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorScaffold
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import name.levis.ichor.model.isDemo
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,7 +74,13 @@ fun ImportScreen(
     kubeDemo: Boolean = false,
     incoming: String? = null,
     onIncomingTaken: () -> Unit = {},
-    vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository, app.kubeAuthRepository, onBrowserDone = app::bringToFront) }),
+    vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(
+        app.configRepository,
+        app.kubeAuthRepository,
+        onBrowserDone = app::bringToFront,
+        // The Kubernetes demo has another home: no tour there yet.
+        onDemoSaved = { kube -> if (!kube) app.uiPreferences.offerDemoTour() },
+    ) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     // Keep the demo entry visible on first launch; config help is available in the toolbar.
@@ -95,15 +107,21 @@ fun ImportScreen(
         onIncomingTaken()
     }
 
+    // The first real cluster on this phone: the home then offers background alerts, once.
+    val wasEmpty = remember { firstRun }
+    val talosApp = app()
     LaunchedEffect(state) {
-        if (state is ImportState.Saved) onImported()
+        if (state !is ImportState.Saved) return@LaunchedEffect
+        val contexts = talosApp.configRepository.config.value?.summary?.contexts.orEmpty()
+        if (wasEmpty && contexts.any { !it.isDemo }) talosApp.uiPreferences.offerAlertsOnce()
+        onImported()
     }
 
-    if (showHelp) TalosconfigHelpDialog(onDismiss = { showHelp = false })
+    if (showHelp) AddClusterHelpDialog(onDismiss = { showHelp = false })
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.import_title)) },
                 navigationIcon = {
                     if (inSource) {
@@ -190,7 +208,7 @@ private fun PreviewCard(
     ) {
         Text(stringResource(R.string.import_valid), style = MaterialTheme.typography.titleLarge)
         summary.contexts.forEachIndexed { index, ctx ->
-            Card(Modifier.fillMaxWidth()) {
+            IchorCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     val name = if (ctx.name == summary.current) stringResource(R.string.import_context_current, ctx.name) else ctx.name
                     Text(name, style = MaterialTheme.typography.titleMedium)
@@ -222,8 +240,8 @@ private fun PreviewCard(
         preview.error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
         MutedText(stringResource(R.string.import_stored_encrypted))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
-            Button(onClick = onConfirm, enabled = preview.canImport, modifier = Modifier.weight(1f)) {
+            IchorOutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
+            IchorButton(onClick = onConfirm, enabled = preview.canImport, modifier = Modifier.weight(1f)) {
                 Text(stringResource(R.string.import_import))
             }
         }
@@ -266,13 +284,19 @@ internal fun NameConflict(
             modifier = Modifier.fillMaxWidth(),
         )
         conflict.sameAs?.let { same ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            val label = stringResource(R.string.import_name_replace_a11y, same)
+            Row(
+                Modifier.fillMaxWidth()
+                    .semantics { contentDescription = label }
+                    .toggleable(value = choice.replace, role = Role.Switch, onValueChange = onReplace),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     stringResource(R.string.import_name_replace, same),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f),
                 )
-                Switch(checked = choice.replace, onCheckedChange = onReplace)
+                IchorSwitch(checked = choice.replace, onCheckedChange = null)
             }
         }
     }

@@ -1,10 +1,11 @@
 package name.levis.ichor.ui.debug
 
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.model.KubeAction
 import androidx.compose.ui.semantics.Role
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.foundation.selection.toggleable
 import name.levis.ichor.ui.asString
 import androidx.compose.ui.res.stringResource
@@ -22,15 +23,15 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -79,6 +80,7 @@ fun DebugShellScreen(
         factory = factory { DebugShellViewModel(app.debugShells, key, hostname) },
     ),
 ) {
+    AllowLandscape()
     val state by vm.state.collectAsStateWithLifecycle()
     var showSnippets by rememberSaveable { mutableStateOf(false) }
 
@@ -93,22 +95,27 @@ fun DebugShellScreen(
         )
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(
                             stringResource(
                                 when {
                                     key.kubeNode -> R.string.node_debug_title
+                                    key.isVM -> R.string.vm_console_title
                                     key.isPod -> R.string.pod_shell_title
                                     else -> R.string.debug_title
                                 },
                             ),
                         )
                         Text(
-                            if (key.isPod) listOf(key.namespace, hostname, key.container).filter { it.isNotEmpty() }.joinToString(" / ") else hostname,
+                            when {
+                                key.isPod -> listOf(key.namespace, hostname, key.container).filter { it.isNotEmpty() }.joinToString(" / ")
+                                key.isVM -> "${key.namespace}/${key.vm}"
+                                else -> hostname
+                            },
                             style = MaterialTheme.typography.labelMedium,
                         )
                     }
@@ -117,7 +124,7 @@ fun DebugShellScreen(
                 navigationIcon = { BackButton(onClick = onBack) },
                 actions = {
                     if (state is ShellState.Running || state is ShellState.Starting) {
-                        TextButton(onClick = vm::stop) { Text(stringResource(R.string.debug_stop)) }
+                        IchorTextButton(onClick = vm::stop) { Text(stringResource(R.string.debug_stop)) }
                     }
                 },
             )
@@ -127,6 +134,7 @@ fun DebugShellScreen(
             when (val s = state) {
                 ShellState.Setup -> when {
                     key.kubeNode -> KubeNodeSetupForm(hostname, key.namespace, onStart = vm::start)
+                    key.isVM -> VmConsoleSetupForm(key.vm, key.namespace, onStart = vm::start)
                     key.isPod -> PodSetupForm(hostname, key.namespace, onStart = vm::start)
                     else -> SetupForm(hostname, onStart = vm::start)
                 }
@@ -143,7 +151,7 @@ fun DebugShellScreen(
                         ExtraKeys(
                             onKey = vm::send,
                             // The snippets are node diagnostics, for netshoot: not for any pod's image.
-                            onSnippets = if (key.isPod || key.kubeNode || vm.snippets.isEmpty()) null else ({ showSnippets = true }),
+                            onSnippets = if (key.isPod || key.kubeNode || key.isVM || vm.snippets.isEmpty()) null else ({ showSnippets = true }),
                         )
                     }
                 }
@@ -195,7 +203,7 @@ private fun SetupForm(hostname: String, onStart: (String, String) -> Unit) {
             modifier = Modifier.fillMaxWidth(),
         )
         error?.let { Text(it, color = LocalStatusColors.current.bad) }
-        Button(onClick = ::start, enabled = image.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.debug_start)) }
+        IchorButton(onClick = ::start, enabled = image.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.debug_start)) }
     }
 }
 
@@ -233,7 +241,7 @@ private fun PodSetupForm(pod: String, namespace: String, onStart: (String, Strin
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(stringResource(R.string.pod_debug_toggle), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            Switch(checked = debug, onCheckedChange = null, enabled = debugDenial == null)
+            IchorSwitch(checked = debug, onCheckedChange = null, enabled = debugDenial == null)
         }
         KubeDenialNote(debugDenial)
         if (debug) {
@@ -256,7 +264,7 @@ private fun PodSetupForm(pod: String, namespace: String, onStart: (String, Strin
             modifier = Modifier.fillMaxWidth(),
         )
         error?.let { Text(it, color = LocalStatusColors.current.bad) }
-        Button(onClick = ::start, enabled = !debug || debugImage.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.debug_start)) }
+        IchorButton(onClick = ::start, enabled = !debug || debugImage.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.debug_start)) }
     }
 }
 
@@ -297,9 +305,40 @@ private fun KubeNodeSetupForm(node: String, namespace: String, onStart: (String,
             modifier = Modifier.fillMaxWidth(),
         )
         error?.let { Text(it, color = LocalStatusColors.current.bad) }
-        Button(onClick = ::start, enabled = image.isNotBlank() && denial == null, modifier = Modifier.fillMaxWidth()) {
+        IchorButton(onClick = ::start, enabled = image.isNotBlank() && denial == null, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.debug_start))
         }
+    }
+}
+
+/**
+ * `virtctl console`: nothing to ask but the go-ahead. The hint says what the guest must do for
+ * the console to show anything.
+ */
+@Composable
+private fun VmConsoleSetupForm(vmName: String, namespace: String, onStart: (String, String) -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var error by remember { mutableStateOf<String?>(null) }
+    val appLock = (context.applicationContext as TalosApp).appLock
+    val denial = rememberKubeDenial(KubeAction.VM_CONSOLE, namespace)
+
+    fun start() {
+        // The console may sit at a logged-in shell: with the app lock on, it asks like a pod's.
+        authenticated(context, appLock.enabled.value, scope, context.getString(R.string.vm_console_on, vmName), onError = { error = it }) {
+            onStart("", "")
+        }
+    }
+
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(stringResource(R.string.vm_console_intro, "$namespace/$vmName"), style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.vm_console_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        KubeDenialNote(denial)
+        error?.let { Text(it, color = LocalStatusColors.current.bad) }
+        IchorButton(onClick = ::start, enabled = denial == null, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.vm_console_connect)) }
     }
 }
 
@@ -329,7 +368,7 @@ private fun authenticated(
 private fun StatusLine(state: ShellState, onRestart: () -> Unit) {
     val text = when (state) {
         is ShellState.Starting -> state.status.asString()
-        is ShellState.Exited -> if (state.code >= 0) stringResource(R.string.debug_exited, state.code.toInt()) else state.message
+        is ShellState.Exited -> if (state.code >= 0 && state.message.isEmpty()) stringResource(R.string.debug_exited, state.code.toInt()) else state.message
         else -> null
     } ?: return
     Row(
@@ -337,7 +376,7 @@ private fun StatusLine(state: ShellState, onRestart: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-        if (state is ShellState.Exited) TextButton(onClick = onRestart) { Text(stringResource(R.string.debug_new_shell)) }
+        if (state is ShellState.Exited) IchorTextButton(onClick = onRestart) { Text(stringResource(R.string.debug_new_shell)) }
     }
 }
 
@@ -354,7 +393,7 @@ private fun ExtraKeys(onKey: (ByteArray) -> Unit, onSnippets: (() -> Unit)?) {
             .horizontalScroll(rememberScrollState()).padding(horizontal = 6.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        onSnippets?.let { Button(onClick = it) { Text(stringResource(R.string.debug_snippets)) } }
+        onSnippets?.let { IchorButton(onClick = it) { Text(stringResource(R.string.debug_snippets)) } }
         keys.forEach { (label, bytes) ->
             FilledTonalButton(onClick = { onKey(bytes.toByteArray()) }) {
                 Text(label, fontFamily = FontFamily.Monospace)

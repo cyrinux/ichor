@@ -1,0 +1,25 @@
+{"items":[
+  {"metadata":{"name":"backups","namespace":"garage"},
+   "spec":{"clusterRef":{"name":"garage"},"quotas":{"maxSize":"10Gi"}},
+   "status":{"phase":"Ready","bucketId":"a3f8c2e19b4d5706a3f8c2e19b4d5706","size":"3.0 GiB",
+    "quotaUsage":{"sizeBytes":3070230528,"sizeLimit":10737418240,"sizePercent":28,"objectCount":1204},
+    "keys":[{},{}],
+    "conditions":[
+      {"type":"LifecycleConfigured","status":"False","reason":"GarageTooOld","message":"lifecycle rules need Garage v2.3.0 or newer","lastTransitionTime":"2026-10-03T06:00:00Z"}]}},
+  {"metadata":{"name":"site","namespace":"garage"},
+   "spec":{"clusterRef":{"name":"garage"}},
+   "status":{"phase":"Ready","bucketId":"b4c9d3e1a2f85706b4c9d3e1a2f85706","size":"8 MiB",
+    "websiteEnabled":true,"websiteUrl":"https://site.example.com","keys":[{}],
+    "conditions":[
+      {"type":"WebsiteExposed","status":"False","reason":"WaitingForAlias","message":"the bucket's global alias is not recorded yet","lastTransitionTime":"2026-10-03T11:00:00Z"}]}},
+  {"metadata":{"name":"stuck","namespace":"garage"},
+   "spec":{"clusterRef":{"name":"garage"}},
+   "status":{"phase":"Ready","bucketId":"c5d0e4f2b3a96817c5d0e4f2b3a96817","size":"1.2 GiB",
+    "keys":[{},{}],
+    "conditions":[
+      {"type":"BucketLookupStuck","status":"True","reason":"AdminAPITimeout","message":"GetBucketInfo timed out 3 times in a row","lastTransitionTime":"2026-10-03T11:30:00Z"}]}},
+  {"metadata":{"name":"files","namespace":"garage"},
+   "spec":{"clusterRef":{"name":"garage"}},
+   "status":{"phase":"Ready","bucketId":"4f1d0c2e9b7a65834f1d0c2e9b7a6583","size":"52 MiB",
+    "quotaUsage":{"sizeBytes":54525952,"objectCount":312},
+    "websiteEnabled":true,"websiteUrl":"https://files.example.com","keys":[{}]}}]}

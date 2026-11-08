@@ -20,9 +20,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -56,15 +56,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
+import name.levis.ichor.ui.logsearch.openInLogsBackendLabel
+import name.levis.ichor.ui.logsearch.rememberLogsBackend
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubePod
+import name.levis.ichor.model.LogFilter
 import name.levis.ichor.model.POD_LOG_TAIL
 import name.levis.ichor.model.containersToChoose
-import name.levis.ichor.model.logLines
+import name.levis.ichor.model.LogEntry
+import name.levis.ichor.model.toEntries
+import name.levis.ichor.ui.logs.AnsiLine
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.runtime.rememberCoroutineScope
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.cancellableCatching
@@ -78,6 +86,8 @@ import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.upwardScrollStaysInSheet
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.components.copyToClipboard
+import name.levis.ichor.ui.share.PinButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.components.shareFile
 import name.levis.ichor.ui.factory
@@ -86,7 +96,10 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 
 /** What the log sheet shows: the current or [previous] run of [container] ("" for the only one). */
-data class PodLogQuery(val container: String = "", val previous: Boolean = false)
+data class PodLogQuery(val container: String = "", val previous: Boolean = false, val filter: LogFilter = LogFilter())
+
+/** A pod log read once: [text] as received, [entries] its lines without escapes, with their colours. */
+data class PodLogSnapshot(val text: String, val entries: List<LogEntry>)
 
 /**
  * The log of the pod the sheet shows ([open]), through the Kubernetes API; for a pod with
@@ -109,8 +122,8 @@ class PodLogViewModel(private val kube: KubeRepository) : ViewModel() {
      */
     val detail: StateFlow<KubePod?> = _detail.asStateFlow()
 
-    private val _state = MutableStateFlow<UiState<String>>(UiState.Loading)
-    val state: StateFlow<UiState<String>> = _state.asStateFlow()
+    private val _state = MutableStateFlow<UiState<PodLogSnapshot>>(UiState.Loading)
+    val state: StateFlow<UiState<PodLogSnapshot>> = _state.asStateFlow()
     private var job: Job? = null
 
     /** Shows [pod]'s current log; with several containers, the first one until another is picked. */
@@ -150,7 +163,7 @@ class PodLogViewModel(private val kube: KubeRepository) : ViewModel() {
         _query.value = query
         _state.value = UiState.Loading
         job = viewModelScope.launch {
-            val outcome = cancellableCatching { kube.podLogs(pod, query.container, query.previous, POD_LOG_TAIL) }
+            val outcome = cancellableCatching { kube.podLogs(pod, query.container, query.previous, POD_LOG_TAIL, query.filter) }
             val choices = outcome.exceptionOrNull()?.message?.let(::containersToChoose).orEmpty()
             // Several containers the pod list did not name (older core): the API names them.
             if (query.container.isEmpty() && choices.isNotEmpty()) {
@@ -158,9 +171,16 @@ class PodLogViewModel(private val kube: KubeRepository) : ViewModel() {
                 load(query.copy(container = choices.first()))
                 return@launch
             }
-            _state.value = outcome.fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
+            _state.value = outcome.fold(
+                // Parsed off the main thread, in one core call: escapes out, colours kept as spans.
+                onSuccess = { UiState.Loaded(PodLogSnapshot(it, kube.parseLogText(it).toEntries())) },
+                onFailure = { UiState.Failed(it.uiText()) },
+            )
         }
     }
+
+    /** [text] without its ANSI escapes: what Copy and Share hand out. */
+    suspend fun plainText(text: String): String = kube.stripLogEscapes(text)
 }
 
 /**
@@ -178,6 +198,8 @@ fun PodLogSheet(
 ) {
     val context = LocalContext.current
     val links = LocalKubeLinks.current
+    val appContext = context.applicationContext as TalosApp
+    val logsBackend = rememberLogsBackend()
     val state by vm.state.collectAsStateWithLifecycle()
     val followState by followVm.state.collectAsStateWithLifecycle()
     val query by vm.query.collectAsStateWithLifecycle()
@@ -190,9 +212,12 @@ fun PodLogSheet(
     // New lines as they are written (`kubectl logs -f`), in place of the last ones read once.
     var follow by rememberSaveable(pod.key) { mutableStateOf(false) }
     val snapshot = (state as? UiState.Loaded)?.data
-    val hasText = if (follow) followState.buffer.lines.isNotEmpty() else !snapshot.isNullOrEmpty()
+    val hasText = if (follow) followState.buffer.lines.isNotEmpty() else !snapshot?.text.isNullOrEmpty()
     // The followed lines joined only when asked: up to MAX_FOLLOW_LINES of them.
-    val text = { if (follow) followState.buffer.text else snapshot.orEmpty() }
+    val text = { if (follow) followState.buffer.text else snapshot?.text.orEmpty() }
+    // Copied and shared without the ANSI escapes the container wrote.
+    val scope = rememberCoroutineScope()
+    val withPlainText = { use: (String) -> Unit -> scope.launch { use(vm.plainText(text())) } }
     LaunchedEffect(pod.key) { vm.open(pod) }
     DisposableEffect(vm) {
         onDispose {
@@ -214,13 +239,17 @@ fun PodLogSheet(
                     Text(pod.name, style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text(pod.namespace, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                PinButton(ShareTarget.pod(pod.namespace, pod.name), pod.name)
                 ShareLinkButton(ShareTarget.pod(pod.namespace, pod.name), icon = Icons.Outlined.Link)
+                AddToHomeButton(ShareTarget.pod(pod.namespace, pod.name), pod.name)
                 TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.pod_logs_copy), enabled = hasText, onClick = {
-                    copyLog(context, pod, text())
-                    Toast.makeText(context, R.string.pod_logs_copied, Toast.LENGTH_SHORT).show()
+                    withPlainText {
+                        copyLog(context, pod, it)
+                        Toast.makeText(context, R.string.pod_logs_copied, Toast.LENGTH_SHORT).show()
+                    }
                 })
                 TooltipIconButton(Icons.Outlined.Share, stringResource(R.string.pod_logs_share), enabled = hasText, onClick = {
-                    shareLog(context, pod, text())
+                    withPlainText { shareLog(context, pod.name, it) }
                 })
             }
             // CPU and memory now, against its limit or request (metrics-server, when there is one).
@@ -228,7 +257,7 @@ fun PodLogSheet(
             run {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(containers, key = { "c-$it" }) { c ->
-                        FilterChip(
+                        IchorFilterChip(
                             selected = query.container == c,
                             onClick = { vm.load(query.copy(container = c)) },
                             label = { Text(c, fontFamily = FontFamily.Monospace) },
@@ -236,7 +265,7 @@ fun PodLogSheet(
                     }
                     if (!query.previous) {
                         item(key = "follow") {
-                            FilterChip(
+                            IchorFilterChip(
                                 selected = follow,
                                 enabled = follow || state is UiState.Loaded,
                                 onClick = {
@@ -249,7 +278,7 @@ fun PodLogSheet(
                     }
                     if (pod.restarts > 0) {
                         item(key = "previous") {
-                            FilterChip(
+                            IchorFilterChip(
                                 selected = query.previous,
                                 onClick = {
                                     follow = false
@@ -260,24 +289,32 @@ fun PodLogSheet(
                         }
                     }
                     item(key = "events") {
-                        FilterChip(selected = events, onClick = { events = !events }, label = { Text(stringResource(R.string.kube_events_title)) })
+                        IchorFilterChip(selected = events, onClick = { events = !events }, label = { Text(stringResource(R.string.kube_events_title)) })
                     }
                     if (links != null) {
                         item(key = "yaml") {
-                            AssistChip(onClick = {
+                            IchorAssistChip(onClick = {
                                 onDismiss()
                                 links.onObject(KubeObjectRef.pod(pod.namespace, pod.name))
                             }, label = { Text(stringResource(R.string.kb_tab_yaml)) })
                         }
                         item(key = "forward") {
-                            AssistChip(onClick = {
+                            IchorAssistChip(onClick = {
                                 onDismiss()
                                 links.onPortForward(pod.namespace, pod.name)
                             }, label = { Text(stringResource(R.string.kb_forward_title)) })
                         }
+                        logsBackend?.let { backend ->
+                            item(key = "log-backend") {
+                                IchorAssistChip(onClick = {
+                                    onDismiss()
+                                    links.onLogSearch(appContext.logsBackendRepository.podQuery(backend.kind, pod.namespace, pod.name))
+                                }, label = { Text(openInLogsBackendLabel(backend)) })
+                            }
+                        }
                         item(key = "shell") {
                             // In the container picked for the log; "" lets Kubernetes pick the only one.
-                            AssistChip(onClick = {
+                            IchorAssistChip(onClick = {
                                 onDismiss()
                                 links.onShell(pod.namespace, pod.name, query.container)
                             }, label = { Text(stringResource(R.string.pod_shell_title)) }, enabled = shellDenial == null)
@@ -299,6 +336,8 @@ fun PodLogSheet(
             } else {
                 InfoNotice(stringResource(R.string.pod_logs_tail, POD_LOG_TAIL), Modifier.padding(horizontal = 16.dp))
             }
+            // A followed log streams as it is written, and events are not lines: nothing to filter.
+            if (!follow && !events) LogFilterBar(query.filter, { vm.load(query.copy(filter = it)) })
             Box(Modifier.weight(1f).upwardScrollStaysInSheet()) {
                 if (events) {
                     KubeEventsList(pod.namespace, "Pod", pod.name, Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp))
@@ -308,7 +347,7 @@ fun PodLogSheet(
                     when (val s = state) {
                         UiState.Loading -> LoadingBox(style = SkeletonStyle.TEXT)
                         is UiState.Failed -> ErrorBox(s.message, { vm.load() })
-                        is UiState.Loaded -> LogText(s.data)
+                        is UiState.Loaded -> LogText(s.data.entries)
                     }
                 }
             }
@@ -317,21 +356,25 @@ fun PodLogSheet(
 }
 
 @Composable
-private fun LogText(text: String) {
-    val lines = logLines(text)
+private fun LogText(lines: List<LogEntry>) {
     if (lines.isEmpty()) {
         EmptyText(stringResource(R.string.pod_logs_empty))
         return
     }
     val list = rememberLazyListState()
     // The newest lines are at the end, as in a terminal.
-    LaunchedEffect(text) { list.scrollToItem(lines.lastIndex) }
-    LazyColumn(Modifier.fillMaxWidth(), state = list, contentPadding = PaddingValues(horizontal = 16.dp)) {
-        items(lines.size) { i ->
-            Text(lines[i], style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+    LaunchedEffect(lines) { list.scrollToItem(lines.lastIndex) }
+    SelectionContainer {
+        LazyColumn(Modifier.fillMaxWidth(), state = list, contentPadding = PaddingValues(horizontal = 16.dp)) {
+            // One styled string per line, laid out only when visible.
+            items(lines.size) { i -> AnsiLine(lines[i], style = podLogTextStyle()) }
         }
     }
 }
+
+/** The pod log's monospace text, snapshot and follow alike. */
+@Composable
+internal fun podLogTextStyle() = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
 
 // Logs may hold secrets: kept out of the clipboard preview (honoured from Android 13).
 private fun copyLog(context: Context, pod: KubePod, text: String) = copyToClipboard(context, pod.name, text, sensitive = true)
@@ -339,15 +382,15 @@ private fun copyLog(context: Context, pod: KubePod, text: String) = copyToClipbo
 private fun sharedLogs(context: Context) = File(context.cacheDir, "logs")
 
 /** Removes the shared log file, once the sheet closes. */
-private fun deleteSharedLogs(context: Context) {
+internal fun deleteSharedLogs(context: Context) {
     sharedLogs(context).listFiles()?.forEach { it.delete() }
 }
 
 /** Shares the log as a file in the cache: it can be larger than an intent can carry as text. One file, replaced each time. */
-private fun shareLog(context: Context, pod: KubePod, text: String) {
+internal fun shareLog(context: Context, name: String, text: String) {
     deleteSharedLogs(context)
     val dir = sharedLogs(context).apply { mkdirs() }
-    val file = File(dir, "${pod.name}.log")
+    val file = File(dir, "$name.log")
     try {
         file.writeText(text)
     } catch (e: java.io.IOException) {

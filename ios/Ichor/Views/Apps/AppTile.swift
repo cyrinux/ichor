@@ -1,0 +1,138 @@
+import SwiftUI
+import IchorCore
+
+extension AppCategory {
+    var label: String {
+        switch self {
+        case .system: String(localized: "System")
+        case .networking: String(localized: "Networking")
+        case .storage: String(localized: "Storage")
+        case .observability: String(localized: "Observability")
+        case .security: String(localized: "Security")
+        case .database: String(localized: "Databases")
+        case .messaging: String(localized: "Messaging")
+        case .devops: String(localized: "DevOps")
+        case .media: String(localized: "Media")
+        case .home: String(localized: "Home automation")
+        case .productivity: String(localized: "Productivity")
+        case .ai: String(localized: "AI")
+        case .web: String(localized: "Web")
+        case .other: String(localized: "Other")
+        }
+    }
+}
+
+extension ClusterInventory {
+    /// "12 apps · 31 containers · 5 nodes", or "4 of 5 nodes" when some did not answer.
+    var localizedSummary: String {
+        let nodesPart =
+            answered < nodes
+            ? String(localized: "\(answered) of \(nodes) nodes")
+            : String(localized: "\(answered) nodes")
+        return [String(localized: "\(apps.count) apps"), String(localized: "\(containers) containers"), nodesPart]
+            .joined(separator: " · ")
+    }
+}
+
+/// The amber of everything that needs a look, like the app's other warnings.
+let attentionColor = Color.orange
+
+/// How much of a stopped app's tile shows: present, yet clearly not running.
+let stoppedOpacity = 0.45
+
+/// An app in the grid: icon, name, and its version or what needs a look; greyed out when stopped.
+struct AppTile: View {
+    let app: InventoryApp
+    /// Its Argo CD Application is broken or drifting.
+    var argoBadge = false
+
+    var body: some View {
+        VStack(spacing: 6) {
+            AppIconView(app: app)
+                .overlay(alignment: .topTrailing) {
+                    if app.needsAttention {
+                        AttentionDot(color: app.isNotStarting ? .red : attentionColor).offset(x: 3, y: -3)
+                    }
+                }
+                .overlay(alignment: .bottomTrailing) {
+                    if argoBadge { ArgoTileBadge().offset(x: 4, y: 4) }
+                }
+            Text(verbatim: app.name)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .truncationMode(.tail)
+            versionLine
+                .font(.caption2.monospaced())
+                .lineLimit(1)
+                .truncationMode(.middle)
+        }
+        .opacity(app.isStopped ? stoppedOpacity : 1)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 6)
+        .background(
+            Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder
+    private var versionLine: some View {
+        if app.isNotStarting {
+            Text("Not starting").font(.caption2).foregroundStyle(.red)
+        } else if app.isStopped {
+            Text("Stopped").font(.caption2).foregroundStyle(.secondary)
+        } else if app.drift {
+            Text("\(app.versionCount) versions").foregroundStyle(attentionColor)
+        } else if app.unpinned {
+            Text(verbatim: ":latest").foregroundStyle(attentionColor)
+        } else {
+            Text(verbatim: app.version.or("—")).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct AttentionDot: View {
+    var size: CGFloat = 12
+    var color: Color = attentionColor
+
+    var body: some View {
+        Circle()
+            .fill(color)
+            .frame(width: size, height: size)
+            .overlay { Circle().stroke(Color(.secondarySystemGroupedBackground), lineWidth: 2) }
+            .accessibilityLabel(Text("Needs a look"))
+    }
+}
+
+/// A filter chip: its label and count, filled with the accent color when selected.
+struct FilterChip: View {
+    let label: String
+    let count: Int
+    let selected: Bool
+    var dot: Color?
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if let dot { Circle().fill(dot).frame(width: 7, height: 7).accessibilityHidden(true) }
+                Text(verbatim: label)
+                Text(verbatim: "\(count)").monospacedDigit().opacity(0.7)
+            }
+            .font(.subheadline.weight(.medium))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .foregroundStyle(selected ? AnyShapeStyle(Color.white) : AnyShapeStyle(HierarchicalShapeStyle.primary))
+            .background(
+                selected ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(Color(.tertiarySystemFill)), in: Capsule()
+            )
+            // A 44 pt touch target around the smaller capsule.
+            .frame(minWidth: 44, minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}

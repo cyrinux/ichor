@@ -14,9 +14,26 @@ data class NodeHardware(
     val extensions: List<ExtensionInfo> = emptyList(),
     /** Null when unavailable. */
     val security: SecurityInfo? = null,
-    /** Section ("system", "processors", "memory", "disks", "extensions", "security") -> error. */
+    /** Null when no watchdog timer is configured (or its read failed: see [errors]). */
+    val watchdog: WatchdogInfo? = null,
+    /** Section ("system", "processors", "memory", "disks", "extensions", "security", "watchdog") -> error. */
     val errors: Map<String, String> = emptyMap(),
 )
+
+/** The hardware watchdog Talos feeds; it resets the machine after [timeoutSec] without food. */
+@Serializable
+data class WatchdogInfo(
+    val device: String = "",
+    val timeoutSec: Int = 0,
+    val feedIntervalSec: Int = 0,
+)
+
+/** A watchdog interval: "40s", "2m", "1m 30s". */
+fun watchdogInterval(seconds: Int): String = when {
+    seconds < 60 -> "${seconds}s"
+    seconds % 60 == 0 -> "${seconds / 60}m"
+    else -> "${seconds / 60}m ${seconds % 60}s"
+}
 
 @Serializable
 data class SystemInfo(
@@ -96,6 +113,7 @@ object HardwareSection {
     const val DISKS = "disks"
     const val EXTENSIONS = "extensions"
     const val SECURITY = "security"
+    const val WATCHDOG = "watchdog"
 }
 
 /** Installed memory in bytes (sum of the populated modules). */

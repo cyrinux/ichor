@@ -1,0 +1,98 @@
+import SwiftUI
+import Ichorgo
+
+/// `kubectl exec -it -n NAMESPACE POD -c CONTAINER -- COMMAND`: a terminal in a running
+/// container, through the Kubernetes API. An empty command runs bash, or sh when the image
+/// lacks it. Or `kubectl debug -it`: a debug container from an image, for images with no shell
+/// at all. The shell ends when the view goes, like the node's debug shell.
+struct PodShellView: View {
+    let namespace: String
+    let pod: String
+    /// "" lets Kubernetes pick the pod's only container.
+    let container: String
+
+    @Environment(AppModel.self) private var model
+    @Environment(LockStore.self) private var lockStore
+    @AppStorage("debug.podCommand") private var command = ""
+    @AppStorage("debug.podImage") private var debugImage = "busybox:1.37"
+    @State private var debug = false
+    @State private var shell = DebugShell()
+    @State private var error: String?
+
+    var body: some View {
+        Group {
+            switch shell.state {
+            case .setup:
+                Form {
+                    Section {
+                        Text(
+                            "Opens a terminal in the running container of \(pod), like kubectl exec -it. Leave the command empty to run bash, or sh when the image has no bash."
+                        )
+                        .font(.callout)
+                    }
+                    Section {
+                        Toggle("Debug container", isOn: $debug).kubeGated(.debugPod, in: namespace)
+                        KubeDeniedNote(.debugPod, in: namespace)
+                    }
+                    if debug {
+                        Section {
+                            TextField("Image", text: $debugImage).font(.body.monospaced())
+                                .autocorrectionDisabled().textInputAutocapitalization(.never)
+                        } header: {
+                            Text("Image")
+                        } footer: {
+                            Text(
+                                "For images without a shell (distroless): adds a temporary container that sees this pod's processes. Kubernetes keeps it in the pod until the pod is deleted."
+                            )
+                        }
+                    } else {
+                        Section("Command") {
+                            TextField("bash, or sh", text: $command).font(.body.monospaced())
+                                .autocorrectionDisabled().textInputAutocapitalization(.never)
+                        }
+                    }
+                    if let error { Text(error).foregroundStyle(.statusBad) }
+                    Button("Start shell") { Task { await start() } }
+                        .disabled(debug && debugImage.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            default:
+                ShellTerminalContent(shell: shell)
+            }
+        }
+        .navigationTitle(Text(verbatim: container.isEmpty ? pod : "\(pod) / \(container)"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if shell.isActive {
+                ToolbarItem(placement: .primaryAction) { Button("Stop") { shell.stop() } }
+            }
+        }
+        .loadsKubeActionAccess(namespace: namespace)
+        .onDisappear { shell.stop() }
+        .allowsLandscape()
+    }
+
+    /// A shell can read the container's secrets: with the app lock on, it asks like the node's.
+    private func start() async {
+        guard let client = model.client else { return }
+        if lockStore.lock.enabled,
+            let failure = await Authenticator.authenticate(reason: String(localized: "Shell in \(pod)"))
+        {
+            error = failure
+            return
+        }
+        error = nil
+        let (namespace, pod, container, command) = (namespace, pod, container, command)
+        let image = debug ? debugImage.trimmingCharacters(in: .whitespaces) : ""
+        shell.start { listener, cols, rows in
+            if image.isEmpty {
+                client.startPodShell(
+                    namespace: namespace, pod: pod, container: container, command: command,
+                    cols: cols, rows: rows, listener: listener)
+            } else {
+                client.startPodDebug(
+                    namespace: namespace, pod: pod, targetContainer: container, image: image,
+                    cols: cols, rows: rows, listener: listener)
+            }
+        }
+    }
+}

@@ -3,10 +3,13 @@ package name.levis.ichor.ui.dataservices
 import androidx.lifecycle.viewModelScope
 import name.levis.ichor.data.DATA_SERVICES
 import name.levis.ichor.data.INVENTORY
+import name.levis.ichor.data.PLUGIN_CATALOG
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.Inventory
+import name.levis.ichor.model.PluginCatalog
+import name.levis.ichor.model.ReadProgress
 import name.levis.ichor.model.dataServiceHints
 import name.levis.ichor.ui.LoadingViewModel
 
@@ -16,9 +19,12 @@ import name.levis.ichor.ui.LoadingViewModel
  * demand, never polled.
  */
 class DataServicesViewModel(private val dataServices: DataServicesRepository) : LoadingViewModel<DataServices>() {
+    // Read with its hints: load.
+    override val loadsOnOpen = false
     override fun cached(): TalosRepository.Timed<DataServices>? = dataServices.cached(DATA_SERVICES)
     override val restores get() = dataServices.restores
     override suspend fun fetch() = dataServices.dataServices(hints)
+    override val progressReader: suspend () -> ReadProgress = { dataServices.readProgress(DATA_SERVICES_PROGRESS_OP) }
 
     /** Garage maintenance; a change shows in a fresh reading (tranquility, repairs running). */
     val garage = GarageActions(viewModelScope, dataServices, onChanged = { refresh() })
@@ -31,6 +37,11 @@ class DataServicesViewModel(private val dataServices: DataServicesRepository) : 
 
     /** On-demand CloudNativePG backups; the new backup shows in a fresh reading once done. */
     val cnpg = CnpgActions(viewModelScope, dataServices, onChanged = { refresh() })
+
+    /** Velero backups now and deletions; the schedule's progress shows in a fresh reading. */
+    val velero = VeleroActions(viewModelScope, dataServices, onChanged = { refresh() })
+
+    /** The DNS check of the ExternalDNS records; the verdicts stay until the next check. */
 
     /** Catalog ids from the inventory; "" checks everything (Garage needs a listing of every pod then). */
     private var hints = ""
@@ -49,6 +60,7 @@ class DataServicesViewModel(private val dataServices: DataServicesRepository) : 
         source = null
     }
 
-    /** The hints of the inventory the overview already loaded, if any. */
-    fun inventoryHints(): String = dataServices.cached<Inventory>(INVENTORY)?.value?.dataServiceHints().orEmpty()
+    /** The hints of the inventory (and plugin catalog) the overview already loaded, if any. */
+    fun inventoryHints(): String = dataServices.cached<Inventory>(INVENTORY)?.value
+        ?.dataServiceHints(dataServices.cached<PluginCatalog>(PLUGIN_CATALOG)?.value ?: PluginCatalog()).orEmpty()
 }

@@ -16,15 +16,14 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Stop
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +45,8 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SMOKE_NODE_SERVICES
+import androidx.compose.ui.platform.testTag
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -62,10 +63,9 @@ fun ServicesTab(
     vm: ServicesViewModel = viewModel(key = "services-$node", factory = factory { ServicesViewModel(app.talosRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
 
     Loaded(state, vm::refresh, freshness = true) { data ->
-        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(Modifier.testTag(SMOKE_NODE_SERVICES), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(data, key = { it.id }) { svc ->
                 ServiceRow(
                     svc,
@@ -96,7 +96,7 @@ private fun ServiceRow(
 ) {
     val colors = LocalStatusColors.current
     var menuOpen by remember { mutableStateOf(false) }
-    Card(
+    IchorCard(
         Modifier.fillMaxWidth().combinedClickable(
             onClick = onClick,
             onLongClick = if (actions.isEmpty()) null else ({ menuOpen = true }),
@@ -118,7 +118,7 @@ private fun ServiceRow(
                 }
                 if (actions.isNotEmpty()) {
                     Box {
-                        IconButton(onClick = { menuOpen = true }) {
+                        IchorIconButton(onClick = { menuOpen = true }) {
                             Icon(Icons.Outlined.MoreVert, stringResource(R.string.service_actions))
                         }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {

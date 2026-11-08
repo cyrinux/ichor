@@ -15,14 +15,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,7 +52,7 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.SnapshotEvent
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.EtcdRepository
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.VersionNotice
 import name.levis.ichor.ui.components.InfoNotice
@@ -99,7 +99,7 @@ val SnapshotState.busy: Boolean get() = this is SnapshotState.Running || this is
  * document the user picked. The cache copy is deleted in every case; leaving the screen
  * clears this view model, which cancels the download.
  */
-class EtcdSnapshotViewModel(private val talos: TalosRepository, private val app: TalosApp) : ViewModel() {
+class EtcdSnapshotViewModel(private val etcd: EtcdRepository, private val app: TalosApp) : ViewModel() {
     private val _state = MutableStateFlow<SnapshotState>(SnapshotState.Idle)
     val state: StateFlow<SnapshotState> = _state.asStateFlow()
     private var job: Job? = null
@@ -120,7 +120,7 @@ class EtcdSnapshotViewModel(private val talos: TalosRepository, private val app:
                 }
                 _state.value = SnapshotState.Running(target.hostname, 0, target.dbSize)
                 var result: SnapshotEvent? = null
-                talos.etcdSnapshot(target.node, temp.path, encryption).collect { event ->
+                etcd.etcdSnapshot(target.node, temp.path, encryption).collect { event ->
                     if (event is SnapshotEvent.Progress) {
                         _state.value = SnapshotState.Running(target.hostname, event.bytes, target.dbSize)
                     } else {
@@ -241,7 +241,7 @@ fun rememberSnapshotFlow(vm: EtcdSnapshotViewModel, contextName: String, fingerp
         SnapshotEncryptionDialog(
             hostname = target.hostname,
             savedKeys = savedKeys[fingerprint].orEmpty(),
-            checkKeys = app.talosRepository::checkSnapshotRecipients,
+            checkKeys = app.etcdRepository::checkSnapshotRecipients,
             onConfirm = { accepted(target, it) },
             onDismiss = { warning = null },
         )
@@ -262,7 +262,7 @@ fun rememberSnapshotFlow(vm: EtcdSnapshotViewModel, contextName: String, fingerp
 private fun MemberPickerDialog(members: List<SnapshotTarget>, onPick: (SnapshotTarget) -> Unit, onDismiss: () -> Unit) {
     // The first candidate is the default: a healthy follower when there is one.
     var selected by remember { mutableStateOf(members.first()) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.etcd_snapshot_pick_member)) },
         text = {
@@ -282,8 +282,8 @@ private fun MemberPickerDialog(members: List<SnapshotTarget>, onPick: (SnapshotT
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onPick(selected) }) { Text(stringResource(R.string.etcd_snapshot_continue)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = { onPick(selected) }) { Text(stringResource(R.string.etcd_snapshot_continue)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -292,13 +292,13 @@ private fun MemberPickerDialog(members: List<SnapshotTarget>, onPick: (SnapshotT
 fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit, onDismiss: () -> Unit, notice: VersionNotice? = null) {
     val colors = LocalStatusColors.current
     val context = LocalContext.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.etcd_snapshot_title), style = MaterialTheme.typography.titleSmall)
             when (state) {
                 SnapshotState.Idle -> {
                     MutedText(stringResource(R.string.etcd_snapshot_explainer))
-                    OutlinedButton(onClick = onSave, enabled = notice == null, modifier = Modifier.fillMaxWidth()) {
+                    IchorOutlinedButton(onClick = onSave, enabled = notice == null, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.etcd_snapshot_save))
                     }
                     notice?.let { InfoNotice(it.text()) }
@@ -320,7 +320,7 @@ fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit
                     } else {
                         LinearProgressIndicator(Modifier.fillMaxWidth())
                     }
-                    TextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
+                    IchorTextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
                 }
                 is SnapshotState.Saving -> {
                     Text(stringResource(R.string.etcd_snapshot_saving), style = MaterialTheme.typography.bodySmall)
@@ -348,9 +348,9 @@ fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit
                         Text(state.sha256, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                     }
                     FlowRow {
-                        TextButton(onClick = { restore = true }) { Text(stringResource(R.string.etcd_snapshot_restore)) }
-                        TextButton(onClick = { copyToClipboard(context, "SHA-256", state.sha256) }) { Text(stringResource(R.string.etcd_snapshot_copy_sha)) }
-                        TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                        IchorTextButton(onClick = { restore = true }) { Text(stringResource(R.string.etcd_snapshot_restore)) }
+                        IchorTextButton(onClick = { copyToClipboard(context, "SHA-256", state.sha256) }) { Text(stringResource(R.string.etcd_snapshot_copy_sha)) }
+                        IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                     }
                     if (restore) {
                         SnapshotRestoreDialog(snapshotRestoreCommands(state.fileName, state.mode, state.sha256)) { restore = false }
@@ -358,7 +358,7 @@ fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit
                 }
                 is SnapshotState.Failed -> {
                     Text(state.message.asString(), color = colors.bad, style = MaterialTheme.typography.bodySmall)
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
             }
         }

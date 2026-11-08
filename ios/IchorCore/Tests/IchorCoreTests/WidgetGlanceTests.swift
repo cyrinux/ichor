@@ -4,12 +4,15 @@ import XCTest
 final class WidgetGlanceTests: XCTestCase {
     private let now = Date(timeIntervalSince1970: 1_800_000_000)
 
-    private func snap(_ health: [NodeHealth], alarms: [String] = [], etcdChecked: Bool = true,
-                      age: TimeInterval = 0) -> ClusterSnapshot {
+    private func snap(
+        _ health: [NodeHealth], alarms: [String] = [], etcdChecked: Bool = true,
+        age: TimeInterval = 0
+    ) -> ClusterSnapshot {
         var nodes: [String: NodeState] = [:]
         for (i, h) in health.enumerated() { nodes["10.0.0.\(i)"] = NodeState(hostname: "n\(i)", health: h) }
-        return ClusterSnapshot(context: "lab", takenAt: now.addingTimeInterval(-age), nodes: nodes,
-                               etcdAlarms: alarms, etcdChecked: etcdChecked)
+        return ClusterSnapshot(
+            context: "lab", takenAt: now.addingTimeInterval(-age), nodes: nodes,
+            etcdAlarms: alarms, etcdChecked: etcdChecked)
     }
 
     func testAllReadyWithHealthyEtcd() {
@@ -17,8 +20,9 @@ final class WidgetGlanceTests: XCTestCase {
     }
 
     func testNotReadyThenEtcdAlarms() {
-        XCTAssertEqual(glanceItems(snap([.ready, .notReady], alarms: ["1:NOSPACE", "2:NOSPACE"])),
-                       [.notReady(1), .etcdAlarms(2)])
+        XCTAssertEqual(
+            glanceItems(snap([.ready, .notReady], alarms: ["1:NOSPACE", "2:NOSPACE"])),
+            [.notReady(1), .etcdAlarms(2)])
     }
 
     func testProblemsComeFirstAndCapAtTwo() {

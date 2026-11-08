@@ -11,7 +11,8 @@ enum PublicIPStore {
     private static func file(create: Bool) throws -> URL? {
         if create { return try AppSupport.excludedFolder("public-ips").appendingPathComponent("reports") }
         guard let url = AppSupport.existingFolder("public-ips")?.appendingPathComponent("reports"),
-              FileManager.default.fileExists(atPath: url.path) else { return nil }
+            FileManager.default.fileExists(atPath: url.path)
+        else { return nil }
         return url
     }
 
@@ -31,7 +32,9 @@ enum PublicIPStore {
     }
 
     static func wipe() {
-        if let url = try? file(create: false) { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        if let url = try? file(create: false) {
+            try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
+        }
         sealed.deleteKey()
     }
 

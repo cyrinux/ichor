@@ -3,16 +3,20 @@ import XCTest
 
 final class ClusterOutageTests: XCTestCase {
     private func overview(_ nodes: [String]) throws -> ClusterOverview {
-        try TalosJSON.decode(ClusterOverview.self, from: #"{"context":"lab","nodes":[\#(nodes.joined(separator: ","))]}"#)
+        try TalosJSON.decode(
+            ClusterOverview.self, from: #"{"context":"lab","nodes":[\#(nodes.joined(separator: ","))]}"#)
     }
 
     private func up(_ addr: String) -> String {
         #"{"node":"\#(addr)","hostname":"\#(addr)","reachable":true,"version":"v1.14.1","arch":"amd64","platform":"metal","role":"worker","stage":"running","ready":true,"unmetConditions":[]}"#
     }
 
-    private func down(_ addr: String, kind: String? = "network", error: String = "unreachable: no route to host") -> String {
+    private func down(_ addr: String, kind: String? = "network", error: String = "unreachable: no route to host")
+        -> String
+    {
         let kindField = kind.map { #","errorKind":"\#($0)""# } ?? ""
-        return #"{"node":"\#(addr)","hostname":"\#(addr)","reachable":false,"error":"\#(error)"\#(kindField),"version":"","arch":"","platform":"","role":"unknown","stage":"unknown","ready":false,"unmetConditions":[]}"#
+        return
+            #"{"node":"\#(addr)","hostname":"\#(addr)","reachable":false,"error":"\#(error)"\#(kindField),"version":"","arch":"","platform":"","role":"unknown","stage":"unknown","ready":false,"unmetConditions":[]}"#
     }
 
     func testAnyNodeAnsweringIsNoOutage() throws {

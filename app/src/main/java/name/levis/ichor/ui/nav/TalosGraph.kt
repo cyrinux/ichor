@@ -10,12 +10,17 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.DriftFix
+import name.levis.ichor.model.PatchPrefill
+import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.model.LogSource
 import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.address
 import name.levis.ichor.model.containerLogSubtitle
 import name.levis.ichor.model.containerLogTitle
+import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.sensitive
 import name.levis.ichor.ui.capture.CaptureFileScreen
 import name.levis.ichor.ui.capture.CaptureScreen
@@ -30,6 +35,7 @@ import name.levis.ichor.ui.hardware.HardwareScreen
 import name.levis.ichor.ui.health.HealthScreen
 import name.levis.ichor.ui.images.ImagesScreen
 import name.levis.ichor.ui.issueconfig.IssueConfigScreen
+import name.levis.ichor.ui.rotateca.RotateCAScreen
 import name.levis.ichor.ui.kubebrowser.KubeLinks
 import name.levis.ichor.ui.kubebrowser.LocalKubeLinks
 import name.levis.ichor.ui.kubespan.KubeSpanScreen
@@ -38,14 +44,17 @@ import name.levis.ichor.ui.machineconfig.MachineConfigScreen
 import name.levis.ichor.ui.nettools.NetToolsScreen
 import name.levis.ichor.ui.upgrade.ClusterUpgradeScreen
 import name.levis.ichor.ui.upgrade.K8sUpgradeScreen
+import name.levis.ichor.ui.join.AddNodePath
+import name.levis.ichor.ui.join.BootMediaScreen
 import name.levis.ichor.ui.join.JoinNodeScreen
+import name.levis.ichor.ui.join.OmniAllocateScreen
 import name.levis.ichor.ui.maintenance.MaintenanceScreen
 import name.levis.ichor.ui.network.NetworkScreen
 import name.levis.ichor.ui.node.NodeDetailScreen
-import name.levis.ichor.ui.node.NodeMenuEntry
+import name.levis.ichor.ui.node.NodeMetaScreen
 import name.levis.ichor.ui.node.NodeTabsScreen
 import name.levis.ichor.ui.node.PowerAction
-import name.levis.ichor.ui.nodes.NodesScreen
+import name.levis.ichor.ui.nodes.NodesListDetail
 import name.levis.ichor.ui.overview.OverviewViewModel
 import name.levis.ichor.ui.resources.ResourceDetailScreen
 import name.levis.ichor.ui.resources.ResourceListScreen
@@ -59,12 +68,14 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
     composable(Routes.NODES, arguments = listOf(navArgument("filter") { type = NavType.StringType; defaultValue = "" })) { entry ->
         // The overview's data and refresh: only ever opened from it, so it is below on the stack.
         val home = remember(entry) { nav.getBackStackEntry(Routes.OVERVIEW) }
-        NodesScreen(
+        NodesListDetail(
             initialFilter = NodeFilter.entries.firstOrNull { it.name == entry.arguments?.getString("filter") },
-            vm = viewModel(viewModelStoreOwner = home, factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
+            vm = viewModel(viewModelStoreOwner = home, factory = factory { OverviewViewModel(app.talosRepository, app.configRepository, app::overviewSeed) }),
             onBack = { nav.popBackStack() },
-            onNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
             onNodeAction = nav::openNodeAction,
+            onOpenNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
+            onTab = { n, tab -> nav.navigate(Routes.nodeTabs(n.node, n.hostname, tab)) },
+            onMenu = { n, entry -> nodeMenuRoute(n.node, n.hostname, entry)?.let(nav::navigate) },
         )
     }
     composable(
@@ -78,6 +89,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
     ) { entry ->
         val addr = entry.arguments?.getString("addr").orEmpty()
         val host = entry.arguments?.getString("host") ?: addr
+        RecordOpened(app, ShareTarget.node(addr, host, 0), host)
         NodeDetailScreen(
             node = addr,
             hostname = host,
@@ -90,27 +102,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             initialCordon = entry.arguments?.getString("action") == "cordon",
             onBack = { nav.popBackStack() },
             onTab = { tab -> nav.navigate(Routes.nodeTabs(addr, host, tab)) },
-            onMenu = { item ->
-                when (item) {
-                    NodeMenuEntry.KERNEL_LOG -> Routes.logs(addr, host, null)
-                    NodeMenuEntry.EVENTS -> Routes.events(addr, host)
-                    NodeMenuEntry.NETWORK -> Routes.network(addr, host)
-                    NodeMenuEntry.HARDWARE -> Routes.hardware(addr, host)
-                    NodeMenuEntry.IMAGES -> Routes.images(addr, host)
-                    NodeMenuEntry.STORAGE -> Routes.storage(addr, host)
-                    NodeMenuEntry.RESOURCES -> Routes.resources(addr, host)
-                    NodeMenuEntry.DEBUG_SHELL -> Routes.debug(addr, host)
-                    NodeMenuEntry.CAPTURE -> Routes.capture(addr, host)
-                    NodeMenuEntry.NET_TOOLS -> Routes.netTools(addr, host)
-                    NodeMenuEntry.CAPTURES -> Routes.CAPTURES
-                    NodeMenuEntry.MACHINE_CONFIG -> Routes.machineConfig(addr, host)
-                    NodeMenuEntry.UPGRADE -> Routes.upgrade(addr, host)
-                    NodeMenuEntry.MAINTENANCE -> Routes.maintenance(addr, host)
-                    NodeMenuEntry.DRAIN -> Routes.maintenance(addr, host, drain = true)
-                    // Handled on the node screen: the tabs through onTab, the others a confirmation.
-                    else -> null
-                }?.let { nav.navigate(it) }
-            },
+            onMenu = { item -> nodeMenuRoute(addr, host, item)?.let { nav.navigate(it) } },
         )
     }
     composable(
@@ -144,6 +136,10 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             navArgument("fix") { type = NavType.StringType; defaultValue = "" },
             navArgument("before") { type = NavType.StringType; defaultValue = "" },
             navArgument("after") { type = NavType.StringType; defaultValue = "" },
+            navArgument("snippet") { type = NavType.StringType; defaultValue = "" },
+            navArgument("snippetParams") { type = NavType.StringType; defaultValue = "" },
+            navArgument("patch") { type = NavType.StringType; defaultValue = "" },
+            navArgument("patchFrom") { type = NavType.StringType; defaultValue = "" },
         ),
     ) { entry ->
         val args = entry.arguments
@@ -151,7 +147,18 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
         val fix = args?.getString("fix").orEmpty().takeIf { it.isNotEmpty() }?.let {
             DriftFix(it, args?.getString("before").orEmpty(), args?.getString("after").orEmpty())
         }
-        MachineConfigScreen(node = addr, hostname = args?.getString("host") ?: addr, onBack = { nav.popBackStack() }, fix = fix)
+        val snippet = SnippetPrefill.decode(args?.getString("snippet").orEmpty(), args?.getString("snippetParams").orEmpty())
+        val patch = args?.getString("patch").orEmpty().takeIf { it.isNotEmpty() }?.let { PatchPrefill(it, args?.getString("patchFrom").orEmpty()) }
+        MachineConfigScreen(
+            node = addr,
+            hostname = args?.getString("host") ?: addr,
+            onBack = { nav.popBackStack() },
+            fix = fix,
+            snippet = snippet,
+            patch = patch,
+            onRepoFile = { path, line -> nav.navigate(Routes.repoFile(path, line, noTry = true)) },
+            onRepoEdit = { path, quick -> nav.navigate(Routes.repoEdit(path, quick)) },
+        )
     }
     composable(Routes.NETWORK, arguments = nodeArguments()) { entry ->
         val addr = entry.arguments?.getString("addr").orEmpty()
@@ -216,6 +223,10 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             onBack = { nav.popBackStack() },
         )
     }
+    composable(Routes.NODE_META, arguments = nodeArguments()) { entry ->
+        val addr = entry.arguments?.getString("addr").orEmpty()
+        NodeMetaScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
+    }
     composable(
         Routes.CLUSTER_UPGRADE,
         arguments = listOf(navArgument("version") { type = NavType.StringType; defaultValue = "" }),
@@ -228,15 +239,56 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
     }
     composable(Routes.K8S_UPGRADE) { K8sUpgradeScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.JOIN_NODE) {
-        JoinNodeScreen(
+        // Omni joins the machine itself: Add a node is only its boot media there.
+        if (app.configRepository.config.value?.activeSummary?.omni == true) {
+            BootMediaScreen(
+                onBack = { nav.popBackStack() },
+                onAddNode = null,
+                onAllocate = { nav.navigate(Routes.OMNI_ALLOCATE) { launchSingleTop = true } },
+            )
+        } else {
+            JoinNodeScreen(
+                onBack = { nav.popBackStack() },
+                onOpenNode = { addr, hostname, role ->
+                    nav.popBackStack()
+                    nav.navigate(Routes.node(addr, hostname, role))
+                },
+                onPath = { nav.navigate(Routes.bootMedia(it)) { launchSingleTop = true } },
+            )
+        }
+    }
+    composable(Routes.BOOT_MEDIA, arguments = listOf(navArgument("path") { type = NavType.StringType; defaultValue = "" })) { entry ->
+        // Add a node takes a machine in maintenance mode; Omni adds its machines itself.
+        val active = app.configRepository.config.value?.activeSummary
+        val omni = active?.omni == true
+        BootMediaScreen(
+            initialPath = AddNodePath.fromRoute(entry.arguments?.getString("path")),
+            // The demo shows its samples there too, and refuses to allocate.
+            onAllocate = if (omni || active?.isDemo == true) {
+                { nav.navigate(Routes.OMNI_ALLOCATE) { launchSingleTop = true } }
+            } else {
+                null
+            },
             onBack = { nav.popBackStack() },
-            onOpenNode = { addr, hostname, role ->
-                nav.popBackStack()
-                nav.navigate(Routes.node(addr, hostname, role))
+            onAddNode = if (omni) null else {
+                {
+                    // Back to Add a node when it opened this screen, else a new one.
+                    if (!nav.popBackStack(Routes.JOIN_NODE, inclusive = false)) nav.navigate(Routes.JOIN_NODE)
+                }
             },
         )
     }
+    composable(Routes.OMNI_ALLOCATE) { OmniAllocateScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.ISSUE_CONFIG) { IssueConfigScreen(onBack = { nav.popBackStack() }) }
+    composable(Routes.ROTATE_CA) {
+        RotateCAScreen(
+            onBack = { nav.popBackStack() },
+            onIssueConfig = {
+                nav.popBackStack()
+                nav.navigate(Routes.ISSUE_CONFIG)
+            },
+        )
+    }
     composable(
         Routes.LOGS,
         arguments = listOf(
@@ -361,7 +413,11 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
         )
     }
     composable(Routes.HEALTH) {
-        HealthScreen(onBack = { nav.popBackStack() }, onDiagnose = { note -> nav.navigate(Routes.diagnosis(note)) })
+        HealthScreen(
+            onBack = { nav.popBackStack() },
+            onDiagnose = { note -> nav.navigate(Routes.diagnosis(note)) },
+            onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
+        )
     }
 }
 

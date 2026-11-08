@@ -20,7 +20,8 @@ private const val KIND_THROTTLED = "throttled"
 
 /**
  * A sensor issue's stored value, split: "severity|hot|hostname|label|celsius|limit" for a node
- * running hot, "severity|throttled|hostname||0|0" for a throttled one.
+ * running hot, "severity|throttled|hostname|label|celsius|0" for a throttled one (its hottest
+ * sensor; "||0" on a node without any, as before it was kept).
  */
 data class SensorDetail(
     val severity: String,
@@ -64,9 +65,9 @@ fun sensorLimit(sensor: TemperatureSensor, threshold: Int): Double? = when {
 /**
  * The sensor issues of [health], keyed "node|hot" and "node|throttled": a node whose hottest
  * sensor reaches its limit (see [sensorLimit]) runs hot, and stays so until it is
- * [SENSOR_HYSTERESIS] °C under it ([known] says it was); a throttled node is a warning, which the
- * monitor only alerts on its second check in a row. A node that did not answer keeps its [known]
- * issues; a node without sensors (a VM) has none.
+ * [SENSOR_HYSTERESIS] °C under it ([known] says it was); a throttled node is a warning (with its
+ * hottest sensor's reading), which the monitor only alerts on its second check in a row. A node
+ * that did not answer keeps its [known] issues; a node without sensors (a VM) has none.
  */
 fun sensorIssuesOf(health: ClusterSensorHealth, threshold: Int, known: Map<String, String> = emptyMap()): Map<String, String> {
     val out = sortedMapOf<String, String>()
@@ -85,7 +86,10 @@ fun sensorIssuesOf(health: ClusterSensorHealth, threshold: Int, known: Map<Strin
             }
         }
         if (node.throttled) {
-            out["${node.node}|$KIND_THROTTLED"] = SensorDetail(DATA_WARNING, throttled = true, host).format()
+            val hottest = node.hottest
+            out["${node.node}|$KIND_THROTTLED"] = SensorDetail(
+                DATA_WARNING, throttled = true, host, hottest?.label.orEmpty(), hottest?.celsius ?: 0.0,
+            ).format()
         }
     }
     return out

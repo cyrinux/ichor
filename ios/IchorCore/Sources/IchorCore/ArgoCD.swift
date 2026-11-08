@@ -8,7 +8,8 @@ public let argoCDCatalogID = "argo-cd"
 
 /// Argo CD's tile when the inventory has none to offer (a kubeconfig context, or the Talos
 /// overview while its inventory still loads). Its icon is bundled (appicons/argo-cd.webp).
-public let argoCDTile = InventoryApp(id: argoCDCatalogID, name: "Argo CD", category: .devops, icon: "argo-cd", known: true)
+public let argoCDTile = InventoryApp(
+    id: argoCDCatalogID, name: "Argo CD", category: .devops, icon: "argo-cd", known: true)
 
 /// The Argo CD Applications of every namespace, read through their custom resources (os:admin).
 public struct ArgoStatus: Decodable, Equatable, Sendable {
@@ -23,8 +24,10 @@ public struct ArgoStatus: Decodable, Equatable, Sendable {
     public let appSets: [ArgoAppSet]
     public let projects: [ArgoProject]
 
-    public init(installed: Bool = true, version: String = "", appSetsError: String = "", apps: [ArgoApp] = [],
-                appSets: [ArgoAppSet] = [], projects: [ArgoProject] = []) {
+    public init(
+        installed: Bool = true, version: String = "", appSetsError: String = "", apps: [ArgoApp] = [],
+        appSets: [ArgoAppSet] = [], projects: [ArgoProject] = []
+    ) {
         self.installed = installed
         self.version = version
         self.appSetsError = appSetsError
@@ -163,9 +166,11 @@ public struct ArgoApp: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, project, owner, level, icon, remoteIcon, iconURL = "iconUrl", health, healthMessage, sync, revision
+        case namespace, name, project, owner, level, icon, remoteIcon, iconURL = "iconUrl", health, healthMessage, sync,
+            revision
         case revisionURL = "revisionUrl", refreshing
-        case sources, destination, autoSync, syncOptions, operation, conditions, resources, history, images, externalURLs
+        case sources, destination, autoSync, syncOptions, operation, conditions, resources, history, images,
+            externalURLs
         case unhealthyPods, reconciledAt, freeze
     }
 }
@@ -294,7 +299,8 @@ public struct ArgoOperation: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case phase, message, startedAt, finishedAt, initiatedBy, revision, revisionURL = "revisionUrl", retryCount, dryRun, done, total, wave, waves, failed
+        case phase, message, startedAt, finishedAt, initiatedBy, revision, revisionURL = "revisionUrl", retryCount,
+            dryRun, done, total, wave, waves, failed
     }
 }
 
@@ -408,7 +414,9 @@ public struct ArgoHistory: Decodable, Equatable, Identifiable, Sendable {
     /// "grafana 8.5.2" for a chart, the short commit ("4be1d0c") otherwise.
     public var label: String { chart.isEmpty ? shortRevision(revision) : "\(chart) \(revision)" }
 
-    private enum CodingKeys: String, CodingKey { case id, revision, url, targetRevision, chart, deployedAt, initiatedBy }
+    private enum CodingKeys: String, CodingKey {
+        case id, revision, url, targetRevision, chart, deployedAt, initiatedBy
+    }
 }
 
 public struct ArgoAppSet: Decodable, Equatable, Identifiable, Sendable {
@@ -480,7 +488,9 @@ public struct ArgoProject: Decodable, Equatable, Identifiable, Sendable {
         managedServerSide = try c.field(.managedServerSide, false)
     }
 
-    private enum CodingKeys: String, CodingKey { case namespace, name, description, syncWindows, windows, managedBy, managedServerSide }
+    private enum CodingKeys: String, CodingKey {
+        case namespace, name, description, syncWindows, windows, managedBy, managedServerSide
+    }
 }
 
 /// One sync window of a project: an allow or deny period from a cron schedule.
@@ -532,7 +542,8 @@ public struct ArgoWindow: Decodable, Equatable, Identifiable, Sendable {
     public var endsAt: Int64 { ichor?.expiresAt ?? end }
 
     private enum CodingKeys: String, CodingKey {
-        case id, kind, schedule, duration, timeZone, applications, namespaces, clusters, manualSync, active, start, end, error, apps, ichor
+        case id, kind, schedule, duration, timeZone, applications, namespaces, clusters, manualSync, active, start, end,
+            error, apps, ichor
     }
 }
 
@@ -568,7 +579,9 @@ public struct ArgoFreeze: Decodable, Equatable, Sendable {
     /// Their window ids.
     public let windows: [String]
 
-    public init(project: String = "", until: Int64 = 0, manualSync: Bool = false, byIchor: Bool = false, windows: [String] = []) {
+    public init(
+        project: String = "", until: Int64 = 0, manualSync: Bool = false, byIchor: Bool = false, windows: [String] = []
+    ) {
         self.project = project
         self.until = until
         self.manualSync = manualSync
@@ -605,8 +618,10 @@ public struct ArgoFreezeOptions: Encodable, Equatable, Sendable {
     /// Confirms removing a window Ichor did not create.
     public var fromGit = false
 
-    public init(applications: [String] = [], namespaces: [String] = [], minutes: Int = 0, manualSync: Bool = false,
-                reason: String = "", window: String = "", fromGit: Bool = false) {
+    public init(
+        applications: [String] = [], namespaces: [String] = [], minutes: Int = 0, manualSync: Bool = false,
+        reason: String = "", window: String = "", fromGit: Bool = false
+    ) {
         self.applications = applications
         self.namespaces = namespaces
         self.minutes = minutes
@@ -657,8 +672,10 @@ public struct ArgoSyncOptions: Encodable, Equatable, Sendable {
     /// Rollback only: the history entry to go back to.
     public var historyId: Int64 = 0
 
-    public init(prune: Bool = false, dryRun: Bool = false, force: Bool = false, applyOutOfSyncOnly: Bool = false,
-                serverSideApply: Bool = false, replace: Bool = false, resources: [ArgoResourceRef] = [], historyId: Int64 = 0) {
+    public init(
+        prune: Bool = false, dryRun: Bool = false, force: Bool = false, applyOutOfSyncOnly: Bool = false,
+        serverSideApply: Bool = false, replace: Bool = false, resources: [ArgoResourceRef] = [], historyId: Int64 = 0
+    ) {
         self.prune = prune
         self.dryRun = dryRun
         self.force = force

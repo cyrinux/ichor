@@ -6,6 +6,10 @@ plugins {
     alias(libs.plugins.aboutlibraries.android)
 }
 
+// The on-device model engine is part of the build unless -Pichor.localModel=false
+// (ICHOR_LOCAL_MODEL=0 ./build.sh): see build_llm_jni in build.sh.
+val localModel = (findProperty("ichor.localModel") as String?)?.toBoolean() ?: true
+
 android {
     namespace = "name.levis.ichor"
     compileSdk = 37
@@ -20,6 +24,8 @@ android {
         // From scripts/version.sh (exported by build.sh); fallbacks for IDE builds.
         versionCode = System.getenv("ICHOR_BUILD_NUMBER")?.toIntOrNull() ?: 1
         versionName = System.getenv("ICHOR_VERSION") ?: "0.0.0-unknown"
+        // The demo-mode smoke test (src/androidTest, run by the ui-smoke CI job).
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // GitHub repository the self-updater reads releases from (set by GitHub Actions).
         val updateRepo = System.getenv("GITHUB_REPOSITORY") ?: "cyrinux/ichor"
@@ -29,6 +35,9 @@ android {
         buildConfigField("boolean", "DONATIONS", "true")
         // On in the Play build: features funded with Play in-app products (Settings → About).
         buildConfigField("boolean", "FEATURE_FUNDING", "false")
+        // The on-device model engine (libichorllm.so, built by build.sh): off with
+        // -Pichor.localModel=false, and the app then hides the "This phone" provider.
+        buildConfigField("boolean", "LOCAL_MODEL", localModel.toString())
     }
 
     // Release signing comes from env vars so CI (Forgejo) can inject secrets.
@@ -48,9 +57,15 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".foss"
+            // en-XA (long accented text) and ar-XB (right to left) in Developer options: docs/build.md.
+            isPseudoLocalesEnabled = true
         }
         release {
             applicationIdSuffix = ".foss"
+            // No META-INF/version-control-info.textproto: AGP writes the commit from a clone but a
+            // stub from a git worktree, so the same tag gave two APKs (CONTRIBUTING.md
+            // "Reproducible builds"). The version name already names the build.
+            vcsInfo.include = false
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -65,6 +80,8 @@ android {
             buildConfigField("boolean", "SELF_UPDATE", "false")
             buildConfigField("boolean", "DONATIONS", "false")
             buildConfigField("boolean", "FEATURE_FUNDING", "true")
+            // :core-widget has no play build type.
+            matchingFallbacks += listOf("release")
         }
     }
 
@@ -73,6 +90,8 @@ android {
     // libraries never reach their APKs.
     // src/foss/res tells them apart from the Play build on a home screen (name and icon).
     sourceSets {
+        // build.sh writes app/build/llm-jni/<abi>/libichorllm.so (absent in the check build).
+        if (localModel) getByName("main").jniLibs.directories.add("build/llm-jni")
         getByName("debug").kotlin.directories.add("src/foss/java")
         getByName("release").kotlin.directories.add("src/foss/java")
         getByName("debug").res.directories.add("src/foss/res")
@@ -114,6 +133,23 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // Full Lint in `./build.sh check` (:app:lintDebug, the open-source sources): the findings
+    // recorded in lint-baseline.xml are known, any new one fails the check (CONTRIBUTING.md,
+    // "Checks"). Warnings stay warnings; errors fail.
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError = true
+        warningsAsErrors = false
+        checkDependencies = false
+        disable += listOf(
+            // "--" in the strings is a command-line flag (`--roles os:reader`), never a dash.
+            "TypographyDashes",
+            // Its dictionary flags product and protocol names in translations (Garage, Magic
+            // Packet, age1 keys); the translation checks own spelling.
+            "Typos",
+        )
+    }
 }
 
 // The licenses screen. Gradle dependencies are collected automatically; the Go core's modules
@@ -132,8 +168,15 @@ aboutLibraries {
     }
 }
 
+// The play build type only flips three flags on release, so its fatal-lint pass (lintVital,
+// about three minutes) would repeat lintVitalRelease's; the release build keeps it.
+tasks.configureEach {
+    if (name.matches(Regex("lintVital\\w*Play|generatePlayLintVital\\w*"))) enabled = false
+}
+
 dependencies {
     implementation(files("libs/ichorgo.aar"))
+    implementation(project(":core-widget"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
@@ -144,14 +187,18 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
+    // List-detail panes on tablets and unfolded foldables (ui/components/Panes.kt).
+    implementation(libs.compose.material3.adaptive)
+    implementation(libs.compose.material3.adaptive.layout)
+    implementation(libs.compose.material3.adaptive.navigation)
     implementation(libs.compose.material.icons)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.camerax.camera2)
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
-    implementation(libs.mlkit.barcode)
-    // QR encoder for sharing an issued talosconfig (ML Kit only decodes). Pure Java, no Android deps.
+    // QR codes: the import scanner's decoder and the encoder for sharing an issued talosconfig.
+    // Pure Java, no Android or Google Play deps, so the open-source APK stays free.
     implementation(libs.zxing.core)
     implementation(libs.termlib)
     implementation(libs.androidx.biometric)
@@ -171,7 +218,18 @@ dependencies {
     "playImplementation"(libs.billing)
     "playImplementation"(libs.play.app.update)
     "playImplementation"(libs.play.services.auth)
+    // The Wear OS tile's Data Layer sync (src/play/.../wear); the open-source builds have none.
+    "playImplementation"(libs.play.services.wearable)
     debugImplementation(libs.compose.ui.tooling)
+    // Hosts the Compose test rule's empty activity in debug builds only.
+    debugImplementation(libs.compose.ui.test.manifest)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
 }

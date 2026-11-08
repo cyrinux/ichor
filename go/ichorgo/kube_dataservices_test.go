@@ -428,6 +428,7 @@ func TestFindGarageGroups(t *testing.T) {
 		fakePod("storage", "garage-x2", "n2", true, ds, "garage", "dxflrs/amd64_garage:v2.3.0"),
 		fakePod("nas", "garage-nas-0", "n3", true, map[string]string{"app.kubernetes.io/name": "garage-nas"}, "garage", "dxflrs/garage:v2.3.0"),
 		fakePod("web", "nginx-1", "n1", true, nil, "nginx", "nginx:1.27"),
+		fakePod("storage", "garage-webui-0", "n1", true, map[string]string{"app.kubernetes.io/name": "garage-webui"}, "garage-webui", "khairul169/garage-webui:1.0.9"),
 	}
 
 	groups := findGarageGroups(pods)
@@ -522,10 +523,16 @@ func TestReadDataServicesSectionErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, err := readDataServices(context.Background(), k, nil, parseHints(""), fixtureNow)
+	ctx := withReadProgressStart(context.Background(), "test-dataservices", "")
+
+	res, err := readDataServices(ctx, k, nil, parseHints(""), fixtureNow)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// The steps are what was detected, the failed section's step failed.
+	checkFinishedProgress(t, "test-dataservices",
+		[]string{dsStepAPI, dsStepPods, dsStepBackups, dsStepLonghorn, dsStepGarage}, dsStepLonghorn)
 
 	if res.Longhorn == nil || !strings.Contains(res.Longhorn.Error, "not found") || res.Garage != nil {
 		t.Fatalf("section error: %+v", res.Longhorn)

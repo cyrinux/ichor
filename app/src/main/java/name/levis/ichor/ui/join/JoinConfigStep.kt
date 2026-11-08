@@ -13,9 +13,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.JoinConfigPreview
 import name.levis.ichor.model.NodeOverview
@@ -63,7 +64,7 @@ data class JoinConfigForm(
 }
 
 /** Step 2 of adding a node: a member's config made the new node's, previewed with its secrets hidden. */
-class JoinConfigViewModel(private val talos: TalosRepository) : ViewModel() {
+class JoinConfigViewModel(private val talos: TalosRepository, private val lifecycle: NodeLifecycleRepository) : ViewModel() {
     private val _members = MutableStateFlow<UiState<List<NodeOverview>>>(UiState.Loading)
     val members: StateFlow<UiState<List<NodeOverview>>> = _members.asStateFlow()
     private val _form = MutableStateFlow(JoinConfigForm())
@@ -100,7 +101,7 @@ class JoinConfigViewModel(private val talos: TalosRepository) : ViewModel() {
         previewing?.cancel()
         _preview.value = UiState.Loading
         previewing = viewModelScope.launch {
-            _preview.value = uiStateOf { talos.joinNodeConfigPreview(form.template, form.role, form.hostname, form.disk, form.address) }
+            _preview.value = uiStateOf { lifecycle.joinNodeConfigPreview(form.template, form.role, form.hostname, form.disk, form.address) }
         }
     }
 
@@ -128,7 +129,7 @@ fun JoinConfigStep(vm: JoinConfigViewModel, disks: List<String>) {
             TemplatePicker(joinTemplates(nodes), form.template) { vm.pick(it, nodes) }
             if (form.template.isNotBlank()) {
                 ConfigFields(form, disks, vm)
-                Button(onClick = vm::generate, enabled = form.complete && preview != UiState.Loading, modifier = Modifier.fillMaxWidth()) {
+                IchorButton(onClick = vm::generate, enabled = form.complete && preview != UiState.Loading, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.join_config_preview))
                 }
             }
@@ -144,7 +145,7 @@ fun JoinConfigStep(vm: JoinConfigViewModel, disks: List<String>) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun TemplatePicker(templates: List<NodeOverview>, selected: String, onPick: (NodeOverview) -> Unit) {
+internal fun TemplatePicker(templates: List<NodeOverview>, selected: String, onPick: (NodeOverview) -> Unit) {
     if (templates.isEmpty()) {
         InfoNotice(stringResource(R.string.join_config_no_template))
         return
@@ -152,7 +153,7 @@ private fun TemplatePicker(templates: List<NodeOverview>, selected: String, onPi
     Text(stringResource(R.string.join_config_template), style = MaterialTheme.typography.labelLarge)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         templates.forEach { node ->
-            FilterChip(
+            IchorFilterChip(
                 selected = node.node == selected,
                 onClick = { onPick(node) },
                 label = { Text("${node.hostname.ifBlank { node.node }} · ${roleLabel(joinRole(node.role))}") },
@@ -163,7 +164,7 @@ private fun TemplatePicker(templates: List<NodeOverview>, selected: String, onPi
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ConfigFields(form: JoinConfigForm, disks: List<String>, vm: JoinConfigViewModel) {
+internal fun ConfigFields(form: JoinConfigForm, disks: List<String>, vm: JoinConfigViewModel, withAddress: Boolean = true) {
     MutedText(stringResource(R.string.join_config_role, roleLabel(form.role)))
     OutlinedTextField(
         value = form.hostname,
@@ -185,10 +186,15 @@ private fun ConfigFields(form: JoinConfigForm, disks: List<String>, vm: JoinConf
     if (disks.isNotEmpty()) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             disks.forEach { disk ->
-                FilterChip(selected = disk == form.disk, onClick = { vm.disk(disk) }, label = { Text(disk, fontFamily = FontFamily.Monospace) })
+                IchorFilterChip(selected = disk == form.disk, onClick = { vm.disk(disk) }, label = { Text(disk, fontFamily = FontFamily.Monospace) })
             }
         }
     }
+    if (withAddress) AddressField(form, vm)
+}
+
+@Composable
+private fun AddressField(form: JoinConfigForm, vm: JoinConfigViewModel) {
     OutlinedTextField(
         value = form.address,
         onValueChange = vm::address,
@@ -203,7 +209,7 @@ private fun ConfigFields(form: JoinConfigForm, disks: List<String>, vm: JoinConf
 
 @Composable
 private fun PreviewCard(preview: JoinConfigPreview) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.join_config_valid, preview.hostname, formatBytes(preview.size.toLong())), style = MaterialTheme.typography.titleSmall)
             preview.warnings.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }

@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -58,7 +58,7 @@ internal fun NetPerfTrend(history: List<NetPerfReport>, client: String, server: 
     val colors = LocalChartColors.current
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
 
-    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+    IchorCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {

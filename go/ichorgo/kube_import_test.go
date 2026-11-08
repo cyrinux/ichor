@@ -78,7 +78,9 @@ clusters:
 - name: plain
   cluster: {server: "http://k8s.example.org:8080"}
 - name: proxied
-  cluster: {server: "https://k8s.example.org:6443", proxy-url: "socks5://p:1080"}
+  cluster: {server: "https://k8s.example.org:6443", proxy-url: "socks5://u:secret@bastion.example.org:1080"}
+- name: bad-proxy
+  cluster: {server: "https://k8s.example.org:6443", proxy-url: "ftp://u:secret@bastion.example.org"}
 - name: ca-file
   cluster: {server: "https://k8s.example.org:6443", certificate-authority: /etc/ca.crt}
 users:
@@ -92,6 +94,10 @@ users:
 - {name: rancher, user: {exec: {command: rancher, args: [token, --server, rancher.example.org]}}}
 - {name: legacy-oidc, user: {auth-provider: {name: oidc, config: {idp-issuer-url: "https://old.example.org"}}}}
 - {name: custom, user: {exec: {command: /usr/local/bin/my-auth}}}
+- {name: teleport, user: {exec: {command: /opt/teleport/tsh, args: [kube, credentials, --kube-cluster=prod, --teleport-cluster=tele.example.org, --proxy=tele.example.org:443]}}}
+- {name: vault, user: {exec: {command: vault, args: [read, -field=token, kubernetes/creds/ops]}}}
+- {name: aws-vault, user: {exec: {command: aws-vault.exe, args: [exec, ops, --, aws, sts, get-caller-identity]}}}
+- {name: kubelogin-bare, user: {exec: {command: kubelogin, args: [get-token, --oidc-client-id=k8s]}}}
 - {name: basic, user: {username: u, password: p}}
 - {name: token-file, user: {tokenFile: /var/run/token}}
 - {name: empty, user: {}}
@@ -106,11 +112,16 @@ contexts:
 - {name: rancher, context: {cluster: c, user: rancher}}
 - {name: legacy-oidc, context: {cluster: c, user: legacy-oidc}}
 - {name: custom, context: {cluster: c, user: custom}}
+- {name: teleport, context: {cluster: c, user: teleport}}
+- {name: vault, context: {cluster: c, user: vault}}
+- {name: aws-vault, context: {cluster: c, user: aws-vault}}
+- {name: kubelogin-bare, context: {cluster: c, user: kubelogin-bare}}
 - {name: basic, context: {cluster: c, user: basic}}
 - {name: token-file, context: {cluster: c, user: token-file}}
 - {name: empty, context: {cluster: c, user: empty}}
 - {name: plain, context: {cluster: plain, user: sa}}
 - {name: proxied, context: {cluster: proxied, user: sa}}
+- {name: bad-proxy, context: {cluster: bad-proxy, user: sa}}
 - {name: ca-file, context: {cluster: ca-file, user: sa}}
 - {name: no-user, context: {cluster: c, user: nobody}}
 - {name: no-cluster, context: {cluster: nowhere, user: sa}}
@@ -191,24 +202,36 @@ func TestParseKubeconfigPreview(t *testing.T) {
 	type row struct{ auth, detail, problem string }
 
 	want := map[string]row{
-		"cert":        {authCert, "", ""},
-		"sa":          {authToken, "", ""},
-		"eks":         {authEKS, "prod", cloudProblem(authEKS)},
-		"gke":         {authGKE, "", cloudProblem(authGKE)},
-		"oidc":        {authOIDC, "https://id.example.org", ""},
-		"azure":       {authAzure, "t1", cloudProblem(authAzure)},
-		"do":          {authDigitalOcean, "", cloudProblem(authDigitalOcean)},
-		"rancher":     {authRancher, "rancher.example.org", cloudProblem(authRancher)},
-		"legacy-oidc": {authOIDC, "https://old.example.org", KubeProblemInvalid}, // no client ID
-		"custom":      {authExec, "my-auth", KubeProblemExec},
-		"basic":       {authBasic, "", KubeProblemBasicAuth},
-		"token-file":  {authToken, "", KubeProblemFilePath},
-		"empty":       {authNone, "", KubeProblemNoCredentials},
-		"plain":       {authToken, "", KubeProblemNotHTTPS},
-		"proxied":     {authToken, "", KubeProblemProxy},
-		"ca-file":     {authToken, "", KubeProblemFilePath},
-		"no-user":     {authNone, "", KubeProblemUserMissing},
-		"no-cluster":  {authToken, "", KubeProblemClusterMissing},
+		"cert":           {authCert, "", ""},
+		"sa":             {authToken, "", ""},
+		"eks":            {authEKS, "prod", cloudProblem(authEKS)},
+		"gke":            {authGKE, "", cloudProblem(authGKE)},
+		"oidc":           {authOIDC, "https://id.example.org", ""},
+		"azure":          {authAzure, "t1", cloudProblem(authAzure)},
+		"do":             {authDigitalOcean, "", cloudProblem(authDigitalOcean)},
+		"rancher":        {authRancher, "rancher.example.org", cloudProblem(authRancher)},
+		"legacy-oidc":    {authOIDC, "https://old.example.org", KubeProblemInvalid}, // no client ID
+		"custom":         {authExec, "my-auth", KubeProblemExec},
+		"teleport":       {authTeleport, "prod", KubeProblemSignInLater}, // until the client presents its certificate
+		"vault":          {authExec, "vault", KubeProblemExec},
+		"aws-vault":      {authExec, "aws-vault", KubeProblemExec},
+		"kubelogin-bare": {authExec, "kubelogin", KubeProblemExec},
+		"basic":          {authBasic, "", KubeProblemBasicAuth},
+		"token-file":     {authToken, "", KubeProblemFilePath},
+		"empty":          {authNone, "", KubeProblemNoCredentials},
+		"plain":          {authToken, "", KubeProblemNotHTTPS},
+		"proxied":        {authToken, "", ""},
+		"bad-proxy":      {authToken, "", KubeProblemProxy},
+		"ca-file":        {authToken, "", KubeProblemFilePath},
+		"no-user":        {authNone, "", KubeProblemUserMissing},
+		"no-cluster":     {authToken, "", KubeProblemClusterMissing},
+	}
+
+	hints := map[string]string{
+		"custom":         ExecHintUnknown,
+		"vault":          ExecHintTokenWrapper,
+		"aws-vault":      ExecHintTokenWrapper,
+		"kubelogin-bare": ExecHintOIDCNoIssuer,
 	}
 
 	if len(s.Contexts) != len(want) {
@@ -232,6 +255,11 @@ func TestParseKubeconfigPreview(t *testing.T) {
 				c.Name, c.Kind, c.Auth, c.AuthDetail, c.Problem, w.auth, w.detail, w.problem)
 		}
 
+		if hint := hints[c.Name]; c.ExecHint != hint || (hint != "" && c.ProblemDetail != w.detail) {
+			t.Errorf("%s: exec hint %q problem detail %q, want hint %q detail %q",
+				c.Name, c.ExecHint, c.ProblemDetail, hint, w.detail)
+		}
+
 		if len(c.Fingerprint) != fingerprintLength || len(c.ClusterID) != fingerprintLength {
 			t.Errorf("%s: fingerprint %q cluster id %q", c.Name, c.Fingerprint, c.ClusterID)
 		}
@@ -252,6 +280,14 @@ func TestParseKubeconfigPreview(t *testing.T) {
 
 	if c := byName["sa"]; len(c.Endpoints) != 1 || c.Endpoints[0] != "https://k8s.example.org:6443" {
 		t.Errorf("endpoints: %v", c.Endpoints)
+	}
+
+	if c := byName["proxied"]; c.ProxyURL != "socks5://bastion.example.org:1080" {
+		t.Errorf("proxy shown as %q", c.ProxyURL)
+	}
+
+	if c := byName["bad-proxy"]; c.ProxyURL != "" || strings.Contains(c.ProblemDetail, "secret") {
+		t.Errorf("invalid proxy: shown as %q, detail %q", c.ProxyURL, c.ProblemDetail)
 	}
 
 	if byName["cert"].ClusterID != byName["sa"].ClusterID || byName["cert"].Fingerprint == byName["sa"].Fingerprint {

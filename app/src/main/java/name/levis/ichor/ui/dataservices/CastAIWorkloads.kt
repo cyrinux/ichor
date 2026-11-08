@@ -3,21 +3,18 @@ package name.levis.ichor.ui.dataservices
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Card
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
+import name.levis.ichor.ui.design.IchorCard
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,9 +41,11 @@ import name.levis.ichor.model.changeCounts
 import name.levis.ichor.model.commonMode
 import name.levis.ichor.model.formatMilliCores
 import name.levis.ichor.model.sections
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.SearchField
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 
@@ -64,7 +63,7 @@ fun CastAIWorkloads(status: CastAIStatus) {
     val growCount = remember(status) { status.recommendations.count { it.change == CastAIChange.GROW } }
     val listState = rememberLazyListState()
 
-    LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = CardListPadding) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
         if (status.recommendations.isEmpty()) {
             item { EmptyText(stringResource(R.string.castai_empty)) }
@@ -73,9 +72,9 @@ fun CastAIWorkloads(status: CastAIStatus) {
         item { WorkloadsSummary(status) }
         item {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(view == CastAIView.OVERVIEW, { view = CastAIView.OVERVIEW }, { Text(stringResource(R.string.castai_view_overview)) })
-                FilterChip(view == CastAIView.GROWS, { view = CastAIView.GROWS }, { Text(stringResource(R.string.castai_view_grows, growCount)) })
-                FilterChip(view == CastAIView.NAMESPACES, { view = CastAIView.NAMESPACES }, { Text(stringResource(R.string.castai_view_namespaces)) })
+                IchorFilterChip(view == CastAIView.OVERVIEW, { view = CastAIView.OVERVIEW }, { Text(stringResource(R.string.castai_view_overview)) })
+                IchorFilterChip(view == CastAIView.GROWS, { view = CastAIView.GROWS }, { Text(stringResource(R.string.castai_view_grows, growCount)) })
+                IchorFilterChip(view == CastAIView.NAMESPACES, { view = CastAIView.NAMESPACES }, { Text(stringResource(R.string.castai_view_namespaces)) })
             }
         }
         item {
@@ -92,12 +91,11 @@ fun CastAIWorkloads(status: CastAIStatus) {
 
 private fun LazyListScope.section(section: CastAISection, onShowAll: () -> Unit, onOpen: (CastAIRecommendation) -> Unit) {
     item(key = "h:" + section.kind + section.namespace) { SectionHeader(section) }
-    items(section.rows, key = { "r:" + section.kind + section.namespace + "/" + it.namespace + "/" + it.name }) { rec ->
+    cardRows(section.rows, key = { "r:" + section.kind + section.namespace + "/" + it.namespace + "/" + it.name }) { rec ->
         WorkloadRow(rec, Modifier.clickable { onOpen(rec) })
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainerHigh)
     }
     if (section.hidden > 0) item(key = "m:" + section.kind) {
-        TextButton(onClick = onShowAll, modifier = Modifier.padding(horizontal = 8.dp)) {
+        IchorTextButton(onClick = onShowAll, modifier = Modifier.padding(horizontal = 8.dp)) {
             Text(stringResource(R.string.castai_show_all_grows, section.rows.size + section.hidden))
         }
     }
@@ -118,7 +116,7 @@ private fun SectionHeader(section: CastAISection) {
     } else {
         (section.rows.size + section.hidden).toString()
     }
-    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 4.dp), verticalAlignment = Alignment.Bottom) {
+    Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 4.dp), verticalAlignment = Alignment.Bottom) {
         Text(title, style = MaterialTheme.typography.titleSmall, color = color, modifier = Modifier.weight(1f))
         Text(note, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
@@ -129,7 +127,7 @@ private fun SectionHeader(section: CastAISection) {
 private fun WorkloadsSummary(status: CastAIStatus) {
     val colors = LocalStatusColors.current
     val counts = remember(status) { status.changeCounts() }
-    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+    IchorCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text(stringResource(R.string.castai_summary_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (status.compared > 0) {

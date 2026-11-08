@@ -1,0 +1,7 @@
+• Boot a new machine: booter command, ISO and iPXE links as copy, share or QR code
+• Russian on both apps, the site and the Play listing
+• Brazilian Portuguese on both apps, the site and the Play listing
+• Boot media for a new node: Image Factory links, booter command and Omni join args
+• Japanese on both apps, the site and the Play listing
+• Simplified Chinese on both apps, the site and the Play listing
+• On Android tablets, a rail lists the clusters and the cluster's sections

@@ -47,6 +47,12 @@ type inventoryApp struct {
 	Memory     uint64           `json:"memory"` // bytes
 	Images     []inventoryImage `json:"images"`
 	Pods       []inventoryPod   `json:"pods"`
+	// State is "" for an app with a running container, else appStopped or appNotStarting, from
+	// its Workloads (Deployments and StatefulSets without a ready pod); Reason is why they do not
+	// start, "" when not known.
+	State     string              `json:"state,omitempty"`
+	Reason    string              `json:"reason,omitempty"`
+	Workloads []inventoryWorkload `json:"workloads,omitempty"`
 }
 
 type inventoryImage struct {
@@ -79,7 +85,10 @@ type nodeContainers struct {
 // ClusterInventory lists the applications running in the cluster: every node's Kubernetes
 // containers, identified from their image (and pod, and namespace) against the bundled catalog
 // (os:reader). Nodes that do not answer in time are left out rather than failing the inventory.
-func ClusterInventory(configYAML, contextName string) (out string, err error) {
+// The apps that run no container come from the Kubernetes API of kubeConfigYAML and kubeContext
+// (the talosconfig's, or a linked kubeconfig's) at kubeServer (see KubePods); without it they
+// are only left out.
+func ClusterInventory(configYAML, contextName, kubeConfigYAML, kubeContext, kubeServer string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
@@ -87,6 +96,10 @@ func ClusterInventory(configYAML, contextName string) (out string, err error) {
 	if isDemoContext(configYAML, contextName) {
 		return demoRead("ClusterInventory", configYAML, contextName, "")
 	}
+
+	// Read alongside the containers: the apps that run none come from the Kubernetes API, where
+	// the app's other Kubernetes calls go (a linked kubeconfig, the address the user set).
+	idle := startIdleRead(kubeTarget{kubeConfigYAML, unmaskContext(kubeConfigYAML, kubeContext), kubeServer})
 
 	return withSession(configYAML, contextName, inventoryTimeout, func(ctx context.Context, s *session) (string, error) {
 		nodes := targetNodes(s.context)
@@ -102,7 +115,7 @@ func ClusterInventory(configYAML, contextName string) (out string, err error) {
 			}
 		}
 
-		inv := buildInventory(time.Now().UnixMilli(), len(nodes), answered)
+		inv := withIdleWorkloads(buildInventory(time.Now().UnixMilli(), len(nodes), answered), idle())
 		learnInventoryNames(inv)
 
 		return inventoryJSON(inv)
@@ -155,8 +168,8 @@ type placedContainer struct {
 	adopted bool // identified by its pod, not by its own image
 }
 
-// learnInventoryNames lets the privacy mask map the apps' masked namespaces and pod names back
-// to the real ones: the app sends them back to find their routes and workloads.
+// learnInventoryNames lets the privacy mask map the apps' masked namespaces, pod and workload
+// names back to the real ones: the app sends them back to find their routes and workloads.
 func learnInventoryNames(inv inventory) {
 	var namespaces, pods []string
 
@@ -164,6 +177,11 @@ func learnInventoryNames(inv inventory) {
 		for _, p := range a.Pods {
 			namespaces = append(namespaces, p.Namespace)
 			pods = append(pods, p.Pod)
+		}
+
+		for _, w := range a.Workloads {
+			namespaces = append(namespaces, w.Namespace)
+			pods = append(pods, w.Name)
 		}
 	}
 

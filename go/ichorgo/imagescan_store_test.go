@@ -267,3 +267,29 @@ func TestImageScanStoreSameScanner(t *testing.T) {
 		t.Fatalf("family %q", got)
 	}
 }
+
+// A Talos cluster scanned through a linked kubeconfig keeps its report under the cluster the
+// app lists (options "cluster"), not the Kubernetes context that ran the scan.
+func TestStartImageScanKeepsUnderTheNamedCluster(t *testing.T) {
+	withScanStore(t, time.UnixMilli(1_000_000))
+
+	old := imageScanDemoStep
+	imageScanDemoStep = time.Millisecond
+
+	t.Cleanup(func() { imageScanDemoStep = old })
+
+	cfg, err := DemoConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := startImageScan(t.Context(), kubeTarget{cfg, "", ""}, `[{"namespace":"demo","pod":"web"}]`,
+		`{"scanner":"grype","app":"web","cluster":"talos-lab"}`, func(imageScanProgress) {}); err != nil {
+		t.Fatal(err)
+	}
+
+	kept := scanHistory(t, "talos-lab")
+	if len(kept) != 1 || kept[0].App != "web" || kept[0].Cluster != "talos-lab" {
+		t.Errorf("kept %+v", kept)
+	}
+}

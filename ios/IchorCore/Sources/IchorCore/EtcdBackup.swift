@@ -9,9 +9,12 @@ public func defaultSnapshotMember(_ statuses: [EtcdNodeStatus]) -> EtcdNodeStatu
 
 /// "etcd-<context>-<hostname>-<yyyyMMdd-HHmm>.snapshot", with characters that are awkward in
 /// file names replaced by "-"; ".snapshot.age" when `encrypted`.
-public func etcdSnapshotFilename(context: String, hostname: String, date: Date,
-                                 timeZone: TimeZone = .current, encrypted: Bool = false) -> String {
-    let name = "etcd-\(fileSafe(context))-\(fileSafe(hostname))-\(fileTimestamp(date, format: "yyyyMMdd-HHmm", timeZone: timeZone)).snapshot"
+public func etcdSnapshotFilename(
+    context: String, hostname: String, date: Date,
+    timeZone: TimeZone = .current, encrypted: Bool = false
+) -> String {
+    let name =
+        "etcd-\(fileSafe(context))-\(fileSafe(hostname))-\(fileTimestamp(date, format: "yyyyMMdd-HHmm", timeZone: timeZone)).snapshot"
     return encrypted ? name + ".age" : name
 }
 
@@ -123,7 +126,7 @@ public struct NumberedLine: Equatable, Identifiable, Sendable {
 /// Lines containing the query (case-insensitive), keeping their original numbers.
 public func filterLines(_ text: String, query: String) -> [NumberedLine] {
     var parts = text.split(separator: "\n", omittingEmptySubsequences: false)
-    if parts.count > 1, parts.last?.isEmpty == true { parts.removeLast() } // trailing newline
+    if parts.count > 1, parts.last?.isEmpty == true { parts.removeLast() }  // trailing newline
     let lines = parts.enumerated().map { NumberedLine(number: $0.offset + 1, text: String($0.element)) }
     let needle = query.trimmingCharacters(in: .whitespaces)
     guard !needle.isEmpty else { return lines }

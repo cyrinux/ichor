@@ -15,13 +15,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Policy
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,9 +54,9 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.netpol.PolicyDetailSheet
-import name.levis.ichor.ui.netpol.TagBadge
 import java.text.DateFormat
 import name.levis.ichor.util.formatDateTime
 
@@ -78,11 +78,11 @@ fun DropDetailSheet(group: DropGroup, vm: FlowsViewModel, onDismiss: () -> Unit)
         ) {
             Text("${group.source.label} → ${group.destination.label}", style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace)
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                TagBadge(
+                Tag(
                     stringResource(if (group.verdict == HUBBLE_AUDIT) R.string.flows_would_drop else R.string.flows_verdict_dropped),
                     verdictColor(group.verdict),
                 )
-                directionText(group.direction)?.let { TagBadge(it, MaterialTheme.colorScheme.outline) }
+                directionText(group.direction)?.let { Tag(it, MaterialTheme.colorScheme.outline) }
                 Text(stringResource(R.string.flows_count, group.count), style = MaterialTheme.typography.labelLarge)
             }
             if (group.reason.isNotEmpty()) Text(reasonText(group.reason), style = MaterialTheme.typography.bodyMedium)
@@ -105,7 +105,7 @@ fun DropDetailSheet(group: DropGroup, vm: FlowsViewModel, onDismiss: () -> Unit)
             }
             Hint(group)
 
-            OutlinedButton(onClick = { copyFlow(context, group.sample) }, modifier = Modifier.padding(top = 8.dp)) {
+            IchorOutlinedButton(onClick = { copyFlow(context, group.sample) }, modifier = Modifier.padding(top = 8.dp)) {
                 Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.flows_copy_json), modifier = Modifier.padding(start = 8.dp))
             }
@@ -145,7 +145,7 @@ private fun Policies(title: String, refs: List<PolicyRef>, onOpen: (PolicyRef) -
     SectionTitle(title)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         refs.forEach { ref ->
-            AssistChip(
+            IchorAssistChip(
                 onClick = { onOpen(ref) },
                 label = { Text(ref.label, fontFamily = FontFamily.Monospace) },
                 leadingIcon = { Icon(Icons.Outlined.Policy, contentDescription = ref.kind, modifier = Modifier.size(18.dp)) },

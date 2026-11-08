@@ -1,0 +1,292 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# kube-green puts a namespace's Deployments, StatefulSets and CronJobs to sleep on a schedule
+# (SleepInfo, kube-green.com/v1alpha1) and wakes them up later. Each SleepInfo shows when it
+# sleeps and wakes up next, in its own time zone, and what the controller did last (its
+# status, never its state Secret's data). A sleeping namespace is never critical.
+# go/ichorgo/plugin_kubegreen_test.go holds it to the reader the apps used before (the
+# workload rows still use that reader: kube_kubegreen_namespace.go).
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: kube-green
+name: kube-green
+website: https://kube-green.dev
+icon: kube-green
+category: workloads
+catalogId: kube-green
+
+detect:
+  - group: kube-green.com
+    resource: sleepinfos
+
+resources:
+  sleepinfo:
+    group: kube-green.com
+    version: v1alpha1
+    resource: sleepinfos
+    kind: SleepInfo
+    scope: Namespaced
+  # The Secret the controller keeps per SleepInfo ("sleepinfo-<name>", labelled with its
+  # manager): only its name is shown, as a link; its data stays masked. Optional: an account
+  # that may not list Secrets sees the schedules without the link, and no error.
+  stateSecret:
+    group: ""
+    version: v1
+    resource: secrets
+    kind: Secret
+    scope: Namespaced
+    list: { labelSelector: "app.kubernetes.io/managed-by=kube-green" }
+    optional: true
+
+fields:
+  sleepinfo:
+    weekdays: $.spec.weekdays | default("")
+    sleepAt: $.spec.sleepAt | default("")
+    wakeUpAt: $.spec.wakeUpAt | default("")
+    timeZone: $.spec.timeZone | default("UTC")
+    # Absent means true for Deployments and StatefulSets, false for CronJobs (upstream defaults).
+    suspendDeployments: $.spec.suspendDeployments | default(true)
+    suspendStatefulSets: $.spec.suspendStatefulSets | default(true)
+    suspendCronJobs: $.spec.suspendCronJobs | default(false)
+    excludeCount: len($.spec.excludeRef)
+    includeCount: len($.spec.includeRef)
+    patchCount: len($.spec.patches)
+    # What the controller did last: SLEEP, WAKE_UP, "" before its first run.
+    operation: $.status.operation | default("")
+    asleep: fields.operation == "SLEEP"
+    lastScheduleAt: $.status.lastScheduleTime | time()
+    # The schedule is "minute hour * * weekdays" per time; one part that does not parse (or an
+    # unknown zone) makes it invalid: no next runs at all.
+    sleepRun: cronNext(fields.sleepAt, fields.weekdays, fields.timeZone)
+    wakeUpRun: 'fields.wakeUpAt == "" ? 0 : cronNext(fields.wakeUpAt, fields.weekdays, fields.timeZone)'
+    validSchedule: 'fields.sleepRun != 0 && (fields.wakeUpAt == "" || fields.wakeUpRun != 0)'
+    nextSleepAt: 'fields.validSchedule ? fields.sleepRun : 0'
+    nextWakeUpAt: 'fields.validSchedule ? fields.wakeUpRun : 0'
+    # The controller's last run expected at least 10 minutes ago (either time); missed by more
+    # than 10 minutes, the controller is not running. A run due a minute ago is not late yet.
+    lastSleepRun: 'fields.validSchedule ? cronPrev(fields.sleepAt, fields.weekdays, fields.timeZone, now - 600000) : 0'
+    lastWakeUpRun: 'fields.validSchedule && fields.wakeUpAt != "" ? cronPrev(fields.wakeUpAt, fields.weekdays, fields.timeZone, now - 600000) : 0'
+    expectedRunAt: 'fields.lastWakeUpRun > fields.lastSleepRun ? fields.lastWakeUpRun : fields.lastSleepRun'
+    overdue: 'fields.expectedRunAt != 0 && fields.lastScheduleAt != 0 && fields.lastScheduleAt < fields.expectedRunAt - 600000'
+    state: join(stateSecret, $.metadata.namespace == left.metadata.namespace && $.metadata.name == "sleepinfo-" + left.metadata.name)
+
+health:
+  sleepinfo:
+    - when: "!fields.validSchedule"
+      health: warning
+      reason: invalidSchedule
+      message: "invalid schedule"
+    - when: fields.lastScheduleAt == 0
+      health: idle
+      reason: neverRan
+      message: "never ran yet"
+    - when: fields.overdue
+      health: warning
+      reason: overdue
+      message: "controller missed its last run"
+    - when: fields.wakeUpAt == ""
+      health: warning
+      reason: noWakeUp
+      message: "no wake-up time"
+
+dataServices:
+  summary:
+    aggregate:
+      total: count(sleepinfo)
+      asleep: count(sleepinfo, fields.asleep)
+      warnings: count(sleepinfo, health == "warning")
+    health: worst(sleepinfo.health)
+
+cards:
+  summary:
+    title: { count: dataServices.summary.total, one: "%d sleep schedule", other: "%d sleep schedules" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "asleep", value: dataServices.summary.asleep, tone: info, hideWhenZero: true }
+      - { label: "warnings", value: dataServices.summary.warnings, tone: warning, hideWhenZero: true }
+  list:
+    from: sleepinfo
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No sleep schedules."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: 'fields.asleep ? "Asleep" : "Awake"'
+      # Asleep: when it wakes up ("never" without a wake-up time); awake: when it sleeps.
+      trailing: { text: "relativeTime(fields.asleep ? fields.nextWakeUpAt : fields.nextSleepAt)" }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Weekdays", value: fields.weekdays, mono: true }
+            - { label: "Sleeps at", value: fields.sleepAt, mono: true }
+            - { label: "Wakes up at", value: 'fields.wakeUpAt == "" ? "–" : fields.wakeUpAt', mono: true }
+            - { label: "Time zone", value: fields.timeZone, mono: true }
+            - { label: "Last run", value: fields.lastScheduleAt | relativeTime() }
+        - type: badges
+          items:
+            - { label: "Deployments", on: fields.suspendDeployments }
+            - { label: "StatefulSets", on: fields.suspendStatefulSets }
+            - { label: "CronJobs", on: fields.suspendCronJobs }
+        - type: badges
+          items:
+            - { label: "excluded", value: fields.excludeCount, tone: info, hideWhenZero: true }
+            - { label: "included", value: fields.includeCount, tone: info, hideWhenZero: true }
+            - { label: "patches", value: fields.patchCount, tone: info, hideWhenZero: true }
+        - type: relations
+          items:
+            - { label: "State secret", ref: fields.state }
+
+findings:
+  - id: schedule-warning
+    from: sleepinfo
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: list
+
+# Invented names. demo-shop sleeps on weekday nights, demo-lab sleeps on weekends with no
+# wake-up time, demo-preview's schedule never ran yet. The last runs are relative to the
+# clock (now-4m): a fixed date would read "controller missed its last run" a day later.
+samples:
+  sleepinfo:
+    - metadata: { name: nightly, namespace: demo-shop }
+      spec: { weekdays: "1-5", sleepAt: "20:00", wakeUpAt: "08:00", timeZone: Europe/Paris }
+      status: { operation: WAKE_UP, lastScheduleTime: now-4m }
+    - metadata: { name: weekend, namespace: demo-lab }
+      spec: { weekdays: "6,0", sleepAt: "00:00" }
+      status: { operation: SLEEP, lastScheduleTime: now-9m }
+    - metadata: { name: previews, namespace: demo-preview }
+      spec:
+        weekdays: "*"
+        sleepAt: "22:30"
+        wakeUpAt: "06:00"
+        suspendStatefulSets: false
+        suspendCronJobs: true
+        excludeRef: [{ apiVersion: apps/v1, kind: Deployment, name: gateway }]
+  stateSecret:
+    - metadata: { name: sleepinfo-weekend, namespace: demo-lab, labels: { app.kubernetes.io/managed-by: kube-green } }
+      type: Opaque
+
+# The apps' former kube-green strings (kubegreen_* in app/src/main/res/values-*/strings.xml).
+i18n:
+  fr:
+    "%d sleep schedule": "%d planning de veille"
+    "%d sleep schedules": "%d plannings de veille"
+    "No sleep schedules.": "Aucun planning de veille."
+    "Asleep": "Endormi"
+    "Awake": "Éveillé"
+    "asleep": "endormis"
+    "warnings": "avertissements"
+    "invalid schedule": "planning invalide"
+    "never ran yet": "jamais exécuté"
+    "controller missed its last run": "le contrôleur a manqué son dernier passage"
+    "no wake-up time": "pas d'heure de réveil"
+    "Weekdays": "Jours"
+    "Sleeps at": "Se met en veille à"
+    "Wakes up at": "Se réveille à"
+    "Time zone": "Fuseau horaire"
+    "Last run": "Dernier passage"
+    "Deployments": "Deployments"
+    "StatefulSets": "StatefulSets"
+    "CronJobs": "CronJobs"
+    "excluded": "exclus"
+    "included": "inclus"
+    "patches": "patchs"
+    "State secret": "Secret d'état"
+  de:
+    "%d sleep schedule": "%d Schlafplan"
+    "%d sleep schedules": "%d Schlafpläne"
+    "No sleep schedules.": "Keine Schlafpläne."
+    "Asleep": "Schlafend"
+    "Awake": "Wach"
+    "asleep": "schlafend"
+    "warnings": "Warnungen"
+    "invalid schedule": "ungültiger Plan"
+    "never ran yet": "noch nie gelaufen"
+    "controller missed its last run": "der Controller hat den letzten Lauf verpasst"
+    "no wake-up time": "keine Aufwachzeit"
+    "Weekdays": "Tage"
+    "Sleeps at": "Schläft um"
+    "Wakes up at": "Wacht auf um"
+    "Time zone": "Zeitzone"
+    "Last run": "Letzter Lauf"
+    "Deployments": "Deployments"
+    "StatefulSets": "StatefulSets"
+    "CronJobs": "CronJobs"
+    "excluded": "ausgeschlossen"
+    "included": "eingeschlossen"
+    "patches": "Patches"
+    "State secret": "Status-Secret"
+  es:
+    "%d sleep schedule": "%d programación de suspensión"
+    "%d sleep schedules": "%d programaciones de suspensión"
+    "No sleep schedules.": "No hay programaciones de suspensión."
+    "Asleep": "Dormido"
+    "Awake": "Despierto"
+    "asleep": "dormidos"
+    "warnings": "avisos"
+    "invalid schedule": "programación inválida"
+    "never ran yet": "nunca se ha ejecutado"
+    "controller missed its last run": "el controlador perdió su última ejecución"
+    "no wake-up time": "sin hora de despertar"
+    "Weekdays": "Días"
+    "Sleeps at": "Se suspende a las"
+    "Wakes up at": "Se reactiva a las"
+    "Time zone": "Zona horaria"
+    "Last run": "Última ejecución"
+    "Deployments": "Deployments"
+    "StatefulSets": "StatefulSets"
+    "CronJobs": "CronJobs"
+    "excluded": "excluidos"
+    "included": "incluidos"
+    "patches": "parches"
+    "State secret": "Secret de estado"
+  it:
+    "%d sleep schedule": "%d pianificazione di sospensione"
+    "%d sleep schedules": "%d pianificazioni di sospensione"
+    "No sleep schedules.": "Nessuna pianificazione di sospensione."
+    "Asleep": "Addormentato"
+    "Awake": "Sveglio"
+    "asleep": "addormentati"
+    "warnings": "avvisi"
+    "invalid schedule": "pianificazione non valida"
+    "never ran yet": "mai eseguito"
+    "controller missed its last run": "il controller ha perso la sua ultima esecuzione"
+    "no wake-up time": "nessun orario di risveglio"
+    "Weekdays": "Giorni"
+    "Sleeps at": "Va in sospensione alle"
+    "Wakes up at": "Si risveglia alle"
+    "Time zone": "Fuso orario"
+    "Last run": "Ultima esecuzione"
+    "Deployments": "Deployment"
+    "StatefulSets": "StatefulSet"
+    "CronJobs": "CronJob"
+    "excluded": "esclusi"
+    "included": "inclusi"
+    "patches": "patch"
+    "State secret": "Secret di stato"
+  uk:
+    "%d sleep schedule": "%d розклад сну"
+    "%d sleep schedules": "%d розкладів сну"
+    "No sleep schedules.": "Немає розкладів сну."
+    "Asleep": "Спить"
+    "Awake": "Прокинувся"
+    "asleep": "сплять"
+    "warnings": "попередження"
+    "invalid schedule": "некоректний розклад"
+    "never ran yet": "ще не запускався"
+    "controller missed its last run": "контролер пропустив останній запуск"
+    "no wake-up time": "немає часу пробудження"
+    "Weekdays": "Дні"
+    "Sleeps at": "Засинає о"
+    "Wakes up at": "Прокидається о"
+    "Time zone": "Часовий пояс"
+    "Last run": "Останній запуск"
+    "Deployments": "Deployments"
+    "StatefulSets": "StatefulSets"
+    "CronJobs": "CronJobs"
+    "excluded": "виключено"
+    "included": "включено"
+    "patches": "патчів"
+    "State secret": "Secret стану"

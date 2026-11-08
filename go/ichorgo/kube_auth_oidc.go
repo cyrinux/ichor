@@ -18,6 +18,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // OIDC sign-in, as kubelogin (`kubectl oidc-login`) and the legacy `auth-provider: oidc` do
@@ -59,13 +61,15 @@ type oidcMethod struct {
 	scopesOnly bool
 	// authQuery is added to the authorization request.
 	authQuery url.Values
+	// endedAs names the sign-in in why its session ended (sessionEndedReason); "" is method.
+	endedAs string
 }
 
 func (m *oidcMethod) name() string { return m.method }
 
 // newOIDCMethod reads the OIDC settings of a kubelogin exec or an oidc auth-provider.
 func newOIDCMethod(user *kubeStoreUser) (*oidcMethod, error) {
-	m := &oidcMethod{method: authOIDC, redirectHost: "localhost", tls: baseTLS(nil, false)}
+	m := &oidcMethod{method: authOIDC, redirectHost: "localhost", tls: httpx.BaseTLS(nil, false)}
 
 	var caData string
 
@@ -145,9 +149,16 @@ func splitScopes(values []string) []string {
 	return out
 }
 
-func (m *oidcMethod) httpClient() *http.Client {
-	// An identity provider may redirect its discovery document; never to plain http.
-	return newHTTPClient(httpClientOpts{tls: m.tls, timeout: oidcHTTPTimeout, followRedirects: true})
+// discoveryClient reads what holds no credential: an identity provider may redirect its
+// discovery document, never to plain http.
+func (m *oidcMethod) discoveryClient() *http.Client {
+	return httpx.New(httpx.Opts{TLS: m.tls, Timeout: oidcHTTPTimeout, FollowRedirects: true})
+}
+
+// credentialClient posts forms holding a token, code or secret: a redirect is the final answer
+// (307 and 308 would carry the form to wherever they point), and postForm refuses it.
+func (m *oidcMethod) credentialClient() *http.Client {
+	return httpx.New(httpx.Opts{TLS: m.tls, Timeout: oidcHTTPTimeout})
 }
 
 // isGoogle: Google refuses offline_access and wants access_type=offline instead.
@@ -174,9 +185,44 @@ type oidcDiscovery struct {
 	DeviceAuthorizationEndpoint string `json:"device_authorization_endpoint"`
 }
 
+// checkOIDCEndpoint refuses an address a browser or a credential must not go to. The address
+// stays out of the message: it may hold a password.
+func checkOIDCEndpoint(name, raw string) error {
+	u, err := url.Parse(raw)
+	if err != nil || u.Scheme != "https" || u.Hostname() == "" {
+		return fmt.Errorf("the identity provider's %s is not an https address", name)
+	}
+
+	if u.User != nil {
+		return fmt.Errorf("the identity provider's %s must not hold a user name or password", name)
+	}
+
+	return nil
+}
+
+// check validates the endpoints named, wherever they came from. They may be on another origin
+// than the issuer: some providers publish them so.
+func (d oidcDiscovery) check() error {
+	for _, e := range []struct{ name, url string }{
+		{"authorization endpoint", d.AuthorizationEndpoint},
+		{"token endpoint", d.TokenEndpoint},
+		{"device authorization endpoint", d.DeviceAuthorizationEndpoint},
+	} {
+		if e.url == "" {
+			continue
+		}
+
+		if err := checkOIDCEndpoint(e.name, e.url); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (m *oidcMethod) discover(ctx context.Context) (oidcDiscovery, error) {
 	if m.endpoints != nil {
-		return *m.endpoints, nil
+		return *m.endpoints, m.endpoints.check()
 	}
 
 	var d oidcDiscovery
@@ -190,6 +236,10 @@ func (m *oidcMethod) discover(ctx context.Context) (oidcDiscovery, error) {
 		return oidcDiscovery{}, errors.New("OIDC discovery: no token endpoint")
 	}
 
+	if err := d.check(); err != nil {
+		return oidcDiscovery{}, fmt.Errorf("OIDC discovery: %w", err)
+	}
+
 	return d, nil
 }
 
@@ -199,7 +249,7 @@ func (m *oidcMethod) getJSON(ctx context.Context, u string, out any) error {
 		return err
 	}
 
-	resp, err := m.httpClient().Do(req)
+	resp, err := m.discoveryClient().Do(req)
 	if err != nil {
 		return err
 	}
@@ -223,12 +273,24 @@ type oidcTokens struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 	ExpiresIn    int64  `json:"expires_in"`
-	Error        string `json:"error"`
-	Description  string `json:"error_description"`
-	Interval     int    `json:"interval"`
+	// RefreshExpiresIn is when the refresh token ends, in seconds (Keycloak): the session.
+	RefreshExpiresIn int64  `json:"refresh_expires_in"`
+	Error            string `json:"error"`
+	// Subtype is Google's error_subtype: invalid_rapt when its session control asks for a
+	// new sign-in.
+	Subtype     string `json:"error_subtype"`
+	Description string `json:"error_description"`
+	Interval    int    `json:"interval"`
 }
 
+// errOIDCRedirect is a redirect answering a form that holds a credential.
+var errOIDCRedirect = errors.New("the identity provider answered with a redirect: refused, so that no credential goes anywhere else")
+
 func (m *oidcMethod) postForm(ctx context.Context, endpoint string, form url.Values, out any) (int, error) {
+	if err := checkOIDCEndpoint("endpoint", endpoint); err != nil {
+		return 0, err
+	}
+
 	if !m.basicClientAuth {
 		if m.clientSecret != "" {
 			form.Set("client_secret", m.clientSecret)
@@ -249,11 +311,15 @@ func (m *oidcMethod) postForm(ctx context.Context, endpoint string, form url.Val
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := m.httpClient().Do(req)
+	resp, err := m.credentialClient().Do(req)
 	if err != nil {
 		return 0, err
 	}
 	defer resp.Body.Close() //nolint:errcheck
+
+	if resp.StatusCode/100 == 3 {
+		return resp.StatusCode, errOIDCRedirect
+	}
 
 	data, err := io.ReadAll(io.LimitReader(resp.Body, oidcMaxBody))
 	if err != nil {
@@ -331,6 +397,10 @@ func (m *oidcMethod) session(state kubeAuthState, t oidcTokens, bearer string, e
 	out := state.withSession(map[string]string{"refresh": refresh, "bearer": bearer, "bearerExpiry": strconv.FormatInt(expiry.Unix(), 10)})
 	out.User = cmpOr(claims.Email, claims.Username, claims.Subject, state.User)
 
+	if t.RefreshExpiresIn > 0 {
+		out.SessionExpires = time.Now().Add(time.Duration(t.RefreshExpiresIn) * time.Second).Unix()
+	}
+
 	return out
 }
 
@@ -360,7 +430,9 @@ func (m *oidcMethod) mint(ctx context.Context, state kubeAuthState) (string, tim
 
 	if t.Error != "" {
 		// invalid_grant: the refresh token expired or was revoked.
-		return "", time.Time{}, state.withSession(map[string]string{"refresh": "", "bearer": ""}), signInRequired(m.method, cmpOr(t.Description, t.Error))
+		reason := sessionEndedReason(cmpOr(m.endedAs, m.method), t.Error, t.Subtype, t.Description, state.SignedInAt)
+
+		return "", time.Time{}, state.withSession(map[string]string{"refresh": "", "bearer": ""}), signInRequired(m.method, reason)
 	}
 
 	bearer, expiry, claims, err := m.bearer(t)
@@ -519,6 +591,16 @@ func callbackAnswer(cb string) (url.Values, error) {
 // serveLoopback listens on the first free m.listen address and hands each answer with a
 // state to codes; it returns the redirect URI and how to stop.
 func (m *oidcMethod) serveLoopback(ctx context.Context, codes chan<- url.Values) (string, func(), error) {
+	return m.serveLoopbackTo(ctx, codes, "")
+}
+
+// serveLoopbackTo is serveLoopback with a donePage an app-side test can check: what the
+// browser is left with once its redirect is answered (empty: signInDonePage).
+func (m *oidcMethod) serveLoopbackTo(ctx context.Context, codes chan<- url.Values, donePage string) (string, func(), error) {
+	if donePage == "" {
+		donePage = signInDonePage
+	}
+
 	ln, err := listenFirst(ctx, m.listen)
 	if err != nil {
 		return "", nil, err
@@ -534,7 +616,7 @@ func (m *oidcMethod) serveLoopback(ctx context.Context, codes chan<- url.Values)
 		}
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_, _ = io.WriteString(w, signInDonePage)
+		_, _ = io.WriteString(w, donePage)
 
 		select {
 		case codes <- r.URL.Query():
@@ -544,10 +626,7 @@ func (m *oidcMethod) serveLoopback(ctx context.Context, codes chan<- url.Values)
 
 	go func() { _ = srv.Serve(ln) }() //nolint:errcheck
 
-	stop := func() {
-		_ = srv.Close() //nolint:errcheck
-		_ = ln.Close()  //nolint:errcheck
-	}
+	stop := stopLoopback(srv, ln)
 
 	return "http://" + net.JoinHostPort(m.redirectHost, port), stop, nil
 }
@@ -567,6 +646,23 @@ func (m *oidcMethod) finish(state kubeAuthState, t oidcTokens, nonce string) (ku
 	}
 
 	return m.session(state, t, bearer, expiry, claims), nil
+}
+
+// stopLoopback closes a loopback server so that the response being written when the sign-in
+// is received is fully flushed first: Shutdown waits for active handlers to finish their
+// answer, Close would cut the connection and leave the browser with an EOF on a sign-in that
+// worked. A handler stuck on anything else is given a second, then closed at once.
+func stopLoopback(srv *http.Server, ln net.Listener) func() {
+	return func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		if err := srv.Shutdown(ctx); err != nil {
+			_ = srv.Close() //nolint:errcheck
+		}
+
+		_ = ln.Close() //nolint:errcheck
+	}
 }
 
 // listenFirst listens on the first free address of addrs (kubelogin tries them in order).

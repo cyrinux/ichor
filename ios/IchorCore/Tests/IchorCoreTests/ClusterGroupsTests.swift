@@ -24,7 +24,8 @@ final class ClusterGroupsTests: XCTestCase {
 
     func testGroupsFollowTheFirstClusterOfEach() throws {
         let groups = try XCTUnwrap(clusterGroups(six, masked: false))
-        XCTAssertEqual(groups.map(\.key), ["talos", "aws:111122223333", "gcp:sample-project", "aws:444455556666", "kubernetes"])
+        XCTAssertEqual(
+            groups.map(\.key), ["talos", "aws:111122223333", "gcp:sample-project", "aws:444455556666", "kubernetes"])
         XCTAssertEqual(groups.map(\.owner), [nil, "11…33", "sample-project", "44…66", nil])
         XCTAssertEqual(groups.first?.contexts, [home, lab])
         XCTAssertEqual(groups.map(\.logo), ["talos", "aws", "google-cloud", "aws", "kubernetes"])
@@ -50,11 +51,13 @@ final class ClusterGroupsTests: XCTestCase {
     }
 
     func testOtherCloudsGroupByProviderOnly() {
-        XCTAssertEqual(clusterGroupKey(kube("do-sample", auth: "digitalocean"), masked: false),
-                       ClusterGroup(key: "digitalocean", provider: .digitalOcean))
+        XCTAssertEqual(
+            clusterGroupKey(kube("do-sample", auth: "digitalocean"), masked: false),
+            ClusterGroup(key: "digitalocean", provider: .digitalOcean))
         XCTAssertEqual(clusterGroupKey(kube("aks-sample", auth: "azure"), masked: false).provider, .azure)
         XCTAssertEqual(clusterGroupKey(kube("rancher-sample", auth: "rancher"), masked: false).provider, .rancher)
-        XCTAssertEqual(clusterGroupKey(kube("eks-sample", auth: "eks"), masked: false), ClusterGroup(key: "aws", provider: .aws))
+        XCTAssertEqual(
+            clusterGroupKey(kube("eks-sample", auth: "eks"), masked: false), ClusterGroup(key: "aws", provider: .aws))
     }
 
     func testDemoClustersGoByKind() {

@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,8 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.HorizontalDivider
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,8 +38,10 @@ import name.levis.ichor.model.CastAIStatus
 import name.levis.ichor.model.CastAIStuckNode
 import name.levis.ichor.model.planGroups
 import name.levis.ichor.model.planSummary
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.theme.LocalChartColors
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatTime
@@ -57,7 +57,7 @@ fun CastAIPlans(status: CastAIStatus) {
     val groups = remember(status) { status.planGroups() }
     val scale = remember(status) { status.plans.maxOfOrNull { it.beforeMonthly } ?: 0.0 }
 
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (status.plansError.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.plansError), Modifier.padding(16.dp)) }
         if (status.plans.isEmpty() && status.plansError.isEmpty()) {
             item { EmptyText(stringResource(R.string.castai_plans_empty)) }
@@ -67,10 +67,7 @@ fun CastAIPlans(status: CastAIStatus) {
         item { PlansSummary(status) }
         groups.forEach { (state, plans) ->
             item(key = "h:$state") { GroupHeader(state) }
-            items(plans, key = { it.name }) { plan ->
-                PlanRow(plan, scale, Modifier.clickable { selected = plan.name })
-                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainerHigh)
-            }
+            cardRows(plans, key = { it.name }) { plan -> PlanRow(plan, scale, Modifier.clickable { selected = plan.name }) }
         }
     }
 
@@ -92,7 +89,7 @@ private fun StuckBanner(stuck: CastAIStuckNode, modifier: Modifier = Modifier) {
 private fun PlansSummary(status: CastAIStatus) {
     val colors = LocalStatusColors.current
     val s = remember(status) { status.planSummary(System.currentTimeMillis()) }
-    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
+    IchorCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text(stringResource(R.string.castai_plans_last_day), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -130,7 +127,7 @@ private fun GroupHeader(state: CastAIPlanState) {
         castAIPlanStateText(state),
         style = MaterialTheme.typography.titleSmall,
         color = planStateColor(state),
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 4.dp),
+        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 4.dp),
     )
 }
 

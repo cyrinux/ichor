@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.machineconfig
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import name.levis.ichor.ui.components.ClusterTitleSubline
 import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
@@ -13,36 +16,36 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Commit
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.text.style.TextOverflow
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -56,6 +59,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.model.DriftFix
+import name.levis.ichor.model.MultiConfigNodeState
+import name.levis.ichor.model.configRole
+import name.levis.ichor.model.PatchPrefill
+import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ConfigApplyMode
 import name.levis.ichor.model.ConfigApplyState
@@ -66,6 +73,7 @@ import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.node.HostnameConfirmDialog
@@ -94,16 +102,24 @@ fun MachineConfigScreen(
     onBack: () -> Unit,
     /** A drift difference from Insights: the screen opens a draft that undoes it, then the review. */
     fix: DriftFix? = null,
+    /** A snippet from another screen: the screen opens a draft and the picker on it, prefilled. */
+    snippet: SnippetPrefill? = null,
+    /** A repository's Talos patch file: the screen opens a draft with it applied, then the review. */
+    patch: PatchPrefill? = null,
+    /** A file of the cluster repository, at a line (the Git comparison's files). */
+    onRepoFile: (path: String, line: Int) -> Unit = { _, _ -> },
+    /** The editor of a file of the cluster repository, a quick edit applied (the write-back's review). */
+    onRepoEdit: (path: String, quick: String) -> Unit = { _, _ -> },
     vm: MachineConfigViewModel = viewModel(
         key = "machineconfig-$node",
-        factory = factory { MachineConfigViewModel(app.talosRepository, node, hostname, app.configTryManager, app.configMultiManager) },
+        factory = factory { MachineConfigViewModel(app.talosRepository, app.machineConfigRepository, node, hostname, app.configTryManager, app.configMultiManager) },
     ),
     metaVm: MetaKeysViewModel = viewModel(key = "meta-$node", factory = factory { MetaKeysViewModel(app.talosRepository, node) }),
 ) {
+    AllowLandscape()
     val state by vm.state.collectAsStateWithLifecycle()
     val revealed by vm.revealed.collectAsStateWithLifecycle()
     val editor by vm.editor.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var fixApplied by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state is UiState.Loaded) {
         if (fix != null && !fixApplied && state is UiState.Loaded) {
@@ -111,8 +127,26 @@ fun MachineConfigScreen(
             vm.applyDriftFix(fix)
         }
     }
+    var patchApplied by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(state is UiState.Loaded) {
+        if (patch != null && !patchApplied && state is UiState.Loaded) {
+            patchApplied = true
+            vm.applyPatch(patch)
+        }
+    }
     val snippets by vm.snippets.collectAsStateWithLifecycle()
     var pickingSnippet by rememberSaveable { mutableStateOf(false) }
+    // The prefill holds for the first opening of the picker only.
+    var prefillUsed by rememberSaveable { mutableStateOf(false) }
+    var snippetOpened by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(state is UiState.Loaded) {
+        if (snippet != null && !snippetOpened && state is UiState.Loaded) {
+            snippetOpened = true
+            if (!editor.editing) vm.startEditing()
+            vm.loadSnippets()
+            pickingSnippet = true
+        }
+    }
 
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
@@ -126,6 +160,10 @@ fun MachineConfigScreen(
     var confirmingTry by rememberSaveable { mutableStateOf<Int?>(null) }
     var confirmingApply by rememberSaveable { mutableStateOf<ConfigApplyMode?>(null) }
     var confirmingMulti by rememberSaveable { mutableStateOf<ConfigApplyMode?>(null) }
+    var comparingGit by rememberSaveable { mutableStateOf(false) }
+    // The change written back to the repository: the config it starts from, the one it gives, and the node's file it goes to.
+    var proposing by remember { mutableStateOf<ProposeTarget?>(null) }
+    val hasRepo = remember { app.gitOpsRepository.activeClusterRepo() != null }
 
     SecureWhile(revealed)
 
@@ -179,11 +217,20 @@ fun MachineConfigScreen(
     val loaded = (state as? UiState.Loaded)?.data
     val shown = remember(loaded, query) { loaded?.let { matchingLines(it, query) } }
     val browsing = run == null && applying == null && review == null && multi == null
+    val ownRole = remember(loaded) { loaded?.let(::configRole).orEmpty() }
+    val proposeEdit = editor.draft?.takeIf { hasRepo }?.let { draft -> { proposing = ProposeTarget(editor.base, draft, hostname, ownRole) } }
+    // After a multi-node run: the same edits (this node's base and draft) into each node's own file.
+    val proposeForNode = editor.draft?.takeIf { hasRepo }?.let { draft ->
+        { n: MultiConfigNodeState ->
+            val role = (multi?.candidates as? UiState.Loaded)?.data?.firstOrNull { it.node == n.node }?.role
+            proposing = ProposeTarget(editor.base, draft, n.hostname, role ?: ownRole)
+        }
+    }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(
@@ -198,7 +245,17 @@ fun MachineConfigScreen(
                                 },
                             ),
                         )
-                        Text(hostname, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
+                        ClusterTitleSubline(hostname)
+                        // The repository file the draft comes from, while it is reviewed and tried.
+                        if (patch != null && (editor.editing || run != null || applying != null)) {
+                            Text(
+                                patch.from,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 },
                 navigationIcon = {
@@ -219,6 +276,13 @@ fun MachineConfigScreen(
                             },
                         )
                         TooltipIconButton(Icons.Outlined.Edit, stringResource(R.string.machine_config_edit), enabled = loaded != null, onClick = vm::startEditing)
+                        TooltipIconButton(Icons.Outlined.Commit, stringResource(R.string.talos_git_action), enabled = loaded != null, onClick = {
+                            if (app.gitOpsRepository.activeClusterRepo() != null) {
+                                comparingGit = true
+                            } else {
+                                scope.launch { snackbar.showSnackbar(context.getString(R.string.repo_none), withDismissAction = true) }
+                            }
+                        })
                     }
                     if (browsing && editor.editing) {
                         TooltipIconButton(Icons.Outlined.AutoAwesome, stringResource(R.string.machine_config_snippets), enabled = !editor.busy, onClick = {
@@ -235,8 +299,8 @@ fun MachineConfigScreen(
                     Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    OutlinedButton(onClick = ::back, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.machine_config_discard)) }
-                    Button(onClick = vm::review, enabled = editor.canReview, modifier = Modifier.weight(1f)) {
+                    IchorOutlinedButton(onClick = ::back, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.machine_config_discard)) }
+                    IchorButton(onClick = vm::review, enabled = editor.canReview, modifier = Modifier.weight(1f)) {
                         Text(stringResource(R.string.machine_config_review))
                     }
                 }
@@ -245,15 +309,15 @@ fun MachineConfigScreen(
     ) { padding ->
         val body = Modifier.padding(padding).fillMaxSize()
         when {
-            multi?.run != null -> MultiApplyContent(multi.run, onDone = vm::finishMulti, modifier = body)
+            multi?.run != null -> MultiApplyContent(multi.run, onDone = vm::finishMulti, modifier = body, onProposeInGit = proposeForNode)
             multi?.preview != null -> MultiNodeReviewContent(
                 multi.preview,
                 onRetry = vm::previewMulti,
                 onApply = { confirmingMulti = it },
                 modifier = body,
             )
-            run != null -> ConfigTryContent(run, onKeep = vm::keep, onRevert = vm::revertNow, onDone = vm::finishTry, modifier = body)
-            applying != null -> ConfigApplyContent(applying, onDone = vm::finishApply, modifier = body)
+            run != null -> ConfigTryContent(run, onKeep = vm::keep, onRevert = vm::revertNow, onDone = vm::finishTry, modifier = body, onProposeInGit = proposeEdit)
+            applying != null -> ConfigApplyContent(applying, onDone = vm::finishApply, modifier = body, onProposeInGit = proposeEdit)
             review != null -> ConfigReviewContent(
                 review,
                 onRetry = vm::review,
@@ -274,7 +338,7 @@ fun MachineConfigScreen(
                                 Text(stringResource(R.string.machine_config_reveal), style = MaterialTheme.typography.titleSmall)
                                 MutedText(stringResource(R.string.machine_config_reveal_desc))
                             }
-                            Switch(checked = revealed, onCheckedChange = ::toggleReveal)
+                            IchorSwitch(checked = revealed, onCheckedChange = ::toggleReveal)
                         }
                         if (revealed) RevealedBanner()
                     }
@@ -329,15 +393,58 @@ fun MachineConfigScreen(
         }
     }
 
+    if (comparingGit) {
+        GitCompareSheet(
+            app.gitOpsRepository,
+            node = node,
+            hostname = hostname,
+            role = remember(loaded) { loaded?.let(::configRole).orEmpty() },
+            onOpenFile = { path, line ->
+                comparingGit = false
+                onRepoFile(path, line)
+            },
+            onEditDraft = { draft ->
+                comparingGit = false
+                vm.editFrom(draft)
+            },
+            // The node's live values into Git: from Git's version to the node's.
+            onProposeLive = { gitVersion ->
+                comparingGit = false
+                loaded?.let { proposing = ProposeTarget(gitVersion, it, hostname, ownRole) }
+            },
+            onDismiss = { comparingGit = false },
+        )
+    }
+
+    proposing?.let { target ->
+        ProposeInGitSheet(
+            app.gitOpsRepository,
+            base = target.base,
+            draft = target.draft,
+            hostname = target.hostname,
+            role = target.role,
+            onReview = { path, quick ->
+                proposing = null
+                onRepoEdit(path, quick)
+            },
+            onDismiss = { proposing = null },
+        )
+    }
+
     if (pickingSnippet) {
         SnippetPickerDialog(
             snippets = snippets,
             onRetry = vm::loadSnippets,
             onApply = { id, params ->
                 pickingSnippet = false
+                prefillUsed = true
                 vm.applySnippet(id, params)
             },
-            onDismiss = { pickingSnippet = false },
+            onDismiss = {
+                pickingSnippet = false
+                prefillUsed = true
+            },
+            prefill = snippet.takeUnless { prefillUsed },
         )
     }
 
@@ -461,7 +568,7 @@ private fun ViewPicker(selected: ConfigView, withMeta: Boolean, onSelect: (Confi
 @Composable
 private fun RevealedBanner() {
     val bad = LocalStatusColors.current.bad
-    Card(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
+    IchorCard(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
         Text(
             stringResource(R.string.machine_config_revealed_warning),
             color = bad,
@@ -471,5 +578,9 @@ private fun RevealedBanner() {
     }
 }
 
+/** A change written back to the repository: from [base] to [draft], into the file of the node [hostname] of [role]. */
+private data class ProposeTarget(val base: String, val draft: String, val hostname: String, val role: String)
+
 private fun copy(context: Context, text: String, sensitive: Boolean) =
     copyToClipboard(context, context.getString(R.string.machine_config_title), text, sensitive)
+

@@ -18,9 +18,11 @@ a3
 aac-infotray
 aapanel
 abacus-research
+ableton
 aboard
 abus-group
 acars-hub
+acme
 acronis
 act
 actian
@@ -33,12 +35,14 @@ adguard-home-sync
 admin-by-request
 adminer
 adobe
+adobe-indesign
 ads-b-exchange
 adsb
 advanzia
 adventure-log
 affine
 agent-of-empires
+agentaia
 agentgateway
 agile-freaks
 agregarr
@@ -153,6 +157,7 @@ arduino
 arenalmsys
 argo-cd
 ariang
+arkkvm
 arm
 armbian
 aroz-os
@@ -210,6 +215,7 @@ auto-cad
 auto-mcs
 autobangumi
 autobrr
+autodesk-maya
 automad
 av1
 avg
@@ -299,6 +305,7 @@ basecamp-5
 baserow
 basilisk
 bastillion
+bat-file
 batocera-linux
 bazarr
 bazecor
@@ -309,6 +316,7 @@ beef
 beekeeper-studio
 beeper
 beets
+beetstreamnext
 behance
 benotes
 bentopdf
@@ -438,6 +446,7 @@ cardigann
 carousell
 carrefour
 casaos
+cashpilot
 castopod
 catppuccin
 cc
@@ -449,6 +458,7 @@ ceph
 cerberus-ftp-server
 cert-manager
 cert-warden
+certshell
 cessna
 chainguard
 changedetection
@@ -543,6 +553,7 @@ commafeed
 commento
 compreface
 concourse
+conduyt
 configarr
 confix
 confluence
@@ -555,6 +566,7 @@ converse
 convertio
 convertx
 convex
+cookiecloud
 cooler-control
 coolify
 copyparty
@@ -579,6 +591,7 @@ craft-app
 crafty-controller
 crashplan
 crater-invoice
+crawlab
 crazydomains
 cribl
 cron-master
@@ -597,6 +610,7 @@ cryptomator
 cryptpad
 csharp
 css
+csv
 ctfreak
 ctrader
 ctroadmap
@@ -639,11 +653,13 @@ ddclient
 ddev
 ddns-updater
 debian-linux
+declarenta
 deemix
 deepl
 deepseek
 deezer
 defguard
+degoog
 dell
 deluge
 dencode
@@ -667,6 +683,7 @@ diffusionbee
 digi-kam
 digikey
 digital-ocean
+digitelstudios
 dilg
 dillinger
 dim
@@ -823,6 +840,7 @@ enshrouded
 ente-auth
 ente-photos
 entergy
+enterr
 entra-id
 epic-games
 epson-iprint
@@ -855,6 +873,7 @@ evernote
 eway-crm
 eweka
 excalidraw
+exe
 exercism
 expense-owl
 express-kawaii
@@ -1013,6 +1032,7 @@ fritzbox-5530-2
 fritzbox-5530-3
 fritzbox-5690pro-2
 fritzbox-5690pro-3
+fromkai
 fronius
 froxlor
 frp
@@ -1048,6 +1068,7 @@ ghostfolio
 ghostty
 gigaset
 gimp
+gis-shapefile
 git
 gitam-university
 gitbook
@@ -1068,6 +1089,7 @@ glitchtip
 glpi
 gluetun
 gmail
+gnext
 gnu-guix
 gnustep
 go
@@ -1166,6 +1188,7 @@ grav
 gravit-designer
 gravity
 graylog
+graywolf
 greenbone
 greenlight
 greymhatter
@@ -1227,6 +1250,7 @@ helper-scripts
 hemmelig
 herdr
 hermes
+hermes-agent-alt
 hestia
 hetzner
 hetzner-h
@@ -1318,6 +1342,7 @@ ideco
 identiv
 idrac
 idrive
+ifc
 ihatemoney
 ikuai
 iliadbox-svg
@@ -1340,6 +1365,7 @@ infomaniak-k
 infomaniak-kdrive
 infomaniak-kmeet
 infomaniak-swisstransfer
+infor-xa
 inoreader
 insanelymac
 insideoutside
@@ -1417,6 +1443,7 @@ joplin
 jotty
 journiv
 json
+jtu-me
 jujutsu-vcs
 julia
 jumpserver
@@ -1540,6 +1567,7 @@ lemmy
 lemonldap-ng
 lenovo
 lets-encrypt
+level-io
 lexmark
 libation
 librariarr
@@ -1566,6 +1594,7 @@ lichess
 lidarr
 lidl
 lightning-terminal
+lightpanda
 lighttpd
 limesurvey
 lineage
@@ -1627,6 +1656,7 @@ lunch-money
 luxriot
 lychee
 lynx
+lynxprompt
 lyrion
 m3u-editor
 m4b-tool
@@ -1667,6 +1697,7 @@ marginalia
 mariadb
 marimo
 marktplaats
+marreta
 marzban
 mastodon
 material-design-icons
@@ -1688,6 +1719,7 @@ mbin
 mcaffee
 mcmyadmin
 mcp
+md
 mealie
 medama
 media-manager
@@ -1742,11 +1774,13 @@ microsoft-onenote
 microsoft-outlook
 microsoft-power-automate
 microsoft-powerpoint
+microsoft-project
 microsoft-remote-desktop
 microsoft-sharepoint
 microsoft-sql-server
 microsoft-teams
 microsoft-to-do
+microsoft-visio
 microsoft-windows
 microsoft-word
 midarr
@@ -1776,6 +1810,7 @@ ml-flow-wordmark
 mlb-tv
 mobaxterm
 mobilizon
+mobilizon-logo
 mobioffice
 mobotix
 mochahost
@@ -1810,6 +1845,7 @@ mousetrap
 movie-pilot
 mpm
 mqtt
+msi
 mstream
 mtlynch-picoshare
 mubi
@@ -1822,6 +1858,7 @@ mumble
 mundraub
 murena
 musescore
+music
 music-assistant
 musicbrainz
 musicbrainz-picard
@@ -2012,6 +2049,7 @@ omni-tools-full
 omnibus
 omnic-forge
 omnidb
+omnisight
 omnivore
 onedev
 oneuptime
@@ -2020,6 +2058,7 @@ onlyoffice
 onshape
 ookla-speedtest
 oott
+opa-ui
 open-central-control-unit
 open-classrooms
 open-cloud
@@ -2152,6 +2191,8 @@ patzer
 payload
 paymenter
 paypal
+pcloud
+pdf
 pdf24
 pdfding
 pdfforge
@@ -2198,6 +2239,7 @@ pia
 piaware
 picoclaw
 picsur
+picture
 pigallery2
 pigeonpod
 pikapods
@@ -2282,6 +2324,7 @@ powerbi
 powerdns
 powerpanel
 powershell
+powershell-file
 premium-mobile
 premiumize
 pretix
@@ -2292,6 +2335,7 @@ prime-video-alt
 printables
 printer
 printstash
+printventory
 prismarr
 pritunl
 privacyidea
@@ -2432,6 +2476,7 @@ qnap-virtualization
 qnap-vpn
 qobuz
 qq
+qrz
 quant-ux
 quasarr
 quay
@@ -2452,6 +2497,8 @@ racknerd
 rackpeek
 rackula
 radarr
+radarr-2d
+radarr-3d
 radarr-4k
 radarr-dv
 radicale
@@ -2506,6 +2553,7 @@ remuxcode
 renovate
 reolink
 repeater-1200ax2
+replicaro
 replit-kawaii
 reposilite
 requestly
@@ -2514,6 +2562,7 @@ resiliosync
 resiliosync-full
 restic
 restreamer
+retriever
 retrom
 revanced-manager
 revolt
@@ -2536,6 +2585,7 @@ romm
 rompya
 rook
 roon
+root-app
 root-me
 rotki
 roundcube
@@ -2640,6 +2690,7 @@ sharry
 shelf
 shelfmark
 shell
+shell-file
 shell-tips
 shellhub
 shellngn
@@ -2654,6 +2705,7 @@ shokoanime
 shopify
 shortcut
 shortlistapp
+shp
 sickbeard
 sickchill
 sickgear
@@ -2672,8 +2724,10 @@ simplelogin
 simplex-chat
 simpli
 sinf-uinsa
+sing-box
 sinusbot
 sipeed
+siphon
 siyuan
 sketchup-make
 sknerus
@@ -2903,6 +2957,7 @@ teedy
 tekstobot
 telegraf
 telegram
+telegram-archive
 telekom
 telekom-magenta-smarthome
 teleport
@@ -2919,6 +2974,7 @@ terraria
 teslamate
 testflight
 tether
+text-document
 thanos
 the-io-foundation
 the-onion
@@ -2930,6 +2986,7 @@ thelounge
 themepark
 theodinproject
 thin-linc
+thingport
 thingsboard
 thinkcell
 thread
@@ -3024,10 +3081,12 @@ tvheadend
 tvp-vod
 twake-mail
 tweakers
+twilio
 twingate
 twitch
 twitter
 txlog
+txt
 tyepcho
 typemill
 typescript
@@ -3106,6 +3165,7 @@ viber
 victorialogs
 victoriametrics
 victron-energy
+video
 videobuster
 videogametrackarr
 videojet
@@ -3139,6 +3199,7 @@ vmware-workstation
 vn-stat
 vodafone
 void-linux
+voidauth
 voilib
 voip-info
 voip-ms
@@ -3239,6 +3300,7 @@ windows-retro
 windows-vista
 windows-xp
 windshift
+wink
 wireguard
 wirenboard
 wireshark
@@ -3252,6 +3314,7 @@ wolfi
 wolframalpha
 woocommerce
 woodpecker-ci
+woorigi
 wooting
 wordpress
 workadventure
@@ -3311,6 +3374,7 @@ youtube-music
 youtube-studio
 youtube-tv
 yt-dlp
+ytdl-material
 yts
 yukkuri-movie-maker-4-kawaii
 yuno-host
@@ -3337,12 +3401,14 @@ zigbee2mqtt
 zima-os
 zimaosmonitoringpanel
 zimbra
+zip-archive
 zipcaptions
 zipline
 zipline-diced
 zitadel
 znc
 zoho
+zoho-desk
 zohomail
 zomro
 zoneminder

@@ -16,8 +16,14 @@ final class NotificationRouter {
     /// A cluster's quick action was chosen: its fingerprint, to show that cluster.
     var pendingCluster: String?
 
+    /// Settings → "Replay the demo tour": back to the home screen (the demo's, now active).
+    var pendingHome = false
+
     /// The "Search clusters" quick action was chosen: open the search, once unlocked.
     var pendingSearch = false
+
+    /// The fleet widget was tapped (ichor://fleet): open the fleet screen, once unlocked.
+    var pendingFleet = false
 
     /// A freeze reminder was tapped: open the Argo CD sync windows.
     var pendingArgoWindows = false
@@ -43,6 +49,9 @@ final class NotificationRouter {
 
     /// A config file opened with Ichor (IncomingConfig): its text, for the import preview.
     var pendingImportText: String?
+
+    /// A backup sent to Ichor (IncomingConfig): its bytes, for the restore flow.
+    var pendingBackup: Data?
 }
 
 /// The screen a GitOps alert leads to.
@@ -62,13 +71,17 @@ enum GitOpsDestination: Equatable {
 }
 
 /// Notification taps (the center keeps its delegate weakly, hence the shared instance).
-final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Sendable {
     static let shared = NotificationDelegate()
 
     /// A freeze reminder shows while the app is open too (it is the likely moment); the alerts
     /// keep today's behaviour.
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        if notification.request.content.categoryIdentifier == FreezeReminders.category { return [.banner, .list, .sound] }
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async
+        -> UNNotificationPresentationOptions
+    {
+        if notification.request.content.categoryIdentifier == FreezeReminders.category {
+            return [.banner, .list, .sound]
+        }
         // How a Wake chosen on an alert went: the app may be open by then.
         return notification.request.identifier.hasPrefix(AlertNotificationActions.wakePrefix) ? [.banner, .list] : []
     }
@@ -85,20 +98,38 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             return
         }
         if content.categoryIdentifier == FreezeReminders.category {
-            let extend = response.actionIdentifier == FreezeReminders.extendAction ? FreezeExtendRequest(userInfo: content.userInfo) : nil
+            let extend =
+                response.actionIdentifier == FreezeReminders.extendAction
+                ? FreezeExtendRequest(userInfo: content.userInfo) : nil
             await MainActor.run {
                 if let extend { NotificationRouter.shared.pendingFreezeExtend = extend }
                 NotificationRouter.shared.pendingArgoWindows = true
             }
             return
         }
+        // A followed run's result (OperationNotice): its screen, like its Live Activity.
+        if let kind = (content.userInfo[OperationNotice.kindKey] as? String).flatMap(OperationKind.init(rawValue:)) {
+            await MainActor.run { NotificationRouter.shared.pendingOperation = kind }
+            return
+        }
         let identifier = response.notification.request.identifier
         let action = response.actionIdentifier
         let cluster = content.userInfo[AlertNotificationActions.clusterKey] as? String ?? ""
         let alertKey = content.userInfo[AlertNotificationActions.alertKey] as? String ?? identifier
-        // Snooze and Wake: in the background, the app stays closed.
+        // Snooze, Acknowledge and Wake: in the background, the app stays closed.
         if let hours = snoozeHours(actionID: action) {
-            AlertNotificationActions.snooze(hours: hours, cluster: cluster, alertKey: alertKey, notification: identifier)
+            AlertNotificationActions.snooze(
+                hours: hours, cluster: cluster, alertKey: alertKey, notification: identifier)
+            return
+        }
+        // Acknowledge: the alert stops repeating, its notification stays.
+        if action == AlertAction.acknowledge.rawValue {
+            AlertAckStore.acknowledge(cluster: cluster, alertKey: alertKey)
+            return
+        }
+        if action == AlertAction.acknowledgePage.rawValue {
+            await AlertNotificationActions.acknowledgePage(
+                cluster: cluster, alertKey: alertKey, notification: identifier, title: content.title)
             return
         }
         if action == AlertAction.wake.rawValue {
@@ -109,7 +140,9 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         // The screen the alert is about, on its cluster (BackgroundMonitor.post); Reboot, Sync,
         // Reconcile and Silence then show that screen's confirmation, nothing runs before it.
         if let link = (content.userInfo["link"] as? String).flatMap(URL.init(string:)) {
-            let request = AlertAction(rawValue: action).flatMap { $0.changesCluster ? AlertActionRequest(action: $0, alertKey: alertKey) : nil }
+            let request = AlertAction(rawValue: action).flatMap {
+                $0.changesCluster ? AlertActionRequest(action: $0, alertKey: alertKey) : nil
+            }
             await MainActor.run {
                 NotificationRouter.shared.pendingAlertAction = request
                 NotificationRouter.shared.pendingShareLink = link

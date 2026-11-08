@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-01-02T03:04:05Z",
+  "plugins": [
+    {
+      "builtin": false,
+      "description": "Sleep schedules",
+      "icon": "kube-green",
+      "id": "demo-sleep",
+      "installed": true,
+      "maintainer": "cyrinux/ichor",
+      "name": "Demo Sleep",
+      "resources": [
+        "sleepinfos.kube-green.com",
+        "secrets"
+      ],
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "url": "https://raw.githubusercontent.com/cyrinux/ichor/main/go/plugin/drafts/demo-sleep.yaml",
+      "version": "ichor.dev/plugin/v1alpha1",
+      "website": "https://example.com"
+    }
+  ],
+  "url": "https://raw.githubusercontent.com/cyrinux/ichor/main/plugins/index.json"
+}

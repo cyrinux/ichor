@@ -260,6 +260,9 @@ data class KubeObjectRef(
     companion object {
         fun pod(namespace: String, name: String) = KubeObjectRef("", "v1", "pods", "Pod", namespace, name, editable = true)
 
+        /** A Node: cluster-scoped, so no namespace. */
+        fun node(name: String) = KubeObjectRef("", "v1", "nodes", "Node", "", name, editable = true)
+
         fun pvc(namespace: String, name: String) =
             KubeObjectRef("", "v1", "persistentvolumeclaims", "PersistentVolumeClaim", namespace, name, editable = true)
 

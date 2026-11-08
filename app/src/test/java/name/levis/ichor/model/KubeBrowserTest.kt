@@ -234,4 +234,12 @@ class KubeBrowserTest {
         assertTrue(job.isParallelism)
         assertFalse(TalosJson.decodeFromString(KubeObjectScale.serializer(), "{}").isParallelism)
     }
+
+    @Test
+    fun nodeRefIsTheClusterScopedCoreNode() {
+        val ref = KubeObjectRef.node("worker-1")
+        assertEquals(KubeObjectRef("", "v1", "nodes", "Node", "", "worker-1", editable = true), ref)
+        assertFalse(ref.isPod)
+        assertFalse(ref.scalable)
+    }
 }

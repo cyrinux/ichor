@@ -1,0 +1,13 @@
+{"items":[
+  {"metadata":{"name":"backup-agent","namespace":"garage"},
+   "spec":{"clusterRef":{"name":"garage"},"allBuckets":{"read":true,"write":true,"owner":true}},
+   "status":{"phase":"Ready","keyId":"e41a7f0c93b2d865","clusterWide":true}},
+  {"metadata":{"name":"app-writer","namespace":"garage"},
+   "spec":{"clusterRef":{"name":"garage"},
+    "bucketPermissions":[{"bucketRef":{"name":"files"},"read":true,"write":true}]},
+   "status":{"phase":"Ready","keyId":"6d03b8f15e9a2c47"}},
+  {"metadata":{"name":"broken","namespace":"garage"},
+   "spec":{"clusterRef":{"name":"garage"}},
+   "status":{"phase":"Failed","keyId":"f7e2a9c04b1d3e58",
+    "conditions":[
+      {"type":"Error","status":"True","reason":"GarageAPIError","message":"Garage answered 400 to ImportKey","lastTransitionTime":"2026-10-03T08:00:00Z"}]}}]}

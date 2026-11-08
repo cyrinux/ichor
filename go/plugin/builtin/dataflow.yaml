@@ -1,0 +1,570 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# Google Cloud Dataflow jobs declared through Config Connector (dataflow.cnrm.cloud.google.com):
+# DataflowJob runs a classic template, DataflowFlexTemplateJob a Flex template. Dataflow runs
+# outside the cluster; what shows is Config Connector's last observation of each job (its
+# JobState, batch or streaming, the job id) and whether its reconcile succeeded (the Ready
+# condition). Jobs launched outside Config Connector are not shown.
+# No actions: Config Connector has no drain or cancel lever, and deleting the object deletes
+# the job in Google Cloud.
+# go/ichorgo/plugin_dataflow_test.go holds it to what an API server would serve.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: dataflow
+name: Dataflow
+website: https://cloud.google.com/dataflow
+icon: dataflow
+category: workloads
+catalogId: dataflow
+
+detect:
+  - group: dataflow.cnrm.cloud.google.com
+    resource: dataflowjobs
+  - group: dataflow.cnrm.cloud.google.com
+    resource: dataflowflextemplatejobs
+
+resources:
+  job:
+    group: dataflow.cnrm.cloud.google.com
+    version: v1beta1
+    resource: dataflowjobs
+    kind: DataflowJob
+    scope: Namespaced
+  flexJob:
+    group: dataflow.cnrm.cloud.google.com
+    version: v1beta1
+    resource: dataflowflextemplatejobs
+    kind: DataflowFlexTemplateJob
+    scope: Namespaced
+
+# The status is empty until Config Connector's first reconcile: every field has a default, and
+# an empty state is unknown. JobState is JOB_STATE_RUNNING, _DONE, _FAILED, _CANCELLED,
+# _UPDATED, _DRAINING, _DRAINED, _PENDING, _CANCELLING, _QUEUED, _STOPPED or _UNKNOWN; the type
+# is JOB_TYPE_BATCH or JOB_TYPE_STREAMING.
+fields:
+  job:
+    state: $.status.state | default("")
+    # The JobState as a number for the row's status word (0: unknown or none yet).
+    stateCode: &stateCode |
+      fields.state == "JOB_STATE_RUNNING" ? 1 :
+      fields.state == "JOB_STATE_DONE" ? 2 :
+      fields.state == "JOB_STATE_FAILED" ? 3 :
+      fields.state == "JOB_STATE_CANCELLED" ? 4 :
+      fields.state == "JOB_STATE_UPDATED" ? 5 :
+      fields.state == "JOB_STATE_DRAINING" ? 6 :
+      fields.state == "JOB_STATE_DRAINED" ? 7 :
+      fields.state == "JOB_STATE_PENDING" ? 8 :
+      fields.state == "JOB_STATE_CANCELLING" ? 9 :
+      fields.state == "JOB_STATE_QUEUED" ? 10 :
+      fields.state == "JOB_STATE_STOPPED" ? 11 :
+      0
+    jobType: $.status.type | default("")
+    jobId: $.status.jobId | default("")
+    region: $.spec.region | default("")
+    zone: $.spec.zone | default("")
+    maxWorkers: $.spec.maxWorkers | default(0)
+    machineType: $.spec.machineType | default("")
+    template: $.spec.templateGcsPath | default("")
+    streamingEngine: $.spec.enableStreamingEngine | default(false)
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+    # The state is an observation: a spec changed since the last reconcile is not applied yet,
+    # and the Ready condition's last change dates the observation.
+    stale: $.status.observedGeneration < $.metadata.generation
+    readySince: condition("Ready").lastTransitionTime | time()
+    created: $.metadata.creationTimestamp | time()
+  flexJob:
+    state: $.status.state | default("")
+    stateCode: *stateCode
+    jobType: $.status.type | default("")
+    jobId: $.status.jobId | default("")
+    region: $.spec.region | default("")
+    maxWorkers: $.spec.maxWorkers | default(0)
+    numWorkers: $.spec.numWorkers | default(0)
+    machineType: $.spec.machineType | default("")
+    container: $.spec.containerSpecGcsPath | default("")
+    sdkImage: $.spec.sdkContainerImage | default("")
+    autoscaling: $.spec.autoscalingAlgorithm | default("")
+    streamingEngine: $.spec.enableStreamingEngine | default(false)
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+    stale: $.status.observedGeneration < $.metadata.generation
+    readySince: condition("Ready").lastTransitionTime | time()
+    created: $.metadata.creationTimestamp | time()
+
+# The first rule that holds wins. A failed job is critical whatever the reconcile says; a
+# reconcile that fails (UpdateFailed, DependencyNotFound, DependencyNotReady,
+# ManagementConflict…) is a warning; an absent Ready condition is not a failure, the job is
+# then unknown until Config Connector reports a state.
+health:
+  job: &jobHealth
+    - when: fields.state == "JOB_STATE_FAILED"
+      health: critical
+      reason: failed
+      message: "job failed"
+    - when: conditions.Ready == false
+      health: warning
+      reason: not-ready
+      message: "not reconciled: {{ fields.readyReason }}"
+    - when: fields.state in ["JOB_STATE_PENDING", "JOB_STATE_QUEUED", "JOB_STATE_DRAINING", "JOB_STATE_CANCELLING", "JOB_STATE_UPDATED"]
+      health: info
+      reason: transitioning
+      message: "starting or stopping"
+    - when: fields.state in ["JOB_STATE_DONE", "JOB_STATE_CANCELLED", "JOB_STATE_DRAINED", "JOB_STATE_STOPPED"]
+      health: idle
+      reason: finished
+      message: "finished"
+    - when: fields.state == "" || fields.state == "JOB_STATE_UNKNOWN"
+      health: unknown
+      reason: unknown
+      message: "no state reported yet"
+  flexJob: *jobHealth
+
+dataServices:
+  summary:
+    aggregate:
+      jobs: count(job) + count(flexJob)
+      running: count(job, fields.state == "JOB_STATE_RUNNING") + count(flexJob, fields.state == "JOB_STATE_RUNNING")
+      failed: count(job, health == "critical") + count(flexJob, health == "critical")
+      notReady: count(job, health == "warning") + count(flexJob, health == "warning")
+    health: worst([worst(job.health), worst(flexJob.health)])
+
+cards:
+  summary:
+    title: { count: dataServices.summary.jobs, one: "%d Dataflow job", other: "%d Dataflow jobs" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "failed", value: dataServices.summary.failed, tone: critical, hideWhenZero: true }
+      - { label: "not ready", value: dataServices.summary.notReady, tone: warning, hideWhenZero: true }
+      - { label: "running", value: dataServices.summary.running, tone: info }
+  jobs:
+    from: job
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No Dataflow template jobs."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status: &stateStatus
+        tone: health
+        # The JobState without its JOB_STATE_ prefix, as a word.
+        text: |
+          fields.stateCode == 1 ? "Running" :
+          fields.stateCode == 2 ? "Done" :
+          fields.stateCode == 3 ? "Failed" :
+          fields.stateCode == 4 ? "Cancelled" :
+          fields.stateCode == 5 ? "Updated" :
+          fields.stateCode == 6 ? "Draining" :
+          fields.stateCode == 7 ? "Drained" :
+          fields.stateCode == 8 ? "Pending" :
+          fields.stateCode == 9 ? "Cancelling" :
+          fields.stateCode == 10 ? "Queued" :
+          fields.stateCode == 11 ? "Stopped" :
+          "Unknown"
+      trailing: &jobType
+        text: 'fields.jobType == "JOB_TYPE_STREAMING" ? "streaming" : (fields.jobType == "JOB_TYPE_BATCH" ? "batch" : "")'
+      # The job id is text only: a console link would carry the project id off the phone.
+      detail:
+        - type: keyValues
+          items:
+            - { label: "State", value: fields.state, mono: true }
+            - { label: "Job ID", value: fields.jobId, mono: true }
+            - { label: "Region", value: 'fields.zone == "" ? fields.region : fields.region + " (" + fields.zone + ")"', mono: true }
+            - { label: "Max workers", value: fields.maxWorkers }
+            - { label: "Machine type", value: fields.machineType, mono: true }
+            - { label: "Template", value: fields.template, mono: true }
+            - { label: "Ready reason", value: fields.readyReason, mono: true }
+            - { label: "Status changed", value: fields.readySince | relativeTime() }
+            - { label: "Created", value: fields.created | relativeTime() }
+        - type: badges
+          items:
+            - { label: "Streaming Engine", on: fields.streamingEngine }
+            - { label: "Last change applied", on: "!fields.stale" }
+        - type: conditions
+  flexJobs:
+    from: flexJob
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No Dataflow Flex template jobs."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status: *stateStatus
+      trailing: *jobType
+      detail:
+        - type: keyValues
+          items:
+            - { label: "State", value: fields.state, mono: true }
+            - { label: "Job ID", value: fields.jobId, mono: true }
+            - { label: "Region", value: fields.region, mono: true }
+            - { label: "Workers", value: 'string(fields.numWorkers) + " / " + string(fields.maxWorkers)' }
+            - { label: "Autoscaling", value: fields.autoscaling, mono: true }
+            - { label: "Machine type", value: fields.machineType, mono: true }
+            - { label: "Container", value: fields.container, mono: true }
+            - { label: "SDK image", value: fields.sdkImage, mono: true }
+            - { label: "Ready reason", value: fields.readyReason, mono: true }
+            - { label: "Status changed", value: fields.readySince | relativeTime() }
+            - { label: "Created", value: fields.created | relativeTime() }
+        - type: badges
+          items:
+            - { label: "Streaming Engine", on: fields.streamingEngine }
+            - { label: "Last change applied", on: "!fields.stale" }
+        - type: conditions
+
+findings:
+  - id: failed
+    from: job
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: '{{ conditions.Ready == false && fields.readyMessage != "" ? message + ": " + fields.readyMessage : message }}'
+    opens: jobs
+  - id: not-ready
+    from: job
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: '{{ conditions.Ready == false && fields.readyMessage != "" ? message + ": " + fields.readyMessage : message }}'
+    opens: jobs
+  - id: flex-failed
+    from: flexJob
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: '{{ conditions.Ready == false && fields.readyMessage != "" ? message + ": " + fields.readyMessage : message }}'
+    opens: flexJobs
+  - id: flex-not-ready
+    from: flexJob
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: '{{ conditions.Ready == false && fields.readyMessage != "" ? message + ": " + fields.readyMessage : message }}'
+    opens: flexJobs
+
+# Invented names, job ids and buckets. demo-shop streams clicks and failed its nightly export;
+# demo-lab drained a backfill, waits on a missing service account, and has a job Config
+# Connector has not reported on yet. The Flex jobs: a pending scoring job, a running sync, a
+# cancelled one, one failed and one whose reconcile failed, and a fresh one.
+samples:
+  job:
+    - metadata: { name: clickstream-enrich, namespace: demo-shop, generation: 2, creationTimestamp: now-12d }
+      spec:
+        region: europe-west1
+        zone: europe-west1-b
+        maxWorkers: 8
+        machineType: n2-standard-4
+        templateGcsPath: gs://demo-shop-dataflow/templates/enrich
+        tempGcsLocation: gs://demo-shop-dataflow/tmp
+        enableStreamingEngine: true
+      status:
+        state: JOB_STATE_RUNNING
+        type: JOB_TYPE_STREAMING
+        jobId: 2026-10-10_04_12_31-1234567890123456789
+        observedGeneration: 2
+        conditions: [{ type: Ready, status: "True", reason: UpToDate, message: The resource is up to date, lastTransitionTime: now-3d }]
+    - metadata: { name: nightly-export, namespace: demo-shop, generation: 1, creationTimestamp: now-30d }
+      spec:
+        region: europe-west1
+        maxWorkers: 4
+        templateGcsPath: gs://dataflow-templates/latest/Spanner_to_GCS_Avro
+        tempGcsLocation: gs://demo-shop-dataflow/tmp
+      status:
+        state: JOB_STATE_FAILED
+        type: JOB_TYPE_BATCH
+        jobId: 2026-10-21_23_00_04-9876543210987654321
+        observedGeneration: 1
+        conditions: [{ type: Ready, status: "False", reason: UpdateFailed, message: "Update call failed: the job ended in JOB_STATE_FAILED", lastTransitionTime: now-7h }]
+    - metadata: { name: orders-backfill, namespace: demo-lab, generation: 3, creationTimestamp: now-9d }
+      spec:
+        region: us-central1
+        maxWorkers: 16
+        templateGcsPath: gs://demo-lab-dataflow/templates/backfill
+        tempGcsLocation: gs://demo-lab-dataflow/tmp
+      status:
+        state: JOB_STATE_DRAINED
+        type: JOB_TYPE_STREAMING
+        jobId: 2026-10-13_08_40_17-1111222233334444555
+        observedGeneration: 3
+        conditions: [{ type: Ready, status: "True", reason: UpToDate, message: The resource is up to date, lastTransitionTime: now-2d }]
+    - metadata: { name: ledger-import, namespace: demo-lab, generation: 1, creationTimestamp: now-1h }
+      spec:
+        region: europe-west4
+        templateGcsPath: gs://demo-lab-dataflow/templates/ledger
+        tempGcsLocation: gs://demo-lab-dataflow/tmp
+      status:
+        observedGeneration: 1
+        conditions: [{ type: Ready, status: "False", reason: DependencyNotFound, message: "reference IAMServiceAccount demo-lab/dataflow-runner is not found", lastTransitionTime: now-50m }]
+    - metadata: { name: sessionize, namespace: demo-lab, generation: 1, creationTimestamp: now-6m }
+      spec:
+        region: europe-west4
+        templateGcsPath: gs://demo-lab-dataflow/templates/sessionize
+        tempGcsLocation: gs://demo-lab-dataflow/tmp
+      status:
+        state: JOB_STATE_QUEUED
+        type: JOB_TYPE_BATCH
+        jobId: 2026-10-22_09_01_44-5555666677778888999
+        observedGeneration: 1
+        conditions: [{ type: Ready, status: "True", reason: UpToDate, message: The resource is up to date, lastTransitionTime: now-5m }]
+    - metadata: { name: audit-replay, namespace: demo-lab, generation: 1, creationTimestamp: now-1m }
+      spec:
+        region: europe-west4
+        templateGcsPath: gs://demo-lab-dataflow/templates/replay
+        tempGcsLocation: gs://demo-lab-dataflow/tmp
+  flexJob:
+    - metadata: { name: fraud-score, namespace: demo-shop, generation: 1, creationTimestamp: now-4m }
+      spec:
+        region: europe-west1
+        containerSpecGcsPath: gs://demo-shop-dataflow/flex/fraud-score.json
+        sdkContainerImage: europe-west1-docker.pkg.dev/demo-shop/beam/fraud-score:1.4.0
+        numWorkers: 2
+        maxWorkers: 10
+        autoscalingAlgorithm: AUTOSCALING_ALGORITHM_BASIC
+        machineType: n2-standard-2
+      status:
+        state: JOB_STATE_PENDING
+        type: JOB_TYPE_STREAMING
+        jobId: 2026-10-22_09_05_02-2222333344445555666
+        observedGeneration: 1
+        conditions: [{ type: Ready, status: "True", reason: UpToDate, message: The resource is up to date, lastTransitionTime: now-3m }]
+    - metadata: { name: inventory-sync, namespace: demo-lab, generation: 4, creationTimestamp: now-20d }
+      spec:
+        region: us-central1
+        containerSpecGcsPath: gs://demo-lab-dataflow/flex/inventory-sync.json
+        numWorkers: 1
+        maxWorkers: 4
+        enableStreamingEngine: true
+      status:
+        state: JOB_STATE_RUNNING
+        type: JOB_TYPE_STREAMING
+        jobId: 2026-10-02_11_30_00-3333444455556666777
+        observedGeneration: 3
+        conditions: [{ type: Ready, status: "True", reason: UpToDate, message: The resource is up to date, lastTransitionTime: now-6d }]
+    - metadata: { name: price-rollup, namespace: demo-shop, generation: 1, creationTimestamp: now-3d }
+      spec:
+        region: europe-west1
+        containerSpecGcsPath: gs://demo-shop-dataflow/flex/price-rollup.json
+      status:
+        state: JOB_STATE_CANCELLED
+        type: JOB_TYPE_BATCH
+        jobId: 2026-10-19_06_00_00-4444555566667777888
+        observedGeneration: 1
+        conditions: [{ type: Ready, status: "True", reason: UpToDate, message: The resource is up to date, lastTransitionTime: now-3d }]
+    - metadata: { name: churn-features, namespace: demo-lab, generation: 1, creationTimestamp: now-2d }
+      spec:
+        region: us-central1
+        containerSpecGcsPath: gs://demo-lab-dataflow/flex/churn-features.json
+      status:
+        state: JOB_STATE_FAILED
+        type: JOB_TYPE_BATCH
+        jobId: 2026-10-20_14_10_09-6666777788889999000
+        observedGeneration: 1
+        conditions: [{ type: Ready, status: "True", reason: UpToDate, message: The resource is up to date, lastTransitionTime: now-2d }]
+    - metadata: { name: geo-tiles, namespace: demo-lab, generation: 2, creationTimestamp: now-5h }
+      spec:
+        region: us-central1
+        containerSpecGcsPath: gs://demo-lab-dataflow/flex/geo-tiles.json
+      status:
+        observedGeneration: 1
+        conditions: [{ type: Ready, status: "False", reason: ManagementConflict, message: "the resource is managed by another Config Connector controller", lastTransitionTime: now-4h }]
+    - metadata: { name: tile-cache, namespace: demo-shop, generation: 1, creationTimestamp: now-30s }
+      spec:
+        region: europe-west1
+        containerSpecGcsPath: gs://demo-shop-dataflow/flex/tile-cache.json
+
+i18n:
+  fr:
+    "%d Dataflow job": "%d job Dataflow"
+    "%d Dataflow jobs": "%d jobs Dataflow"
+    "failed": "en échec"
+    "not ready": "pas prêts"
+    "running": "en cours"
+    "No Dataflow template jobs.": "Aucun job Dataflow sur modèle."
+    "No Dataflow Flex template jobs.": "Aucun job Dataflow sur modèle Flex."
+    "job failed": "job en échec"
+    "not reconciled: {{ fields.readyReason }}": "non réconcilié : {{ fields.readyReason }}"
+    "starting or stopping": "démarrage ou arrêt en cours"
+    "finished": "terminé"
+    "no state reported yet": "aucun état remonté pour l'instant"
+    "Running": "En cours"
+    "Done": "Terminé"
+    "Failed": "En échec"
+    "Cancelled": "Annulé"
+    "Updated": "Remplacé"
+    "Draining": "Vidange en cours"
+    "Drained": "Vidé"
+    "Pending": "En attente"
+    "Cancelling": "Annulation en cours"
+    "Queued": "En file d'attente"
+    "Stopped": "Arrêté"
+    "Unknown": "Inconnu"
+    "State": "État"
+    "Job ID": "ID du job"
+    "Region": "Région"
+    "Max workers": "Workers max"
+    "Workers": "Workers"
+    "Autoscaling": "Autoscaling"
+    "Machine type": "Type de machine"
+    "Template": "Modèle"
+    "Container": "Conteneur"
+    "SDK image": "Image du SDK"
+    "Streaming Engine": "Streaming Engine"
+    "Ready reason": "Raison Ready"
+    "Last change applied": "Dernière modification appliquée"
+    "Status changed": "Statut modifié"
+    "Created": "Créé"
+  de:
+    "%d Dataflow job": "%d Dataflow-Job"
+    "%d Dataflow jobs": "%d Dataflow-Jobs"
+    "failed": "fehlgeschlagen"
+    "not ready": "nicht bereit"
+    "running": "laufend"
+    "No Dataflow template jobs.": "Keine Dataflow-Vorlagen-Jobs."
+    "No Dataflow Flex template jobs.": "Keine Dataflow-Flex-Vorlagen-Jobs."
+    "job failed": "Job fehlgeschlagen"
+    "not reconciled: {{ fields.readyReason }}": "nicht abgeglichen: {{ fields.readyReason }}"
+    "starting or stopping": "startet oder stoppt"
+    "finished": "beendet"
+    "no state reported yet": "noch kein Status gemeldet"
+    "Running": "Läuft"
+    "Done": "Fertig"
+    "Failed": "Fehlgeschlagen"
+    "Cancelled": "Abgebrochen"
+    "Updated": "Ersetzt"
+    "Draining": "Wird geleert"
+    "Drained": "Geleert"
+    "Pending": "Ausstehend"
+    "Cancelling": "Wird abgebrochen"
+    "Queued": "In Warteschlange"
+    "Stopped": "Gestoppt"
+    "Unknown": "Unbekannt"
+    "State": "Status"
+    "Job ID": "Job-ID"
+    "Region": "Region"
+    "Max workers": "Max. Worker"
+    "Workers": "Worker"
+    "Autoscaling": "Autoscaling"
+    "Machine type": "Maschinentyp"
+    "Template": "Vorlage"
+    "Container": "Container"
+    "SDK image": "SDK-Image"
+    "Streaming Engine": "Streaming Engine"
+    "Ready reason": "Ready-Grund"
+    "Last change applied": "Letzte Änderung übernommen"
+    "Status changed": "Status geändert"
+    "Created": "Erstellt"
+  es:
+    "%d Dataflow job": "%d trabajo de Dataflow"
+    "%d Dataflow jobs": "%d trabajos de Dataflow"
+    "failed": "fallidos"
+    "not ready": "no listos"
+    "running": "en ejecución"
+    "No Dataflow template jobs.": "No hay trabajos de Dataflow con plantilla."
+    "No Dataflow Flex template jobs.": "No hay trabajos de Dataflow con plantilla Flex."
+    "job failed": "el trabajo falló"
+    "not reconciled: {{ fields.readyReason }}": "sin reconciliar: {{ fields.readyReason }}"
+    "starting or stopping": "iniciándose o deteniéndose"
+    "finished": "terminado"
+    "no state reported yet": "aún no se ha informado ningún estado"
+    "Running": "En ejecución"
+    "Done": "Terminado"
+    "Failed": "Fallido"
+    "Cancelled": "Cancelado"
+    "Updated": "Reemplazado"
+    "Draining": "Drenando"
+    "Drained": "Drenado"
+    "Pending": "Pendiente"
+    "Cancelling": "Cancelando"
+    "Queued": "En cola"
+    "Stopped": "Detenido"
+    "Unknown": "Desconocido"
+    "State": "Estado"
+    "Job ID": "ID del trabajo"
+    "Region": "Región"
+    "Max workers": "Workers máx."
+    "Workers": "Workers"
+    "Autoscaling": "Autoescalado"
+    "Machine type": "Tipo de máquina"
+    "Template": "Plantilla"
+    "Container": "Contenedor"
+    "SDK image": "Imagen del SDK"
+    "Streaming Engine": "Streaming Engine"
+    "Ready reason": "Motivo de Ready"
+    "Last change applied": "Último cambio aplicado"
+    "Status changed": "Estado cambiado"
+    "Created": "Creado"
+  it:
+    "%d Dataflow job": "%d job Dataflow"
+    "%d Dataflow jobs": "%d job Dataflow"
+    "failed": "falliti"
+    "not ready": "non pronti"
+    "running": "in esecuzione"
+    "No Dataflow template jobs.": "Nessun job Dataflow da modello."
+    "No Dataflow Flex template jobs.": "Nessun job Dataflow da modello Flex."
+    "job failed": "job fallito"
+    "not reconciled: {{ fields.readyReason }}": "non riconciliato: {{ fields.readyReason }}"
+    "starting or stopping": "in avvio o in arresto"
+    "finished": "terminato"
+    "no state reported yet": "nessuno stato ancora segnalato"
+    "Running": "In esecuzione"
+    "Done": "Completato"
+    "Failed": "Fallito"
+    "Cancelled": "Annullato"
+    "Updated": "Sostituito"
+    "Draining": "In svuotamento"
+    "Drained": "Svuotato"
+    "Pending": "In attesa"
+    "Cancelling": "In annullamento"
+    "Queued": "In coda"
+    "Stopped": "Arrestato"
+    "Unknown": "Sconosciuto"
+    "State": "Stato"
+    "Job ID": "ID del job"
+    "Region": "Regione"
+    "Max workers": "Worker max"
+    "Workers": "Worker"
+    "Autoscaling": "Scalabilità automatica"
+    "Machine type": "Tipo di macchina"
+    "Template": "Modello"
+    "Container": "Container"
+    "SDK image": "Immagine SDK"
+    "Streaming Engine": "Streaming Engine"
+    "Ready reason": "Motivo Ready"
+    "Last change applied": "Ultima modifica applicata"
+    "Status changed": "Stato cambiato"
+    "Created": "Creato"
+  uk:
+    "%d Dataflow job": "%d завдання Dataflow"
+    "%d Dataflow jobs": "%d завдань Dataflow"
+    "failed": "невдалих"
+    "not ready": "не готових"
+    "running": "працюють"
+    "No Dataflow template jobs.": "Немає завдань Dataflow за шаблоном."
+    "No Dataflow Flex template jobs.": "Немає завдань Dataflow за шаблоном Flex."
+    "job failed": "завдання завершилося з помилкою"
+    "not reconciled: {{ fields.readyReason }}": "не узгоджено: {{ fields.readyReason }}"
+    "starting or stopping": "запускається або зупиняється"
+    "finished": "завершено"
+    "no state reported yet": "стан ще не повідомлено"
+    "Running": "Працює"
+    "Done": "Завершено"
+    "Failed": "Помилка"
+    "Cancelled": "Скасовано"
+    "Updated": "Замінено"
+    "Draining": "Спорожнюється"
+    "Drained": "Спорожнено"
+    "Pending": "Очікує"
+    "Cancelling": "Скасовується"
+    "Queued": "У черзі"
+    "Stopped": "Зупинено"
+    "Unknown": "Невідомо"
+    "State": "Стан"
+    "Job ID": "ID завдання"
+    "Region": "Регіон"
+    "Max workers": "Макс. воркерів"
+    "Workers": "Воркери"
+    "Autoscaling": "Автомасштабування"
+    "Machine type": "Тип машини"
+    "Template": "Шаблон"
+    "Container": "Контейнер"
+    "SDK image": "Образ SDK"
+    "Streaming Engine": "Streaming Engine"
+    "Ready reason": "Причина Ready"
+    "Last change applied": "Останню зміну застосовано"
+    "Status changed": "Статус змінено"
+    "Created": "Створено"

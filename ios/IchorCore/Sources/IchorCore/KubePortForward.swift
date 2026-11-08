@@ -23,7 +23,9 @@ public func containerPorts(fromPodYAML yaml: String) -> [KubeContainerPort] {
     let lines = yaml.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
     var found: [Int: KubeContainerPort] = [:]
     for (index, line) in lines.enumerated() {
-        guard let key = yamlKey(line), key.name == "containerPort", let port = Int(key.value), (1...65535).contains(port) else {
+        guard let key = yamlKey(line), key.name == "containerPort", let port = Int(key.value),
+            (1...65535).contains(port)
+        else {
             continue
         }
         let fields = yamlItemFields(lines, at: index, column: key.column)
@@ -109,7 +111,9 @@ private func leadingSpaces(_ line: String) -> Int {
 }
 
 private func unquoted(_ value: String) -> String {
-    guard value.count >= 2, let first = value.first, first == value.last, first == "\"" || first == "'" else { return value }
+    guard value.count >= 2, let first = value.first, first == value.last, first == "\"" || first == "'" else {
+        return value
+    }
     return String(value.dropFirst().dropLast())
 }
 
@@ -118,7 +122,8 @@ private func unquoted(_ value: String) -> String {
 public func portForwardURL(_ address: String) -> URL? {
     let trimmed = address.trimmingCharacters(in: .whitespaces)
     guard let colon = trimmed.lastIndex(of: ":"), let port = Int(trimmed[trimmed.index(after: colon)...]),
-          (1...65535).contains(port) else { return nil }
+        (1...65535).contains(port)
+    else { return nil }
     let host = String(trimmed[..<colon])
     guard host == "127.0.0.1" || host == "localhost" || host == "[::1]" else { return nil }
     return URL(string: "http://\(host):\(port)")

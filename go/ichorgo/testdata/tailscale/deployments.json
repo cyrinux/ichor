@@ -1,0 +1,5 @@
+{"kind":"DeploymentList","apiVersion":"apps/v1","metadata":{},"items":[
+ {"metadata":{"name":"operator","namespace":"tailscale","labels":{"app.kubernetes.io/name":"tailscale-operator"}},
+  "spec":{"replicas":1,"template":{"spec":{"containers":[{"name":"operator","image":"tailscale/k8s-operator:v1.90.0"}]}}},
+  "status":{"readyReplicas":1}}
+]}

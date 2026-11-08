@@ -35,6 +35,8 @@ type pageQuery struct {
 	// table asks for a Table (rows of server-side columns plus each object's metadata)
 	// instead of full objects: 10-20 times smaller for pods.
 	table bool
+	// metadataOnly requests PartialObjectMetadataList, excluding Secret payloads.
+	metadataOnly bool
 }
 
 // kubePage is one page of a list: table when the server answered with a Table, else items.
@@ -159,6 +161,9 @@ func (k *kubeClient) getPage(ctx context.Context, path string, q pageQuery) (kub
 	}
 
 	accept := "application/json"
+	if q.metadataOnly {
+		accept = "application/json;as=PartialObjectMetadataList;g=meta.k8s.io;v=v1"
+	}
 	if q.table {
 		accept = kubeTableAccept
 
@@ -319,16 +324,6 @@ func validateNamespace(namespace string) error {
 	}
 
 	return nil
-}
-
-// scopedPath is the collection of resource in namespace ("" for every namespace) under
-// group ("/api/v1", "/apis/apps/v1").
-func scopedPath(group, namespace, resource string) string {
-	if namespace == "" {
-		return group + "/" + resource
-	}
-
-	return group + "/namespaces/" + url.PathEscape(namespace) + "/" + resource
 }
 
 // pageArgs are the arguments every page function takes from the app, checked.

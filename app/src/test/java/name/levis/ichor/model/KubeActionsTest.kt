@@ -28,7 +28,32 @@ class KubeActionsTest {
         assertTrue(KubeWorkload("StatefulSet", "ns", "a").canScale)
         assertFalse(KubeWorkload("DaemonSet", "ns", "a").canScale)
         assertTrue(KubeWorkload("Deployment", "ns", "a").hasHistory)
-        assertFalse(KubeWorkload("StatefulSet", "ns", "a").hasHistory)
+        assertTrue(KubeWorkload("StatefulSet", "ns", "a").hasHistory)
+        assertTrue(KubeWorkload("DaemonSet", "ns", "a").hasHistory)
+        assertTrue(KubeWorkload("Deployment", "ns", "a").canPauseRollout)
+        assertFalse(KubeWorkload("StatefulSet", "ns", "a").canPauseRollout)
+    }
+
+    @Test
+    fun decodesAStatefulSetHistoryAndItsDiff() {
+        val list = TalosJson.decodeFromString(
+            KubeRevisionList.serializer(),
+            """{"kind":"StatefulSet","manual":true,"paused":false,"revisions":[{"revision":5,"replicaSet":"db-5a1b2","created":0,"images":["postgres:16"],"changeCause":"","replicas":0,"current":false}]}""",
+        )
+        assertEquals("StatefulSet", list.kind)
+        assertTrue(list.manual)
+        assertEquals("db-5a1b2", list.revisions.single().replicaSet)
+
+        val diff = TalosJson.decodeFromString(
+            KubeRevisionDiff.serializer(),
+            """{"diff":"--- revision 7 (current)\n+++ revision 5\n@@ -1,1 +1,1 @@\n-image: postgres:17\n+image: postgres:16\n","from":"revision 7 (current)","to":"revision 5",
+               "fromRevision":7,"toRevision":5,"images":{"from":["postgres:17","sidecar:1"],"to":["postgres:16","sidecar:1"]}}""",
+        )
+        assertEquals(5, diff.toRevision)
+        assertEquals(listOf(DiffLine.Kind.HUNK, DiffLine.Kind.REMOVED, DiffLine.Kind.ADDED), parseDiffLines(diff.diff).map { it.kind })
+        // Only the images that change, container by container.
+        assertEquals(listOf(ImageChange("postgres:17", "postgres:16")), diff.images.changes())
+        assertEquals(listOf(ImageChange("a:1", "")), KubeRevisionImages(listOf("x:1", "a:1"), listOf("x:1")).changes())
     }
 
     @Test

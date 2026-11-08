@@ -1,0 +1,21 @@
+{"kind":"ScaledObjectList","apiVersion":"keda.sh/v1alpha1","metadata":{},"items":[
+{"metadata":{"name":"transcoder","namespace":"media"},
+ "spec":{"scaleTargetRef":{"name":"transcoder"},"minReplicaCount":1,"maxReplicaCount":8,
+  "triggers":[{"type":"prometheus","metadata":{"serverAddress":"http://prometheus.monitoring:9090","query":"sum(rate(jobs_queued_total[2m]))","threshold":"10"}}]},
+ "status":{"hpaName":"keda-hpa-transcoder","conditions":[
+  {"type":"Ready","status":"True","reason":"ScaledObjectReady","message":"ScaledObject is defined correctly and is ready for scaling"},
+  {"type":"Active","status":"True","reason":"ScalerActive","message":"Scaling is performed because triggers are active"},
+  {"type":"Fallback","status":"False","reason":"NoFallbackFound"}]}},
+{"metadata":{"name":"uploader","namespace":"media","annotations":{"autoscaling.keda.sh/paused-replicas":"5"}},
+ "spec":{"scaleTargetRef":{"kind":"Deployment","name":"uploader"},"maxReplicaCount":20,"fallback":{"failureThreshold":3,"replicas":2},
+  "triggers":[{"type":"kafka","metadata":{"bootstrapServers":"kafka.queue:9092","password":"never-shown-secret","topic":"uploads","lagThreshold":"50"}}]},
+ "status":{"conditions":[
+  {"type":"Ready","status":"True","reason":"ScaledObjectReady"},
+  {"type":"Active","status":"False","reason":"ScalerNotActive","message":"Scaling is not performed because triggers are not active"},
+  {"type":"Paused","status":"True","reason":"ScaledObjectPaused"}]}},
+{"metadata":{"name":"office-hours","namespace":"shop"},
+ "spec":{"scaleTargetRef":{"name":"backoffice"},
+  "triggers":[{"type":"cron","metadata":{"timezone":"Europe/Berlin","start":"0 8 * * 1-5","end":"0 19 * * 1-5","desiredReplicas":"2"}}]},
+ "status":{"conditions":[
+  {"type":"Ready","status":"False","reason":"ScaledObjectCheckFailed","message":"ScaledObject doesn't have correct scaleTargetRef specification"}]}}
+]}

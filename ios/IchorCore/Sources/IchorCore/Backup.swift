@@ -5,8 +5,11 @@ import Foundation
 /// moves between platforms; a setting this app does not have is ignored, one the backup lacks
 /// (nil) keeps its current value.
 ///
-/// Not included: AI diagnosis settings and keys (a third-party service, enabled per device),
-/// the app lock (per-device security), and caches.
+/// Format 3 adds the pins, the Git hosts, the AI diagnosis settings and, only when the user
+/// opts in, their API keys and Git tokens (`secrets`). Not included: the app lock's secret
+/// and security-key data (device-bound; only whether a lock was on), the audit log, caches.
+/// Format 4 adds the pull requests opened from the phone (`proposals`), format 5 the imported
+/// plugins (`plugins`), each written only when there are some.
 public struct BackupPayload: Codable, Equatable, Sendable {
     /// The payload version, checked by the Go core; bump it for changes older apps cannot read.
     public var format: Int
@@ -26,11 +29,30 @@ public struct BackupPayload: Codable, Equatable, Sendable {
     /// The sign-ins of the kubeconfig clusters by fingerprint (Go KubeAuthForBackup: what the
     /// user entered, never a session); nil when there is none. Older apps ignore it.
     public var kubeAuth: [String: String]?
+    /// The real-scope pins by context fingerprint (format 3); a pin this version cannot read is skipped.
+    public var pins: [String: [Pin]]?
+    /// The Git hosts, without their tokens (format 3).
+    public var gitHosts: [GitHost]?
+    /// The AI diagnosis settings, without their keys (format 3).
+    public var ai: BackupAI?
+    /// The AI keys and Git tokens: only when the user opted in, else left out of the JSON.
+    public var secrets: BackupSecrets?
+    /// The pull requests opened from the phone by context fingerprint, as stored (format 4).
+    public var proposals: [String: [GitProposalRecord]]?
+    /// The imported plugins, their files and flags (format 5; Go PluginUserExport).
+    public var plugins: PluginBackup?
+    /// The fingerprints a Talos CA rotation derived, to the ones the clusters had before (Go
+    /// FingerprintLineageExport), so `clusters` still match once restored; nil when no CA was
+    /// rotated. Older apps ignore it.
+    public var fingerprintLineage: [String: String]?
 
     public init(
         format: Int = backupFormat, platform: String? = nil, createdAt: Int64? = nil, talosconfig: String,
         kubeconfig: String? = nil, activeContextIndex: Int? = nil, settings: BackupSettings? = nil,
-        clusters: [String: BackupCluster]? = nil, kubeAuth: [String: String]? = nil
+        clusters: [String: BackupCluster]? = nil, kubeAuth: [String: String]? = nil,
+        pins: [String: [Pin]]? = nil, gitHosts: [GitHost]? = nil, ai: BackupAI? = nil, secrets: BackupSecrets? = nil,
+        proposals: [String: [GitProposalRecord]]? = nil, plugins: PluginBackup? = nil,
+        fingerprintLineage: [String: String]? = nil
     ) {
         self.format = format
         self.platform = platform
@@ -41,10 +63,18 @@ public struct BackupPayload: Codable, Equatable, Sendable {
         self.settings = settings
         self.clusters = clusters
         self.kubeAuth = kubeAuth
+        self.pins = pins
+        self.gitHosts = gitHosts
+        self.ai = ai
+        self.secrets = secrets
+        self.proposals = proposals
+        self.plugins = plugins
+        self.fingerprintLineage = fingerprintLineage
     }
 
     private enum CodingKeys: String, CodingKey {
         case format, platform, createdAt, talosconfig, kubeconfig, activeContextIndex, settings, clusters, kubeAuth
+        case pins, gitHosts, ai, secrets, proposals, plugins, fingerprintLineage
     }
 
     // A format 2 payload may leave the talosconfig out (or null) when it only holds a kubeconfig.
@@ -59,7 +89,21 @@ public struct BackupPayload: Codable, Equatable, Sendable {
         settings = try c.decodeIfPresent(BackupSettings.self, forKey: .settings)
         clusters = try c.decodeIfPresent([String: BackupCluster].self, forKey: .clusters)
         kubeAuth = try c.decodeIfPresent([String: String].self, forKey: .kubeAuth)
+        pins = try c.decodeIfPresent([String: [LenientBackupPin]].self, forKey: .pins)?
+            .mapValues { $0.compactMap(\.pin) }
+        gitHosts = try c.decodeIfPresent([GitHost].self, forKey: .gitHosts)?.filter { !$0.host.isEmpty }
+        ai = try c.decodeIfPresent(BackupAI.self, forKey: .ai)
+        secrets = try c.decodeIfPresent(BackupSecrets.self, forKey: .secrets)
+        proposals = try c.decodeIfPresent([String: [GitProposalRecord]].self, forKey: .proposals)
+        plugins = try c.decodeIfPresent(PluginBackup.self, forKey: .plugins)
+        fingerprintLineage = try c.decodeIfPresent([String: String].self, forKey: .fingerprintLineage)
     }
+}
+
+/// A pin of a backup, nil when this version cannot read it (a newer target).
+private struct LenientBackupPin: Decodable {
+    let pin: Pin?
+    init(from decoder: Decoder) throws { pin = try? Pin(from: decoder) }
 }
 
 public struct BackupSettings: Codable, Equatable, Sendable {
@@ -76,6 +120,17 @@ public struct BackupSettings: Codable, Equatable, Sendable {
     public var monitorIntervalMinutes: Int?
     /// Download icons the app does not bundle (Apps inventory).
     public var remoteAppIcons: Bool?
+    /// Android only ("Allow screenshots"; iOS cannot block them).
+    public var allowScreenshots: Bool?
+    /// Whether an app lock was on: "off", "biometric" or "securityKey" (`BackupLockMode`);
+    /// never its secret. A restore only offers to set the lock up again.
+    public var appLockMode: String?
+    /// The monitor's storage thresholds (% used).
+    public var storageWarnPercent: Int?
+    public var storageCriticalPercent: Int?
+    /// Quiet hours, minimum severity and digest; the cluster overrides by fingerprint, only of
+    /// the clusters in the backup. Older backups have none.
+    public var alertRules: AlertRules?
 
     public init(
         themeMode: String? = nil, privacyMask: Bool? = nil, privacyMaskWords: String? = nil, monitorAlerts: Bool? = nil,
@@ -102,15 +157,30 @@ public struct BackupCluster: Codable, Equatable, Sendable {
     /// A Talos cluster's Kubernetes access: the fingerprint of the kubeconfig cluster its
     /// Kubernetes calls go through (nil: the admin kubeconfig Talos issues).
     public var kubeAccess: String?
+    /// The cluster's own Git repository (its Cluster repository setting); never a token.
+    public var repository: ClusterRepo?
+    /// "Record actions in the cluster" (a Kubernetes Event per change); nil: off.
+    public var auditEvents: Bool?
+    /// An on-call integration is set up for it: only that, its token never leaves the device.
+    public var oncallSet: Bool?
+    /// The tags the user gave it; absent in older backups, ignored by older apps.
+    public var tags: [String]?
 
-    public init(name: String? = nil, color: Int? = nil, vpnOnly: Bool? = nil,
-                wakeOnLan: [String: BackupWolTarget]? = nil, kubeServer: String? = nil, kubeAccess: String? = nil) {
+    public init(
+        name: String? = nil, color: Int? = nil, vpnOnly: Bool? = nil,
+        wakeOnLan: [String: BackupWolTarget]? = nil, kubeServer: String? = nil, kubeAccess: String? = nil,
+        repository: ClusterRepo? = nil, auditEvents: Bool? = nil, oncallSet: Bool? = nil, tags: [String]? = nil
+    ) {
+        self.tags = tags
         self.name = name
         self.color = color
         self.vpnOnly = vpnOnly
         self.wakeOnLan = wakeOnLan
         self.kubeServer = kubeServer
         self.kubeAccess = kubeAccess
+        self.repository = repository
+        self.auditEvents = auditEvents
+        self.oncallSet = oncallSet
     }
 }
 
@@ -133,14 +203,40 @@ public let backupFormat = 1
 /// instead of restoring it without its kubeconfig clusters.
 public let backupFormatKubeconfig = 2
 
-/// The format to write: 2 only when there are kubeconfig clusters, so backups of Talos
-/// clusters alone stay readable by older apps. Same rule as Android.
-public func backupPayloadFormat(kubeconfig: String?) -> Int {
-    let kube = kubeconfig?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-    return kube.isEmpty ? backupFormat : backupFormatKubeconfig
+/// The format of a payload holding pins, Git hosts, AI settings and maybe secrets: older apps
+/// refuse it ("update the app") instead of silently dropping them.
+public let backupFormatSettings = 3
+
+/// The format of a payload holding the pull requests opened from the phone.
+public let backupFormatProposals = 4
+
+/// The format of a payload holding imported plugins: an app that reads 4 ignores unknown keys,
+/// so it must refuse the file ("update the app") rather than restore it without them.
+public let backupFormatPlugins = 5
+
+/// The format to write: 5 when it holds plugins, 4 when it holds proposals, else 3 (the payload
+/// always holds the format 3 settings), so a backup without them still opens in an app that
+/// reads 3. Same as Android.
+public func backupPayloadFormat(hasProposals: Bool = false, hasPlugins: Bool = false) -> Int {
+    if hasPlugins { return backupFormatPlugins }
+    return hasProposals ? backupFormatProposals : backupFormatSettings
 }
 
-/// The kubeconfig of a restored payload: only a format 2 one carries it, nil when it holds none.
+/// The proposals to back up: the clusters' records as stored, nil when there are none.
+public func backupProposals(_ stored: [String: [GitProposalRecord]], fingerprints: [String]) -> [String:
+    [GitProposalRecord]]?
+{
+    let kept = ProposalsStore.keep(stored, fingerprints: fingerprints).filter { !$0.value.isEmpty }
+    return kept.isEmpty ? nil : kept
+}
+
+/// The proposals of a restored payload for the restored clusters: only a format 4+ one carries them.
+public func restoredProposals(_ payload: BackupPayload, fingerprints: [String]) -> [String: [GitProposalRecord]]? {
+    guard payload.format >= backupFormatProposals, let proposals = payload.proposals else { return nil }
+    return ProposalsStore.keep(proposals, fingerprints: fingerprints)
+}
+
+/// The kubeconfig of a restored payload: only a format 2+ one carries it, nil when it holds none.
 public func restoredKubeconfig(_ payload: BackupPayload) -> String? {
     guard payload.format >= backupFormatKubeconfig else { return nil }
     let kube = payload.kubeconfig ?? ""
@@ -158,10 +254,11 @@ public let backupMinPassphrase = 12
 /// The extension backups are saved with, on both platforms.
 public let backupExtension = "ichorbackup"
 
-/// The file name a new backup is offered under, e.g. "ichor-2026-10-02.ichorbackup".
-public func backupFileName(date: Date, calendar: Calendar = .current) -> String {
+/// The file name a new backup is offered under, e.g. "ichor-2026-10-02.ichorbackup"
+/// ("ichor-2026-10-02.age" for an age file).
+public func backupFileName(date: Date, format: BackupFileFormat = .ichor, calendar: Calendar = .current) -> String {
     let c = calendar.dateComponents([.year, .month, .day], from: date)
-    return String(format: "ichor-%04d-%02d-%02d.%@", c.year ?? 0, c.month ?? 0, c.day ?? 0, backupExtension)
+    return String(format: "ichor-%04d-%02d-%02d.%@", c.year ?? 0, c.month ?? 0, c.day ?? 0, format.fileExtension)
 }
 
 /// Why a new backup's passphrase cannot be used yet.
@@ -177,20 +274,36 @@ public func backupPassphraseProblem(_ passphrase: String, again: String) -> Back
 
 /// The per-cluster settings of this device, as a backup stores them (only clusters still in `fingerprints`).
 /// `wakeOnLan` is keyed by `wolKey`.
-public func backupClusters(fingerprints: [String], names: [String: String], colors: [String: Int],
-                           kubeServers: [String: String], vpnOnly: Set<String> = [],
-                           wakeOnLan: [String: WolTarget] = [:], kubeAccess: [String: String] = [:]) -> [String: BackupCluster] {
+public func backupClusters(
+    fingerprints: [String], names: [String: String], colors: [String: Int],
+    kubeServers: [String: String], vpnOnly: Set<String> = [],
+    wakeOnLan: [String: WolTarget] = [:], kubeAccess: [String: String] = [:],
+    repos: [String: ClusterRepo] = [:], auditEvents: Set<String> = [], oncallSet: Set<String> = [],
+    tags: [String: [String]] = [:]
+) -> [String: BackupCluster] {
     var out: [String: BackupCluster] = [:]
     for fp in fingerprints where !fp.isEmpty {
         var wol: [String: BackupWolTarget] = [:]
         for (key, target) in wakeOnLan where key.hasPrefix(fp + "|") {
-            wol[String(key.dropFirst(fp.count + 1))] = BackupWolTarget(mac: target.mac, broadcast: target.broadcast, port: target.port)
+            wol[String(key.dropFirst(fp.count + 1))] = BackupWolTarget(
+                mac: target.mac, broadcast: target.broadcast, port: target.port)
         }
-        out[fp] = BackupCluster(name: names[fp], color: colors[fp].map { $0 & 0xFFFFFF },
-                                vpnOnly: vpnOnly.contains(fp) ? true : nil, wakeOnLan: wol.isEmpty ? nil : wol,
-                                kubeServer: kubeServers[fp], kubeAccess: kubeAccess[fp].flatMap { $0.isEmpty ? nil : $0 })
+        out[fp] = BackupCluster(
+            name: names[fp], color: colors[fp].map { $0 & 0xFFFFFF },
+            vpnOnly: vpnOnly.contains(fp) ? true : nil, wakeOnLan: wol.isEmpty ? nil : wol,
+            kubeServer: kubeServers[fp], kubeAccess: kubeAccess[fp].flatMap { $0.isEmpty ? nil : $0 },
+            repository: repos[fp], auditEvents: auditEvents.contains(fp) ? true : nil,
+            oncallSet: oncallSet.contains(fp) ? true : nil, tags: tags[fp].flatMap { $0.isEmpty ? nil : $0 })
     }
     return out
+}
+
+/// Whether a restored cluster had an on-call integration this device has no token for: the
+/// backup never carries it, so the restore says to set it again.
+public func onCallTokenNeeded(
+    _ clusters: [String: BackupCluster]?, fingerprints: [String], isSet: (String) -> Bool
+) -> Bool {
+    fingerprints.contains { clusters?[$0]?.oncallSet == true && !isSet($0) }
 }
 
 /// The per-cluster settings to restore, narrowed to `fingerprints` (the restored config's) and checked.
@@ -204,6 +317,12 @@ public struct RestoredClusters: Equatable, Sendable {
     public var wakeOnLan: [String: WolTarget] = [:]
     /// Talos fingerprint → kubeconfig cluster fingerprint, both in the restored config.
     public var kubeAccess: [String: String] = [:]
+    /// Normalized; one without an address is dropped.
+    public var repos: [String: ClusterRepo] = [:]
+    /// The clusters that record actions.
+    public var auditEvents: Set<String> = []
+    /// Normalized like typed ones; a cluster with none is left out.
+    public var tags: [String: [String]] = [:]
 }
 
 public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints: [String]) -> RestoredClusters {
@@ -214,14 +333,22 @@ public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints:
     var vpnOnly: Set<String> = []
     var wakeOnLan: [String: WolTarget] = [:]
     var kubeAccess: [String: String] = [:]
+    var repos: [String: ClusterRepo] = [:]
+    var auditEvents: Set<String> = []
+    var tags: [String: [String]] = [:]
     for (fp, cluster) in clusters ?? [:] where known.contains(fp) {
+        let clean = normalizeTags((cluster.tags ?? []).joined(separator: ","))
+        if !clean.isEmpty { tags[fp] = clean }
+        if let repo = cluster.repository.flatMap(normalizeClusterRepo) { repos[fp] = repo }
+        if cluster.auditEvents == true { auditEvents.insert(fp) }
         if let target = cluster.kubeAccess, target != fp, known.contains(target) { kubeAccess[fp] = target }
         if cluster.vpnOnly == true { vpnOnly.insert(fp) }
         for (node, wol) in cluster.wakeOnLan ?? [:] {
             let node = node.trimmingCharacters(in: .whitespaces)
             let broadcast = (wol.broadcast ?? "").trimmingCharacters(in: .whitespaces)
             guard !node.isEmpty, !broadcast.contains("|"), isWolAddress(broadcast),
-                  let target = decodeWolTarget(encodeWolTarget(WolTarget(mac: wol.mac, broadcast: broadcast, port: wol.port ?? wolDefaultPort)))
+                let target = decodeWolTarget(
+                    encodeWolTarget(WolTarget(mac: wol.mac, broadcast: broadcast, port: wol.port ?? wolDefaultPort)))
             else { continue }
             wakeOnLan[wolKey(fingerprint: fp, node: node)] = target
         }
@@ -232,8 +359,9 @@ public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints:
             kubeServers[fp] = server
         }
     }
-    return RestoredClusters(names: names, colors: colors, kubeServers: kubeServers, vpnOnly: vpnOnly,
-                            wakeOnLan: wakeOnLan, kubeAccess: kubeAccess)
+    return RestoredClusters(
+        names: names, colors: colors, kubeServers: kubeServers, vpnOnly: vpnOnly,
+        wakeOnLan: wakeOnLan, kubeAccess: kubeAccess, repos: repos, auditEvents: auditEvents, tags: tags)
 }
 
 /// The sign-ins of a restored payload for the clusters it restored (`fingerprints`), empty
@@ -245,6 +373,8 @@ public func restoredKubeAuth(_ payload: BackupPayload, fingerprints: [String]) -
 /// A backup error of the Go core, whose messages start with a code (backup.go).
 public enum BackupError: Error, Equatable, Sendable {
     case passphraseShort, wrongPassphrase, notBackup, unsupported, invalidContent
+    /// An age file sealed for public keys only: it opens with the matching age key on a computer.
+    case needsIdentity
 
     public init?(coreMessage: String) {
         let codes: [(String, BackupError)] = [
@@ -253,6 +383,7 @@ public enum BackupError: Error, Equatable, Sendable {
             ("backup-not-a-backup", .notBackup),
             ("backup-unsupported", .unsupported),
             ("backup-invalid-content", .invalidContent),
+            ("backup-needs-identity", .needsIdentity),
         ]
         guard let match = codes.first(where: { coreMessage.hasPrefix($0.0) }) else { return nil }
         self = match.1

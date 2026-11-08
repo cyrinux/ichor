@@ -13,27 +13,36 @@ import (
 // The risk word of a workload, worst first.
 const (
 	riskOOM        = "oom"        // OOM-killed already, or a pod uses 90 % of its memory limit
+	riskDiskNear   = "diskNear"   // a pod uses 90 % of its ephemeral-storage limit: evicted past it
 	riskEvictFirst = "evictFirst" // BestEffort: the first evicted under node pressure
 	riskUnbounded  = "unbounded"  // Burstable with no memory limit: may take a node's memory
 	riskOK         = "ok"
 )
 
-// oomNearPercent is the share of its memory limit a pod may use before it counts as at risk.
-const oomNearPercent = 90.0
+// oomNearPercent is the share of its memory limit a pod may use before it counts as at risk,
+// diskNearPercent the same for its ephemeral-storage limit.
+const (
+	oomNearPercent  = 90.0
+	diskNearPercent = 90.0
+)
 
 // capacityAssumptions say what the fit estimates leave out, for the apps to word them as such.
 var capacityAssumptions = []string{
 	"Fit counts requests against allocatable only: affinity, topology spread, volume node affinity and extended resources are ignored.",
 	"Memory limits add up the pods that set one: a pod without a limit is not bounded.",
+	"Ephemeral storage counts ephemeral-storage requests against allocatable; disk free space is the kubelet's nodefs, evictions start under 10% free (15% for images).",
 }
 
 // kubeCapacity is KubeCapacity's answer. CPU is in cores, memory in bytes. MetricsAvailable
 // false: no metrics-server (usage fields 0); MetricsForbidden: the credentials may not read
 // it. PriorityClassesRead / PDBsRead false: those lists could not be read (priorities then
-// come from the pods alone, no PDB is named).
+// come from the pods alone, no PDB is named). DiskMeasured: at least one kubelet gave its
+// node's disk; DiskForbidden: the credentials may not read nodes/proxy.
 type kubeCapacity struct {
 	MetricsAvailable    bool                    `json:"metricsAvailable"`
 	MetricsForbidden    bool                    `json:"metricsForbidden"`
+	DiskMeasured        bool                    `json:"diskMeasured"`
+	DiskForbidden       bool                    `json:"diskForbidden"`
 	PriorityClassesRead bool                    `json:"priorityClassesRead"`
 	PDBsRead            bool                    `json:"pdbsRead"`
 	PriorityClasses     []capacityPriorityClass `json:"priorityClasses"`
@@ -66,11 +75,19 @@ type capacityTotals struct {
 	PodCapacity       int     `json:"podCapacity"`
 	Nodes             int     `json:"nodes"`
 	SchedulableNodes  int     `json:"schedulableNodes"`
+	// Ephemeral storage in bytes; the disk sums the measured nodes only.
+	EphemeralAllocatable float64 `json:"ephemeralAllocatable"`
+	EphemeralRequests    float64 `json:"ephemeralRequests"`
+	DiskCapacity         float64 `json:"diskCapacity"`
+	DiskAvailable        float64 `json:"diskAvailable"`
+	DiskMeasuredNodes    int     `json:"diskMeasuredNodes"`
 }
 
 // capacityNode is a checkup node with its limits, usage and free room. Free is allocatable
 // minus requests, never negative. Overcommitted: its pods' memory limits exceed what it has,
-// so they cannot all reach them at once without an OOM kill.
+// so they cannot all reach them at once without an OOM kill. Ephemeral storage is in bytes,
+// 0 allocatable when the node does not say (unknown, not full). The disk is the kubelet's
+// nodefs and imagefs (often one filesystem); DiskMeasured is false when it did not answer.
 type capacityNode struct {
 	checkupNode
 
@@ -82,6 +99,16 @@ type capacityNode struct {
 	MemoryFree    float64 `json:"memoryFree"`
 	PodsFree      int     `json:"podsFree"`
 	Overcommitted bool    `json:"overcommitted"`
+
+	EphemeralAllocatable float64 `json:"ephemeralAllocatable"`
+	EphemeralRequests    float64 `json:"ephemeralRequests"`
+	EphemeralFree        float64 `json:"ephemeralFree"`
+	DiskPressure         bool    `json:"diskPressure"`
+	DiskMeasured         bool    `json:"diskMeasured"`
+	DiskCapacity         float64 `json:"diskCapacity"`
+	DiskAvailable        float64 `json:"diskAvailable"`
+	ImageFsCapacity      float64 `json:"imageFsCapacity"`
+	ImageFsAvailable     float64 `json:"imageFsAvailable"`
 }
 
 // capacityWorkload is the running pods of one controller. Requests and limits are one
@@ -109,6 +136,11 @@ type capacityWorkload struct {
 	Risk              string  `json:"risk"`
 	MoreFit           int     `json:"moreFit"`
 	MoreFitNA         bool    `json:"moreFitNA"`
+	// Ephemeral storage in bytes: one replica's request and limit (0 when unbounded), the
+	// pods' summed use (0 when no kubelet measured it).
+	EphemeralRequest float64 `json:"ephemeralRequest"`
+	EphemeralLimit   float64 `json:"ephemeralLimit"`
+	EphemeralUsage   float64 `json:"ephemeralUsage"`
 }
 
 // capacityNPlusOne: OK when the pods of every schedulable node would fit on the others (by
@@ -120,6 +152,8 @@ type capacityNPlusOne struct {
 	PendingPods int     `json:"pendingPods"`
 	ShortCPU    float64 `json:"shortCPU"`
 	ShortMemory float64 `json:"shortMemory"`
+	// ShortEphemeral is the ephemeral storage those pods request, in bytes.
+	ShortEphemeral float64 `json:"shortEphemeral"`
 }
 
 type priorityClassObject struct {
@@ -170,10 +204,11 @@ type capacityInput struct {
 	sets       []capacityReplicaSet
 	topNodes   kubeTopNodes
 	topPods    kubeTopPods
+	kubelets   []kubeletRead // the ready nodes' stats/summary, when asked for
 }
 
 func readCapacity(ctx context.Context, k *kubeClient) (kubeCapacity, error) {
-	in, err := readCapacityInput(ctx, k)
+	in, err := readCapacityInput(ctx, k, true)
 	if err != nil {
 		return kubeCapacity{}, err
 	}
@@ -182,14 +217,28 @@ func readCapacity(ctx context.Context, k *kubeClient) (kubeCapacity, error) {
 }
 
 // readCapacityInput reads every list the capacity and the node-loss simulation need, in
-// parallel; only the nodes and the pods are required.
-func readCapacityInput(ctx context.Context, k *kubeClient) (capacityInput, error) {
+// parallel; only the nodes and the pods are required. withDisk also asks each ready node's
+// kubelet for its disk, once the nodes are known.
+func readCapacityInput(ctx context.Context, k *kubeClient, withDisk bool) (capacityInput, error) {
 	var (
 		in capacityInput
 		wg sync.WaitGroup
 	)
 
-	wg.Go(func() { in.nodes, in.nodesErr = listObjects[checkNodeObject](ctx, k, "/api/v1/nodes") })
+	nodesRead := make(chan struct{})
+
+	wg.Go(func() {
+		defer close(nodesRead)
+
+		in.nodes, in.nodesErr = listObjects[checkNodeObject](ctx, k, "/api/v1/nodes")
+	})
+	wg.Go(func() {
+		<-nodesRead
+
+		if withDisk && in.nodesErr == nil {
+			in.kubelets = readKubeletSummaries(ctx, k, in.nodes, nil)
+		}
+	})
 	wg.Go(func() { in.pods, in.podsErr = listCheckPods(ctx, k) })
 	wg.Go(func() {
 		in.classes, in.classesErr = listObjects[priorityClassObject](ctx, k, "/apis/scheduling.k8s.io/v1/priorityclasses")
@@ -264,9 +313,11 @@ func buildCapacity(in capacityInput) kubeCapacity {
 		usage[p.Namespace+"/"+p.Name] = p
 	}
 
-	out.Nodes = capacityNodes(mapCheckupNodes(in.nodes, pods), pods, in.topNodes)
+	disk := measureNodeDisk(in.kubelets)
+	out.DiskMeasured, out.DiskForbidden = disk.measured, disk.forbidden
+	out.Nodes = withNodeDisk(capacityNodes(in.nodes, pods, in.topNodes), disk)
 	out.Totals = capacityTotalsOf(out.Nodes)
-	out.Workloads = capacityWorkloads(pods, in.sets, in.pdbs, usage, out.Nodes)
+	out.Workloads = capacityWorkloads(pods, in.sets, in.pdbs, usage, disk.ephemeralUse, out.Nodes)
 	out.NPlusOne = nPlusOne(out.Nodes, pods)
 
 	return out

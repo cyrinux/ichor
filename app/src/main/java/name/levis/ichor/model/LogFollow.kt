@@ -10,14 +10,20 @@ const val MAX_FOLLOW_LINES = 5000
 fun <T> List<T>.appendCapped(added: List<T>, cap: Int = MAX_FOLLOW_LINES): List<T> =
     if (size + added.size <= cap) this + added else (this + added).takeLast(cap)
 
-/** A followed log line, numbered so rows keep their keys as the oldest are dropped. */
-data class FollowedLine(val seq: Long, val text: String)
+/**
+ * A followed log line, numbered so rows keep their keys as the oldest are dropped: [text]
+ * without its ANSI escapes, [spans] its colours (empty when it had none).
+ */
+data class FollowedLine(val seq: Long, val text: String, val spans: List<LogSpan> = emptyList())
 
 /** The lines of a followed log, the newest [MAX_FOLLOW_LINES] kept. */
 data class FollowBuffer(val lines: List<FollowedLine> = emptyList(), val nextSeq: Long = 0) {
-    fun append(added: List<String>, cap: Int = MAX_FOLLOW_LINES): FollowBuffer {
+    fun append(added: List<String>, cap: Int = MAX_FOLLOW_LINES): FollowBuffer = appendEntries(added.map(LogEntry::plain), cap)
+
+    /** Parsed lines appended, with their colours. */
+    fun appendEntries(added: List<LogEntry>, cap: Int = MAX_FOLLOW_LINES): FollowBuffer {
         if (added.isEmpty()) return this
-        val numbered = added.mapIndexed { i, text -> FollowedLine(nextSeq + i, text) }
+        val numbered = added.mapIndexed { i, entry -> FollowedLine(nextSeq + i, entry.text, entry.spans) }
         return FollowBuffer(lines.appendCapped(numbered, cap), nextSeq + added.size)
     }
 

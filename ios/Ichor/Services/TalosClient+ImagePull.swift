@@ -22,13 +22,14 @@ extension TalosClient {
                     continuation.finish()
                 }
             )
-            let run = IchorgoStartImagePull(config, context, nodes.joined(separator: ","), image, namespace.rawValue, bridge)
+            let run = IchorgoStartImagePull(
+                config, context, nodes.joined(separator: ","), image, namespace.rawValue, bridge)
             return BridgedRun(bridge) { run?.cancel() }
         }
     }
 }
 
-private final class ImagePullBridge: NSObject, IchorgoImagePullListenerProtocol, @unchecked Sendable {
+private final class ImagePullBridge: NSObject, IchorgoImagePullListenerProtocol, Sendable {
     private let sink: JSONSink<ImagePullProgress>
 
     init(progress: @escaping @Sendable (ImagePullProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {

@@ -8,18 +8,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +40,8 @@ import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.Loaded
@@ -75,11 +74,10 @@ fun ResourceListScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -115,7 +113,7 @@ fun ResourceListScreen(
 @Composable
 private fun ItemList(list: ResourceList, query: String, onItem: (ResourceItem) -> Unit) {
     val items = remember(list, query) { list.items.matching(query) }
-    LazyColumn(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (list.truncated) {
             item { InfoNotice(stringResource(R.string.resources_truncated, list.items.size), Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
         }
@@ -124,9 +122,8 @@ private fun ItemList(list: ResourceList, query: String, onItem: (ResourceItem) -
                 EmptyText(emptyOrNoMatch(query, R.string.resources_items_empty, R.string.resources_no_match))
             }
         }
-        items(items, key = { "${it.namespace}|${it.id}" }) { item ->
+        cardRows(items, key = { "${it.namespace}|${it.id}" }) { item ->
             ItemRow(item, onClick = { onItem(item) })
-            HorizontalDivider()
         }
     }
 }

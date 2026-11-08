@@ -6,12 +6,20 @@ import kotlinx.serialization.Serializable
 
 /** The app's Kubernetes actions whose permissions the core asks before the tap ([wire]: its name there). */
 enum class KubeAction(val wire: String) {
+    CREATE_VOLUME_SNAPSHOT("createVolumeSnapshot"),
     RESTART_WORKLOAD("restartWorkload"),
     RESTART_STATEFUL_SET("restartStatefulSet"),
     RESTART_DAEMON_SET("restartDaemonSet"),
     SCALE("scale"),
     SCALE_STATEFUL_SET("scaleStatefulSet"),
+    /** A StatefulSet's or DaemonSet's rollback: patch it, list its ControllerRevisions. */
+    ROLLBACK_STATEFUL_SET("rollbackStatefulSet"),
+    ROLLBACK_DAEMON_SET("rollbackDaemonSet"),
+    /** Pause or resume a Deployment's rollout. */
+    PAUSE_ROLLOUT("pauseRollout"),
     DELETE_POD("deletePod"),
+    /** List and delete a namespace's dead pods at once (k9s sanitize). */
+    SANITIZE_PODS("sanitizePods"),
     EXEC_POD("execPod"),
     DEBUG_POD("debugPod"),
     DEBUG_NODE("debugNode"),
@@ -27,6 +35,46 @@ enum class KubeAction(val wire: String) {
     FLUX_RECONCILE_BUCKET("fluxReconcileBucket"),
     CORDON_NODE("cordonNode"),
     DRAIN_NODE("drainNode"),
+    /** A node's taints and labels. */
+    EDIT_NODE_META("editNodeMeta"),
+    CNPG_PROMOTE("cnpgPromote"),
+    /** Remove one instance: its PVCs, then its pod. */
+    CNPG_DESTROY("cnpgDestroy"),
+    CNPG_RESTART_PRIMARY("cnpgRestartPrimary"),
+    CNPG_HIBERNATE("cnpgHibernate"),
+    LONGHORN_SALVAGE("longhornSalvage"),
+    LONGHORN_ATTACHMENT("longhornAttachment"),
+    /** Upgrade a Longhorn volume's engine image. */
+    LONGHORN_ENGINE_UPGRADE("longhornEngineUpgrade"),
+    /** Take, back up or delete a Longhorn snapshot. */
+    LONGHORN_SNAPSHOT("longhornSnapshot"),
+    /** A Longhorn volume's replica count. */
+    LONGHORN_REPLICAS("longhornReplicas"),
+    /** A Longhorn node's scheduling and eviction. */
+    LONGHORN_NODE("longhornNode"),
+    VELERO_BACKUP_NOW("veleroBackupNow"),
+    VELERO_DELETE_BACKUP("veleroDeleteBackup"),
+    VELERO_RESTORE("veleroRestore"),
+
+    /** A KubeVirt virtual machine: start, stop, restart, migrate, pause and unpause. */
+    VM_START("vmStart"),
+    VM_STOP("vmStop"),
+    VM_RESTART("vmRestart"),
+    VM_MIGRATE("vmMigrate"),
+    VM_PAUSE("vmPause"),
+    VM_UNPAUSE("vmUnpause"),
+
+    /** Its serial console, like `virtctl console`. */
+    VM_CONSOLE("vmConsole"),
+
+    /** An HPA's min and max. */
+    AUTOSCALE("autoscale"),
+
+    /** Pause or resume a KEDA ScaledObject. */
+    AUTOSCALE_KEDA("autoscaleKeda"),
+
+    /** An Argo Rollout: promote, promote fully, abort, retry or pause (the object and its status). */
+    ARGO_ROLLOUT("argoRollout"),
     ;
 
     /** The action asked for an object of a kind, on that kind's own resource; null for a kind the core does not ask about (offered). */
@@ -36,6 +84,14 @@ enum class KubeAction(val wire: String) {
             "Deployment" -> RESTART_WORKLOAD
             "StatefulSet" -> RESTART_STATEFUL_SET
             "DaemonSet" -> RESTART_DAEMON_SET
+            else -> null
+        }
+
+        /** A rollback of a [kind] workload: a Deployment's is its restart's patch. */
+        fun rollback(kind: String): KubeAction? = when (kind) {
+            "Deployment" -> RESTART_WORKLOAD
+            "StatefulSet" -> ROLLBACK_STATEFUL_SET
+            "DaemonSet" -> ROLLBACK_DAEMON_SET
             else -> null
         }
 

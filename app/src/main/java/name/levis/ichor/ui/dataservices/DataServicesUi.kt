@@ -12,11 +12,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Dns
-import androidx.compose.material.icons.outlined.Hub
-import androidx.compose.material.icons.outlined.Memory
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.SettingsBackupRestore
 import androidx.compose.material.icons.outlined.Storage
-import androidx.compose.material.icons.outlined.TableChart
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material.icons.outlined.WarningAmber
@@ -24,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,61 +45,62 @@ import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.LikelyCause
 import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.model.alertSystem
 import name.levis.ichor.model.formatMilliCores
 import name.levis.ichor.model.health
 import name.levis.ichor.model.summary
 import name.levis.ichor.model.title
 import name.levis.ichor.ui.apps.AppIconTile
+import name.levis.ichor.ui.components.HealthDot
+import name.levis.ichor.ui.components.color
+import name.levis.ichor.ui.components.label
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
+
+/** The ReadProgress op of the data services read (Go KubeDataServices). */
+const val DATA_SERVICES_PROGRESS_OP = "dataservices"
+
+/**
+ * A data services progress step by name: the shared reads, then each system detected by its
+ * tab's name (step ids are the alert system names, "backups" for the backup CronJobs).
+ */
+@Composable
+fun dataServicesStepLabel(id: String): String = when (id) {
+    "api" -> stringResource(R.string.read_progress_step_api)
+    "pods" -> stringResource(R.string.read_progress_step_pods)
+    "backups" -> DataServiceKind.BACKUP_JOBS.tabTitle
+    else -> DataServiceKind.entries.firstOrNull { it.alertSystem == id }?.tabTitle ?: id
+}
+
+/** The tab row's name: [tabTitle], the long ones cut to a word or two (the tab's sections keep the long name). */
+@Composable
+fun DataServiceKind.tabLabel(): String = when (this) {
+    DataServiceKind.SNAPSHOTS -> stringResource(R.string.data_services_tab_snapshots)
+    DataServiceKind.BACKUP_JOBS -> stringResource(R.string.data_services_tab_backup_jobs)
+    else -> tabTitle
+}
 
 /** The tab's name, short enough for four tabs. */
 val DataServiceKind.tabTitle: String
     get() = when (this) {
         DataServiceKind.CNPG -> "CNPG"
-        DataServiceKind.PERCONA -> "Percona"
         else -> title
     }
 
-private val DataServiceKind.fallbackIcon: ImageVector
+internal val DataServiceKind.fallbackIcon: ImageVector
     get() = when (this) {
         DataServiceKind.LONGHORN -> Icons.Outlined.Storage
         DataServiceKind.GARAGE -> Icons.Outlined.Cloud
         DataServiceKind.CNPG -> Icons.Outlined.Dns
-        DataServiceKind.DRAGONFLY -> Icons.Outlined.Memory
-        DataServiceKind.MARIADB -> Icons.Outlined.TableChart
-        DataServiceKind.PERCONA -> Icons.Outlined.Hub
         DataServiceKind.CERT_MANAGER -> Icons.Outlined.VerifiedUser
         DataServiceKind.VELERO -> Icons.Outlined.SettingsBackupRestore
-        DataServiceKind.CEPH -> Icons.Outlined.Storage
+        DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> Icons.Outlined.SettingsBackupRestore
         DataServiceKind.CASTAI -> Icons.Outlined.Tune
     }
 
 /** Hostnames of the nodes Talos reports not ready or unreachable: candidates for a likely cause. */
 fun ClusterOverview.downHostnames(): Set<String> =
     nodes.filter { it.health != NodeHealth.READY }.map { it.hostname }.filter { it.isNotEmpty() }.toSet()
-
-@Composable
-fun ServiceHealth.color(): Color {
-    val colors = LocalStatusColors.current
-    return when (this) {
-        ServiceHealth.CRITICAL -> colors.bad
-        ServiceHealth.WARNING -> colors.warn
-        ServiceHealth.OK -> colors.ok
-        ServiceHealth.IDLE, ServiceHealth.UNKNOWN -> colors.muted
-    }
-}
-
-@Composable
-fun ServiceHealth.label(): String = stringResource(
-    when (this) {
-        ServiceHealth.CRITICAL -> R.string.data_services_health_critical
-        ServiceHealth.WARNING -> R.string.data_services_health_warning
-        ServiceHealth.OK -> R.string.data_services_health_ok
-        ServiceHealth.IDLE -> R.string.data_services_health_idle
-        ServiceHealth.UNKNOWN -> R.string.data_services_health_unknown
-    },
-)
 
 @Composable
 fun GarageState.label(): String = stringResource(
@@ -111,12 +111,6 @@ fun GarageState.label(): String = stringResource(
         GarageState.UNKNOWN -> R.string.garage_status_unknown
     },
 )
-
-@Composable
-fun HealthDot(health: ServiceHealth, modifier: Modifier = Modifier) {
-    val label = health.label()
-    Box(modifier.size(10.dp).background(health.color(), CircleShape).semantics { contentDescription = label })
-}
 
 /** The app's own icon when the inventory has it, else a generic one. */
 @Composable
@@ -141,12 +135,9 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
     val head = when (kind) {
         DataServiceKind.LONGHORN -> pluralStringResource(R.plurals.longhorn_volumes, summary.total, summary.total)
         DataServiceKind.CNPG -> pluralStringResource(R.plurals.cnpg_clusters, summary.total, summary.total)
-        DataServiceKind.DRAGONFLY -> pluralStringResource(R.plurals.dragonfly_instances, summary.total, summary.total)
-        DataServiceKind.MARIADB -> pluralStringResource(R.plurals.mariadb_clusters, summary.total, summary.total)
-        DataServiceKind.PERCONA -> pluralStringResource(R.plurals.percona_clusters, summary.total, summary.total)
         DataServiceKind.CERT_MANAGER -> pluralStringResource(R.plurals.certmanager_certificates, summary.total, summary.total)
         DataServiceKind.VELERO -> pluralStringResource(R.plurals.velero_schedules, summary.total, summary.total)
-        DataServiceKind.CEPH -> pluralStringResource(R.plurals.ceph_clusters, summary.total, summary.total)
+        DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> stringResource(R.string.backup_items, summary.total)
         DataServiceKind.CASTAI -> {
             val saving = services.castai?.takeIf { it.compared > 0 && it.cpuDeltaMilli != 0L }
                 ?.let { stringResource(R.string.castai_cpu_delta, formatMilliCores(it.cpuDeltaMilli, signed = true)) }
@@ -167,22 +158,29 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
     return listOfNotNull(head, attention).joinToString(" · ")
 }
 
-/** "worker-3 is not ready: the likely cause of 3 problems", one line per node. */
+/**
+ * "worker-3 is not ready: the likely cause of 3 problems" as one line, the nodes joined, with a
+ * "Nodes" link to the nodes list when [onNodes] is given.
+ */
 @Composable
-fun LikelyCauseBanner(causes: List<LikelyCause>, modifier: Modifier = Modifier) {
+fun LikelyCauseBanner(causes: List<LikelyCause>, modifier: Modifier = Modifier, onNodes: (() -> Unit)? = null) {
     if (causes.isEmpty()) return
-    CauseBanner(causes.map { it.text() }.joinToString("\n"), modifier)
+    val link: (@Composable () -> Unit)? = onNodes?.let { open ->
+        @Composable { IchorTextButton(onClick = open) { Text(stringResource(R.string.common_label_nodes)) } }
+    }
+    CauseBanner(causes.map { it.text() }.joinToString(" · "), modifier, action = link)
 }
 
-/** A red banner naming the likely root cause of what is broken. */
+/** A red banner naming the likely root cause of what is broken; [action] (a link) at its end. */
 @Composable
-fun CauseBanner(text: String, modifier: Modifier = Modifier) {
+fun CauseBanner(text: String, modifier: Modifier = Modifier, action: (@Composable () -> Unit)? = null) {
     val bad = LocalStatusColors.current.bad
     Surface(color = bad.copy(alpha = 0.12f), contentColor = bad, shape = RoundedCornerShape(12.dp), modifier = modifier.fillMaxWidth()) {
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
+        Row(Modifier.padding(horizontal = 12.dp, vertical = if (action != null) 4.dp else 12.dp), verticalAlignment = if (action != null) Alignment.CenterVertically else Alignment.Top) {
             Icon(Icons.Outlined.WarningAmber, contentDescription = null, modifier = Modifier.size(20.dp))
             Spacer(Modifier.size(8.dp))
-            Text(text, style = MaterialTheme.typography.bodyMedium)
+            Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f, fill = action != null))
+            action?.invoke()
         }
     }
 }
@@ -203,8 +201,6 @@ fun podWhere(node: String, phase: String): String = when {
 fun podRoleLabel(role: String): String? = when (role) {
     "primary" -> stringResource(R.string.cnpg_role_primary)
     "replica" -> stringResource(R.string.cnpg_role_replica)
-    "master" -> stringResource(R.string.dragonfly_role_master)
-    "member" -> stringResource(R.string.mariadb_role_member)
     "" -> null
     else -> role
 }

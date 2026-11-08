@@ -37,6 +37,11 @@ public extension FluxApp {
     var canForce: Bool { isHelmRelease && !suspended }
     var canReset: Bool { isHelmRelease && !suspended }
 
+    /// The helm-controller compares the release with the cluster: its drift is worth a line.
+    var driftWatched: Bool { driftMode == fluxDriftWarn || driftMode == fluxDriftEnabled }
+    /// Drift found and a forced upgrade allowed: it puts the release back now.
+    var canCorrectDrift: Bool { drifted && canForce }
+
     /// The revision tried last differs from the one applied: it is failing (or rolling) to it.
     var revisionDiffers: Bool { !attemptedRevision.isEmpty && attemptedRevision != revision }
 
@@ -69,7 +74,8 @@ public extension FluxApp {
     var resourcesByKind: [FluxResourceGroup] {
         Dictionary(grouping: resources, by: \.kind)
             .map { kind, items in
-                FluxResourceGroup(kind: kind, resources: items.sorted { ($0.namespace, $0.name) < ($1.namespace, $1.name) })
+                FluxResourceGroup(
+                    kind: kind, resources: items.sorted { ($0.namespace, $0.name) < ($1.namespace, $1.name) })
             }
             .sorted { $0.kind < $1.kind }
     }
@@ -96,7 +102,9 @@ public func fluxShortRevision(_ revision: String) -> String {
     revision.split(separator: "@", omittingEmptySubsequences: false)
         .map { part in
             let hash = part.split(separator: ":", maxSplits: 1).last.map(String.init) ?? ""
-            let digest = part.hasPrefix("sha1:") || part.hasPrefix("sha256:") || part.hasPrefix("sha384:") || part.hasPrefix("sha512:")
+            let digest =
+                part.hasPrefix("sha1:") || part.hasPrefix("sha256:") || part.hasPrefix("sha384:")
+                || part.hasPrefix("sha512:")
             return shortRevision(digest ? hash : String(part))
         }
         .joined(separator: "@")
@@ -124,7 +132,8 @@ public enum FluxFilter: String, Sendable, CaseIterable, Hashable, Identifiable {
 /// (case-insensitive), worst level first, then by name.
 public func filterFluxApps(_ apps: [FluxApp], filter: FluxFilter, query: String) -> [FluxApp] {
     let q = query.trimmingCharacters(in: .whitespaces)
-    return apps
+    return
+        apps
         .filter { app in
             guard filter.matches(app) else { return false }
             guard !q.isEmpty else { return true }
@@ -137,9 +146,14 @@ public func filterFluxApps(_ apps: [FluxApp], filter: FluxFilter, query: String)
 /// Sources whose name, namespace, kind or URL contains query, worst level first, then by name.
 public func filterFluxSources(_ sources: [FluxSource], query: String) -> [FluxSource] {
     let q = query.trimmingCharacters(in: .whitespaces)
-    return sources
-        .filter { s in q.isEmpty || [s.name, s.namespace, s.kind, s.url].contains { $0.localizedCaseInsensitiveContains(q) } }
-        .sorted { a, b in a.level != b.level ? a.level < b.level : (a.name, a.namespace, a.kind) < (b.name, b.namespace, b.kind) }
+    return
+        sources
+        .filter { s in
+            q.isEmpty || [s.name, s.namespace, s.kind, s.url].contains { $0.localizedCaseInsensitiveContains(q) }
+        }
+        .sorted { a, b in
+            a.level != b.level ? a.level < b.level : (a.name, a.namespace, a.kind) < (b.name, b.namespace, b.kind)
+        }
 }
 
 /// Worst level first, then by name.
@@ -185,4 +199,55 @@ public extension FluxStatus {
         guard app.isKustomization else { return [] }
         return apps.filter { $0.owner == app.target }.sorted(by: fluxOrder)
     }
+
+    /// `app`'s dependsOn chain among the apps of its own kind (a key names no kind),
+    /// depth-first, at most `fluxDependsMaxDepth` deep; a link already shown (a cycle, or two
+    /// paths to it) is not shown again. Then the apps that wait for it.
+    func dependencyTree(of app: FluxApp) -> FluxDependencyTree {
+        let sameKind = apps.filter { $0.kind == app.kind }
+        let byKey = Dictionary(
+            sameKind.map { ("\($0.namespace)/\($0.name)", $0) }, uniquingKeysWith: { first, _ in first })
+        let me = "\(app.namespace)/\(app.name)"
+        var seen: Set<String> = [me]
+        var upstream: [FluxDependencyNode] = []
+
+        func walk(_ keys: [String], depth: Int) {
+            guard depth <= fluxDependsMaxDepth else { return }
+            for key in keys where seen.insert(key).inserted {
+                let target = byKey[key]
+                upstream.append(FluxDependencyNode(key: key, app: target, depth: depth))
+                if let target { walk(target.dependsOn, depth: depth + 1) }
+            }
+        }
+
+        walk(app.dependsOn, depth: 1)
+        let dependents = sameKind.filter { $0.dependsOn.contains(me) }.sorted {
+            "\($0.namespace)/\($0.name)" < "\($1.namespace)/\($1.name)"
+        }
+        return FluxDependencyTree(upstream: upstream, dependents: dependents)
+    }
+}
+
+/// spec.driftDetection.mode: drift is only reported, or corrected at each reconcile.
+public let fluxDriftWarn = "warn"
+public let fluxDriftEnabled = "enabled"
+
+/// How deep a dependsOn chain is drawn.
+public let fluxDependsMaxDepth = 6
+
+/// One link of a dependsOn chain: `app` when it is listed (nil: missing), `depth` 1 for a direct one.
+public struct FluxDependencyNode: Equatable, Sendable, Identifiable {
+    public let key: String
+    public let app: FluxApp?
+    public let depth: Int
+
+    public var id: String { key }
+}
+
+/// What an app waits for, transitively, in tree order, and the apps that wait for it.
+public struct FluxDependencyTree: Equatable, Sendable {
+    public let upstream: [FluxDependencyNode]
+    public let dependents: [FluxApp]
+
+    public var isEmpty: Bool { upstream.isEmpty && dependents.isEmpty }
 }

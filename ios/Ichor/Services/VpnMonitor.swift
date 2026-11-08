@@ -17,7 +17,8 @@ final class VpnMonitor {
     @ObservationIgnored private let monitor = NWPathMonitor()
 
     private init() {
-        monitor.pathUpdateHandler = { path in
+        // @Sendable: called on the monitor's queue, so it must not inherit the main actor.
+        monitor.pathUpdateHandler = { @Sendable path in
             let isUp = Self.isUp(path)
             Task { @MainActor in VpnMonitor.shared.update(isUp) }
         }
@@ -31,8 +32,9 @@ final class VpnMonitor {
     }
 
     nonisolated static func isUp(_ path: NWPath) -> Bool {
-        vpnIsUp(interfaces: path.availableInterfaces.map { PathInterface(name: $0.name, isOther: $0.type == .other) },
-                usesOther: path.usesInterfaceType(.other))
+        vpnIsUp(
+            interfaces: path.availableInterfaces.map { PathInterface(name: $0.name, isOther: $0.type == .other) },
+            usesOther: path.usesInterfaceType(.other))
     }
 
     /// The current answer, read once from a fresh monitor: for background checks, which may
@@ -52,15 +54,14 @@ final class VpnMonitor {
 }
 
 /// True for the first caller only (path updates come on one queue, but may repeat).
-private final class OnceFlag: @unchecked Sendable {
-    private let lock = NSLock()
-    private var claimed = false
+private final class OnceFlag: Sendable {
+    private let claimed = Locked(false)
 
     func claim() -> Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        if claimed { return false }
-        claimed = true
-        return true
+        claimed.withLock { claimed in
+            if claimed { return false }
+            claimed = true
+            return true
+        }
     }
 }

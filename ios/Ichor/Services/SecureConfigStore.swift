@@ -4,7 +4,9 @@ import Security
 
 /// A stored item is sealed with a security key and none was tapped yet this run.
 struct SecurityKeyRequiredError: LocalizedError {
-    var errorDescription: String? { String(localized: "The stored config is sealed with a security key: tap it first.") }
+    var errorDescription: String? {
+        String(localized: "The stored config is sealed with a security key: tap it first.")
+    }
 }
 
 enum ConfigProtection: String {
@@ -29,16 +31,23 @@ enum ConfigProtection: String {
 /// ciphertext is sealed once more with the data key only a tap of the key unwraps
 /// (SecurityKeyCrypto.seal): the items then read only after a key was tapped this run.
 enum SecureConfigStore {
-    /// The sealed items, under the same key: the two configs, and the sign-ins of the
-    /// kubeconfig clusters (KubeAuthStore).
+    /// The sealed items, under the same key: the two configs, the sign-ins of the
+    /// kubeconfig clusters (KubeAuthStore), the cloud providers' tokens (CloudProviderStore),
+    /// and the configs' parsed summaries (ConfigSummaryCache, names and endpoints: sealed like
+    /// the configs).
     enum Item: CaseIterable {
-        case talosconfig, kubeconfig, kubeAuth
+        case talosconfig, kubeconfig, kubeAuth, cloudTokens, summaryCache
+
+        /// Derived from the others: never what keeps the key alive.
+        fileprivate var isDerived: Bool { self == .summaryCache }
 
         fileprivate var account: String {
             switch self {
             case .talosconfig: "talosconfig.sealed"
             case .kubeconfig: "kubeconfig.sealed"
             case .kubeAuth: "kubeauth.sealed"
+            case .cloudTokens: "cloud-tokens.sealed"
+            case .summaryCache: "config-summary.sealed"
             }
         }
     }
@@ -65,7 +74,9 @@ enum SecureConfigStore {
     }
 
     static func load(_ item: Item = .talosconfig) -> Data? {
-        guard let stored = Keychain.read(item.account), let key = try? privateKey(create: false), let sealed = unseal(stored) else { return nil }
+        guard let stored = Keychain.read(item.account), let key = try? privateKey(create: false),
+            let sealed = unseal(stored)
+        else { return nil }
         var error: Unmanaged<CFError>?
         return SecKeyCreateDecryptedData(key, algorithm, sealed as CFData, &error) as Data?
     }
@@ -84,7 +95,14 @@ enum SecureConfigStore {
     static func reseal() throws {
         for item in Item.allCases {
             guard Keychain.read(item.account) != nil else { continue }
-            guard let plaintext = load(item) else { throw SecurityKeyRequiredError() }
+            guard let plaintext = load(item) else {
+                // The cache is rebuilt from the configs: one that cannot be read just goes.
+                if item.isDerived {
+                    Keychain.delete(item.account)
+                    continue
+                }
+                throw SecurityKeyRequiredError()
+            }
             try save(plaintext, item: item)
         }
     }
@@ -99,10 +117,11 @@ enum SecureConfigStore {
         Keychain.read(item.account) != nil
     }
 
-    /// Deletes `item`; the key goes too once no config is left.
+    /// Deletes `item`; the key goes too once no config is left (with the summary cache).
     static func delete(_ item: Item) {
         Keychain.delete(item.account)
-        if Item.allCases.allSatisfy({ Keychain.read($0.account) == nil }) {
+        if Item.allCases.filter({ !$0.isDerived }).allSatisfy({ Keychain.read($0.account) == nil }) {
+            for derived in Item.allCases where derived.isDerived { Keychain.delete(derived.account) }
             SecItemDelete(keyQuery as CFDictionary)
         }
     }
@@ -116,7 +135,8 @@ enum SecureConfigStore {
     /// Where the key protecting the stored config lives (nil before the first import).
     static var protection: ConfigProtection? {
         guard let key = try? privateKey(create: false),
-              let attributes = SecKeyCopyAttributes(key) as? [String: Any] else { return nil }
+            let attributes = SecKeyCopyAttributes(key) as? [String: Any]
+        else { return nil }
         let token = attributes[kSecAttrTokenID as String] as? String
         return token == (kSecAttrTokenIDSecureEnclave as String) ? .secureEnclave : .keychain
     }
@@ -134,7 +154,7 @@ enum SecureConfigStore {
         query[kSecReturnRef as String] = true
         var item: CFTypeRef?
         if SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess, let item {
-            return item as! SecKey // swiftlint:disable:this force_cast (CF type, always SecKey here)
+            return item as! SecKey  // swiftlint:disable:this force_cast (CF type, always SecKey here)
         }
         guard create else { throw KeychainError(status: errSecItemNotFound) }
         if let key = try? makeKey(secureEnclave: true) { return key }
@@ -143,12 +163,14 @@ enum SecureConfigStore {
 
     private static func makeKey(secureEnclave: Bool) throws -> SecKey {
         var error: Unmanaged<CFError>?
-        guard let access = SecAccessControlCreateWithFlags(
-            nil,
-            kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-            secureEnclave ? .privateKeyUsage : [],
-            &error
-        ) else { throw cfError(error) }
+        guard
+            let access = SecAccessControlCreateWithFlags(
+                nil,
+                kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+                secureEnclave ? .privateKeyUsage : [],
+                &error
+            )
+        else { throw cfError(error) }
 
         var attributes: [String: Any] = [
             kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,

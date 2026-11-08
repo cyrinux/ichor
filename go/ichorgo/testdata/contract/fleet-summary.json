@@ -1,0 +1,138 @@
+{
+  "clusters": [
+    {
+      "checkedAt": 1767323045000,
+      "context": "prod-eu",
+      "critical": 1,
+      "etcdAlarms": 0,
+      "key": "demo-prod-eu",
+      "kube": false,
+      "name": "prod-eu",
+      "nodes": 3,
+      "notReady": 0,
+      "ready": 2,
+      "stale": false,
+      "tags": [
+        "prod",
+        "eu"
+      ],
+      "tone": "bad",
+      "topFinding": {
+        "severity": "critical",
+        "subject": "prod-eu-worker-1 unreachable",
+        "track": "nodes"
+      },
+      "tracksChecked": [
+        "etcd",
+        "alertmanager"
+      ],
+      "unreachable": 1,
+      "warnings": 0
+    },
+    {
+      "checkedAt": 1767323045000,
+      "context": "edge",
+      "critical": 1,
+      "etcdAlarms": 0,
+      "key": "demo-edge",
+      "kube": false,
+      "name": "edge",
+      "nodes": 2,
+      "notReady": 0,
+      "ready": 2,
+      "stale": false,
+      "tags": [
+        "prod"
+      ],
+      "tone": "bad",
+      "topFinding": {
+        "detail": "neverHandshaked",
+        "severity": "critical",
+        "subject": "edge-1 ↔ edge-2",
+        "track": "kubespan"
+      },
+      "tracksChecked": [
+        "etcd",
+        "kubespan",
+        "storage"
+      ],
+      "unreachable": 0,
+      "warnings": 0
+    },
+    {
+      "checkedAt": 1767323045000,
+      "context": "staging",
+      "critical": 0,
+      "etcdAlarms": 0,
+      "key": "demo-staging",
+      "kube": false,
+      "name": "staging",
+      "nodes": 2,
+      "notReady": 0,
+      "ready": 2,
+      "stale": false,
+      "tags": [
+        "staging"
+      ],
+      "tone": "warn",
+      "topFinding": {
+        "severity": "warning",
+        "subject": "KubePodCrashLooping · shop/checkout",
+        "track": "alertmanager"
+      },
+      "tracksChecked": [
+        "etcd",
+        "alertmanager",
+        "gitops"
+      ],
+      "unreachable": 0,
+      "warnings": 1
+    }
+  ],
+  "counts": {
+    "bad": 2,
+    "ok": 1,
+    "unknown": 1,
+    "warn": 1
+  },
+  "groups": [
+    {
+      "counts": {
+        "bad": 2,
+        "ok": 0,
+        "unknown": 0,
+        "warn": 0
+      },
+      "keys": [
+        "demo-prod-eu",
+        "demo-edge"
+      ],
+      "tag": "prod"
+    },
+    {
+      "counts": {
+        "bad": 1,
+        "ok": 0,
+        "unknown": 0,
+        "warn": 0
+      },
+      "keys": [
+        "demo-prod-eu"
+      ],
+      "tag": "eu"
+    },
+    {
+      "counts": {
+        "bad": 0,
+        "ok": 0,
+        "unknown": 0,
+        "warn": 1
+      },
+      "keys": [
+        "demo-staging"
+      ],
+      "tag": "staging"
+    }
+  ],
+  "worst": "bad"
+}

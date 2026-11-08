@@ -1,0 +1,91 @@
+{
+  "cronJobs": [
+    {
+      "active": 0,
+      "created": 1767323045000,
+      "description": "Dumps postgres to object storage",
+      "icon": "postgresql",
+      "images": [
+        "postgres:17"
+      ],
+      "lastSchedule": 1767323045000,
+      "lastSuccess": 1767323045000,
+      "name": "db-backup",
+      "namespace": "demo",
+      "nextRun": 1767323045000,
+      "runs": [
+        {
+          "finished": 1767323045000,
+          "manual": true,
+          "name": "db-backup-manual-x7k2p",
+          "started": 1767323045000,
+          "state": "succeeded"
+        },
+        {
+          "finished": 1767323045000,
+          "manual": false,
+          "name": "db-backup-29331540",
+          "started": 1767323045000,
+          "state": "succeeded"
+        },
+        {
+          "finished": 1767323045000,
+          "manual": false,
+          "name": "db-backup-29330100",
+          "started": 1767323045000,
+          "state": "succeeded"
+        }
+      ],
+      "schedule": "0 3 * * *",
+      "state": "succeeded",
+      "suspended": false,
+      "timeZone": "UTC",
+      "title": "Database backup",
+      "triggerable": true
+    },
+    {
+      "active": 0,
+      "created": 1767323045000,
+      "images": [
+        "busybox:1.37"
+      ],
+      "lastSchedule": 1767323045000,
+      "lastSuccess": 0,
+      "name": "report-mailer",
+      "namespace": "demo",
+      "nextRun": 1767323045000,
+      "runs": [
+        {
+          "finished": 1767323045000,
+          "manual": false,
+          "name": "report-mailer-29328960",
+          "started": 1767323045000,
+          "state": "failed"
+        }
+      ],
+      "schedule": "0 8 * * MON",
+      "state": "failed",
+      "suspended": false,
+      "title": "Weekly report",
+      "triggerable": true
+    },
+    {
+      "active": 0,
+      "created": 1767323045000,
+      "description": "Runs on schedule only: manual runs are disabled",
+      "images": [
+        "busybox:1.37"
+      ],
+      "lastSchedule": 0,
+      "lastSuccess": 0,
+      "name": "wipe-staging",
+      "namespace": "demo",
+      "nextRun": 1767323045000,
+      "runs": [],
+      "schedule": "0 0 1 * *",
+      "state": "never",
+      "suspended": false,
+      "triggerable": false
+    }
+  ]
+}

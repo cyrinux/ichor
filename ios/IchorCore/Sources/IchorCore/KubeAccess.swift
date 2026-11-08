@@ -6,17 +6,36 @@ import Foundation
 
 /// An app action KubeActionAccess answers for (its key in `actions`).
 public enum KubeAction: String, CaseIterable, Sendable {
+    case createVolumeSnapshot
     case restartWorkload, restartStatefulSet, restartDaemonSet, scale, scaleStatefulSet
-    case deletePod, execPod, debugPod, debugNode, suspendCronJob, triggerCronJob, helmRollback, argoSync
+    /// A StatefulSet's or DaemonSet's rollback (patch it, list its ControllerRevisions); a
+    /// Deployment's rollout pause and resume.
+    case rollbackStatefulSet, rollbackDaemonSet, pauseRollout
+    case deletePod, sanitizePods, execPod, debugPod, debugNode, suspendCronJob, triggerCronJob, helmRollback, argoSync
     case fluxReconcile, fluxReconcileHelmRelease, fluxReconcileGitRepository, fluxReconcileOCIRepository
     case fluxReconcileHelmRepository, fluxReconcileBucket, cordonNode, drainNode
+    /// A node's taints and labels (patch nodes, like the cordon).
+    case editNodeMeta
     /// create and delete on services/proxy: an Alertmanager reached through the service proxy.
     case alertmanagerSilence, alertmanagerExpire
+    case cnpgPromote, cnpgRestartPrimary, cnpgHibernate
+    /// Remove one CloudNativePG instance, its PVCs then its pod, like `kubectl cnpg destroy`.
+    case cnpgDestroy
+    case longhornSalvage, longhornAttachment, longhornSnapshot
+    case longhornReplicas, longhornNode, longhornEngineUpgrade
+    case veleroBackupNow, veleroDeleteBackup, veleroRestore
+    case vmStart, vmStop, vmRestart, vmMigrate, vmPause, vmUnpause
+    /// A VM's serial console, like `virtctl console`.
+    case vmConsole
+    /// An HPA's min and max; a KEDA ScaledObject's pause and resume.
+    case autoscale, autoscaleKeda
+    /// An Argo Rollout's promote, promote fully, abort, retry and pause.
+    case argoRollout
 
     /// Asked in a namespace; the node actions are cluster-wide whatever the namespace.
     public var isNamespaced: Bool {
         switch self {
-        case .cordonNode, .drainNode: false
+        case .cordonNode, .drainNode, .editNodeMeta: false
         default: true
         }
     }
@@ -30,6 +49,16 @@ public enum KubeAction: String, CaseIterable, Sendable {
         case "Deployment": .restartWorkload
         case "StatefulSet": .restartStatefulSet
         case "DaemonSet": .restartDaemonSet
+        default: nil
+        }
+    }
+
+    /// A rollback of a `kind` workload: a Deployment's is its restart's patch.
+    public static func rollback(kind: String) -> KubeAction? {
+        switch kind {
+        case "Deployment": .restartWorkload
+        case "StatefulSet": .rollbackStatefulSet
+        case "DaemonSet": .rollbackDaemonSet
         default: nil
         }
     }
@@ -66,7 +95,9 @@ public func kubeDistinctActions(_ actions: [KubeAction?]) -> [KubeAction] {
 /// The refusal of `action` over objects of `namespaces` (a bulk action), given the access of
 /// each namespace loaded (`access`): the first distinct namespace that refuses it, nil when each
 /// allows it or is not known yet. A bulk action runs only where each of its objects may.
-public func kubeBulkDenial(for action: KubeAction?, across namespaces: [String], in access: [String: KubeActionAccess]) -> KubeAccess? {
+public func kubeBulkDenial(for action: KubeAction?, across namespaces: [String], in access: [String: KubeActionAccess])
+    -> KubeAccess?
+{
     guard let action else { return nil }
     var seen = Set<String>()
     for namespace in namespaces where seen.insert(namespace).inserted {
@@ -87,8 +118,10 @@ public struct KubeAccess: Decodable, Equatable, Sendable {
     public let namespace: String
     public let reason: String
 
-    public init(allowed: Bool, unknown: Bool = false, verb: String = "", group: String = "", resource: String = "",
-                namespace: String = "", reason: String = "") {
+    public init(
+        allowed: Bool, unknown: Bool = false, verb: String = "", group: String = "", resource: String = "",
+        namespace: String = "", reason: String = ""
+    ) {
         self.allowed = allowed
         self.unknown = unknown
         self.verb = verb

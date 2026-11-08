@@ -59,6 +59,9 @@ type readStep struct {
 	MS    int64  `json:"ms,omitempty"` // how long a finished step took
 
 	started time.Time
+	// timed is the length of a wait: while it runs, Count and Total are its seconds gone and
+	// its seconds in all, from the clock when read (no goroutine ticks them).
+	timed time.Duration
 }
 
 type readProgressJSON struct {
@@ -127,6 +130,23 @@ func (p *readProgress) end(id, state string) {
 			s.MS = time.Since(s.started).Milliseconds()
 		}
 	})
+}
+
+// endAt ends a step that ran before the read knew its steps (the detection a read's steps
+// depend on), from when it started.
+func (p *readProgress) endAt(id string, started time.Time, failed bool) {
+	p.update(id, func(s *readStep) { s.started = started })
+
+	if failed {
+		p.fail(id)
+	} else {
+		p.done(id)
+	}
+}
+
+// wait marks a step running as a wait of d from since: ReadProgress counts its seconds.
+func (p *readProgress) wait(id string, since time.Time, d time.Duration) {
+	p.update(id, func(s *readStep) { s.State, s.started, s.timed = readStepRunning, since, d })
 }
 
 // count is how far a step's fan-out got: done of total (nodes asked, say).
@@ -202,7 +222,12 @@ func (p *readProgress) snapshot() readProgressJSON {
 
 	out.Running, out.Total, out.Steps = p.running, len(p.steps), append(out.Steps, p.steps...)
 
-	for _, s := range p.steps {
+	for i, s := range out.Steps {
+		if s.State == readStepRunning && s.timed > 0 {
+			out.Steps[i].Count = int(min(time.Since(s.started), s.timed) / time.Second)
+			out.Steps[i].Total = int(s.timed / time.Second)
+		}
+
 		if s.State == readStepDone || s.State == readStepFailed {
 			out.Done++
 		}
@@ -225,8 +250,71 @@ func readProgressFrom(ctx context.Context) *readProgress {
 	return p
 }
 
+// readProgressStartCtxKey carries where a read that knows its steps only once it detected what
+// the cluster runs starts its progress.
+type readProgressStartCtxKey struct{}
+
+type readProgressStart struct{ op, contextName string }
+
+// withReadProgressStart lets the readers of a call start op's progress on contextName
+// themselves, once they know their steps (startReadProgressIn).
+func withReadProgressStart(ctx context.Context, op, contextName string) context.Context {
+	return context.WithValue(ctx, readProgressStartCtxKey{}, readProgressStart{op, contextName})
+}
+
+// startReadProgressIn starts the progress ctx is to carry, with steps; nil (a tracker that
+// does nothing) when ctx carries none, as in tests and background reads.
+func startReadProgressIn(ctx context.Context, steps ...string) *readProgress {
+	start, ok := ctx.Value(readProgressStartCtxKey{}).(readProgressStart)
+	if !ok {
+		return nil
+	}
+
+	return startReadProgress(start.op, start.contextName, steps...)
+}
+
+// readProgressDemoStep paces the fake progress a demo context plays.
+const readProgressDemoStep = 100 * time.Millisecond
+
+// playDemoReadProgress walks steps so the demo shows the progress the apps draw.
+func playDemoReadProgress(op, contextName string, steps ...string) {
+	progress := startReadProgress(op, contextName, steps...)
+	defer progress.finish()
+
+	for _, step := range steps {
+		progress.begin(step)
+		time.Sleep(readProgressDemoStep)
+		progress.done(step)
+	}
+}
+
+// kubeReadProgressJSON is kubeReadJSON under op's progress on target's (unmasked) context:
+// the demo plays demoSteps; a cluster read runs with a tracker of steps in its ctx or, when
+// steps is nil, starts its own once it knows them (startReadProgressIn).
+func kubeReadProgressJSON[T any](target kubeTarget, op string, steps, demoSteps []string, demo func() T, fn func(context.Context, *kubeClient) (T, error)) (string, error) {
+	if isDemoContext(target.config, target.context) {
+		playDemoReadProgress(op, target.context, demoSteps...)
+
+		return toJSON(demo())
+	}
+
+	if steps == nil {
+		return kubeReadJSON(target, demo, func(ctx context.Context, k *kubeClient) (T, error) {
+			return fn(withReadProgressStart(ctx, op, target.context), k)
+		})
+	}
+
+	progress := startReadProgress(op, target.context, steps...)
+	defer progress.finish()
+
+	return kubeReadJSON(target, demo, func(ctx context.Context, k *kubeClient) (T, error) {
+		return fn(withReadProgress(ctx, progress), k)
+	})
+}
+
 // ReadProgress is, as JSON, how far the running read of op on contextName got (op "checkup":
-// KubeCheckup): {"running":true,"done":5,"total":17,"steps":[{"id":"api","state":"done","ms":120},
+// KubeCheckup, "dataservices": KubeDataServices, "integrations": KubeIntegrations, "netpol":
+// KubeNetworkPolicies, "apihealth": KubeAPIHealth): {"running":true,"done":5,"total":17,"steps":[{"id":"api","state":"done","ms":120},
 // {"id":"storage","state":"running","count":12,"total":40},{"id":"helm","state":"pending"}]}.
 // state is pending, running, done or failed; count/total follow a step's fan-out. An op that
 // never ran there answers {"running":false,"done":0,"total":0,"steps":[]}.

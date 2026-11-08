@@ -112,15 +112,25 @@ public struct ObjectOwner: Decodable, Equatable, Hashable, Sendable {
 
     public var isHelmRelease: Bool { via == Self.viaHelm }
 
+    /// An Argo CD Application (its namespace known) or a Flux Kustomization that applies the
+    /// object: its diff can show what the object changed by hand, to keep in Git.
+    public var hasGitOpsDiff: Bool {
+        !name.isEmpty && !namespace.isEmpty
+            && (via == Self.viaArgo && kind == "Application" || via == Self.viaFlux && kind == "Kustomization")
+    }
+
     /// The browser's resource for it, nil when discovery did not know its kind (or for a
     /// Helm release, which has a screen of its own).
     public var apiResource: KubeAPIResource? {
         guard !resource.isEmpty, !version.isEmpty, !name.isEmpty else { return nil }
-        return KubeAPIResource(group: group, version: version, resource: resource, kind: kind, namespaced: namespaced, verbs: verbs,
-                               scalable: scalable)
+        return KubeAPIResource(
+            group: group, version: version, resource: resource, kind: kind, namespaced: namespaced, verbs: verbs,
+            scalable: scalable)
     }
 
-    private enum CodingKeys: String, CodingKey { case via, group, version, resource, kind, namespace, name, namespaced, verbs, controller, scalable }
+    private enum CodingKeys: String, CodingKey {
+        case via, group, version, resource, kind, namespace, name, namespaced, verbs, controller, scalable
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)

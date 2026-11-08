@@ -3,7 +3,8 @@ import XCTest
 
 final class KubeTopTests: XCTestCase {
     func testDecodesTheCoreJSON() throws {
-        let json = #"{"available":true,"forbidden":false,"pods":[{"namespace":"web","name":"api","node":"w1","cpu":0.125,"memory":230686720,"cpuRequest":0.3,"cpuLimit":1.1,"memoryRequest":335544320,"memoryLimit":671088640}]}"#
+        let json =
+            #"{"available":true,"forbidden":false,"pods":[{"namespace":"web","name":"api","node":"w1","cpu":0.125,"memory":230686720,"cpuRequest":0.3,"cpuLimit":1.1,"memoryRequest":335544320,"memoryLimit":671088640}]}"#
         let top = try JSONDecoder().decode(KubeTopPods.self, from: Data(json.utf8))
         XCTAssertTrue(top.available)
         XCTAssertFalse(top.boundsRead)
@@ -20,7 +21,8 @@ final class KubeTopTests: XCTestCase {
     }
 
     func testABarIsMeasuredAgainstTheLimitElseTheRequest() {
-        let pod = KubeTopPod(namespace: "a", name: "p", cpu: 0.5, memory: 300, cpuRequest: 0.25, cpuLimit: 1, memoryRequest: 200)
+        let pod = KubeTopPod(
+            namespace: "a", name: "p", cpu: 0.5, memory: 300, cpuRequest: 0.25, cpuLimit: 1, memoryRequest: 200)
         XCTAssertEqual(pod.cpuFraction ?? -1, 0.5, accuracy: 1e-9)
         XCTAssertEqual(pod.memoryFraction ?? -1, 1, accuracy: 1e-9)
         XCTAssertNil(KubeTopPod(namespace: "a", name: "q", cpu: 0.1).cpuFraction)

@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
@@ -12,6 +13,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -92,6 +94,87 @@ func TestGKEServiceAccount(t *testing.T) {
 
 	if info, _ := KubeSignInInfo(stored, "admin@test"); !strings.Contains(info, "viewer@proj") {
 		t.Errorf("info %s", info)
+	}
+}
+
+func TestGKEServiceAccountTokenURI(t *testing.T) {
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	der, _ := x509.MarshalPKCS8PrivateKey(key)
+
+	var requests atomic.Int32
+
+	record := func(w http.ResponseWriter, _ *http.Request) {
+		requests.Add(1)
+
+		_, _ = io.WriteString(w, `{"access_token":"ya29.gke","expires_in":3599}`)
+	}
+	plain := httptest.NewServer(http.HandlerFunc(record))
+	t.Cleanup(plain.Close)
+
+	secure := withCloudServer(t, record)
+	host := strings.TrimPrefix(secure.URL, "https://")
+
+	const defaultURI = "https://oauth2.googleapis.com/token"
+
+	for _, tt := range []struct {
+		name, uri, want string
+		wantRequests    int32
+	}{
+		{name: "http", uri: plain.URL + "/token", want: "not an https address"},
+		{name: "relative", uri: "/token", want: "not an https address"},
+		{name: "no host", uri: "https:///token", want: "not an https address"},
+		{name: "user info", uri: "https://user:secret@" + host + "/token", want: "must not hold a user name"},
+		{name: "https", uri: secure.URL + "/token", wantRequests: 1},
+		{name: "default", wantRequests: 1},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			requests.Store(0)
+
+			fields := map[string]string{
+				"type": "service_account", "client_email": "viewer@sample.iam.gserviceaccount.com",
+				"private_key": string(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: der})),
+			}
+			if tt.uri != "" {
+				fields["token_uri"] = tt.uri
+			} else {
+				target := gcpTokenTarget
+				gcpTokenTarget = func(uri string) string {
+					if uri != defaultURI {
+						t.Errorf("token uri %q", uri)
+					}
+
+					return secure.URL + "/token"
+				}
+
+				t.Cleanup(func() { gcpTokenTarget = target })
+			}
+
+			sa, _ := json.Marshal(fields)
+			secrets := map[string]string{gcpFieldServiceAccount: string(sa)}
+
+			_, enterErr := gkeMethod{}.fromSecrets(secrets)
+			// A key stored before this check reaches mint without passing through fromSecrets.
+			_, _, _, mintErr := gkeMethod{}.mint(context.Background(), kubeAuthState{Secrets: secrets})
+
+			for name, err := range map[string]error{"entered": enterErr, "mint": mintErr} {
+				switch {
+				case tt.want == "" && err != nil:
+					t.Errorf("%s: %v", name, err)
+				case tt.want != "" && (err == nil || !strings.Contains(err.Error(), tt.want)):
+					t.Errorf("%s: error %v, want %q", name, err, tt.want)
+				case err != nil && strings.Contains(err.Error(), "secret"):
+					t.Errorf("%s: the error repeats the address: %v", name, err)
+				}
+			}
+
+			if got := requests.Load(); got != tt.wantRequests {
+				t.Errorf("%d requests, want %d", got, tt.wantRequests)
+			}
+		})
 	}
 }
 

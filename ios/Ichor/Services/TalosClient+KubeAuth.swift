@@ -31,7 +31,9 @@ extension TalosClient {
     /// How `context` signs in; nil for static credentials. `talos`: `kube` is the stored
     /// talosconfig and `context` an Omni context of it (the same goes for the calls below).
     static func signInInfo(kube: String, context: String, talos: Bool = false) async throws -> KubeSignInInfo? {
-        let json = try await run { talos ? IchorgoTalosSignInInfo(kube, context, $0) : IchorgoKubeSignInInfo(kube, context, $0) }
+        let json = try await run {
+            talos ? IchorgoTalosSignInInfo(kube, context, $0) : IchorgoKubeSignInInfo(kube, context, $0)
+        }
         return try KubeSignInInfo.decode(json)
     }
 
@@ -39,12 +41,37 @@ extension TalosClient {
     /// IAM Identity Center sign-in throws kube-sign-in-required: then start the interactive one.
     static func setCredentials(kube: String, context: String, secrets: String, talos: Bool = false) async throws {
         try await run { error -> Void in
-            _ = talos ? IchorgoTalosSetCredentials(kube, context, secrets, error) : IchorgoKubeSetCredentials(kube, context, secrets, error)
+            _ =
+                talos
+                ? IchorgoTalosSetCredentials(kube, context, secrets, error)
+                : IchorgoKubeSetCredentials(kube, context, secrets, error)
         }
     }
 
     static func signOut(kube: String, context: String, talos: Bool = false) async throws {
-        try await run { error -> Void in _ = talos ? IchorgoTalosSignOut(kube, context, error) : IchorgoKubeSignOut(kube, context, error) }
+        try await run { error -> Void in
+            _ = talos ? IchorgoTalosSignOut(kube, context, error) : IchorgoKubeSignOut(kube, context, error)
+        }
+    }
+
+    /// Renews every signed-in cluster's token ahead of need (on foreground and before a
+    /// background check): an identity provider with an idle timeout keeps the session, and one
+    /// that ended it is found now. `kube` and `talos` are the stored configs ("" for none);
+    /// contexts never signed in are left out, Omni ones only reported.
+    static func renewSignIns(kube: String, talos: String) async throws -> [SignInRenewal] {
+        let json = try await run { IchorgoKubeRenewSignIns(kube, talos, $0) }
+        return try SignInRenewal.decodeList(json)
+    }
+
+    /// renewSignIns on the stored configs; nil when they or the sign-ins cannot be read now (a
+    /// locked device: every cluster would read as needing a sign-in) or the renewal failed.
+    static func renewStoredSignIns() async -> [SignInRenewal]? {
+        guard KubeAuthStore.shared.all() != nil else { return nil }
+        let stored = StoredConfigs.load()
+        let kube = stored.kube ?? ""
+        let talos = stored.talos ?? ""
+        guard !kube.isEmpty || !talos.isEmpty else { return [] }
+        return try? await renewSignIns(kube: kube, talos: talos)
     }
 
     /// A stored auth state as a backup keeps it (no session); "" when nothing is left.
@@ -96,11 +123,15 @@ extension TalosClient {
 
     /// A running interactive sign-in: its events (finished after `done`), `complete` hands
     /// over a callback URL the app received, `cancel` stops waiting.
-    typealias SignInRun = (events: AsyncStream<KubeSignInEvent>, complete: @Sendable (String) -> Void, cancel: @Sendable () -> Void)
+    typealias SignInRun = (
+        events: AsyncStream<KubeSignInEvent>, complete: @Sendable (String) -> Void, cancel: @Sendable () -> Void
+    )
 
     /// Starts the browser or device-code sign-in of `context`.
     static func startSignIn(kube: String, context: String, talos: Bool = false) -> SignInRun {
-        signInRun { bridge in talos ? IchorgoStartTalosSignIn(kube, context, bridge) : IchorgoStartKubeSignIn(kube, context, bridge) }
+        signInRun { bridge in
+            talos ? IchorgoStartTalosSignIn(kube, context, bridge) : IchorgoStartKubeSignIn(kube, context, bridge)
+        }
     }
 
     /// Signs in to a cloud account before any of its clusters has been imported.
@@ -134,7 +165,8 @@ extension TalosClient {
         try await run { IchorgoDiscoverOmniClusters(endpoint, identity, $0) }
     }
 
-    private static func signInRun(_ start: (SignInBridge) -> IchorgoSignInRun?) -> SignInRun {
+    /// Bridges a Go sign-in run (its listener and its `complete`/`cancel`) to a SignInRun.
+    static func signInRun(_ start: (SignInBridge) -> IchorgoSignInRun?) -> SignInRun {
         let (stream, continuation) = AsyncStream.makeStream(of: KubeSignInEvent.self)
         let bridge = SignInBridge(
             prompt: { continuation.yield(.prompt($0)) },
@@ -143,16 +175,16 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = start(bridge)
+        let run = start(bridge).map(GoObject.init)
         continuation.onTermination = { _ in
-            run?.cancel()
-            _ = bridge // keep the listener alive for the whole sign-in
+            run?.value.cancel()
+            _ = bridge  // keep the listener alive for the whole sign-in
         }
-        return (stream, { run?.complete($0) }, { run?.cancel() })
+        return (stream, { run?.value.complete($0) }, { run?.value.cancel() })
     }
 }
 
-private final class SignInBridge: NSObject, IchorgoSignInListenerProtocol, @unchecked Sendable {
+final class SignInBridge: NSObject, IchorgoSignInListenerProtocol, Sendable {
     private let prompt: @Sendable (KubeSignInPrompt) -> Void
     private let done: @Sendable (String?) -> Void
 

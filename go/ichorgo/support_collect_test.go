@@ -101,6 +101,15 @@ func TestStartSupportBundleFake(t *testing.T) {
 		}
 	}
 
+	// No Kubernetes data service here: the step writes nothing and does not fail.
+	if _, ok := files["cluster/dataservices.json"]; ok || strings.Contains(files["summary.txt"], "data_services") {
+		t.Errorf("data services written for a cluster without any: %q", files["summary.txt"])
+	}
+
+	if !strings.Contains(files["summary.txt"], "cluster/dataservices.json") {
+		t.Errorf("summary does not name the data services file: %q", files["summary.txt"])
+	}
+
 	if got := f.called("List " + config.MachineConfigType); len(got) != 0 {
 		t.Errorf("a sensitive type was read: %v", got)
 	}
@@ -123,7 +132,7 @@ func TestStartSupportBundleFake(t *testing.T) {
 		}
 	}
 
-	if steps < 10 || last != (supportProgress{Step: "done", Done: 2, Total: 2}) {
+	if steps < 10 || last != (supportProgress{Step: "done", Done: 3, Total: 3}) {
 		t.Errorf("%d progress reports, last = %+v", steps, last)
 	}
 }

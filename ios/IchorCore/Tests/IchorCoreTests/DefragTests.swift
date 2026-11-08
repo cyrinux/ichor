@@ -2,11 +2,13 @@ import XCTest
 @testable import IchorCore
 
 final class DefragTests: XCTestCase {
-    private func member(_ node: String, leader: Bool = false, size: Int64 = 100, inUse: Int64 = 40, error: String? = nil) -> EtcdNodeStatus {
+    private func member(
+        _ node: String, leader: Bool = false, size: Int64 = 100, inUse: Int64 = 40, error: String? = nil
+    ) -> EtcdNodeStatus {
         let json = """
-        {"node":"\(node)",\(error.map { "\"error\":\"\($0)\"," } ?? "")"memberId":"\(error == nil ? "id-\(node)" : "")","isLeader":\(leader),"isLearner":false,
-         "dbSize":\(size),"dbSizeInUse":\(inUse),"raftIndex":1,"raftTerm":1,"version":"3.7.0","errors":[]}
-        """
+            {"node":"\(node)",\(error.map { "\"error\":\"\($0)\"," } ?? "")"memberId":"\(error == nil ? "id-\(node)" : "")","isLeader":\(leader),"isLearner":false,
+             "dbSize":\(size),"dbSizeInUse":\(inUse),"raftIndex":1,"raftTerm":1,"version":"3.7.0","errors":[]}
+            """
         return try! TalosJSON.decode(EtcdNodeStatus.self, from: json)
     }
 

@@ -10,12 +10,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,6 +26,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import name.levis.ichor.ui.components.SMOKE_EVENTS
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -78,9 +80,9 @@ fun EventsScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.events_title))
@@ -100,7 +102,7 @@ fun EventsScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 EventFilter.entries.forEach { f ->
-                    FilterChip(selected = filter == f, onClick = { filter = f }, label = { Text(stringResource(f.label)) })
+                    IchorFilterChip(selected = filter == f, onClick = { filter = f }, label = { Text(stringResource(f.label)) })
                 }
             }
             LiveIndicator(state.streaming, state.error, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
@@ -108,7 +110,7 @@ fun EventsScreen(
             if (rows.isEmpty()) {
                 EmptyText(stringResource(if (filter == EventFilter.ALL) R.string.events_empty else R.string.events_empty_filtered))
             } else {
-                LazyColumn(Modifier.fillMaxSize()) {
+                LazyColumn(Modifier.fillMaxSize().testTag(SMOKE_EVENTS)) {
                     itemsIndexed(rows, key = { i, row -> row.event.id.ifEmpty { "#$i" }.let { "${row.event.node}|$it" } }) { _, row ->
                         EventItem(row, hostname = hostnames[row.event.node] ?: row.event.node, showNode = node == null, now = now)
                         HorizontalDivider()

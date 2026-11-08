@@ -3,9 +3,9 @@ package name.levis.ichor.ui.settings
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -21,9 +21,9 @@ import name.levis.ichor.ui.components.pageContent
 @Composable
 fun LicensesScreen(onBack: () -> Unit) {
     val libraries by produceLibraries(R.raw.aboutlibraries)
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.about_licenses)) },
                 navigationIcon = { BackButton(onBack) },
             )

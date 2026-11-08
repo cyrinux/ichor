@@ -85,4 +85,17 @@ class ClusterUsageTest {
         assertEquals(listOf(0.2f, 0.3f), appendHistory(listOf(0.1f, 0.2f), 0.3f, max = 2))
         assertEquals(listOf(0.1f), appendHistory(listOf(0.1f), null, max = 2))
     }
+
+    @Test
+    fun sparklineSpansTheWidthUntilTheWindowIsFull() {
+        val width = 350f
+        val points = 36
+        assertEquals(width, sparklineStep(2, points, width), 1e-4f)
+        assertEquals(width / (points - 2), sparklineStep(points - 1, points, width), 1e-4f)
+        assertEquals(width / (points - 1), sparklineStep(points, points, width), 1e-4f)
+        assertEquals(width / (points - 1), sparklineStep(points + 1, points, width), 1e-4f)
+        for (count in 2 until points) {
+            assertEquals(0f, width - sparklineStep(count, points, width) * (count - 1), 1e-3f)
+        }
+    }
 }

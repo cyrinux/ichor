@@ -9,7 +9,12 @@ import org.junit.Test
 
 class AppLockTest {
 
-    private class MemoryStore(override var lockEnabled: Boolean = false, override var securityKeys: SecurityKeyEnrolment? = null) : LockSettings
+    private class MemoryStore(
+        override var lockEnabled: Boolean = false,
+        override var securityKeys: SecurityKeyEnrolment? = null,
+        override var panicTriggerPackage: String? = null,
+        override var panicResponse: PanicResponse = PanicResponse.LOCK,
+    ) : LockSettings
 
     private var now = 0L
     private fun lock(enabled: Boolean) = AppLock(MemoryStore(enabled), clock = { now }, graceMillis = 30_000)
@@ -128,6 +133,55 @@ class AppLockTest {
         lock.setEnabled(false)
         assertNull(store.securityKeys)
         assertNull(lock.securityKeys.value)
+    }
+
+    @Test
+    fun aPanicLockClosesTheAppAtOnce() {
+        val lock = lock(enabled = true).apply { unlock() }
+        lock.lock()
+        assertTrue(lock.locked.value)
+        assertTrue("the app stays loaded under the lock", lock.everUnlocked.value)
+    }
+
+    @Test
+    fun aPanicLockDoesNothingWithoutTheAppLock() {
+        // No lock screen could open it again (a demo-only install).
+        val lock = lock(enabled = false)
+        lock.lock()
+        assertFalse(lock.locked.value)
+    }
+
+    @Test
+    fun aPanicLockDropsTheDataKeyWhenAKeyIsRequired() {
+        val key = EnrolledKey("AQID", "AAAA", "Security key", 1)
+        val required = SecurityKeyEnrolment.create().withKey(key).copy(mode = SecurityKeyMode.REQUIRED)
+        val lock = AppLock(MemoryStore(lockEnabled = true, securityKeys = required), clock = { now })
+        lock.provideDek(ByteArray(32) { 7 })
+        lock.lock()
+        assertNull("the sealed config needs the key again", lock.dek())
+
+        val optional = AppLock(MemoryStore(lockEnabled = true), clock = { now })
+        optional.provideDek(ByteArray(32) { 7 })
+        optional.lock()
+        assertEquals(7.toByte(), optional.dek()?.first())
+    }
+
+    @Test
+    fun thePanicConnectionIsPersisted() {
+        val store = MemoryStore(lockEnabled = true)
+        val lock = AppLock(store, clock = { now })
+        assertNull(lock.panicTriggerPackage.value)
+        assertEquals(PanicResponse.LOCK, lock.panicResponse.value)
+
+        lock.setPanicConnection("org.example.panic", PanicResponse.DELETE_CONFIG)
+        assertEquals("org.example.panic", store.panicTriggerPackage)
+        assertEquals(PanicResponse.DELETE_CONFIG, store.panicResponse)
+        assertEquals("org.example.panic", lock.panicTriggerPackage.value)
+        assertEquals(PanicResponse.DELETE_CONFIG, lock.panicResponse.value)
+
+        lock.setPanicConnection(null, PanicResponse.LOCK)
+        assertNull(store.panicTriggerPackage)
+        assertEquals(PanicResponse.LOCK, lock.panicResponse.value)
     }
 
     @Test

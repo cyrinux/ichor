@@ -41,7 +41,7 @@ data class MaintenanceRunState(
  * [onStarted] runs once a maintenance is followed (to keep the app alive meanwhile).
  */
 class MaintenanceManager(
-    private val talos: TalosRepository,
+    private val lifecycle: NodeLifecycleRepository,
     private val onStarted: () -> Unit = {},
 ) {
     private val _current = MutableStateFlow<MaintenanceRunState?>(null)
@@ -50,11 +50,11 @@ class MaintenanceManager(
     val cordoned: StateFlow<Map<String, Boolean>> = _cordoned.asStateFlow()
     private var run: MaintenanceRun? = null
 
-    suspend fun plan(node: String): MaintenancePlan = talos.maintenancePlan(node).also { remember(node, it.cordoned) }
+    suspend fun plan(node: String): MaintenancePlan = lifecycle.maintenancePlan(node).also { remember(node, it.cordoned) }
 
     /** Cordons ([on]) or uncordons [node]; throws when refused. */
     suspend fun cordon(node: String, on: Boolean) {
-        talos.cordon(node, on)
+        lifecycle.cordon(node, on)
         remember(node, on)
     }
 
@@ -75,7 +75,7 @@ class MaintenanceManager(
         if (_current.value?.running == true) return false
         _current.value = MaintenanceRunState(node, hostname, action, wasCordoned)
         run = try {
-            talos.startMaintenance(node, action, includeBare, acknowledged, listener(node), upgrade)
+            lifecycle.startMaintenance(node, action, includeBare, acknowledged, listener(node), upgrade)
         } catch (e: Exception) {
             _current.value = null
             throw e

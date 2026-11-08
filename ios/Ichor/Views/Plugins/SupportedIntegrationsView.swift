@@ -1,0 +1,153 @@
+import SwiftUI
+import IchorCore
+
+/// The projects the app reads through the Kubernetes API, with their websites, and which ones the
+/// active cluster runs: the list comes from the Go core, the status from one API discovery.
+struct SupportedIntegrationsView: View {
+    @Environment(AppModel.self) private var model
+    @State private var list = TalosClient.supportedIntegrations()
+    @State private var problem: String?
+    /// Asking the cluster failed (not: it needs another config).
+    @State private var retryable = false
+    /// How far the first detection got, while the list has no status yet.
+    @State private var progress: ReadProgress?
+
+    var body: some View {
+        content
+            .navigationTitle("Integrations")
+            .task(id: model.client?.kubeServer) { await load() }
+    }
+
+    /// The first detection's steps while it runs, then the list.
+    @ViewBuilder private var content: some View {
+        if let progress, progress.running, !list.checked {
+            ReadProgressView(progress: progress, stepLabel: Self.stepLabel)
+        } else {
+            integrationList
+        }
+    }
+
+    private var integrationList: some View {
+        List {
+            Section("Platform") {
+                Link(destination: ProjectLinks.talos) {
+                    Label("Talos Linux (talos.dev)", systemImage: "arrow.up.right.square")
+                }
+                .foregroundStyle(.primary)
+            }
+            Section {
+                ForEach(list.items) { item in
+                    SupportedIntegrationRow(item: item, checked: list.checked)
+                }
+            } footer: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(
+                        "The projects Ichor reads through the Kubernetes API, found on the cluster by their API groups, their running pods or their Services. Tap one to open its website."
+                    )
+                    if let problem { Text(verbatim: problem) }
+                    if retryable { Button("Retry") { Task { await load() } } }
+                }
+            }
+        }
+        .themedBackground()
+    }
+
+    /// A read step by name; an unknown one by its id.
+    private static func stepLabel(_ id: String) -> String {
+        switch id {
+        case "api": String(localized: "API groups")
+        case "kinds": String(localized: "Reading resource kinds")
+        default: id
+        }
+    }
+
+    private func load() async {
+        guard model.allows(.workloads) else {
+            problem = String(localized: "Detecting them on the cluster needs an os:admin config.")
+            retryable = false
+            return
+        }
+        guard let client = model.client else { return }
+        let hints =
+            model.lastKnown(.inventory, as: ClusterInventory.self).map { supportedIntegrationHints($0.value) } ?? ""
+        let result: Result<SupportedIntegrations, Error> = await client.withReadProgress(
+            TalosClient.integrationsProgressOp, watching: !list.checked, update: { progress = $0 }
+        ) {
+            do {
+                return .success(try await client.supportedIntegrations(hints: hints))
+            } catch {
+                return .failure(error)
+            }
+        }
+        progress = nil
+        switch result {
+        case .success(let read):
+            list = read
+            problem = nil
+            retryable = false
+        case .failure(let error) where error is CancellationError:
+            break
+        case .failure(let error):
+            problem = error.localizedDescription
+            retryable = true
+        }
+    }
+}
+
+private struct SupportedIntegrationRow: View {
+    let item: SupportedIntegration
+    let checked: Bool
+
+    var body: some View {
+        let row = HStack(spacing: 12) {
+            AppIconView(app: item.app, size: 40)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: item.name)
+                Text(item.groups.isEmpty ? String(localized: "no API of its own") : item.groups.joined(separator: ", "))
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+                if checked { status }
+            }
+            Spacer()
+            if item.website != nil {
+                Image(systemName: "arrow.up.right.square").foregroundStyle(.secondary)
+            }
+        }
+        if let website = item.website {
+            Link(destination: website) { row }
+                .foregroundStyle(.primary)
+                .accessibilityHint(Text("\(item.name) website"))
+        } else {
+            row
+        }
+    }
+
+    @ViewBuilder private var status: some View {
+        if item.detected {
+            Text(
+                item.version.isEmpty
+                    ? String(localized: "Detected") : "\(String(localized: "Detected")) · \(item.version)"
+            )
+            .font(.caption)
+            .foregroundStyle(.statusOK)
+            if let how = item.via?.label {
+                Text([how, item.namespace].filter { !$0.isEmpty }.joined(separator: " · "))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        } else {
+            Text("Not detected").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+private extension SupportedIntegrationVia {
+    var label: String {
+        switch self {
+        case .api: String(localized: "Found by its API")
+        case .pods: String(localized: "Found by its running pods")
+        case .services: String(localized: "Found by its Services")
+        case .inventory: String(localized: "Found in the app inventory")
+        }
+    }
+}

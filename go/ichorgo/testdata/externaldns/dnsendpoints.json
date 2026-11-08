@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "metadata": {"name": "db", "namespace": "demo", "generation": 2},
+      "spec": {"endpoints": [
+        {"dnsName": "db.example.com", "recordType": "A", "targets": ["203.0.113.40"], "recordTTL": 300}
+      ]},
+      "status": {"observedGeneration": 1}
+    },
+    {
+      "metadata": {"name": "foreign", "namespace": "demo",
+                   "annotations": {"external-dns.alpha.kubernetes.io/controller": "other-controller"}},
+      "spec": {"endpoints": [
+        {"dnsName": "foreign.example.com", "recordType": "A", "targets": ["203.0.113.90"]}
+      ]},
+      "status": {"observedGeneration": 1}
+    }
+  ]
+}

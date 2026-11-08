@@ -26,6 +26,8 @@ import name.levis.ichor.ui.overview.sendWake
 
 private const val ACTION_SNOOZE = "name.levis.ichor.ALERT_SNOOZE"
 private const val ACTION_WAKE = "name.levis.ichor.ALERT_WAKE"
+private const val ACTION_ACKNOWLEDGE = "name.levis.ichor.ALERT_ACKNOWLEDGE"
+private const val ACTION_ACKNOWLEDGE_PAGE = "name.levis.ichor.ALERT_ACKNOWLEDGE_PAGE"
 private const val KEY_CLUSTER = "cluster"
 private const val KEY_ALERT = "alert"
 private const val KEY_HOST = "host"
@@ -57,7 +59,14 @@ fun alertActionButton(context: Context, alert: Alert, action: AlertAction, finge
         PendingIntent.getActivity(context, requestCode, open, flags)
     } else {
         val broadcast = Intent(context, AlertActionReceiver::class.java)
-            .setAction(if (action == AlertAction.WAKE) ACTION_WAKE else ACTION_SNOOZE)
+            .setAction(
+                when (action) {
+                    AlertAction.WAKE -> ACTION_WAKE
+                    AlertAction.ACKNOWLEDGE -> ACTION_ACKNOWLEDGE
+                    AlertAction.ACKNOWLEDGE_PAGE -> ACTION_ACKNOWLEDGE_PAGE
+                    else -> ACTION_SNOOZE
+                },
+            )
             .putExtra(KEY_CLUSTER, fingerprint)
             .putExtra(KEY_ALERT, alert.key)
             .putExtra(KEY_HOST, alert.subject)
@@ -69,16 +78,23 @@ fun alertActionButton(context: Context, alert: Alert, action: AlertAction, finge
         AlertAction.SYNC -> R.string.argo_sync
         AlertAction.RECONCILE -> R.string.flux_reconcile
         AlertAction.SILENCE -> R.string.alert_action_silence_hour
+        AlertAction.ACKNOWLEDGE -> R.string.alert_action_acknowledge
+        AlertAction.ACKNOWLEDGE_PAGE -> R.string.oncall_action_page
         AlertAction.SNOOZE -> R.string.alert_action_snooze
     }
     return NotificationCompat.Action.Builder(0, res.getString(title), intent)
         .setShowsUserInterface(action.inApp)
         // Never from the lock screen: the device is unlocked first (the app lock then asks too).
-        .setAuthenticationRequired(action.inApp)
+        // Acknowledging a page changes the incident for everyone: unlocked, but the app stays closed.
+        .setAuthenticationRequired(action.inApp || action == AlertAction.ACKNOWLEDGE_PAGE)
         .build()
 }
 
-/** Snooze and Wake from an alert's notification. Wake runs as work: the receiver must return at once. */
+/**
+ * Snooze, Acknowledge, Acknowledge page and Wake from an alert's notification. Wake and the page
+ * run as work: the receiver must return at once. Acknowledge keeps the notification: it only stops
+ * the alert's repeats.
+ */
 class AlertActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val cluster = intent.getStringExtra(KEY_CLUSTER).orEmpty()
@@ -91,6 +107,8 @@ class AlertActionReceiver : BroadcastReceiver() {
                 snoozes.snooze(cluster, key, now + SNOOZE_MILLIS)
                 NotificationManagerCompat.from(context).cancel(alertNotificationId(cluster, key))
             }
+            ACTION_ACKNOWLEDGE -> (context.applicationContext as TalosApp).alertAcks.acknowledge(cluster, key, System.currentTimeMillis())
+            ACTION_ACKNOWLEDGE_PAGE -> enqueuePageAck(context, cluster, key, intent.getStringExtra(KEY_HOST).orEmpty())
             ACTION_WAKE -> {
                 val data = workDataOf(KEY_CLUSTER to cluster, KEY_ALERT to key, KEY_HOST to intent.getStringExtra(KEY_HOST).orEmpty())
                 WorkManager.getInstance(context).enqueueUniqueWork(
@@ -117,19 +135,19 @@ class AlertWakeWorker(context: Context, params: WorkerParameters) : CoroutineWor
         val wol = wolKey(cluster, key.substringAfter(':'))
         val targets = wakeTargets(app.wakeOnLan.targets.value[wol], app.wakeOnLan.seen.value[wol].orEmpty())
         if (targets.isEmpty()) return Result.success()
-        postWakeNotice(applicationContext, cluster, key, res.getString(R.string.wol_title, host), sendWake(res, host, targets))
+        postAlertNotice(applicationContext, cluster, key, res.getString(R.string.wol_title, host), sendWake(res, host, targets), AlertChannel.NODES)
         return Result.success()
     }
 }
 
-/** The outcome of a Wake, replacing the alert; a tap opens the app. */
-private fun postWakeNotice(context: Context, cluster: String, key: String, title: String, text: String) {
+/** The outcome of a Wake or of acknowledging a page, replacing the alert; a tap opens the app. */
+internal fun postAlertNotice(context: Context, cluster: String, key: String, title: String, text: String, channel: AlertChannel) {
     if (!canPostNotifications(context)) return
     ensureAlertChannels(context)
     val app = context.applicationContext as TalosApp
     val intent = Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-    val open = PendingIntent.getActivity(context, "$cluster|$key|wake".hashCode(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-    val builder = alertNotification(context, AlertChannel.NODES, title, text, open, hideOnLockScreen = app.appLock.enabled.value)
+    val open = PendingIntent.getActivity(context, "$cluster|$key|notice".hashCode(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+    val builder = alertNotification(context, channel, title, text, open, hideOnLockScreen = app.appLock.enabled.value)
     try {
         NotificationManagerCompat.from(context).notify(alertNotificationId(cluster, key), builder.build())
     } catch (_: SecurityException) {

@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -64,14 +64,14 @@ fun TalosUpdateCard(offer: TalosUpdateOffer, canUpgrade: Boolean, onRollout: () 
             }
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 if (offer.notes.startsWith("https://")) {
-                    TextButton(onClick = { openUrl(context, offer.notes) }) { Text(stringResource(R.string.overview_talos_release_notes)) }
+                    IchorTextButton(onClick = { openUrl(context, offer.notes) }) { Text(stringResource(R.string.overview_talos_release_notes)) }
                 } else {
                     Spacer(Modifier)
                 }
-                TextButton(onClick = onSkip) { Text(stringResource(R.string.overview_talos_skip, offer.latest)) }
+                IchorTextButton(onClick = onSkip) { Text(stringResource(R.string.overview_talos_skip, offer.latest)) }
             }
         }
     }
-    if (canUpgrade) Card(onClick = onRollout, modifier = Modifier.fillMaxWidth()) { content() }
-    else Card(Modifier.fillMaxWidth()) { content() }
+    if (canUpgrade) IchorCard(onClick = onRollout, modifier = Modifier.fillMaxWidth()) { content() }
+    else IchorCard(Modifier.fillMaxWidth()) { content() }
 }

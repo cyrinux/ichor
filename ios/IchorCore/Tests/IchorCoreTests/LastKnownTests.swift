@@ -5,13 +5,15 @@ final class LastKnownTests: XCTestCase {
     private let at = Date(timeIntervalSince1970: 1_700_000_000)
 
     private func up(_ addr: String, hostname: String = "cp-1") -> NodeOverview {
-        NodeOverview(node: addr, hostname: hostname, reachable: true, version: "v1.14.1", arch: "amd64", platform: "metal",
-                     role: "controlplane", stage: "running", ready: true, cpuCount: 4, memTotal: 8_000, memAvailable: 3_000)
+        NodeOverview(
+            node: addr, hostname: hostname, reachable: true, version: "v1.14.1", arch: "amd64", platform: "metal",
+            role: "controlplane", stage: "running", ready: true, cpuCount: 4, memTotal: 8_000, memAvailable: 3_000)
     }
 
     private func down(_ addr: String, lastSeen: Int64? = nil) -> NodeOverview {
-        NodeOverview(node: addr, hostname: addr, reachable: false, error: "unreachable: no route to host", errorKind: "network",
-                     role: "unknown", stage: "unknown", lastSeen: lastSeen)
+        NodeOverview(
+            node: addr, hostname: addr, reachable: false, error: "unreachable: no route to host", errorKind: "network",
+            role: "unknown", stage: "unknown", lastSeen: lastSeen)
     }
 
     private func overview(_ nodes: [NodeOverview]) -> ClusterOverview { ClusterOverview(context: "lab", nodes: nodes) }
@@ -22,7 +24,8 @@ final class LastKnownTests: XCTestCase {
     }
 
     func testAnUnreachableNodeKeepsWhatItSaidLast() {
-        let merged = mergeLastKnown(current: overview([down("10.0.0.1")]), previous: overview([up("10.0.0.1")]), previousAt: at)
+        let merged = mergeLastKnown(
+            current: overview([down("10.0.0.1")]), previous: overview([up("10.0.0.1")]), previousAt: at)
         let node = merged.nodes[0]
         XCTAssertEqual(node.hostname, "cp-1")
         XCTAssertEqual(node.version, "v1.14.1")
@@ -44,7 +47,8 @@ final class LastKnownTests: XCTestCase {
 
     func testLastSeenIsKeptAcrossFailedRefreshes() {
         let first = mergeLastKnown(current: overview([down("a")]), previous: overview([up("a")]), previousAt: at)
-        let second = mergeLastKnown(current: overview([down("a")]), previous: first, previousAt: at.addingTimeInterval(60))
+        let second = mergeLastKnown(
+            current: overview([down("a")]), previous: first, previousAt: at.addingTimeInterval(60))
         XCTAssertEqual(second.nodes[0].lastSeen, 1_700_000_000_000)
         XCTAssertEqual(second.nodes[0].hostname, "cp-1")
     }
@@ -68,13 +72,15 @@ final class LastKnownTests: XCTestCase {
     }
 
     func testOverviewRoundTripsWithLastSeen() throws {
-        let merged = mergeLastKnown(current: overview([down("a"), up("b")]), previous: overview([up("a")]), previousAt: at)
+        let merged = mergeLastKnown(
+            current: overview([down("a"), up("b")]), previous: overview([up("a")]), previousAt: at)
         let json = String(decoding: try JSONEncoder().encode(merged), as: UTF8.self)
         XCTAssertEqual(try TalosJSON.decode(ClusterOverview.self, from: json), merged)
     }
 
     func testGoOverviewWithoutCapacityOrLastSeenDecodes() throws {
-        let json = #"{"context":"lab","nodes":[{"node":"a","hostname":"a","reachable":true,"version":"v1","arch":"arm64","platform":"metal","role":"worker","stage":"running","ready":true,"unmetConditions":null}]}"#
+        let json =
+            #"{"context":"lab","nodes":[{"node":"a","hostname":"a","reachable":true,"version":"v1","arch":"arm64","platform":"metal","role":"worker","stage":"running","ready":true,"unmetConditions":null}]}"#
         let node = try TalosJSON.decode(ClusterOverview.self, from: json).nodes[0]
         XCTAssertNil(node.lastSeen)
         XCTAssertEqual(node.cpuCount, 0)
@@ -92,9 +98,11 @@ final class LastKnownTests: XCTestCase {
     }
 
     func testDomainKeysAreDistinctPerNode() {
-        let keys: [LastKnownDomain] = [.overview, .etcd, .kubespan, .inventory, .workloads, .pods, .cronJobs,
-                                       .services(node: "a"), .services(node: "b"), .resources(node: "a"),
-                                       .hardware(node: "a"), .network(node: "a"), .images(node: "a")]
+        let keys: [LastKnownDomain] = [
+            .overview, .etcd, .kubespan, .inventory, .workloads, .pods, .cronJobs,
+            .services(node: "a"), .services(node: "b"), .resources(node: "a"),
+            .hardware(node: "a"), .network(node: "a"), .images(node: "a"),
+        ]
         XCTAssertEqual(Set(keys.map(\.key)).count, keys.count)
     }
 
@@ -107,8 +115,12 @@ final class LastKnownTests: XCTestCase {
         XCTAssertEqual(when, at)
         XCTAssertEqual(error, "timeout")
         // A success replaces it, error gone.
-        guard case .loaded(2, _, nil) = shown.refreshed(with: .loaded(2, at: at)) else { return XCTFail("not replaced") }
+        guard case .loaded(2, _, nil) = shown.refreshed(with: .loaded(2, at: at)) else {
+            return XCTFail("not replaced")
+        }
         // Nothing shown yet: the failure is shown.
-        guard case .failed("timeout") = LoadState<Int>.loading.refreshed(with: .failed("timeout")) else { return XCTFail("no error") }
+        guard case .failed("timeout") = LoadState<Int>.loading.refreshed(with: .failed("timeout")) else {
+            return XCTFail("no error")
+        }
     }
 }

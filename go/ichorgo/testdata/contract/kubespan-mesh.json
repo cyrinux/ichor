@@ -1,0 +1,10 @@
+{
+  "broken": 1,
+  "checked": true,
+  "context": "demo",
+  "issues": {
+    "node-a|node-b": "critical|neverHandshaked|0|node-a|node-b"
+  },
+  "links": 3,
+  "partial": false
+}

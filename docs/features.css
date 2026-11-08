@@ -1,0 +1,782 @@
+/* The full tour: what the sections and the page's header need. */
+:not(pre) > code {
+  overflow-wrap: anywhere;
+}
+
+@keyframes arrive {
+  from {
+          opacity: 0;
+  transform: translateY(-14px) scale(0.97);
+  }
+        to {
+          opacity: 1;
+  transform: none;
+  };
+}
+
+section {
+  padding: 4rem 0;
+  border-top: 1px solid var(--line);
+}
+
+h2 {
+  font-weight: 400;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin: 0 0 0.75rem;
+}
+
+.intro {
+  color: var(--ink-2);
+  max-width: var(--measure);
+  margin: 0 0 2rem;
+}
+
+.site-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  gap: 1rem 1.5rem;
+  max-width: 48rem;
+}
+
+.site-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.site-form .wide {
+  grid-column: 1 / -1;
+}
+
+.site-form label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.site-form input,
+.site-form textarea {
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  width: 100%;
+}
+
+.site-form textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.site-form input:focus-visible,
+.site-form textarea:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.site-form .button {
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+}
+
+.site-form .note {
+  margin: 0;
+}
+
+.map {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.map th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  padding: 0 1rem 0.6rem 0;
+}
+
+.map td {
+  padding: 0.95rem 1rem 0.95rem 0;
+  border-top: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.map td.cmd {
+  font-size: 0.92rem;
+  white-space: nowrap;
+  color: var(--ink-2);
+}
+
+.map td.what strong {
+  font-weight: 600;
+}
+
+.map td.what span {
+  display: block;
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+
+.role {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.roles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+.roles h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.roles code {
+  font-size: 0.9rem;
+  color: var(--accent-ink);
+}
+
+.roles p {
+  margin: 0.5rem 0 0;
+  color: var(--ink-2);
+  font-size: 0.98rem;
+}
+
+.roles .recommended {
+  border-left: 3px solid var(--ready);
+  padding-left: 1rem;
+}
+
+.roles > div {
+  border-left: 3px solid var(--line);
+  padding-left: 1rem;
+}
+
+.roles > div.recommended {
+  border-left-color: var(--ready);
+}
+
+.steps {
+  counter-reset: step;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-width: var(--measure);
+}
+
+.steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 0 0 1.75rem 3rem;
+}
+
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -0.1rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.steps h3 {
+  margin: 0 0 0.3rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.steps p {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+pre {
+  margin: 0.7rem 0 0;
+  padding: 0.8rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow-x: auto;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.platforms {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2.5rem;
+}
+
+.platforms h3 {
+  margin: 0 0 0.4rem;
+  font-weight: 600;
+}
+
+.platforms p {
+  color: var(--ink-2);
+  margin: 0 0 1rem;
+}
+
+@media (max-width: 860px) {
+  .roles,
+  .platforms {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .map thead {
+    display: none;
+  }
+
+  .map tr {
+    display: block;
+    border-top: 1px solid var(--line);
+    padding: 0.9rem 0;
+  }
+
+  .map td {
+    display: block;
+    border: 0;
+    padding: 0.1rem 0;
+  }
+
+  .map td.cmd {
+    white-space: normal;
+  }
+
+  .map td.role::before {
+    content: "Needs ";
+  }
+
+  :lang(fr) .map td.role::before {
+    content: "Rôle ";
+  }
+
+  :lang(es) .map td.role::before {
+    content: "Rol ";
+  }
+
+  :lang(uk) .map td.role::before {
+    content: "Роль ";
+  }
+
+  :lang(de) .map td.role::before {
+    content: "Rolle ";
+  }
+
+  :lang(it) .map td.role::before {
+    content: "Ruolo ";
+  }
+
+}
+
+.shots {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 0.5rem 0 1.25rem;
+  margin-top: 2rem;
+}
+
+.shots figure {
+  margin: 0;
+  flex: 0 0 auto;
+  width: min(240px, 70vw);
+  scroll-snap-align: start;
+}
+
+.shots img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--phone);
+}
+
+.shots figcaption {
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+
+.shots figcaption strong {
+  display: block;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.shots:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.donate {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.donate > div {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.25rem;
+}
+
+.donate h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.donate img {
+  display: block;
+  width: 148px;
+  height: 148px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.donate code {
+  display: block;
+  margin: 0.9rem 0 0.6rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.8rem;
+  word-break: break-all;
+  color: var(--ink);
+}
+
+.donate .row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.donate button,
+.donate .wallet {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.donate button:focus-visible,
+.donate .wallet:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin: 0 0 1rem;
+  font:
+          500 0.85rem/1 "IBM Plex Mono",
+          ui-monospace,
+          monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+
+.myth {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 3rem;
+  align-items: start;
+}
+
+.myth blockquote {
+  margin: 0;
+  padding-left: 1.25rem;
+  border-left: 3px solid var(--accent);
+  font-size: 1.35rem;
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.myth p {
+  margin: 0 0 1rem;
+  color: var(--ink-2);
+  max-width: var(--measure);
+}
+
+.faq {
+  max-width: var(--measure);
+}
+
+.faq details {
+  border-top: 1px solid var(--line);
+  padding: 1rem 0;
+}
+
+.faq details:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.faq summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.faq summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.faq details p {
+  margin: 0.6rem 0 0;
+  color: var(--ink-2);
+}
+
+@media (max-width: 860px) {
+  .myth {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+}
+
+.spotlight {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.insight {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 1.25rem;
+}
+
+.insight h3 {
+  margin: 1.1rem 0 0.35rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.insight p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.97rem;
+}
+
+.insight .ask {
+  margin-top: 0.9rem;
+  font: 500 0.85rem/1.4 "IBM Plex Mono", ui-monospace, monospace;
+  color: var(--accent-ink);
+}
+
+.insight.wide {
+  grid-column: 1 / -1;
+}
+
+/* A wide card with a screen: the screen beside its text. */
+.insight.wide:has(> .card-shot) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  column-gap: 1.5rem;
+  align-items: start;
+}
+.insight.wide > .card-shot {
+  grid-column: 1;
+  grid-row: 1 / span 8;
+  margin-bottom: 0;
+}
+.insight.wide > :not(.card-shot) {
+  grid-column: 2;
+}
+
+.insight.wide h3 {
+  margin-top: 0;
+}
+
+.insight p + p {
+  margin-top: 0.6rem;
+}
+
+.reassure {
+  margin: 1.5rem 0 0;
+  color: var(--ink-2);
+  font-size: 0.95rem;
+  max-width: var(--measure);
+}
+
+.alsonew {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2rem;
+  margin: 3rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.alsonew li {
+  border-left: 3px solid var(--accent);
+  padding-left: 1rem;
+}
+
+.alsonew h3 {
+  margin: 0 0 0.3rem;
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+.alsonew p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 960px) {
+  .spotlight {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .insight.wide:has(> .card-shot) {
+    display: block;
+  }
+  .insight.wide > .card-shot {
+    margin-bottom: 1rem;
+  }
+
+  .alsonew {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+}
+
+
+@media (max-width: 640px) {
+  .spotlight {
+    max-width: 34rem;
+  }
+
+}
+
+@media (max-width: 520px) {
+  .alsonew {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .insight {
+    padding: 1rem;
+  }
+
+}
+
+.providers {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 2.5rem;
+  align-items: start;
+  margin-top: 0.5rem;
+}
+
+.providers .intro {
+  margin-top: 0;
+}
+
+.ways {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.5rem 2rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ways li {
+  border-top: 2px solid var(--line);
+  padding-top: 0.8rem;
+}
+
+.ways li:first-child {
+  border-top-color: var(--accent);
+}
+
+.ways h3 {
+  margin: 0 0 0.3rem;
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+.ways p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 2.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips li {
+  font: 500 0.85rem/1 "IBM Plex Mono", ui-monospace, monospace;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+}
+
+.chips li.talos {
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+@media (max-width: 860px) {
+  .providers {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+  }
+
+}
+
+@media (max-width: 640px) {
+  .ways {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+
+  .providers .insight {
+    max-width: 34rem;
+  }
+
+}
+
+@media (max-width: 520px) {
+  .actions .button {
+    padding: 0.7rem 1rem;
+  }
+
+  .chips li {
+    font-size: 0.78rem;
+    padding: 0.4rem 0.65rem;
+  }
+
+  section {
+    padding: 3rem 0;
+  }
+
+}
+
+@media (max-width: 360px) {
+  .actions .button {
+    justify-content: center;
+  }
+
+  .actions .button.primary {
+    grid-column: 1 / -1;
+  }
+
+}
+
+.page-head {
+  padding: 7rem 1.5rem 3.5rem;
+  background: radial-gradient(120% 70% at 50% 0%, var(--navy-2), var(--navy));
+  color: var(--navy-ink);
+  text-align: center;
+}
+
+.page-head h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  font-weight: 300;
+  line-height: 1.15;
+}
+
+.page-head .lede {
+  margin: 1.25rem auto 0;
+  max-width: 62ch;
+  color: var(--navy-ink-2);
+}
+
+.page-head .release {
+  display: inline-block;
+  margin: 0 0 1.5rem;
+  color: var(--navy-ink);
+  font-size: 0.9rem;
+}
+
+.page-head .release b {
+  margin-right: 0.4rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--navy);
+}
+
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 2rem auto 0;
+  max-width: 48rem;
+}
+
+.toc a {
+  padding: 0.35rem 0.85rem;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.toc a:hover {
+  border-color: var(--accent);
+}
+
+main > section:first-child {
+  border-top: 0;
+}
+
+/* A card's screen: the top of the real screenshot, the whole of it in the gallery. */
+.card-shot {
+  display: block;
+  margin-bottom: 1rem;
+}
+.card-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 6;
+  object-fit: cover;
+  object-position: top;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}

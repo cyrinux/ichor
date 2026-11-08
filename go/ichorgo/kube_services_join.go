@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"cmp"
+	"context"
 	"slices"
 	"strconv"
 	"time"
@@ -117,11 +118,35 @@ func serviceAddresses(s serviceListObject) []string {
 	return addresses
 }
 
-// routesOf lists the URLs of the Ingresses and HTTPRoutes sending traffic to ref, the
-// routes map's own matching (KubeAppRoutes) narrowed to this Service.
+// withServiceRouteCerts badges every route of rows with the certificate its host serves,
+// each host read once.
+func withServiceRouteCerts(ctx context.Context, k *kubeClient, rows []serviceRow, now time.Time) {
+	var targets []certTarget
+
+	for _, r := range rows {
+		for _, route := range r.Routes {
+			if t, ok := routeCertTarget(route); ok {
+				targets = append(targets, t)
+			}
+		}
+	}
+
+	if len(targets) == 0 {
+		return
+	}
+
+	certs, managed := probeRouteCerts(ctx, targets, now), certManagerSecrets(ctx, k)
+	for i := range rows {
+		fillRouteCerts(rows[i].Routes, certs, managed, now)
+	}
+}
+
+// routesOf lists the URLs of the Ingresses, Gateway API routes and Traefik routes sending
+// traffic to ref, the routes map's own matching (KubeAppRoutes) narrowed to this Service.
 func routesOf(ref serviceRef, routes serviceRoutes) []kubeRoute {
 	only := map[serviceRef]bool{ref: true}
-	found := append(ingressRoutes(routes.ingresses, only), httpRouteRoutes(routes.httpRoutes, routes.gateways, only)...)
+	found := append(ingressRoutes(routes.ingresses, only), gatewayRoutes(routes.gatewayRoutes, routes.gateways, only)...)
+	found = append(found, traefikRoutes(routes.traefik, only)...)
 
 	return uniqueRoutes(found)
 }

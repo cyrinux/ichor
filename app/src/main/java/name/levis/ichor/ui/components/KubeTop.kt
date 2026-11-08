@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -138,7 +138,7 @@ fun TopSortChips(sort: TopSort, onSort: (TopSort) -> Unit, modifier: Modifier = 
             TopSort.CPU to R.string.node_processes_sort_cpu,
             TopSort.MEMORY to R.string.node_processes_sort_memory,
         ).forEach { (option, label) ->
-            FilterChip(selected = sort == option, onClick = { onSort(option) }, label = { Text(stringResource(label)) })
+            IchorFilterChip(selected = sort == option, onClick = { onSort(option) }, label = { Text(stringResource(label)) })
         }
     }
 }

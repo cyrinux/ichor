@@ -1,0 +1,30 @@
+{
+ "kind": "PolicyReportList",
+ "apiVersion": "wgpolicyk8s.io/v1alpha2",
+ "metadata": {},
+ "items": [
+  {
+   "metadata": {
+    "namespace": "billing"
+   },
+   "results": [
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "result": "pass",
+     "timestamp": {
+      "seconds": 1760000200
+     }
+    },
+    {
+     "source": "kyverno",
+     "policy": "require-labels",
+     "result": "pass",
+     "timestamp": {
+      "seconds": 1760000201
+     }
+    }
+   ]
+  }
+ ]
+}

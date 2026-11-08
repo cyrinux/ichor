@@ -230,6 +230,7 @@ func TestAuditExport(t *testing.T) {
 
 	recordOutcome("", "prod", auditAction{Action: "scale", Namespace: "web", Object: "Deployment/api", Params: "replicas=3"}, nil)
 	recordOutcome("", "lab", auditAction{Action: "reboot", Node: "10.0.0.2"}, errors.New("unreachable"))
+	recordOutcome("", "lab", auditAction{Action: "sanitize-pods", Namespace: "web", Object: "Pod×2"}, partialOutcome{"1 of 2 pods not deleted"})
 
 	js, err := AuditExport("prod", "json")
 	if err != nil {
@@ -246,7 +247,7 @@ func TestAuditExport(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, want := range []string{"| Time", "2026-10-01 12:00:00Z", "web/Deployment/api", "replicas=3", "10.0.0.2", "failed: unreachable"} {
+	for _, want := range []string{"| Time", "2026-10-01 12:00:00Z", "web/Deployment/api", "replicas=3", "10.0.0.2", "failed: unreachable", "| partial: 1 of 2 pods not deleted |"} {
 		if !strings.Contains(md, want) {
 			t.Errorf("markdown export lacks %q:\n%s", want, md)
 		}

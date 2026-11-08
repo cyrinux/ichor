@@ -319,6 +319,7 @@ func StartClusterUpgrade(configYAML, contextName, kubeServer, version string, dr
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(configYAML, contextName)()
 
 		var upgraded []string
 
@@ -620,7 +621,8 @@ func (t *talosClusterSteps) upgrade(ctx context.Context, n clusterPlanNode, emit
 // uncordon) under the roll's lock.
 func (t *talosClusterSteps) drainedUpgrade(ctx context.Context, n clusterPlanNode, image string, emit func(phase, message string)) error {
 	planCtx, planCancel := context.WithTimeout(ctx, planTimeout)
-	plan, err := gatherMaintenancePlan(planCtx, t.s, t.kube, n.Node)
+	// The roll holds the lock this plan reads: as its own, it does not refuse the roll.
+	plan, err := gatherMaintenancePlanFor(planCtx, t.s, t.kube, n.Node, t.lock.holder())
 
 	planCancel()
 

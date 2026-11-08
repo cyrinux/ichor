@@ -75,7 +75,8 @@ public struct KubeSsoRoleChoice: Codable, Equatable, Hashable, Sendable {
         var picked = values.filter { $0.key == kubeAWSStartURLField || $0.key == kubeAWSRegionField }
         picked[kubeAWSAccountField] = accountId
         picked[kubeAWSRoleField] = roleName
-        return kubeSecretsJSON(fields: [kubeAWSStartURLField, kubeAWSRegionField, kubeAWSAccountField, kubeAWSRoleField], values: picked)
+        return kubeSecretsJSON(
+            fields: [kubeAWSStartURLField, kubeAWSRegionField, kubeAWSAccountField, kubeAWSRoleField], values: picked)
     }
 }
 
@@ -99,9 +100,11 @@ public struct KubeSignInInfo: Decodable, Equatable, Sendable {
     /// picks one.
     public let choices: [KubeSsoRoleChoice]
 
-    public init(method: String, kind: String, fields: [String] = [], options: [[String]] = [],
-                values: [String: String] = [:], signedIn: Bool = false, user: String? = nil, sessionExpires: Int64 = 0,
-                choices: [KubeSsoRoleChoice] = []) {
+    public init(
+        method: String, kind: String, fields: [String] = [], options: [[String]] = [],
+        values: [String: String] = [:], signedIn: Bool = false, user: String? = nil, sessionExpires: Int64 = 0,
+        choices: [KubeSsoRoleChoice] = []
+    ) {
         self.method = method
         self.kind = kind
         self.fields = fields
@@ -113,7 +116,9 @@ public struct KubeSignInInfo: Decodable, Equatable, Sendable {
         self.choices = choices
     }
 
-    private enum CodingKeys: String, CodingKey { case method, kind, fields, options, values, signedIn, user, sessionExpires, choices }
+    private enum CodingKeys: String, CodingKey {
+        case method, kind, fields, options, values, signedIn, user, sessionExpires, choices
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -160,8 +165,10 @@ public struct KubeSignInPrompt: Decodable, Equatable, Sendable {
     /// Seconds the device code stays valid (0: unknown).
     public let expiresIn: Int
 
-    public init(kind: String, url: String, userCode: String? = nil, verificationURL: String? = nil,
-                redirectPrefix: String? = nil, expiresIn: Int = 0) {
+    public init(
+        kind: String, url: String, userCode: String? = nil, verificationURL: String? = nil,
+        redirectPrefix: String? = nil, expiresIn: Int = 0
+    ) {
         self.kind = kind
         self.url = url
         self.userCode = userCode
@@ -209,8 +216,10 @@ public enum KubeFieldInput: Equatable, Sendable {
 public func kubeFieldInput(_ field: String) -> KubeFieldInput {
     switch field {
     case "gcpServiceAccountJson", "gcpUserCredentialsJson", kubeLoginConfigField: .json
-    case "awsSecretAccessKey", "awsSessionToken", "azureClientSecret", "doApiToken", "rancherApiKey", "serviceAccountKey",
-         "gcpOAuthClientSecret": .secret
+    case "awsSecretAccessKey", "awsSessionToken", "azureClientSecret", "doApiToken", "rancherApiKey",
+        "serviceAccountKey",
+        "gcpOAuthClientSecret":
+        .secret
     default: .plain
     }
 }
@@ -222,8 +231,9 @@ public let kubeGoogleSignInField = "gcpGoogleSignIn"
 /// What the GKE "Sign in with Google" option submits to the Go core (KubeSetCredentials):
 /// the browser sign-in then starts.
 public func kubeGoogleSignInSecretsJSON(projects: String = "") -> String {
-    kubeSecretsJSON(fields: [kubeGoogleSignInField, "gcpProjects"],
-                    values: [kubeGoogleSignInField: "ios", "gcpProjects": projects])
+    kubeSecretsJSON(
+        fields: [kubeGoogleSignInField, "gcpProjects"],
+        values: [kubeGoogleSignInField: "ios", "gcpProjects": projects])
 }
 
 /// GKE's "Your Google account (like gcloud)" option: the browser sign-in with gcloud's own
@@ -238,7 +248,8 @@ public let kubeLoginConfigField = "gcpLoginConfigJson"
 /// Discovery's OAuth, gcloud, workforce login config, native iOS Google and IAM Identity
 /// Center options need a browser round first.
 public func kubeDiscoverNeedsSignIn(_ fields: [String]) -> Bool {
-    fields.contains(kubeGoogleSignInField) || fields.contains(kubeGcloudSignInField) || fields.contains("gcpOAuthClientId")
+    fields.contains(kubeGoogleSignInField) || fields.contains(kubeGcloudSignInField)
+        || fields.contains("gcpOAuthClientId")
         || fields.contains(kubeLoginConfigField) || fields.contains(kubeAWSStartURLField)
 }
 
@@ -255,8 +266,8 @@ public func kubeCallbackScheme(of redirectPrefix: String?) -> String {
 /// Fields that may be left empty.
 public func kubeFieldOptional(_ field: String) -> Bool {
     // The account and role of IAM Identity Center are picked from a list after the sign-in.
-    field == "awsSessionToken" || field == "gcpProjects" || field == "gcpOAuthRedirectUrl" ||
-        field == kubeAWSAccountField || field == kubeAWSRoleField || field == kubeAWSRegionsField
+    field == "awsSessionToken" || field == "gcpProjects" || field == "gcpOAuthRedirectUrl"
+        || field == kubeAWSAccountField || field == kubeAWSRoleField || field == kubeAWSRegionsField
 }
 
 /// The JSON object of `values` for `fields` (trimmed, empty ones left out), as KubeSetCredentials
@@ -276,7 +287,10 @@ public func kubeSecretsJSON(fields: [String], values: [String: String]) -> Strin
 
 /// Whether every required field of `fields` has a value; a marker needs none.
 public func kubeFieldsComplete(_ fields: [String], values: [String: String]) -> Bool {
-    fields.allSatisfy { $0 == kubeGcloudSignInField || kubeFieldOptional($0) || !(values[$0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    fields.allSatisfy {
+        $0 == kubeGcloudSignInField || kubeFieldOptional($0)
+            || !(values[$0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 }
 
 /// The providers cloud discovery offers, in the order shown (Go KubeDiscoverFields keys).
@@ -307,8 +321,10 @@ public struct DiscoveryProgress: Decodable, Equatable {
     public var current: [String] = []
     public var found: [String] = []
 
-    public init(running: Bool = false, projects: Int = 0, scanned: Int = 0, clusters: Int = 0, refused: [String] = [],
-                current: [String] = [], found: [String] = []) {
+    public init(
+        running: Bool = false, projects: Int = 0, scanned: Int = 0, clusters: Int = 0, refused: [String] = [],
+        current: [String] = [], found: [String] = []
+    ) {
         self.running = running
         self.projects = projects
         self.scanned = scanned
@@ -400,7 +416,9 @@ public func decodeSignInDiscovered(_ json: String) throws -> [String] {
 }
 
 /// The credentials `provider` takes, as field sets: its options, else its one set of fields.
-public func kubeDiscoverOptionSets(provider: String, fields: [String: [String]], options: [String: [[String]]]) -> [[String]] {
+public func kubeDiscoverOptionSets(provider: String, fields: [String: [String]], options: [String: [[String]]])
+    -> [[String]]
+{
     let sets = (options[provider] ?? []).filter { !$0.isEmpty }
     if !sets.isEmpty { return sets }
     return fields[provider].map { [$0] } ?? []
@@ -409,8 +427,10 @@ public func kubeDiscoverOptionSets(provider: String, fields: [String: [String]],
 /// The stored names of the contexts an import added that sign in through a method (`signIn`):
 /// those the user kept, under the name the core gives a taken one unless it replaced the same
 /// cluster. What discovery signs in with the account's credentials once saved.
-public func importedSignInContexts(summary: ConfigSummary, selected: Set<Int>, replacing: Set<Int>,
-                                   conflicts: [(index: Int, suggested: String)]) -> [String] {
+public func importedSignInContexts(
+    summary: ConfigSummary, selected: Set<Int>, replacing: Set<Int>,
+    conflicts: [(index: Int, suggested: String)]
+) -> [String] {
     summary.contexts.indices.compactMap { index in
         let ctx = summary.contexts[index]
         guard selected.contains(index), ctx.problem == nil, ctx.signIn != nil else { return nil }
@@ -464,16 +484,20 @@ public enum KubeAuthMap {
 /// The stored kubeconfig context the Kubernetes calls of `talos` go through, nil when it uses
 /// the admin kubeconfig Talos issues: a Talos cluster linked (`links`: Talos fingerprint → kube
 /// fingerprint) to a kube cluster still stored (`kubeContexts`).
-public func kubeAccessContext(of talos: ContextSummary?, links: [String: String], kubeContexts: [ContextSummary]) -> String? {
+public func kubeAccessContext(of talos: ContextSummary?, links: [String: String], kubeContexts: [ContextSummary])
+    -> String?
+{
     // An Omni cluster's Kubernetes goes through Omni, with its sign-in: no link applies.
     guard let talos, !talos.isKube, !talos.demo, !talos.omni, !talos.fingerprint.isEmpty,
-          let target = links[talos.fingerprint], !target.isEmpty else { return nil }
+        let target = links[talos.fingerprint], !target.isEmpty
+    else { return nil }
     return kubeContexts.first { $0.isKube && $0.fingerprint == target }?.name
 }
 
 /// The links whose Talos cluster and kube cluster are both still stored.
 public func keepKubeAccess(_ links: [String: String], talos: [String], kube: [String]) -> [String: String] {
-    let talosKnown = Set(talos.filter { !$0.isEmpty }), kubeKnown = Set(kube.filter { !$0.isEmpty })
+    let talosKnown = Set(talos.filter { !$0.isEmpty })
+    let kubeKnown = Set(kube.filter { !$0.isEmpty })
     return links.filter { talosKnown.contains($0.key) && kubeKnown.contains($0.value) }
 }
 
@@ -509,8 +533,8 @@ public struct ImportTextRoute: Decodable, Sendable {
     /// The fields of a secret-free file (an ~/.aws/config: start URL, regions, account, role) to prefill.
     public let values: [String: String]
     public var isGkeCredential: Bool {
-        kind == "credentials" && provider == "gke" &&
-            ["gcpUserCredentialsJson", "gcpServiceAccountJson", kubeLoginConfigField].contains(field)
+        kind == "credentials" && provider == "gke"
+            && ["gcpUserCredentialsJson", "gcpServiceAccountJson", kubeLoginConfigField].contains(field)
     }
 
     /// An ~/.aws/config that signs in with IAM Identity Center: EKS discovery with `values`.

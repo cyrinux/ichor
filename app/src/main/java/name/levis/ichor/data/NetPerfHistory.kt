@@ -2,6 +2,7 @@ package name.levis.ichor.data
 
 import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.model.NetPerfReport
+import name.levis.ichor.model.withReport
 import java.io.File
 
 /**
@@ -14,10 +15,15 @@ class NetPerfHistory(private val directory: File) {
     fun read(scope: String): List<NetPerfReport> =
         store(scope).read()?.let { TalosJson.decodeFromString(SERIALIZER, it.toString(Charsets.UTF_8)) }.orEmpty()
 
+    @Synchronized
     fun save(scope: String, reports: List<NetPerfReport>) {
         if (reports.isEmpty()) store(scope).clear()
         else store(scope).write(TalosJson.encodeToString(SERIALIZER, reports).toByteArray())
     }
+
+    /** Puts [report] first in [scope]'s list (the network test's own save, wherever the screen is). */
+    @Synchronized
+    fun add(scope: String, report: NetPerfReport) = save(scope, read(scope).withReport(report))
 
     private companion object {
         val SERIALIZER = ListSerializer(NetPerfReport.serializer())

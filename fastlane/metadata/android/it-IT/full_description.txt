@@ -1,6 +1,8 @@
-Ichor porta il tuo cluster Talos Linux in tasca. L'app comunica con l'API di Talos tramite il client Go ufficiale, lo stesso codice di talosctl: contesti talosconfig, mTLS e proxy da endpoint a nodo funzionano esattamente come sulla tua workstation.
+Ichor porta in tasca qualsiasi cluster Kubernetes, dal suo kubeconfig: EKS, GKE, AKS, DigitalOcean, Rancher, Omni o il tuo, con accesso OIDC e cloud. Workload, pod, log, eventi, Argo CD e Flux, nei limiti del suo RBAC.
 
-Porta il tuo cluster: l'app richiede un talosconfig di un cluster Talos Linux che gestisci. Non ha un server né un account propri.
+Su Talos Linux arriva fino ai nodi: stato dei nodi, etcd, aggiornamenti e configurazione della macchina. L'app comunica con l'API di Talos tramite il client Go ufficiale, lo stesso codice di talosctl: contesti talosconfig, mTLS e proxy da endpoint a nodo funzionano esattamente come sulla tua workstation.
+
+Porta il tuo cluster: l'app richiede un kubeconfig o un talosconfig di un cluster che gestisci. Non ha un server né un account propri.
 
 <b>Cosa vedi</b>
 • Panoramica del cluster: ogni nodo pronto, non pronto o irraggiungibile, con le condizioni non soddisfatte, la deriva dell'orologio e gli aggiornamenti di Talos disponibili

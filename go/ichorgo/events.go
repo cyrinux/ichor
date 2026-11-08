@@ -6,12 +6,15 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 	"slices"
 	"strings"
 	"time"
 
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
 	"github.com/siderolabs/talos/pkg/machinery/client"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -102,41 +105,107 @@ func runEvents(ctx context.Context, configYAML, contextName, nodes string, tail 
 		return err.Error()
 	}
 
-	ch := make(chan eventItem)
+	// Multi-node proxying (WithNodes, answers tagged through common.Metadata) is deprecated
+	// since Talos 1.14 and planned for removal in 2.0: by then, open one stream per node.
+	//lint:ignore SA1019 see above
+	nodesCtx := client.WithNodes(ctx, targets...)
 
-	go func() {
-		// Multi-node proxying (WithNodes, answers tagged through common.Metadata) is deprecated
-		// since Talos 1.14 and planned for removal in 2.0: by then, open one stream per node.
-		//lint:ignore SA1019 see above
-		err := safeCall(func() error { return watchEvents(client.WithNodes(ctx, targets...), s.client, tail, ch) })
-		if err != nil && ctx.Err() == nil {
-			select {
-			case ch <- eventItem{err: err}:
-			case <-ctx.Done():
-			}
-		}
-	}()
+	// A dropped stream (apid restarting, the network going away) is reopened after the last
+	// event relayed, so none is lost or repeated; only a refusal ends the feed.
+	from, backoff := client.WithTailEvents(int32(tail)), eventsBackoffMin
 
 	for {
+		lastID, err := relayEventStream(nodesCtx, s.client, from, listener)
+		if ctx.Err() != nil {
+			return ""
+		}
+
+		if lastID != "" {
+			from, backoff = client.WithTailID(lastID), eventsBackoffMin
+		}
+
+		if permanentEventsError(err) {
+			return friendlyError(err)
+		}
+
+		emitJSON(reconnectingEvent(time.Now()), listener.OnEvent)
+
 		select {
 		case <-ctx.Done():
 			return ""
+		case <-time.After(backoff):
+		}
+
+		backoff = min(2*backoff, eventsBackoffMax)
+	}
+}
+
+// eventsBackoffMin and eventsBackoffMax pace the reopening of a dropped events stream:
+// doubling from min up to max, back to min once a stream relayed an event.
+var (
+	eventsBackoffMin = time.Second
+	eventsBackoffMax = 30 * time.Second
+)
+
+// relayEventStream relays one events stream to listener until it ends; it returns the id of the
+// last Talos event relayed (empty when none) and why the stream ended.
+func relayEventStream(ctx context.Context, c *client.Client, from client.EventsOptionFunc, listener EventListener) (lastID string, err error) {
+	ch := make(chan eventItem)
+	done := make(chan error, 1)
+
+	go func() { done <- safeCall(func() error { return watchEvents(ctx, c, from, ch) }) }()
+
+	for {
+		select {
+		case err := <-done:
+			return lastID, err
 		case res := <-ch:
-			if res.err != nil {
-				if ctx.Err() != nil {
-					return ""
-				}
-
-				return friendlyError(res.err)
-			}
-
 			ev := res.event
 			if ev.Kind == "address" {
 				privacy.learnHost(ev.Subject, "node")
 			}
 
+			if _, ok := xidTime(ev.ID); ok {
+				lastID = ev.ID
+			}
+
 			emitJSON(ev, listener.OnEvent)
 		}
+	}
+}
+
+// permanentEventsError tells whether reopening the events stream would fail the same way:
+// the API refuses it (an old Talos, no permission, a bad request) or its answer cannot be
+// read. A clean end (EOF) and a lost connection are worth a new stream.
+func permanentEventsError(err error) bool {
+	if errors.Is(err, io.EOF) {
+		return false
+	}
+
+	st, ok := status.FromError(err)
+	if !ok {
+		return true
+	}
+
+	switch st.Code() {
+	case codes.Unimplemented, codes.PermissionDenied, codes.Unauthenticated, codes.InvalidArgument, codes.NotFound, codes.FailedPrecondition:
+		return true
+	default:
+		return false
+	}
+}
+
+// reconnectingEvent tells the timeline the feed was dropped and is being reopened; its id is
+// unique, as the apps drop an event whose id they already have.
+func reconnectingEvent(at time.Time) nodeEvent {
+	return nodeEvent{
+		ID:       fmt.Sprintf("reconnect-%d", at.UnixNano()),
+		At:       at.UnixMilli(),
+		Kind:     "other",
+		Subject:  "events",
+		Action:   "reconnecting",
+		Message:  "reconnecting to the events feed…",
+		Severity: "warning",
 	}
 }
 
@@ -229,14 +298,13 @@ var errUnsupportedAction = errors.New("unsupported service action")
 
 type eventItem struct {
 	event nodeEvent
-	err   error
 }
 
 // watchEvents streams events like client.EventsWatchV2, but keeps going where that ends the
 // whole stream: events of a type this client can't decode are skipped, and a node that fails
 // (offline, say) is reported as an error event while the other nodes keep streaming.
-func watchEvents(ctx context.Context, c *client.Client, tail int, ch chan<- eventItem) error {
-	stream, err := c.Events(ctx, client.WithTailEvents(int32(tail)))
+func watchEvents(ctx context.Context, c *client.Client, from client.EventsOptionFunc, ch chan<- eventItem) error {
+	stream, err := c.Events(ctx, from)
 	if err != nil {
 		return fmt.Errorf("error fetching events: %w", err)
 	}

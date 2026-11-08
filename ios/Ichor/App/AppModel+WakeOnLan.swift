@@ -5,7 +5,9 @@ extension AppModel {
     /// The cluster whose nodes Wake-on-LAN applies to; nil in screenshot mode (node addresses
     /// are masked then and would not match the saved ones, and MACs are revealing).
     var wakeOnLanFingerprint: String? {
-        guard !privacyMask, let fingerprint = activeSummary?.fingerprint, !fingerprint.isEmpty else { return nil }
+        guard !settings.privacyMask, let fingerprint = activeSummary?.fingerprint, !fingerprint.isEmpty else {
+            return nil
+        }
         return fingerprint
     }
 
@@ -16,7 +18,9 @@ extension AppModel {
         let store = WakeOnLanStore.shared
         for node in nodes where node.reachable && store.shouldRecord(fingerprint: fingerprint, node: node.node) {
             // Unreadable now: tried again on a later load.
-            guard let network = try? await client.network(node: node.node), wakeOnLanFingerprint == fingerprint else { continue }
+            guard let network = try? await client.network(node: node.node), wakeOnLanFingerprint == fingerprint else {
+                continue
+            }
             store.record(IchorCore.seenMacs(network.links), fingerprint: fingerprint, node: node.node)
         }
     }

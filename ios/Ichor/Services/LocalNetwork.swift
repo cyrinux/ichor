@@ -25,7 +25,9 @@ enum LocalNetwork {
     /// The broadcast address of the phone's Wi-Fi or Ethernet IPv4 network (e.g. 192.168.1.255).
     static func directedBroadcastAddress() -> String? {
         for entry in interfaceAddresses() where isLocal(entry.name) {
-            if let bytes = entry.ipv4, let broadcast = directedBroadcast(bytes, prefix: entry.prefixLength) { return broadcast }
+            if let bytes = entry.ipv4, let broadcast = directedBroadcast(bytes, prefix: entry.prefixLength) {
+                return broadcast
+            }
         }
         return nil
     }
@@ -59,16 +61,19 @@ enum LocalNetwork {
             let entry = pointer.pointee
             let flags = Int32(entry.ifa_flags)
             guard flags & IFF_UP != 0, flags & IFF_RUNNING != 0, flags & IFF_LOOPBACK == 0,
-                  let addr = entry.ifa_addr, let mask = entry.ifa_netmask else { continue }
+                let addr = entry.ifa_addr, let mask = entry.ifa_netmask
+            else { continue }
             let name = String(cString: entry.ifa_name)
             switch Int32(addr.pointee.sa_family) {
             case AF_INET:
                 let ip = addr.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { $0.pointee.sin_addr }
                 let netmask = mask.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { $0.pointee.sin_addr }
-                let bytes = withUnsafeBytes(of: ip.s_addr) { Array($0) } // network order
+                let bytes = withUnsafeBytes(of: ip.s_addr) { Array($0) }  // network order
                 let prefix = UInt32(bigEndian: netmask.s_addr).nonzeroBitCount
-                out.append(InterfaceAddress(name: name, address: bytes.map(String.init).joined(separator: "."),
-                                            prefixLength: prefix, ipv4: bytes))
+                out.append(
+                    InterfaceAddress(
+                        name: name, address: bytes.map(String.init).joined(separator: "."),
+                        prefixLength: prefix, ipv4: bytes))
             case AF_INET6:
                 var ip = addr.withMemoryRebound(to: sockaddr_in6.self, capacity: 1) { $0.pointee.sin6_addr }
                 let netmask = mask.withMemoryRebound(to: sockaddr_in6.self, capacity: 1) { $0.pointee.sin6_addr }

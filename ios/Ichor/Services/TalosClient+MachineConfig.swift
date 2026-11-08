@@ -5,23 +5,23 @@ import IchorCore
 /// A machine config being tried on a node. `events` finishes after `done`. Cancelling (or
 /// dropping the consuming task) only stops following: the node reverts by itself at the end
 /// of the timeout.
-final class ConfigTryHandle: @unchecked Sendable {
+final class ConfigTryHandle: Sendable {
     let events: AsyncStream<ConfigTryEvent>
-    private let run: IchorgoConfigTryRun?
+    private let run: GoObject<IchorgoConfigTryRun>?
 
     fileprivate init(events: AsyncStream<ConfigTryEvent>, run: IchorgoConfigTryRun?) {
         self.events = events
-        self.run = run
+        self.run = run.map(GoObject.init)
     }
 
     /// Makes the tried config permanent.
-    func keep() { run?.keep() }
+    func keep() { run?.value.keep() }
 
     /// Puts the previous config back now instead of waiting for the timeout.
-    func revert() { run?.revert() }
+    func revert() { run?.value.revert() }
 
     /// Stops following; the change is not kept.
-    func cancel() { run?.cancel() }
+    func cancel() { run?.value.cancel() }
 }
 
 /// Editing the machine config: schema, tree, field edits, preview and the try-mode apply (see
@@ -60,6 +60,22 @@ extension TalosClient {
         try await Self.json { IchorgoDriftFixEdits(draft, fix.key, fix.before, fix.after, $0) }
     }
 
+    /// Whether `content` is a Talos patch that can be tried on a node (pure, no cluster).
+    static func talosPatchDetect(_ content: String) async throws -> TalosPatchInfo {
+        try await json { IchorgoTalosPatchDetect(content, $0) }
+    }
+
+    /// `node`'s config with `patch` applied (os:admin: read with its secrets, checked with a
+    /// dry run), redacted: the draft the review shows.
+    func talosPatchDraft(node: String, patch: String) async throws -> TalosPatchDraft {
+        try await Self.json { [config, context] in IchorgoTalosPatchDraft(config, context, node, patch, $0) }
+    }
+
+    /// The field edits of `draft` that make `patch`, when it only sets values (pure).
+    func talosPatchEdits(_ draft: String, patch: String) async throws -> SnippetEdits {
+        try await Self.json { IchorgoTalosPatchEdits(draft, patch, $0) }
+    }
+
     /// What applying `draft` would change, validated by the node with a dry run (os:admin).
     /// `base` is the config the draft was made from, secrets hidden.
     func previewMachineConfig(node: String, base: String, draft: String) async throws -> ConfigPreview {
@@ -77,16 +93,16 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartConfigTry(config, context, node, base, draft, timeoutSeconds, bridge)
+        let run = IchorgoStartConfigTry(config, context, node, base, draft, timeoutSeconds, bridge).map(GoObject.init)
         continuation.onTermination = { _ in
-            run?.cancel()
-            _ = bridge // keep the listener alive for the whole try
+            run?.value.cancel()
+            _ = bridge  // keep the listener alive for the whole try
         }
         if run == nil {
             continuation.yield(.done(.failed(String(localized: "The config could not be applied."))))
             continuation.finish()
         }
-        return ConfigTryHandle(events: stream, run: run)
+        return ConfigTryHandle(events: stream, run: run?.value)
     }
 }
 
@@ -99,7 +115,9 @@ enum ConfigApplyEvent: Sendable {
 extension TalosClient {
     /// Applies `draft` for good in `mode` (os:admin): now, at the next reboot, or now with a
     /// reboot. Ending the stream stops following the run; what was sent stays.
-    func applyMachineConfig(node: String, base: String, draft: String, mode: ConfigApplyMode) -> AsyncStream<ConfigApplyEvent> {
+    func applyMachineConfig(node: String, base: String, draft: String, mode: ConfigApplyMode) -> AsyncStream<
+        ConfigApplyEvent
+    > {
         Self.bridged { [config, context] continuation in
             let bridge = ConfigApplyBridge(
                 progress: { continuation.yield(.progress($0)) },
@@ -114,7 +132,7 @@ extension TalosClient {
     }
 }
 
-private final class ConfigApplyBridge: NSObject, IchorgoConfigApplyListenerProtocol, @unchecked Sendable {
+private final class ConfigApplyBridge: NSObject, IchorgoConfigApplyListenerProtocol, Sendable {
     private let sink: JSONSink<ConfigApplyProgress>
 
     init(progress: @escaping @Sendable (ConfigApplyProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {
@@ -126,11 +144,13 @@ private final class ConfigApplyBridge: NSObject, IchorgoConfigApplyListenerProto
     func onDone(_ errMessage: String?) { sink.finish(errMessage) }
 }
 
-private final class ConfigTryBridge: NSObject, IchorgoConfigTryListenerProtocol, @unchecked Sendable {
+private final class ConfigTryBridge: NSObject, IchorgoConfigTryListenerProtocol, Sendable {
     private let progress: @Sendable (ConfigTryProgress) -> Void
     private let done: @Sendable (ConfigTryOutcome) -> Void
 
-    init(progress: @escaping @Sendable (ConfigTryProgress) -> Void, done: @escaping @Sendable (ConfigTryOutcome) -> Void) {
+    init(
+        progress: @escaping @Sendable (ConfigTryProgress) -> Void, done: @escaping @Sendable (ConfigTryOutcome) -> Void
+    ) {
         self.progress = progress
         self.done = done
     }

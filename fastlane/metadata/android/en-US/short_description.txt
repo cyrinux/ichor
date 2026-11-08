@@ -1,1 +1,1 @@
-Monitor your Talos Linux cluster: node health, logs, etcd and instant alerts.
+Any Kubernetes cluster from a kubeconfig, plus the Talos layer: nodes and etcd

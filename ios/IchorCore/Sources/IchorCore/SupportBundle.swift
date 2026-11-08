@@ -58,7 +58,10 @@ public struct SupportBundleProgress: Equatable, Sendable {
     /// Whole-bundle counting only: the closing report came.
     public let closed: Bool
 
-    public init(latest: [String: SupportProgress] = [:], current: String? = nil, countsWholeBundle: Bool = false, closed: Bool = false) {
+    public init(
+        latest: [String: SupportProgress] = [:], current: String? = nil, countsWholeBundle: Bool = false,
+        closed: Bool = false
+    ) {
         self.latest = latest
         self.current = current
         self.countsWholeBundle = countsWholeBundle
@@ -69,8 +72,9 @@ public struct SupportBundleProgress: Equatable, Sendable {
         var next = latest
         next[progress.node] = progress
         let whole = countsWholeBundle || (latest[progress.node] == nil && progress.done > 0 && !progress.finished)
-        return SupportBundleProgress(latest: next, current: progress.node, countsWholeBundle: whole,
-                                     closed: closed || (whole && progress.finished))
+        return SupportBundleProgress(
+            latest: next, current: progress.node, countsWholeBundle: whole,
+            closed: closed || (whole && progress.finished))
     }
 
     /// Share of the rows that are done, the selected nodes plus the cluster-wide part.
@@ -104,11 +108,13 @@ public func supportBundleFilename(context: String, date: Date, timeZone: TimeZon
         }
     }
     let name = String(safe.trimmingCharacters(in: CharacterSet(charactersIn: "-.")).prefix(40))
-    return "support-\(name.isEmpty ? "cluster" : name)-\(fileTimestamp(date, format: "yyyyMMdd-HHmmss", timeZone: timeZone)).zip"
+    return
+        "support-\(name.isEmpty ? "cluster" : name)-\(fileTimestamp(date, format: "yyyyMMdd-HHmmss", timeZone: timeZone)).zip"
 }
 
 private func isBundleNameCharacter(_ character: Character) -> Bool {
-    character.isASCII && (character.isLetter || character.isNumber || character == "." || character == "_" || character == "-")
+    character.isASCII
+        && (character.isLetter || character.isNumber || character == "." || character == "_" || character == "-")
 }
 
 /// Only files this app wrote are listed, shared or deleted.

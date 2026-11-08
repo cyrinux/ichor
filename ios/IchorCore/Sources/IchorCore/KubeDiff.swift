@@ -16,8 +16,10 @@ public struct FluxDiff: Decodable, Equatable, Sendable {
     public let resources: [KubeDiffResource]
     public let warnings: [String]
 
-    public init(kind: String = "Kustomization", namespace: String = "", name: String = "", revision: String = "",
-                applied: String = "", resources: [KubeDiffResource] = [], warnings: [String] = []) {
+    public init(
+        kind: String = "Kustomization", namespace: String = "", name: String = "", revision: String = "",
+        applied: String = "", resources: [KubeDiffResource] = [], warnings: [String] = []
+    ) {
         self.kind = kind
         self.namespace = namespace
         self.name = name
@@ -59,6 +61,27 @@ public struct FluxDiff: Decodable, Equatable, Sendable {
     public var newRevision: Bool { !revision.isEmpty && !applied.isEmpty && revision != applied }
 }
 
+extension FluxDiff {
+    /// What a sync of refs would change (the sync sheet): every changed object when refs is
+    /// empty (a full sync), else the changed objects among refs. Argo CD's group for core kinds
+    /// can be "" on one side only, so an empty group on either side matches on kind, namespace
+    /// and name; cluster-scoped objects have an empty namespace on both.
+    public func resources(for refs: [ArgoResourceRef]) -> [KubeDiffResource] {
+        guard !refs.isEmpty else { return changed }
+        return changed.filter { resource in refs.contains { $0.matches(resource) } }
+    }
+}
+
+private extension ArgoResourceRef {
+    /// "core" is the empty group under another name, as on Android.
+    func matches(_ resource: KubeDiffResource) -> Bool {
+        let mine = group == "core" ? "" : group
+        let theirs = resource.group == "core" ? "" : resource.group
+        return kind == resource.kind && namespace == resource.namespace && name == resource.name
+            && (mine.isEmpty || theirs.isEmpty || mine == theirs)
+    }
+}
+
 /// How many objects a diff has with one kind of change.
 public struct DiffCount: Equatable, Hashable, Sendable {
     public let change: DiffChange
@@ -71,7 +94,7 @@ public struct DiffCount: Equatable, Hashable, Sendable {
 }
 
 /// One object of a diff.
-public struct KubeDiffResource: Decodable, Equatable, Identifiable, Sendable {
+public struct KubeDiffResource: Decodable, Hashable, Identifiable, Sendable {
     public let group: String
     public let version: String
     public let kind: String
@@ -84,11 +107,19 @@ public struct KubeDiffResource: Decodable, Equatable, Identifiable, Sendable {
     public let truncated: Bool
     /// Why the API server refused the dry run, for `.error`.
     public let error: String
+    /// The plain values changed in the cluster by hand, which "Keep in Git" writes to the manifest.
+    public let liveChanges: [DiffLiveChange]
 
     public var id: String { "\(group)/\(kind)/\(namespace)/\(name)" }
 
-    public init(group: String = "", version: String = "v1", kind: String, namespace: String = "", name: String,
-                change: DiffChange, diff: String = "", truncated: Bool = false, error: String = "") {
+    /// What a diff's focus names it by ("kind/namespace/name"): an object page knows no group alias.
+    public var focusKey: String { "\(kind)/\(namespace)/\(name)" }
+
+    public init(
+        group: String = "", version: String = "v1", kind: String, namespace: String = "", name: String,
+        change: DiffChange, diff: String = "", truncated: Bool = false, error: String = "",
+        liveChanges: [DiffLiveChange] = []
+    ) {
         self.group = group
         self.version = version
         self.kind = kind
@@ -98,6 +129,7 @@ public struct KubeDiffResource: Decodable, Equatable, Identifiable, Sendable {
         self.diff = diff
         self.truncated = truncated
         self.error = error
+        self.liveChanges = liveChanges
     }
 
     public init(from decoder: Decoder) throws {
@@ -111,12 +143,48 @@ public struct KubeDiffResource: Decodable, Equatable, Identifiable, Sendable {
         diff = try c.field(.diff, "")
         truncated = try c.field(.truncated, false)
         error = try c.field(.error, "")
+        liveChanges = try c.field(.liveChanges, [DiffLiveChange]())
     }
 
-    private enum CodingKeys: String, CodingKey { case group, version, kind, namespace, name, change, diff, truncated, error }
+    private enum CodingKeys: String, CodingKey {
+        case group, version, kind, namespace, name, change, diff, truncated, error, liveChanges
+    }
 
     /// The diff's lines without its "---"/"+++" header.
     public var lines: [DiffLine] { parseDiffLines(diff) }
+
+    /// Lines added and removed.
+    public var counts: (added: Int, removed: Int) { diffLineCounts(lines) }
+}
+
+/// One plain value an object has live but not as its GitOps tool would apply it: label shown
+/// ("spec.template.spec.containers[app].image"), wanted and live as YAML writes them, type the
+/// live value's tag (str, int, float, bool). path is the Go core's own, sent back as is.
+public struct DiffLiveChange: Codable, Hashable, Sendable {
+    public let path: [String]
+    public let label: String
+    public let wanted: String
+    public let live: String
+    public let type: String
+
+    public init(path: [String], label: String, wanted: String, live: String, type: String) {
+        self.path = path
+        self.label = label
+        self.wanted = wanted
+        self.live = live
+        self.type = type
+    }
+
+    enum CodingKeys: String, CodingKey { case path, label, wanted, live, type }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        path = try c.field(.path, [String]())
+        label = try c.field(.label, "")
+        wanted = try c.field(.wanted, "")
+        live = try c.field(.live, "")
+        type = try c.field(.type, "")
+    }
 }
 
 /// How an object would change, in the order the screen lists them.
@@ -139,6 +207,14 @@ public struct DiffLine: Equatable, Sendable {
     public init(_ kind: Kind, _ text: String) {
         self.kind = kind
         self.text = text
+    }
+}
+
+/// The lines added and removed among lines.
+public func diffLineCounts(_ lines: [DiffLine]) -> (added: Int, removed: Int) {
+    lines.reduce(into: (0, 0)) { counts, line in
+        if line.kind == .added { counts.0 += 1 }
+        if line.kind == .removed { counts.1 += 1 }
     }
 }
 

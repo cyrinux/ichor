@@ -9,15 +9,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PersonRemove
 import androidx.compose.material.icons.outlined.SwapHoriz
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.EtcdRepository
 import name.levis.ichor.model.EtcdMemberPlan
 import name.levis.ichor.model.EtcdMemberRef
 import name.levis.ichor.model.FeatureSupport
@@ -69,7 +69,7 @@ sealed interface MemberActionState {
 val MemberActionState.busy: Boolean get() = this is MemberActionState.Planning || this is MemberActionState.Running
 
 /** `talosctl etcd forfeit-leadership` and `etcd remove-member` (os:admin), one at a time. */
-class EtcdMemberActionsViewModel(private val talos: TalosRepository) : ViewModel() {
+class EtcdMemberActionsViewModel(private val etcd: EtcdRepository) : ViewModel() {
     private val _state = MutableStateFlow<MemberActionState>(MemberActionState.Idle)
     val state: StateFlow<MemberActionState> = _state.asStateFlow()
     private var job: Job? = null
@@ -80,7 +80,7 @@ class EtcdMemberActionsViewModel(private val talos: TalosRepository) : ViewModel
         _state.value = MemberActionState.Planning(member)
         job = viewModelScope.launch {
             _state.value = attempt {
-                val plan = talos.etcdMemberPlan(member.id)
+                val plan = etcd.etcdMemberPlan(member.id)
                 // The plan may come back without the name the screen already knows.
                 MemberActionState.Planned(if (plan.member.id.isEmpty()) plan.copy(member = member) else plan)
             }
@@ -93,7 +93,7 @@ class EtcdMemberActionsViewModel(private val talos: TalosRepository) : ViewModel
         job = viewModelScope.launch {
             _state.value = attempt {
                 // No new leader in the answer: the node was not the leader, nothing changed.
-                if (talos.etcdForfeitLeadership(node).member.isEmpty()) {
+                if (etcd.etcdForfeitLeadership(node).member.isEmpty()) {
                     MemberActionState.Done(UiText.Res(R.string.etcd_forfeit_not_leader, hostname), changed = false)
                 } else {
                     MemberActionState.Done(UiText.Res(R.string.etcd_forfeit_done, hostname))
@@ -108,7 +108,7 @@ class EtcdMemberActionsViewModel(private val talos: TalosRepository) : ViewModel
         _state.value = MemberActionState.Running(UiText.Res(R.string.etcd_remove_running, member.confirmToken))
         job = viewModelScope.launch {
             _state.value = attempt {
-                talos.etcdRemoveMember(viaNode, member.id)
+                etcd.etcdRemoveMember(viaNode, member.id)
                 MemberActionState.Done(UiText.Res(R.string.etcd_remove_done, member.confirmToken))
             }
         }
@@ -152,7 +152,7 @@ fun MemberOverflow(actions: MemberActions) {
     if (actions.onRemove == null && actions.onReplace == null) return
     var open by remember { mutableStateOf(false) }
     Box {
-        IconButton(onClick = { open = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.common_more)) }
+        IchorIconButton(onClick = { open = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.common_more)) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             actions.onReplace?.let { onReplace ->
                 FeatureMenuItem(
@@ -188,22 +188,22 @@ fun MemberActionPanel(state: MemberActionState, onDismiss: () -> Unit) {
     val colors = LocalStatusColors.current
     when (state) {
         MemberActionState.Idle, is MemberActionState.Planning, is MemberActionState.Planned -> Unit
-        is MemberActionState.Running -> Card(Modifier.fillMaxWidth()) {
+        is MemberActionState.Running -> IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(state.label.asString(), style = MaterialTheme.typography.titleSmall)
                 LinearProgressIndicator(Modifier.fillMaxWidth())
             }
         }
-        is MemberActionState.Done -> Card(Modifier.fillMaxWidth()) {
+        is MemberActionState.Done -> IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 if (state.changed) Text(state.message.asString(), color = colors.ok) else InfoNotice(state.message.asString())
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
             }
         }
-        is MemberActionState.Failed -> Card(Modifier.fillMaxWidth()) {
+        is MemberActionState.Failed -> IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 InlineError(state.message.asString())
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
             }
         }
     }
@@ -211,7 +211,7 @@ fun MemberActionPanel(state: MemberActionState, onDismiss: () -> Unit) {
 
 @Composable
 fun PlanningDialog(member: EtcdMemberRef, onDismiss: () -> Unit) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.etcd_remove_title, member.confirmToken)) },
         text = {
@@ -221,7 +221,7 @@ fun PlanningDialog(member: EtcdMemberRef, onDismiss: () -> Unit) {
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 

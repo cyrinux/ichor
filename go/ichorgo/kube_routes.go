@@ -13,16 +13,55 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
+
+	"github.com/cyrinux/ichor/go/kube/netmap"
 )
 
 // kubeRoute is an address an app is reachable at from outside the cluster: a host of an
-// Ingress or of a Gateway API HTTPRoute whose backend is a Service selecting its pods.
+// Ingress, of a Gateway API HTTPRoute, GRPCRoute or TLSRoute, or of a Traefik
+// IngressRoute(TCP) whose backend is a Service selecting its pods.
 type kubeRoute struct {
-	Kind      string `json:"kind"` // Ingress or HTTPRoute
+	Kind      string `json:"kind"`    // Ingress, HTTPRoute, GRPCRoute, TLSRoute, IngressRoute or IngressRouteTCP
+	Group     string `json:"group"`   // the API group the kind is read at, so its object summary opens
+	Version   string `json:"version"` // and the version: gateway.networking.k8s.io/v1alpha2 for a TLSRoute
+	Resource  string `json:"resource"`
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
 	URL       string `json:"url"`
 	Service   string `json:"service"` // the backend Service, in Namespace
+
+	// The certificate the route's host serves, read from a TLS handshake (withRouteCerts,
+	// never from the Secret): its expiry (unix seconds), what is wrong with it (routeCert*),
+	// the TLS Secret the route names ("namespace/name") and whether cert-manager writes it.
+	// Empty when unknown.
+	CertNotAfter int64  `json:"certNotAfter,omitempty"`
+	CertIssue    string `json:"certIssue,omitempty"`
+	CertSecret   string `json:"certSecret,omitempty"`
+	CertManaged  bool   `json:"certManaged,omitempty"`
+
+	tlsSecret string // the TLS Secret the route names for its host, "namespace/name"
+}
+
+// routeAPIRefs is where each route kind is read, so the apps can ask KubeObjectSummary for
+// it: the URL of a route says nothing about the resource behind it.
+var routeAPIRefs = map[string]resourceRef{
+	"Ingress":         {"networking.k8s.io", "v1", "ingresses"},
+	"HTTPRoute":       {groupGatewayAPI, "v1", "httproutes"},
+	"GRPCRoute":       {groupGatewayAPI, "v1", "grpcroutes"},
+	"TLSRoute":        {groupGatewayAPI, "v1alpha2", "tlsroutes"},
+	"IngressRoute":    {groupTraefik, "v1alpha1", "ingressroutes"},
+	"IngressRouteTCP": {groupTraefik, "v1alpha1", "ingressroutetcps"},
+}
+
+// routeRow builds a route, carrying the API resource its kind is read at.
+func routeRow(kind, namespace, name, url, service string) kubeRoute {
+	ref := routeAPIRefs[kind]
+
+	return kubeRoute{
+		Kind: kind, Group: ref.group, Version: ref.version, Resource: ref.resource,
+		Namespace: namespace, Name: name, URL: url, Service: service,
+	}
 }
 
 type kubeRouteList struct {
@@ -56,8 +95,9 @@ type serviceRef struct{ namespace, name string }
 
 // KubeAppRoutes lists the URLs the given pods are served at, through the Kubernetes API
 // with the admin kubeconfig Talos issues (os:admin): the Services selecting them, then the
-// Ingresses and HTTPRoutes (gateway.networking.k8s.io/v1, when installed) sending traffic to
-// those Services. pods: [{namespace,pod}]. {"routes":[{kind,namespace,name,url,service}]}.
+// Ingresses, the Gateway API HTTPRoutes, GRPCRoutes and TLSRoutes (gateway.networking.k8s.io,
+// TLSRoute v1alpha2) and Traefik IngressRoutes and IngressRouteTCPs (traefik.io/v1alpha1),
+// when installed, sending traffic to those Services. pods: [{namespace,pod}]. {"routes":[{kind,namespace,name,url,service}]}.
 // kubeServer: see KubePods.
 func KubeAppRoutes(configYAML, contextName, kubeServer, pods string) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -84,34 +124,48 @@ func appRoutes(ctx context.Context, k *kubeClient, pods []routePod) (kubeRouteLi
 
 	var (
 		ingresses  kubeList[ingressObject]
-		httpRoutes kubeList[httpRouteObject]
+		httpRoutes []gatewayRouteObject
+		grpcRoutes []gatewayRouteObject
+		tlsRoutes  []gatewayRouteObject
 		gateways   kubeList[gatewayObject]
+		traefik    traefikRouteSet
 	)
 
-	errs := make([]error, 3)
+	errs := make([]error, 5)
 
 	var wg sync.WaitGroup
 
 	wg.Go(func() { errs[0] = getList(ctx, k, "/apis/networking.k8s.io/v1/ingresses", &ingresses) })
-	// The Gateway API is optional: without its CRDs, no HTTPRoute.
+	// The Gateway API is optional: without its CRDs, no HTTPRoute. GRPCRoute came with v1.1;
+	// TLSRoute is the experimental channel (v1alpha2), absent on most clusters.
 	wg.Go(func() {
-		errs[1] = ignoreNotFound(getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/httproutes", &httpRoutes))
+		httpRoutes, errs[1] = readGatewayRoutes(ctx, k, "/apis/"+groupGatewayAPI+"/v1/httproutes", "HTTPRoute")
+	})
+	wg.Go(func() {
+		grpcRoutes, errs[2] = readGatewayRoutes(ctx, k, "/apis/"+groupGatewayAPI+"/v1/grpcroutes", "GRPCRoute")
+	})
+	wg.Go(func() {
+		tlsRoutes, errs[3] = readGatewayRoutes(ctx, k, "/apis/"+groupGatewayAPI+"/v1alpha2/tlsroutes", "TLSRoute")
 	})
 	// Only used to tell http from https: a URL is still worth showing without it.
 	wg.Go(func() { _ = getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/gateways", &gateways) })
+	// Traefik's CRDs are optional too.
+	wg.Go(func() { traefik, errs[4] = readTraefikRoutes(ctx, k, "", false) })
 	wg.Wait()
 
 	if err := errors.Join(errs...); err != nil {
 		return kubeRouteList{}, err
 	}
 
-	if len(httpRoutes.Items) > 0 {
+	if len(httpRoutes)+len(grpcRoutes)+len(tlsRoutes) > 0 {
 		gateways.Items = withPublicPorts(ctx, k, gateways.Items)
 	}
 
-	routes := append(ingressRoutes(ingresses.Items, services), httpRouteRoutes(httpRoutes.Items, gateways.Items, services)...)
+	routes := append(ingressRoutes(ingresses.Items, services),
+		gatewayRoutes(slices.Concat(httpRoutes, grpcRoutes, tlsRoutes), gateways.Items, services)...)
+	routes = append(routes, traefikRoutes(traefik, services)...)
 
-	return kubeRouteList{Routes: uniqueRoutes(routes)}, nil
+	return kubeRouteList{Routes: withRouteCerts(ctx, k, uniqueRoutes(routes), time.Now())}, nil
 }
 
 type labeledObject struct {
@@ -132,20 +186,7 @@ type serviceObject struct {
 
 // servicesOfPods finds the Services whose selector matches the labels of one of pods.
 func servicesOfPods(ctx context.Context, k *kubeClient, pods []routePod) (map[serviceRef]bool, error) {
-	wanted := map[string]map[string]bool{} // namespace -> pod names
-
-	for _, p := range pods {
-		if validateKubeName("pod", p.Namespace, p.Pod) != nil {
-			continue
-		}
-
-		if wanted[p.Namespace] == nil {
-			wanted[p.Namespace] = map[string]bool{}
-		}
-
-		wanted[p.Namespace][p.Pod] = true
-	}
-
+	wanted := wantedRoutePods(pods)
 	found := map[serviceRef]bool{}
 
 	for _, ns := range slices.Sorted(maps.Keys(wanted)) {
@@ -209,21 +250,8 @@ func readLabeledPods(ctx context.Context, k *kubeClient, namespace string, names
 	return list, nil
 }
 
-// selects tells whether a Service selector matches labels; an empty one selects nothing
-// (its endpoints are managed by hand).
-func selects(selector, labels map[string]string) bool {
-	if len(selector) == 0 {
-		return false
-	}
-
-	for key, value := range selector {
-		if labels[key] != value {
-			return false
-		}
-	}
-
-	return true
-}
+// selects tells whether a Service selector matches labels (netmap.Selects).
+func selects(selector, labels map[string]string) bool { return netmap.Selects(selector, labels) }
 
 // routeURL is scheme://host[:port][path], the path left out when it is the root.
 func routeURL(scheme, host string, port int32, path string) string {

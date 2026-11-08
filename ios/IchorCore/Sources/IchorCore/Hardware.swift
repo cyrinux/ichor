@@ -12,18 +12,28 @@ public struct NodeHardware: Decodable, Equatable, Sendable {
     public let security: SecurityInfo?
     public let errors: [String: String]
 
-    public init(system: SystemInfo? = nil, processors: [ProcessorInfo] = [], memory: [MemoryModule] = [], disks: [DiskInfo] = [],
-                extensions: [ExtensionInfo] = [], security: SecurityInfo? = nil, errors: [String: String] = [:]) {
+    /// nil when no watchdog timer is configured (or its read failed: see `errors["watchdog"]`).
+    public let watchdog: WatchdogInfo?
+
+    public init(
+        system: SystemInfo? = nil, processors: [ProcessorInfo] = [], memory: [MemoryModule] = [],
+        disks: [DiskInfo] = [],
+        extensions: [ExtensionInfo] = [], security: SecurityInfo? = nil, watchdog: WatchdogInfo? = nil,
+        errors: [String: String] = [:]
+    ) {
         self.system = system
         self.processors = processors
         self.memory = memory
         self.disks = disks
         self.extensions = extensions
         self.security = security
+        self.watchdog = watchdog
         self.errors = errors
     }
 
-    private enum CodingKeys: String, CodingKey { case system, processors, memory, disks, extensions, security, errors }
+    private enum CodingKeys: String, CodingKey {
+        case system, processors, memory, disks, extensions, security, watchdog, errors
+    }
 
     // Go encodes empty (nil) slices and maps as null.
     public init(from decoder: Decoder) throws {
@@ -34,6 +44,7 @@ public struct NodeHardware: Decodable, Equatable, Sendable {
         disks = try c.field(.disks, [])
         extensions = try c.field(.extensions, [])
         security = try c.decodeIfPresent(SecurityInfo.self, forKey: .security)
+        watchdog = try c.decodeIfPresent(WatchdogInfo.self, forKey: .watchdog)
         errors = try c.field(.errors, [:])
     }
 
@@ -53,8 +64,10 @@ public struct SystemInfo: Decodable, Equatable, Sendable {
     public let sku: String
     public let biosVersion: String
 
-    public init(manufacturer: String = "", product: String = "", version: String = "", serial: String = "",
-                uuid: String = "", sku: String = "", biosVersion: String = "") {
+    public init(
+        manufacturer: String = "", product: String = "", version: String = "", serial: String = "",
+        uuid: String = "", sku: String = "", biosVersion: String = ""
+    ) {
         self.manufacturer = manufacturer
         self.product = product
         self.version = version
@@ -76,8 +89,10 @@ public struct ProcessorInfo: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { "\(socket)/\(model)" }
 
-    public init(socket: String = "CPU 0", manufacturer: String = "", model: String = "", cores: UInt32 = 0,
-                threads: UInt32 = 0, maxSpeedMhz: UInt32 = 0, bootSpeedMhz: UInt32 = 0) {
+    public init(
+        socket: String = "CPU 0", manufacturer: String = "", model: String = "", cores: UInt32 = 0,
+        threads: UInt32 = 0, maxSpeedMhz: UInt32 = 0, bootSpeedMhz: UInt32 = 0
+    ) {
         self.socket = socket
         self.manufacturer = manufacturer
         self.model = model
@@ -101,8 +116,10 @@ public struct MemoryModule: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { "\(slot)/\(bank)/\(serial)" }
 
-    public init(slot: String, bank: String = "", sizeMib: UInt32, type: String = "", speed: UInt32 = 0,
-                manufacturer: String = "", serial: String = "") {
+    public init(
+        slot: String, bank: String = "", sizeMib: UInt32, type: String = "", speed: UInt32 = 0,
+        manufacturer: String = "", serial: String = ""
+    ) {
         self.slot = slot
         self.bank = bank
         self.sizeMib = sizeMib
@@ -131,8 +148,12 @@ public struct DiskInfo: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { name }
 
-    public init(name: String, devPath: String = "", model: String = "", serial: String = "", size: UInt64 = 0, type: String = "ssd",
-                wwid: String = "", busPath: String = "", systemDisk: Bool = false, readonly: Bool = false, transport: String = "") {
+    public init(
+        name: String, devPath: String = "", model: String = "", serial: String = "", size: UInt64 = 0,
+        type: String = "ssd",
+        wwid: String = "", busPath: String = "", systemDisk: Bool = false, readonly: Bool = false,
+        transport: String = ""
+    ) {
         self.name = name
         self.devPath = devPath
         self.model = model
@@ -191,9 +212,11 @@ public struct SecurityInfo: Decodable, Equatable, Sendable {
     public let fipsState: String
     public let moduleSignatureEnforced: Bool
 
-    public init(secureBoot: Bool = false, bootedWithUki: Bool = false, ukiSigningKeyFingerprint: String = "",
-                pcrSigningKeyFingerprint: String = "", selinuxState: String = "", fipsState: String = "",
-                moduleSignatureEnforced: Bool = false) {
+    public init(
+        secureBoot: Bool = false, bootedWithUki: Bool = false, ukiSigningKeyFingerprint: String = "",
+        pcrSigningKeyFingerprint: String = "", selinuxState: String = "", fipsState: String = "",
+        moduleSignatureEnforced: Bool = false
+    ) {
         self.secureBoot = secureBoot
         self.bootedWithUki = bootedWithUki
         self.ukiSigningKeyFingerprint = ukiSigningKeyFingerprint
@@ -202,6 +225,35 @@ public struct SecurityInfo: Decodable, Equatable, Sendable {
         self.fipsState = fipsState
         self.moduleSignatureEnforced = moduleSignatureEnforced
     }
+}
+
+/// The hardware watchdog Talos feeds; it resets the machine after `timeoutSec` without food.
+public struct WatchdogInfo: Decodable, Equatable, Sendable {
+    public let device: String
+    public let timeoutSec: Int
+    public let feedIntervalSec: Int
+
+    public init(device: String = "", timeoutSec: Int = 0, feedIntervalSec: Int = 0) {
+        self.device = device
+        self.timeoutSec = timeoutSec
+        self.feedIntervalSec = feedIntervalSec
+    }
+
+    private enum CodingKeys: String, CodingKey { case device, timeoutSec, feedIntervalSec }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        device = try c.field(.device, "")
+        timeoutSec = try c.field(.timeoutSec, 0)
+        feedIntervalSec = try c.field(.feedIntervalSec, 0)
+    }
+}
+
+/// A watchdog interval: "40s", "2m", "1m 30s".
+public func watchdogInterval(_ seconds: Int) -> String {
+    if seconds < 60 { return "\(seconds)s" }
+    if seconds % 60 == 0 { return "\(seconds / 60)m" }
+    return "\(seconds / 60)m \(seconds % 60)s"
 }
 
 /// Disks with the system (Talos install) disk first, then by name.

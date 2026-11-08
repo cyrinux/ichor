@@ -21,8 +21,8 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.outlined.RemoveCircleOutline
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -30,13 +30,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -64,7 +66,7 @@ fun MultiNodePickerDialog(
     onPreview: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.machine_config_multi_pick_title)) },
         text = {
@@ -85,11 +87,11 @@ fun MultiNodePickerDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onPreview, enabled = candidates is UiState.Loaded && selected.isNotEmpty()) {
+            IchorTextButton(onClick = onPreview, enabled = candidates is UiState.Loaded && selected.isNotEmpty()) {
                 Text(stringResource(R.string.machine_config_multi_preview))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -168,9 +170,18 @@ private fun NodePage(node: MultiConfigNodePreview) {
     }
 }
 
-/** A multi-node apply: every node's state as it goes, then how it ended. */
+/**
+ * A multi-node apply: every node's state as it goes, then how it ended. Once it has, each node
+ * that took the change offers [onProposeInGit] (when the cluster has a repository): the same
+ * edits written into that node's own file.
+ */
 @Composable
-fun MultiApplyContent(run: MultiApplyRun, onDone: () -> Unit, modifier: Modifier = Modifier) {
+fun MultiApplyContent(
+    run: MultiApplyRun,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+    onProposeInGit: ((MultiConfigNodeState) -> Unit)? = null,
+) {
     val status = LocalStatusColors.current
     val progress = run.progress
     Column(modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -180,10 +191,19 @@ fun MultiApplyContent(run: MultiApplyRun, onDone: () -> Unit, modifier: Modifier
                 style = MaterialTheme.typography.titleMedium,
             )
         }
+        // A node file is found by hostname: a node without one cannot be written back.
+        val proposable = { node: MultiConfigNodeState -> run.finished && node.state == MultiConfigNodeState.DONE && node.hostname.isNotEmpty() }
         LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (onProposeInGit != null && progress?.nodes.orEmpty().any(proposable)) {
+                item(key = "propose") { MutedText(stringResource(R.string.talos_writeback_multi_desc)) }
+            }
             items(progress?.nodes.orEmpty(), key = { it.node }) { node ->
                 val running = !run.finished && node.state == MultiConfigNodeState.APPLYING
-                NodeStateRow(node, if (running) progress?.message.orEmpty() else node.error.orEmpty())
+                NodeStateRow(
+                    node,
+                    if (running) progress?.message.orEmpty() else node.error.orEmpty(),
+                    onProposeInGit = onProposeInGit?.takeIf { proposable(node) }?.let { propose -> { propose(node) } },
+                )
             }
         }
         if (run.finished) {
@@ -209,7 +229,7 @@ fun MultiApplyContent(run: MultiApplyRun, onDone: () -> Unit, modifier: Modifier
                     },
                 )
             }
-            Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
+            IchorButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(if (unfinished) R.string.machine_config_back_to_draft else R.string.machine_config_done))
             }
         }
@@ -217,7 +237,7 @@ fun MultiApplyContent(run: MultiApplyRun, onDone: () -> Unit, modifier: Modifier
 }
 
 @Composable
-private fun NodeStateRow(node: MultiConfigNodeState, detail: String) {
+private fun NodeStateRow(node: MultiConfigNodeState, detail: String, onProposeInGit: (() -> Unit)? = null) {
     val status = LocalStatusColors.current
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         when (node.state) {
@@ -246,6 +266,12 @@ private fun NodeStateRow(node: MultiConfigNodeState, detail: String) {
                 },
             )
             MutedText(listOf(state, detail).filter { it.isNotEmpty() }.joinToString(" · "))
+        }
+        onProposeInGit?.let { propose ->
+            val label = stringResource(R.string.talos_writeback_node, node.name)
+            IchorTextButton(onClick = propose, modifier = Modifier.semantics { contentDescription = label }) {
+                Text(stringResource(R.string.talos_writeback_action))
+            }
         }
     }
 }

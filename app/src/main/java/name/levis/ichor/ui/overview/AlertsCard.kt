@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,8 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
@@ -33,7 +33,6 @@ import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.alerts.severityColor
 import name.levis.ichor.ui.alerts.severityLabel
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -50,6 +49,8 @@ class AlertsCardViewModel(
     private val store: AlertmanagerStore,
     private val fingerprint: () -> String?,
 ) : LoadingViewModel<AlertsOverview?>() {
+    // Read only where the role can read Kubernetes: load.
+    override val loadsOnOpen = false
     private var key: Any? = null
 
     override suspend fun fetch(): AlertsOverview? {
@@ -88,9 +89,9 @@ val UiState<AlertsOverview?>.alertmanagerFound: Boolean
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AlertsCard(state: UiState<AlertsOverview?>, onOpen: () -> Unit) {
+fun AlertsCard(state: UiState<AlertsOverview?>, onOpen: () -> Unit, onRetry: (() -> Unit)? = null) {
     val colors = LocalStatusColors.current
-    Card(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
+    IchorCard(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             val counts = ((state as? UiState.Loaded)?.data)?.alerts?.counts
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -104,11 +105,7 @@ fun AlertsCard(state: UiState<AlertsOverview?>, onOpen: () -> Unit) {
                 )
             }
             when {
-                state is UiState.Failed -> MutedText(
-                    stringResource(R.string.alerts_unreadable, state.message.asString()),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                state is UiState.Failed -> LoadFailureRow(state.message, onRetry, compact = true)
                 counts == null -> MutedText(stringResource(R.string.alerts_loading))
                 counts.firing == 0 -> MutedText(stringResource(R.string.alerts_none_firing))
                 else -> FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

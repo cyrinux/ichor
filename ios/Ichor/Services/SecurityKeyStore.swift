@@ -26,27 +26,20 @@ enum SecurityKeyStore {
 /// life of the process: the stored items are sealed with it (SecureConfigStore), so a cold start
 /// reads nothing until a key is tapped, while the app, once open, keeps working through relocks.
 /// Read from Go's threads too (KubeAuthStore), hence the lock.
-final class SecurityKeySession: @unchecked Sendable {
+final class SecurityKeySession: Sendable {
     static let shared = SecurityKeySession()
 
-    private let lock = NSLock()
-    private var dek: Data?
+    private let dek = Locked<Data?>(nil)
 
     var currentDek: Data? {
-        lock.lock()
-        defer { lock.unlock() }
-        return dek
+        dek.get()
     }
 
     func provide(_ dek: Data) {
-        lock.lock()
-        self.dek = dek
-        lock.unlock()
+        self.dek.set(dek)
     }
 
     func clear() {
-        lock.lock()
-        dek = nil
-        lock.unlock()
+        dek.set(nil)
     }
 }

@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.events
 
+import name.levis.ichor.data.MaskScoped
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,9 +27,15 @@ data class EventsState(
 class EventsViewModel(private val talos: TalosRepository, private val node: String?) : ViewModel() {
     private val _state = MutableStateFlow(EventsState())
     val state: StateFlow<EventsState> = _state.asStateFlow()
+    private val mask = MaskScoped()
 
-    /** Runs until cancelled or the stream ends; events already received are kept across restarts. */
-    suspend fun stream() {
+    /**
+     * Runs until cancelled or the stream ends; events already received are kept across restarts,
+     * not across a screenshot mode switch (restarted from an empty list).
+     */
+    suspend fun stream() = mask.run(clear = { _state.value = EventsState() }) { streamOnce() }
+
+    private suspend fun streamOnce() {
         _state.update { it.copy(streaming = true, error = null) }
         try {
             talos.events(listOfNotNull(node), EVENTS_TAIL).collect { item ->

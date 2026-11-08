@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -25,16 +25,20 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import name.levis.ichor.R
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.ui.argocd.ArgoTileBadge
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.attentionCount
+import name.levis.ichor.model.notStarting
 import name.levis.ichor.model.overviewTiles
+import name.levis.ichor.model.stopped
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.apps.AppIconPlaceholder
 import name.levis.ichor.ui.apps.AppIconTile
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SectionCard
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -58,7 +62,7 @@ fun AppsCard(state: UiState<Inventory>, onOpen: () -> Unit, argoBadges: Map<Stri
         is UiState.Loaded -> {
             val apps = state.data.apps
             if (apps.isEmpty()) return
-            val running = apps.count { !it.system }
+            val running = apps.count { !it.system && !it.stopped && !it.notStarting }
             val containers = apps.sumOf { it.containers }
             val subtitle = listOf(
                 pluralStringResource(R.plurals.apps_running, running, running),
@@ -83,31 +87,20 @@ fun AppsCard(state: UiState<Inventory>, onOpen: () -> Unit, argoBadges: Map<Stri
 
 @Composable
 private fun AppsCardFrame(subtitle: String?, attention: Int, onOpen: () -> Unit, onAttention: () -> Unit, tiles: @Composable () -> Unit) {
-    Card(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.apps_title), style = MaterialTheme.typography.titleMedium)
-                    if (subtitle != null) {
-                        MutedText(subtitle)
-                    }
-                }
-                if (attention > 0) {
-                    StatusPill(
-                        pluralStringResource(R.plurals.apps_attention, attention, attention),
-                        LocalStatusColors.current.warn,
-                        Modifier.clip(RoundedCornerShape(50)).clickable(role = Role.Button, onClick = onAttention),
-                    )
-                }
-                Icon(
-                    Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 4.dp),
-                )
-            }
-            Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) { tiles() }
+    val pill: (@Composable () -> Unit)? = if (attention > 0) {
+        {
+            StatusPill(
+                pluralStringResource(R.plurals.apps_attention, attention, attention),
+                LocalStatusColors.current.warn,
+                Modifier.clip(RoundedCornerShape(50)).clickable(role = Role.Button, onClick = onAttention),
+            )
         }
+    } else {
+        null
+    }
+    SectionCard(stringResource(R.string.apps_title), subtitle = subtitle, pill = pill, onOpen = onOpen) {
+        // 12 dp under the header, as before: the card spaces its rows by 8.
+        Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) { tiles() }
     }
 }
 
@@ -116,7 +109,7 @@ private fun AppsCardFrame(subtitle: String?, attention: Int, onOpen: () -> Unit,
 private fun MoreTile(count: Int) {
     Surface(shape = RoundedCornerShape(TILE * 0.3f), color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.size(TILE)) {
         Box(contentAlignment = Alignment.Center) {
-            Text("+$count", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            Text("+$count", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

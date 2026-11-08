@@ -7,28 +7,28 @@ final class AlertmanagerTests: XCTestCase {
 
     /// The Go demo's answer, trimmed (alertmanager_demo.go).
     private let demo = #"""
-    {"groups":[
-      {"alertname":"NodeFilesystemAlmostOutOfSpace","severity":"critical","count":1,"active":1,"alerts":[
-        {"fingerprint":"a1c3e5f7a9b1c3d5","alertname":"NodeFilesystemAlmostOutOfSpace","severity":"critical",
-         "labels":{"alertname":"NodeFilesystemAlmostOutOfSpace","severity":"critical","instance":"demo-worker-1","mountpoint":"/var","namespace":"monitoring"},
-         "annotations":{"summary":"Filesystem has less than 5% space left.","runbook_url":"https://runbooks.example.invalid/x","team":"platform"},
-         "summary":"Filesystem has less than 5% space left.","runbookURL":"https://runbooks.example.invalid/x",
-         "generatorURL":"http://prometheus.demo.invalid/graph","startsAt":1791540000000,"endsAt":1791543060000,"updatedAt":1791542790000,
-         "receivers":["oncall-pager","team-chat"],"state":"active","silencedBy":[],"inhibitedBy":[]}]},
-      {"alertname":"KubePodCrashLooping","severity":"warning","count":1,"active":1,"alerts":[
-        {"fingerprint":"b2d4f6a8c0e2a4b6","alertname":"KubePodCrashLooping","severity":"warning",
-         "labels":{"alertname":"KubePodCrashLooping","severity":"warning","namespace":"demo","pod":"worker-6f4b8-uvwxy"},
-         "annotations":{},"receivers":["team-chat"],"state":"active","silencedBy":[],"inhibitedBy":[]}]},
-      {"alertname":"Watchdog","severity":"info","count":1,"active":1,"alerts":[
-        {"fingerprint":"c3e5a7b9d1f3c5e7","alertname":"Watchdog","severity":"info","labels":{"alertname":"Watchdog"},
-         "state":"active"}]},
-      {"alertname":"CPUThrottlingHigh","severity":"info","count":1,"active":0,"alerts":[
-        {"fingerprint":"d4f6b8c0e2a4d6f8","alertname":"CPUThrottlingHigh","severity":"warning","labels":{"namespace":"kube-system","pod":"coredns-x"},
-         "state":"suppressed","silencedBy":["5b0d7c3e-9a41-4f2e-8c6d-1e2f3a4b5c6d"],"inhibitedBy":[]}]},
-      {"alertname":"Unlabelled","severity":"brand-new","count":1,"active":1,"alerts":[
-        {"fingerprint":"e5a7c9d1f3b5e7a9","alertname":"Unlabelled","severity":"brand-new","labels":{"job":"api"},"state":"unprocessed"}]}],
-     "counts":{"critical":1,"warning":1,"info":1,"other":1,"suppressed":1},"total":5,"truncated":false}
-    """#
+        {"groups":[
+          {"alertname":"NodeFilesystemAlmostOutOfSpace","severity":"critical","count":1,"active":1,"alerts":[
+            {"fingerprint":"a1c3e5f7a9b1c3d5","alertname":"NodeFilesystemAlmostOutOfSpace","severity":"critical",
+             "labels":{"alertname":"NodeFilesystemAlmostOutOfSpace","severity":"critical","instance":"demo-worker-1","mountpoint":"/var","namespace":"monitoring"},
+             "annotations":{"summary":"Filesystem has less than 5% space left.","runbook_url":"https://runbooks.example.invalid/x","team":"platform"},
+             "summary":"Filesystem has less than 5% space left.","runbookURL":"https://runbooks.example.invalid/x",
+             "generatorURL":"http://prometheus.demo.invalid/graph","startsAt":1791540000000,"endsAt":1791543060000,"updatedAt":1791542790000,
+             "receivers":["oncall-pager","team-chat"],"state":"active","silencedBy":[],"inhibitedBy":[]}]},
+          {"alertname":"KubePodCrashLooping","severity":"warning","count":1,"active":1,"alerts":[
+            {"fingerprint":"b2d4f6a8c0e2a4b6","alertname":"KubePodCrashLooping","severity":"warning",
+             "labels":{"alertname":"KubePodCrashLooping","severity":"warning","namespace":"demo","pod":"worker-6f4b8-uvwxy"},
+             "annotations":{},"receivers":["team-chat"],"state":"active","silencedBy":[],"inhibitedBy":[]}]},
+          {"alertname":"Watchdog","severity":"info","count":1,"active":1,"alerts":[
+            {"fingerprint":"c3e5a7b9d1f3c5e7","alertname":"Watchdog","severity":"info","labels":{"alertname":"Watchdog"},
+             "state":"active"}]},
+          {"alertname":"CPUThrottlingHigh","severity":"info","count":1,"active":0,"alerts":[
+            {"fingerprint":"d4f6b8c0e2a4d6f8","alertname":"CPUThrottlingHigh","severity":"warning","labels":{"namespace":"kube-system","pod":"coredns-x"},
+             "state":"suppressed","silencedBy":["5b0d7c3e-9a41-4f2e-8c6d-1e2f3a4b5c6d"],"inhibitedBy":[]}]},
+          {"alertname":"Unlabelled","severity":"brand-new","count":1,"active":1,"alerts":[
+            {"fingerprint":"e5a7c9d1f3b5e7a9","alertname":"Unlabelled","severity":"brand-new","labels":{"job":"api"},"state":"unprocessed"}]}],
+         "counts":{"critical":1,"warning":1,"info":1,"other":1,"suppressed":1},"total":5,"truncated":false}
+        """#
 
     private func decoded() throws -> AMAlerts { try TalosJSON.decode(AMAlerts.self, from: demo) }
 
@@ -62,26 +62,30 @@ final class AlertmanagerTests: XCTestCase {
     func testFilteringBySeverityAndSearch() throws {
         let alerts = try decoded()
         XCTAssertEqual(alerts.filtered(severities: Set(AMSeverity.allCases), query: "").count, 5)
-        XCTAssertEqual(alerts.filtered(severities: [.critical, .warning], query: "").map(\.alertname),
-                       ["NodeFilesystemAlmostOutOfSpace", "KubePodCrashLooping", "CPUThrottlingHigh"])
+        XCTAssertEqual(
+            alerts.filtered(severities: [.critical, .warning], query: "").map(\.alertname),
+            ["NodeFilesystemAlmostOutOfSpace", "KubePodCrashLooping", "CPUThrottlingHigh"])
         // The group's severity follows the alerts kept.
         XCTAssertEqual(alerts.filtered(severities: [.warning], query: "").last?.severity, .warning)
         // Search reads the name, the summary and the labels.
-        XCTAssertEqual(alerts.filtered(severities: Set(AMSeverity.allCases), query: "worker-6F4B8").map(\.alertname), ["KubePodCrashLooping"])
-        XCTAssertEqual(alerts.filtered(severities: Set(AMSeverity.allCases), query: "5% space").map(\.alertname),
-                       ["NodeFilesystemAlmostOutOfSpace"])
+        XCTAssertEqual(
+            alerts.filtered(severities: Set(AMSeverity.allCases), query: "worker-6F4B8").map(\.alertname),
+            ["KubePodCrashLooping"])
+        XCTAssertEqual(
+            alerts.filtered(severities: Set(AMSeverity.allCases), query: "5% space").map(\.alertname),
+            ["NodeFilesystemAlmostOutOfSpace"])
         XCTAssertEqual(alerts.filtered(severities: Set(AMSeverity.allCases), query: "mountpoint").count, 1)
         XCTAssertTrue(alerts.filtered(severities: [], query: "").isEmpty)
     }
 
     func testSilencesDecode() throws {
         let json = #"""
-        {"silences":[{"id":"5b0d7c3e-9a41-4f2e-8c6d-1e2f3a4b5c6d","state":"active",
-          "matchers":[{"name":"alertname","value":"CPUThrottlingHigh","isRegex":false,"isEqual":true},
-                      {"name":"pod","value":"worker-.*","isRegex":true,"isEqual":false}],
-          "createdBy":"ichor","comment":"limits are being raised","startsAt":1791470000000,"endsAt":1791642800000},
-          {"id":"old","state":"expired","matchers":[{"name":"job","value":"x"}]}]}
-        """#
+            {"silences":[{"id":"5b0d7c3e-9a41-4f2e-8c6d-1e2f3a4b5c6d","state":"active",
+              "matchers":[{"name":"alertname","value":"CPUThrottlingHigh","isRegex":false,"isEqual":true},
+                          {"name":"pod","value":"worker-.*","isRegex":true,"isEqual":false}],
+              "createdBy":"ichor","comment":"limits are being raised","startsAt":1791470000000,"endsAt":1791642800000},
+              {"id":"old","state":"expired","matchers":[{"name":"job","value":"x"}]}]}
+            """#
         let silences = try TalosJSON.decode(AMSilences.self, from: json).silences
         XCTAssertEqual(silences.count, 2)
         XCTAssertTrue(silences[0].expirable)
@@ -116,8 +120,10 @@ final class AlertmanagerTests: XCTestCase {
     }
 
     func testTheNodeAnAlertIsAbout() {
-        let nodes = [NodeOverview(node: "10.0.0.5", hostname: "demo-worker-1", reachable: true),
-                     NodeOverview(node: "fd00::7", hostname: "demo-cp-1", reachable: true)]
+        let nodes = [
+            NodeOverview(node: "10.0.0.5", hostname: "demo-worker-1", reachable: true),
+            NodeOverview(node: "fd00::7", hostname: "demo-cp-1", reachable: true),
+        ]
         XCTAssertEqual(alertNode(["instance": "demo-worker-1"], in: nodes)?.node, "10.0.0.5")
         XCTAssertEqual(alertNode(["instance": "10.0.0.5:9100"], in: nodes)?.hostname, "demo-worker-1")
         XCTAssertEqual(alertNode(["instance": "[fd00::7]:9100"], in: nodes)?.hostname, "demo-cp-1")
@@ -130,15 +136,18 @@ final class AlertmanagerTests: XCTestCase {
     // MARK: monitor
 
     private func snap(_ issues: [String: String]?, watched: Bool = true, context: String = "lab") -> ClusterSnapshot {
-        ClusterSnapshot(context: context, takenAt: now, nodes: ["a": NodeState(hostname: "host-a", health: .ready)],
-                        etcdChecked: true, certNotAfter: farCert,
-                        amWatched: watched, amChecked: watched && issues != nil, amIssues: issues ?? [:])
+        ClusterSnapshot(
+            context: context, takenAt: now, nodes: ["a": NodeState(hostname: "host-a", health: .ready)],
+            etcdChecked: true, certNotAfter: farCert,
+            amWatched: watched, amChecked: watched && issues != nil, amIssues: issues ?? [:])
     }
 
     private let disk = "a1c3e5f7a9b1c3d5"
     private var diskValue: String {
-        AMIssue(severity: dataCritical, alertname: "NodeFilesystemAlmostOutOfSpace", subject: "demo-worker-1",
-                summary: "Filesystem has less than 5% space left.").value
+        AMIssue(
+            severity: dataCritical, alertname: "NodeFilesystemAlmostOutOfSpace", subject: "demo-worker-1",
+            summary: "Filesystem has less than 5% space left."
+        ).value
     }
     private let crash = "b2d4f6a8c0e2a4b6"
     private var crashValue: String {
@@ -244,26 +253,32 @@ final class AlertmanagerTests: XCTestCase {
         XCTAssertTrue(off.alerts.isEmpty)
         XCTAssertTrue(off.next.amIssues.isEmpty)
         XCTAssertTrue(evaluate(previous: off.next, current: snap([disk: diskValue]), now: now).alerts.isEmpty)
-        XCTAssertTrue(evaluate(previous: snap([:], context: "other"), current: snap([disk: diskValue]), now: now).alerts.isEmpty)
+        XCTAssertTrue(
+            evaluate(previous: snap([:], context: "other"), current: snap([disk: diskValue]), now: now).alerts.isEmpty)
     }
 
     func testSnapshotsCarryTheTrack() throws {
         let overview = try TalosJSON.decode(ClusterOverview.self, from: #"{"context":"lab","nodes":[]}"#)
-        let unread = snapshotOf(overview, etcd: nil, certNotAfter: 0, takenAt: now, alertmanagerWatched: true, alertmanagerIssues: nil)
+        let unread = snapshotOf(
+            overview, etcd: nil, certNotAfter: 0, takenAt: now, alertmanagerWatched: true, alertmanagerIssues: nil)
         XCTAssertTrue(unread.amWatched)
         XCTAssertFalse(unread.amChecked)
-        let read = kubeSnapshotOf(KubeNodesOverview(), context: "lab", certNotAfter: 0, takenAt: now,
-                                  alertmanagerWatched: true, alertmanagerIssues: [disk: diskValue])
+        let read = kubeSnapshotOf(
+            KubeNodesOverview(), context: "lab", certNotAfter: 0, takenAt: now,
+            alertmanagerWatched: true, alertmanagerIssues: [disk: diskValue])
         XCTAssertTrue(read.amChecked)
         XCTAssertEqual(read.amIssues, [disk: diskValue])
-        let off = snapshotOf(overview, etcd: nil, certNotAfter: 0, takenAt: now, alertmanagerWatched: false, alertmanagerIssues: [disk: diskValue])
+        let off = snapshotOf(
+            overview, etcd: nil, certNotAfter: 0, takenAt: now, alertmanagerWatched: false,
+            alertmanagerIssues: [disk: diskValue])
         XCTAssertTrue(off.amIssues.isEmpty)
         // Saved by an older version: no Alertmanager fields.
         let old = #"{"context":"lab","takenAt":0,"nodes":{}}"#
         let decoded = try JSONDecoder().decode(ClusterSnapshot.self, from: Data(old.utf8))
         XCTAssertFalse(decoded.amWatched)
         XCTAssertTrue(decoded.amIssues.isEmpty)
-        let roundTrip = try JSONDecoder().decode(ClusterSnapshot.self, from: JSONEncoder().encode(snap([disk: diskValue])))
+        let roundTrip = try JSONDecoder().decode(
+            ClusterSnapshot.self, from: JSONEncoder().encode(snap([disk: diskValue])))
         XCTAssertEqual(roundTrip.amIssues, [disk: diskValue])
     }
 }

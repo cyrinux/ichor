@@ -1,8 +1,13 @@
 package ichorgo
 
-import "slices"
+import (
+	"context"
+	"slices"
+	"strings"
+)
 
-// Gateway API objects (gateway.networking.k8s.io/v1), the fields the app reads.
+// Gateway API objects (gateway.networking.k8s.io, HTTPRoute and GRPCRoute v1, TLSRoute
+// v1alpha2), the fields the app reads.
 
 type gatewayParentRef struct {
 	Group       *string `json:"group"`
@@ -13,10 +18,21 @@ type gatewayParentRef struct {
 	Port        int32   `json:"port"`
 }
 
-type httpRouteObject struct {
+// gatewayRouteObject is a Gateway API route: HTTPRoute (v1), GRPCRoute (v1) or TLSRoute
+// (v1alpha2, the experimental channel), the fields the app reads. Kind is set by the reader;
+// a GRPCRoute's matches name a gRPC Service and Method (no URL path), a TLSRoute's spec has
+// no matches (the URL is the listener's host at its TLS port).
+//
+// One struct decodes the three kinds, so it keeps only fields they agree on: a match's
+// `method` is a string on an HTTPRoute (GET) but an object on a GRPCRoute ({service,
+// method}), and is left undecoded, or any HTTPRoute with a method match fails the whole list.
+type gatewayRouteObject struct {
+	Kind     string `json:"-"`
 	Metadata struct {
-		Name      string `json:"name"`
-		Namespace string `json:"namespace"`
+		Name string `json:"name"`
+		// Annotations: the ExternalDNS plugin reads the controller and ttl ones.
+		Namespace   string            `json:"namespace"`
+		Annotations map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {
 		ParentRefs []gatewayParentRef `json:"parentRefs"`
@@ -43,15 +59,28 @@ type gatewayListener struct {
 	Hostname string `json:"hostname"`
 	Port     int32  `json:"port"`
 	Protocol string `json:"protocol"` // HTTP, HTTPS, TLS...
+	TLS      *struct {
+		CertificateRefs []struct {
+			Group     string `json:"group"`
+			Kind      string `json:"kind"`
+			Name      string `json:"name"`
+			Namespace string `json:"namespace"`
+		} `json:"certificateRefs"`
+	} `json:"tls"`
+
+	namespace string // the Gateway's, which a certificate ref without one defaults to
 }
 
 type gatewayObject struct {
 	Metadata struct {
 		Name      string `json:"name"`
 		Namespace string `json:"namespace"`
+		// Annotations: the ExternalDNS plugin reads the target one.
+		Annotations map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {
-		Listeners []gatewayListener `json:"listeners"`
+		GatewayClassName string            `json:"gatewayClassName"`
+		Listeners        []gatewayListener `json:"listeners"`
 	} `json:"spec"`
 	Status struct {
 		Addresses []struct {
@@ -62,43 +91,92 @@ type gatewayObject struct {
 	publicPorts map[int32]int32
 }
 
+// gatewayClassObject is a GatewayClass: which controller serves its Gateways.
+type gatewayClassObject struct {
+	Metadata struct {
+		Name string `json:"name"`
+	} `json:"metadata"`
+	Spec struct {
+		ControllerName string `json:"controllerName"`
+	} `json:"spec"`
+}
+
+// gatewayControllerNames maps a GatewayClass's controllerName to the short name the network
+// map shows next to the Gateway's address (no version; the box is narrow).
+var gatewayControllerNames = map[string]string{
+	"kgateway.dev/kgateway":                         "kgateway",
+	"traefik.io/gateway-controller":                 "Traefik",
+	"io.cilium/gateway-controller":                  "Cilium",
+	"gateway.envoyproxy.io/gatewayclass-controller": "Envoy Gateway",
+	"istio.io/gateway-controller":                   "Istio",
+	"gateway.nginx.org/nginx-gateway-controller":    "NGINX Gateway Fabric",
+}
+
+// gatewayController names the controller serving the Gateways of className, "" when the
+// class is unknown to the cluster or to the app; an unknown controller shows its domain.
+func gatewayController(className string, classes []gatewayClassObject) string {
+	i := slices.IndexFunc(classes, func(c gatewayClassObject) bool { return c.Metadata.Name == className })
+	if i < 0 {
+		return ""
+	}
+
+	if name, ok := gatewayControllerNames[classes[i].Spec.ControllerName]; ok {
+		return name
+	}
+
+	if domain, _, ok := strings.Cut(classes[i].Spec.ControllerName, "/"); ok {
+		return domain
+	}
+
+	return classes[i].Spec.ControllerName
+}
+
 // routeTarget is a path of an HTTPRoute and the Service it sends it to.
 type routeTarget struct{ path, service string }
 
-// httpRouteRoutes lists a URL per hostname and path of the HTTPRoutes sending traffic to one
-// of services. The scheme and port come from the listener of the parent Gateway serving the
+// gatewayRoutes lists a URL per hostname of the Gateway API routes sending traffic to one of
+// services. The scheme and port come from the listener of the parent Gateway serving the
 // hostname (https when it is unknown); a route without hostnames uses its listeners' ones,
-// else the Gateway's addresses.
-func httpRouteRoutes(httpRoutes []httpRouteObject, gateways []gatewayObject, services map[serviceRef]bool) []kubeRoute {
-	var routes []kubeRoute
+// else the Gateway's addresses (never for a TLSRoute, which is reached by SNI). A GRPCRoute's
+// and a TLSRoute's URL is the host root: only an HTTPRoute match narrows it to a path.
+func gatewayRoutes(routes []gatewayRouteObject, gateways []gatewayObject, services map[serviceRef]bool) []kubeRoute {
+	var out []kubeRoute
 
-	for _, hr := range httpRoutes {
-		targets := httpRouteTargets(hr, services)
+	for _, r := range routes {
+		targets := gatewayRouteTargets(r, services)
 		if len(targets) == 0 {
 			continue
 		}
 
-		listeners, addresses := routeParents(hr, gateways)
+		listeners, addresses := routeParents(r, gateways)
 
-		for _, host := range httpRouteHosts(hr, listeners, addresses) {
+		for _, host := range gatewayRouteHosts(r, listeners, addresses) {
 			scheme, port := listenerScheme(listeners, host)
+
 			for _, t := range targets {
-				routes = append(routes, kubeRoute{
-					Kind: "HTTPRoute", Namespace: hr.Metadata.Namespace, Name: hr.Metadata.Name,
-					URL: routeURL(scheme, host, port, t.path), Service: t.service,
-				})
+				path := ""
+				if r.Kind == "HTTPRoute" {
+					path = t.path
+				}
+
+				row := routeRow(r.Kind, r.Metadata.Namespace, r.Metadata.Name, routeURL(scheme, host, port, path), t.service)
+				if scheme == "https" {
+					row.tlsSecret = listenerTLSSecret(listeners, host)
+				}
+
+				out = append(out, row)
 			}
 		}
 	}
 
-	return routes
+	return out
 }
 
-// httpRouteTargets lists the rules of hr whose backends include one of services.
-func httpRouteTargets(hr httpRouteObject, services map[serviceRef]bool) []routeTarget {
+// gatewayRouteTargets lists the rules of r whose backends include one of services.
+func gatewayRouteTargets(r gatewayRouteObject, services map[serviceRef]bool) []routeTarget {
 	var targets []routeTarget
 
-	for _, rule := range hr.Spec.Rules {
+	for _, rule := range r.Spec.Rules {
 		service := ""
 
 		for _, b := range rule.BackendRefs {
@@ -106,7 +184,7 @@ func httpRouteTargets(hr httpRouteObject, services map[serviceRef]bool) []routeT
 				continue
 			}
 
-			if services[serviceRef{orDefault(b.Namespace, hr.Metadata.Namespace), b.Name}] {
+			if services[serviceRef{orDefault(b.Namespace, r.Metadata.Namespace), b.Name}] {
 				service = b.Name
 
 				break
@@ -134,39 +212,33 @@ func httpRouteTargets(hr httpRouteObject, services map[serviceRef]bool) []routeT
 	return targets
 }
 
-// routeParents returns the listeners hr attaches to (sectionName and port narrow them), at
+// routeParents returns the listeners r attaches to (sectionName and port narrow them), at
 // their public ports when known, and the addresses of its Gateways.
-func routeParents(hr httpRouteObject, gateways []gatewayObject) ([]gatewayListener, []string) {
+func routeParents(r gatewayRouteObject, gateways []gatewayObject) ([]gatewayListener, []string) {
 	var (
 		listeners []gatewayListener
 		addresses []string
 	)
 
-	for _, ref := range hr.Spec.ParentRefs {
-		if !isGatewayRef(ref) {
+	for _, ref := range r.Spec.ParentRefs {
+		gw, ok := parentGateway(r, ref, gateways)
+		if !ok {
 			continue
 		}
 
-		ns := orDefault(ref.Namespace, hr.Metadata.Namespace)
-		i := slices.IndexFunc(gateways, func(g gatewayObject) bool {
-			return g.Metadata.Namespace == ns && g.Metadata.Name == ref.Name
-		})
-
-		if i < 0 {
-			continue
-		}
-
-		for _, l := range gateways[i].Spec.Listeners {
-			if (ref.SectionName == "" || ref.SectionName == l.Name) && (ref.Port == 0 || ref.Port == l.Port) {
-				if public, ok := gateways[i].publicPorts[l.Port]; ok {
+		for _, l := range gw.Spec.Listeners {
+			if refSelects(ref, l) {
+				if public, ok := gw.publicPorts[l.Port]; ok {
 					l.Port = public
 				}
+
+				l.namespace = gw.Metadata.Namespace
 
 				listeners = append(listeners, l)
 			}
 		}
 
-		for _, a := range gateways[i].Status.Addresses {
+		for _, a := range gw.Status.Addresses {
 			addresses = append(addresses, a.Value)
 		}
 	}
@@ -174,16 +246,47 @@ func routeParents(hr httpRouteObject, gateways []gatewayObject) ([]gatewayListen
 	return listeners, addresses
 }
 
-// httpRouteHosts are the route's hostnames a browser can open, else its listeners', else
-// the Gateway addresses.
-func httpRouteHosts(hr httpRouteObject, listeners []gatewayListener, addresses []string) []string {
+// parentGateway finds the Gateway a parent ref of r names; a ref without a namespace is in
+// the route's.
+func parentGateway(r gatewayRouteObject, ref gatewayParentRef, gateways []gatewayObject) (gatewayObject, bool) {
+	if !isGatewayRef(ref) {
+		return gatewayObject{}, false
+	}
+
+	ns := orDefault(ref.Namespace, r.Metadata.Namespace)
+	i := slices.IndexFunc(gateways, func(g gatewayObject) bool {
+		return g.Metadata.Namespace == ns && g.Metadata.Name == ref.Name
+	})
+
+	if i < 0 {
+		return gatewayObject{}, false
+	}
+
+	return gateways[i], true
+}
+
+// refSelects tells whether a parent ref attaches to listener l: its sectionName and port,
+// when set, narrow the Gateway's listeners.
+func refSelects(ref gatewayParentRef, l gatewayListener) bool {
+	return (ref.SectionName == "" || ref.SectionName == l.Name) && (ref.Port == 0 || ref.Port == l.Port)
+}
+
+// gatewayRouteHosts are the route's hostnames a browser can open, else its listeners', else
+// the Gateway addresses. A TLSRoute is reached by SNI, so a bare address is no URL: it needs
+// a hostname of its own or one of a listener it attaches to.
+func gatewayRouteHosts(r gatewayRouteObject, listeners []gatewayListener, addresses []string) []string {
 	var listenerHosts []string
 	for _, l := range listeners {
 		listenerHosts = append(listenerHosts, l.Hostname)
 	}
 
-	for _, candidates := range [][]string{hr.Spec.Hostnames, listenerHosts, addresses} {
-		hosts := slices.DeleteFunc(slices.Clone(candidates), func(h string) bool { return !openableHost(h) })
+	candidates := [][]string{r.Spec.Hostnames, listenerHosts, addresses}
+	if r.Kind == "TLSRoute" {
+		candidates = candidates[:len(candidates)-1]
+	}
+
+	for _, list := range candidates {
+		hosts := slices.DeleteFunc(slices.Clone(list), func(h string) bool { return !openableHost(h) })
 		if len(hosts) > 0 {
 			return slices.Compact(hosts)
 		}
@@ -227,6 +330,27 @@ func isCoreService(group, kind *string) bool {
 // isGatewayRef tells a parentRef to a Gateway, the default.
 func isGatewayRef(ref gatewayParentRef) bool {
 	return (ref.Group == nil || *ref.Group == "gateway.networking.k8s.io") && (ref.Kind == nil || *ref.Kind == "Gateway")
+}
+
+// withGatewayKind tags each route with the kind that was read, so gatewayRoutes puts it on
+// the kubeRoute and the network map on its node.
+func withGatewayKind(routes []gatewayRouteObject, kind string) []gatewayRouteObject {
+	for i := range routes {
+		routes[i].Kind = kind
+	}
+
+	return routes
+}
+
+// readGatewayRoutes lists one Gateway API route kind (tolerating a missing CRD, the
+// experimental channel in particular), each tagged with its kind.
+func readGatewayRoutes(ctx context.Context, k *kubeClient, path, kind string) ([]gatewayRouteObject, error) {
+	var list kubeList[gatewayRouteObject]
+	if err := ignoreNotFound(getList(ctx, k, path, &list)); err != nil {
+		return nil, err
+	}
+
+	return withGatewayKind(list.Items, kind), nil
 }
 
 func orDefault(s, def string) string {

@@ -109,6 +109,12 @@ build:
 build-release:
     ./build.sh release
 
+# Rebuilds a published release from its tag in the Nix shell and compares the APK with the
+# one on GitHub once both signatures are stripped (CONTRIBUTING.md "Reproducible builds").
+# `just verify-release v1.40.1 --abi x86_64 --keep` keeps both for diffoscope.
+verify-release TAG *flags:
+    python3 -I scripts/verify-release.py verify {{TAG}} {{flags}}
+
 # Google Play App Bundle (app/build/outputs/bundle/play/app-play.aab): the release build
 # without the self-updater and donation links, signed with the ICHOR_KEYSTORE* upload key.
 build-play:
@@ -127,16 +133,40 @@ deadcode:
 a11y-check:
     python3 scripts/check-accessibility.py
 
+# No Go, Kotlin or Swift source file over 800 lines (tests 1,200), Android and iOS.
+length-check:
+    python3 scripts/check-file-length.py
+
+# Every Play listing text (title, descriptions, release notes) within Google Play's limits.
+play-listing-check:
+    python3 scripts/check-play-listing.py
+
 # Every UI string translated (fr, es, uk, de, it) with matching placeholders, Android and iOS,
-# and every website string in docs-i18n/.
+# every iOS key with a placeholder formatted with its arguments, every Android key read
+# somewhere, and every website string in docs-i18n/.
 i18n-check:
     python3 scripts/check-translations.py
+    python3 scripts/check-ios-strings.py
+    python3 scripts/check-unused-strings.py
     python3 scripts/site-i18n.py --check
 
 # Translated website: `just site` writes docs/<lang>/ (as CI does before publishing);
 # `just site --sync` lists new English strings in docs-i18n/*.json for translation.
 site *args:
     python3 scripts/site-i18n.py {{ args }}
+
+# The reference pages (docs/plugins/ and docs/runbooks/, git-ignored) from their Markdown, as
+# CI writes them before publishing; the Markdown package goes in a venv under .cache/.
+site-reference:
+    test -x .cache/site-venv/bin/python || python3 -m venv .cache/site-venv
+    .cache/site-venv/bin/python -c "import markdown" 2>/dev/null || .cache/site-venv/bin/pip install --quiet markdown==3.8.2
+    .cache/site-venv/bin/python scripts/site-reference.py
+
+# The site as CI publishes it, with its search index (docs/pagefind/, git-ignored), served on
+# http://localhost:8000 to try the search box.
+site-search: site site-reference
+    npx --yes pagefind@1.6.0 --site docs
+    python3 -m http.server -d docs 8000
 
 # Refresh the bundled app-inventory icons from go/ichorgo/appcatalog.json (needs network
 # and ImageMagick). `just app-icons --check` only validates the catalog and the bundle.
@@ -147,14 +177,49 @@ app-icons *args:
 test:
     cd go && go test ./...
 
+# The Go tests under the race detector (needs cgo; not on hosts whose ThreadSanitizer refuses
+# the address space, see build.sh's race_flag).
+test-race:
+    cd go && go test -race ./...
+
+# Known vulnerabilities reachable from the Go core (needs network for vuln.go.dev).
+vuln:
+    cd go && govulncheck ./...
+
+# Rewrite the facade contract fixtures (go/ichorgo/testdata/contract) after changing one of
+# their Go types, then fix the Kotlin and Swift models the app tests point at.
+contract-update:
+    cd go && go test ./ichorgo -run TestContractFixtures -update-contract -count=1
+
+# Grade a model or a prompt change on the AI evaluation set, e.g. `just ai-eval anthropic
+# claude-opus-5-5`, with ANTHROPIC_API_KEY or OPENAI_API_KEY set; fails under a mean of 0.8.
+ai-eval provider model="":
+    cd go && go run ./cmd/probe -min 0.8 diag-eval {{ provider }} {{ quote(model) }}
+
 # Run the Go core against a real cluster, e.g. `just probe overview`,
 # `just probe logs 10.0.0.2 kubelet`, `just probe -config talosconfig-phone etcd`.
+# Plugin files (plugin-validate, plugin-lint, plugin-render, plugin-from-crd) are relative to where just runs.
 probe *args:
-    cd go && go run ./cmd/probe {{ args }}
+    cd go && ICHOR_PROBE_CWD={{ quote(invocation_directory()) }} go run ./cmd/probe {{ args }}
+
+# Validate every plugin file of a directory (default: the built-in plugins), as ./build.sh
+# check does; exits 1 naming FILE:LINE when one is broken. See docs/plugins.md.
+plugin-check dir="go/plugin/builtin":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+    files=("$(cd "{{ dir }}" && pwd)"/*.yaml)
+    (( ${#files[@]} )) || { echo "no plugin file in {{ dir }}" >&2; exit 1; }
+    cd go && go run ./cmd/probe plugin-validate "${files[@]}"
+
+# Write plugins/index.json, the catalog the apps browse, from the plugin drafts; `just plugin-index
+# -check` only fails when it is stale, as ./build.sh check and the release workflow do.
+plugin-index *flags:
+    cd go && ICHOR_PROBE_CWD={{ quote(invocation_directory()) }} go run ./cmd/probe plugin-index {{ flags }} go/plugin/drafts
 
 # Generate the release signing key. Back it up: an app signed with another key
 # cannot update the installed one.
-android-keystore-gen path=env_var_or_default("ICHOR_KEYSTORE", home_directory() + "/ichor-release.jks") alias=env_var_or_default("ICHOR_KEY_ALIAS", "ichor"):
+android-keystore-gen path=env_var_or_default("ICHOR_KEYSTORE", env_var("HOME") + "/ichor-release.jks") alias=env_var_or_default("ICHOR_KEY_ALIAS", "ichor"):
     #!/usr/bin/env bash
     set -euo pipefail
     if [ -e "{{ path }}" ]; then
@@ -264,6 +329,10 @@ qr config="talosconfig-phone":
 qr-gz config="talosconfig-phone":
     gzip -9 < "{{ config }}" | qrencode -8 -t ansiutf8
 
+# A config too large even gzipped, over several QR codes the app collects (-o DIR writes PNGs).
+qr-parts config="talosconfig-phone" *args="":
+    python3 scripts/qr-parts.py "{{ config }}" {{ args }}
+
 # Remove build outputs and caches (Gradle, Go AAR, gomobile/NDK shims).
 clean:
     rm -rf app/build build/reports .gradle .cache/ndk .cache/x-mobile .cache/gobin app/libs/ichorgo.aar
@@ -287,7 +356,11 @@ _adb-install device build_type:
 ios-test-linux:
     nix develop .#swift --command ios/IchorCore/test-linux.sh
 
-# macOS only: Go xcframework, core tests and a simulator build.
+# macOS only: rewrite the Swift sources to ios/.swift-format (the lint `ios-test` runs first).
+ios-format:
+    scripts/ios-build.sh format
+
+# macOS only: swift-format lint, Go xcframework, core tests and a simulator build.
 ios-test:
     scripts/ios-build.sh test
 
@@ -298,6 +371,10 @@ ios-build:
 # Capture the phone's current screen for the website and store (turn on screenshot mode first)
 screenshot name:
     scripts/screenshot.sh {{name}}
+
+# The Play listing's screenshots in all ten languages, on a running emulator (./build.sh smoke first)
+store-screenshots *args:
+    scripts/store-screenshots.sh {{args}}
 
 # The release history as JSON, from the release tags and conventional commits
 changelog *args:

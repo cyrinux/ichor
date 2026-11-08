@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube/flux"
 )
 
 // fakeAccessAPI answers SelfSubjectAccessReviews with allowed(attributes), and
@@ -86,7 +88,7 @@ func TestActionAccessFollowsRBAC(t *testing.T) {
 		t.Error("deletePod allowed")
 	}
 
-	for _, name := range []string{"execPod", "debugPod", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync", "fluxReconcile", "cordonNode", "drainNode"} {
+	for _, name := range []string{"execPod", "debugPod", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync", "fluxReconcile", "cordonNode", "editNodeMeta", "drainNode"} {
 		if _, ok := access.Actions[name]; !ok {
 			t.Errorf("%s not checked", name)
 		}
@@ -100,12 +102,15 @@ func TestActionAccessAsksEachKindsOwnResource(t *testing.T) {
 		"restartDaemonSet":            "patch daemonsets.apps",
 		"scale":                       "patch deployments.apps/scale",
 		"scaleStatefulSet":            "patch statefulsets.apps/scale",
+		"pauseRollout":                "patch deployments.apps",
 		"fluxReconcile":               "patch kustomizations.kustomize.toolkit.fluxcd.io",
 		"fluxReconcileHelmRelease":    "patch helmreleases.helm.toolkit.fluxcd.io",
 		"fluxReconcileGitRepository":  "patch gitrepositories.source.toolkit.fluxcd.io",
 		"fluxReconcileOCIRepository":  "patch ocirepositories.source.toolkit.fluxcd.io",
 		"fluxReconcileHelmRepository": "patch helmrepositories.source.toolkit.fluxcd.io",
 		"fluxReconcileBucket":         "patch buckets.source.toolkit.fluxcd.io",
+		"autoscale":                   "patch horizontalpodautoscalers.autoscaling",
+		"autoscaleKeda":               "patch scaledobjects.keda.sh",
 	}
 
 	for name, w := range want {
@@ -128,9 +133,19 @@ func TestActionAccessAsksEachKindsOwnResource(t *testing.T) {
 	}
 
 	// Every source kind Flux lists has its own check.
-	for _, sk := range fluxSourceKinds {
-		if _, ok := kubeActionChecks["fluxReconcile"+sk.kind]; !ok {
-			t.Errorf("no check for %s", sk.kind)
+	for _, sk := range flux.SourceKinds {
+		if _, ok := kubeActionChecks["fluxReconcile"+sk.Kind]; !ok {
+			t.Errorf("no check for %s", sk.Kind)
+		}
+	}
+}
+
+func TestRollbackAccessReadsControllerRevisions(t *testing.T) {
+	for name, resource := range map[string]string{"rollbackStatefulSet": "statefulsets", "rollbackDaemonSet": "daemonsets"} {
+		needs := kubeActionChecks[name]
+		if len(needs) != 2 || needs[0].attrs.Verb != "patch" || needs[0].attrs.Resource != resource || needs[0].attrs.Group != "apps" ||
+			needs[1].attrs.Verb != "list" || needs[1].attrs.Resource != "controllerrevisions" || !needs[0].namespaced || !needs[1].namespaced {
+			t.Errorf("%s: %+v", name, needs)
 		}
 	}
 }

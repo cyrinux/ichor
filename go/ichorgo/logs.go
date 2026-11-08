@@ -52,12 +52,7 @@ func ServiceLogs(configYAML, contextName, node, service string, tailLines int) (
 			return "", s.friendlyErr(node, err)
 		}
 
-		tail, err := drainStream(stream.Recv, n)
-		if err != nil {
-			return "", err
-		}
-
-		return toJSON(tail)
+		return logTailJSON(stream.Recv, n)
 	})
 }
 
@@ -81,17 +76,20 @@ func KernelLogs(configYAML, contextName, node string, tailLines int) (out string
 			return "", s.friendlyErr(node, err)
 		}
 
-		tail, err := drainStream(stream.Recv, clampTail(tailLines))
-		if err != nil {
-			return "", err
-		}
-
-		return toJSON(tail)
+		return logTailJSON(stream.Recv, clampTail(tailLines))
 	})
 }
 
 func clampTail(n int) int {
 	return clampOr(n, defaultLogLines, maxLogLines)
+}
+
+func logTailJSON(recv func() (*common.Data, error), n int) (string, error) {
+	tail, err := drainStream(recv, n)
+	if err != nil {
+		return "", err
+	}
+	return toJSON(tail)
 }
 
 // clampOr is v capped at maxV, or def when v is not positive (unset).

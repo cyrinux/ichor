@@ -1,0 +1,6 @@
+• Create an AWS EC2 instance for a new node from the phone
+• An images report on the Apps screen: unpinned, several tags, registries, unused on nodes
+• Sign in to a Teleport proxy with SSO from the Go core and keep its short-lived certificate
+• Show what Tailscale exposes on the tailnet and each proxy's devices (Android, iOS)
+• List what the Tailscale operator exposes on the tailnet (Go)
+• Use the cluster's Ollama as the AI diagnosis server through a port-forward

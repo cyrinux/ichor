@@ -23,6 +23,9 @@ open class FingerprintSet(private val prefs: SharedPreferences) {
     /** Forgets the clusters no longer in [summary]. */
     fun sync(summary: ConfigSummary) = store(keepVpnOnly(_fingerprints.value, summary.contexts.map { it.fingerprint }))
 
+    /** The whole set at once (blank fingerprints dropped). */
+    fun replaceWith(fingerprints: Set<String>) = store(fingerprints.filterTo(mutableSetOf()) { it.isNotBlank() })
+
     private fun store(fingerprints: Set<String>) {
         if (fingerprints == _fingerprints.value) return
         prefs.edit().putStringSet(KEY, fingerprints).commit()
@@ -41,6 +44,16 @@ open class FingerprintSet(private val prefs: SharedPreferences) {
 class VpnOnlyClusters(prefs: SharedPreferences) : FingerprintSet(prefs) {
     companion object {
         const val FILE = "ichor-vpn-only"
+    }
+}
+
+/**
+ * The clusters that record actions ("Record actions in the cluster": a Kubernetes Event on
+ * each object the app changes there; off by default). The Go core gets the whole set.
+ */
+class AuditEventClusters(prefs: SharedPreferences) : FingerprintSet(prefs) {
+    companion object {
+        const val FILE = "ichor-audit-events"
     }
 }
 

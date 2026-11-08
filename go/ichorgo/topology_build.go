@@ -6,6 +6,7 @@ import (
 	"net/netip"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/resources/kubespan"
 )
@@ -22,7 +23,18 @@ type clusterTopology struct {
 	Nodes []topologyNode `json:"nodes"`
 	Links []topologyLink `json:"links"`
 	Sites []topologySite `json:"sites"`
+	Mesh  topologyMesh   `json:"mesh"`
 }
+
+// topologyMesh sums the links up for the screens that do not draw them.
+type topologyMesh struct {
+	Checked bool     `json:"checked"` // a node listed peers: false without KubeSpan, then nothing is known
+	Links   int      `json:"links"`
+	Broken  int      `json:"broken"`
+	Pairs   []string `json:"pairs"` // "node-a ↔ node-b" of the broken links, worst first, at most meshMaxPairs
+}
+
+const meshMaxPairs = 5
 
 type topologyNode struct {
 	ID        string   `json:"id"`             // hostname, the key links and sites refer to
@@ -50,10 +62,14 @@ type topologySite struct {
 
 // topologyLink is the KubeSpan tunnel between two nodes, as each end reports it.
 type topologyLink struct {
-	A     string             `json:"a"`
-	B     string             `json:"b"`
-	State string             `json:"state"` // up | down | degraded (one end down) | unknown
-	Sides []topologyLinkSide `json:"sides"`
+	A     string `json:"a"`
+	B     string `json:"b"`
+	State string `json:"state"` // up | down | degraded (one end down) | unknown, as Talos reports it
+	// Broken is the verdict, State alone cannot tell it: see kubespanBrokenReason.
+	Broken bool               `json:"broken"`
+	Reason string             `json:"reason,omitempty"` // the worst side's, or oneSide when the other end is up
+	Since  int64              `json:"since"`            // unix seconds of the broken side's last handshake, 0 = never
+	Sides  []topologyLinkSide `json:"sides"`
 }
 
 type topologyLinkSide struct {
@@ -65,6 +81,7 @@ type topologyLinkSide struct {
 	Rx            int64  `json:"rx"`
 	Tx            int64  `json:"tx"`
 	LastHandshake int64  `json:"lastHandshake"`
+	brokenReason  string
 }
 
 // topologyObservation is what one targeted node reported.
@@ -88,6 +105,7 @@ type topologyBuilder struct {
 // nodes, KubeSpan links and sites of the cluster map.
 func buildTopology(members []clusterMember, observations []topologyObservation) clusterTopology {
 	b := &topologyBuilder{byKey: map[string]*topologyNode{}, links: map[[2]string]*topologyLink{}}
+	now := time.Now()
 
 	for _, m := range members {
 		n := b.node(m.hostname, m.addresses)
@@ -106,7 +124,7 @@ func buildTopology(members []clusterMember, observations []topologyObservation) 
 	for _, o := range observed {
 		from := b.find(o.hostname, o.node)
 		for _, p := range o.peers {
-			b.addSide(from, b.peerNode(p), p)
+			b.addSide(from, b.peerNode(p), p, now)
 		}
 	}
 
@@ -114,10 +132,16 @@ func buildTopology(members []clusterMember, observations []topologyObservation) 
 		return cmp.Or(cmp.Compare(roleRank(x.Role), roleRank(y.Role)), cmp.Compare(x.ID, y.ID))
 	})
 
+	for _, l := range b.links {
+		b.judgeLink(l)
+	}
+
 	out := clusterTopology{Nodes: []topologyNode{}, Links: b.sortedLinks(), Sites: b.sites()}
 	for _, n := range b.nodes {
 		out.Nodes = append(out.Nodes, *n)
 	}
+
+	out.Mesh = b.mesh(out.Links)
 
 	return out
 }
@@ -228,12 +252,15 @@ func (b *topologyBuilder) observe(o topologyObservation) bool {
 	return true
 }
 
-func (b *topologyBuilder) addSide(from, to *topologyNode, p kubespanPeerInput) {
+func (b *topologyBuilder) addSide(from, to *topologyNode, p kubespanPeerInput, now time.Time) {
 	if from == nil || from == to {
 		return
 	}
 
-	side := topologyLinkSide{From: from.ID, To: to.ID, State: p.spec.State.String(), Rx: p.spec.ReceiveBytes, Tx: p.spec.TransmitBytes}
+	side := topologyLinkSide{
+		From: from.ID, To: to.ID, State: p.spec.State.String(), Rx: p.spec.ReceiveBytes, Tx: p.spec.TransmitBytes,
+		brokenReason: kubespanBrokenReason(p, now),
+	}
 	if p.spec.Endpoint.IsValid() {
 		side.Endpoint = p.spec.Endpoint.String()
 		side.Private = lanAddress(p.spec.Endpoint.Addr())
@@ -286,6 +313,45 @@ func linkState(sides []topologyLinkSide) string {
 	default:
 		return "unknown"
 	}
+}
+
+// judgeLink decides whether a link is broken. A node the phone cannot reach never makes one:
+// its peers see it down, and the node is already reported as unreachable.
+func (b *topologyBuilder) judgeLink(l *topologyLink) {
+	if b.byKey[l.A].Error != "" || b.byKey[l.B].Error != "" {
+		return
+	}
+
+	for _, s := range l.Sides {
+		if s.brokenReason != "" && (l.Reason == "" || brokenRank(s.brokenReason) < brokenRank(l.Reason)) {
+			l.Broken, l.Reason, l.Since = true, s.brokenReason, s.LastHandshake
+		}
+	}
+
+	if l.Broken && slices.ContainsFunc(l.Sides, func(s topologyLinkSide) bool { return s.State == kubespan.PeerStateUp.String() }) {
+		l.Reason = kubespanReasonOneSide
+	}
+}
+
+// brokenRank orders the reasons, the worst first.
+func brokenRank(reason string) int {
+	return slices.Index([]string{kubespanReasonNoEndpoint, kubespanReasonNever, kubespanReasonStale, kubespanReasonDown, kubespanReasonOneSide}, reason)
+}
+
+func (b *topologyBuilder) mesh(links []topologyLink) topologyMesh {
+	m := topologyMesh{Links: len(links), Pairs: []string{}}
+	m.Checked = slices.ContainsFunc(b.nodes, func(n *topologyNode) bool { return n.KubeSpan })
+
+	broken := slices.DeleteFunc(slices.Clone(links), func(l topologyLink) bool { return !l.Broken })
+	slices.SortStableFunc(broken, func(x, y topologyLink) int { return cmp.Compare(brokenRank(x.Reason), brokenRank(y.Reason)) })
+
+	m.Broken = len(broken)
+
+	for _, l := range broken[:min(len(broken), meshMaxPairs)] {
+		m.Pairs = append(m.Pairs, cmp.Or(b.byKey[l.A].Hostname, l.A)+" ↔ "+cmp.Or(b.byKey[l.B].Hostname, l.B))
+	}
+
+	return m
 }
 
 func (b *topologyBuilder) sortedLinks() []topologyLink {

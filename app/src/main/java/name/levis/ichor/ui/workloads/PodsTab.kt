@@ -10,23 +10,27 @@ import name.levis.ichor.model.TopSort
 import name.levis.ichor.model.KubeTopPod
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Stream
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.outlined.CleaningServices
+import name.levis.ichor.ui.design.IchorAssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -41,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import name.levis.ichor.TalosApp
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -71,8 +76,12 @@ import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.RowAction
+import name.levis.ichor.ui.components.RowActionsMenu
 import name.levis.ichor.ui.components.rememberKubeDenial
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.components.groupedCardRows
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.emptyOrNoMatch
@@ -155,6 +164,25 @@ internal fun PodActionDialogs(actions: PodActionState, deletions: PodDeletions) 
 }
 
 /**
+ * Clean up dead pods (k9s sanitize) for [namespace] (null: every namespace), on the tab it acts
+ * on: greyed with the reason when the credentials may not delete pods there. The sheet it opens
+ * lists the pods first and refuses the sweep on the demo.
+ */
+@Composable
+private fun CleanUpChip(namespace: String?, onCleanUp: () -> Unit) {
+    val denial = rememberKubeDenial(KubeAction.SANITIZE_PODS, namespace.orEmpty())
+    Column(Modifier.padding(horizontal = 16.dp)) {
+        IchorAssistChip(
+            onClick = onCleanUp,
+            enabled = denial == null,
+            label = { Text(stringResource(R.string.sanitize_title)) },
+            leadingIcon = { Icon(Icons.Outlined.CleaningServices, contentDescription = null, Modifier.size(AssistChipDefaults.IconSize)) },
+        )
+        KubeDenialNote(denial)
+    }
+}
+
+/**
  * The pods of the scope's namespace (every namespace by default) with the status `kubectl get
  * pods` shows, unhealthy ones first once every page is loaded, their logs, and a delete action
  * so a controller starts a fresh one. [focusKey]: the pod whose logs to open once listed (a
@@ -170,6 +198,9 @@ fun PodsTab(
     vm: PodsViewModel = viewModel(factory = factory { PodsViewModel(app.kubeRepository) { isMeteredNetwork(app) } }),
     focusKey: String? = null,
     onFocused: () -> Unit = {},
+    pullLinks: PodPullLinks? = null,
+    /** Opens Clean up dead pods for the scope's namespace; null: no such control here. */
+    onCleanUp: (() -> Unit)? = null,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
@@ -177,6 +208,17 @@ fun PodsTab(
     LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setScope(control.scope) }
     val actions = remember { PodActionState() }
     PodActionDialogs(actions, vm.deletions)
+    // This cluster's dead-pod sweep: how far it is above the list, a reload once it ended.
+    val talos = LocalContext.current.applicationContext as TalosApp
+    val config by talos.configRepository.config.collectAsStateWithLifecycle()
+    val current by talos.podSweepManager.current.collectAsStateWithLifecycle()
+    val sweep = current?.takeIf { it.cluster == config?.activeContext }
+    val sweeping = sweep?.running == true
+    var sweptWhileShown by remember { mutableStateOf(sweeping) }
+    LaunchedEffect(sweeping) {
+        if (sweptWhileShown && !sweeping) vm.refresh()
+        sweptWhileShown = sweeping
+    }
     var sort by rememberSaveable { mutableStateOf(TopSort.NAME) }
     var topGeneration by remember { mutableIntStateOf(0) }
     val listed = (state as? UiState.Loaded)?.data?.items
@@ -197,8 +239,10 @@ fun PodsTab(
         val usage = remember(top) { top?.byKey.orEmpty() }
         val rows = remember(filtered, sort, usage) { filtered.sortedByUsage(sort) { usage[it.key] } }
         PagedProgress(progress)
+        if (sweep != null && sweeping) PodSweepBanner(sweep, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         KubeDenialNote(rememberKubeDenial(KubeAction.DELETE_POD, selected.orEmpty()), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         IncompleteNotice(load, searching = query.isNotBlank(), onLoadMore = vm::loadMore, onLoadAll = vm::loadAll)
+        if (onCleanUp != null) CleanUpChip(selected, onCleanUp)
         if (top != null) TopSortChips(sort, { sort = it })
         val refresh: () -> Unit = {
             vm.refresh()
@@ -210,18 +254,19 @@ fun PodsTab(
             } else {
                 val listState = rememberLazyListState()
                 LoadMoreOnScroll(listState, enabled = load.hasMore && query.isBlank(), loaded = load.items.size, onLoadMore = vm::loadMore)
-                LazyColumn(Modifier.fillMaxSize(), state = listState) {
-                    items(rows, key = { it.key }) { pod ->
+                // All namespaces: one card per namespace, its name as the card's title.
+                LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = CardListPadding) {
+                    groupedCardRows(rows, groupOf = if (selected == null) { p: KubePod -> p.namespace } else null, key = { it.key }) { pod ->
                         PodRow(
                             pod,
-                            showNamespace = selected == null,
+                            showNamespace = false,
                             deleting = pod.key in deleting,
                             onDelete = { actions.confirm = pod },
                             onLogs = { actions.logs = pod },
                             onFlows = onFlows?.let { open -> { open(pod) } },
                             usage = usage[pod.key],
+                            pullLinks = pullLinks,
                         )
-                        HorizontalDivider()
                     }
                 }
             }
@@ -231,8 +276,10 @@ fun PodsTab(
 }
 
 /**
- * A pod: name, namespace and node (when asked), status, readiness, restarts, CPU and memory in
- * use ([usage], from metrics-server); logs, flows and delete actions.
+ * A pod: name, namespace and node (when asked), status, readiness, restarts, why its image
+ * cannot be pulled (with [pullLinks] to act on it), CPU and memory in use ([usage], from
+ * metrics-server); a Logs button and a More menu for the rest, also as swipes and a long-press
+ * menu ([PodQuickActions]). [background]: the colour of what the row is drawn on.
  */
 @Composable
 internal fun PodRow(
@@ -244,11 +291,31 @@ internal fun PodRow(
     onFlows: (() -> Unit)? = null,
     showNode: Boolean = true,
     usage: KubeTopPod? = null,
+    pullLinks: PodPullLinks? = null,
+    background: Color = CardDefaults.cardColors().containerColor,
+) {
+    PodQuickActions(pod, deleting, onLogs = onLogs, onDelete = onDelete, onFlows = onFlows, background = background) { more ->
+        PodRowContent(pod, showNamespace, deleting, onLogs, more, showNode, usage, pullLinks)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PodRowContent(
+    pod: KubePod,
+    showNamespace: Boolean,
+    deleting: Boolean,
+    onLogs: () -> Unit,
+    more: List<RowAction>,
+    showNode: Boolean,
+    usage: KubeTopPod?,
+    pullLinks: PodPullLinks?,
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text(pod.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            // TalkBack reads the whole name; the row's menu shows it when even two lines cut it.
+            Text(pod.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(
                 listOfNotNull(pod.namespace.takeIf { showNamespace }, pod.node.takeIf { showNode && it.isNotEmpty() }).joinToString("  ·  "),
                 style = MaterialTheme.typography.labelSmall,
@@ -256,33 +323,35 @@ internal fun PodRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(pod.status, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = pod.statusColor())
-                Text(stringResource(R.string.pods_ready_count, pod.ready, pod.containers), style = MaterialTheme.typography.labelSmall, color = muted)
+            // Wraps rather than squeezing: a long status (ContainerStatusUnknown) would otherwise
+            // leave the restarts a one-character column.
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(pod.status, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = pod.statusColor(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(stringResource(R.string.pods_ready_count, pod.ready, pod.containers), style = MaterialTheme.typography.labelSmall, color = muted, softWrap = false)
                 if (pod.restarts > 0) {
                     Text(
                         pluralStringResource(R.plurals.pods_restarts, pod.restarts, pod.restarts),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (pod.healthy) muted else LocalStatusColors.current.warn,
+                        softWrap = false,
                     )
                 }
             }
+            PodPullLine(pod, pullLinks)
             usage?.let { PodUsage(it, Modifier.padding(top = 2.dp, end = 8.dp)) }
         }
-        IconButton(onClick = onLogs) {
+        IchorIconButton(onClick = onLogs) {
             Icon(Icons.AutoMirrored.Outlined.Article, stringResource(R.string.pod_logs_open, pod.name))
-        }
-        if (onFlows != null) {
-            IconButton(onClick = onFlows) {
-                Icon(Icons.Outlined.Stream, stringResource(R.string.pods_live_flows, pod.name))
-            }
         }
         if (deleting) {
             CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
         } else {
-            val denied = rememberKubeDenial(KubeAction.DELETE_POD, pod.namespace) != null
-            IconButton(onClick = onDelete, enabled = pod.status != "Terminating" && !denied) {
-                Icon(Icons.Outlined.Delete, stringResource(R.string.pods_delete, pod.name))
+            var moreOpen by remember { mutableStateOf(false) }
+            Box {
+                IchorIconButton(onClick = { moreOpen = true }) {
+                    Icon(Icons.Outlined.MoreVert, stringResource(R.string.pods_row_actions, pod.name))
+                }
+                RowActionsMenu(moreOpen, more, onDismiss = { moreOpen = false }, header = pod.name)
             }
         }
     }

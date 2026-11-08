@@ -9,13 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,7 +59,6 @@ fun ConnectionsTab(
     vm: ConnectionsViewModel = viewModel(key = "connections-$node", factory = factory { ConnectionsViewModel(app.talosRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var filter by rememberSaveable { mutableStateOf(ConnectionFilter.LISTENING) }
     var query by rememberSaveable { mutableStateOf("") }
 
@@ -72,12 +70,12 @@ fun ConnectionsTab(
             Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 SearchField(query, { query = it }, stringResource(R.string.connections_search), Modifier.fillMaxWidth())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    FilterChip(
+                    IchorFilterChip(
                         selected = filter == ConnectionFilter.LISTENING,
                         onClick = { filter = ConnectionFilter.LISTENING },
                         label = { Text(stringResource(R.string.connections_listening)) },
                     )
-                    FilterChip(
+                    IchorFilterChip(
                         selected = filter == ConnectionFilter.ALL,
                         onClick = { filter = ConnectionFilter.ALL },
                         label = { Text(stringResource(R.string.connections_all)) },

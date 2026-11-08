@@ -26,8 +26,10 @@ public struct CastAISection: Equatable, Identifiable, Sendable {
     /// The rows shown plus those left out.
     public var total: Int { rows.count + hidden }
 
-    public init(kind: CastAISectionKind, rows: [CastAIRecommendation], hidden: Int = 0, namespace: String = "",
-                cpuDeltaMilli: Int64 = 0, memoryDeltaBytes: Int64 = 0) {
+    public init(
+        kind: CastAISectionKind, rows: [CastAIRecommendation], hidden: Int = 0, namespace: String = "",
+        cpuDeltaMilli: Int64 = 0, memoryDeltaBytes: Int64 = 0
+    ) {
         self.kind = kind
         self.rows = rows
         self.hidden = hidden
@@ -58,8 +60,9 @@ public let castAIGrowsPreview = 5
 public extension CastAIStatus {
     var changeCounts: CastAIChangeCounts {
         let changes = recommendations.map(\.change)
-        return CastAIChangeCounts(shrink: changes.filter { $0 == .shrink }.count, grow: changes.filter { $0 == .grow }.count,
-                                  same: changes.filter { $0 == .same }.count, unknown: changes.filter { $0 == .unknown }.count)
+        return CastAIChangeCounts(
+            shrink: changes.filter { $0 == .shrink }.count, grow: changes.filter { $0 == .grow }.count,
+            same: changes.filter { $0 == .same }.count, unknown: changes.filter { $0 == .unknown }.count)
     }
 
     /// The apply mode most recommendations use and how many use it; nil when there are none.
@@ -80,7 +83,8 @@ public extension CastAIStatus {
     /// first: a workload that grows risks OOM kills and unschedulable pods, a shrinking one is the saving.
     func sections(_ mode: CastAIListMode, query: String = "") -> [CastAISection] {
         let q = query.trimmingCharacters(in: .whitespaces)
-        let shown = q.isEmpty ? recommendations : recommendations.filter { $0.label.localizedCaseInsensitiveContains(q) }
+        let shown =
+            q.isEmpty ? recommendations : recommendations.filter { $0.label.localizedCaseInsensitiveContains(q) }
         let biggest: (CastAIRecommendation, CastAIRecommendation) -> Bool = { a, b in
             a.weight != b.weight ? a.weight > b.weight : a.label < b.label
         }
@@ -97,16 +101,21 @@ public extension CastAIStatus {
             let byNamespace = Dictionary(grouping: shown, by: \.namespace)
             sections = byNamespace.keys.sorted().map { ns in
                 let rows = byNamespace[ns] ?? []
-                return CastAISection(kind: .namespace, rows: rows.sorted(by: biggest), namespace: ns,
-                                     cpuDeltaMilli: rows.reduce(0) { $0 + $1.cpuDeltaMilli },
-                                     memoryDeltaBytes: rows.reduce(0) { $0 + $1.memoryDeltaBytes })
+                return CastAISection(
+                    kind: .namespace, rows: rows.sorted(by: biggest), namespace: ns,
+                    cpuDeltaMilli: rows.reduce(0) { $0 + $1.cpuDeltaMilli },
+                    memoryDeltaBytes: rows.reduce(0) { $0 + $1.memoryDeltaBytes })
             }
         case .overview:
             sections = [
                 CastAISection(kind: .attention, rows: shown.filter(\.health.needsAttention).sorted(by: byLabel)),
-                CastAISection(kind: .grows, rows: Array(grows.prefix(castAIGrowsPreview)), hidden: max(grows.count - castAIGrowsPreview, 0)),
+                CastAISection(
+                    kind: .grows, rows: Array(grows.prefix(castAIGrowsPreview)),
+                    hidden: max(grows.count - castAIGrowsPreview, 0)),
                 CastAISection(kind: .reductions, rows: shown.filter { $0.change == .shrink }.sorted(by: biggest)),
-                CastAISection(kind: .other, rows: shown.filter { $0.change == .same || $0.change == .unknown }.sorted(by: byLabel)),
+                CastAISection(
+                    kind: .other, rows: shown.filter { $0.change == .same || $0.change == .unknown }.sorted(by: byLabel)
+                ),
             ]
         }
         return sections.filter { !$0.rows.isEmpty }

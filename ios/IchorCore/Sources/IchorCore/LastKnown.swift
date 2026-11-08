@@ -20,7 +20,7 @@ public func mergeLastKnown(current: ClusterOverview, previous: ClusterOverview?,
             memAvailable: node.memAvailable, lastSeen: last.lastSeen ?? previousMillis
         )
     }
-    return ClusterOverview(context: current.context, nodes: nodes)
+    return ClusterOverview(context: current.context, nodes: nodes, partial: current.partial)
 }
 
 extension ClusterOverview {

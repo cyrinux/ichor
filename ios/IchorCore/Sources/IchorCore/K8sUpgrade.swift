@@ -12,7 +12,10 @@ public struct K8sVersionChoice: Decodable, Equatable, Sendable {
     /// Why `versions` may miss some: the release list could not be read.
     public let warning: String
 
-    public init(from: String, supportedRange: String = "", lo: Int = 0, hi: Int = 0, versions: [String] = [], warning: String = "") {
+    public init(
+        from: String, supportedRange: String = "", lo: Int = 0, hi: Int = 0, versions: [String] = [],
+        warning: String = ""
+    ) {
         self.from = from
         self.supportedRange = supportedRange
         self.lo = lo
@@ -45,7 +48,8 @@ public struct K8sVersionChoice: Decodable, Equatable, Sendable {
     }
 
     private static func parts(_ version: String) -> [Int]? {
-        let p = version.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "v", with: "").split(separator: ".")
+        let p = version.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "v", with: "").split(
+            separator: ".")
         guard p.count == 3 else { return nil }
         let n = p.compactMap { Int($0) }
         return n.count == 3 ? n : nil

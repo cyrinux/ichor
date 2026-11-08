@@ -1,0 +1,119 @@
+{
+  "plugin": {
+    "id": "demo-caches",
+    "name": "Demo Caches",
+    "icon": "",
+    "category": "data-services",
+    "version": "v1alpha1",
+    "screen": ""
+  },
+  "active": true,
+  "detectedVia": "demo",
+  "apiVersion": "v1alpha1",
+  "health": "ok",
+  "partial": false,
+  "summary": {
+    "title": "2 entrées",
+    "health": "ok",
+    "partial": false,
+    "badges": []
+  },
+  "cards": [
+    {
+      "id": "entries",
+      "type": "list",
+      "empty": "Aucune entrée.",
+      "rows": [
+        {
+          "ref": {
+            "group": "apps",
+            "version": "v1",
+            "resource": "deployments",
+            "kind": "Deployment",
+            "namespace": "demo-shop",
+            "name": "cache-a"
+          },
+          "title": "carts:v1",
+          "health": {
+            "tone": "ok"
+          },
+          "detail": [
+            {
+              "type": "actions",
+              "items": [
+                {
+                  "id": "evict",
+                  "label": "Évincer",
+                  "enabled": false,
+                  "confirm": "typedName",
+                  "disabledReason": "pas en mémoire",
+                  "params": [
+                    {
+                      "name": "force",
+                      "label": "Même si utilisée",
+                      "type": "bool",
+                      "default": false
+                    }
+                  ],
+                  "target": {
+                    "group": "ichor.dev",
+                    "version": "v1alpha1",
+                    "resource": "democacheentries",
+                    "kind": "DemoCacheEntry",
+                    "namespace": "demo-shop",
+                    "name": "carts:v1"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": {
+            "group": "apps",
+            "version": "v1",
+            "resource": "deployments",
+            "kind": "Deployment",
+            "namespace": "demo-shop",
+            "name": "cache-a"
+          },
+          "title": "pages:v2",
+          "health": {
+            "tone": "ok"
+          },
+          "detail": [
+            {
+              "type": "actions",
+              "items": [
+                {
+                  "id": "evict",
+                  "label": "Évincer",
+                  "enabled": true,
+                  "confirm": "typedName",
+                  "params": [
+                    {
+                      "name": "force",
+                      "label": "Même si utilisée",
+                      "type": "bool",
+                      "default": false
+                    }
+                  ],
+                  "target": {
+                    "group": "ichor.dev",
+                    "version": "v1alpha1",
+                    "resource": "democacheentries",
+                    "kind": "DemoCacheEntry",
+                    "namespace": "demo-shop",
+                    "name": "pages:v2"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "findings": [],
+  "errors": []
+}

@@ -28,7 +28,8 @@ const (
 
 // KubeScale sets the replicas of a Deployment or StatefulSet, like `kubectl scale
 // KIND/NAME --replicas=N -n NAMESPACE` (os:admin). It returns a warning ("" when none) when
-// a HorizontalPodAutoscaler manages the workload: it will change the count again.
+// a HorizontalPodAutoscaler manages the workload (it will change the count again) or when
+// kube-green has the namespace asleep or puts it to sleep within a day (it undoes the scale).
 // kubeServer: see KubePods.
 func KubeScale(configYAML, contextName, kubeServer, kind, namespace, name string, replicas int) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -63,7 +64,11 @@ func KubeScale(configYAML, contextName, kubeServer, kind, namespace, name string
 			return err
 		}
 
-		out = autoscalerWarning(ctx, k, wk.kind, namespace, name)
+		now := time.Now()
+		out = joinWarnings(
+			autoscalerWarning(ctx, k, wk.kind, namespace, name),
+			kubeGreenWarningText(readKubeGreenNamespace(ctx, k, namespace, now), now),
+		)
 
 		return nil
 	})
@@ -71,42 +76,39 @@ func KubeScale(configYAML, contextName, kubeServer, kind, namespace, name string
 	return out, err
 }
 
-// hpaObject is a HorizontalPodAutoscaler: what it scales and between which bounds.
-type hpaObject struct {
-	Metadata struct {
-		Name string `json:"name"`
-	} `json:"metadata"`
-	Spec struct {
-		ScaleTargetRef struct {
-			Kind string `json:"kind"`
-			Name string `json:"name"`
-		} `json:"scaleTargetRef"`
-		MinReplicas *int32 `json:"minReplicas"`
-		MaxReplicas int32  `json:"maxReplicas"`
-	} `json:"spec"`
-}
-
 // autoscalerWarning names the HorizontalPodAutoscaler that targets the workload, "" when
 // none (or when they cannot be read: the scale itself succeeded).
 func autoscalerWarning(ctx context.Context, k *kubeClient, kind, namespace, name string) string {
-	var hpas kubeList[hpaObject]
-	if getList(ctx, k, scopedPath("/apis/autoscaling/v2", namespace, "horizontalpodautoscalers"), &hpas) != nil {
+	index, err := autoscaledWorkloads(ctx, k)
+	if err != nil {
 		return ""
 	}
 
-	for _, h := range hpas.Items {
-		if h.Spec.ScaleTargetRef.Kind == kind && h.Spec.ScaleTargetRef.Name == name {
-			lowest := int32(1)
-			if h.Spec.MinReplicas != nil {
-				lowest = *h.Spec.MinReplicas
-			}
+	a, ok := index[kind+"/"+namespace+"/"+name]
+	if !ok {
+		return ""
+	}
 
-			return fmt.Sprintf("HorizontalPodAutoscaler %s manages the replicas (%d to %d): it will change them again",
-				h.Metadata.Name, lowest, h.Spec.MaxReplicas)
+	what := "HorizontalPodAutoscaler"
+	if a.By == autoscaledByKEDA {
+		what = "ScaledObject"
+	}
+
+	return fmt.Sprintf("%s %s manages the replicas (%d to %d): it will change them again", what, a.Name, a.Min, a.Max)
+}
+
+// joinWarnings is the warnings that apply, one per line, in the order given (the autoscaling
+// one first: see CYR-56). Empty warnings are dropped.
+func joinWarnings(warnings ...string) string {
+	kept := []string{}
+
+	for _, w := range warnings {
+		if w != "" {
+			kept = append(kept, w)
 		}
 	}
 
-	return ""
+	return strings.Join(kept, "\n")
 }
 
 // KubeSuspendCronJob suspends (no new runs) or resumes a CronJob, like `kubectl patch
@@ -131,9 +133,11 @@ func KubeSuspendCronJob(configYAML, contextName, kubeServer, namespace, name str
 	})
 }
 
-// deploymentRevision is one revision of a Deployment (one of its ReplicaSets).
+// deploymentRevision is one revision of a workload: one of a Deployment's ReplicaSets, or
+// one of a StatefulSet's or DaemonSet's ControllerRevisions.
 type deploymentRevision struct {
-	Revision    int      `json:"revision"`
+	Revision int `json:"revision"`
+	// ReplicaSet is the ReplicaSet, or the ControllerRevision, that keeps the revision.
 	ReplicaSet  string   `json:"replicaSet"`
 	Created     int64    `json:"created"` // unix ms
 	Images      []string `json:"images"`
@@ -179,24 +183,15 @@ func (rs revisionReplicaSet) revision() int {
 }
 
 // KubeDeploymentRevisions lists a Deployment's revisions, newest first, like `kubectl
-// rollout history` (os:admin): {"revisions":[{revision,replicaSet,created,images,
-// changeCause,replicas,current}]}. kubeServer: see KubePods.
+// rollout history` (os:admin): KubeWorkloadRevisions of a Deployment. kubeServer: see
+// KubePods.
 func KubeDeploymentRevisions(configYAML, contextName, kubeServer, namespace, name string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
-	if err := validateKubeName("Deployment", namespace, name); err != nil {
-		return "", err
-	}
-
-	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demoDeploymentRevisions,
-		func(ctx context.Context, k *kubeClient) (map[string][]deploymentRevision, error) {
-			revs, _, err := deploymentRevisions(ctx, k, namespace, name)
-
-			return map[string][]deploymentRevision{"revisions": revs}, err
-		})
+	return workloadRevisionsJSON(configYAML, contextName, kubeServer, "Deployment", namespace, name)
 }
 
 // deploymentRevisions reads the Deployment and its ReplicaSets; the ReplicaSets come back
@@ -207,6 +202,11 @@ func deploymentRevisions(ctx context.Context, k *kubeClient, namespace, name str
 		return nil, nil, err
 	}
 
+	return deploymentRevisionsOf(ctx, k, dep, namespace, name)
+}
+
+// deploymentRevisionsOf is deploymentRevisions of the Deployment dep, already read.
+func deploymentRevisionsOf(ctx context.Context, k *kubeClient, dep appsObject, namespace, name string) ([]deploymentRevision, map[int]revisionReplicaSet, error) {
 	var list kubeList[revisionReplicaSet]
 
 	path := "/apis/apps/v1/namespaces/" + url.PathEscape(namespace) + "/replicasets?labelSelector=" + url.QueryEscape(matchLabelsSelector(dep.Spec.Selector.MatchLabels))
@@ -260,28 +260,11 @@ func templateImages(template json.RawMessage) []string {
 	return images
 }
 
-// KubeRollbackDeployment rolls a Deployment back to revision, like `kubectl rollout undo
-// deployment/NAME --to-revision=N` (os:admin): its pod template becomes that ReplicaSet's
-// (without the pod-template-hash label), which starts a rolling update to it (it then
-// shows as the newest revision). A paused Deployment, and the current revision, are
-// refused. kubeServer: see KubePods.
-func KubeRollbackDeployment(configYAML, contextName, kubeServer, namespace, name string, revision int) (err error) {
-	defer maskErr(&err)
-
-	contextName = unmaskContext(configYAML, contextName)
-	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
-
-	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "rollback-deployment", Namespace: namespace, Object: "Deployment/" + name, Params: fmt.Sprintf("revision=%d", revision)})
-
-	if err := validateKubeName("Deployment", namespace, name); err != nil {
-		return err
-	}
-
-	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
-		return rollbackDeployment(ctx, k, namespace, name, revision)
-	})
-}
-
+// rollbackDeployment rolls a Deployment back to revision, like `kubectl rollout undo
+// deployment/NAME --to-revision=N` (KubeRollbackWorkload): its pod template becomes that
+// ReplicaSet's (without the pod-template-hash label), which starts a rolling update to it (it
+// then shows as the newest revision). A paused Deployment, and the current revision, are
+// refused.
 func rollbackDeployment(ctx context.Context, k *kubeClient, namespace, name string, revision int) error {
 	path := appsPath(workloadKinds[0], namespace, name)
 
@@ -381,6 +364,12 @@ func KubePodLogs(configYAML, contextName, kubeServer, namespace, pod, container 
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
+
+	return readPodLog(configYAML, contextName, kubeServer, namespace, pod, container, previous, tailLines, 0)
+}
+
+// readPodLog is KubePodLogs bounded to the last sinceMinutes (0: no bound); contextName is unmasked.
+func readPodLog(configYAML, contextName, kubeServer, namespace, pod, container string, previous bool, tailLines, sinceMinutes int) (string, error) {
 	namespace, pod = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(pod))
 	container = privacy.reveal(strings.TrimSpace(container))
 
@@ -396,18 +385,7 @@ func KubePodLogs(configYAML, contextName, kubeServer, namespace, pod, container 
 		tailLines = maxLogTail
 	}
 
-	// No limitBytes: Kubernetes applies it to the start of the tail, which would drop the
-	// newest lines (the crash the log was opened for). The size is bounded below instead.
-	query := url.Values{}
-	query.Set("tailLines", strconv.Itoa(tailLines))
-
-	if container != "" {
-		query.Set("container", container)
-	}
-
-	if previous {
-		query.Set("previous", "true")
-	}
+	query := podLogQuery(container, previous, tailLines, sinceMinutes)
 
 	if isDemoContext(configYAML, contextName) {
 		return demoPodLog(pod, previous), nil

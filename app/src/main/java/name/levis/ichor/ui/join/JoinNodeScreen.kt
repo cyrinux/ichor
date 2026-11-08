@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.join
 
+import androidx.compose.runtime.getValue
+import name.levis.ichor.ui.components.ClusterScreenTitle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,16 +12,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -40,7 +41,7 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.JoinRequest
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.MaintenanceInspection
 import name.levis.ichor.model.installDisks
@@ -65,7 +66,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiStateOf
 
 /** Step 1 of adding a node: the typed address and what the node in maintenance mode answered. */
-class JoinNodeViewModel(private val talos: TalosRepository) : ViewModel() {
+class JoinNodeViewModel(private val lifecycle: NodeLifecycleRepository) : ViewModel() {
     private val _address = MutableStateFlow("")
     val address: StateFlow<String> = _address.asStateFlow()
     private val _inspection = MutableStateFlow<UiState<MaintenanceInspection>?>(null)
@@ -85,12 +86,13 @@ class JoinNodeViewModel(private val talos: TalosRepository) : ViewModel() {
         val address = joinAddress(_address.value).ifEmpty { return }
         inspecting?.cancel()
         _inspection.value = UiState.Loading
-        inspecting = viewModelScope.launch { _inspection.value = uiStateOf { talos.maintenanceNodeInspect(address) } }
+        inspecting = viewModelScope.launch { _inspection.value = uiStateOf { lifecycle.maintenanceNodeInspect(address) } }
     }
 }
 
 /**
- * "Add a node…": a machine booted from the Talos ISO waits in maintenance mode; type the address
+ * "Add a node…": first where the new machine comes from ([onPath] opens that way). A machine booted
+ * from the Talos ISO waits in maintenance mode; type the address
  * its console shows and see its version, disks and links; then make its config from a member's;
  * then send it and follow the node until it joins ([onOpenNode] opens it afterwards).
  */
@@ -99,22 +101,19 @@ class JoinNodeViewModel(private val talos: TalosRepository) : ViewModel() {
 fun JoinNodeScreen(
     onBack: () -> Unit,
     onOpenNode: (address: String, hostname: String, role: String) -> Unit,
-    vm: JoinNodeViewModel = viewModel(key = "join-node", factory = factory { JoinNodeViewModel(app.talosRepository) }),
-    configVm: JoinConfigViewModel = viewModel(key = "join-config", factory = factory { JoinConfigViewModel(app.talosRepository) }),
+    /** A server to create at a cloud, or a machine to boot: what gets it there. */
+    onPath: (AddNodePath) -> Unit,
+    vm: JoinNodeViewModel = viewModel(key = "join-node", factory = factory { JoinNodeViewModel(app.nodeLifecycleRepository) }),
+    configVm: JoinConfigViewModel = viewModel(key = "join-config", factory = factory { JoinConfigViewModel(app.talosRepository, app.nodeLifecycleRepository) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val address by vm.address.collectAsStateWithLifecycle()
     val inspection by vm.inspection.collectAsStateWithLifecycle()
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(stringResource(R.string.join_node_title))
-                        Text(config?.activeContext.orEmpty(), style = MaterialTheme.typography.labelMedium)
-                    }
-                },
+            IchorTopAppBar(
+                title = { ClusterScreenTitle(stringResource(R.string.join_node_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
         },
@@ -123,6 +122,8 @@ fun JoinNodeScreen(
             Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            AddNodeChooser(onPath)
+            MutedText(stringResource(R.string.add_node_ready))
             SectionTitle(stringResource(R.string.join_node_step_inspect))
             MutedText(stringResource(R.string.join_node_intro))
             if (config?.activeSummary?.isDemo == true) InfoNotice(stringResource(R.string.join_node_demo))
@@ -159,7 +160,7 @@ private fun AddressField(address: String, onAddress: (String) -> Unit, onInspect
             keyboardActions = KeyboardActions(onGo = { onInspect() }),
             modifier = Modifier.weight(1f),
         )
-        Button(onClick = onInspect, enabled = !busy && joinAddress(address).isNotEmpty()) {
+        IchorButton(onClick = onInspect, enabled = !busy && joinAddress(address).isNotEmpty()) {
             Text(stringResource(R.string.join_node_inspect))
         }
     }
@@ -169,7 +170,7 @@ private fun AddressField(address: String, onAddress: (String) -> Unit, onInspect
 private fun InspectionView(node: MaintenanceInspection) {
     val colors = LocalStatusColors.current
     if (!node.maintenance) {
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 StatusPill(stringResource(R.string.join_node_installed_pill), colors.warn)
                 Text(stringResource(R.string.join_node_installed, node.address), style = MaterialTheme.typography.bodyMedium)
@@ -177,7 +178,7 @@ private fun InspectionView(node: MaintenanceInspection) {
         }
         return
     }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(node.address, style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))
@@ -201,7 +202,7 @@ private fun InspectionView(node: MaintenanceInspection) {
 /** A card with a title, the section's error if it failed, "none" when empty, else [content]. */
 @Composable
 private fun Section(title: String, error: String?, empty: Boolean, content: @Composable () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             SectionTitle(title)
             when {

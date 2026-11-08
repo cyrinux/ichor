@@ -2,15 +2,19 @@ import XCTest
 @testable import IchorCore
 
 final class EventsTests: XCTestCase {
-    private func event(_ id: String, at: Int64, node: String = "10.0.0.2", kind: String = "address",
-                       subject: String = "cp-1", action: String = "", message: String = "10.0.0.2",
-                       severity: String = "info") -> NodeEvent {
-        NodeEvent(node: node, eventId: id, at: at, kind: kind, subject: subject, action: action,
-                  message: message, severity: severity)
+    private func event(
+        _ id: String, at: Int64, node: String = "10.0.0.2", kind: String = "address",
+        subject: String = "cp-1", action: String = "", message: String = "10.0.0.2",
+        severity: String = "info"
+    ) -> NodeEvent {
+        NodeEvent(
+            node: node, eventId: id, at: at, kind: kind, subject: subject, action: action,
+            message: message, severity: severity)
     }
 
     func testDecodeGoJSON() throws {
-        let json = #"{"node":"10.0.0.2","id":"d0abcdefghijklmnopqr","at":1800000000000,"kind":"service","subject":"kubelet","action":"running","message":"Health check successful","severity":"info"}"#
+        let json =
+            #"{"node":"10.0.0.2","id":"d0abcdefghijklmnopqr","at":1800000000000,"kind":"service","subject":"kubelet","action":"running","message":"Health check successful","severity":"info"}"#
         let decoded = try TalosJSON.decode(NodeEvent.self, from: json)
         XCTAssertEqual(decoded.eventId, "d0abcdefghijklmnopqr")
         XCTAssertEqual(decoded.id, "10.0.0.2/d0abcdefghijklmnopqr")
@@ -84,7 +88,7 @@ final class EventsTests: XCTestCase {
         list = insertEvent(event("b", at: 2_000), into: list)
         list = insertEvent(event("a", at: 1_000), into: list)
         list = insertEvent(event("c", at: 3_000), into: list)
-        list = insertEvent(event("b2", at: 2_000), into: list) // tie: later arrival first
+        list = insertEvent(event("b2", at: 2_000), into: list)  // tie: later arrival first
         XCTAssertEqual(list.map(\.eventId), ["c", "b2", "b", "a"])
         XCTAssertEqual(insertEvent(event("b", at: 2_000), into: list).map(\.eventId), ["c", "b2", "b", "a"])
         // Same id from another node is a different event.

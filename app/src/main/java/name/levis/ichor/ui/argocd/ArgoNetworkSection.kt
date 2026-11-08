@@ -29,22 +29,26 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import name.levis.ichor.ui.components.SectionLoaded
 import name.levis.ichor.R
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ArgoApp
-import name.levis.ichor.model.ArgoNetNode
-import name.levis.ichor.model.ArgoNetProblem
+import name.levis.ichor.model.NetMapNode
+import name.levis.ichor.model.NetMapProblem
 import name.levis.ichor.model.ArgoNetWording
-import name.levis.ichor.model.ArgoNetwork
+import name.levis.ichor.model.wording
+import name.levis.ichor.model.NetMap
 import name.levis.ichor.model.NodeOverview
-import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.netmap.CARD_HEIGHT
+import name.levis.ichor.ui.components.netmap.CARD_WIDTH
+import name.levis.ichor.ui.components.netmap.NetMapGraph
+import name.levis.ichor.ui.components.netmap.NetMapLegend
 import name.levis.ichor.ui.dataservices.CauseBanner
 import name.levis.ichor.ui.factory
 
@@ -70,13 +74,15 @@ fun ArgoNetworkSection(
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SectionTitle(stringResource(R.string.argo_net_title))
-        when (val s = state) {
-            UiState.Loading -> NetworkSkeleton()
-            is UiState.Failed -> MutedText(stringResource(R.string.argo_net_failed, s.message.asString()))
-            is UiState.Loaded -> {
-                val network = remember(s.data, downNodes) { s.data.withDownNodes(downNodes) }
-                NetworkBody(app, network, talosNodes, onNode, vm)
-            }
+        // A failed reload keeps the graph on screen, the row under it.
+        SectionLoaded(
+            state,
+            onRetry = { vm.retry(app) },
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            loading = { NetworkSkeleton() },
+        ) { data ->
+            val network = remember(data, downNodes) { data.withDownNodes(downNodes) }
+            NetworkBody(app, network, talosNodes, onNode, vm)
         }
     }
 }
@@ -84,7 +90,7 @@ fun ArgoNetworkSection(
 @Composable
 private fun NetworkBody(
     app: ArgoApp,
-    network: ArgoNetwork,
+    network: NetMap,
     talosNodes: List<NodeOverview>,
     onNode: ((NodeOverview, Int) -> Unit)?,
     vm: ArgoNetworkViewModel,
@@ -94,19 +100,19 @@ private fun NetworkBody(
         return
     }
     var selected by rememberSaveable(app.key) { mutableStateOf<String?>(null) }
-    var deleting by remember { mutableStateOf<ArgoNetNode?>(null) }
+    var deleting by remember { mutableStateOf<NetMapNode?>(null) }
     val inFlight by vm.deleting.collectAsStateWithLifecycle()
     // A box gone after a reload (a deleted pod) takes its highlight with it.
     val node = selected?.let { network.node(it) }
 
     network.problem?.let { CauseBanner(problemText(it)) }
-    ArgoNetworkGraph(network, selected = node?.id, onSelect = { selected = it })
-    ArgoNetLegend()
+    NetMapGraph(network, selected = node?.id, onSelect = { selected = it })
+    NetMapLegend()
     AnimatedVisibility(node != null, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
         val shown = node ?: return@AnimatedVisibility
         val deleteDenial = if (shown.canDelete) rememberKubeDenial(KubeAction.DELETE_POD, shown.namespace) else null
-        val podNode = if (shown.kind == ArgoNetNode.POD) network.nodeOf(shown)?.name else null
-        val hostname = if (shown.kind == ArgoNetNode.NODE) shown.name else podNode
+        val podNode = if (shown.kind == NetMapNode.POD) network.nodeOf(shown)?.name else null
+        val hostname = if (shown.kind == NetMapNode.NODE) shown.name else podNode
         val actions = ArgoNetActions(
             node = hostname?.let { h -> talosNodes.firstOrNull { it.hostname == h } },
             onNode = onNode,
@@ -132,7 +138,7 @@ private fun NetworkBody(
 
 /** The banner's sentence for the likely root cause. */
 @Composable
-private fun problemText(problem: ArgoNetProblem): String = when (problem.wording) {
+private fun problemText(problem: NetMapProblem): String = when (problem.wording) {
     ArgoNetWording.NODE_NOT_READY -> stringResource(R.string.argo_net_problem_node, problem.name)
     ArgoNetWording.NODE_CORDONED -> stringResource(R.string.argo_net_problem_cordoned, problem.name)
     ArgoNetWording.POD_STATUS -> stringResource(R.string.argo_net_problem_pod, problem.name, problem.detail)
@@ -166,5 +172,5 @@ private fun NetworkSkeleton() {
 }
 
 /** A pod not already on its way out: deleting a terminating one would change nothing. */
-private val ArgoNetNode.canDelete: Boolean
-    get() = kind == ArgoNetNode.POD && !detail.startsWith("Terminating")
+private val NetMapNode.canDelete: Boolean
+    get() = kind == NetMapNode.POD && !detail.startsWith("Terminating")

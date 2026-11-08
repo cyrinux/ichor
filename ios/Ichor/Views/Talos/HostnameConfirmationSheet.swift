@@ -1,0 +1,103 @@
+import SwiftUI
+import IchorCore
+
+/// The reboot sheet's confirmation for other risky node actions: the button only works once
+/// the hostname is typed and every acknowledgment is switched on.
+struct HostnameConfirmationSheet: View {
+    let title: String
+    let message: String
+    let hostname: String
+    let actionTitle: String
+    let enabled: Bool
+    /// Risks the user confirms one by one (none by default).
+    let acknowledgments: [String]
+    /// A safer way out shown under the action (e.g. "Back up first"); it dismisses the sheet first.
+    let alternative: (title: String, action: () -> Void)?
+    let onConfirm: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var typed = ""
+    @State private var acknowledged: Set<String> = []
+
+    // Explicit: the private @State makes the memberwise init private.
+    init(
+        title: String, message: String, hostname: String, actionTitle: String, enabled: Bool = true,
+        acknowledgments: [String] = [],
+        alternative: (title: String, action: () -> Void)? = nil, onConfirm: @escaping () -> Void
+    ) {
+        self.title = title
+        self.message = message
+        self.hostname = hostname
+        self.actionTitle = actionTitle
+        self.enabled = enabled
+        self.acknowledgments = acknowledgments
+        self.alternative = alternative
+        self.onConfirm = onConfirm
+    }
+
+    /// A blank hostname is never confirmed, least of all by an empty field.
+    private var matches: Bool { enabled && typedConfirmationMatches(typed, token: hostname) }
+
+    private var allAcknowledged: Bool { Set(acknowledgments).isSubset(of: acknowledged) }
+
+    private func acknowledgment(_ risk: String) -> Binding<Bool> {
+        Binding(
+            get: { acknowledged.contains(risk) },
+            set: { on in acknowledged = on ? acknowledged.union([risk]) : acknowledged.subtracting([risk]) }
+        )
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text(message).foregroundStyle(.statusWarn)
+                }
+                if !acknowledgments.isEmpty {
+                    Section("I understand") {
+                        ForEach(acknowledgments, id: \.self) { risk in
+                            Toggle(isOn: acknowledgment(risk)) { Text(verbatim: risk).font(.callout) }
+                                .tint(.orange)
+                        }
+                    }
+                }
+                Section(typedConfirmationPrompt(hostname)) {
+                    TextField("Hostname", text: $typed, prompt: Text(verbatim: hostname))
+                        .font(.body.monospaced())
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                }
+                Section {
+                    Button(role: .destructive) {
+                        onConfirm()
+                    } label: {
+                        Text(actionTitle)
+                    }
+                    .disabled(!matches || !allAcknowledged)
+                    if let alternative {
+                        Button {
+                            dismiss()
+                            alternative.action()
+                        } label: {
+                            Text(verbatim: alternative.title)
+                        }
+                    }
+                }
+            }
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+            }
+        }
+    }
+}
+
+/// "Type … to confirm": the whole `name`, or only its end when it is long (see `typedConfirmationCode`).
+func typedConfirmationPrompt(_ name: String) -> String {
+    let code = typedConfirmationCode(name)
+    let whole = name.trimmingCharacters(in: .whitespaces)
+    return code == whole
+        ? String(localized: "Type \(code) to confirm")
+        : String(localized: "Type \(code), the end of \(whole), to confirm")
+}

@@ -13,8 +13,10 @@ enum NetToolEvent: Sendable {
 extension TalosClient {
     /// `tool` against `target` from `node`, in a privileged netshoot container (os:admin):
     /// output lines as they come, then the parsed result. Ending the stream cancels the run.
-    func netTool(node: String, tool: NetTool, target: String, record: String = "", server: String = "",
-                 count: Int = 0) -> AsyncStream<NetToolEvent> {
+    func netTool(
+        node: String, tool: NetTool, target: String, record: String = "", server: String = "",
+        count: Int = 0
+    ) -> AsyncStream<NetToolEvent> {
         let options = Self.netToolOptions(record: record, server: server, count: count)
         let trimmed = target.trimmingCharacters(in: .whitespacesAndNewlines)
         return Self.bridged { [config, context] continuation in
@@ -41,7 +43,7 @@ extension TalosClient {
     }
 }
 
-private final class NetToolBridge: NSObject, IchorgoNetToolListenerProtocol, @unchecked Sendable {
+private final class NetToolBridge: NSObject, IchorgoNetToolListenerProtocol, Sendable {
     private let line: @Sendable (String) -> Void
     private let done: @Sendable (NetToolEvent) -> Void
 

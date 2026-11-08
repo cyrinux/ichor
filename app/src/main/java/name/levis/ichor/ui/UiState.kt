@@ -8,12 +8,15 @@ sealed interface UiState<out T> {
     /**
      * [fetchedAt]: when [data] came from the cluster (epoch millis), shown in the screen footer.
      * [error]: why the last refresh failed while [data] stayed on screen; null once one succeeds.
+     * [fromMonitor]: [data] is what the last background check saw (a seed: nodes and their
+     * health only), shown until the cluster or the last known state has more.
      */
     data class Loaded<T>(
         val data: T,
         val refreshing: Boolean = false,
         val fetchedAt: Long = System.currentTimeMillis(),
         val error: UiText? = null,
+        val fromMonitor: Boolean = false,
     ) : UiState<T>
     data class Failed(val message: UiText) : UiState<Nothing>
 }
@@ -30,22 +33,23 @@ inline fun <T> uiStateOf(block: () -> T): UiState<T> = try {
 /**
  * The state after a refresh failed with [message]: the data on screen stays (or the last known
  * [fallback], fetched at its epoch millis), marked with the error; [UiState.Failed] only when
- * there is nothing to show.
+ * there is nothing to show. The background check's seed gives way to the last known value.
  */
 fun <T> UiState<T>.refreshFailed(message: UiText, fallback: Pair<T, Long>? = null): UiState<T> = when {
-    this is UiState.Loaded -> copy(refreshing = false, error = message)
+    this is UiState.Loaded && !(fromMonitor && fallback != null) -> copy(refreshing = false, error = message)
     fallback != null -> UiState.Loaded(fallback.first, fetchedAt = fallback.second, error = message)
     else -> UiState.Failed(message)
 }
 
 /**
  * The state once the last known [restored] value (fetched at its epoch millis) was read from
- * disk: shown while still loading, and instead of the error when [overFailure]; data on screen stays.
+ * disk: shown while still loading, and instead of the error when [overFailure]; data on screen
+ * stays, unless it is only the background check's seed (the last known state says more).
  */
 fun <T> UiState<T>.orRestored(restored: Pair<T, Long>, overFailure: Boolean): UiState<T> = when (this) {
     UiState.Loading -> UiState.Loaded(restored.first, refreshing = true, fetchedAt = restored.second)
     is UiState.Failed -> if (overFailure) UiState.Loaded(restored.first, fetchedAt = restored.second, error = message) else this
-    is UiState.Loaded -> this
+    is UiState.Loaded -> if (fromMonitor) UiState.Loaded(restored.first, refreshing, restored.second, error) else this
 }
 
 fun Throwable.userMessage(): String = message?.takeIf { it.isNotBlank() }?.let(::goErrorText) ?: javaClass.simpleName

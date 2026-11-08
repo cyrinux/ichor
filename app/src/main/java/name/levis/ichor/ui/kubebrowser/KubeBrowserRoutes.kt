@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.model.ApiResource
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.ObjectOwner
 
 /** Routes of the resource browser, Helm and port-forward screens. */
 object KubeBrowserRoutes {
@@ -23,7 +24,17 @@ object KubeBrowserRoutes {
     const val APPLY = "kube-apply"
     const val STORAGE = "kube-storage"
     const val SERVICES = "kube-services"
+    const val CROSSPLANE = "kube-crossplane"
+    const val TAILSCALE = "kube-tailscale"
+
+    /** The network map of one address the Tailscale operator serves, opened by an exposed row. */
+    private const val TAILSCALE_NETWORK = "kube-tailscale-network?kind={kind}&ns={ns}&name={name}&title={title}"
+    const val CLUSTER_LIFECYCLE = "kube-cluster-lifecycle"
+    const val LOAD_BALANCING = "kube-load-balancing"
     const val JOBS = "kube-jobs"
+
+    /** A CRD plugin of another category than Data services, as a screen of its own. */
+    private const val PLUGIN = "kube-plugin/{id}"
     private const val HELM_RELEASE = "kube-helm-release?ns={ns}&name={name}"
     private const val FORWARD = "kube-forward?ns={ns}&pod={pod}"
 
@@ -38,9 +49,15 @@ object KubeBrowserRoutes {
         "kube-object?g=${e(o.group)}&v=${e(o.version)}&r=${e(o.resource)}&k=${e(o.kind)}&ns=${e(o.namespace)}&name=${e(o.name)}&edit=${o.editable}&scale=${o.scalable}" +
             if (openScale) "&openScale=true" else ""
 
+    fun plugin(id: String) = "kube-plugin/${e(id)}"
+
     fun helmRelease(namespace: String, name: String) = "kube-helm-release?ns=${e(namespace)}&name=${e(name)}"
 
     fun forward(namespace: String, pod: String) = "kube-forward?ns=${e(namespace)}&pod=${e(pod)}"
+
+    /** The map of the [kind] [namespace]/[name] the Tailscale operator serves; [title] is the tailnet name. */
+    fun tailscaleNetwork(kind: String, namespace: String, name: String, title: String) =
+        "kube-tailscale-network?kind=${e(kind)}&ns=${e(namespace)}&name=${e(name)}&title=${e(title)}"
 
     private fun e(s: String): String = Uri.encode(s)
 
@@ -82,6 +99,13 @@ object KubeBrowserRoutes {
                 onPortForward = { links.onPortForward(ref.namespace, ref.name) },
                 onOwner = links.onObject,
                 onHelmRelease = { ns, name -> nav.navigate(helmRelease(ns, name)) },
+                onScanReports = { cluster -> nav.navigate(Routes.scanReports(cluster)) },
+                onGitOpsDiff = { owner, focus ->
+                    nav.navigate(
+                        if (owner.via == ObjectOwner.VIA_ARGO) Routes.argoDiff(owner.namespace, owner.name, focus)
+                        else Routes.fluxDiff(owner.kind, owner.namespace, owner.name, focus),
+                    )
+                },
                 onDeleted = {
                     nav.previousBackStackEntry?.savedStateHandle?.set(DELETED, System.currentTimeMillis())
                     nav.popBackStack()
@@ -93,13 +117,52 @@ object KubeBrowserRoutes {
                 onBack = { nav.popBackStack() },
                 onClaim = links.onObject,
                 onDataService = { nav.navigate(Routes.dataServices(it)) },
+                onPlugin = { nav.navigate(plugin(it)) },
             )
         }
         composable(SERVICES) {
-            ServicesScreen(onBack = { nav.popBackStack() }, onService = links.onObject)
+            ServicesScreen(onBack = { nav.popBackStack() }, onObject = links.onObject, onLoadBalancing = { nav.navigate(LOAD_BALANCING) })
+        }
+        composable(CROSSPLANE) {
+            name.levis.ichor.ui.crossplane.CrossplaneScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)
+        }
+        composable(TAILSCALE) {
+            name.levis.ichor.ui.tailscale.TailscaleScreen(
+                onBack = { nav.popBackStack() },
+                onObject = links.onObject,
+                onNetwork = { e ->
+                    nav.navigate(
+                        tailscaleNetwork(
+                            e.kind,
+                            e.namespace,
+                            e.name,
+                            e.tailnetNames.firstOrNull().takeIf { !e.isEgress } ?: "${e.namespace}/${e.name}",
+                        ),
+                    )
+                },
+            )
+        }
+        composable(TAILSCALE_NETWORK, arguments = strings("kind", "ns", "name", "title")) { entry ->
+            val a = entry.arguments
+            name.levis.ichor.ui.tailscale.TailscaleNetworkScreen(
+                kind = a.str("kind"),
+                namespace = a.str("ns"),
+                name = a.str("name"),
+                title = a.str("title"),
+                onBack = { nav.popBackStack() },
+            )
+        }
+        composable(CLUSTER_LIFECYCLE) {
+            name.levis.ichor.ui.lifecycle.ClusterLifecycleScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)
+        }
+        composable(LOAD_BALANCING) {
+            name.levis.ichor.ui.loadbalancing.LoadBalancingScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)
         }
         composable(JOBS) {
             JobsScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)
+        }
+        composable(PLUGIN, arguments = strings("id")) { entry ->
+            name.levis.ichor.ui.plugins.PluginScreen(entry.arguments.str("id"), onBack = { nav.popBackStack() }, onObject = links.onObject)
         }
         composable(HELM) {
             HelmReleasesScreen(onBack = { nav.popBackStack() }, onRelease = { nav.navigate(helmRelease(it.namespace, it.name)) })

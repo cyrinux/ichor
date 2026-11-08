@@ -1,0 +1,1 @@
+• The Go core names the same directory whichever checkout builds it

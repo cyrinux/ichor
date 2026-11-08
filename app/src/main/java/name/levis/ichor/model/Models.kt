@@ -46,8 +46,15 @@ data class ContextSummary(
     /** Why the context cannot be added (a kube-* code), "" when it can. */
     val problem: String = "",
     val problemDetail: String = "",
+    /**
+     * What to do instead of an exec plugin the phone cannot run (teleport, token-wrapper,
+     * oidc-no-issuer, unknown); [problemDetail] is then the plugin's name.
+     */
+    val execHint: String = "",
     /** The method the app signs in with (oidc, eks, gke, azure, digitalocean, rancher; omni, omni-service-account for a Talos context through Omni), "" for static credentials. */
     val signIn: String = "",
+    /** The kubeconfig's proxy-url as scheme://host:port (no credentials), "" without one. */
+    val proxyURL: String = "",
     /**
      * A Talos cluster's Kubernetes access: the fingerprint of the stored kubeconfig cluster its
      * Kubernetes calls go through, "" for the Talos admin kubeconfig. Set by the app, not the core.
@@ -63,6 +70,9 @@ val ContextSummary.isDemo: Boolean get() = demo
 
 /** Added from a kubeconfig: only the Kubernetes API, no Talos one. */
 val ContextSummary.isKube: Boolean get() = kind == KIND_KUBE
+
+/** The proxy's host and port, what the cluster's row says it goes through; null without a proxy. */
+val ContextSummary.proxyHost: String? get() = proxyURL.takeIf { it.isNotEmpty() }?.substringAfter("://")
 
 /** A Talos cluster that lists no endpoint (a talosconfig generated before it had addresses): nothing to reach yet. */
 val ContextSummary.needsEndpoint: Boolean get() = endpoints.isEmpty() && !demo && !isKube
@@ -148,6 +158,13 @@ val ContextSummary.accessLabel: Int
 data class ClusterOverview(
     val context: String,
     val nodes: List<NodeOverview>,
+    /**
+     * Set by the app, never kept: the nodes that answered so far of a streamed overview (see
+     * [partialOverview]). Never cached, persisted or given to the monitor; no [outage] yet.
+     */
+    @Transient val partial: Boolean = false,
+    /** While [partial]: how many nodes the talosconfig context lists, 0 when unknown (Omni). */
+    @Transient val expectedNodes: Int = 0,
 )
 
 @Serializable
@@ -296,6 +313,9 @@ data class KubeSpanNode(
     val up: Int = 0,
     val down: Int = 0,
     val peers: List<KubeSpanPeer> = emptyList(),
+    val unknown: Int = 0,
+    /** Down, and unknown ones the core judges dead. */
+    val broken: Int = down,
 )
 
 @Serializable
@@ -307,6 +327,10 @@ data class KubeSpanPeer(
     val rx: Long = 0,
     val tx: Long = 0,
     val lastHandshake: Long = 0,
+    /** The core's verdict: an "unknown" peer can be dead. */
+    val broken: Boolean = state == "down",
+    /** Why it is broken: noEndpoint, neverHandshaked, staleHandshake or down. */
+    val reason: String = "",
 )
 
 /** Space a defragmentation would give back (on-disk size minus space in use). */

@@ -16,13 +16,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorAssistChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,7 +70,7 @@ fun LazyListScope.diskUsageSection(
             MutedText(stringResource(R.string.storage_usage_hint))
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 DISK_USAGE_SHORTCUTS.forEach { shortcut ->
-                    FilterChip(
+                    IchorFilterChip(
                         selected = shortcut == path,
                         onClick = { onOpen(shortcut) },
                         label = { Text(shortcut, fontFamily = FontFamily.Monospace) },
@@ -90,7 +90,7 @@ fun LazyListScope.diskUsageSection(
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f),
                     )
-                    TextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
+                    IchorTextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
                 }
                 LinearProgressIndicator(Modifier.fillMaxWidth())
             }
@@ -117,7 +117,7 @@ private fun Breadcrumb(path: String, onOpen: (String) -> Unit) {
     Row(Modifier.horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
         crumbs.forEachIndexed { i, crumb ->
             if (i > 0) Icon(Icons.Outlined.ChevronRight, contentDescription = null, modifier = Modifier.size(16.dp))
-            AssistChip(
+            IchorAssistChip(
                 onClick = { onOpen(crumb.path) },
                 enabled = i < crumbs.lastIndex, // the last one is where we are
                 label = { Text(crumb.label, fontFamily = FontFamily.Monospace) },

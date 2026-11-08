@@ -14,6 +14,7 @@ const (
 	checkStorage       = "storage"
 	checkUpgrade       = "upgrade"
 	checkWebhooks      = "webhooks"
+	checkPolicies      = "policies"
 	checkCapacity      = "capacity"
 	checkNodes         = "nodes"
 	checkLoadBalancers = "loadbalancers"
@@ -22,6 +23,10 @@ const (
 	checkSecrets       = "secrets"
 	checkHelm          = "helm"
 	checkMonitoring    = "monitoring"
+	checkCrossplane    = "crossplane"
+	checkTailscale     = "tailscale"
+	checkClusterAPI    = "clusterapi"
+	checkPlugins       = "plugins"
 )
 
 // A section's status beyond the health values: the cluster does not run what it checks, or
@@ -36,9 +41,8 @@ const (
 	checkupTimeout = 60 * time.Second
 	// checkupMaxFindings caps a section's findings; Truncated counts the rest.
 	checkupMaxFindings = 40
-	// checkupProgressOp is the ReadProgress op of a checkup; checkupDemoStep paces its demo.
+	// checkupProgressOp is the ReadProgress op of a checkup.
 	checkupProgressOp = "checkup"
-	checkupDemoStep   = 100 * time.Millisecond
 	// How long something may stay in a transient state before it is a finding.
 	pendingGrace     = 5 * time.Minute
 	startingGrace    = 10 * time.Minute
@@ -57,8 +61,9 @@ const (
 
 var checkupSteps = []string{
 	checkupStepAPI, checkupStepPods, checkupStepNodes, checkupStepPVCs, checkupStepVersion,
-	checkWorkloads, checkEvents, checkStorage, checkUpgrade, checkWebhooks, checkCapacity,
-	checkLoadBalancers, checkTerminating, checkCertificates, checkSecrets, checkHelm, checkMonitoring,
+	checkWorkloads, checkEvents, checkStorage, checkUpgrade, checkWebhooks, checkPolicies,
+	checkCapacity, checkLoadBalancers, checkTerminating, checkCertificates, checkSecrets, checkHelm, checkMonitoring,
+	checkCrossplane, checkTailscale, checkClusterAPI, checkPlugins,
 }
 
 // checkupReport is what the cluster hides behind green nodes: one section per kind of
@@ -100,24 +105,30 @@ type checkupFinding struct {
 	Limit     float64 `json:"limit,omitempty"`
 	Count     int     `json:"count,omitempty"`
 	Since     int64   `json:"since,omitempty"` // unix ms
+	// The fields of a plugin's finding (kind "plugin"), absent for the others.
+	pluginFinding
 }
 
 // KubeCheckup looks for the trouble no other screen shows, through the Kubernetes API
 // (os:admin): failing pods and Jobs, Warning events, volumes filling up, deprecated APIs
 // still in use, admission webhooks without a backend, nodes out of room, load balancers
 // without an address, objects stuck in Terminating, pending certificate requests, external
-// secrets that do not sync, Helm releases that failed, and the scrape targets down and rules
-// failing in the first Prometheus discovered, as JSON (see checkupReport).
+// secrets that do not sync, sealed secrets that do not unseal, Helm releases that failed,
+// the scrape targets down and rules failing in the first Prometheus discovered, and
+// Crossplane resources that cannot sync, a Tailscale operator, Connector or ProxyGroup that is
+// not ready, and (on a management cluster) a workload cluster that failed, a Machine stuck or
+// failed and a Sidero server off or not accepted, and the findings of the plugins the cluster
+// runs (worded by each plugin in locale, "" is English), as JSON (see checkupReport).
 // It only reads. kubeServer: see KubePods.
-func KubeCheckup(configYAML, contextName, kubeServer string) (out string, err error) {
+func KubeCheckup(configYAML, contextName, kubeServer, locale string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
 
 	if isDemoContext(configYAML, contextName) {
-		playDemoCheckupProgress(contextName)
+		playDemoReadProgress(checkupProgressOp, contextName, checkupStepAPI, checkupStepPods, checkStorage)
 
-		return toJSON(demoCheckup(time.Now()))
+		return toJSON(demoCheckup(time.Now(), locale))
 	}
 
 	progress := startReadProgress(checkupProgressOp, contextName, checkupSteps...)
@@ -127,26 +138,13 @@ func KubeCheckup(configYAML, contextName, kubeServer string) (out string, err er
 	defer cancel()
 
 	report, err := withKubeContext(ctx, kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) (checkupReport, error) {
-		return readCheckup(ctx, k, time.Now())
+		return readCheckup(ctx, k, time.Now(), locale)
 	})
 	if err != nil {
 		return "", err
 	}
 
 	return toJSON(report)
-}
-
-// playDemoCheckupProgress walks a few steps so the demo shows the progress the apps draw.
-func playDemoCheckupProgress(contextName string) {
-	steps := []string{checkupStepAPI, checkupStepPods, checkStorage}
-	progress := startReadProgress(checkupProgressOp, contextName, steps...)
-	defer progress.finish()
-
-	for _, step := range steps {
-		progress.begin(step)
-		time.Sleep(checkupDemoStep)
-		progress.done(step)
-	}
 }
 
 // checkupInput is what several sections share, read once.
@@ -163,7 +161,8 @@ type checkupInput struct {
 
 // readCheckup reads the shared lists, then every section in parallel. It fails only when
 // the API server answers nothing (its API groups); a section that fails carries its error.
-func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupReport, error) {
+// locale words the plugins' findings.
+func readCheckup(ctx context.Context, k *kubeClient, now time.Time, locale string) (checkupReport, error) {
 	progress := readProgressFrom(ctx)
 
 	endAPI := progress.track(checkupStepAPI)
@@ -205,7 +204,7 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 	wg.Wait()
 
 	report := checkupReport{KubeVersion: version}
-	sections := make([]checkupSection, 13)
+	sections := make([]checkupSection, 18)
 
 	// section runs one section reader as its progress step; the step fails when a section it
 	// fills could not be read at all.
@@ -222,13 +221,18 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 	section(checkStorage, func() { sections[2], report.Volumes = checkupStorage(ctx, k, in) }, 2)
 	section(checkUpgrade, func() { sections[3] = checkupUpgrade(ctx, k, version) }, 3)
 	section(checkWebhooks, func() { sections[4] = checkupWebhooks(ctx, k) }, 4)
-	section(checkCapacity, func() { sections[5], sections[6], report.Nodes = checkupCapacity(ctx, k, in, version) }, 5, 6)
-	section(checkLoadBalancers, func() { sections[7] = checkupLoadBalancers(ctx, k, in) }, 7)
-	section(checkTerminating, func() { sections[8] = checkupTerminating(ctx, k, in) }, 8)
-	section(checkCertificates, func() { sections[9] = checkupCSRs(ctx, k, in) }, 9)
-	section(checkSecrets, func() { sections[10] = checkupExternalSecrets(ctx, k, in) }, 10)
-	section(checkHelm, func() { sections[11], report.Releases = checkupHelm(ctx, k, in) }, 11)
-	section(checkMonitoring, func() { sections[12] = checkupMonitoring(ctx, k, in) }, 12)
+	section(checkPolicies, func() { sections[5] = checkupPolicies(ctx, k, in) }, 5)
+	section(checkCapacity, func() { sections[6], sections[7], report.Nodes = checkupCapacity(ctx, k, in, version) }, 6, 7)
+	section(checkLoadBalancers, func() { sections[8] = checkupLoadBalancers(ctx, k, in) }, 8)
+	section(checkTerminating, func() { sections[9] = checkupTerminating(ctx, k, in) }, 9)
+	section(checkCertificates, func() { sections[10] = checkupCertificates(ctx, k, in) }, 10)
+	section(checkSecrets, func() { sections[11] = checkupSecrets(ctx, k, in) }, 11)
+	section(checkHelm, func() { sections[12], report.Releases = checkupHelm(ctx, k, in) }, 12)
+	section(checkMonitoring, func() { sections[13] = checkupMonitoring(ctx, k, in) }, 13)
+	section(checkCrossplane, func() { sections[14] = checkupCrossplane(ctx, k, in) }, 14)
+	section(checkTailscale, func() { sections[15] = checkupTailscale(ctx, k, in) }, 15)
+	section(checkClusterAPI, func() { sections[16] = checkupClusterAPI(ctx, k, in) }, 16)
+	section(checkPlugins, func() { sections[17] = checkupPlugins(ctx, k, in, locale) }, 17)
 	wg.Wait()
 
 	report.Sections = sections
@@ -245,6 +249,43 @@ func listObjects[T any](ctx context.Context, k *kubeClient, path string) ([]T, e
 	err := getList(ctx, k, path, &list)
 
 	return list.Items, err
+}
+
+// checkupPart is what one reader contributes to a section several fill (see checkupSecrets):
+// served says the cluster runs what it checks, and the rest is what newSection needs. A part
+// that is not served contributes nothing, so a section is absent only when none of its
+// readers is.
+type checkupPart struct {
+	served   bool
+	checked  int
+	findings []checkupFinding
+	errs     []error
+}
+
+// sectionFromParts closes a section from the readers that fill it, absent when none of them
+// is served.
+func sectionFromParts(id string, parts ...checkupPart) checkupSection {
+	served := false
+	checked := 0
+	findings := []checkupFinding{}
+	errs := []error{}
+
+	for _, p := range parts {
+		if !p.served {
+			continue
+		}
+
+		served = true
+		checked += p.checked
+		findings = append(findings, p.findings...)
+		errs = append(errs, p.errs...)
+	}
+
+	if !served {
+		return absentSection(id)
+	}
+
+	return newSection(id, checked, findings, errs...)
 }
 
 // newSection closes a section: findings worst first (in the order given otherwise), capped,

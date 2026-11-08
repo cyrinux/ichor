@@ -45,6 +45,16 @@ const garageTranquilityVar = "resync-tranquility"
 type garageStatus struct {
 	Error     string           `json:"error"`
 	Instances []garageInstance `json:"instances"`
+	// The garage-operator's declarative layer (garage.rajsingh.info), empty when its CRDs
+	// are not served: the operator's CRs, listed beside the instances above, and the
+	// operator Deployment's own health.
+	Version   string                `json:"version,omitempty"`
+	Truncated bool                  `json:"truncated,omitempty"`
+	Clusters  []garageOpCluster     `json:"clusters,omitempty"`
+	Buckets   []garageOpBucket      `json:"buckets,omitempty"`
+	Keys      []garageOpKey         `json:"keys,omitempty"`
+	Nodes     []garageOpNode        `json:"nodes,omitempty"`
+	Operator  *garageOperatorStatus `json:"operator,omitempty"`
 }
 
 type garageInstance struct {
@@ -109,7 +119,7 @@ func findGarageGroups(pods []dsPod) []garageGroup {
 		container := ""
 
 		for _, c := range p.Spec.Containers {
-			if id := catalog.identify(parseImageRef(c.Image)); id.app != nil && id.app.ID == "garage" {
+			if isGarageServerImage(catalog, parseImageRef(c.Image)) {
 				container = c.Name
 
 				break
@@ -141,6 +151,18 @@ func findGarageGroups(pods []dsPod) []garageGroup {
 	}
 
 	return groups
+}
+
+// isGarageServerImage tells the Garage server image from its companions: the catalog also
+// hands Garage a variant like khairul169/garage-webui, which has no /garage binary to exec.
+func isGarageServerImage(catalog *appCatalog, ref imageRef) bool {
+	if id := catalog.identify(ref); id.app == nil || id.app.ID != "garage" {
+		return false
+	}
+
+	name := strings.ReplaceAll(ref.Name(), "_", "-")
+
+	return name == "garage" || strings.HasSuffix(name, "-garage")
 }
 
 // readGarage reads every Garage cluster found among pods; nil when there is none. A pod

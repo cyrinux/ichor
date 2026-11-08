@@ -1,6 +1,9 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.DataServices
+import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
@@ -40,6 +43,10 @@ fun podsKey(namespace: String?) = "$PODS|${namespace ?: "*"}"
 fun workloadsKey(namespace: String?) = "$WORKLOADS|${namespace ?: "*"}"
 fun cronJobsKey(namespace: String?) = "$CRON_JOBS|${namespace ?: "*"}"
 const val DATA_SERVICES = "dataservices"
+
+/** What kube-green has done to one namespace, read when a workload or CronJob sheet opens. */
+const val KUBE_GREEN_NAMESPACE = "kubegreen"
+fun kubeGreenNamespaceKey(namespace: String) = "$KUBE_GREEN_NAMESPACE|$namespace"
 const val ARGO_CD = "argocd"
 const val FLUX = "flux"
 fun servicesKey(node: String) = "services|$node"
@@ -70,6 +77,11 @@ internal val PERSISTED: Map<String, KSerializer<*>> = mapOf(
     "network" to NodeNetwork.serializer(),
     "hardware" to NodeHardware.serializer(),
     "images" to ListSerializer(ImageInfo.serializer()),
+    // The overview's Data services and GitOps cards: without them a reopened app shows their
+    // skeleton until the slow reads (the Garage CLI in a pod) finish, under an Apps card already filled.
+    DATA_SERVICES to DataServices.serializer(),
+    ARGO_CD to ArgoStatus.serializer(),
+    FLUX to FluxStatus.serializer(),
 )
 
 internal const val FEATURES_PREFIX = "|features|"

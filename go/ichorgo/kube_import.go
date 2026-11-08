@@ -12,6 +12,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // kubeContextSummary is contextSummary for a kubeconfig context, plus what the import
@@ -31,9 +33,14 @@ type kubeContextSummary struct {
 	// Problem is a kubeProblem code when the context cannot be added; the apps localize it.
 	Problem       string `json:"problem,omitempty"`
 	ProblemDetail string `json:"problemDetail,omitempty"`
+	// ExecHint is what to do instead of an exec plugin the phone cannot run (an ExecHint*
+	// code), set with KubeProblemExec; ProblemDetail is then the plugin's name.
+	ExecHint string `json:"execHint,omitempty"`
 	// SignIn is the method the app signs in with ("" for static credentials); see
 	// KubeSignInInfo for how and whether it is signed in.
 	SignIn string `json:"signIn,omitempty"`
+	// ProxyURL is the kubeconfig's proxy-url as scheme://host:port, never with its credentials.
+	ProxyURL string `json:"proxyURL,omitempty"`
 }
 
 type kubeconfigSummary struct {
@@ -55,12 +62,25 @@ const (
 	KubeProblemInvalid        = "kube-invalid"
 )
 
+// What to do instead of an exec plugin the phone cannot run. The apps map the codes to localized text.
+const (
+	ExecHintTeleport     = "teleport"       // tsh before its sign-in: kept for the apps' tables until they drop it
+	ExecHintTokenWrapper = "token-wrapper"  // vault, aws-vault, az: paste the token they print
+	ExecHintOIDCNoIssuer = "oidc-no-issuer" // kubelogin without an issuer: re-export with one
+	ExecHintUnknown      = "unknown"
+)
+
 // ParseKubeconfig validates a kubeconfig and returns a JSON kubeconfigSummary: one row per
 // context, sorted by name, each importable or carrying the reason it is not. It reads both an
 // imported file and the app's stored kubeconfig. No key material leaves.
 func ParseKubeconfig(configYAML string) (out string, err error) {
 	defer maskResult(&out, &err)
 
+	return kubeconfigSummaryJSON(configYAML)
+}
+
+// kubeconfigSummaryJSON is ParseKubeconfig before masking.
+func kubeconfigSummaryJSON(configYAML string) (string, error) {
 	start := time.Now()
 
 	privacy.learnConfig(configYAML)
@@ -98,14 +118,26 @@ func summarizeKubeContext(doc *kubeconfigDoc, name string) kubeContextSummary {
 		s.Endpoints = []string{cluster.Cluster.Server}
 		s.Insecure = cluster.Cluster.InsecureSkipTLSVerify
 		s.Demo = isDemoServer(cluster)
+
+		if proxy, err := httpx.ParseProxyURL(cluster.Cluster.ProxyURL); err == nil {
+			s.ProxyURL = httpx.ProxyDisplay(proxy)
+		}
 	}
 
 	if hasUser {
 		s.Auth, s.AuthDetail = kubeAuthMethod(user)
 		s.describeCredentials(user)
+
+		// tsh --insecure skips the proxy's certificate check, and so does the sign-in.
+		if s.Auth == authTeleport && slices.Contains(user.User.Exec.Args, "--insecure") {
+			s.Insecure = true
+		}
 	}
 
 	s.Problem, s.ProblemDetail = kubeContextProblem(doc, name, cluster, user)
+	if s.Problem == KubeProblemExec {
+		s.ExecHint = execPluginHint(user.User.Exec)
+	}
 	if s.Problem == "" && supportedSignIn(s.Auth) {
 		s.SignIn = s.Auth
 	}
@@ -129,6 +161,7 @@ const (
 	authAzure        = "azure"
 	authDigitalOcean = "digitalocean"
 	authRancher      = "rancher"
+	authTeleport     = "teleport"
 )
 
 // kubeAuthMethod names how a user signs in. Static credentials win, as in parseKubeconfig.
@@ -151,7 +184,7 @@ func kubeAuthMethod(u *kubeStoreUser) (method, detail string) {
 
 // execAuthMethod recognises the credential plugins of the common clouds and of kubelogin.
 func execAuthMethod(e *kubeStoreExec) (method, detail string) {
-	cmd := strings.TrimSuffix(path.Base(strings.ReplaceAll(e.Command, `\`, "/")), ".exe")
+	cmd := execCommandName(e)
 
 	switch {
 	case cmd == "aws" && slices.Contains(e.Args, "eks"):
@@ -164,16 +197,41 @@ func execAuthMethod(e *kubeStoreExec) (method, detail string) {
 		return authOIDC, flagValue(e.Args, "--oidc-issuer-url")
 	case cmd == "kubelogin" && flagValue(e.Args, "--oidc-issuer-url") != "":
 		return authOIDC, flagValue(e.Args, "--oidc-issuer-url")
-	case cmd == "kubelogin":
-		// Azure's kubelogin (an int128 kubelogin always names its issuer).
+	case cmd == "kubelogin" && isAzureKubelogin(e.Args):
 		return authAzure, flagValue(e.Args, "--tenant-id", "-t")
 	case cmd == "doctl":
 		return authDigitalOcean, ""
 	case cmd == "rancher":
 		return authRancher, flagValue(e.Args, "--server")
+	case cmd == "tsh" && slices.Contains(e.Args, "kube") && slices.Contains(e.Args, "credentials"):
+		return authTeleport, flagValue(e.Args, "--kube-cluster")
 	}
 
 	return authExec, cmd
+}
+
+// execCommandName is the plugin's binary without its directory or ".exe".
+func execCommandName(e *kubeStoreExec) string {
+	return strings.TrimSuffix(path.Base(strings.ReplaceAll(e.Command, `\`, "/")), ".exe")
+}
+
+// isAzureKubelogin tells Azure's kubelogin from int128's: Azure's names its server or login
+// mode; int128's names its issuer, and without one neither sign-in can take over.
+func isAzureKubelogin(args []string) bool {
+	return flagValue(args, "--server-id", "--login", "-l", "--tenant-id", "-t") != "" ||
+		slices.Contains(args, "convert-kubeconfig")
+}
+
+// execPluginHint is what to do instead of an exec plugin execAuthMethod has no sign-in for.
+func execPluginHint(e *kubeStoreExec) string {
+	switch execCommandName(e) {
+	case "vault", "aws-vault", "az":
+		return ExecHintTokenWrapper
+	case "kubelogin":
+		return ExecHintOIDCNoIssuer
+	}
+
+	return ExecHintUnknown
 }
 
 func authProviderMethod(p map[string]any) (method, detail string) {
@@ -295,7 +353,9 @@ func kubeContextProblem(doc *kubeconfigDoc, name string, cluster *kubeStoreClust
 	case c.CertificateAuthority != "" && c.CertificateAuthorityData == "":
 		return KubeProblemFilePath, c.CertificateAuthority
 	case c.ProxyURL != "":
-		return KubeProblemProxy, c.ProxyURL
+		if _, err := httpx.ParseProxyURL(c.ProxyURL); err != nil {
+			return KubeProblemProxy, err.Error()
+		}
 	}
 
 	switch method, _ := kubeAuthMethod(user); method {
@@ -312,7 +372,7 @@ func kubeContextProblem(doc *kubeconfigDoc, name string, cluster *kubeStoreClust
 	case authNone:
 		return KubeProblemNoCredentials, ""
 	case authExec:
-		return KubeProblemExec, u.Exec.Command
+		return KubeProblemExec, execCommandName(u.Exec)
 	default:
 		if !supportedSignIn(method) {
 			return KubeProblemSignInLater, method
@@ -495,27 +555,9 @@ func clusterOf(doc *kubeconfigDoc, name string) *kubeStoreCluster {
 
 // kubeMergedName is mergedName for a kubeconfig context.
 func kubeMergedName(stored *kubeconfigDoc, taken, reserved map[string]bool, name string, cluster *kubeStoreCluster, choice importChoice) (string, error) {
-	if !taken[name] {
-		return name, nil
-	}
-
-	switch {
-	case choice.Replace:
-		same := sameKubeClusterName(stored, name, cluster)
-		if same == "" {
-			return "", fmt.Errorf("context %q is another cluster than the stored one: it cannot replace it", name)
-		}
-
-		return same, nil
-	case choice.Name != "":
-		if taken[choice.Name] || (reserved[choice.Name] && choice.Name != name) {
-			return "", fmt.Errorf("a cluster named %q is already imported", choice.Name)
-		}
-
-		return choice.Name, nil
-	default:
-		return freeName(taken, reserved, name), nil
-	}
+	return mergedChoiceName(taken, reserved, name, choice, func() string {
+		return sameKubeClusterName(stored, name, cluster)
+	})
 }
 
 // sameKubeClusterName is the stored context named name, or name-N, of the same cluster.

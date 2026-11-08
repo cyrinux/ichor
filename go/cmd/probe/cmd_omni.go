@@ -77,6 +77,36 @@ var omniCommands = []command{
 
 		return ichorgo.DiscoverOmniClusters(endpoint, identity)
 	}},
+	// Read only: the cluster's machine sets, and the machines no cluster has.
+	{name: "omni-machines", args: "", run: func(e env) (string, error) {
+		if err := omniSignIn(e.cfg, e.context, false); err != nil {
+			return "", fmt.Errorf("omni sign-in: %w", err)
+		}
+
+		sets, err := ichorgo.OmniMachineSets(e.cfg, e.context)
+		if err != nil {
+			return "", err
+		}
+
+		fmt.Println("machine sets:", sets)
+
+		return ichorgo.OmniUnallocatedMachines(e.cfg, e.context)
+	}},
+	// Writes to Omni: a test cluster only, and only with -yes.
+	{name: "omni-allocate", args: "MACHINE SET -yes", run: func(e env) (string, error) {
+		if flag.NArg() != 4 || flag.Arg(3) != "-yes" {
+			return "", errors.New("usage: omni-allocate MACHINE SET -yes (puts the machine in the cluster)")
+		}
+
+		if err := omniSignIn(e.cfg, e.context, false); err != nil {
+			return "", fmt.Errorf("omni sign-in: %w", err)
+		}
+
+		j := joinProbe{done: make(chan string, 1)}
+		ichorgo.StartOmniAllocate(e.cfg, e.context, flag.Arg(1), flag.Arg(2), j)
+
+		return "done: " + <-j.done, nil
+	}},
 }
 
 // omniEndpoint is the Omni endpoint of the named context (the current one when empty).

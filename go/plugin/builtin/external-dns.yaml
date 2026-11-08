@@ -1,0 +1,456 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# ExternalDNS publishes DNS records for the hostnames its sources (Ingresses, Services,
+# HTTPRoutes, DNSEndpoints) ask for, and keeps no status on them: what this plugin shows is
+# what the controllers' flags and the sources say. Two Go readers do what no expression can:
+# native:external-dns-controllers parses each controller's flags off its Deployment, and
+# native:external-dns-records fans every source out into one record per hostname and address
+# family, matched with the controller whose domain filters and record types cover it. Each row
+# opens the object it comes from (ref: $.source). "Check names" resolves the hostnames from the
+# phone. go/ichorgo/plugin_externaldns_test.go holds it to the reader the apps used before.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: external-dns
+name: ExternalDNS
+website: https://kubernetes-sigs.github.io/external-dns/latest/
+icon: external-dns
+category: networking
+catalogId: external-dns
+
+# The DNSEndpoint CRD is optional: most installs only publish Ingress and Service hosts.
+detect:
+  - group: externaldns.k8s.io
+  - pods: external-dns
+
+resources:
+  controller:
+    group: ichor.dev
+    version: v1alpha1
+    resource: externaldnscontrollers
+    kind: ExternalDNSController
+    scope: Namespaced
+    source: native:external-dns-controllers
+    ref: $.source
+  record:
+    group: ichor.dev
+    version: v1alpha1
+    resource: externaldnsrecords
+    kind: ExternalDNSRecord
+    scope: Namespaced
+    source: native:external-dns-records
+    ref: $.source
+    list: { limit: 500 }
+
+fields:
+  controller:
+    replicas: $.status.replicas | default(0)
+    readyReplicas: $.status.readyReplicas | default(0)
+    ready: fields.replicas > 0 && fields.readyReplicas >= fields.replicas
+    dryRun: $.spec.dryRun | default(false)
+  record:
+    dnsName: $.spec.dnsName
+    unmanaged: ($.spec.controller | default("")) == ""
+    stale: $.status.stale | default(false)
+    noTarget: len($.spec.targets) == 0
+
+# One reason per object: the first rule that holds.
+health:
+  controller:
+    - { when: fields.readyReplicas == 0, health: critical, reason: notReady, message: "no replica ready" }
+    - { when: fields.dryRun, health: warning, reason: dryRun, message: "dry-run: it changes nothing" }
+  record:
+    - { when: fields.unmanaged, health: warning, reason: unmanaged, message: "outside every controller’s domain filters" }
+    - { when: fields.stale, health: warning, reason: stale, message: "a newer version is not observed yet" }
+    - { when: fields.noTarget, health: warning, reason: noTarget, message: "no address to point at yet" }
+
+dataServices:
+  # No controller found (when the Deployments could be read) is as critical as one not ready.
+  controllers:
+    aggregate:
+      down: readable(controller) && (count(controller) == 0 || count(controller, health == "critical") > 0)
+      notReady: count(controller, health == "critical")
+      dryRun: count(controller, fields.dryRun)
+    health: 'readable(controller) && (count(controller) == 0 || count(controller, health == "critical") > 0) ? "critical" : worst(controller.health)'
+  records:
+    aggregate:
+      unmanaged: count(record, fields.unmanaged)
+      noTarget: count(record, fields.noTarget)
+    health: worst(record.health)
+  summary:
+    aggregate:
+      total: count(record)
+    health: worst([dataServices.controllers.health, dataServices.records.health])
+
+cards:
+  summary:
+    title: { count: dataServices.summary.total, one: "%d hostname", other: "%d hostnames" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "controllers down", value: dataServices.controllers.notReady, tone: critical, hideWhenZero: true }
+      - { label: "dry-run", value: dataServices.controllers.dryRun, tone: warning, hideWhenZero: true }
+      - { label: "unmanaged", value: dataServices.records.unmanaged, tone: warning, hideWhenZero: true }
+      - { label: "without target", value: dataServices.records.noTarget, tone: warning, hideWhenZero: true }
+  controllers:
+    from: controller
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No controller found"
+    row:
+      title: $.metadata.name
+      subtitle: '$.metadata.namespace + " · " + $.spec.provider + ($.spec.policy != "" ? " · " + $.spec.policy : "") + " · " + $.spec.ownerId'
+      status:
+        tone: health
+        text: '!fields.ready ? "not ready" : (fields.dryRun ? "dry-run" : "ready")'
+      trailing: { text: 'string(fields.readyReplicas) + "/" + string(fields.replicas)' }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Provider", value: $.spec.provider }
+            - { label: "Policy", value: $.spec.policy }
+            - { label: "Registry", value: $.spec.registry }
+            - { label: "Owner id", value: $.spec.ownerId, mono: true }
+            - { label: "TXT prefix/suffix", value: '$.spec.txtPrefix == "" && $.spec.txtSuffix == "" ? "" : $.spec.txtPrefix + "/" + $.spec.txtSuffix', mono: true }
+            - { label: "Domain filters", value: $.spec.domainFilters, mono: true }
+            - { label: "Sources", value: $.spec.sources }
+            - { label: "Interval", value: 'string($.spec.intervalSeconds) + " s"' }
+            - { label: "Annotation filter", value: $.spec.annotationFilter, mono: true }
+            - { label: "Record types", value: $.spec.managedRecordTypes }
+  records:
+    from: record
+    sort: [health desc, fields.dnsName, $.spec.recordType, $.spec.sourceKind, $.metadata.namespace, $.source.name]
+    empty: "No hostnames."
+    row:
+      title: fields.dnsName
+      subtitle: '$.spec.recordType + " · " + $.spec.sourceKind + " " + $.metadata.namespace + "/" + $.source.name'
+      status:
+        tone: health
+        text: 'fields.unmanaged ? "unmanaged" : (fields.stale ? "stale" : (fields.noTarget ? "without target" : ""))'
+      trailing: { text: '$.spec.ttl > 0 ? "TTL " + string($.spec.ttl) : ""' }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Targets", value: $.spec.targets, mono: true }
+            - { label: "Controller", value: $.spec.controller }
+            - { label: "Source", value: '$.spec.sourceKind + " " + $.metadata.namespace + "/" + $.source.name' }
+
+# The monitor's former ExternalDNS alert (a controller with no replica ready) and the
+# reasons the tab showed. A record's finding is keyed by its source object: two hostnames of
+# one Ingress make one finding.
+findings:
+  - { id: controller-down, from: controller, when: health == "critical", severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: controllers }
+  - { id: controller-dry-run, from: controller, when: fields.dryRun, severity: info, title: "{{ namespace }}/{{ name }}", detail: "dry-run: it changes nothing", opens: controllers }
+  - { id: record-unmanaged, from: record, when: fields.unmanaged, severity: info, title: "{{ fields.dnsName }}", detail: "outside every controller’s domain filters", opens: records }
+  - { id: record-no-target, from: record, when: fields.noTarget, severity: warning, title: "{{ fields.dnsName }}", detail: "no address to point at yet", opens: records }
+  - { id: record-stale, from: record, when: fields.stale, severity: info, title: "{{ fields.dnsName }}", detail: "a newer version is not observed yet", opens: records }
+
+tools:
+  checkNames:
+    label: "Check names"
+    hint: "Resolves every hostname from this phone and compares it with the record's targets. The names go to your DNS resolver."
+    run: native:dns-check
+    texts:
+      - "%d of %d name points at this cluster"
+      - "%d of %d names point at this cluster"
+      - "No hostnames."
+      - "Resolves here"
+      - "Points elsewhere"
+      - "Not found"
+      - "Could not check"
+      - "Resolves, nothing to compare"
+      - "Answers"
+      - "Targets"
+      - "Owner"
+      - "Source"
+      - "owned by %s"
+      - "A name that points elsewhere may be split-horizon DNS at home, a change still propagating, or another ExternalDNS owning it."
+      - "the resolver timed out"
+      - "the resolver could not answer"
+      - "a wildcard can only be the first label"
+
+# The former demo: one controller (cloudflare, sync, owner id homelab, example.com only) and
+# eight records across the four source kinds, among them a dual-stack Service (an A and an
+# AAAA record), a DNSEndpoint whose newer generation is not observed yet, an Ingress without
+# an address to point at and a name outside every domain filter.
+samples:
+  controller:
+    - apiVersion: ichor.dev/v1alpha1
+      kind: ExternalDNSController
+      metadata: { name: external-dns, namespace: external-dns }
+      spec:
+        provider: cloudflare
+        policy: sync
+        registry: txt
+        ownerId: homelab
+        txtPrefix: ""
+        txtSuffix: ""
+        domainFilters: [example.com]
+        sources: [ingress, service, gateway-httproute, crd]
+        dryRun: false
+        intervalSeconds: 60
+        annotationFilter: ""
+        managedRecordTypes: [A, AAAA, CNAME]
+      status: { replicas: 1, readyReplicas: 1 }
+      source: { group: apps, version: v1, resource: deployments, kind: Deployment, namespace: external-dns, name: external-dns }
+  record:
+    - metadata: { name: app.example.com/A/Ingress/app, namespace: demo }
+      spec: { dnsName: app.example.com, recordType: A, targets: [203.0.113.10], ttl: 300, sourceKind: Ingress, controller: external-dns/external-dns }
+      status: { stale: false }
+      source: { group: networking.k8s.io, version: v1, resource: ingresses, kind: Ingress, namespace: demo, name: app }
+    - metadata: { name: shop.example.com/A/Service/shop, namespace: demo }
+      spec: { dnsName: shop.example.com, recordType: A, targets: [203.0.113.20], ttl: 60, sourceKind: Service, controller: external-dns/external-dns }
+      status: { stale: false }
+      source: { group: "", version: v1, resource: services, kind: Service, namespace: demo, name: shop }
+    - metadata: { name: web.example.com/A/Service/web, namespace: demo }
+      spec: { dnsName: web.example.com, recordType: A, targets: [203.0.113.60], ttl: 300, sourceKind: Service, controller: external-dns/external-dns }
+      status: { stale: false }
+      source: { group: "", version: v1, resource: services, kind: Service, namespace: demo, name: web }
+    - metadata: { name: web.example.com/AAAA/Service/web, namespace: demo }
+      spec: { dnsName: web.example.com, recordType: AAAA, targets: ["2001:db8::60"], ttl: 300, sourceKind: Service, controller: external-dns/external-dns }
+      status: { stale: false }
+      source: { group: "", version: v1, resource: services, kind: Service, namespace: demo, name: web }
+    - metadata: { name: api.example.com/A/HTTPRoute/api, namespace: demo }
+      spec: { dnsName: api.example.com, recordType: A, targets: [203.0.113.30], ttl: 300, sourceKind: HTTPRoute, controller: external-dns/external-dns }
+      status: { stale: false }
+      source: { group: gateway.networking.k8s.io, version: v1, resource: httproutes, kind: HTTPRoute, namespace: demo, name: api }
+    - metadata: { name: db.example.com/A/DNSEndpoint/db, namespace: demo }
+      spec: { dnsName: db.example.com, recordType: A, targets: [203.0.113.40], ttl: 300, sourceKind: DNSEndpoint, controller: external-dns/external-dns }
+      status: { stale: true }
+      source: { group: externaldns.k8s.io, version: v1alpha1, resource: dnsendpoints, kind: DNSEndpoint, namespace: demo, name: db }
+    - metadata: { name: status.example.com/A/Ingress/status, namespace: demo }
+      spec: { dnsName: status.example.com, recordType: A, targets: [], ttl: 0, sourceKind: Ingress, controller: external-dns/external-dns }
+      status: { stale: false }
+      source: { group: networking.k8s.io, version: v1, resource: ingresses, kind: Ingress, namespace: demo, name: status }
+    - metadata: { name: "*.example.org/A/Ingress/legacy", namespace: demo }
+      spec: { dnsName: "*.example.org", recordType: A, targets: [203.0.113.50], ttl: 300, sourceKind: Ingress, controller: "" }
+      status: { stale: false }
+      source: { group: networking.k8s.io, version: v1, resource: ingresses, kind: Ingress, namespace: demo, name: legacy }
+
+# The apps' former ExternalDNS strings (externaldns_* in app/src/main/res/values-*/strings.xml).
+i18n:
+  fr:
+    "%d hostname": "%d nom d'hôte"
+    "%d hostnames": "%d noms d'hôte"
+    "controllers down": "contrôleurs arrêtés"
+    "dry-run": "dry-run"
+    "unmanaged": "non gérés"
+    "without target": "sans cible"
+    "stale": "périmé"
+    "No controller found": "Aucun contrôleur trouvé"
+    "No hostnames.": "Aucun nom d'hôte."
+    "ready": "prêt"
+    "not ready": "pas prêt"
+    "Provider": "Fournisseur"
+    "Policy": "Politique"
+    "Registry": "Registre"
+    "Owner id": "ID de propriétaire"
+    "TXT prefix/suffix": "Préfixe/suffixe TXT"
+    "Domain filters": "Filtres de domaine"
+    "Sources": "Sources"
+    "Interval": "Intervalle"
+    "Annotation filter": "Filtre d'annotation"
+    "Record types": "Types d'enregistrement"
+    "Targets": "Cibles"
+    "Controller": "Contrôleur"
+    "Source": "Source"
+    "no replica ready": "aucun réplica prêt"
+    "dry-run: it changes nothing": "dry-run : il ne change rien"
+    "outside every controller’s domain filters": "hors des filtres de domaine de tous les contrôleurs"
+    "a newer version is not observed yet": "une version plus récente n'est pas encore observée"
+    "no address to point at yet": "aucune adresse à viser pour l'instant"
+    "Check names": "Vérifier les noms"
+    "Resolves every hostname from this phone and compares it with the record's targets. The names go to your DNS resolver.": "Résout chaque nom d'hôte depuis ce téléphone et le compare aux cibles de l'enregistrement. Les noms partent vers votre résolveur DNS."
+    "%d of %d name points at this cluster": "%d nom sur %d pointe vers ce cluster"
+    "%d of %d names point at this cluster": "%d noms sur %d pointent vers ce cluster"
+    "Resolves here": "Résout ici"
+    "Points elsewhere": "Pointe ailleurs"
+    "Not found": "Introuvable"
+    "Could not check": "Vérification impossible"
+    "Resolves, nothing to compare": "Répond, rien à comparer"
+    "Answers": "Réponses"
+    "Owner": "Propriétaire"
+    "owned by %s": "appartient à %s"
+    "A name that points elsewhere may be split-horizon DNS at home, a change still propagating, or another ExternalDNS owning it.": "Un nom qui pointe ailleurs peut être du DNS split-horizon à la maison, un changement encore en propagation, ou un autre ExternalDNS qui le possède."
+    "the resolver timed out": "le résolveur n'a pas répondu à temps"
+    "the resolver could not answer": "le résolveur n'a pas pu répondre"
+    "a wildcard can only be the first label": "un joker ne peut être que le premier label"
+  de:
+    "%d hostname": "%d Hostname"
+    "%d hostnames": "%d Hostnamen"
+    "controllers down": "Controller ausgefallen"
+    "dry-run": "dry-run"
+    "unmanaged": "nicht verwaltet"
+    "without target": "ohne Ziel"
+    "stale": "veraltet"
+    "No controller found": "Kein Controller gefunden"
+    "No hostnames.": "Keine Hostnamen."
+    "ready": "bereit"
+    "not ready": "nicht bereit"
+    "Provider": "Provider"
+    "Policy": "Richtlinie"
+    "Registry": "Registry"
+    "Owner id": "Owner-ID"
+    "TXT prefix/suffix": "TXT-Präfix/-Suffix"
+    "Domain filters": "Domain-Filter"
+    "Sources": "Quellen"
+    "Interval": "Intervall"
+    "Annotation filter": "Annotation-Filter"
+    "Record types": "Eintragstypen"
+    "Targets": "Ziele"
+    "Controller": "Controller"
+    "Source": "Quelle"
+    "no replica ready": "kein Replikat bereit"
+    "dry-run: it changes nothing": "Dry-Run: er ändert nichts"
+    "outside every controller’s domain filters": "außerhalb der Domain-Filter aller Controller"
+    "a newer version is not observed yet": "eine neuere Version wurde noch nicht beobachtet"
+    "no address to point at yet": "noch keine Zieladresse"
+    "Check names": "Namen prüfen"
+    "Resolves every hostname from this phone and compares it with the record's targets. The names go to your DNS resolver.": "Löst jeden Hostnamen von diesem Telefon aus auf und vergleicht ihn mit den Zielen des Eintrags. Die Namen gehen an deinen DNS-Resolver."
+    "%d of %d name points at this cluster": "%d von %d Namen zeigt auf diesen Cluster"
+    "%d of %d names point at this cluster": "%d von %d Namen zeigen auf diesen Cluster"
+    "Resolves here": "Löst hier auf"
+    "Points elsewhere": "Zeigt woandershin"
+    "Not found": "Nicht gefunden"
+    "Could not check": "Konnte nicht geprüft werden"
+    "Resolves, nothing to compare": "Löst auf, nichts zu vergleichen"
+    "Answers": "Antworten"
+    "Owner": "Eigentümer"
+    "owned by %s": "gehört %s"
+    "A name that points elsewhere may be split-horizon DNS at home, a change still propagating, or another ExternalDNS owning it.": "Ein Name, der woandershin zeigt, kann Split-Horizon-DNS zu Hause sein, eine noch laufende Änderung oder ein anderer ExternalDNS, dem er gehört."
+    "the resolver timed out": "der Resolver hat nicht rechtzeitig geantwortet"
+    "the resolver could not answer": "der Resolver konnte nicht antworten"
+    "a wildcard can only be the first label": "ein Platzhalter kann nur das erste Label sein"
+  es:
+    "%d hostname": "%d nombre de host"
+    "%d hostnames": "%d nombres de host"
+    "controllers down": "controladores caídos"
+    "dry-run": "dry-run"
+    "unmanaged": "sin gestionar"
+    "without target": "sin destino"
+    "stale": "desactualizado"
+    "No controller found": "No se encontró ningún controlador"
+    "No hostnames.": "Ningún nombre de host."
+    "ready": "listo"
+    "not ready": "no listo"
+    "Provider": "Proveedor"
+    "Policy": "Política"
+    "Registry": "Registro"
+    "Owner id": "ID de propietario"
+    "TXT prefix/suffix": "Prefijo/sufijo TXT"
+    "Domain filters": "Filtros de dominio"
+    "Sources": "Fuentes"
+    "Interval": "Intervalo"
+    "Annotation filter": "Filtro de anotación"
+    "Record types": "Tipos de registro"
+    "Targets": "Destinos"
+    "Controller": "Controlador"
+    "Source": "Origen"
+    "no replica ready": "ninguna réplica lista"
+    "dry-run: it changes nothing": "dry-run: no cambia nada"
+    "outside every controller’s domain filters": "fuera de los filtros de dominio de todos los controladores"
+    "a newer version is not observed yet": "todavía no se ha observado una versión más reciente"
+    "no address to point at yet": "todavía no hay una dirección a la que apuntar"
+    "Check names": "Comprobar nombres"
+    "Resolves every hostname from this phone and compares it with the record's targets. The names go to your DNS resolver.": "Resuelve cada nombre de host desde este teléfono y lo compara con los destinos del registro. Los nombres van a tu resolutor DNS."
+    "%d of %d name points at this cluster": "%d de %d nombre apunta a este clúster"
+    "%d of %d names point at this cluster": "%d de %d nombres apuntan a este clúster"
+    "Resolves here": "Resuelve aquí"
+    "Points elsewhere": "Apunta a otro sitio"
+    "Not found": "No encontrado"
+    "Could not check": "No se pudo comprobar"
+    "Resolves, nothing to compare": "Resuelve, nada que comparar"
+    "Answers": "Respuestas"
+    "Owner": "Propietario"
+    "owned by %s": "pertenece a %s"
+    "A name that points elsewhere may be split-horizon DNS at home, a change still propagating, or another ExternalDNS owning it.": "Un nombre que apunta a otro sitio puede ser DNS split-horizon en casa, un cambio aún propagándose, u otro ExternalDNS que lo posee."
+    "the resolver timed out": "el resolutor no respondió a tiempo"
+    "the resolver could not answer": "el resolutor no pudo responder"
+    "a wildcard can only be the first label": "un comodín solo puede ser la primera etiqueta"
+  it:
+    "%d hostname": "%d nome host"
+    "%d hostnames": "%d nomi host"
+    "controllers down": "controller fermi"
+    "dry-run": "dry-run"
+    "unmanaged": "non gestiti"
+    "without target": "senza target"
+    "stale": "non aggiornato"
+    "No controller found": "Nessun controller trovato"
+    "No hostnames.": "Nessun nome host."
+    "ready": "pronto"
+    "not ready": "non pronto"
+    "Provider": "Provider"
+    "Policy": "Policy"
+    "Registry": "Registro"
+    "Owner id": "ID proprietario"
+    "TXT prefix/suffix": "Prefisso/suffisso TXT"
+    "Domain filters": "Filtri di dominio"
+    "Sources": "Sorgenti"
+    "Interval": "Intervallo"
+    "Annotation filter": "Filtro di annotazione"
+    "Record types": "Tipi di record"
+    "Targets": "Target"
+    "Controller": "Controller"
+    "Source": "Origine"
+    "no replica ready": "nessuna replica pronta"
+    "dry-run: it changes nothing": "dry-run: non cambia nulla"
+    "outside every controller’s domain filters": "fuori dai filtri di dominio di tutti i controller"
+    "a newer version is not observed yet": "una versione più recente non è ancora stata osservata"
+    "no address to point at yet": "ancora nessun indirizzo a cui puntare"
+    "Check names": "Controlla i nomi"
+    "Resolves every hostname from this phone and compares it with the record's targets. The names go to your DNS resolver.": "Risolve ogni nome host da questo telefono e lo confronta con i target del record. I nomi vanno al tuo resolver DNS."
+    "%d of %d name points at this cluster": "%d di %d nome punta a questo cluster"
+    "%d of %d names point at this cluster": "%d di %d nomi puntano a questo cluster"
+    "Resolves here": "Risolve qui"
+    "Points elsewhere": "Punta altrove"
+    "Not found": "Non trovato"
+    "Could not check": "Impossibile controllare"
+    "Resolves, nothing to compare": "Si risolve, niente da confrontare"
+    "Answers": "Risposte"
+    "Owner": "Proprietario"
+    "owned by %s": "di proprietà di %s"
+    "A name that points elsewhere may be split-horizon DNS at home, a change still propagating, or another ExternalDNS owning it.": "Un nome che punta altrove può essere DNS split-horizon a casa, una modifica ancora in propagazione, o un altro ExternalDNS che lo possiede."
+    "the resolver timed out": "il resolver non ha risposto in tempo"
+    "the resolver could not answer": "il resolver non ha potuto rispondere"
+    "a wildcard can only be the first label": "un carattere jolly può essere solo la prima etichetta"
+  uk:
+    "%d hostname": "%d ім'я хоста"
+    "%d hostnames": "%d імен хостів"
+    "controllers down": "контролери не працюють"
+    "dry-run": "dry-run"
+    "unmanaged": "некеровані"
+    "without target": "без цілі"
+    "stale": "застарілий"
+    "No controller found": "Контролер не знайдено"
+    "No hostnames.": "Немає імен хостів."
+    "ready": "готовий"
+    "not ready": "не готовий"
+    "Provider": "Провайдер"
+    "Policy": "Політика"
+    "Registry": "Реєстр"
+    "Owner id": "Ідентифікатор власника"
+    "TXT prefix/suffix": "Префікс/суфікс TXT"
+    "Domain filters": "Фільтри доменів"
+    "Sources": "Джерела"
+    "Interval": "Інтервал"
+    "Annotation filter": "Фільтр анотацій"
+    "Record types": "Типи записів"
+    "Targets": "Цілі"
+    "Controller": "Контролер"
+    "Source": "Джерело"
+    "no replica ready": "жодна репліка не готова"
+    "dry-run: it changes nothing": "dry-run: нічого не змінює"
+    "outside every controller’s domain filters": "поза фільтрами доменів усіх контролерів"
+    "a newer version is not observed yet": "новішу версію ще не спостережено"
+    "no address to point at yet": "ще немає адреси, на яку вказувати"
+    "Check names": "Перевірити імена"
+    "Resolves every hostname from this phone and compares it with the record's targets. The names go to your DNS resolver.": "Розпізнає кожне ім'я хоста з цього телефону та порівнює його з цілями запису. Імена надсилаються до вашого DNS-резолвера."
+    "%d of %d name points at this cluster": "%d з %d імені вказує на цей кластер"
+    "%d of %d names point at this cluster": "%d з %d імен вказують на цей кластер"
+    "Resolves here": "Розпізнається тут"
+    "Points elsewhere": "Вказує в інше місце"
+    "Not found": "Не знайдено"
+    "Could not check": "Не вдалося перевірити"
+    "Resolves, nothing to compare": "Резолвиться, немає з чим порівняти"
+    "Answers": "Відповіді"
+    "Owner": "Власник"
+    "owned by %s": "належить %s"
+    "A name that points elsewhere may be split-horizon DNS at home, a change still propagating, or another ExternalDNS owning it.": "Ім'я, що вказує в інше місце, може бути split-horizon DNS вдома, зміною, що ще поширюється, або іншим ExternalDNS, який ним володіє."
+    "the resolver timed out": "резолвер не відповів вчасно"
+    "the resolver could not answer": "резолвер не зміг відповісти"
+    "a wildcard can only be the first label": "шаблон може бути лише першою міткою"

@@ -62,6 +62,24 @@ data class HelmRollbackChange(
     val error: String = "",
 )
 
+/** One pre- or post-rollback hook of the target revision's chart, checked by a dry run. */
+@Serializable
+data class HelmRollbackHook(
+    val name: String = "",
+    val kind: String = "",
+    /** pre-rollback or post-rollback. */
+    val event: String = "",
+    /** Helm runs the hooks of one event by weight, lowest first. */
+    val weight: Int = 0,
+    val deletePolicies: List<String> = emptyList(),
+    /** Why the API server refused the dry run; empty when it passed. */
+    val error: String = "",
+) {
+    val isPre: Boolean get() = event == HELM_HOOK_PRE_ROLLBACK
+}
+
+const val HELM_HOOK_PRE_ROLLBACK = "pre-rollback"
+
 /** What rolling a release back from revision [from] to [to] would do; nothing changed yet. */
 @Serializable
 data class HelmRollbackPlan(
@@ -80,9 +98,89 @@ data class HelmRollbackPlan(
     val fluxOwner: String = "",
     /** Why it cannot run; empty when it can. */
     val blockers: List<String> = emptyList(),
+    /** Updates are planned as whole-object replaces (helm rollback --force). */
+    val force: Boolean = false,
+    /** Revisions kept after the rollback; 0 keeps them all. */
+    val historyMax: Int = 0,
+    /** Revisions whose record the rollback deletes once it succeeded, oldest first. */
+    val prune: List<Int> = emptyList(),
+    /** Deployments, StatefulSets and DaemonSets of the target revision: what a wait follows. */
+    val workloads: Int = 0,
+    /** The chart's rollback hooks in Helm's order (event, weight, name); run around the changes. */
+    val hooks: List<HelmRollbackHook> = emptyList(),
 )
 
-val HelmRollbackPlan.canRun: Boolean get() = blockers.isEmpty()
+/** No blocker and no hook refused by its dry run (the Go core refuses the run then too). */
+val HelmRollbackPlan.canRun: Boolean get() = blockers.isEmpty() && hooks.none { it.error.isNotEmpty() }
+
+/** Helm's default --history-max, and the stepper's upper bound. */
+const val HELM_HISTORY_MAX_DEFAULT = 10
+const val HELM_HISTORY_MAX_LIMIT = 50
+
+/**
+ * How to roll back: [force] and [historyMax] go to the Go core (and change the dry run),
+ * [wait] stays in the app (follow the workloads afterwards).
+ */
+@Serializable
+data class HelmRollbackOptions(
+    val force: Boolean = false,
+    val historyMax: Int = HELM_HISTORY_MAX_DEFAULT,
+    val wait: Boolean = true,
+) {
+    /** Whether going from this to [other] needs a new dry run. */
+    fun changesPlan(other: HelmRollbackOptions): Boolean = force != other.force || historyMax != other.historyMax
+
+    fun withHistoryMax(n: Int): HelmRollbackOptions = copy(historyMax = n.coerceIn(0, HELM_HISTORY_MAX_LIMIT))
+}
+
+/** What the Go core reads: both fields always present, `wait` left out. */
+@Serializable
+internal data class HelmRollbackOptionsPayload(val force: Boolean, val historyMax: Int)
+
+internal val HelmRollbackOptions.payload: HelmRollbackOptionsPayload
+    get() = HelmRollbackOptionsPayload(force, historyMax.coerceIn(0, HELM_HISTORY_MAX_LIMIT))
+
+/** One Deployment, StatefulSet or DaemonSet followed after a rollback. */
+@Serializable
+data class HelmRollbackWorkload(
+    val kind: String = "",
+    val namespace: String = "",
+    val name: String = "",
+    val ready: Int = 0,
+    val desired: Int = 0,
+    val done: Boolean = false,
+    /** Its progress deadline was exceeded. */
+    val failed: Boolean = false,
+    /** OnDelete or a StatefulSet partition: counted as done, its pods change only when deleted. */
+    val manual: Boolean = false,
+) {
+    val label: String get() = "$kind $name"
+}
+
+object HelmRollbackPhase {
+    const val RUNNING = "Running"
+    const val SUCCEEDED = "Succeeded"
+    const val FAILED = "Failed"
+    const val TIMEOUT = "Timeout"
+}
+
+/** A step of StartHelmRollbackFollow, sent on change only. */
+@Serializable
+data class HelmRollbackFollowProgress(
+    /** Running, Succeeded, Failed or Timeout. */
+    val phase: String = "",
+    val done: Int = 0,
+    val total: Int = 0,
+    val workloads: List<HelmRollbackWorkload> = emptyList(),
+    /** Unix millis. */
+    val at: Long = 0,
+) {
+    /** done/total in 0..1; 1 when there is nothing to follow. */
+    val fraction: Float get() = if (total <= 0) 1f else (done.toFloat() / total).coerceIn(0f, 1f)
+
+    /** The first workload that failed, for the outcome line. */
+    val firstFailed: HelmRollbackWorkload? get() = workloads.firstOrNull { it.failed }
+}
 
 /** How a Helm status reads at a glance: deployed fine, failed bad, pending-* in progress. */
 fun helmStatusTone(status: String): CellTone = when {
@@ -98,3 +196,11 @@ fun List<HelmRelease>.filteredReleases(query: String): List<HelmRelease> {
     if (q.isEmpty()) return this
     return filter { it.name.contains(q, true) || it.namespace.contains(q, true) || it.chart.contains(q, true) }
 }
+
+/**
+ * Whether a KubeHelmRollback error only says the history was not pruned afterwards
+ * ("history not pruned: …"): the rollback itself is done.
+ */
+fun isHelmHistoryNotPruned(message: String?): Boolean = message?.contains(HELM_HISTORY_NOT_PRUNED) == true
+
+private const val HELM_HISTORY_NOT_PRUNED = "history not pruned:"

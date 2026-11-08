@@ -174,7 +174,8 @@ class MetricsViewModel(
         }
     }
 
-    private fun refreshPanel(panel: PromPanel) {
+    /** Runs [panel]'s query again: after an edit, or Retry on its failed read. */
+    fun refreshPanel(panel: PromPanel) {
         val source = _state.value.config.source ?: return
         viewModelScope.launch { query(source, panel, quiet = false) }
     }

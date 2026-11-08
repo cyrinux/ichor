@@ -13,16 +13,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,6 +50,7 @@ import name.levis.ichor.model.actionLabel
 import name.levis.ichor.model.distinctOf
 import name.levis.ichor.model.failed
 import name.levis.ichor.model.matches
+import name.levis.ichor.model.partial
 import name.levis.ichor.model.target
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
@@ -65,6 +68,8 @@ import name.levis.ichor.util.formatDateTime
 
 /** The action audit log of [cluster] ("" for every cluster). */
 class ActivityViewModel(private val cluster: String) : LoadingViewModel<List<ActivityEntry>>() {
+    // The screen reads it again on each visit.
+    override val loadsOnOpen = false
     override suspend fun fetch() = ActivityLog.entries(cluster)
 
     suspend fun export(): String = ActivityLog.export(cluster)
@@ -86,6 +91,8 @@ class ActivityViewModel(private val cluster: String) : LoadingViewModel<List<Act
 fun ActivityScreen(
     cluster: String,
     onBack: () -> Unit,
+    /** The vulnerability scan reports kept for [cluster]. */
+    onScanReports: () -> Unit = {},
     vm: ActivityViewModel = viewModel(key = "activity-$cluster", factory = factory { ActivityViewModel(cluster) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -96,9 +103,9 @@ fun ActivityScreen(
     val entries = (state as? UiState.Loaded)?.data.orEmpty()
     val shareTitle = stringResource(R.string.activity_share)
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.activity_title))
@@ -109,6 +116,7 @@ fun ActivityScreen(
                 },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    TooltipIconButton(Icons.Outlined.Security, stringResource(R.string.imagescan_saved_title), onClick = onScanReports)
                     TooltipIconButton(Icons.Outlined.Share, shareTitle, enabled = entries.isNotEmpty(), onClick = {
                         scope.launch {
                             runCatching { vm.export() }.onSuccess { shareText(context, it, shareTitle) }
@@ -162,7 +170,7 @@ private fun ActivityList(entries: List<ActivityEntry>, showCluster: Boolean, mod
                 Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                FilterChip(
+                IchorFilterChip(
                     selected = filter == ActivityFilter(),
                     onClick = {
                         clusterFilter = null
@@ -171,17 +179,17 @@ private fun ActivityList(entries: List<ActivityEntry>, showCluster: Boolean, mod
                     },
                     label = { Text(stringResource(R.string.activity_filter_all)) },
                 )
-                FilterChip(selected = failedOnly, onClick = { failedOnly = !failedOnly }, label = { Text(stringResource(R.string.activity_filter_failed)) })
+                IchorFilterChip(selected = failedOnly, onClick = { failedOnly = !failedOnly }, label = { Text(stringResource(R.string.activity_filter_failed)) })
                 // Only a choice when there is more than one.
                 if (clusters.size > 1) {
                     clusters.forEach { c ->
-                        FilterChip(selected = clusterFilter == c, onClick = { clusterFilter = c.takeIf { clusterFilter != c } }, label = { Text(c) })
+                        IchorFilterChip(selected = clusterFilter == c, onClick = { clusterFilter = c.takeIf { clusterFilter != c } }, label = { Text(c) })
                     }
                 }
                 if (actions.size > 1) {
                     actions.forEach { a ->
                         val label = ActivityEntry(action = a).actionLabel
-                        FilterChip(selected = actionFilter == a, onClick = { actionFilter = a.takeIf { actionFilter != a } }, label = { Text(label) })
+                        IchorFilterChip(selected = actionFilter == a, onClick = { actionFilter = a.takeIf { actionFilter != a } }, label = { Text(label) })
                     }
                 }
             }
@@ -203,10 +211,12 @@ private fun ActivityList(entries: List<ActivityEntry>, showCluster: Boolean, mod
 @Composable
 private fun ActivityRow(entry: ActivityEntry, showCluster: Boolean) {
     val status = LocalStatusColors.current
-    ListItem(
+    IchorListItem(
         leadingContent = {
             if (entry.failed) {
                 Icon(Icons.Outlined.ErrorOutline, stringResource(R.string.activity_filter_failed), tint = status.bad)
+            } else if (entry.partial) {
+                Icon(Icons.Outlined.WarningAmber, stringResource(R.string.activity_outcome_partial), tint = status.warn)
             } else {
                 Icon(Icons.Outlined.CheckCircle, null, tint = status.ok)
             }
@@ -225,8 +235,11 @@ private fun ActivityRow(entry: ActivityEntry, showCluster: Boolean) {
                 if (entry.params.isNotEmpty()) {
                     Text(entry.params, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                if (entry.partial) {
+                    Text(stringResource(R.string.activity_outcome_partial), style = MaterialTheme.typography.labelMedium, color = status.warn)
+                }
                 if (entry.error.isNotEmpty()) {
-                    Text(entry.error, style = MaterialTheme.typography.bodySmall, color = status.bad)
+                    Text(entry.error, style = MaterialTheme.typography.bodySmall, color = if (entry.partial) status.warn else status.bad)
                 }
             }
         },

@@ -156,6 +156,18 @@ def swift_libraries(checkouts: Path, resolved: Path | None, unknown: list[str]) 
     return libraries
 
 
+def llama_library(unknown: list[str]) -> list[dict]:
+    """llama.cpp, the on-device model engine, from the source scripts/fetch-llama.sh fetched."""
+    pin = dict(line.split("=", 1) for line in (ROOT / "native/llama-cpp.env").read_text().splitlines()
+               if "=" in line and not line.startswith("#"))
+    source = ROOT / ".cache" / f"llama.cpp-{pin['LLAMA_COMMIT']}"
+    entry = library("llama.cpp", pin["LLAMA_TAG"], "https://github.com/ggml-org/llama.cpp", source) if source.is_dir() else None
+    if entry:
+        return [entry]
+    unknown.append(f"llama.cpp (run scripts/fetch-llama.sh first: {source.relative_to(ROOT)})")
+    return []
+
+
 def ios_licenses(swift_checkouts: Path | None, swift_resolved: Path | None) -> tuple[dict, list[str]]:
     """The iOS licenses file and the dependencies whose license was not recognised."""
     unknown: list[str] = []
@@ -172,6 +184,7 @@ def ios_licenses(swift_checkouts: Path | None, swift_resolved: Path | None) -> t
     libraries.append(std) if std else unknown.append("Go standard library")
     if swift_checkouts:
         libraries.extend(swift_libraries(swift_checkouts, swift_resolved, unknown))
+    libraries.extend(llama_library(unknown))
     notice = "\n\n".join((ROOT / name).read_text().strip() for name in ("NOTICE", "LICENSE"))
     libraries.sort(key=lambda entry: entry["name"].lower())
     return {"notice": notice, "libraries": libraries}, unknown

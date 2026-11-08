@@ -10,8 +10,9 @@ const noOutput = "\x00"
 
 // env is what a command runs with: the talosconfig and the flags.
 type env struct {
-	cmd, cfg, context, kubeServer, ageRecipient, configPath, home, maskWords string
-	mask                                                                     bool
+	cmd, cfg, context, kubeServer, ageRecipient, configPath, home, maskWords, nodes, labels string
+	mask, stream                                                                            bool
+	minScore                                                                                float64
 }
 
 // command is one subcommand of the probe: its name, its arguments as the usage shows them
@@ -26,7 +27,7 @@ type command struct {
 
 // commands is every subcommand, by area.
 func commands() []command {
-	return slices.Concat(nodeCommands, configCommands, kubeCommands, dataCommands, etcdCommands, omniCommands)
+	return slices.Concat(nodeCommands, configCommands, kubeCommands, dataCommands, etcdCommands, omniCommands, cloudCommands, historyCommands, diagCommands, pluginCommands, pluginI18nCommands, runbookCommands, searchCommands, fleetCommands, alertRulesCommands, evalCommands)
 }
 
 func lookup(name string) (command, bool) {

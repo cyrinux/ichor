@@ -31,16 +31,24 @@ import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.KubeScope
+import name.levis.ichor.model.RecentTarget
+import name.levis.ichor.model.ScreenEntry
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.model.ScreenMatches
 import name.levis.ichor.model.SearchResults
 import name.levis.ichor.model.eagerLimit
 import name.levis.ichor.model.fetchWorkloadPage
 import name.levis.ichor.model.loadPages
 
-/** What the search screen shows: [results] of [query] once [snapshot] was read (null before). */
+/**
+ * What the search screen shows: [results] of [query] once [snapshot] was read (null before),
+ * and the active cluster's [screens] that match it.
+ */
 data class SearchState(
     val snapshot: SearchSnapshot? = null,
     val query: String = "",
     val results: SearchResults = SearchResults(),
+    val screens: ScreenMatches = ScreenMatches(),
 )
 
 /**
@@ -61,6 +69,9 @@ class SearchViewModel(
 
     val recent: StateFlow<List<String>> = prefs.recentSearches
 
+    /** The objects opened lately, newest first (shown while the query is blank). */
+    val recentTargets: StateFlow<List<RecentTarget>> = prefs.recentTargets
+
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
 
@@ -68,12 +79,23 @@ class SearchViewModel(
     /** The last refresh read nothing: the cluster could not be reached or refused. */
     val refreshFailed: StateFlow<Boolean> = _refreshFailed.asStateFlow()
 
-    val state: StateFlow<SearchState> = combine(snapshot.filterNotNull(), _query.debounce(DEBOUNCE_MS)) { s, q -> s to q }
-        .mapLatest { (s, q) -> SearchState(s, q, rank(s, q)) }
+    private val _refreshed = MutableStateFlow(false)
+    /** The last refresh read the active cluster: said once it lands, as a failure is. */
+    val refreshed: StateFlow<Boolean> = _refreshed.asStateFlow()
+
+    private val catalog = MutableStateFlow<List<ScreenEntry>>(emptyList())
+
+    val state: StateFlow<SearchState> = combine(snapshot.filterNotNull(), _query.debounce(DEBOUNCE_MS), catalog) { s, q, c -> Triple(s, q, c) }
+        .mapLatest { (s, q, c) -> SearchState(s, q, rank(s, q), rankScreens(c, q)) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SearchState())
 
     init {
         viewModelScope.launch { snapshot.value = readSnapshot() }
+    }
+
+    /** The active cluster's screens, titles resolved (see screenCatalog). */
+    fun setCatalog(screens: List<ScreenEntry>) {
+        catalog.value = screens
     }
 
     fun setQuery(query: String) {
@@ -85,6 +107,8 @@ class SearchViewModel(
 
     fun forget(query: String) = prefs.removeRecentSearch(query)
 
+    fun forgetTarget(target: ShareTarget) = prefs.removeRecentTarget(target)
+
     /**
      * Reads the active cluster's pods, workloads, CronJobs and GitOps apps again, then searches
      * them: the only cluster call of the screen. A list not loaded completely is searched but
@@ -94,9 +118,12 @@ class SearchViewModel(
         if (_refreshing.value) return
         viewModelScope.launch {
             _refreshing.value = true
+            _refreshed.value = false
+            _refreshFailed.value = false
             try {
                 val fresh = fetchActive()
                 _refreshFailed.value = fresh == null
+                _refreshed.value = fresh != null
                 snapshot.value = readSnapshot(fresh.orEmpty())
             } finally {
                 _refreshing.value = false
@@ -120,6 +147,15 @@ class SearchViewModel(
             throw e
         } catch (_: Exception) {
             SearchResults()
+        }
+
+    private suspend fun rankScreens(screens: List<ScreenEntry>, query: String): ScreenMatches =
+        try {
+            search.screens(screens, query)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            ScreenMatches()
         }
 
     /** The fresh lists by cache key; null when none could be read. */

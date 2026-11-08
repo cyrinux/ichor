@@ -57,6 +57,7 @@ var demoWorkloads = []struct {
 	}},
 	{3, "default", "uptime-kuma-0", [][2]string{{"app", "docker.io/louislam/uptime-kuma:latest"}}},
 	{4, "demo", "hello-ichor", [][2]string{{"web", "nginx:1.27"}}},
+	{3, "networking", "whoami-6d4f-p2x8k", [][2]string{{"whoami", "docker.io/traefik/whoami"}}},
 	{3, "tools", "it-backup-5c8d-rx2k9", [][2]string{{"backup", "registry.example.com/internal/nightly-backup:2025.10"}}},
 }
 
@@ -80,5 +81,48 @@ func demoInventory(now int64) inventory {
 		}
 	}
 
-	return buildInventory(now, len(nodes), lists)
+	return withIdleWorkloads(buildInventory(now, len(nodes), lists), demoIdleWorkloads())
+}
+
+// demoIdleWorkloads are the demo's Deployments and StatefulSets without a ready pod.
+func demoIdleWorkloads() []idleWorkload {
+	var idle []idleWorkload
+
+	for _, w := range demoKubeWorkloads() {
+		if w.Ready > 0 || w.Kind == "DaemonSet" {
+			continue
+		}
+
+		reason := ""
+		if w.Desired > 0 {
+			reason = demoNotStartingReason
+		}
+
+		idle = append(idle, idleWorkload{
+			inventoryWorkload: inventoryWorkload{Kind: w.Kind, Namespace: w.Namespace, Name: w.Name, Desired: w.Desired, Reason: reason},
+			images:            w.Images,
+		})
+	}
+
+	return idle
+}
+
+// demoNodeImages is what NodeImages lists on every demo node: the coredns image left from before
+// the last upgrade sits there unused.
+func demoNodeImages() []imageInfo {
+	return []imageInfo{
+		{Name: "registry.k8s.io/coredns/coredns:v1.12.0", Digest: "sha256:abc123demo", Size: 20 << 20, Created: demoBoot.UnixMilli()},
+		{Name: "nginx:1.27", Digest: "sha256:def456demo", Size: 64 << 20, Created: demoBoot.UnixMilli()},
+	}
+}
+
+// demoImageReport is the images report the demo cluster shows: two unpinned images, cilium on
+// two tags, and the unused images of every node.
+func demoImageReport(now int64) imageReport {
+	nodeImages := map[string][]imageInfo{}
+	for _, n := range demoNodes() {
+		nodeImages[n.Node] = demoNodeImages()
+	}
+
+	return buildImageReport(demoInventory(now), nodeImages)
 }

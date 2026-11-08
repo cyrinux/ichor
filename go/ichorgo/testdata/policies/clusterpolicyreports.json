@@ -1,0 +1,17 @@
+{
+  "kind": "ClusterPolicyReportList",
+  "apiVersion": "wgpolicyk8s.io/v1alpha2",
+  "metadata": {},
+  "items": [
+    {
+      "metadata": {},
+      "results": [
+        { "source": "kyverno", "policy": "disallow-privileged", "rule": "privileged-containers", "result": "fail",
+          "severity": "high", "message": "Privileged container is not allowed",
+          "resources": [ { "kind": "Deployment", "namespace": "media", "name": "legacy" } ],
+          "timestamp": { "seconds": 1760000300 } },
+        { "source": "other-engine", "policy": "disallow-privileged", "result": "error", "timestamp": { "seconds": 1760000301 } }
+      ]
+    }
+  ]
+}

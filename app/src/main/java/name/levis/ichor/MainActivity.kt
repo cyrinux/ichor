@@ -2,15 +2,14 @@ package name.levis.ichor
 
 import android.content.Context
 import android.content.Intent
+import android.service.quicksettings.TileService
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.view.WindowManager
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Surface
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
@@ -30,10 +29,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.util.StartupTrace
+import name.levis.ichor.security.AppLockGate
 import name.levis.ichor.security.LockOnboarding
-import name.levis.ichor.security.LockScreen
-import name.levis.ichor.security.SecurityKeyPromptHost
 import name.levis.ichor.security.lockRequired
+import name.levis.ichor.security.secureWhileLockIsOn
 import name.levis.ichor.data.ConfigUnreadableException
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.activeSummary
@@ -43,15 +42,15 @@ import name.levis.ichor.monitor.AlertActionToken
 import name.levis.ichor.ui.DeepLink
 import name.levis.ichor.ui.Navigation
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.startOrientation
 import name.levis.ichor.ui.debug.DebugShellService
 import name.levis.ichor.ui.importconfig.ConfigUnreadableScreen
 import name.levis.ichor.ui.share.OpenLink
 import name.levis.ichor.ui.debug.LiveShell
 import name.levis.ichor.ui.debug.shellKey
-import name.levis.ichor.ui.theme.TalosTheme
+import name.levis.ichor.ui.design.IchorTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 // FragmentActivity (still a ComponentActivity) is required by BiometricPrompt.
@@ -88,19 +87,16 @@ class MainActivity : FragmentActivity() {
             window.isNavigationBarContrastEnforced = false
         }
         super.onCreate(savedInstanceState)
+        // Phones hold portrait (before the first frame, so nothing flashes); the wide screens
+        // unlock rotation while shown (AllowLandscape). Tablets and foldables always rotate.
+        requestedOrientation = startOrientation(
+            resources.configuration.smallestScreenWidthDp,
+            requestedOrientation,
+            restoring = savedInstanceState != null,
+        )
         val app = application as TalosApp
 
-        // With the lock on, keep cluster data out of the recents thumbnail and screenshots,
-        // unless the user explicitly allowed screenshots.
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.CREATED) {
-                combine(app.appLock.enabled, app.uiPreferences.allowScreenshots) { lock, allow -> lock && !allow }
-                    .collect { secure ->
-                    if (secure) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                    else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                }
-            }
-        }
+        secureWhileLockIsOn(app)
 
         // Reopened from Recents, the task's first intent comes again: already handled then.
         val fromHistory = intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0
@@ -120,6 +116,7 @@ class MainActivity : FragmentActivity() {
 
         setContent {
             val themeMode by app.uiPreferences.themeMode.collectAsStateWithLifecycle()
+            val uiStyle by app.uiPreferences.uiStyle.collectAsStateWithLifecycle()
             val dark = themeMode.isDark(isSystemInDarkTheme())
             // System bars follow the app theme (not just the system one): transparent over
             // the app background, with icons contrasting with it.
@@ -135,9 +132,10 @@ class MainActivity : FragmentActivity() {
             // The palette follows the cluster on screen (its main color, see ClusterColors).
             val stored by app.configRepository.config.collectAsStateWithLifecycle()
             val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
-            TalosTheme(themeMode, seed = clusterColors.seedOf(stored?.activeSummary)) {
+            IchorTheme(themeMode, uiStyle, clusterColors.seedOf(stored?.activeSummary)) {
                 Surface {
-                    LockGate(app, LaunchTargets(deepLink, openCluster, backupFile, openShell, openTarget), onWiped = ::recreate)
+                    val targets = LaunchTargets(deepLink, openCluster, backupFile, openShell, openTarget)
+                    AppLockGate(app, onWiped = ::recreate) { Root(app, targets) }
                 }
             }
         }
@@ -174,6 +172,7 @@ class MainActivity : FragmentActivity() {
         const val EXTRA_SHELL_POD = "name.levis.ichor.SHELL_POD"
         const val EXTRA_SHELL_CONTAINER = "name.levis.ichor.SHELL_CONTAINER"
         const val EXTRA_SHELL_KUBE_NODE = "name.levis.ichor.SHELL_KUBE_NODE"
+        const val EXTRA_SHELL_VM = "name.levis.ichor.SHELL_VM"
     }
 }
 
@@ -189,7 +188,7 @@ private class LaunchTargets(
 private fun Intent.debugShell(): LiveShell? {
     if (action != DebugShellService.ACTION_OPEN) return null
     val key = shellKey() ?: return null
-    return LiveShell(key, getStringExtra(MainActivity.EXTRA_SHELL_HOST)?.takeIf { it.isNotBlank() } ?: key.node.ifEmpty { key.pod })
+    return LiveShell(key, getStringExtra(MainActivity.EXTRA_SHELL_HOST)?.takeIf { it.isNotBlank() } ?: key.node.ifEmpty { key.pod.ifEmpty { key.vm } })
 }
 
 /**
@@ -232,40 +231,9 @@ private fun Intent.deepLink(): DeepLink? {
         "", "/" -> return DeepLink.DEMO
         "/kube" -> return DeepLink.DEMO_KUBE
     }
+    // A long press on the Quick Settings tile (see ClusterTileService).
+    if (action == TileService.ACTION_QS_TILE_PREFERENCES) return DeepLink.CHECKUP
     return DeepLink.named(getStringExtra(MainActivity.EXTRA_OPEN))
-}
-
-/**
- * Nothing (not even the encrypted config) is loaded before the first unlock. Later relocks
- * draw over the app so navigation state survives.
- */
-@Composable
-private fun LockGate(app: TalosApp, targets: LaunchTargets, onWiped: () -> Unit) {
-    val locked by app.appLock.locked.collectAsStateWithLifecycle()
-    val everUnlocked by app.appLock.everUnlocked.collectAsStateWithLifecycle()
-    val securityKeys by app.appLock.securityKeys.collectAsStateWithLifecycle()
-    val scope = rememberCoroutineScope()
-
-    Box {
-        if (everUnlocked) Root(app, targets)
-        if (locked) {
-            LockScreen(
-                onUnlocked = { app.appLock.unlock() },
-                onWipe = {
-                    scope.launch {
-                        app.configRepository.clear()
-                        // Sealed with the lost keys too: unreadable for good.
-                        app.kubeAuthStore.clear()
-                        app.appLock.setEnabled(false)
-                        onWiped()
-                    }
-                },
-                securityKeys = securityKeys,
-            )
-        }
-        // The "tap your security key" dialog, over the lock screen or whatever asked for a check.
-        SecurityKeyPromptHost(app)
-    }
 }
 
 /**

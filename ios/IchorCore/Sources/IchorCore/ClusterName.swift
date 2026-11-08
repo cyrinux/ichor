@@ -16,8 +16,9 @@ public func keepClusterNames(saved: [String: String], fingerprints: [String]) ->
     return saved.filter { known.contains($0.key) }
 }
 
-/// A managed cluster as its cloud's CLI names its context: `provider` (`eks`, `gke`), the
-/// region or zone, the `owner` (AWS account ID, GCP project) and the cluster's own name.
+/// A managed cluster as its cloud's CLI (or the app's discovery) names its context: `provider`
+/// (`eks`, `gke`), the region or zone, the `owner` (AWS account ID, GCP project; "" when the
+/// name does not say) and the cluster's own name.
 public struct CloudContext: Equatable, Sendable {
     public static let eks = "EKS"
     public static let gke = "GKE"
@@ -36,8 +37,18 @@ public struct CloudContext: Equatable, Sendable {
 /// `name` as an EKS or GKE context name, nil when it is neither.
 public func parseCloudContext(_ name: String) -> CloudContext? {
     // aws eks update-kubeconfig: the cluster ARN.
-    if case let (region, account, cluster)? = match(#"^arn:aws(?:-[a-z]+)*:eks:([a-z0-9-]+):([0-9]+):cluster/(.+)$"#, name) {
+    if case let (region, account, cluster)? = match(
+        #"^arn:aws(?:-[a-z]+)*:eks:([a-z0-9-]+):([0-9]+):cluster/(.+)$"#, name)
+    {
         return CloudContext(provider: CloudContext.eks, location: region, owner: account, cluster: cluster)
+    }
+    // The app's EKS discovery: <cluster>.<region>.eks, with .<account> before .eks when the
+    // sign-in reached several accounts. EKS cluster names have no dot.
+    if case let (cluster, region, account)? = match(
+        #"^([A-Za-z0-9][A-Za-z0-9_-]*)\.([a-z]{2}(?:-[a-z]+)+-[0-9]+)((?:\.[0-9]{12})?)\.eks$"#, name)
+    {
+        return CloudContext(
+            provider: CloudContext.eks, location: region, owner: String(account.dropFirst()), cluster: cluster)
     }
     // gcloud container clusters get-credentials: gke_<project>_<location>_<cluster>. Neither
     // part has an underscore (a domain-scoped project is example.com:name).
@@ -50,10 +61,10 @@ public func parseCloudContext(_ name: String) -> CloudContext? {
 /// The three groups of `pattern` in the whole of `name`, nil when it does not match.
 private func match(_ pattern: String, _ name: String) -> (String, String, String)? {
     guard let regex = try? NSRegularExpression(pattern: pattern),
-          let found = regex.firstMatch(in: name, range: NSRange(name.startIndex..., in: name)),
-          let first = Range(found.range(at: 1), in: name),
-          let second = Range(found.range(at: 2), in: name),
-          let third = Range(found.range(at: 3), in: name)
+        let found = regex.firstMatch(in: name, range: NSRange(name.startIndex..., in: name)),
+        let first = Range(found.range(at: 1), in: name),
+        let second = Range(found.range(at: 2), in: name),
+        let third = Range(found.range(at: 3), in: name)
     else { return nil }
     return (String(name[first]), String(name[second]), String(name[third]))
 }

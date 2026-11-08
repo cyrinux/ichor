@@ -1,0 +1,8 @@
+• Pin the downloadable models to their Hugging Face revisions
+• Run the AI diagnosis on the phone
+• On-device model provider and llama.cpp engine
+• Rotate the cluster CA from Settings, with a Live Activity
+• Rotate the cluster CA from Settings, followed in a notification
+• Rotate the Talos API CA from the phone
+• Strip the model engine library when it is linked
+• Block a CA rotation the control planes disagree on

@@ -22,10 +22,18 @@ final class AISettings {
         didSet { UserDefaults.standard.set(anonymize, forKey: AIKeys.anonymize) }
     }
 
+    /// A provider on the network may ask for a pod's logs, an object's events or YAML. Not in a
+    /// backup: a file does not decide what the model may read on this device. The stored value is
+    /// the person's choice because only this didSet writes it: never write it from init or a restore.
+    var allowTools: Bool {
+        didSet { UserDefaults.standard.set(allowTools, forKey: AIKeys.allowTools) }
+    }
+
     init() {
         let defaults = UserDefaults.standard
         enabled = defaults.bool(forKey: AIKeys.enabled)
         anonymize = aiAnonymize(stored: defaults.object(forKey: AIKeys.anonymize) as? Bool)
+        allowTools = aiAllowTools(stored: defaults.object(forKey: AIKeys.allowTools) as? Bool)
         savedProvider = defaults.string(forKey: AIKeys.provider)
     }
 
@@ -35,6 +43,56 @@ final class AISettings {
     var current: AIProviderSettings {
         guard let id = provider?.id else { return AIProviderSettings() }
         return perProvider[id] ?? AIProviderSettings()
+    }
+
+    /// The model on the phone (Go's "device" provider): no key, no server.
+    static let deviceProvider = "device"
+
+    /// The selected provider runs on the phone.
+    var onPhone: Bool { provider?.id == Self.deviceProvider }
+
+    /// The model the provider uses: the one set, else its default.
+    var effectiveModel: String { current.model.isEmpty ? provider?.defaultModel ?? "" : current.model }
+
+    /// A question can be asked from the app now: with a key or a server, or, on the phone,
+    /// with the model's file there.
+    var canAsk: Bool {
+        guard onPhone else { return current.canAsk }
+        _ = ModelDownloads.shared.version
+        return LocalModelStore.shared.file(for: effectiveModel) != nil
+    }
+
+    /// The selected provider is the cluster's Ollama, through a port-forward.
+    var inCluster: Bool { provider?.id == ollamaClusterProvider }
+
+    /// Who answers, as the AI screens name it ("Ask %@", "Waiting for %@…").
+    var providerName: String {
+        if onPhone { return String(localized: "the model on this phone") }
+        return inCluster ? ollamaBrand : provider?.name ?? ""
+    }
+
+    /// The providers the picker offers: the cluster's Ollama once a server was picked from its
+    /// row (Data services), or while it is the one selected.
+    var visibleProviders: [AIProvider] {
+        providers.filter { item in
+            item.id != ollamaClusterProvider || item.id == provider?.id
+                || !(perProvider[item.id]?.baseURL.isEmpty ?? true)
+        }
+    }
+
+    /// Points the AI diagnosis at `ref`, a server of the cluster's Ollama: no model (its newest
+    /// answers until one is picked) when the server changed.
+    func useClusterServer(_ ref: OllamaServerRef) {
+        let id = ollamaClusterProvider
+        let same = (perProvider[id] ?? Self.stored(id)).baseURL == ref.text
+        enabled = true
+        select(id)
+        perProvider[id, default: AIProviderSettings()].baseURL = ref.text
+        UserDefaults.standard.set(ref.text, forKey: AIKeys.baseURL(id))
+        if !same {
+            perProvider[id, default: AIProviderSettings()].model = ""
+            UserDefaults.standard.set("", forKey: AIKeys.model(id))
+        }
     }
 
     /// The list comes from Go (no network); asked once.
@@ -49,6 +107,8 @@ final class AISettings {
     func select(_ id: String) {
         savedProvider = id
         UserDefaults.standard.set(id, forKey: AIKeys.provider)
+        // The cluster's Ollama no longer asked: its port-forward goes.
+        if id != ollamaClusterProvider { AIForward.shared.stop() }
     }
 
     /// An empty key removes it from the Keychain.
@@ -72,6 +132,54 @@ final class AISettings {
         guard let id = provider?.id else { return }
         perProvider[id, default: AIProviderSettings()].baseURL = url
         UserDefaults.standard.set(url, forKey: AIKeys.baseURL(id))
+    }
+
+    /// What a backup keeps of the AI settings, and the API keys by provider id (empty unless
+    /// `includeKeys`: they go in the backup only when the user opted in).
+    func backup(includeKeys: Bool) async -> (settings: BackupAI, keys: [String: String]) {
+        await loadProviders()
+        var models: [String: String] = [:]
+        var baseURLs: [String: String] = [:]
+        var keys: [String: String] = [:]
+        for item in providers {
+            let set = perProvider[item.id] ?? Self.stored(item.id)
+            if !set.model.isEmpty { models[item.id] = set.model }
+            if !set.baseURL.isEmpty { baseURLs[item.id] = set.baseURL }
+            if includeKeys, !set.apiKey.isEmpty { keys[item.id] = set.apiKey }
+        }
+        let settings = BackupAI(
+            enabled: enabled, provider: provider?.id, models: models.isEmpty ? nil : models,
+            baseUrls: baseURLs.isEmpty ? nil : baseURLs, anonymize: anonymize)
+        return (settings, keys)
+    }
+
+    /// Applies a backup's AI settings and keys as `restoredAI` decides (unknown providers dropped,
+    /// a server URL only with its key from the same backup, anonymize off only with keys); a
+    /// provider without a key in the backup keeps the one this device has.
+    func restore(_ backup: BackupAI?, keys: [String: String]) async {
+        await loadProviders()
+        let restored = restoredAI(backup, keys: keys, known: Set(providers.map(\.id)))
+        if let on = restored.enabled { enabled = on }
+        if let hide = restored.anonymize { anonymize = hide }
+        if let id = restored.provider { select(id) }
+        let defaults = UserDefaults.standard
+        for (id, model) in restored.models {
+            perProvider[id, default: AIProviderSettings()].model = model
+            defaults.set(model, forKey: AIKeys.model(id))
+        }
+        for (id, key) in restored.keys {
+            // A key the Keychain refuses is left out, and its server URL with it.
+            do {
+                try Keychain.write(Data(key.utf8), account: AIKeys.keychainAccount(id))
+                perProvider[id, default: AIProviderSettings()].apiKey = key
+            } catch {
+                continue
+            }
+            if let url = restored.baseURLs[id] {
+                perProvider[id, default: AIProviderSettings()].baseURL = url
+                defaults.set(url, forKey: AIKeys.baseURL(id))
+            }
+        }
     }
 
     private static func stored(_ id: String) -> AIProviderSettings {

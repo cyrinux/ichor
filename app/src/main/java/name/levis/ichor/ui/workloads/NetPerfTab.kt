@@ -2,28 +2,24 @@ package name.levis.ichor.ui.workloads
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,7 +51,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
  * A network test between two nodes (netperf, like `cilium connectivity perf`): the setup,
- * then its progress and the measurements. Leaving the screen stops a running test.
+ * then its progress and the measurements. Leaving the screen keeps a running test going.
  */
 @Composable
 fun NetPerfTab(vm: NetPerfViewModel, modifier: Modifier = Modifier) {
@@ -64,7 +60,6 @@ fun NetPerfTab(vm: NetPerfViewModel, modifier: Modifier = Modifier) {
     val session by vm.session.collectAsStateWithLifecycle()
     val history by vm.history.collectAsStateWithLifecycle()
     val viewing by vm.viewing.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var confirming by remember { mutableStateOf(false) }
 
     if (confirming) {
@@ -123,13 +118,13 @@ private fun NetPerfSetupForm(nodes: List<NetPerfNode>, setup: NetPerfSetup, onCh
         Text(stringResource(R.string.netperf_no_nodes), color = muted, modifier = gutter)
         return
     }
-    NodeChips(
+    NodePicker(
         stringResource(R.string.netperf_client),
         nodes,
         setup.client,
         hint = { InfoHint(stringResource(R.string.netperf_hint_nodes_title), stringResource(R.string.netperf_hint_nodes)) },
     ) { name -> onChange { it.copy(client = name) } }
-    NodeChips(stringResource(R.string.netperf_server), nodes, setup.server) { name -> onChange { it.copy(server = name) } }
+    NodePicker(stringResource(R.string.netperf_server), nodes, setup.server) { name -> onChange { it.copy(server = name) } }
     if (setup.ready && setup.server == setup.client) {
         Text(stringResource(R.string.netperf_same_node), style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.warn, modifier = gutter)
     }
@@ -139,7 +134,7 @@ private fun NetPerfSetupForm(nodes: List<NetPerfNode>, setup: NetPerfSetup, onCh
             Text(stringResource(R.string.netperf_host_desc), style = MaterialTheme.typography.bodySmall, color = muted)
         }
         InfoHint(stringResource(R.string.netperf_hint_paths_title), stringResource(R.string.netperf_hint_paths))
-        Switch(checked = setup.hostNetwork, onCheckedChange = { on -> onChange { it.copy(hostNetwork = on) } }, modifier = Modifier.padding(start = 12.dp))
+        IchorSwitch(checked = setup.hostNetwork, onCheckedChange = { on -> onChange { it.copy(hostNetwork = on) } }, modifier = Modifier.padding(start = 12.dp))
     }
     Row(gutter, verticalAlignment = Alignment.CenterVertically) {
         Text(stringResource(R.string.netperf_duration), style = MaterialTheme.typography.labelLarge)
@@ -154,33 +149,7 @@ private fun NetPerfSetupForm(nodes: List<NetPerfNode>, setup: NetPerfSetup, onCh
             ) { Text(stringResource(R.string.netperf_seconds, seconds)) }
         }
     }
-    Button(onClick = onStart, enabled = setup.ready, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_start)) }
-}
-
-@Composable
-private fun NodeChips(
-    label: String,
-    nodes: List<NetPerfNode>,
-    selected: String,
-    hint: @Composable () -> Unit = {},
-    onSelect: (String) -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(label, style = MaterialTheme.typography.labelLarge)
-            hint()
-        }
-        LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(nodes, key = { it.name }) { node ->
-                FilterChip(
-                    selected = node.name == selected,
-                    onClick = { onSelect(node.name) },
-                    enabled = node.ready,
-                    label = { Text(node.name, fontFamily = FontFamily.Monospace) },
-                )
-            }
-        }
-    }
+    IchorButton(onClick = onStart, enabled = setup.ready, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_start)) }
 }
 
 @Composable
@@ -206,13 +175,13 @@ private fun NetPerfStatus(session: NetPerfSession, onStop: () -> Unit, onReset: 
             if (progress?.phase != NETPERF_PHASE_CLEANING) {
                 MutedText(stringResource(R.string.netperf_keep_open), modifier = gutter)
             }
-            OutlinedButton(onClick = onStop, enabled = !session.stopping, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_stop)) }
+            IchorOutlinedButton(onClick = onStop, enabled = !session.stopping, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_stop)) }
         }
         else -> {
             val context = LocalContext.current
             session.error?.let { InlineError(stringResource(R.string.netperf_failed, it.resolve(context)), gutter) }
             if (session.stopped) Text(stringResource(R.string.netperf_stopped), modifier = gutter)
-            OutlinedButton(onClick = onReset, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_again)) }
+            IchorOutlinedButton(onClick = onReset, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_again)) }
         }
     }
 }
@@ -234,7 +203,7 @@ private fun phaseText(session: NetPerfSession): String {
 
 @Composable
 private fun NetPerfConfirmDialog(setup: NetPerfSetup, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.netperf_confirm_title)) },
         text = {
@@ -243,7 +212,7 @@ private fun NetPerfConfirmDialog(setup: NetPerfSetup, onConfirm: () -> Unit, onD
                 if (setup.hostNetwork) Text(stringResource(R.string.netperf_confirm_host), color = LocalStatusColors.current.warn)
             }
         },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.netperf_confirm)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = onConfirm) { Text(stringResource(R.string.netperf_confirm)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

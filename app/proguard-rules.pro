@@ -3,8 +3,8 @@
 -keep class go.** { *; }
 -keep class name.levis.ichorgo.** { *; }
 
-# ML Kit (QR import) instantiates its components by reflection from manifest metadata; R8 full
-# mode stripped their constructors and BarcodeScanning.getClient() crashed in release builds
-# only. Keeping the registrars is enough: ML Kit's own consumer rules cover the rest, and
-# keeping all of com.google.mlkit.** left a third of the DEX unoptimized.
--keep class * implements com.google.firebase.components.ComponentRegistrar { <init>(); *; }
+# The on-device model engine (libichorllm.so) binds by name: LlamaNative's natives, and the
+# onPiece([B)V it calls back on the sink.
+-keep class name.levis.ichor.localmodel.LlamaNative { native <methods>; }
+-keep interface name.levis.ichor.localmodel.PieceSink { *; }
+-keepclassmembers class * implements name.levis.ichor.localmodel.PieceSink { void onPiece(byte[]); }

@@ -103,3 +103,56 @@ enum class VeleroReason(val wire: String) {
         fun from(wire: String): VeleroReason? = entries.firstOrNull { it.wire == wire }
     }
 }
+
+/** Why "Back up now" is not offered on a schedule, null when it is. */
+enum class VeleroBackupBlocker { PAUSED, INVALID, RUNNING }
+
+val VeleroSchedule.backupNowBlocker: VeleroBackupBlocker?
+    get() = when {
+        phase == "FailedValidation" -> VeleroBackupBlocker.INVALID
+        paused -> VeleroBackupBlocker.PAUSED
+        inProgress -> VeleroBackupBlocker.RUNNING
+        else -> null
+    }
+
+/** A schedule's backups, or the ones taken by hand when [schedule] is "", newest first. */
+@Serializable
+data class VeleroBackups(
+    val namespace: String = "",
+    val schedule: String = "",
+    val backups: List<VeleroBackupDetail> = emptyList(),
+    /** The deletion requests could not be read: the backups still show. */
+    val error: String = "",
+)
+
+@Serializable
+data class VeleroBackupDetail(
+    val name: String = "",
+    val phase: String = "",
+    val startedAt: Long = 0,
+    val completedAt: Long = 0,
+    /** Unix ms, 0 when it never expires. */
+    val expiresAt: Long = 0,
+    val errors: Int = 0,
+    val warnings: Int = 0,
+    val failureReason: String = "",
+    val validationErrors: List<String> = emptyList(),
+    val storageLocation: String = "",
+    val includedNamespaces: List<String> = emptyList(),
+    val includedResources: List<String> = emptyList(),
+    val itemsBackedUp: Int = 0,
+    val totalItems: Int = 0,
+    val volumeSnapshots: Int = 0,
+    val volumeSnapshotsAttempted: Int = 0,
+    val csiSnapshots: Int = 0,
+    val running: Boolean = false,
+    val finished: Boolean = false,
+    /** Being deleted, or a deletion request for it is pending. */
+    val deleting: Boolean = false,
+    /** Velero's errors from the latest deletion that failed. */
+    val deleteErrors: List<String> = emptyList(),
+) {
+    /** A finished backup nobody is deleting yet: Velero refuses the others. */
+    val deletable: Boolean get() = finished && !deleting
+    val at: Long get() = completedAt.takeIf { it > 0 } ?: startedAt
+}

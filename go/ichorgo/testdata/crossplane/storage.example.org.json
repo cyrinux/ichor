@@ -1,0 +1,38 @@
+{
+  "groupVersion": "storage.example.org/v1",
+  "resources": [
+    {
+      "name": "buckets",
+      "kind": "Bucket",
+      "namespaced": false,
+      "verbs": [
+        "get",
+        "list"
+      ],
+      "categories": [
+        "crossplane",
+        "managed"
+      ]
+    },
+    {
+      "name": "buckets/status",
+      "kind": "Bucket",
+      "verbs": [
+        "get"
+      ],
+      "categories": [
+        "managed"
+      ]
+    },
+    {
+      "name": "notlistable",
+      "kind": "Other",
+      "verbs": [
+        "get"
+      ],
+      "categories": [
+        "managed"
+      ]
+    }
+  ]
+}

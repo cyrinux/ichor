@@ -136,4 +136,42 @@ class OfflineCacheTest {
         cache.save("fp", "overview", "masked", now, cache.epoch)
         assertEquals("masked", cache.peek("fp", "overview")?.value)
     }
+
+    @Test
+    fun oneResultIsReadBeforeTheWholeCluster() = runBlocking {
+        cache().apply {
+            save("fp", "overview", "o", now, epoch = 0)
+            save("fp", "etcd", "e", now, epoch = 0)
+        }
+        val restarted = cache()
+        restarted.loadOne("fp", "overview")
+        assertEquals("o", restarted.peek("fp", "overview")?.value)
+        // Only that one: the others wait for load.
+        assertNull(restarted.peek("fp", "etcd"))
+        restarted.load("fp")
+        assertEquals("e", restarted.peek("fp", "etcd")?.value)
+    }
+
+    @Test
+    fun loadOneSkipsWhatIsMissingExpiredOrOff() = runBlocking {
+        cache().save("fp", "overview", "o", now, epoch = 0)
+        val restarted = cache()
+        restarted.loadOne("fp", "etcd")
+        assertNull(restarted.peek("fp", "etcd"))
+
+        now += OfflineCache.MAX_AGE_MS + 1
+        restarted.loadOne("fp", "overview")
+        assertNull(restarted.peek("fp", "overview"))
+
+        now -= OfflineCache.MAX_AGE_MS + 1
+        enabled = false
+        val off = cache()
+        off.loadOne("fp", "overview")
+        enabled = true
+        // Tried once while off; a new cache (the next launch) reads it.
+        assertNull(off.peek("fp", "overview"))
+        val next = cache()
+        next.loadOne("fp", "overview")
+        assertEquals("o", next.peek("fp", "overview")?.value)
+    }
 }

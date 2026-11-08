@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.components
 
+import name.levis.ichor.data.UiStyle
+import name.levis.ichor.ui.design.IchorLoadingBox
+import name.levis.ichor.ui.design.LocalUiStyle
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,17 +23,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -59,15 +60,13 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 /** A page (or a pane of one) still loading: the grey [style] shapes of what is coming. */
 @Composable
 fun LoadingBox(modifier: Modifier = Modifier, style: SkeletonStyle = SkeletonStyle.CARDS) {
-    SkeletonBox(modifier, style)
+    if (LocalUiStyle.current == UiStyle.EXPRESSIVE) IchorLoadingBox(modifier) else SkeletonBox(modifier, style)
 }
 
 /** A centred spinner, for a wait too small or too short-lived for a skeleton. */
 @Composable
 fun SpinnerBox(modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-    }
+    IchorLoadingBox(modifier)
 }
 
 @Composable
@@ -91,7 +90,8 @@ fun ErrorBox(message: UiText, onRetry: () -> Unit, modifier: Modifier = Modifier
         Icon(
             Icons.Outlined.ErrorOutline,
             contentDescription = null,
-            tint = LocalStatusColors.current.bad,
+            // Warning, not red: the read failed, the cluster is not broken (red is for its state).
+            tint = LocalStatusColors.current.warn,
             modifier = Modifier.size(40.dp),
         )
         Spacer(Modifier.height(12.dp))
@@ -100,7 +100,7 @@ fun ErrorBox(message: UiText, onRetry: () -> Unit, modifier: Modifier = Modifier
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             // Refused for want of a sign-in: signing in is the way out, then it loads again.
             SignInAction(message, onSignedIn = onRetry)
-            Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+            IchorButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
         }
     }
 }
@@ -193,28 +193,10 @@ fun InfoRow(label: String, value: String, mono: Boolean = false, valueColor: Col
     }
 }
 
-/** Usage bar coloured by how full it is. */
-@Composable
-fun UsageBar(fraction: Float, modifier: Modifier = Modifier, warnAt: Float = 0.75f) {
-    val colors = LocalStatusColors.current
-    val color = when {
-        fraction >= 0.9f -> colors.bad
-        fraction >= warnAt -> colors.warn
-        else -> colors.ok
-    }
-    LinearProgressIndicator(
-        progress = { fraction },
-        color = color,
-        trackColor = MaterialTheme.colorScheme.surfaceVariant,
-        modifier = modifier.fillMaxWidth().height(6.dp),
-        drawStopIndicator = {},
-    )
-}
-
 /** Top app bar "back" arrow. */
 @Composable
 fun BackButton(onClick: () -> Unit) {
-    IconButton(onClick = onClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
+    IchorIconButton(onClick = onClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
 }
 
 /** Single-line filter box with a search icon. */
@@ -279,7 +261,7 @@ fun ToggleRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit, desc
                 MutedText(description)
             }
         }
-        Switch(checked = checked, onCheckedChange = null, modifier = Modifier.padding(start = 8.dp))
+        IchorSwitch(checked = checked, onCheckedChange = null, modifier = Modifier.padding(start = 8.dp))
     }
 }
 

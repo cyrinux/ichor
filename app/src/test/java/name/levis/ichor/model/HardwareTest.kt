@@ -31,5 +31,23 @@ class HardwareTest {
         assertEquals(10_737_418_240L, hw.disks.single().size)
         assertEquals(3200, hw.memory.single().speed)
         assertEquals("not found", hw.errors[HardwareSection.SYSTEM])
+        assertNull(hw.watchdog)
+    }
+
+    @Test
+    fun decodesTheWatchdogAndNoWatchdog() {
+        val armed = TalosJson.decodeFromString(
+            NodeHardware.serializer(),
+            """{"watchdog":{"device":"/dev/watchdog0","timeoutSec":120,"feedIntervalSec":40},"errors":{}}""",
+        )
+        assertEquals(WatchdogInfo("/dev/watchdog0", 120, 40), armed.watchdog)
+        val none = TalosJson.decodeFromString(NodeHardware.serializer(), """{"watchdog":null,"errors":{}}""")
+        assertNull(none.watchdog)
+        assertNull(none.errors[HardwareSection.WATCHDOG])
+    }
+
+    @Test
+    fun watchdogIntervals() {
+        assertEquals(listOf("40s", "2m", "1m 30s"), listOf(40, 120, 90).map(::watchdogInterval))
     }
 }

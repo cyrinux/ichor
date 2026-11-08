@@ -15,35 +15,11 @@ struct Entry: TimelineEntry {
     var link: URL?
 }
 
-/// A cluster the widget can show, from the list the app keeps in the App Group (WidgetCluster).
-struct ClusterEntity: AppEntity {
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Cluster"
-    static var defaultQuery = ClusterQuery()
-
-    /// Its monitor key (monitorClusterKey): what its snapshot is kept under.
-    let id: String
-    let name: String
-
-    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(name)") }
-}
-
-struct ClusterQuery: EntityQuery {
-    private var clusters: [ClusterEntity] {
-        SharedSnapshot.clusters(from: UserDefaults(suiteName: SharedSnapshot.suite)).map { ClusterEntity(id: $0.id, name: $0.name) }
-    }
-
-    func entities(for identifiers: [ClusterEntity.ID]) async throws -> [ClusterEntity] {
-        clusters.filter { identifiers.contains($0.id) }
-    }
-
-    func suggestedEntities() async throws -> [ClusterEntity] { clusters }
-}
-
 /// The widget's settings: which cluster it shows; none chosen (existing widgets too), the one
 /// open in the app.
 struct ClusterWidgetIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Cluster"
-    static var description = IntentDescription("The cluster this widget shows. None chosen: the one open in the app.")
+    static let title: LocalizedStringResource = "Cluster"
+    static let description = IntentDescription("The cluster this widget shows. None chosen: the one open in the app.")
 
     @Parameter(title: "Cluster")
     var cluster: ClusterEntity?
@@ -56,8 +32,10 @@ struct Provider: AppIntentTimelineProvider {
         // The name as the app calls it now (renamed since the widget was set up, too).
         let cluster = id.flatMap { id in SharedSnapshot.clusters(from: defaults).first { $0.id == id } }
         let link = intent.cluster == nil ? nil : cluster?.link.flatMap(URL.init(string:))
-        return Entry(date: date, snapshot: SharedSnapshot.load(from: defaults, cluster: id), name: cluster?.name ?? intent.cluster?.name,
-                     link: link)
+        return Entry(
+            date: date, snapshot: SharedSnapshot.load(from: defaults, cluster: id),
+            name: cluster?.name ?? intent.cluster?.name,
+            link: link)
     }
 
     func placeholder(in context: Context) -> Entry { Entry(date: .now, snapshot: nil) }
@@ -73,7 +51,9 @@ struct Provider: AppIntentTimelineProvider {
         // A second entry dims the widget when the snapshot turns stale, without waiting for a reload.
         if let snapshot = current.snapshot {
             let staleAt = snapshot.takenAt.addingTimeInterval(glanceStaleAfter + 1)
-            if staleAt > now { entries.append(Entry(date: staleAt, snapshot: snapshot, name: current.name, link: current.link)) }
+            if staleAt > now {
+                entries.append(Entry(date: staleAt, snapshot: snapshot, name: current.name, link: current.link))
+            }
         }
         // The app reloads timelines after each check; this is just a fallback refresh.
         return Timeline(entries: entries, policy: .after(now.addingTimeInterval(30 * 60)))
@@ -90,7 +70,9 @@ enum Glance {
     static let problem = rgb(0xF0716B)
 
     static func rgb(_ hex: UInt32) -> Color {
-        Color(red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255, blue: Double(hex & 0xFF) / 255)
+        Color(
+            red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255,
+            blue: Double(hex & 0xFF) / 255)
     }
 
     static func color(_ tone: GlanceItem.Tone) -> Color {
@@ -105,6 +87,7 @@ enum Glance {
         switch item {
         case .notReady(let n): return Text("\(n) not ready")
         case .unreachable(let n): return Text("\(n) unreachable")
+        case .tunnelsDown(let n): return Text("\(n) tunnels down")
         case .allReady: return Text("all ready")
         case .etcdNoAlarms: return Text("etcd: no alarms")
         case .etcdAlarms(let n): return Text("etcd: \(n) alarms")
@@ -195,7 +178,9 @@ struct ClusterWidgetView: View {
                 // Side by side when it fits (medium), stacked otherwise (small).
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 12) { ForEach(items.indices, id: \.self) { GlanceItemView(item: items[$0]) } }
-                    VStack(alignment: .leading, spacing: 2) { ForEach(items.indices, id: \.self) { GlanceItemView(item: items[$0]) } }
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(items.indices, id: \.self) { GlanceItemView(item: items[$0]) }
+                    }
                 }
             }
         } else {
@@ -207,7 +192,8 @@ struct ClusterWidgetView: View {
 /// The Home Screen cluster widget; IchorWidgets bundles it with the runs' Live Activity.
 struct TalosWidget: Widget {
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: "TalosClusterWidget", intent: ClusterWidgetIntent.self, provider: Provider()) { entry in
+        AppIntentConfiguration(kind: "TalosClusterWidget", intent: ClusterWidgetIntent.self, provider: Provider()) {
+            entry in
             ClusterWidgetView(entry: entry)
         }
         .configurationDisplayName("Cluster status")

@@ -34,6 +34,27 @@ class HistoryRepository(private val store: HistoryStore) {
     /** The cluster [fingerprint]'s whole ring as anonymised JSON, for a support bundle. */
     suspend fun export(fingerprint: String): String? = read(fingerprint) { ring -> Ichorgo.historyExport(ring) }
 
+    /**
+     * The Markdown incident summary of the cluster [contextName] (ring: [fingerprint]) from
+     * [sinceMillis] to [nowMillis], names hidden with [anonymize]. A cluster with no history
+     * yet gets a summary saying so (an empty ring); throws when Go refuses (no cluster name).
+     */
+    suspend fun incidentSummary(
+        fingerprint: String,
+        contextName: String,
+        sinceMillis: Long,
+        nowMillis: Long,
+        anonymize: Boolean,
+    ): String = withContext(Dispatchers.IO) {
+        val ring = fingerprint.takeIf { it.isNotBlank() }?.let(store::ring) ?: ByteArray(0)
+        Ichorgo.incidentSummary(contextName, ring, sinceMillis, nowMillis, anonymize)
+    }
+
+    /** The cluster [fingerprint] has history on this phone (at least one recorded run). */
+    suspend fun hasHistory(fingerprint: String): Boolean = withContext(Dispatchers.IO) {
+        fingerprint.isNotBlank() && store.ring(fingerprint)?.isNotEmpty() == true
+    }
+
     private suspend fun <T> read(fingerprint: String, block: (ByteArray) -> T): T? = withContext(Dispatchers.IO) {
         if (fingerprint.isBlank()) return@withContext null
         val ring = store.ring(fingerprint)?.takeIf { it.isNotEmpty() } ?: return@withContext null

@@ -68,9 +68,13 @@ final class OverviewBarTests: XCTestCase {
     }
 
     func testSlotsPutTheLineAfterTheIcons() {
-        XCTAssertEqual(OverviewBar().slots, [.action(.health), .action(.workloads), .action(.gitOps), .action(.etcd), .menuLine,
-                                             .action(.events), .action(.metrics), .action(.alerts), .action(.kubespan),
-                                             .action(.search), .action(.settings)])
+        XCTAssertEqual(
+            OverviewBar().slots,
+            [
+                .action(.health), .action(.workloads), .action(.gitOps), .action(.etcd), .menuLine,
+                .action(.events), .action(.metrics), .action(.alerts), .action(.kubespan),
+                .action(.search), .action(.settings),
+            ])
     }
 
     func testMovingAcrossTheLineChangesTheIcons() {
@@ -81,7 +85,8 @@ final class OverviewBarTests: XCTestCase {
         let up = OverviewBar().moving(fromOffsets: [10], toOffset: 0)
         XCTAssertEqual(up.icons, [.settings, .health, .workloads, .gitOps, .etcd])
         XCTAssertEqual(up.menu, [.events, .metrics, .alerts, .kubespan, .search])
-        XCTAssertEqual(OverviewBar().moving(fromOffsets: [3], toOffset: 0).icons, [.etcd, .health, .workloads, .gitOps])
+        XCTAssertEqual(
+            OverviewBar().moving(fromOffsets: [3], toOffset: 0).icons, [.etcd, .health, .workloads, .gitOps])
     }
 
     func testTheMenuLineDoesNotMove() {

@@ -36,7 +36,7 @@ characters per language.
 
 ## One-time setup
 
-1. **Create the app** in the Play Console (App name `Ichor for Talos Linux`, App, Free) and fill in
+1. **Create the app** in the Play Console (App name `Ichor for Kubernetes & Talos`, App, Free) and fill in
    the forms below.
 2. **Play App Signing: choose "Use existing app signing key"** and upload the release key
    (Play's PEPK tool encrypts it). Play installs and GitHub/Obtainium installs then share one
@@ -69,7 +69,8 @@ the Play Console reports.
   it can be bought again and is acknowledged in time). Create each id `docs/roadmap.json`
   lists under Monetize with Play → Products → In-app products, and activate it. An id missing
   in the Console, or inactive, simply shows no button. Ids used now:
-  `tip_2`, `tip_5`, `tip_10`, and `fund_<feature>_2`, `_5`, `_10` per feature.
+  `tip_2`, `tip_5`, `tip_10`, and `fund_<feature>_2`, `_5`, `_10` per feature (open now:
+  `fund_relay_*`, `fund_plugins_*`).
   Name a product after its feature ("Act on data services: €5"), as Play shows that name on
   the payment sheet and the receipt.
 - **Adding a feature:** create its products, add an entry to `docs/roadmap.json` (title and
@@ -88,17 +89,20 @@ the Play Console reports.
 
 | Field | Value |
 |---|---|
-| App name | `Ichor for Talos Linux` |
+| App name | `Ichor for Kubernetes & Talos` (`<locale>/title.txt`; Play itself adds "(Early Access)" until the app is in production) |
 | Short / full description | `fastlane/metadata/android/<locale>/` |
 | App icon | `images/icon.png` (512×512) |
 | Feature graphic | `images/featureGraphic.png` (1024×500) |
-| Phone screenshots | `images/phoneScreenshots/` (7, 1200×2322 PNG) |
+| Phone screenshots | `<locale>/images/phoneScreenshots/` (7 per locale, 1080×2082 PNG) |
 | Default language | English (United States), en-US |
-| Translations | fr-FR, de-DE, es-ES, it-IT, uk |
+| Translations | fr-FR, es-ES, uk, de-DE, it-IT, zh-CN, ru-RU, pt-BR, ja-JP |
 
-The screenshots (ratio 1.94, under Play's 2:1 limit, and at least 1080 px wide) qualify for
+The screenshots (ratio 1.93, under Play's 2:1 limit, and at least 1080 px wide) qualify for
 featuring and recommendations. Their `N_` prefix sets the order `fastlane supply` uploads
-them in. Locales without their own images use the en-US ones.
+them in. To retake every locale: `just store-screenshots` on an emulator, or the Screenshots
+workflow with its `store` input and its `store-screenshots` artifact, then
+`scripts/play-assets.sh`. The icon and feature graphic exist in en-US only, and Play uses them
+for the other locales.
 
 ## Store settings
 
@@ -176,31 +180,31 @@ None of them.
 ### Data safety
 
 Basis: the app has no backend. Cluster data goes straight to the user's own cluster. The AI
-report goes to a provider the user picked, with their own key, only when they tap Ask. The one
-silent transfer is Google ML Kit's diagnostics
-([disclosure](https://developers.google.com/ml-kit/android-data-disclosure)), which must be
-declared because SDK collection counts as the app's.
+report goes to a provider the user picked, with their own key, only when they tap Ask. There
+is no silent transfer: no SDK in the app sends anything on its own. QR codes are decoded on
+the phone by ZXing (open source), which has no network code.
+
+History: until v1.34 the QR scanner was Google ML Kit, whose diagnostics (device model, OS,
+package and version, a per-install identifier, performance data) had to be declared. ML Kit
+was removed in v1.35.0 (PR #491). The Play Console form was resubmitted with the answers
+below on <date: fill in when resubmitted>.
 
 **Data collection and security**
 
 | Question | Answer |
 |---|---|
-| Does your app collect or share any of the required user data types? | **Yes** (ML Kit diagnostics) |
-| Is all of the user data collected by your app encrypted in transit? | **Yes** |
-| Do you provide a way for users to request that their data is deleted? | **No**. The developer holds none; ML Kit's per-install identifier is reset by uninstalling |
+| Does your app collect or share any of the required user data types? | **No** |
 
-**Data types**
+With "No", Play skips the encryption and deletion questions and the data types: nothing is
+collected or shared in Play's sense (the borderline cases below explain why).
 
-| Data type | Collected | Shared | Ephemeral | Required or optional | Purposes |
-|---|---|---|---|---|---|
-| App info and performance → **Diagnostics** | Yes | No | No | Required | Analytics |
-| App info and performance → **Other app performance data** | Yes | No | No | Required | Analytics |
-| Device or other IDs → **Device or other IDs** | Yes | No | No | Required | Analytics |
-
-Everything else: **not collected**. Reasoning for the borderline cases:
+Every data type: **not collected**. Reasoning for the borderline cases:
 
 - **Talosconfig, cluster state, logs** go only to servers the user owns and configured, not
   to the developer or a third party. They are not collected in Play's sense.
+- **AI model on the phone** (provider "This phone"): nothing is sent; the report is read on the
+  phone. Downloading a model fetches a public file from Hugging Face on the user's tap; no user
+  data goes with it. Nothing to declare.
 - **AI diagnosis**: transferred to a third party only on a specific user action (tapping Ask,
   after seeing the report), with a provider and key the user entered. Play exempts
   user-initiated transfers the user reasonably expects from the "shared" disclosure. The
@@ -226,6 +230,7 @@ Everything else: **not collected**. Reasoning for the borderline cases:
 | `INTERNET`, `POST_NOTIFICATIONS` | No | |
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SPECIAL_USE` | **Yes**, see [Foreground services](#foreground-services) | open debug shells |
 | `CAMERA` | No form; covered by the privacy policy | QR code import |
+| `RUN_USER_INITIATED_JOBS` | No foreground service declaration: it is not one | the on-device model download (Android 14+), a user-initiated data transfer job; recheck if the Console asks |
 | `REQUEST_INSTALL_PACKAGES` | No | removed from the Play build |
 | `<queries>` for `io.kubenav.kubenav` | No | a single named package, not `QUERY_ALL_PACKAGES` |
 
@@ -240,6 +245,10 @@ a terminal moves no data in the background. No other type fits a remote terminal
 WorkManager also merges `FOREGROUND_SERVICE` and its `SystemForegroundService`, without a
 `foregroundServiceType`; the background checks never run in the foreground, so it needs no
 declaration of its own.
+
+The on-device model download is not a foreground service either: a user-initiated data transfer
+job (Android 14+). v1.47.0 used WorkManager's foreground service with `dataSync` for it, and
+Play refused the upload until the foreground service declaration covered `dataSync`.
 
 **To do in the Console before the first release with it** (Play rejects or blocks the release
 without it):

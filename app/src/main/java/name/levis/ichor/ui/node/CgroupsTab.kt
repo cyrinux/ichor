@@ -13,7 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -124,7 +124,7 @@ fun CgroupsTab(
                     CgroupSort.CPU to R.string.node_processes_sort_cpu,
                     CgroupSort.PRESSURE to R.string.node_section_pressure,
                 ).forEach { (option, label) ->
-                    FilterChip(selected = sort == option, onClick = { sort = option }, label = { Text(stringResource(label)) })
+                    IchorFilterChip(selected = sort == option, onClick = { sort = option }, label = { Text(stringResource(label)) })
                 }
             }
         }

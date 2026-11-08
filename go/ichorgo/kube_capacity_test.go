@@ -20,7 +20,7 @@ const (
 		 "status":{"phase":"Running","qosClass":"Burstable","containerStatuses":[{"name":"app","ready":true,"restartCount":1,
 		   "lastState":{"terminated":{"reason":"OOMKilled","exitCode":137}}}]}},
 		{"metadata":{"name":"db-0","namespace":"web","ownerReferences":[{"kind":"StatefulSet","name":"db","controller":true}]},
-		 "spec":{"nodeName":"w1","priorityClassName":"high","priority":1000,"containers":[{"name":"db","resources":{"requests":{"cpu":"500m","memory":"1Gi"},"limits":{"cpu":"500m","memory":"1Gi"}}}]},
+		 "spec":{"nodeName":"w1","priorityClassName":"high","priority":1000,"containers":[{"name":"db","resources":{"requests":{"cpu":"500m","memory":"1Gi","ephemeral-storage":"1Gi"},"limits":{"cpu":"500m","memory":"1Gi","ephemeral-storage":"2Gi"}}}]},
 		 "status":{"phase":"Running","qosClass":"Guaranteed"}},
 		{"metadata":{"name":"proxy-a","namespace":"kube-system","ownerReferences":[{"kind":"DaemonSet","name":"proxy","controller":true}]},
 		 "spec":{"nodeName":"w1","containers":[{"name":"proxy"}]},"status":{"phase":"Running"}},
@@ -127,6 +127,11 @@ func TestKubeCapacityUsesMetricsWhenServed(t *testing.T) {
 	f.answerWith("GET /apis/metrics.k8s.io/v1beta1/nodes", http.StatusOK, `{"items":[{"metadata":{"name":"w1"},"usage":{"cpu":"1500m","memory":"3Gi"}}]}`)
 	f.answerWith("GET /apis/metrics.k8s.io/v1beta1/pods", http.StatusOK, `{"items":[
 		{"metadata":{"name":"db-0","namespace":"web"},"containers":[{"usage":{"cpu":"100m","memory":"950Mi"}}]}]}`)
+	// w1's kubelet answers, w2's does not (404): w2 stays unmeasured.
+	f.answerWith("GET /api/v1/nodes/w1/proxy/stats/summary", http.StatusOK, `{
+		"node":{"fs":{"availableBytes":32212254720,"capacityBytes":107374182400,"usedBytes":75161927680},
+		        "runtime":{"imageFs":{"availableBytes":32212254720,"capacityBytes":107374182400,"usedBytes":75161927680}}},
+		"pods":[{"podRef":{"name":"db-0","namespace":"web"},"ephemeral-storage":{"usedBytes":536870912}}]}`)
 
 	c, err := readCapacity(context.Background(), openFakeKube(t, f))
 	if err != nil {
@@ -138,9 +143,20 @@ func TestKubeCapacityUsesMetricsWhenServed(t *testing.T) {
 	}
 
 	db := c.Workloads[len(c.Workloads)-1]
-	// 950Mi of a 1Gi limit: past 90 %.
-	if db.Name != "db" || db.MemoryUsage != 950<<20 || db.Risk != riskOOM {
+	// 950Mi of a 1Gi limit: past 90 %. 512Mi of its 2Gi ephemeral limit: fine.
+	if db.Name != "db" || db.MemoryUsage != 950<<20 || db.Risk != riskOOM ||
+		db.EphemeralRequest != 1<<30 || db.EphemeralLimit != 2<<30 || db.EphemeralUsage != 512<<20 {
 		t.Errorf("db %+v", db)
+	}
+
+	w1, w2 := c.Nodes[0], c.Nodes[1]
+	if !c.DiskMeasured || c.DiskForbidden || !w1.DiskMeasured || w1.DiskCapacity != 100<<30 || w1.DiskAvailable != 30<<30 ||
+		w1.ImageFsCapacity != 100<<30 || w1.EphemeralRequests != 1<<30 || w2.DiskMeasured || w2.DiskCapacity != 0 {
+		t.Errorf("disk %v %v, w1 %+v, w2 %+v", c.DiskMeasured, c.DiskForbidden, w1, w2)
+	}
+
+	if c.Totals.DiskMeasuredNodes != 1 || c.Totals.DiskCapacity != 100<<30 || c.Totals.DiskAvailable != 30<<30 || c.Totals.EphemeralRequests != 1<<30 {
+		t.Errorf("totals %+v", c.Totals)
 	}
 }
 
@@ -242,7 +258,7 @@ func TestKubeCapacityDemo(t *testing.T) {
 		}
 	}
 
-	for _, r := range []string{riskOOM, riskEvictFirst, riskUnbounded, riskOK} {
+	for _, r := range []string{riskOOM, riskDiskNear, riskEvictFirst, riskUnbounded, riskOK} {
 		if !risks[r] {
 			t.Errorf("no %s workload", r)
 		}
@@ -250,6 +266,29 @@ func TestKubeCapacityDemo(t *testing.T) {
 
 	if !critical {
 		t.Error("no system-cluster-critical workload")
+	}
+
+	// Every node says its ephemeral storage and disk; demo-worker-2 is near full, not yet under
+	// DiskPressure; report-cache is near its ephemeral limit; demo-worker-1's N+1 is unchanged.
+	if !c.DiskMeasured || c.DiskForbidden || c.Totals.DiskMeasuredNodes != 5 || c.Totals.EphemeralAllocatable != 980<<30 {
+		t.Errorf("demo disk %v/%v totals %+v", c.DiskMeasured, c.DiskForbidden, c.Totals)
+	}
+
+	for _, n := range c.Nodes {
+		used := 100 - percentOf(n.DiskAvailable, n.DiskCapacity)
+		if !n.DiskMeasured || n.EphemeralAllocatable <= 0 || n.EphemeralFree <= 0 || n.DiskPressure || (n.Name == "demo-worker-2") != (used >= 85) {
+			t.Errorf("demo node %s: %+v (%.0f %% used)", n.Name, n, used)
+		}
+	}
+
+	for _, w := range c.Workloads {
+		if w.Name == "report-cache" && (w.Risk != riskDiskNear || percentOf(w.EphemeralUsage, w.EphemeralLimit) < diskNearPercent) {
+			t.Errorf("report-cache %+v", w)
+		}
+	}
+
+	if n := c.NPlusOne; n.Node != "demo-worker-1" || n.PendingPods != 9 || n.ShortCPU != 1.9 {
+		t.Errorf("demo nPlusOne %+v", n)
 	}
 
 	out, err := KubeCapacity(mustDemoConfig(t), "", "")

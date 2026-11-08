@@ -43,8 +43,10 @@ public struct TopologyLayout: Equatable, Sendable {
     /// Height of a site header row.
     public let header: Double
 
-    public init(width: Double, height: Double, sites: [SiteBox], nodes: [String: MapPoint],
-                cellWidth: Double, header: Double = TopologyLayout.headerHeight) {
+    public init(
+        width: Double, height: Double, sites: [SiteBox], nodes: [String: MapPoint],
+        cellWidth: Double, header: Double = TopologyLayout.headerHeight
+    ) {
         self.width = width
         self.height = height
         self.sites = sites
@@ -170,7 +172,8 @@ extension NetPerfSetup {
 extension NetPerfReport {
     /// Pod-to-pod throughput of this test, nil when not measured.
     public var podThroughputMbps: Double? {
-        results.first { $0.path == NetPerfPath.pod && $0.test == NetPerfTest.throughput && $0.error.isEmpty }?.throughputMbps
+        results.first { $0.path == NetPerfPath.pod && $0.test == NetPerfTest.throughput && $0.error.isEmpty }?
+            .throughputMbps
     }
 }
 

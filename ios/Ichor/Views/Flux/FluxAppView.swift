@@ -1,0 +1,192 @@
+import SwiftUI
+import IchorCore
+
+/// One Flux Kustomization or HelmRelease: the hero with its state and actions, a
+/// Kustomization's diff, where it comes from, its conditions, the pods that are not ready, what
+/// a Kustomization applies (grouped by kind) and a HelmRelease's history. Every action but Reconcile asks first, saying what it
+/// does. Reads again every 2 s while it reconciles (and just after an action).
+struct FluxAppView: View {
+    let kind: String
+    let namespace: String
+    let name: String
+    let downNodes: Set<String>
+
+    // Explicit: the private @State properties make the memberwise init private.
+    init(kind: String, namespace: String, name: String, downNodes: Set<String>) {
+        self.kind = kind
+        self.namespace = namespace
+        self.name = name
+        self.downNodes = downNodes
+    }
+
+    @Environment(AppModel.self) private var model
+    @State private var state: LoadState<FluxStatus> = .loading
+    @State private var confirm: FluxAction?
+    /// The confirmation is for a forced upgrade that corrects drift: said as such.
+    @State private var correctingDrift = false
+    @State private var busy = false
+    @State private var message: String?
+    @State private var succeeded = 0
+    /// Where the object's files are (the Source rows); nil until read.
+    @State private var gitSources: GitOpsSource?
+
+    private var store: FluxStore { .shared }
+
+    var body: some View {
+        LoadStateView(state: state, retry: load) { status in
+            if let app = status.app(kind: kind, namespace: namespace, name: name) {
+                content(app, status: status)
+            } else {
+                ContentUnavailableView(
+                    "App not found", systemImage: "questionmark.app",
+                    description: Text("\(name) is no longer a Flux \(kind) of this cluster.")
+                )
+                .themedBackground()
+            }
+        }
+        .gitOpsPolling(key: model.fluxKey, shouldPoll: { store.shouldPoll(for: model.fluxKey) }, load: { await load() })
+        .navigationTitle(Text(verbatim: name))
+        .clusterScreenTitle(Text(verbatim: name))
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                ShareLinkButton(target: .fluxApp(kind: kind, namespace: namespace, name: name))
+            }
+            ToolbarItem(placement: .primaryAction) {
+                PinButton(target: .fluxApp(kind: kind, namespace: namespace, name: name), label: name)
+            }
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .messageAlert($message)
+        .sensoryFeedback(.success, trigger: succeeded)
+        .loadsKubeActionAccess(namespace: namespace)
+        .onChange(of: NotificationRouter.shared.alertActionRequest) { _, _ in takeAlertAction() }
+    }
+
+    private func content(_ app: FluxApp, status: FluxStatus) -> some View {
+        List {
+            FluxHero(
+                app: app, source: status.source(of: app), busy: busy, act: { act($0, on: app) },
+                correctDrift: {
+                    correctingDrift = true
+                    confirm = .force
+                })
+            let tree = status.dependencyTree(of: app)
+            if !tree.isEmpty { FluxDependsOnTree(tree: tree, downNodes: downNodes) }
+            if app.isKustomization {
+                Section {
+                    NavigationLink {
+                        FluxDiffView(target: app.target)
+                    } label: {
+                        Label("Show diff", systemImage: "plus.forwardslash.minus")
+                    }
+                } footer: {
+                    Text("What a reconcile would change now, compared in the cluster without changing anything.")
+                }
+            }
+            FluxSourceSection(sources: gitSources, app: .flux(kind: app.kind, namespace: app.namespace, name: app.name))
+            // The pull requests opened from the phone for it; a merged one not running yet reconciles with its source from here.
+            ProposalsSection(
+                app: .flux(kind: app.kind, namespace: app.namespace, name: app.name), refresh: app.revision
+            ) {
+                act(.reconcileWithSource, on: app)
+            }
+            FluxConditionsSection(app: app)
+            if !app.unhealthyPods.isEmpty { ArgoPodsSection(pods: app.unhealthyPods, downNodes: downNodes) }
+            let children = status.children(of: app)
+            if !children.isEmpty { FluxChildrenSection(apps: children, downNodes: downNodes) }
+            if !app.resources.isEmpty { FluxInventorySection(app: app) }
+            if !app.history.isEmpty { FluxHistorySection(history: app.history) }
+            Section("Events") { KubeEventsRows(namespace: app.namespace, kind: app.kind, name: app.name) }
+        }
+        .refreshable { await load() }
+        .themedBackground()
+        // Again once another revision is applied.
+        .task(id: app.revision) { await loadSources(app) }
+        .confirmationDialog(
+            confirm.map { $0.title(for: app.name) } ?? "",
+            isPresented: $confirm.isPresent(),
+            titleVisibility: .visible, presenting: confirm
+        ) { action in
+            Button(
+                correctingDrift && action == .force ? String(localized: "Correct drift") : action.label,
+                role: action == .suspend ? ButtonRole.destructive : nil
+            ) {
+                Task { await run(action, on: app) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { action in
+            let explanation =
+                correctingDrift && action == .force
+                ? String(
+                    localized:
+                        "The helm-controller found objects that no longer match the release. A forced upgrade applies the release again now and puts them back."
+                )
+                : action.explanation(for: app.name)
+            Text(
+                verbatim: [explanation, action == .suspend ? app.ownerNotice : nil]
+                    .compactMap { $0 }.joined(separator: "\n\n"))
+        }
+    }
+
+    /// Reconcile runs at once (Flux would on its interval anyway); the rest asks first.
+    private func act(_ action: FluxAction, on app: FluxApp) {
+        correctingDrift = false
+        if action == .reconcile {
+            Task { await run(action, on: app) }
+        } else {
+            confirm = action
+        }
+    }
+
+    private func load() async {
+        guard let client = model.client else { return }
+        let key = model.fluxKey
+        let store = self.store
+        await store.refresh($state, key: key, currentKey: { model.fluxKey }) {
+            try await store.load(with: client, key: key)
+        }
+        takeAlertAction()
+    }
+
+    /// The Source rows: left out when the sources cannot be read, the rest of the screen stands alone.
+    private func loadSources(_ app: FluxApp) async {
+        guard let client = model.client else { return }
+        if let read = try? await client.gitOpsSource(
+            tool: "flux", kind: app.kind, namespace: app.namespace, name: app.name)
+        {
+            gitSources = read
+        }
+    }
+
+    /// Reconcile chosen on this object's alert: asked first here (the hero's button runs it at
+    /// once), once the object is read.
+    private func takeAlertAction() {
+        guard let request = NotificationRouter.shared.alertActionRequest,
+            request.isReconcile(kind: kind, namespace: namespace, name: name),
+            case .loaded(let status, _, _) = state
+        else { return }
+        NotificationRouter.shared.alertActionRequest = nil
+        if status.app(kind: kind, namespace: namespace, name: name) != nil {
+            correctingDrift = false
+            confirm = .reconcile
+        }
+    }
+
+    private func run(_ action: FluxAction, on app: FluxApp) async {
+        guard let client = model.client else { return }
+        // Another request is in flight: wait for it rather than drop this one, which the
+        // confirmation has already been dismissed for.
+        while busy { try? await Task.sleep(for: .milliseconds(100)) }
+        busy = true
+        defer { busy = false }
+        let failure = await store.run(action, on: app.target, with: client)
+        // A reconcile the phone started: followed app-wide, with its Live Activity.
+        if failure == nil, action == .reconcile || action == .reconcileWithSource {
+            GitOpsOperationJob.shared.followFluxReconcile(client: client, target: app.target)
+        }
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) {
+            announce(String(localized: "Done"))
+        }
+        await load()
+    }
+}

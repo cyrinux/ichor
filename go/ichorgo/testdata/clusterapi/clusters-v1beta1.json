@@ -1,0 +1,19 @@
+{"kind":"ClusterList","apiVersion":"cluster.x-k8s.io/v1beta1","metadata":{},"items":[
+{"metadata":{"name":"prod-edge","namespace":"fleet","creationTimestamp":"2026-09-01T08:00:00Z"},
+ "spec":{"paused":false,"controlPlaneEndpoint":{"host":"10.0.0.5","port":6443},
+  "controlPlaneRef":{"apiVersion":"controlplane.cluster.x-k8s.io/v1alpha3","kind":"TalosControlPlane","name":"prod-edge-cp","namespace":"fleet"},
+  "infrastructureRef":{"apiVersion":"infrastructure.cluster.x-k8s.io/v1alpha3","kind":"MetalCluster","name":"prod-edge","namespace":"fleet"}},
+ "status":{"phase":"Provisioned","infrastructureReady":true,"controlPlaneReady":true,
+  "conditions":[
+   {"type":"Ready","status":"True","lastTransitionTime":"2026-09-01T08:20:00Z"},
+   {"type":"ControlPlaneReady","status":"True","lastTransitionTime":"2026-09-01T08:20:00Z"}]}},
+{"metadata":{"name":"old-lab","namespace":"fleet","creationTimestamp":"2026-08-01T08:00:00Z"},
+ "spec":{"controlPlaneEndpoint":{"host":"10.0.2.5","port":6443},
+  "controlPlaneRef":{"apiVersion":"controlplane.cluster.x-k8s.io/v1alpha3","kind":"TalosControlPlane","name":"old-lab-cp","namespace":"fleet"},
+  "infrastructureRef":{"apiVersion":"infrastructure.cluster.x-k8s.io/v1alpha3","kind":"MetalCluster","name":"old-lab","namespace":"fleet"}},
+ "status":{"phase":"Failed","infrastructureReady":true,"controlPlaneReady":false,
+  "failureReason":"CreateError","failureMessage":"the control plane machine failed to provision",
+  "conditions":[
+   {"type":"Available","status":"False","severity":"Error","reason":"NotAvailable","message":"control plane not available"},
+   {"type":"ControlPlaneInitialized","status":"Unknown","reason":"Unknown","message":""}]}}
+]}

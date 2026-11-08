@@ -2,6 +2,7 @@ package name.levis.ichor.ui.nav
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -18,6 +19,9 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.PromLink
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.model.shareTarget
+import name.levis.ichor.model.SnippetPrefill
+import name.levis.ichor.ui.workloads.PodPullLinks
 import name.levis.ichor.model.kubeFocus
 import name.levis.ichor.ui.alerts.AlertObjectLinks
 import name.levis.ichor.ui.alerts.AlertsScreen
@@ -34,10 +38,16 @@ import name.levis.ichor.ui.kubebrowser.KubeBrowserRoutes
 import name.levis.ichor.ui.kubebrowser.KubeLinks
 import name.levis.ichor.ui.kubebrowser.LocalKubeLinks
 import name.levis.ichor.ui.kubeevents.KubeEventsScreen
-import name.levis.ichor.ui.kubenodes.KubeNodesScreen
+import name.levis.ichor.ui.kubenodes.KubeNodesListDetail
 import name.levis.ichor.ui.metrics.METRICS_TAB_MONITORING
 import name.levis.ichor.ui.netpol.NetworkPoliciesScreen
 import name.levis.ichor.ui.overview.KubeHomeViewModel
+import name.levis.ichor.ui.autoscaling.AutoscalingScreen
+import name.levis.ichor.ui.vms.VirtualMachinesScreen
+import name.levis.ichor.ui.argorollouts.ArgoRolloutsScreen
+import name.levis.ichor.ui.policies.PoliciesScreen
+import name.levis.ichor.ui.plugins.pluginRouteFor
+import kotlinx.coroutines.launch
 
 /** The Kubernetes screens: nodes, workloads, events, apps, metrics, the checkup, flows, data services, pod shells. */
 internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks) {
@@ -62,15 +72,27 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             silenceFingerprint = entry.arguments?.getString("silence").orEmpty(),
         )
     }
-    composable(Routes.KUBE_NODES, arguments = listOf(navArgument("filter") { type = NavType.StringType; defaultValue = "" })) { entry ->
+    composable(Routes.LOG_SEARCH, arguments = listOf(navArgument("query") { type = NavType.StringType; defaultValue = "" })) { entry ->
+        name.levis.ichor.ui.logsearch.LogSearchScreen(
+            onBack = { nav.popBackStack() },
+            initialQuery = entry.arguments?.getString("query").orEmpty(),
+        )
+    }
+    composable(
+        Routes.KUBE_NODES,
+        arguments = listOf("filter", "query").map { navArgument(it) { type = NavType.StringType; defaultValue = "" } },
+    ) { entry ->
         // The Kubernetes home's data and refresh: only ever opened from it, so it is below on the stack.
         val home = remember(entry) { nav.getBackStackEntry(Routes.OVERVIEW) }
-        KubeNodesScreen(
+        KubeNodesListDetail(
             initialFilter = NodeFilter.entries.firstOrNull { it.name == entry.arguments?.getString("filter") },
-            vm = viewModel(viewModelStoreOwner = home, factory = factory { KubeHomeViewModel(app.kubeRepository) }),
+            initialQuery = entry.arguments?.getString("query").orEmpty(),
+            vm = viewModel(viewModelStoreOwner = home, factory = factory { KubeHomeViewModel(app.kubeRepository, app::kubeNodesSeed) }),
             onBack = { nav.popBackStack() },
             onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
             onDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
+            onMeta = { nav.navigate(Routes.nodeMeta(it, it)) },
+            onOwner = kubeLinks.onObject,
         )
     }
     composable(
@@ -104,11 +126,17 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
         AppsScreen(
             attention = entry.arguments?.getBoolean("attention") == true,
             onBack = { nav.popBackStack() },
-            // A pod's node, on its Pods tab.
-            onNode = { addr, host, _ -> nav.navigate(Routes.nodeTabs(addr, host, tab = 4)) },
+            // A pod's node, on its Pods tab; without Talos, the Kubernetes nodes on that one (they need the home below).
+            onNode = { addr, host, _ ->
+                if (app.configRepository.config.value?.activeIsKube != true) nav.navigate(Routes.nodeTabs(addr, host, tab = 4))
+                else if (runCatching { nav.getBackStackEntry(Routes.OVERVIEW) }.isSuccess) nav.navigate(Routes.kubeNodes(null, query = host))
+            },
             onArgoCD = { nav.navigate(Routes.ARGO_CD) },
             onArgoApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
             onFlux = { nav.navigate(Routes.FLUX) },
+            onObject = kubeLinks.onObject,
+            onScanReports = { cluster -> nav.navigate(Routes.scanReports(cluster)) },
+            onNodeImages = { addr, host -> nav.navigate(Routes.images(addr, host)) },
         )
     }
     composable(
@@ -121,18 +149,21 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
         ),
     ) { entry ->
         val args = entry.arguments
+        val focus = KubeFocus(
+            args?.getInt("tab") ?: 0,
+            args?.getString("key").orEmpty(),
+            args?.getString("ns").orEmpty(),
+            args?.getString("name").orEmpty(),
+        )
+        RecordOpened(app, focus.shareTarget(), focus.name, focus.namespace)
         CompositionLocalProvider(LocalKubeLinks provides kubeLinks) {
             name.levis.ichor.ui.workloads.KubernetesScreen(
-                focus = KubeFocus(
-                    args?.getInt("tab") ?: 0,
-                    args?.getString("key").orEmpty(),
-                    args?.getString("ns").orEmpty(),
-                    args?.getString("name").orEmpty(),
-                ),
+                focus = focus,
                 onBack = { nav.popBackStack() },
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
                 onApiHealth = { nav.navigate(Routes.API_HEALTH) },
                 onCheckup = { nav.navigate(Routes.CHECKUP) },
+                onCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
                 onFlows = { ns, pod -> nav.navigate(Routes.flows(ns, pod)) },
                 onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
                 onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
@@ -140,19 +171,61 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
                 onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
                 onJobs = { nav.navigate(KubeBrowserRoutes.JOBS) },
                 onEvents = { nav.navigate(Routes.KUBE_EVENTS) },
+                onPolicies = { nav.navigate(Routes.POLICIES) },
+                onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
+                onVirtualMachines = { nav.navigate(Routes.VIRTUAL_MACHINES) },
+                onCrossplane = { nav.navigate(KubeBrowserRoutes.CROSSPLANE) },
+                onTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
+                onArgoRollouts = { nav.navigate(Routes.ARGO_ROLLOUTS) },
+                onClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
+                onDataServices = { kind, solo -> nav.navigate(Routes.dataServices(kind, solo)) },
+                pullLinks = podPullLinks(nav, app),
             )
         }
     }
     composable(Routes.KUBE_EVENTS) { KubeEventsScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
     composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
+    composable(Routes.POLICIES) { PoliciesScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
+    composable(Routes.AUTOSCALING) { AutoscalingScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
+    composable(Routes.VIRTUAL_MACHINES) {
+        VirtualMachinesScreen(
+            onBack = { nav.popBackStack() },
+            onConsole = { vm ->
+                val active = app.configRepository.config.value?.activeContext.orEmpty()
+                nav.navigate(Routes.vmConsole(active, vm.namespace, vm.name))
+            },
+        )
+    }
+    composable(Routes.ARGO_ROLLOUTS) { ArgoRolloutsScreen(onBack = { nav.popBackStack() }) }
+    composable(
+        Routes.VM_CONSOLE,
+        arguments = listOf("ctx", "ns", "vm").map { navArgument(it) { type = NavType.StringType; defaultValue = "" } },
+    ) { entry ->
+        val a = entry.arguments
+        val name = a?.getString("vm").orEmpty()
+        DebugShellScreen(
+            key = ShellKey(a?.getString("ctx").orEmpty(), "", a?.getString("ns").orEmpty(), vm = name),
+            hostname = name,
+            onBack = { nav.popBackStack() },
+        )
+    }
     composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = { nav.navigate(Routes.AUDIT) }) }
     composable(Routes.AUDIT) { AuditScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.CHECKUP) {
+        val scope = rememberCoroutineScope()
         CheckupScreen(
             onBack = { nav.popBackStack() },
             onOpenRelease = { ns, name -> nav.navigate(KubeBrowserRoutes.helmRelease(ns, name)) },
             onOpenMonitoring = { nav.navigate(Routes.metrics(METRICS_TAB_MONITORING)) },
             onOpenCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
+            onOpenLoadBalancing = { nav.navigate(KubeBrowserRoutes.LOAD_BALANCING) },
+            onOpenPolicies = { nav.navigate(Routes.POLICIES) },
+            onOpenTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
+            onOpenClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
+            // Its tab in Data services or its own screen, as its tile leads (a cached detection).
+            onOpenPlugin = { id ->
+                scope.launch { nav.navigate(pluginRouteFor(app.pluginRepository, id) ?: KubeBrowserRoutes.plugin(id)) }
+            },
         )
     }
     composable(Routes.KUBE_CAPACITY) {
@@ -173,17 +246,50 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
     }
     composable(
         Routes.DATA_SERVICES,
-        arguments = listOf(navArgument("kind") { type = NavType.StringType; defaultValue = "" }),
+        arguments = listOf(
+            navArgument("kind") { type = NavType.StringType; defaultValue = "" },
+            navArgument("solo") { type = NavType.BoolType; defaultValue = false },
+        ),
     ) { entry ->
-        val kind = entry.arguments?.getString("kind")?.let { k -> DataServiceKind.entries.firstOrNull { it.name == k } }
+        val arg = entry.arguments?.getString("kind").orEmpty()
+        val kind = DataServiceKind.entries.firstOrNull { it.name == arg }
         name.levis.ichor.ui.dataservices.DataServicesScreen(
             initial = kind,
+            initialPlugin = arg.takeIf { it.startsWith(Routes.DATA_SERVICES_PLUGIN_PREFIX) }?.removePrefix(Routes.DATA_SERVICES_PLUGIN_PREFIX),
+            solo = entry.arguments?.getBoolean("solo") == true && kind != null,
             onBack = { nav.popBackStack() },
+            onObject = kubeLinks.onObject,
             onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
             onRequestIntegration = { nav.navigate(Routes.INTEGRATIONS) },
+            // The nodes lists share the home's data: they open only with the home below.
+            onNodes = {
+                if (runCatching { nav.getBackStackEntry(Routes.OVERVIEW) }.isSuccess) {
+                    val kube = app.configRepository.config.value?.activeIsKube == true
+                    nav.navigate(if (kube) Routes.kubeNodes(NodeFilter.NOT_READY) else Routes.nodes(NodeFilter.NOT_READY))
+                }
+            },
         )
     }
 }
+
+/**
+ * Where a pod's pull problem leads on a Talos cluster: its node's network tools, or its machine
+ * config on the registry mirror snippet for the registry. Null for a cluster added from a
+ * kubeconfig, which has no node screens.
+ */
+private fun podPullLinks(nav: NavHostController, app: TalosApp): PodPullLinks? =
+    if (app.configRepository.config.value?.activeIsKube == true) null else PodPullLinks(
+        talosNode = { name ->
+            app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.nodes?.firstOrNull { it.hostname == name || it.node == name }
+        },
+        onNetTools = { n -> nav.navigate(Routes.netTools(n.node, n.hostname)) },
+        onMirrorSnippet = { n, registry ->
+            nav.navigate(Routes.machineConfig(n.node, n.hostname, snippet = SnippetPrefill(REGISTRY_MIRROR_SNIPPET, mapOf("host" to registry))))
+        },
+    )
+
+/** The config snippet (go/ichorgo/configsnippets.go) a registry's pull limit is lifted with. */
+private const val REGISTRY_MIRROR_SNIPPET = "registry_mirror"
 
 /**
  * Where an alert's labels lead: a pod or a namespace on the Kubernetes screen (focused as a

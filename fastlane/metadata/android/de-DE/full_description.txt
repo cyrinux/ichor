@@ -1,6 +1,8 @@
-Ichor bringt Ihren Talos-Linux-Cluster aufs Smartphone. Die App spricht mit der Talos-API über den offiziellen Go-Client, denselben Code wie talosctl: talosconfig-Kontexte, mTLS und das Weiterleiten vom Endpoint zum Node verhalten sich genau wie an Ihrem Arbeitsplatz.
+Ichor bringt jeden Kubernetes-Cluster aufs Smartphone, aus seiner kubeconfig: EKS, GKE, AKS, DigitalOcean, Rancher, Omni oder Ihr eigener. Workloads, Pods, Logs, Argo CD und Flux, so weit seine RBAC es erlaubt.
 
-Bringen Sie Ihren eigenen Cluster mit: Die App braucht eine talosconfig für einen Talos-Linux-Cluster, den Sie betreiben. Sie hat weder einen eigenen Server noch ein Konto.
+Auf Talos Linux geht die App bis zu den Nodes: etcd, Upgrades, Maschinenkonfiguration. Sie nutzt den offiziellen Go-Client der Talos-API, denselben Code wie talosctl: talosconfig-Kontexte, mTLS und das Weiterleiten zum Node verhalten sich wie an Ihrem Arbeitsplatz.
+
+Bringen Sie Ihren eigenen Cluster mit: Die App braucht eine kubeconfig oder eine talosconfig für einen Cluster, den Sie betreiben. Sie hat weder einen eigenen Server noch ein Konto.
 
 <b>Was Sie sehen</b>
 • Cluster-Übersicht: jeder Node bereit, nicht bereit oder nicht erreichbar, mit offenen Bedingungen, Uhrzeitabweichung und verfügbaren Talos-Upgrades

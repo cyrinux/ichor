@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.WarningAmber
@@ -19,7 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,9 +44,10 @@ import name.levis.ichor.model.inTrouble
 import name.levis.ichor.model.level
 import name.levis.ichor.model.subject
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.UsageBar
 import name.levis.ichor.ui.components.expandable
-import name.levis.ichor.ui.netpol.TagBadge
+import name.levis.ichor.ui.plugins.PluginIcon
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import name.levis.ichor.util.formatPercent
@@ -56,36 +58,58 @@ private const val LIST_PREVIEW = 6
 
 /**
  * One problem: what it is about, what happens, Kubernetes' own words and what to do, and
- * [onDelete] when the checkup can remove it (a namespace a network test left behind).
+ * [onDelete] when the checkup can remove it (a namespace a network test left behind). A
+ * plugin's finding names its plugin; [onOpen] opens where it leads (the plugin's screen).
  */
 @Composable
-fun FindingCard(f: CheckupFinding, now: Long, onDelete: (() -> Unit)? = null) {
+fun FindingCard(f: CheckupFinding, now: Long, onDelete: (() -> Unit)? = null, onOpen: (() -> Unit)? = null) {
     val colors = LocalStatusColors.current
     val (icon, tint) = when (f.level) {
         CheckupSeverity.CRITICAL -> Icons.Outlined.Error to colors.bad
         CheckupSeverity.WARNING -> Icons.Outlined.WarningAmber to colors.warn
         CheckupSeverity.INFO -> Icons.Outlined.Info to colors.muted
     }
+    val plugin = f.kind == CheckupKind.PLUGIN
+    val title = checkupTitle(f, now)
+    val openLabel = stringResource(R.string.common_open)
+    val tap = if (onOpen != null) Modifier.clickable(role = Role.Button, onClickLabel = openLabel, onClick = onOpen) else Modifier
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = tint.copy(alpha = 0.07f)) {
-        Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(tap.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(
-                    if (f.kind == CheckupKind.EVENT && f.extra.isNotEmpty()) "${f.extra} ${f.subject}" else f.subject,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontFamily = FontFamily.Monospace,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(checkupTitle(f, now), style = MaterialTheme.typography.bodyMedium)
+                if (plugin && f.pluginName.isNotEmpty()) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        PluginIcon(f.pluginIcon, f.pluginName, 16.dp)
+                        MutedText(stringResource(R.string.checkup_plugin_caption, f.pluginName), maxLines = 1)
+                    }
+                }
+                // A plugin's title is often its object already: not twice.
+                if (f.subject.isNotEmpty() && !(plugin && f.subject == title)) {
+                    Text(
+                        if (f.kind == CheckupKind.EVENT && f.extra.isNotEmpty()) "${f.extra} ${f.subject}" else f.subject,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontFamily = FontFamily.Monospace,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Text(title, style = MaterialTheme.typography.bodyMedium)
                 if (f.node.isNotEmpty()) MutedText(stringResource(R.string.checkup_on_node, f.node), maxLines = 1)
                 f.detail.takeIf { it.isNotEmpty() }?.let {
                     Text(it, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = colors.muted, maxLines = 6, overflow = TextOverflow.Ellipsis)
                 }
-                checkupFix(f.kind).takeIf { it != 0 }?.let { MutedText(stringResource(it)) }
+                checkupFix(f.kind, f.reason, f.extra).takeIf { it != 0 }?.let { MutedText(stringResource(it)) }
                 if (onDelete != null) {
-                    TextButton(onClick = onDelete) { Text(stringResource(R.string.common_delete), color = colors.bad) }
+                    IchorTextButton(onClick = onDelete) { Text(stringResource(R.string.common_delete), color = colors.bad) }
                 }
+            }
+            if (onOpen != null) {
+                Icon(
+                    Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = colors.muted,
+                    modifier = Modifier.size(20.dp).align(Alignment.CenterVertically),
+                )
             }
         }
     }
@@ -100,7 +124,7 @@ private fun <T> MeasuredList(title: String, rows: List<T>, row: @Composable (T) 
     Text(title, style = MaterialTheme.typography.labelLarge)
     (if (all) rows else rows.take(LIST_PREVIEW)).forEach { row(it) }
     if (rows.size > LIST_PREVIEW) {
-        TextButton(onClick = { all = !all }) {
+        IchorTextButton(onClick = { all = !all }) {
             Text(if (all) stringResource(R.string.checkup_show_less) else stringResource(R.string.checkup_show_all, rows.size.toString()))
         }
     }
@@ -149,10 +173,10 @@ fun NodeTaints(nodes: List<CheckupNode>) {
                 if (n.kubelet.isNotEmpty()) MutedText(n.kubelet)
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                n.roles.forEach { TagBadge(it, MaterialTheme.colorScheme.primary) }
-                if (!n.ready) TagBadge(stringResource(R.string.common_status_not_ready), colors.bad)
-                if (n.cordoned) TagBadge(stringResource(R.string.checkup_cordoned), colors.warn)
-                n.taints.forEach { TagBadge(it, colors.muted, mono = true) }
+                n.roles.forEach { Tag(it, MaterialTheme.colorScheme.primary) }
+                if (!n.ready) Tag(stringResource(R.string.common_status_not_ready), colors.bad)
+                if (n.cordoned) Tag(stringResource(R.string.checkup_cordoned), colors.warn)
+                n.taints.forEach { Tag(it, colors.muted, mono = true) }
                 if (n.taints.isEmpty()) MutedText(stringResource(R.string.checkup_no_taint))
             }
             if (labels) {
@@ -200,7 +224,7 @@ fun HelmReleases(releases: List<CheckupRelease>, now: Long, onOpenRelease: (name
                 Text("${r.namespace}/${r.name}", style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 MutedText(stringResource(R.string.checkup_release_revision, r.revision.toString(), ageSince(r.updated, now)), maxLines = 1)
             }
-            TagBadge(r.status, if (r.inTrouble) colors.warn else colors.ok)
+            Tag(r.status, if (r.inTrouble) colors.warn else colors.ok)
         }
     }
 }

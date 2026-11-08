@@ -111,6 +111,7 @@ func StartNodeNetTool(configYAML, contextName, node, tool, target, options strin
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		if err != nil {
 			listener.OnDone("", err.Error())

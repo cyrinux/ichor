@@ -170,7 +170,7 @@ func TestDemoKubeReadsAnswerFromTheDemoInventory(t *testing.T) {
 		"cron jobs":     func() (string, error) { return KubeCronJobs(yaml, "", "") },
 		"helm":          func() (string, error) { return KubeHelmReleases(yaml, "", "", "") },
 		"api health":    func() (string, error) { return KubeAPIHealth(yaml, "", "") },
-		"checkup":       func() (string, error) { return KubeCheckup(yaml, "", "") },
+		"checkup":       func() (string, error) { return KubeCheckup(yaml, "", "", "") },
 		"drain plan":    func() (string, error) { return KubeDrainPlan(yaml, "", "", "demo-worker-1") },
 	}
 
@@ -195,6 +195,7 @@ func TestDemoKubeRefusesMutationsAndTalos(t *testing.T) {
 		"restart": func() error { return KubeRolloutRestart(yaml, "", "", "Deployment", "demo", "hello-ichor") },
 		"delete":  func() error { return KubeDeletePod(yaml, "", "", "demo", "hello-ichor") },
 		"cordon":  func() error { return KubeNodeCordon(yaml, "", "", "demo-worker-1", true) },
+		"meta":    func() error { return KubeNodeMetaApply(yaml, "", "", "demo-worker-1", `{"taints":[]}`, false) },
 		"argo":    func() error { return KubeArgoAction(yaml, "", "", "argocd", "demo", "sync", "") },
 		"flux":    func() error { return KubeFluxAction(yaml, "", "", "Kustomization", "flux-system", "apps", "reconcile") },
 	}

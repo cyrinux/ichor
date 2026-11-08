@@ -62,8 +62,9 @@ func parseRebootMode(mode string) (machineapi.RebootRequest_Mode, error) {
 }
 
 // nodeAction runs action against node, bounded by timeout, with Talos errors made friendly.
+// Never under the cluster's call scope: leaving the cluster does not cut what was tapped.
 func nodeAction(configYAML, contextName, node string, timeout time.Duration, action func(context.Context, *client.Client) error) error {
-	_, err := withNodeSession(configYAML, contextName, node, timeout, func(ctx context.Context, s *session) (struct{}, error) {
+	_, err := withNodeSessionFrom(context.Background(), configYAML, contextName, node, timeout, func(ctx context.Context, s *session) (struct{}, error) {
 		if err := action(ctx, s.client); err != nil {
 			return struct{}{}, s.friendlyErr(node, err)
 		}

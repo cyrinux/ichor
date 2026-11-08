@@ -78,37 +78,91 @@ data class JoinProgress(
 
 /** The phases of a join, in order. */
 enum class JoinPhase(val wire: String) {
+    KEY("key"),
+    CREATING("creating"),
+    STARTING("starting"),
     APPLYING("applying"),
+    ALLOCATED("allocated"),
     INSTALLING("installing"),
+    OMNI_BOOTING("booting"),
     REBOOTING("rebooting"),
     BOOTED("booted"),
     JOINING("joining"),
+    OMNI("omni"),
     REGISTERING("registering"),
+    RESCUE("rescue"),
+    WRITING("writing"),
+    SNAPSHOT("snapshot"),
+    REGISTER("register"),
+    CLEANUP("cleanup"),
     DONE("done"),
     ;
 
     companion object {
         fun of(wire: String): JoinPhase? = entries.firstOrNull { it.wire.equals(wire, ignoreCase = true) }
+
+        /** A node in maintenance mode that gets its config from the app. */
+        val maintenanceRun = listOf(APPLYING, INSTALLING, REBOOTING, BOOTED, JOINING, REGISTERING, DONE)
+
+        /** A server created with the config as its user data. */
+        val cloudRun = listOf(CREATING, STARTING, REBOOTING, BOOTED, JOINING, REGISTERING, DONE)
+
+        /** A server created with Omni's join config. */
+        val cloudOmniRun = listOf(CREATING, STARTING, OMNI, DONE)
+
+        /** A throwaway server that becomes a Talos snapshot. */
+        val snapshotRun = listOf(KEY, CREATING, RESCUE, WRITING, SNAPSHOT, CLEANUP, DONE)
+
+        /** A throwaway AWS instance whose volume becomes a Talos AMI. */
+        val awsImageRun = listOf(CREATING, WRITING, SNAPSHOT, REGISTER, CLEANUP, DONE)
+
+        /** A throwaway helper VM whose data disk becomes a Talos image (Azure's managed image). */
+        val imageRun = listOf(CREATING, WRITING, SNAPSHOT, CLEANUP, DONE)
+
+        /** A throwaway Compute Engine VM whose data disk becomes a Talos image: no snapshot in between. */
+        val gcpImageRun = listOf(CREATING, WRITING, REGISTER, CLEANUP, DONE)
+
+        /** A machine put in a cluster through Omni. */
+        val omniAllocateRun = listOf(ALLOCATED, INSTALLING, OMNI_BOOTING, DONE)
     }
+}
+
+/** What a run with no node makes: a Talos image at a cloud provider, with that run's steps. */
+enum class ImageRunKind(val phases: List<JoinPhase>) {
+    HETZNER_SNAPSHOT(JoinPhase.snapshotRun),
+    AWS_AMI(JoinPhase.awsImageRun),
+    AZURE_IMAGE(JoinPhase.imageRun),
+    GCP_IMAGE(JoinPhase.gcpImageRun),
+}
+
+/** An image an image run made (an AMI, an Azure managed image, a Compute Engine image): its id to pick it, its name to say so. */
+interface MadeImage {
+    val imageId: String
+    val name: String
 }
 
 data class JoinStep(val phase: JoinPhase, val status: StepStatus, val at: Long = 0, val message: String = "")
 
 /**
- * The join's timeline from the [events] so far, like [maintenanceTimeline]: phases before the
- * latest one are done, the latest is current (failed when [failed]), the rest pending; all
- * done once [finished] without failure.
+ * The join's timeline over [phases] from the [events] so far, like [maintenanceTimeline]: phases
+ * before the latest one are done, the latest is current (failed when [failed]), the rest
+ * pending; all done once [finished] without failure.
  */
-fun joinTimeline(events: List<JoinProgress>, finished: Boolean, failed: Boolean): List<JoinStep> {
-    val known = events.mapNotNull { e -> JoinPhase.of(e.phase)?.let { it to e } }
-    val reached = known.maxOfOrNull { it.first.ordinal } ?: if (failed) 0 else -1
-    return JoinPhase.entries.map { phase ->
+fun joinTimeline(
+    events: List<JoinProgress>,
+    finished: Boolean,
+    failed: Boolean,
+    phases: List<JoinPhase> = JoinPhase.maintenanceRun,
+): List<JoinStep> {
+    val known = events.mapNotNull { e -> JoinPhase.of(e.phase)?.takeIf { it in phases }?.let { it to e } }
+    val reached = known.maxOfOrNull { phases.indexOf(it.first) } ?: if (failed) 0 else -1
+    return phases.mapIndexed { index, phase ->
         val own = known.filter { it.first == phase }.map { it.second }
         val status = when {
             finished && !failed -> StepStatus.DONE
-            phase.ordinal < reached -> StepStatus.DONE
-            phase.ordinal == reached && failed -> StepStatus.FAILED
-            phase.ordinal == reached -> StepStatus.CURRENT
+            index < reached -> StepStatus.DONE
+            index == reached && failed -> StepStatus.FAILED
+            index == reached -> StepStatus.CURRENT
             else -> StepStatus.PENDING
         }
         JoinStep(phase, status, own.firstOrNull()?.at ?: 0, own.lastOrNull()?.message.orEmpty())

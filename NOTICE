@@ -20,6 +20,9 @@ This product includes third-party software:
   Apache License 2.0, Copyright the Homarr Labs contributors.
 - Application icons from selfh.st/icons (github.com/selfhst/icons), Creative Commons
   Attribution 4.0 International (CC BY 4.0), by selfh.st; resized.
+- Project logos of cloud-native software from the CNCF artwork repository
+  (github.com/cncf/artwork), from the projects' own GitHub repositories, and from their
+  GitHub organisations' avatars; resized, used under the projects' trademark policies.
 
 Application names and logos are trademarks of their respective owners and are shown
 only to identify the software running in a cluster, or the platform a cluster runs on

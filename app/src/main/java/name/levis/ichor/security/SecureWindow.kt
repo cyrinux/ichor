@@ -4,7 +4,29 @@ import android.view.WindowManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import name.levis.ichor.TalosApp
+
+/**
+ * With the lock on, keeps cluster data out of the recents thumbnail and screenshots, unless the
+ * user explicitly allowed screenshots.
+ */
+fun FragmentActivity.secureWhileLockIsOn(app: TalosApp) {
+    lifecycleScope.launch {
+        repeatOnLifecycle(Lifecycle.State.CREATED) {
+            combine(app.appLock.enabled, app.uiPreferences.allowScreenshots) { lock, allow -> lock && !allow }
+                .collect { secure ->
+                    if (secure) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                }
+        }
+    }
+}
 
 /**
  * Blocks screenshots and the recents thumbnail while [secure], whatever the "allow

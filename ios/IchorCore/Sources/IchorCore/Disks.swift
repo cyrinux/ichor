@@ -47,9 +47,11 @@ public struct DiskLayout: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { name }
 
-    public init(name: String, devPath: String = "", size: UInt64 = 0, type: String = "", transport: String = "",
-                model: String = "", serial: String = "", systemDisk: Bool = false, readonly: Bool = false,
-                unallocated: UInt64 = 0, partitions: [DiskPartition] = [], segments: [DiskSegment] = []) {
+    public init(
+        name: String, devPath: String = "", size: UInt64 = 0, type: String = "", transport: String = "",
+        model: String = "", serial: String = "", systemDisk: Bool = false, readonly: Bool = false,
+        unallocated: UInt64 = 0, partitions: [DiskPartition] = [], segments: [DiskSegment] = []
+    ) {
         self.name = name
         self.devPath = devPath
         self.size = size
@@ -65,7 +67,8 @@ public struct DiskLayout: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case name, devPath, size, type, transport, model, serial, systemDisk, readonly, unallocated, partitions, segments
+        case name, devPath, size, type, transport, model, serial, systemDisk, readonly, unallocated, partitions,
+            segments
     }
 
     public init(from decoder: Decoder) throws {
@@ -106,10 +109,12 @@ public struct DiskPartition: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: Int { index }
 
-    public init(index: Int, devPath: String = "", label: String = "", volumeId: String = "", offset: UInt64 = 0,
-                size: UInt64 = 0, filesystem: String = "", encryption: String = "", encryptionProvider: String = "",
-                uuid: String = "", partitionUuid: String = "", partitionType: String = "", mountedOn: String = "",
-                phase: String = "", error: String = "") {
+    public init(
+        index: Int, devPath: String = "", label: String = "", volumeId: String = "", offset: UInt64 = 0,
+        size: UInt64 = 0, filesystem: String = "", encryption: String = "", encryptionProvider: String = "",
+        uuid: String = "", partitionUuid: String = "", partitionType: String = "", mountedOn: String = "",
+        phase: String = "", error: String = ""
+    ) {
         self.index = index
         self.devPath = devPath
         self.label = label

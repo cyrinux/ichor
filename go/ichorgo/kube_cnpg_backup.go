@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -59,26 +58,12 @@ type cnpgBackupObject struct {
 // KubeCNPGBackup starts a backup of the CloudNativePG cluster namespace/name now (os:admin),
 // like `kubectl cnpg backup`. Refused for a hibernated cluster, one without a backup method,
 // or one already being backed up. Returns the new Backup's name. kubeServer: see KubePods.
-func KubeCNPGBackup(configYAML, contextName, kubeServer, namespace, name string) (out string, err error) {
-	defer maskResult(&out, &err)
+func KubeCNPGBackup(configYAML, contextName, kubeServer, namespace, name string) (string, error) {
+	m := namedMutation{action: "cnpg-backup", kind: "Cluster", label: "cluster"}
 
-	contextName = unmaskContext(configYAML, contextName)
-	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
-
-	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "cnpg-backup", Namespace: namespace, Object: "Cluster/" + name})
-
-	if err := validateKubeName("cluster", namespace, name); err != nil {
-		return "", err
-	}
-
-	err = kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
-		backup, err := backupCNPGCluster(ctx, k, namespace, name, time.Now())
-		out = backup
-
-		return err
+	return kubeNamedMutation(kubeTarget{configYAML, contextName, kubeServer}, m, namespace, name, func(ctx context.Context, k *kubeClient, namespace, name string) (string, error) {
+		return backupCNPGCluster(ctx, k, namespace, name, time.Now())
 	})
-
-	return out, err
 }
 
 func backupCNPGCluster(ctx context.Context, k *kubeClient, namespace, name string, now time.Time) (string, error) {

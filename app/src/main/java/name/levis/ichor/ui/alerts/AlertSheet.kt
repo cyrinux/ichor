@@ -18,12 +18,12 @@ import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Widgets
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.AmAlert
 import name.levis.ichor.model.KubePermission
+import name.levis.ichor.model.OnCallIncident
+import name.levis.ichor.model.OnCallIncidents
 import name.levis.ichor.model.objectLinks
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.KubeDenialNote
@@ -60,7 +62,8 @@ class AlertObjectLinks(
  * One alert: its summary and description, when it started, its receivers and state, its
  * labels and other annotations, the runbook and the rule's graph, the pod, namespace or node
  * it is about ([nodes]: the cluster's node names and addresses), and "Silence".
- * [silenceDenial]: why the credentials cannot silence, if known.
+ * [silenceDenial]: why the credentials cannot silence, if known. With an incident behind it in
+ * [onCall], what the pager says and its actions.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -71,6 +74,9 @@ fun AlertSheet(
     silenceDenial: KubePermission?,
     onSilence: () -> Unit,
     onDismiss: () -> Unit,
+    onCall: OnCallIncidents? = null,
+    onCallBusy: (String) -> Boolean = { false },
+    onCallAct: (OnCallIncident, String) -> Unit = { _, _ -> },
 ) {
     val uri = LocalUriHandler.current
     val objects = remember(alert, nodes) { alert.objectLinks(nodes) }
@@ -110,11 +116,18 @@ fun AlertSheet(
                     LinkButton(Icons.Outlined.Dns, stringResource(R.string.alerts_open_node, node)) { links.onNode(node) }
                 }
             }
-            Button(onClick = onSilence, enabled = silenceDenial == null, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            IchorButton(onClick = onSilence, enabled = silenceDenial == null, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
                 Icon(Icons.Outlined.NotificationsOff, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.alerts_silence), modifier = Modifier.padding(start = 8.dp))
             }
             KubeDenialNote(silenceDenial)
+            onCall?.incidentOf(alert.fingerprint)?.let { incident ->
+                OnCallIncidentSection(
+                    incident,
+                    onCall.matches[alert.fingerprint]?.confidence.orEmpty(),
+                    onCallBusy(incident.id),
+                ) { verb -> onCallAct(incident, verb) }
+            }
             SectionTitle(stringResource(R.string.alerts_labels))
             alert.labels.toSortedMap().forEach { (name, value) -> InfoRow(name, value, mono = true) }
             val others = alert.annotations.filterKeys { it !in SHOWN_ANNOTATIONS }
@@ -128,7 +141,7 @@ fun AlertSheet(
 
 @Composable
 private fun LinkButton(icon: ImageVector, label: String, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick) {
+    IchorOutlinedButton(onClick = onClick) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
         Text(label, modifier = Modifier.padding(start = 6.dp))
     }

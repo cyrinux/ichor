@@ -17,11 +17,13 @@ const (
 	// upgradeRequestTimeout covers the request itself: Talos pulls and validates the
 	// installer image before it answers.
 	upgradeRequestTimeout = 10 * time.Minute
-	upgradePollInterval   = 5 * time.Second
 	// oldVersionGrace is how long the node may run its old version again after a reboot
 	// before the upgrade is reported as failed (a staged upgrade reboots twice).
 	oldVersionGrace = 5 * time.Minute
 )
+
+// upgradePollInterval is how often an upgrade's node is looked at again; tests shorten it.
+var upgradePollInterval = 5 * time.Second
 
 // Upgrade phases reported through UpgradeListener.OnProgress.
 const (
@@ -85,6 +87,7 @@ func StartUpgrade(configYAML, contextName, kubeServer, node, image string, stage
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		opts := upgradeOptions{image: strings.TrimSpace(image), stage: stage, force: force, acknowledged: acknowledged}
 

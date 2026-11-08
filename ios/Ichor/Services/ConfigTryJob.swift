@@ -42,10 +42,12 @@ final class ConfigTryJob {
         UNNotificationCategory(
             identifier: category,
             actions: [
-                UNNotificationAction(identifier: keepAction, title: String(localized: "Keep"),
-                                     options: [.foreground, .authenticationRequired]),
-                UNNotificationAction(identifier: revertAction, title: String(localized: "Revert now"),
-                                     options: [.destructive, .authenticationRequired]),
+                UNNotificationAction(
+                    identifier: keepAction, title: String(localized: "Keep"),
+                    options: [.foreground, .authenticationRequired]),
+                UNNotificationAction(
+                    identifier: revertAction, title: String(localized: "Revert now"),
+                    options: [.destructive, .authenticationRequired]),
             ],
             intentIdentifiers: [],
             hiddenPreviewsBodyPlaceholder: String(localized: "A config change is being tried"),
@@ -55,7 +57,9 @@ final class ConfigTryJob {
 
     /// Starts the try unless one is followed already; false then.
     @discardableResult
-    func start(client: TalosClient, node: String, hostname: String, base: String, draft: String, timeoutSeconds: Int) -> Bool {
+    func start(client: TalosClient, node: String, hostname: String, base: String, draft: String, timeoutSeconds: Int)
+        -> Bool
+    {
         guard !isActive else { return false }
         target = Target(node: node, hostname: hostname)
         progress = nil
@@ -140,8 +144,12 @@ final class ConfigTryJob {
     private func postSuspended() {
         guard isActive, let target else { return }
         let time = progress?.deadlineDate?.formatted(date: .omitted, time: .shortened) ?? "—"
-        post(title: String(localized: "Trying a config change on \(target.hostname)"),
-             body: String(localized: "Ichor was suspended: open it to keep the change. Otherwise the node reverts by itself at \(time)."))
+        post(
+            title: String(localized: "Trying a config change on \(target.hostname)"),
+            body: String(
+                localized:
+                    "Ichor was suspended: open it to keep the change. Otherwise the node reverts by itself at \(time).")
+        )
     }
 
     private func post(title: String, body: String) {

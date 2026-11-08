@@ -43,7 +43,8 @@ final class KubeSignInFlow {
     func signIn(_ target: KubeSignInTarget, secrets: String) async {
         phase = .working
         do {
-            try await TalosClient.setCredentials(kube: target.kube, context: target.context, secrets: secrets, talos: target.talos)
+            try await TalosClient.setCredentials(
+                kube: target.kube, context: target.context, secrets: secrets, talos: target.talos)
             phase = .signedIn
         } catch {
             let message = error.localizedDescription
@@ -126,7 +127,8 @@ final class KubeSignInFlow {
         let session = WebSignInSession()
         web = session
         let id = runID
-        let started = session.start(url: url, callbackScheme: kubeCallbackScheme(of: prompt.redirectPrefix)) { [weak self] callback in
+        let started = session.start(url: url, callbackScheme: kubeCallbackScheme(of: prompt.redirectPrefix)) {
+            [weak self] callback in
             guard let self, id == self.runID else { return }
             if let callback {
                 // The provider came back to the app rather than to Go's loopback address.
@@ -168,7 +170,8 @@ final class WebSignInSession: NSObject, ASWebAuthenticationPresentationContextPr
     /// closed. False when the sheet could not be shown.
     @MainActor
     func start(url: URL, callbackScheme: String, ended: @escaping @MainActor (URL?) -> Void) -> Bool {
-        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: callbackScheme) { callback, _ in
+        // @Sendable: the system picks the queue, so it must not inherit the main actor.
+        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: callbackScheme) { @Sendable callback, _ in
             Task { @MainActor in ended(callback) }
         }
         session.presentationContextProvider = self

@@ -6,11 +6,11 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.confirmationCode
 import name.levis.ichor.model.confirmationMatches
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -40,18 +41,19 @@ fun HostnameConfirmDialog(
     enabled: Boolean = true,
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
-    var typed by remember { mutableStateOf("") }
+    // Per hostname: a dialog reused for another object starts empty.
+    var typed by remember(hostname) { mutableStateOf("") }
     // [enabled] false: something forbids the action whatever is typed (e.g. a blocker).
     val matches = enabled && confirmationMatches(typed, hostname)
     val colors = LocalStatusColors.current
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 content()
-                Text(stringResource(R.string.power_type_to_confirm, hostname), style = MaterialTheme.typography.bodyMedium)
+                TypedConfirmPrompt(hostname)
                 OutlinedTextField(
                     value = typed,
                     onValueChange = { typed = it },
@@ -62,7 +64,7 @@ fun HostnameConfirmDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onConfirm, enabled = matches) {
+            IchorTextButton(onClick = onConfirm, enabled = matches) {
                 Text(
                     confirmLabel,
                     color = if (matches) colors.bad else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -70,6 +72,14 @@ fun HostnameConfirmDialog(
                 )
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
+}
+
+/** "Type … to confirm": the whole [name], or only its end when it is long (see [confirmationCode]). */
+@Composable
+fun TypedConfirmPrompt(name: String) {
+    val code = confirmationCode(name)
+    val prompt = if (code == name.trim()) stringResource(R.string.power_type_to_confirm, code) else stringResource(R.string.power_type_end_to_confirm, code, name.trim())
+    Text(prompt, style = MaterialTheme.typography.bodyMedium)
 }

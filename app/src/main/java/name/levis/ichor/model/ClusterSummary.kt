@@ -16,11 +16,17 @@ data class ClusterSummary(
     val cpuCount: Int,
     val memTotal: Long,
     val memAvailable: Long,
+    /** The KubeSpan links were read: false without KubeSpan or before the map landed. */
+    val meshChecked: Boolean = false,
+    val meshBroken: Int = 0,
+    /** "node-a ↔ node-b" of the broken links, worst first. */
+    val meshPairs: List<String> = emptyList(),
 ) {
     val status: ClusterStatus
         get() = when {
             total == 0 || unreachable == total -> ClusterStatus.DOWN
-            ready == total -> ClusterStatus.HEALTHY
+            // A tunnel down is a degraded cluster, never a down one: its nodes still answer.
+            ready == total && meshBroken == 0 -> ClusterStatus.HEALTHY
             else -> ClusterStatus.DEGRADED
         }
 
@@ -29,7 +35,8 @@ data class ClusterSummary(
         get() = if (memTotal <= 0) null else usedFraction(memTotal, memAvailable)
 }
 
-fun clusterSummary(nodes: List<NodeOverview>): ClusterSummary {
+fun clusterSummary(nodes: List<NodeOverview>, topology: ClusterTopology? = null): ClusterSummary {
+    val mesh = topology?.mesh
     val counts = nodes.groupingBy { it.health }.eachCount()
     val reachable = nodes.filter { it.reachable }
     return ClusterSummary(
@@ -41,5 +48,8 @@ fun clusterSummary(nodes: List<NodeOverview>): ClusterSummary {
         cpuCount = reachable.sumOf { it.cpuCount },
         memTotal = reachable.sumOf { it.memTotal },
         memAvailable = reachable.sumOf { it.memAvailable },
+        meshChecked = mesh?.checked == true,
+        meshBroken = mesh?.broken ?: 0,
+        meshPairs = mesh?.pairs.orEmpty(),
     )
 }

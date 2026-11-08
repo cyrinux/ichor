@@ -13,7 +13,9 @@ public struct HistoryNodeRecord: Codable, Equatable, Sendable {
     public let version: String?
     public let memUsedPercent: Double?
 
-    public init(node: String, hostname: String, health: NodeHealth, version: String? = nil, memUsedPercent: Double? = nil) {
+    public init(
+        node: String, hostname: String, health: NodeHealth, version: String? = nil, memUsedPercent: Double? = nil
+    ) {
         self.node = node
         self.hostname = hostname
         self.health = health.rawValue
@@ -112,7 +114,9 @@ public func historyExtras(_ overview: KubeNodesOverview) -> HistoryExtras {
 /// Every volume of the nodes that answered.
 public func historyVolumes(_ health: ClusterStorageHealth) -> [HistoryVolumeRecord] {
     health.nodes.flatMap { node in
-        node.volumes.map { HistoryVolumeRecord(key: $0.key, name: $0.name, node: node.node, usedPercent: $0.usedPercent) }
+        node.volumes.map {
+            HistoryVolumeRecord(key: $0.key, name: $0.name, node: node.node, usedPercent: $0.usedPercent)
+        }
     }
 }
 
@@ -123,22 +127,28 @@ public func historyRecordingAllowed(privacyMasked: Bool) -> Bool { !privacyMaske
 /// `evaluated`: the snapshot after evaluate (its issues are the notified ones); `previousAlerts`:
 /// the alerts open in the ring, resent for a track that could not be read this run (and all of
 /// them when the cluster did not answer).
-public func historyRecord(at: Date, current: ClusterSnapshot?, evaluated: ClusterSnapshot?, extras: HistoryExtras,
-                          previousAlerts: [HistoryAlertRecord], now: Date) -> HistoryRecord {
+public func historyRecord(
+    at: Date, current: ClusterSnapshot?, evaluated: ClusterSnapshot?, extras: HistoryExtras,
+    previousAlerts: [HistoryAlertRecord], now: Date
+) -> HistoryRecord {
     let millis = Int64((at.timeIntervalSince1970 * 1000).rounded())
     guard let current, !current.unreachableAsAWhole else {
         let nodes = current.map { historyNodes($0, extras: extras) } ?? []
-        return HistoryRecord(at: millis, reachable: false, nodes: nodes, volumes: [], alerts: sortedAlerts(previousAlerts))
+        return HistoryRecord(
+            at: millis, reachable: false, nodes: nodes, volumes: [], alerts: sortedAlerts(previousAlerts))
     }
     let alerts = historyOpenAlerts(evaluated ?? current, previous: previousAlerts, now: now)
-    return HistoryRecord(at: millis, reachable: true, nodes: historyNodes(current, extras: extras), volumes: extras.volumes, alerts: alerts)
+    return HistoryRecord(
+        at: millis, reachable: true, nodes: historyNodes(current, extras: extras), volumes: extras.volumes,
+        alerts: alerts)
 }
 
 private func historyNodes(_ snapshot: ClusterSnapshot, extras: HistoryExtras) -> [HistoryNodeRecord] {
     snapshot.nodes.keys.sorted().compactMap { address in
         guard let state = snapshot.nodes[address] else { return nil }
-        return HistoryNodeRecord(node: address, hostname: state.hostname, health: state.health,
-                                 version: extras.versions[address], memUsedPercent: extras.memory[address])
+        return HistoryNodeRecord(
+            node: address, hostname: state.hostname, health: state.health,
+            version: extras.versions[address], memUsedPercent: extras.memory[address])
     }
 }
 
@@ -148,7 +158,9 @@ private func sortedAlerts(_ alerts: [HistoryAlertRecord]) -> [HistoryAlertRecord
 
 /// The issues open after the run, across tracks, keyed as in the snapshot. A track watched but not
 /// read this run resends `previous`'s keys of that track; a track not watched sends none.
-public func historyOpenAlerts(_ snapshot: ClusterSnapshot, previous: [HistoryAlertRecord], now: Date) -> [HistoryAlertRecord] {
+public func historyOpenAlerts(_ snapshot: ClusterSnapshot, previous: [HistoryAlertRecord], now: Date)
+    -> [HistoryAlertRecord]
+{
     func resent(_ track: String) -> [HistoryAlertRecord] { previous.filter { $0.track == track } }
     var out: [HistoryAlertRecord] = []
     if !snapshot.kube {
@@ -158,23 +170,29 @@ public func historyOpenAlerts(_ snapshot: ClusterSnapshot, previous: [HistoryAle
         HistoryAlertRecord(key: key, track: HistoryTrack.data, severity: value, title: lastPart(key))
     }
     out += track(HistoryTrack.gitops, snapshot.gitopsTrack, resent: resent) { key, value in
-        HistoryAlertRecord(key: key, track: HistoryTrack.gitops, severity: gitopsSeverity(value), title: GitOpsSubject(key: key).title)
+        HistoryAlertRecord(
+            key: key, track: HistoryTrack.gitops, severity: gitopsSeverity(value), title: GitOpsSubject(key: key).title)
     }
     out += track(HistoryTrack.checkup, snapshot.checkupTrack, resent: resent) { key, value in
-        HistoryAlertRecord(key: key, track: HistoryTrack.checkup, severity: value, title: CheckupSubject(key: key).subject)
+        HistoryAlertRecord(
+            key: key, track: HistoryTrack.checkup, severity: value, title: CheckupSubject(key: key).subject)
     }
     out += track(HistoryTrack.alertmanager, snapshot.amTrack, resent: resent) { key, value in
         let issue = AMIssue(value: value)
-        return HistoryAlertRecord(key: key, track: HistoryTrack.alertmanager, severity: issue.severity, title: issue.alertname)
+        return HistoryAlertRecord(
+            key: key, track: HistoryTrack.alertmanager, severity: issue.severity, title: issue.alertname)
     }
     out += track(HistoryTrack.storage, snapshot.storageTrack, resent: resent) { key, value in
         let issue = StorageIssue(value: value)
-        return HistoryAlertRecord(key: key, track: HistoryTrack.storage, severity: issue.severity, title: "\(issue.name) (\(issue.hostname))")
+        return HistoryAlertRecord(
+            key: key, track: HistoryTrack.storage, severity: issue.severity, title: "\(issue.name) (\(issue.hostname))")
     }
     if snapshot.certNotAfter > 0 {
         let days = daysUntil(snapshot.certNotAfter, now: now)
         if days <= certWarnDays {
-            out.append(HistoryAlertRecord(key: "cert", track: HistoryTrack.cert, severity: days < 0 ? dataCritical : dataWarning))
+            out.append(
+                HistoryAlertRecord(
+                    key: "cert", track: HistoryTrack.cert, severity: days < 0 ? dataCritical : dataWarning))
         }
     }
     return sortedAlerts(out)
@@ -192,15 +210,18 @@ public enum HistoryTrack {
 }
 
 private func etcdAlert(_ alarm: String) -> HistoryAlertRecord {
-    HistoryAlertRecord(key: alarm, track: HistoryTrack.etcd, severity: dataCritical, title: lastPart(alarm, separator: ":"))
+    HistoryAlertRecord(
+        key: alarm, track: HistoryTrack.etcd, severity: dataCritical, title: lastPart(alarm, separator: ":"))
 }
 
 private func lastPart(_ key: String, separator: Character = "|") -> String {
     String(key.split(separator: separator, maxSplits: 1).last ?? Substring(key))
 }
 
-private func track(_ name: String, _ track: IssueTrack, resent: (String) -> [HistoryAlertRecord],
-                   _ alert: (String, String) -> HistoryAlertRecord) -> [HistoryAlertRecord] {
+private func track(
+    _ name: String, _ track: IssueTrack, resent: (String) -> [HistoryAlertRecord],
+    _ alert: (String, String) -> HistoryAlertRecord
+) -> [HistoryAlertRecord] {
     guard track.watched else { return [] }
     guard track.checked else { return resent(name) }
     return track.issues.keys.sorted().compactMap { key in track.issues[key].map { alert(key, $0) } }

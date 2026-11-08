@@ -94,8 +94,11 @@ class ArgoViewModel(
     /** A sync is running. */
     override fun isBusy(data: ArgoStatus): Boolean = data.apps.any { it.isRunning }
 
-    /** Runs [action] on every app of [apps], one after the other, then follows the outcome. */
-    fun act(apps: List<ArgoApp>, action: ArgoAction, options: ArgoSyncOptions? = null) {
+    /**
+     * Runs [action] on every app of [apps], one after the other, then follows the outcome;
+     * [onDone] runs once every app took it (to follow the sync app-wide).
+     */
+    fun act(apps: List<ArgoApp>, action: ArgoAction, options: ArgoSyncOptions? = null, onDone: () -> Unit = {}) {
         val keys = apps.map { it.key }.toSet()
         if (keys.isEmpty() || keys.any { it in _busy.value }) return
         _busy.update { it + keys }
@@ -107,6 +110,7 @@ class ArgoViewModel(
             _busy.update { it - keys }
             _results.send(ArgoActionResult(action, apps.size, apps.singleOrNull()?.name, errors.size, errors.firstOrNull()))
             if (errors.size < apps.size) boost()
+            if (errors.isEmpty()) onDone()
         }
     }
 

@@ -18,11 +18,11 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,8 +46,10 @@ import name.levis.ichor.model.VulnFilter
 import name.levis.ichor.model.VulnSeverity
 import name.levis.ichor.model.byPackage
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.util.formatDateTime
 
 /**
  * A vulnerability report: the totals, filters (fixable only, by default; severities), then
@@ -58,8 +60,10 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 @Composable
 fun ImageScanReportSheet(report: ImageScanReport, onExport: (ImageScanFormat) -> Unit, onDismiss: () -> Unit) {
     var fixableOnly by rememberSaveable { mutableStateOf(true) }
+    var newOnly by rememberSaveable { mutableStateOf(false) }
     var hidden by rememberSaveable { mutableStateOf(emptyList<String>()) }
-    val filter = VulnFilter(fixableOnly, VulnSeverity.entries.filterNot { it.name in hidden }.toSet())
+    val hasNew = report.newSummary.total > 0
+    val filter = VulnFilter(fixableOnly, VulnSeverity.entries.filterNot { it.name in hidden }.toSet(), newOnly && hasNew)
     var open by rememberSaveable { mutableStateOf<String?>(null) }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         LazyColumn(
@@ -68,9 +72,11 @@ fun ImageScanReportSheet(report: ImageScanReport, onExport: (ImageScanFormat) ->
         ) {
             item { Header(report, onExport) }
             item { SeverityPills(report.summary) }
+            item { NewFindingsLine(report.newSummary, report.hasPrevious) }
             item {
-                Filters(filter) {
+                Filters(filter, hasNew) {
                     fixableOnly = it.fixableOnly
+                    newOnly = it.newOnly
                     hidden = VulnSeverity.entries.filterNot { s -> s in it.severities }.map { s -> s.name }
                 }
             }
@@ -121,15 +127,21 @@ private fun Header(report: ImageScanReport, onExport: (ImageScanFormat) -> Unit)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Filters(filter: VulnFilter, onChange: (VulnFilter) -> Unit) {
+private fun Filters(filter: VulnFilter, hasNew: Boolean, onChange: (VulnFilter) -> Unit) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(
+        IchorFilterChip(
+            selected = filter.newOnly,
+            onClick = { onChange(filter.copy(newOnly = !filter.newOnly)) },
+            enabled = hasNew,
+            label = { Text(stringResource(R.string.imagescan_new_filter)) },
+        )
+        IchorFilterChip(
             selected = filter.fixableOnly,
             onClick = { onChange(filter.copy(fixableOnly = !filter.fixableOnly)) },
             label = { Text(stringResource(R.string.imagescan_fixable_only)) },
         )
         VulnSeverity.entries.forEach { severity ->
-            FilterChip(
+            IchorFilterChip(
                 selected = severity in filter.severities,
                 onClick = { onChange(filter.toggle(severity)) },
                 label = { Text(stringResource(severityLabel(severity))) },
@@ -145,6 +157,9 @@ private fun ImageHeader(image: ScannedImage) {
         Text(image.image.ifEmpty { image.ref }, style = MaterialTheme.typography.titleSmall, fontFamily = FontFamily.Monospace)
         val meta = listOf(image.os, image.digest.take(19)).filter { it.isNotEmpty() }
         if (meta.isNotEmpty()) MutedText(meta.joinToString(" · "), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (image.previousScannedAt > 0) {
+            MutedText(stringResource(R.string.imagescan_previous_scan, formatDateTime(image.previousScannedAt)))
+        }
         if (image.pods.isNotEmpty()) {
             MutedText(stringResource(R.string.imagescan_pods, image.pods.joinToString(", ")), maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
@@ -153,6 +168,7 @@ private fun ImageHeader(image: ScannedImage) {
             return@Column
         }
         if (image.summary.total > 0) SeverityPills(image.summary)
+        if (image.new.total > 0) NewFindingsLine(image.new, hasPrevious = true)
         if (image.summary.os > 0 && image.os.isNotEmpty()) {
             MutedText(stringResource(R.string.imagescan_base_hint, image.summary.os.toString(), image.os))
         }
@@ -188,6 +204,9 @@ private fun VulnRow(v: ImageVuln, expanded: Boolean, onToggle: () -> Unit) {
                 modifier = Modifier.width(64.dp),
             )
             Text(v.id, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))
+            if (v.new) {
+                StatusPill(stringResource(R.string.imagescan_new_badge), LocalStatusColors.current.warn, Modifier.padding(start = 6.dp))
+            }
             Text(
                 if (v.fixable) stringResource(R.string.imagescan_fixed_in, v.fixed) else stringResource(R.string.imagescan_no_fix),
                 style = MaterialTheme.typography.labelSmall,
@@ -210,7 +229,7 @@ private fun VulnRow(v: ImageVuln, expanded: Boolean, onToggle: () -> Unit) {
             if (v.description.isNotEmpty()) Text(v.description, style = MaterialTheme.typography.bodySmall)
             if (v.score > 0) MutedText(stringResource(R.string.imagescan_score, "%.1f".format(v.score)) + " " + v.vector)
             if (v.url.startsWith("https://") || v.url.startsWith("http://")) {
-                TextButton(onClick = { uri.openUri(v.url) }, contentPadding = PaddingValues(0.dp)) {
+                IchorTextButton(onClick = { uri.openUri(v.url) }, contentPadding = PaddingValues(0.dp)) {
                     Text(stringResource(R.string.imagescan_open_advisory))
                 }
             }

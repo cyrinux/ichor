@@ -7,7 +7,9 @@ public struct KubeTopNodes: Decodable, Sendable {
     public let forbidden: Bool
     public let nodes: [KubeTopNode]
 
-    public var byName: [String: KubeTopNode] { Dictionary(nodes.map { ($0.name, $0) }, uniquingKeysWith: { a, _ in a }) }
+    public var byName: [String: KubeTopNode] {
+        Dictionary(nodes.map { ($0.name, $0) }, uniquingKeysWith: { a, _ in a })
+    }
 
     private enum CodingKeys: String, CodingKey { case available, forbidden, nodes }
 
@@ -86,8 +88,10 @@ public struct KubeTopPod: Decodable, Hashable, Identifiable, Sendable {
     public var cpuBound: Double { cpuLimit > 0 ? cpuLimit : cpuRequest }
     public var memoryBound: Double { memoryLimit > 0 ? memoryLimit : memoryRequest }
 
-    public init(namespace: String, name: String, node: String = "", cpu: Double = 0, memory: Double = 0,
-                cpuRequest: Double = 0, cpuLimit: Double = 0, memoryRequest: Double = 0, memoryLimit: Double = 0) {
+    public init(
+        namespace: String, name: String, node: String = "", cpu: Double = 0, memory: Double = 0,
+        cpuRequest: Double = 0, cpuLimit: Double = 0, memoryRequest: Double = 0, memoryLimit: Double = 0
+    ) {
         self.namespace = namespace
         self.name = name
         self.node = node

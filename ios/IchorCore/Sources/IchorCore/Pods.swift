@@ -23,6 +23,10 @@ public struct KubePod: Codable, Equatable, Identifiable, Sendable {
     public let containerNames: [String]
     /// How a container last stopped, e.g. "OOMKilled (exit 137)"; "" when none did.
     public let lastTermination: String
+    /// The kubelet's message for the waiting reason the status shows, "" when none.
+    public let waiting: String
+    /// Why the image cannot be pulled; nil unless the pod is stuck pulling.
+    public let pull: PullProblem?
 
     public var id: String { "\(namespace)/\(name)" }
 
@@ -31,9 +35,12 @@ public struct KubePod: Codable, Equatable, Identifiable, Sendable {
         status == "Pending" || status == "Terminating" || (status.hasPrefix("Init:") && status.contains("/"))
     }
 
-    public init(namespace: String, name: String, status: String = "", healthy: Bool = false, ready: Int = 0, containers: Int = 0,
-                restarts: Int = 0, node: String = "", owner: String = "", created: Int64 = 0, images: [String] = [],
-                containerNames: [String] = [], lastTermination: String = "") {
+    public init(
+        namespace: String, name: String, status: String = "", healthy: Bool = false, ready: Int = 0,
+        containers: Int = 0,
+        restarts: Int = 0, node: String = "", owner: String = "", created: Int64 = 0, images: [String] = [],
+        containerNames: [String] = [], lastTermination: String = "", waiting: String = "", pull: PullProblem? = nil
+    ) {
         self.namespace = namespace
         self.name = name
         self.status = status
@@ -47,6 +54,8 @@ public struct KubePod: Codable, Equatable, Identifiable, Sendable {
         self.images = images
         self.containerNames = containerNames
         self.lastTermination = lastTermination
+        self.waiting = waiting
+        self.pull = pull
     }
 
     public init(from decoder: Decoder) throws {
@@ -64,10 +73,13 @@ public struct KubePod: Codable, Equatable, Identifiable, Sendable {
         images = try c.field(.images, [])
         containerNames = try c.field(.containerNames, [])
         lastTermination = try c.field(.lastTermination, "")
+        waiting = try c.field(.waiting, "")
+        pull = try c.decodeIfPresent(PullProblem.self, forKey: .pull)
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, status, healthy, ready, containers, restarts, node, owner, created, images, containerNames, lastTermination
+        case namespace, name, status, healthy, ready, containers, restarts, node, owner, created, images,
+            containerNames, lastTermination, waiting, pull
     }
 }
 
@@ -79,17 +91,20 @@ public func podNamespaces(_ pods: [KubePod]) -> [String] {
 /// Pods of namespace (all when nil) whose name, status, node, owner or, when searchImages,
 /// image contains query (case-insensitive). sorted: unhealthy ones first, then by namespace
 /// and name; else in the order loaded (a list still incomplete).
-public func filterPods(_ pods: [KubePod], namespace: String?, query: String, sorted: Bool = true,
-                       searchImages: Bool = true) -> [KubePod] {
+public func filterPods(
+    _ pods: [KubePod], namespace: String?, query: String, sorted: Bool = true,
+    searchImages: Bool = true
+) -> [KubePod] {
     let needle = query.trimmingCharacters(in: .whitespaces)
     let contains = { (text: String) in text.range(of: needle, options: .caseInsensitive) != nil }
     let matching = pods.filter { p in
-        (namespace == nil || p.namespace == namespace) &&
-            (needle.isEmpty || [p.name, p.status, p.node, p.owner].contains(where: contains) ||
-                searchImages && p.images.contains(where: contains))
+        (namespace == nil || p.namespace == namespace)
+            && (needle.isEmpty || [p.name, p.status, p.node, p.owner].contains(where: contains)
+                || searchImages && p.images.contains(where: contains))
     }
     guard sorted else { return matching }
-    return matching
+    return
+        matching
         .sorted { a, b in
             if a.healthy != b.healthy { return !a.healthy }
             if a.namespace != b.namespace { return a.namespace < b.namespace }

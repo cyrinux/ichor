@@ -4,9 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import name.levis.ichor.R
@@ -14,13 +14,13 @@ import name.levis.ichor.i18n.AppLocale
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -60,21 +60,38 @@ fun AppearanceSection(prefs: UiPreferences) {
             ) { Text(stringResource(option.label)) }
         }
     }
+    UiStyleSetting(prefs)
     LanguageSetting(prefs)
     LiveClusterStatsSetting(prefs)
+    AddToHomeSetting(prefs)
+}
+
+/** The "Add to home screen" buttons on screens and menus: on by default, off to declutter the bars. */
+@Composable
+private fun AddToHomeSetting(prefs: UiPreferences) {
+    val enabled by prefs.addToHome.collectAsStateWithLifecycle()
+    IchorCard(Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.settings_add_to_home), style = MaterialTheme.typography.titleMedium)
+                MutedText(stringResource(R.string.settings_add_to_home_desc))
+            }
+            IchorSwitch(checked = enabled, onCheckedChange = prefs::setAddToHome, modifier = Modifier.padding(start = 12.dp))
+        }
+    }
 }
 
 /** Live CPU and memory on the overview: on by default, off to spare data and battery. */
 @Composable
 private fun LiveClusterStatsSetting(prefs: UiPreferences) {
     val enabled by prefs.liveClusterStats.collectAsStateWithLifecycle()
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_live_cluster_stats), style = MaterialTheme.typography.titleMedium)
                 MutedText(stringResource(R.string.settings_live_cluster_stats_desc))
             }
-            Switch(checked = enabled, onCheckedChange = prefs::setLiveClusterStats, modifier = Modifier.padding(start = 12.dp))
+            IchorSwitch(checked = enabled, onCheckedChange = prefs::setLiveClusterStats, modifier = Modifier.padding(start = 12.dp))
         }
     }
 }
@@ -88,7 +105,7 @@ private fun LanguageSetting(prefs: UiPreferences) {
     val systemLabel = stringResource(R.string.settings_language_system)
     fun labelOf(tag: String) = AppLocale.languages.firstOrNull { it.tag == tag }?.nativeName ?: systemLabel
 
-    Card(Modifier.fillMaxWidth().clickable(role = Role.Button) { picking = true }) {
+    IchorCard(Modifier.fillMaxWidth().clickable(role = Role.Button) { picking = true }) {
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.titleMedium)
             MutedText(labelOf(current))
@@ -97,7 +114,7 @@ private fun LanguageSetting(prefs: UiPreferences) {
 
     if (picking) {
         val options = listOf(AppLocale.SYSTEM) + AppLocale.languages.map { it.tag }
-        AlertDialog(
+        IchorAlertDialog(
             onDismissRequest = { picking = false },
             title = { Text(stringResource(R.string.settings_language)) },
             text = {
@@ -121,7 +138,7 @@ private fun LanguageSetting(prefs: UiPreferences) {
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { picking = false }) { Text(stringResource(R.string.common_cancel)) } },
+            confirmButton = { IchorTextButton(onClick = { picking = false }) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
 }
@@ -163,7 +180,7 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences, required: Boolean) {
     }
 
     SectionTitle(stringResource(R.string.settings_section_security))
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_app_lock), style = MaterialTheme.typography.titleMedium)
@@ -176,7 +193,7 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences, required: Boolean) {
                     )
                 }
             }
-            Switch(
+            IchorSwitch(
                 checked = enabled,
                 onCheckedChange = ::toggle,
                 enabled = !(enabled && (required || keyRequired)),
@@ -189,7 +206,7 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences, required: Boolean) {
                     Text(stringResource(R.string.settings_allow_screenshots), style = MaterialTheme.typography.titleSmall)
                     MutedText(stringResource(R.string.settings_allow_screenshots_desc))
                 }
-                Switch(
+                IchorSwitch(
                     checked = allowScreenshots,
                     onCheckedChange = { allow ->
                         if (allow) authThen(context.getString(R.string.settings_allow_screenshots)) { prefs.setAllowScreenshots(true) }
@@ -203,4 +220,5 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences, required: Boolean) {
         }
     }
     error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }
+    PanicSection(appLock)
 }

@@ -59,6 +59,10 @@ func sampleDiagnosis() diagnosisData {
 			Statuses: []etcdNodeStatus{{Node: "192.0.2.10", MemberID: "a1", IsLeader: true, DbSize: 64 << 20, DbSizeInUse: 32 << 20, RaftIndex: 900, RaftTerm: 3}},
 			Alarms:   []etcdAlarm{{MemberID: "a1", Alarm: "NOSPACE"}},
 		},
+		DataServices: &dataServicesState{dataServices: dataServices{Longhorn: &longhornStatus{Volumes: []longhornVolume{{
+			Name: "pvc-aaaa", State: "attached", Robustness: "degraded", Health: healthWarning, ReplicasDesired: 2, ReplicasHealthy: 1,
+			ReplicaNodes: []string{"talos-w-a"},
+		}}}}},
 		Events: []nodeEvent{{
 			Node: "192.0.2.20", At: at.Add(-time.Minute).UnixMilli(), Kind: "service", Subject: "kubelet",
 			Action: "failed", Message: "exit code 1", Severity: "error",
@@ -90,6 +94,7 @@ func TestRenderDiagnosis(t *testing.T) {
 		"  status on 192.0.2.10: member a1, leader, database 64 MiB (32 MiB in use), raft index 900, term 3",
 		"  ALARM NOSPACE on member a1",
 		"  2026-10-01 18:03:00 192.0.2.20 error: service kubelet failed: exit code 1",
+		"DATA SERVICES\n  Longhorn: 1 volumes, 1 warning\n    pvc-aaaa [warning]: attached, degraded, 1/2 replicas healthy; nodes talos-w-a\n",
 	} {
 		if !strings.Contains(report, want) {
 			t.Errorf("report lacks %q", want)
@@ -267,7 +272,8 @@ func TestAnonymizedReportAndReveal(t *testing.T) {
 		}
 	}
 
-	if !strings.Contains(d.Report(), "- cp-1 [10.0.0.1]: controlplane") || !d.Anonymized() {
+	if !strings.Contains(d.Report(), "- cp-1 [10.0.0.1]: controlplane") || !d.Anonymized() ||
+		!strings.Contains(d.Report(), "pvc-aaaa [warning]: attached, degraded, 1/2 replicas healthy; nodes worker-1") {
 		t.Fatalf("unexpected anonymized report:\n%s", d.Report())
 	}
 
@@ -297,18 +303,27 @@ func TestAnonymizedReportAndReveal(t *testing.T) {
 }
 
 type answerRecorder struct {
-	answers []string
-	done    chan string
+	answers   []string
+	tools     []recordedTool
+	toolsDone []recordedToolDone
+	done      chan string
 }
 
 func (l *answerRecorder) OnAnswer(text string)     { l.answers = append(l.answers, text) }
 func (l *answerRecorder) OnDone(errMessage string) { l.done <- errMessage }
+func (l *answerRecorder) OnTool(name, argsJSON string) {
+	l.tools = append(l.tools, recordedTool{name: name, args: argsJSON})
+}
+
+func (l *answerRecorder) OnToolDone(name string, bytes int, result, errMessage string) {
+	l.toolsDone = append(l.toolsDone, recordedToolDone{name, bytes, result, errMessage})
+}
 
 func askAndWait(t *testing.T, d *Diagnosis, provider, key, baseURL, note string) (*answerRecorder, string) {
 	t.Helper()
 
 	l := &answerRecorder{done: make(chan string, 1)}
-	d.Ask(provider, key, "", baseURL, "en", note, l)
+	d.Ask(provider, key, "", baseURL, "en", note, false, l)
 
 	select {
 	case errMessage := <-l.done:
@@ -397,7 +412,7 @@ func TestAskCancelled(t *testing.T) {
 	defer close(release)
 
 	l := &answerRecorder{done: make(chan string, 1)}
-	run := (&Diagnosis{report: "r"}).Ask("openai", testAPIKey, "", srv.URL, "en", "", l)
+	run := (&Diagnosis{report: "r"}).Ask("openai", testAPIKey, "", srv.URL, "en", "", false, l)
 	run.Cancel()
 
 	select {

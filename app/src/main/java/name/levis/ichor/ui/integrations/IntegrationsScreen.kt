@@ -12,15 +12,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorOutlinedButton
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,7 +43,7 @@ import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.factory
-import name.levis.ichor.ui.settings.openUrl
+import name.levis.ichor.ui.settings.openInBrowser
 import name.levis.ichor.ui.components.pageContent
 
 /**
@@ -58,14 +58,15 @@ fun IntegrationsScreen(onBack: () -> Unit) {
     val vm: IntegrationsViewModel = viewModel(factory = factory { IntegrationsViewModel(app.kubeRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
     val picked by vm.picked.collectAsStateWithLifecycle()
+    val progress by vm.readProgress.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val generation by app.configRepository.generation.collectAsStateWithLifecycle()
 
     LaunchedEffect(config?.activeContext, generation) { vm.load(config?.activeContext to generation) }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.integrations_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
@@ -73,9 +74,17 @@ fun IntegrationsScreen(onBack: () -> Unit) {
         },
     ) { padding ->
         Column(Modifier.pageContent(padding).fillMaxSize()) {
-            Loaded(state, vm::refresh) { report -> Report(report, picked, vm) }
+            Loaded(state, vm::refresh, progress = progress, stepLabel = { integrationsStepLabel(it) }) { report -> Report(report, picked, vm) }
         }
     }
+}
+
+/** An integrations progress step by name: the API groups, then their discovery documents. */
+@Composable
+private fun integrationsStepLabel(id: String): String = when (id) {
+    "api" -> stringResource(R.string.read_progress_step_api)
+    "kinds" -> stringResource(R.string.read_progress_step_kinds)
+    else -> id
 }
 
 @Composable
@@ -93,15 +102,15 @@ private fun Report(report: IntegrationReport, picked: Set<String>, vm: Integrati
                 family,
                 picked,
                 onToggle = vm::toggle,
-                onSearch = { openUrl(context, vm.searchUrl(family)) },
-                onRequest = { openUrl(context, vm.issueUrl(family)) },
+                onSearch = { openInBrowser(context, vm.searchUrl(family)) },
+                onRequest = { openInBrowser(context, vm.issueUrl(family)) },
             )
         }
         if (report.supported.isNotEmpty()) {
             item { MutedText(stringResource(R.string.integrations_supported, report.supported.joinToString(", "))) }
         }
         item {
-            OutlinedButton(onClick = { openUrl(context, INTEGRATION_FORM_URL) }, modifier = Modifier.fillMaxWidth()) {
+            IchorOutlinedButton(onClick = { openInBrowser(context, INTEGRATION_FORM_URL) }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.integrations_other))
             }
         }
@@ -116,7 +125,7 @@ private fun FamilyCard(
     onSearch: () -> Unit,
     onRequest: () -> Unit,
 ) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 12.dp)) {
             Text(family.id, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 16.dp))
             family.groups.forEach { group -> GroupRow(group, group.name in picked) { onToggle(group.name) } }
@@ -124,8 +133,8 @@ private fun FamilyCard(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
             ) {
-                OutlinedButton(onClick = onSearch) { Text(stringResource(R.string.integrations_search)) }
-                Button(onClick = onRequest, enabled = family.groups.any { it.name in picked }) {
+                IchorOutlinedButton(onClick = onSearch) { Text(stringResource(R.string.integrations_search)) }
+                IchorButton(onClick = onRequest, enabled = family.groups.any { it.name in picked }) {
                     Text(stringResource(R.string.integrations_request))
                 }
             }

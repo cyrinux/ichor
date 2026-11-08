@@ -87,7 +87,7 @@ public func clusterGroupKey(_ context: ContextSummary, masked: Bool) -> ClusterG
         let authKey = context.authKey ?? ""
         id = authKey.isEmpty ? (identity.isEmpty ? nil : identity) : authKey
         owner = identity.isEmpty ? nil : identity
-    } else if let cloud {
+    } else if let cloud, !cloud.owner.isEmpty {
         id = cloud.owner
         owner = cloud.shortOwner
     }
@@ -104,7 +104,8 @@ public func clusterGroups(_ contexts: [ContextSummary], masked: Bool) -> [Cluste
     var seen = Set<String>()
     return keyed.compactMap { _, group in
         guard seen.insert(group.key).inserted else { return nil }
-        return ClusterGroup(key: group.key, provider: group.provider, owner: group.owner,
-                            contexts: members[group.key]?.map(\.0) ?? [])
+        return ClusterGroup(
+            key: group.key, provider: group.provider, owner: group.owner,
+            contexts: members[group.key]?.map(\.0) ?? [])
     }
 }

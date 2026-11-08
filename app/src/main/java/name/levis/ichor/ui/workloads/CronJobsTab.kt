@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,7 +46,9 @@ import name.levis.ichor.model.filteredCronJobs
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.cancellableCatching
+import name.levis.ichor.ui.components.CRONJOBS_DOCS_URL
 import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.components.CustomIconHint
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ResultToasts
@@ -141,6 +143,8 @@ fun CronJobsTab(
     val triggering by vm.triggering.collectAsStateWithLifecycle()
     val suspending by vm.suspending.collectAsStateWithLifecycle()
     LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setScope(control.scope) }
+    // kube-green may have the scope's namespace asleep: a CronJob it suspends says so.
+    val kubeGreen = rememberKubeGreenNamespace(control.scope.namespace.orEmpty())
     var confirm by remember { mutableStateOf<KubeCronJob?>(null) }
     var confirmSuspend by remember { mutableStateOf<KubeCronJob?>(null) }
     var expanded by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -159,7 +163,11 @@ fun CronJobsTab(
     confirmSuspend?.let { c ->
         val suspend = !c.suspended
         val title = stringResource(if (suspend) R.string.cronjobs_suspend_title else R.string.cronjobs_resume_title, c.displayName)
-        val text = stringResource(if (suspend) R.string.cronjobs_suspend_text else R.string.cronjobs_resume_text, c.namespace)
+        // kube-green re-suspends a resumed CronJob at the next sleep: warn before the tap.
+        val text = listOfNotNull(
+            stringResource(if (suspend) R.string.cronjobs_suspend_text else R.string.cronjobs_resume_text, c.namespace),
+            kubeGreenChangeWarning(kubeGreen),
+        ).joinToString("\n\n")
         val confirmLabel = stringResource(if (suspend) R.string.cronjobs_suspend else R.string.cronjobs_resume)
         // Argo CD self-heal would put spec.suspend back: offer to freeze its app first.
         val healer = remember(c.key) { vm.argoHealer(c) }
@@ -220,12 +228,13 @@ fun CronJobsTab(
                 LazyColumn(
                     Modifier.fillMaxSize(),
                     state = listState,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                    contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     items(rows, key = { it.key }) { c ->
                         CronJobCard(
                             cronJob = c,
+                            kubeGreen = kubeGreen,
                             showNamespace = selected == null,
                             expanded = c.key in expanded,
                             triggering = c.key in triggering,
@@ -235,6 +244,7 @@ fun CronJobsTab(
                             onSuspend = { confirmSuspend = c },
                         )
                     }
+                    item(key = "icon-hint") { CustomIconHint(stringResource(R.string.cronjobs_icon_hint), CRONJOBS_DOCS_URL) }
                 }
             }
         }
@@ -253,7 +263,7 @@ private fun CronRunToasts(results: Flow<CronRunResult>) = ResultToasts(results) 
 @Composable
 private fun CronRunConfirmDialog(cronJob: KubeCronJob, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val warn = LocalStatusColors.current.warn
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.cronjobs_run_title, cronJob.displayName)) },
         text = {
@@ -263,7 +273,7 @@ private fun CronRunConfirmDialog(cronJob: KubeCronJob, onConfirm: () -> Unit, on
                 if (cronJob.suspended) Text(stringResource(R.string.cronjobs_run_suspended), color = warn)
             }
         },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.cronjobs_run_confirm)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirmButton = { IchorTextButton(onClick = onConfirm) { Text(stringResource(R.string.cronjobs_run_confirm)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

@@ -1,61 +1,10 @@
 import BackgroundTasks
 import Foundation
 import IchorCore
+import UIKit
 import UserNotifications
 import WidgetKit
 
-/// Shared with the widget extension (App Group): a snapshot per cluster (by monitor key, see
-/// monitorClusterKey), the clusters the widget can pick and the active one.
-enum SharedStore {
-    static var defaults: UserDefaults { UserDefaults(suiteName: SharedSnapshot.suite) ?? .standard }
-
-    /// Every cluster's last snapshot; the single one of older versions goes to `activeCluster`.
-    static func snapshots(activeCluster: String?) -> [String: ClusterSnapshot] {
-        migratedSnapshots(SharedSnapshot.loadAll(from: defaults), legacy: SharedSnapshot.load(from: defaults), activeCluster: activeCluster)
-    }
-
-    /// Stores `snapshots` (the older versions' single one goes) and reloads the widget.
-    static func save(_ snapshots: [String: ClusterSnapshot]) {
-        if !snapshots.isEmpty, let data = try? JSONEncoder().encode(snapshots) {
-            defaults.set(data, forKey: SharedSnapshot.snapshotsKey)
-        } else {
-            defaults.removeObject(forKey: SharedSnapshot.snapshotsKey)
-        }
-        defaults.removeObject(forKey: SharedSnapshot.key)
-        WidgetCenter.shared.reloadAllTimelines()
-    }
-
-    /// Only the state of the clusters still stored (monitor keys): a removed cluster's snapshot
-    /// and unreachable count go with it.
-    static func keep(clusters: [String]) {
-        let stored = SharedSnapshot.loadAll(from: defaults)
-        let kept = keepingClusters(stored, clusters: clusters)
-        if kept.count != stored.count { save(kept) }
-        let reach = BackgroundMonitor.reachability()
-        let keptReach = keepingClusters(reach, clusters: clusters)
-        if keptReach.count != reach.count { BackgroundMonitor.saveReachability(keptReach) }
-    }
-
-    /// Forgets every snapshot (a config replaced, the screenshot mode toggled): the next run is a baseline.
-    static func clear() {
-        save([:])
-        BackgroundMonitor.saveReachability([:])
-    }
-
-    /// The clusters the widget can pick, named as on screen, and the active one (its default).
-    static func publish(clusters: [WidgetCluster], active: String?) {
-        let data = clusters.isEmpty ? nil : (try? JSONEncoder().encode(clusters))
-        guard data != defaults.data(forKey: SharedSnapshot.clustersKey) || active != SharedSnapshot.activeCluster(from: defaults) else { return }
-        if let data { defaults.set(data, forKey: SharedSnapshot.clustersKey) } else { defaults.removeObject(forKey: SharedSnapshot.clustersKey) }
-        if let active { defaults.set(active, forKey: SharedSnapshot.activeKey) } else { defaults.removeObject(forKey: SharedSnapshot.activeKey) }
-        WidgetCenter.shared.reloadAllTimelines()
-    }
-}
-
-/// Best-effort background checks: iOS decides when refresh tasks run (often every 15-60
-/// minutes). The config can only be decrypted while the device is unlocked, so checks made
-/// while it is locked are skipped (and with a security key required, once iOS closed the app).
-/// Each run checks every cluster not turned off. Same alert rules as Android (IchorCore.evaluate).
 enum BackgroundMonitor {
     static let taskID = "name.levis.ichor.refresh"
     static let alertsKey = "monitor.alerts"
@@ -106,6 +55,14 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: dataServicesKey) }
     }
 
+    static let importedPluginsKey = "monitor.importedPlugins"
+    /// Opt-in: imported plugins' findings notify too. Off, only the built-in plugins' do: a plugin
+    /// pasted in must not page anyone by itself.
+    static var importedPluginAlerts: Bool {
+        get { UserDefaults.standard.bool(forKey: importedPluginsKey) }
+        set { UserDefaults.standard.set(newValue, forKey: importedPluginsKey) }
+    }
+
     static let gitopsKey = "monitor.gitops"
     /// Opt-in: also check Argo CD and Flux apps through the Kubernetes API.
     static var gitopsWatched: Bool {
@@ -149,12 +106,23 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: sensorsKey) }
     }
 
+    static let kubespanKey = "monitor.kubespan"
+    /// On by default: also read every node's KubeSpan peers, to alert when a tunnel goes down (cheap, Talos only).
+    static var kubespanWatched: Bool {
+        get {
+            let defaults = UserDefaults.standard
+            return defaults.object(forKey: kubespanKey) == nil ? true : defaults.bool(forKey: kubespanKey)
+        }
+        set { UserDefaults.standard.set(newValue, forKey: kubespanKey) }
+    }
+
     static let sensorThresholdKey = "monitor.sensorThreshold"
     /// sensorThresholdAuto (each sensor's own limit) or the °C every node is held to.
     static var sensorThreshold: Int {
         get {
             let value = UserDefaults.standard.integer(forKey: sensorThresholdKey)
-            return value == sensorThresholdAuto ? value : min(max(value, sensorThresholdRange.lowerBound), sensorThresholdRange.upperBound)
+            return value == sensorThresholdAuto
+                ? value : min(max(value, sensorThresholdRange.lowerBound), sensorThresholdRange.upperBound)
         }
         set { UserDefaults.standard.set(newValue, forKey: sensorThresholdKey) }
     }
@@ -165,8 +133,9 @@ enum BackgroundMonitor {
     static var storageThresholds: StorageThresholds {
         get {
             let stored = UserDefaults.standard
-            return StorageThresholds(warn: stored.object(forKey: storageWarnKey) as? Int ?? storageWarnDefault,
-                                     crit: stored.object(forKey: storageCritKey) as? Int ?? storageCritDefault)
+            return StorageThresholds(
+                warn: stored.object(forKey: storageWarnKey) as? Int ?? storageWarnDefault,
+                crit: stored.object(forKey: storageCritKey) as? Int ?? storageCritDefault)
         }
         set {
             UserDefaults.standard.set(newValue.warn, forKey: storageWarnKey)
@@ -179,12 +148,20 @@ enum BackgroundMonitor {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: taskID, using: nil) { task in
             guard let task = task as? BGAppRefreshTask else { return }
             schedule()
+            let refresh = RefreshTask(task: task)
             let work = Task {
                 await check()
-                task.setTaskCompleted(success: true)
+                refresh.task.setTaskCompleted(success: true)
             }
             task.expirationHandler = { work.cancel() }
         }
+    }
+
+    /// `@unchecked Sendable`, and why it is sound: BGTask is not marked Sendable, but nothing here
+    /// changes it across threads: iOS hands it over once, and it is only completed, once, by the
+    /// task below (its expiration handler touches the Swift task, not this).
+    private struct RefreshTask: @unchecked Sendable {
+        let task: BGAppRefreshTask
     }
 
     static func schedule() {
@@ -194,7 +171,8 @@ enum BackgroundMonitor {
     }
 
     /// One cluster to check, with what that takes.
-    private struct ClusterJob: Sendable {
+    // Internal, not private: BackgroundMonitor+Alerts.swift reads it through ClusterAlerts.
+    struct ClusterJob: Sendable {
         let context: ContextSummary
         /// Its monitor key (monitorClusterKey): what its snapshot and unreachable count are kept under.
         let key: String
@@ -225,14 +203,16 @@ enum BackgroundMonitor {
         let extras: HistoryExtras
     }
 
-    /// Node storage as a run read it: the issues worth an alert, and every volume's fill.
+    /// Node storage as a run read it: the issues worth an alert (nil: not readable, the last
+    /// snapshot's stand), and every volume's fill.
     private struct StorageRead: Sendable {
-        let issues: [String: String]
+        let issues: [String: String]?
         let volumes: [HistoryVolumeRecord]
     }
 
     /// The alerts of one cluster, with the snapshots they are worded from.
-    private struct ClusterAlerts {
+    // Internal, not private: BackgroundMonitor+Alerts.swift posts them.
+    struct ClusterAlerts {
         let job: ClusterJob
         let alerts: [Alert]
         let snapshot: ClusterSnapshot
@@ -244,31 +224,50 @@ enum BackgroundMonitor {
     /// snapshot. Silent on a cluster unreachable as a whole (e.g. off VPN), past the opt-in
     /// "unreachable" alert after a few runs in a row.
     static func check() async {
-        TalosClient.applyStoredPrivacyMask() // also set at launch; keeps this path self-contained
+        TalosClient.applyStoredPrivacyMask()  // also set at launch; keeps this path self-contained
+        TalosClient.applyStoredAuditEvents()
         // Both stores, as the app lists them: the saved position counts kubeconfig clusters too.
         let stored = StoredConfigs.load()
         let parsed = await stored.parsed()
-        guard parsed.unreadable.isEmpty, let summary = ConfigSummary.combined(talos: parsed.talos, kube: parsed.kube) else { return }
-        let activeName = summary.selectedContext(index: AppModel.savedContextIndex, name: UserDefaults.standard.string(forKey: "activeContext"))
+        guard parsed.unreadable.isEmpty, let summary = ConfigSummary.combined(talos: parsed.talos, kube: parsed.kube)
+        else { return }
+        let activeName = summary.selectedContext(
+            index: AppModel.savedContextIndex, name: UserDefaults.standard.string(forKey: "activeContext"))
         // A cluster removed since drops its snapshot, unreachable count and snoozes (the app does too).
         let clusterKeys = summary.contexts.map(monitorClusterKey)
         AlertSnoozeStore.keep(clusters: summary.contexts.map(\.fingerprint))
         HistoryStore.keep(clusters: clusterKeys)
-        var snapshots = keepingClusters(SharedStore.snapshots(activeCluster: summary.context(named: activeName).map(monitorClusterKey)),
-                                        clusters: clusterKeys)
+        AlertMuteStore.keep(clusters: clusterKeys)
+        AlertRulesStore.keep(fingerprints: summary.contexts.map(\.fingerprint))
+        var snapshots = keepingClusters(
+            SharedStore.snapshots(activeCluster: summary.context(named: activeName).map(monitorClusterKey)),
+            clusters: clusterKeys)
         let unwatched = Set(UserDefaults.standard.stringArray(forKey: unwatchedKey) ?? [])
         let contexts = monitoredContexts(summary.contexts, active: activeName, unwatched: unwatched)
         // A Talos cluster without an endpoint yet cannot be checked: the widget stops showing what
         // it showed (Android's clearSnapshot).
         for context in contexts where context.needsEndpoint { snapshots[monitorClusterKey(context)] = nil }
-        let jobs = await checkJobs(for: contexts.filter { !$0.needsEndpoint }, stored: stored,
-                              kubeContexts: parsed.kube?.contexts ?? [], snapshots: snapshots)
+        // Renewed first, so the reads use fresh tokens and an idle-timeout session is kept alive;
+        // nil on a locked device (the sign-ins cannot be read), when nothing is told either.
+        let signIns = await TalosClient.renewStoredSignIns()
+        // Read in monitorOrder (CYR-190): the clusters that missed the last run (a miss counted in
+        // the reachability map) first; with the app in front ("Check now"), the cluster on screen last.
+        let lastFailed = Set(reachability().filter { $0.value.misses > 0 }.keys)
+        let appActive = await MainActor.run { UIApplication.shared.applicationState == .active }
+        let ordered = monitorOrder(
+            contexts.filter { !$0.needsEndpoint }, active: activeName, appActive: appActive,
+            lastFailed: lastFailed)
+        let jobs = await checkJobs(
+            for: ordered, stored: stored,
+            kubeContexts: parsed.kube?.contexts ?? [], snapshots: snapshots)
         let reads = await read(jobs)
         let now = Date()
         var reach = keepingClusters(reachability(), clusters: clusterKeys)
         let runs = unreachableRuns
         var outcomes: [ClusterAlerts] = []
         var history: [HistoryInput] = []
+        // The clusters read this run where a node answered: their firing alerts may repeat.
+        var answered: Set<String> = []
         for job in jobs {
             guard let result = reads[job.key] else { continue }
             var alerts: [Alert] = []
@@ -282,19 +281,23 @@ enum BackgroundMonitor {
                 history.append(HistoryInput(key: job.key, current: nil, evaluated: nil, extras: HistoryExtras()))
             case .read(let current, let extras):
                 let evaluated = evaluate(previous: job.previous, current: current, now: now)
-                snapshots[job.key] = evaluated.next
-                latest = evaluated.next
+                let next = withAlertTimes(previous: job.previous, next: evaluated.next, now: now)
+                snapshots[job.key] = next
+                latest = next
+                if !current.unreachableAsAWhole { answered.insert(job.key) }
                 alerts = evaluated.alerts
                 reachable = !current.unreachableAsAWhole
                 history.append(HistoryInput(key: job.key, current: current, evaluated: evaluated.next, extras: extras))
             }
             // Counted even with the alert off, so turning it on knows the runs already missed.
-            let counted = evaluateReachability(previous: reach[job.key], reachable: reachable, runs: runs,
-                                               enabled: alertsEnabled && unreachableWatched)
+            let counted = evaluateReachability(
+                previous: reach[job.key], reachable: reachable, runs: runs,
+                enabled: alertsEnabled && unreachableWatched)
             reach[job.key] = counted.next == Reachability() ? nil : counted.next
             if let alert = counted.alert { alerts.insert(alert, at: 0) }
             guard !alerts.isEmpty else { continue }
-            let snapshot = latest ?? ClusterSnapshot(context: job.context.name, takenAt: now, nodes: [:], kube: job.context.isKube)
+            let snapshot =
+                latest ?? ClusterSnapshot(context: job.context.name, takenAt: now, nodes: [:], kube: job.context.isKube)
             outcomes.append(ClusterAlerts(job: job, alerts: alerts, snapshot: snapshot, previous: job.previous))
         }
         saveReachability(reach)
@@ -304,9 +307,32 @@ enum BackgroundMonitor {
             // The storage trends come from the ring with this run's record in it.
             outcomes += await evaluateTrends(history, jobs: jobs, snapshots: &snapshots, now: now)
         }
+        // Ranked before the save, which reloads the widgets and sends the watch the new tally.
+        await publishFleet(contexts: summary.contexts, snapshots: snapshots, reachability: reach, now: now)
         SharedStore.save(snapshots)
+        // The pull requests opened from the phone: their states are kept even with alerts off,
+        // so turning them on does not tell old merges.
+        let proposals = await checkProposals(contexts: contexts.filter { !$0.needsEndpoint }, now: now)
         guard alertsEnabled else { return }
-        await post(outcomes, now: now)
+        // One rules decision over every cluster's alerts, pull requests and sign-ins (postAll).
+        let names = UserDefaults.standard.dictionary(forKey: "clusterNames") as? [String: String] ?? [:]
+        let labels = ClusterLabels(names: names, masked: UserDefaults.standard.bool(forKey: PrivacyKeys.enabled))
+        let snoozes = AlertSnoozeStore.current(now: now)
+        var posts = await pending(outcomes, labels: labels, snoozes: snoozes, now: now)
+        posts += pendingProposals(proposals, labels: labels, snoozes: snoozes, now: now)
+        if let signIns {
+            posts += pendingSignIns(signIns, contexts: contexts, labels: labels, snoozes: snoozes, now: now)
+        }
+        posts += await pendingRepeats(
+            jobs.filter { answered.contains($0.key) }, changed: outcomes, snapshots: snapshots,
+            clusters: summary.contexts.map(\.fingerprint), labels: labels, snoozes: snoozes, now: now)
+        let notified = await postAll(posts, now: now)
+        guard !notified.isEmpty else { return }
+        for (key, alertKeys) in notified {
+            guard let snapshot = snapshots[key] else { continue }
+            snapshots[key] = withNotified(snapshot, keys: alertKeys, now: now)
+        }
+        SharedStore.save(snapshots)
     }
 
     /// One record per cluster read (or not answering) in each one's sealed ring. A track not read
@@ -318,8 +344,9 @@ enum BackgroundMonitor {
             let stored = HistoryStore.ring(cluster: input.key)
             if stored == .unreadable { continue }
             let previous = await HistoryStore.openAlerts(in: stored, now: millis)
-            let record = historyRecord(at: now, current: input.current, evaluated: input.evaluated, extras: input.extras,
-                                       previousAlerts: previous, now: now)
+            let record = historyRecord(
+                at: now, current: input.current, evaluated: input.evaluated, extras: input.extras,
+                previousAlerts: previous, now: now)
             HistoryStore.append(record, cluster: input.key, stored: stored)
         }
     }
@@ -327,23 +354,29 @@ enum BackgroundMonitor {
     /// The storage trend alerts (CYR-128) of each cluster whose storage was read this run, from
     /// its ring as just written: the ones open go in its snapshot. A cluster not read, or whose
     /// ring cannot be read, keeps its open ones; with the warning off they are forgotten.
-    private static func evaluateTrends(_ inputs: [HistoryInput], jobs: [ClusterJob], snapshots: inout [String: ClusterSnapshot],
-                                       now: Date) async -> [ClusterAlerts] {
+    private static func evaluateTrends(
+        _ inputs: [HistoryInput], jobs: [ClusterJob], snapshots: inout [String: ClusterSnapshot],
+        now: Date
+    ) async -> [ClusterAlerts] {
         let watched = storageTrendWatched
         var out: [ClusterAlerts] = []
         for input in inputs {
-            guard let current = input.current, var snapshot = snapshots[input.key], snapshot.storageWatched else { continue }
+            guard let current = input.current, var snapshot = snapshots[input.key], snapshot.storageWatched else {
+                continue
+            }
             guard watched else {
                 snapshot.storageTrends = [:]
                 snapshots[input.key] = snapshot
                 continue
             }
             guard current.storageChecked, let job = jobs.first(where: { $0.key == input.key }),
-                  let forecast = await HistoryStore.forecast(cluster: input.key, now: now) else { continue }
+                let forecast = await HistoryStore.forecast(cluster: input.key, now: now)
+            else { continue }
             // At or above the warning threshold, read now or still notified: the fill alert speaks for it.
             let fill = current.storageIssues.merging(snapshot.storageIssues) { fresh, _ in fresh }
-            let outcome = evaluateStorageTrends(forecast, open: snapshot.storageTrends, fillIssues: fill,
-                                                hostnames: snapshot.nodes.mapValues(\.hostname))
+            let outcome = evaluateStorageTrends(
+                forecast, open: snapshot.storageTrends, fillIssues: fill,
+                hostnames: snapshot.nodes.mapValues(\.hostname))
             snapshot.storageTrends = outcome.open
             snapshots[input.key] = snapshot
             if !outcome.alerts.isEmpty {
@@ -353,10 +386,27 @@ enum BackgroundMonitor {
         return out
     }
 
+    /// A client of the stored cluster `fingerprint`, whichever is on screen, as a check would use it;
+    /// nil when it is gone or waits for its VPN. For a notification's action, with the app closed.
+    static func client(forFingerprint fingerprint: String) async -> TalosClient? {
+        TalosClient.applyStoredPrivacyMask()
+        TalosClient.applyStoredAuditEvents()
+        let stored = StoredConfigs.load()
+        let parsed = await stored.parsed()
+        guard let summary = ConfigSummary.combined(talos: parsed.talos, kube: parsed.kube),
+            let context = summary.contexts.first(where: { $0.fingerprint == fingerprint })
+        else { return nil }
+        let jobs = await checkJobs(
+            for: [context], stored: stored, kubeContexts: parsed.kube?.contexts ?? [], snapshots: [:])
+        return jobs.first?.client
+    }
+
     /// The clusters of `contexts` to check now: a VPN-only one waits for its VPN (without it the
     /// check could only time out), and a cluster whose config is not stored is left out.
-    private static func checkJobs(for contexts: [ContextSummary], stored: StoredConfigs, kubeContexts: [ContextSummary],
-                                  snapshots: [String: ClusterSnapshot]) async -> [ClusterJob] {
+    private static func checkJobs(
+        for contexts: [ContextSummary], stored: StoredConfigs, kubeContexts: [ContextSummary],
+        snapshots: [String: ClusterSnapshot]
+    ) async -> [ClusterJob] {
         let vpnOnly = Set(UserDefaults.standard.stringArray(forKey: "vpnOnlyClusters") ?? [])
         var vpnUp = true
         if contexts.contains(where: { vpnOnly.contains($0.fingerprint) }) { vpnUp = await VpnMonitor.currentlyUp() }
@@ -367,14 +417,22 @@ enum BackgroundMonitor {
         let links = UserDefaults.standard.dictionary(forKey: "kubeAccess") as? [String: String] ?? [:]
         return contexts.compactMap { context -> ClusterJob? in
             guard !heldBackForVpn(vpnOnly: vpnOnly, fingerprint: context.fingerprint, vpnUp: vpnUp),
-                  let yaml = stored.config(for: context) else { return nil }
-            let link = context.isKube ? nil : stored.kube.flatMap { kube in
-                kubeAccessContext(of: context, links: links, kubeContexts: kubeContexts).map { KubeLink(config: kube, context: $0) }
-            }
-            let client = TalosClient(config: yaml, context: context.name, kubeServer: servers[context.fingerprint] ?? "", kubeLink: link)
+                let yaml = stored.config(for: context)
+            else { return nil }
+            let link =
+                context.isKube
+                ? nil
+                : stored.kube.flatMap { kube in
+                    kubeAccessContext(of: context, links: links, kubeContexts: kubeContexts).map {
+                        KubeLink(config: kube, context: $0)
+                    }
+                }
+            let client = TalosClient(
+                config: yaml, context: context.name, kubeServer: servers[context.fingerprint] ?? "", kubeLink: link)
             let key = monitorClusterKey(context)
-            return ClusterJob(context: context, key: key, client: client,
-                              kubeAllowed: context.allows(.workloads, kubeLinked: link != nil), previous: snapshots[key])
+            return ClusterJob(
+                context: context, key: key, client: client,
+                kubeAllowed: context.allows(.workloads, kubeLinked: link != nil), previous: snapshots[key])
         }
     }
 
@@ -411,18 +469,32 @@ enum BackgroundMonitor {
         var overview: ClusterOverview?
         var kubeNodes: KubeNodesOverview?
         if context.isKube {
-            kubeNodes = await withDeadline(max(0, deadline.timeIntervalSinceNow)) { try? await client.kubeNodes() }
+            switch await firstRead(within: max(0, deadline.timeIntervalSinceNow), { try await client.kubeNodes() }) {
+            case .read(let nodes): kubeNodes = nodes
+            case .left: return .skipped
+            case .failed: break
+            }
         } else {
-            overview = await withDeadline(max(0, deadline.timeIntervalSinceNow)) { try? await client.overview() }
+            switch await firstRead(within: max(0, deadline.timeIntervalSinceNow), { try await client.overview() }) {
+            case .read(let read): overview = read
+            case .left: return .skipped
+            case .failed: break
+            }
         }
         guard overview != nil || kubeNodes != nil else { return Task.isCancelled ? .skipped : .unreachable }
         var etcd: EtcdOverview?
-        if !context.isKube { etcd = await withDeadline(max(0, deadline.timeIntervalSinceNow)) { try? await client.etcd() } }
+        if !context.isKube {
+            etcd = await withDeadline(max(0, deadline.timeIntervalSinceNow)) { try? await client.etcd() }
+        }
         let left = max(0, deadline.timeIntervalSinceNow)
         let previous = job.previous
         // Opt-in, and only for roles that may use the Kubernetes API: each check then lists custom
         // resources and runs the Garage CLI in a pod.
         let watchData = dataServicesWatched && job.kubeAllowed
+        // With them, the CRD plugins' findings (KubePluginFindings): one bounded call for every
+        // plugin the cluster runs.
+        let watchPlugins = watchData
+        let knownPlugins = knownPluginIssues(previous, context: context.name)
         // Same gate for Argo CD and Flux apps, read through their custom resources.
         let watchGitOps = gitopsWatched && job.kubeAllowed
         let known = knownGitOpsIssues(previous, context: context.name)
@@ -432,27 +504,51 @@ enum BackgroundMonitor {
         // And for the Alertmanager, reached like the metrics through the service proxy or a URL.
         let watchAlertmanager = alertmanagerWatched && job.kubeAllowed
         let knownAlertmanager = knownAlertmanagerIssues(previous, context: context.name)
-        // And node storage, through the Talos API only (any role may read it): none on a kubeconfig cluster.
-        let watchStorage = storageWatched && !context.isKube
+        // And node storage: through the Talos API (any role may read it), or on a kubeconfig cluster
+        // each kubelet's summary (credentials refused nodes/proxy: no reading, never an alert). A
+        // node still listed that did not answer keeps its issues. The demo's disks are read (its
+        // history shows them) but never open an issue: a demo never notifies.
+        let watchStorage = storageWatched
+        let kubeListed = kubeNodes.map { Set($0.nodes.map(\.name)) }
+        let demo = context.demo
         let knownStorage = knownStorageIssues(previous, context: context.name)
         let thresholds = storageThresholds
         // And node temperatures, the same way: one Talos call, nothing read with the setting off.
         let watchSensors = sensorsWatched && !context.isKube
         let knownSensors = knownSensorIssues(previous, context: context.name)
         let sensorLimit = sensorThreshold
+        // And the KubeSpan tunnels: Go judges them from every node's peers, the app only keeps the verdict.
+        let watchKubespan = kubespanWatched && !context.isKube
+        let knownKubespan = knownKubespanIssues(previous, context: context.name)
         let fingerprint = context.fingerprint
         async let dataRead = ifWatched(watchData, within: left) { try? await client.dataServices(hints: "") }
         async let gitopsRead = ifWatched(watchGitOps, within: left) { await readGitOps(client, known: known) }
-        async let checkupRead = ifWatched(watchCheckup, within: left) { await readCheckup(client, known: knownCheckup) }
+        async let checkupRead = ifWatched(watchCheckup, within: left) {
+            await readCheckup(
+                client, known: knownCheckup, gitopsWatched: watchGitOps, pluginsWatched: watchPlugins,
+                importedWatched: importedPluginAlerts)
+        }
+        async let pluginRead = ifWatched(watchPlugins, within: left) {
+            await readPlugins(
+                client, known: knownPlugins, checkupWatched: watchCheckup, importedWatched: importedPluginAlerts)
+        }
         async let alertmanagerRead = ifWatched(watchAlertmanager, within: left) {
             await readAlertmanager(client, fingerprint: fingerprint, known: knownAlertmanager)
         }
-        async let storageRead = ifWatched(watchStorage, within: left) {
-            await readStorage(client, thresholds: thresholds, known: knownStorage)
+        async let storageRead = ifWatched(watchStorage, within: left) { () -> StorageRead? in
+            if let kubeListed {
+                return await readKubeStorage(
+                    client, thresholds: thresholds, listed: kubeListed, known: knownStorage, demo: demo)
+            }
+            return await readStorage(client, thresholds: thresholds, known: knownStorage)
         }
         async let sensorRead = ifWatched(watchSensors, within: left) { () -> [String: String]? in
             guard let health = try? await client.clusterSensorHealth() else { return nil }
             return sensorIssuesOf(health, threshold: sensorLimit, known: knownSensors)
+        }
+        async let kubespanRead = ifWatched(watchKubespan, within: left) { () -> [String: String]? in
+            guard let health = try? await client.kubeSpanMeshHealth() else { return nil }
+            return kubespanIssuesOf(health, known: knownKubespan)
         }
         let dataServices = await dataRead
         let gitopsIssues = await gitopsRead
@@ -461,77 +557,72 @@ enum BackgroundMonitor {
         let storage = await storageRead
         let storageIssues = storage?.issues
         let sensorIssues = await sensorRead
+        let kubespanIssues = await kubespanRead
+        let pluginIssues = await pluginRead
         let now = Date()
         if let kubeNodes {
-            return .read(kubeSnapshotOf(kubeNodes, context: context.name, certNotAfter: context.certNotAfter, takenAt: now,
-                                        dataWatched: watchData, dataServices: dataServices,
-                                        gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
-                                        checkupWatched: watchCheckup, checkupIssues: checkupIssues,
-                                        alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues),
-                         historyExtras(kubeNodes))
+            var kubeExtras = historyExtras(kubeNodes)
+            kubeExtras.volumes = storage?.volumes ?? []
+            return .read(
+                kubeSnapshotOf(
+                    kubeNodes, context: context.name, certNotAfter: context.certNotAfter, takenAt: now,
+                    dataWatched: watchData, dataServices: dataServices,
+                    gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
+                    checkupWatched: watchCheckup, checkupIssues: checkupIssues,
+                    alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
+                    storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn,
+                    pluginWatched: watchPlugins, pluginIssues: pluginIssues),
+                kubeExtras)
         }
         guard let overview else { return .unreachable }
         var extras = historyExtras(overview)
         extras.volumes = storage?.volumes ?? []
-        return .read(snapshotOf(overview, etcd: etcd, certNotAfter: context.certNotAfter, takenAt: now,
-                                dataWatched: watchData, dataServices: dataServices,
-                                gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
-                                checkupWatched: watchCheckup, checkupIssues: checkupIssues,
-                                alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
-                                storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn,
-                                sensorWatched: watchSensors, sensorIssues: sensorIssues),
-                     extras)
+        return .read(
+            snapshotOf(
+                overview, etcd: etcd, certNotAfter: context.certNotAfter, takenAt: now,
+                dataWatched: watchData, dataServices: dataServices,
+                gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
+                checkupWatched: watchCheckup, checkupIssues: checkupIssues,
+                alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
+                storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn,
+                sensorWatched: watchSensors, sensorIssues: sensorIssues,
+                kubespanWatched: watchKubespan, kubespanIssues: kubespanIssues,
+                pluginWatched: watchPlugins, pluginIssues: pluginIssues),
+            extras)
+    }
+
+    /// How a check's first read ended: `left` when the switch away from this cluster cut it,
+    /// which says nothing of the cluster.
+    private enum FirstRead<T: Sendable>: Sendable {
+        case read(T)
+        case left
+        case failed
+    }
+
+    private static func firstRead<T: Sendable>(
+        within seconds: TimeInterval, _ work: @escaping @Sendable () async throws -> T
+    ) async -> FirstRead<T> {
+        let ended = await withDeadline(seconds) { () async -> FirstRead<T>? in
+            do {
+                return .read(try await work())
+            } catch is CancellationError {
+                return .left
+            } catch {
+                return .failed
+            }
+        }
+        return ended ?? .failed
     }
 
     /// `work` within `seconds` when `on`; nil when off, failed or too slow.
-    private static func ifWatched<T: Sendable>(_ on: Bool, within seconds: TimeInterval,
-                                               _ work: @escaping @Sendable () async -> T?) async -> T? {
+    private static func ifWatched<T: Sendable>(
+        _ on: Bool, within seconds: TimeInterval,
+        _ work: @escaping @Sendable () async -> T?
+    ) async -> T? {
         guard on else { return nil }
         return await withDeadline(seconds, work)
     }
 
-    /// Posts each cluster's alerts, named after their cluster (the notification's subtitle).
-    private static func post(_ outcomes: [ClusterAlerts], now: Date) async {
-        let hide = UserDefaults.standard.bool(forKey: "appLockEnabled")
-        let names = UserDefaults.standard.dictionary(forKey: "clusterNames") as? [String: String] ?? [:]
-        let labels = ClusterLabels(names: names, masked: UserDefaults.standard.bool(forKey: PrivacyKeys.enabled))
-        let snoozes = AlertSnoozeStore.current(now: now)
-        for outcome in outcomes {
-            let context = outcome.job.context
-            let fingerprint = context.fingerprint
-            // A snoozed alert posts nothing, neither the problem nor its end (its notification's Snooze).
-            for alert in snoozes.notSnoozed(outcome.alerts, cluster: fingerprint, now: now) {
-                let link = alertLink(alert, snapshot: outcome.snapshot, cluster: context.clusterID)
-                let text = localized(alert, snapshot: outcome.snapshot, previous: outcome.previous, now: now)
-                let wake = await canWake(alert, cluster: fingerprint)
-                await post(alert, localized: text, cluster: labels.of(context),
-                           id: alertNotificationID(cluster: outcome.job.key, alertKey: alert.key), link: link,
-                           actions: alertActions(key: alert.key, problem: alert.problem, canWake: wake),
-                           info: actionInfo(alert, snapshot: outcome.snapshot, cluster: fingerprint), hideDetails: hide)
-            }
-        }
-    }
-
-    /// Whether the node of a node alert can be woken: a Wake-on-LAN setting or a MAC seen.
-    private static func canWake(_ alert: Alert, cluster: String) async -> Bool {
-        guard alert.problem, !cluster.isEmpty, alert.key.hasPrefix("node:") else { return false }
-        let address = String(alert.key.dropFirst("node:".count))
-        return await MainActor.run {
-            WakeOnLanStore.shared.loadIfNeeded()
-            return !WakeOnLanStore.shared.wakeTargets(fingerprint: cluster, node: address).isEmpty
-        }
-    }
-
-    /// What the notification's Snooze and Wake need: the cluster, the alert, a node's hostname.
-    private static func actionInfo(_ alert: Alert, snapshot: ClusterSnapshot, cluster: String) -> [String: String] {
-        var info = [AlertNotificationActions.clusterKey: cluster, AlertNotificationActions.alertKey: alert.key]
-        if alert.key.hasPrefix("node:"), let state = snapshot.nodes[String(alert.key.dropFirst("node:".count))] {
-            info[AlertNotificationActions.hostKey] = state.hostname
-        }
-        return info
-    }
-
-    /// Argo CD and Flux issues (a tool not installed reads fine and adds nothing); nil when neither
     /// could be read. A part that could not be read keeps what the last snapshot knew of it.
     private static func readGitOps(_ client: TalosClient, known: [String: String]) async -> [String: String]? {
         async let argo = try? client.argoCD()
@@ -540,250 +631,65 @@ enum BackgroundMonitor {
     }
 
     /// The checkup's findings worth an alert; nil when it could not be read. A section that could
-    /// not be read keeps what the last snapshot knew of it.
-    private static func readCheckup(_ client: TalosClient, known: [String: String]) async -> [String: String]? {
+    /// not be read keeps what the last snapshot knew of it. With GitOps watched, what that alert
+    /// already raises is left to it; with the plugins watched, their findings to their own alert.
+    private static func readCheckup(
+        _ client: TalosClient, known: [String: String], gitopsWatched: Bool,
+        pluginsWatched: Bool, importedWatched: Bool
+    ) async -> [String: String]? {
         guard let report = try? await client.checkup() else { return nil }
-        return checkupIssuesWithGaps(report, known: known)
+        return checkupIssuesWithGaps(
+            report, known: known, gitopsWatched: gitopsWatched, pluginsWatched: pluginsWatched,
+            importedPluginsWatched: importedWatched)
+    }
+
+    /// The CRD plugins' findings worth an alert, in the app's language; nil when the call failed.
+    /// A plugin that could not be read keeps what the last snapshot knew of it. With the checkup
+    /// watched, the findings it reports from a section of its own are left to it.
+    private static func readPlugins(
+        _ client: TalosClient, known: [String: String], checkupWatched: Bool,
+        importedWatched: Bool
+    ) async -> [String: String]? {
+        guard let report = try? await client.pluginFindings() else { return nil }
+        return pluginIssuesWithGaps(
+            report, known: known, checkupWatched: checkupWatched, importedWatched: importedWatched)
     }
 
     /// The Alertmanager's alerts worth a notification; nil when it could not be read (or none was
     /// found): the last snapshot's then stand. Past 1000 alerts, a known one missing from the
     /// answer is kept rather than reported resolved.
-    private static func readAlertmanager(_ client: TalosClient, fingerprint: String, known: [String: String]) async -> [String: String]? {
+    private static func readAlertmanager(_ client: TalosClient, fingerprint: String, known: [String: String]) async
+        -> [String: String]?
+    {
         guard let source = try? await AlertmanagerStore.resolve(fingerprint, with: client),
-              let alerts = try? await client.alertmanagerAlerts(source) else { return nil }
+            let alerts = try? await client.alertmanagerAlerts(source)
+        else { return nil }
         return alertmanagerIssuesWithGaps(alerts, known: known)
     }
 
     /// Volumes over `thresholds` and disks failing SMART, with every volume's fill (the history);
     /// nil when it could not be read. A node that did not answer keeps what the last snapshot knew of it.
-    private static func readStorage(_ client: TalosClient, thresholds: StorageThresholds,
-                                    known: [String: String]) async -> StorageRead? {
+    private static func readStorage(
+        _ client: TalosClient, thresholds: StorageThresholds,
+        known: [String: String]
+    ) async -> StorageRead? {
         guard let health = try? await client.clusterStorageHealth() else { return nil }
-        return StorageRead(issues: storageIssuesOf(health, thresholds: thresholds, known: known), volumes: historyVolumes(health))
+        return StorageRead(
+            issues: storageIssuesOf(health, thresholds: thresholds, known: known), volumes: historyVolumes(health))
     }
 
-    /// IchorCore builds English alerts; this rebuilds their text in the user's
-    /// language from the alert key and the snapshot (same wording, keys in Localizable.xcstrings).
-    /// `previous`: the snapshot before the check, which still names an Alertmanager alert that resolved.
-    static func localized(_ alert: Alert, snapshot: ClusterSnapshot, previous: ClusterSnapshot? = nil,
-                          now: Date) -> (title: String, text: String) {
-        let parts = alert.key.split(separator: ":", maxSplits: 1).map(String.init)
-        guard let kind = parts.first else { return (alert.title, alert.text) }
-        let subject = parts.count > 1 ? parts[1] : ""
-        switch kind {
-        case "node":
-            guard let state = snapshot.nodes[subject] else { return (alert.title, alert.text) }
-            let title = switch state.health {
-            case .ready: String(localized: "\(state.hostname) is ready again")
-            case .notReady: String(localized: "\(state.hostname) is not ready")
-            case .unreachable: String(localized: "\(state.hostname) is unreachable")
-            }
-            return (title, alert.text)
-        case "etcd":
-            let alarm = subject.split(separator: ":", maxSplits: 1).map(String.init)
-            let text = String(localized: "\(alarm.last ?? subject) on member \(alarm.first ?? "")")
-            return (String(localized: "etcd alarm raised"), text)
-        case "cert":
-            let days = daysUntil(snapshot.certNotAfter, now: now)
-            if snapshot.kube {
-                let text = days < 0
-                    ? String(localized: "The kubeconfig credentials expired \(-days) days ago.")
-                    : String(localized: "The kubeconfig credentials expire in \(days) days. Import a new kubeconfig.")
-                return (String(localized: "kubeconfig credentials"), text)
-            }
-            let text = days < 0
-                ? String(localized: "The client certificate expired \(-days) days ago.")
-                : String(localized: "The client certificate expires in \(days) days. Generate a new talosconfig.")
-            return (String(localized: "talosconfig certificate"), text)
-        case "data":
-            // "system|label": the label names the volume or cluster, the system goes in the text.
-            let issue = subject.split(separator: "|", maxSplits: 1).map(String.init)
-            let label = issue.last ?? subject
-            let system = dataSystemTitle(subject)
-            guard alert.problem else { return (String(localized: "\(label) is healthy again"), system) }
-            let severity = snapshot.dataIssues[subject] == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
-            return (String(localized: "\(label) needs attention"), "\(system) · \(severity)")
-        case "gitops":
-            return localizedGitOps(alert, subject: subject, value: snapshot.gitopsIssues[subject])
-        case "am":
-            // "am:fingerprint": named from the issue kept, the current one or, once resolved, the last.
-            guard let value = snapshot.amIssues[subject] ?? previous?.amIssues[subject] else { return (alert.title, alert.text) }
-            let issue = AMIssue(value: value)
-            guard alert.problem else { return (String(localized: "Alertmanager: \(issue.alertname) resolved"), issue.subject) }
-            let severity = issue.severity == dataCritical ? AMSeverity.critical.label : AMSeverity.warning.label
-            let line = issue.line(severity: severity)
-            return (String(localized: "Alertmanager: \(issue.alertname)"), issue.summary.isEmpty ? line : "\(line)\n\(issue.summary)")
-        case "checkup":
-            // "section|kind|subject": the section names what kind of trouble, the subject what has it.
-            let finding = CheckupSubject(key: subject)
-            guard alert.problem else { return (CheckupText.monitorCheckupOk(finding.subject), CheckupText.checkupTitle) }
-            let section = CheckupSectionID(rawValue: finding.section)?.title ?? finding.section
-            let severity = snapshot.checkupIssues[subject] == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
-            return ("\(section): \(finding.subject)", "\(CheckupText.checkupTitle) · \(severity)")
-        case "storage":
-            // "<node>|<volume>:trend": named from the trend kept, the current one or, once resolved, the last.
-            if let volume = storageTrendVolumeKey(subject: subject) {
-                guard let value = snapshot.storageTrends[volume] ?? previous?.storageTrends[volume] else { return (alert.title, alert.text) }
-                return localizedStorageTrend(alert, issue: StorageTrendIssue(value: value))
-            }
-            // "<node>|…": named from the issue kept, the current one or, once resolved, the last.
-            guard let value = snapshot.storageIssues[subject] ?? previous?.storageIssues[subject] else { return (alert.title, alert.text) }
-            return localizedStorage(alert, issue: StorageIssue(value: value), warn: snapshot.storageWarn)
-        case "sensor":
-            // "<node>|hot" or "<node>|throttled": named from the issue kept, the current one or, once resolved, the last.
-            guard let value = snapshot.sensorIssues[subject] ?? previous?.sensorIssues[subject] else { return (alert.title, alert.text) }
-            return localizedSensor(alert, issue: SensorIssue(value: value))
-        case "unreachable":
-            // The cluster is named in the subtitle.
-            guard alert.problem else {
-                return (String(localized: "Cluster reachable again"), String(localized: "It answers the background checks again."))
-            }
-            return (String(localized: "Cluster unreachable"), String(localized: "No answer to the last \(unreachableRuns) checks."))
-        default:
-            return (alert.title, alert.text)
-        }
-    }
-
-    /// "tool|subject": worded per tool and reason, the namespace/name and severity in the text.
-    private static func localizedGitOps(_ alert: Alert, subject key: String, value: String?) -> (title: String, text: String) {
-        let subject = GitOpsSubject(key: key)
-        let name = subject.title
-        guard alert.problem else {
-            let title = subject.isFlux
-                ? String(localized: "Flux: \(name) is ready again")
-                : String(localized: "Argo CD: \(name) is synced and healthy again")
-            return (title, subject.label)
-        }
-        guard let value else { return (alert.title, alert.text) }
-        let title = switch gitopsReason(value) {
-        case .syncFailed: String(localized: "Argo CD: \(name) sync failed")
-        case .degraded: String(localized: "Argo CD: \(name) is degraded")
-        case .missing: String(localized: "Argo CD: \(name) has missing resources")
-        case .error: String(localized: "Argo CD: \(name) has an error")
-        case .outOfSync: String(localized: "Argo CD: \(name) is out of sync")
-        case .notReady: String(localized: "Flux: \(name) is not ready")
-        case nil: alert.title
-        }
-        let severity = gitopsSeverity(value) == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
-        return (title, "\(subject.label) · \(severity)")
-    }
-
-    /// A volume's fill, or a disk failing SMART, on a node named by its hostname.
-    /// A node running hot or throttled, worded as on Android.
-    private static func localizedSensor(_ alert: Alert, issue: SensorIssue) -> (title: String, text: String) {
-        let host = issue.hostname
-        if issue.isThrottled {
-            guard alert.problem else { return (String(localized: "\(host) no longer throttled"), String(localized: "Node temperatures")) }
-            return (String(localized: "\(host) is throttled"), String(localized: "Its cores run well below their speed: check its cooling."))
-        }
-        guard alert.problem else { return (String(localized: "\(host) back to a normal temperature"), String(localized: "Node temperatures")) }
-        return (String(localized: "\(host) runs hot (\(celsiusText(issue.celsius)) °C)"),
-                String(localized: "\(issue.label), alert at \(celsiusText(issue.limit)) °C"))
-    }
-
-    private static func localizedStorage(_ alert: Alert, issue: StorageIssue, warn: Int) -> (title: String, text: String) {
-        let name = issue.name
-        let host = issue.hostname
-        if issue.isSmart {
-            guard alert.problem else { return (String(localized: "\(name) on \(host) passes SMART again"), "") }
-            return (String(localized: "SMART failing on \(name) (\(host))"), issue.detail)
-        }
-        // The "%" goes with the number, so no key carries a literal one.
-        guard alert.problem else {
-            let threshold = "\(warn) %"
-            return (String(localized: "\(name) on \(host) back under \(threshold)"), "")
-        }
-        let fill = "\(issue.percent) %"
-        let title = issue.severity == dataCritical
-            ? String(localized: "\(name) on \(host) at \(fill), almost full")
-            : String(localized: "\(name) on \(host) at \(fill)")
-        let free = formatBytes(issue.freeBytes)
-        let size = formatBytes(issue.sizeBytes)
-        return (title, String(localized: "\(free) free of \(size)"))
-    }
-
-    /// A volume about to be critical or full, by its growth over the last week.
-    private static func localizedStorageTrend(_ alert: Alert, issue: StorageTrendIssue) -> (title: String, text: String) {
-        let name = issue.name
-        let host = issue.hostname
-        guard alert.problem else { return (String(localized: "\(name) on \(host) no longer filling up fast"), "") }
-        let when = issue.when.localized
-        let title = issue.critical
-            ? String(localized: "\(name) on \(host) critical \(when)")
-            : String(localized: "\(name) on \(host) full \(when)")
-        // The "%" goes with the number, so no key carries a literal one.
-        let growth = "\(storagePercentText(issue.slopePerDay)) %"
-        let fill = "\(storagePercentText(issue.usedPercent)) %"
-        return (title, String(localized: "growing ~\(growth) a day, now at \(fill)"))
-    }
-
-    static func requestPermission() async -> Bool {
-        (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])) ?? false
-    }
-
-    /// The share link a tapped alert opens, on the cluster checked (its `clusterID`); nil without
-    /// one, or for an alert about no screen (the Talos certificate alert opens the renewal).
-    private static func alertLink(_ alert: Alert, snapshot: ClusterSnapshot, cluster: String) -> URL? {
-        guard !cluster.isEmpty, var target = ShareTarget.forAlert(key: alert.key, snapshot: snapshot) else { return nil }
-        target.cluster = cluster
-        return TalosClient.shareLink(for: target)
-    }
-
-    /// The alert kinds, one notification category each ("alert.node"…), so iOS can group and
-    /// summarize them per kind.
-    static let alertKinds = ["node", "etcd", "cert", "data", "gitops", "checkup", "alertmanager", "storage", "cluster"]
-
-    /// The category of an alert: its kind's with its `actions` (see alertCategory), "….private"
-    /// with details hidden; "private" for a kind this version does not know. Alertmanager alerts
-    /// ("am:…") are of the kind "alertmanager", "unreachable" of the kind "cluster" (alertKind).
-    static func category(alertKey: String, actions: [AlertAction] = [], hideDetails: Bool) -> String {
-        let kind = alertKind(key: alertKey)
-        guard alertKinds.contains(kind) else { return hideDetails ? "private" : "" }
-        return alertCategory(kind: kind, actions: actions, hideDetails: hideDetails)
-    }
-
-    /// With the app lock on, details are hidden on the lock screen (iOS shows "Notification").
-    /// `cluster` names the cluster (the subtitle), `id` keeps the same alert of two clusters apart;
-    /// `link` (userInfo "link") is the share link the tap opens; `info` what its actions need.
-    private static func post(_ alert: Alert, localized: (title: String, text: String), cluster: String, id: String, link: URL?,
-                             actions: [AlertAction], info: [String: String], hideDetails: Bool) async {
-        let content = UNMutableNotificationContent()
-        content.title = localized.title
-        content.subtitle = cluster
-        content.body = localized.text
-        content.sound = alert.problem ? .default : nil
-        content.categoryIdentifier = category(alertKey: alert.key, actions: actions, hideDetails: hideDetails)
-        var userInfo = info
-        if let link { userInfo["link"] = link.absoluteString }
-        content.userInfo = userInfo
-        let request = UNNotificationRequest(identifier: id, content: content, trigger: nil)
-        try? await UNUserNotificationCenter.current().add(request)
-    }
-
-    /// Registers a category per alert kind and set of actions (alertActionSets), plain and
-    /// ".private": the private ones keep their previews hidden until the device is unlocked. The
-    /// title is hidden with the body (no `.hiddenPreviewsShowTitle`): it names the node. The ones
-    /// without actions take the resolved alerts and, like "private", the notifications an older
-    /// version delivered.
-    static func registerCategories() {
-        let placeholder = String(localized: "Talos cluster alert")
-        func make(_ id: String, actions: [AlertAction], hidden: Bool) -> UNNotificationCategory {
-            let buttons = AlertNotificationActions.notificationActions(actions)
-            return hidden
-                ? UNNotificationCategory(identifier: id, actions: buttons, intentIdentifiers: [],
-                                         hiddenPreviewsBodyPlaceholder: placeholder, options: [])
-                : UNNotificationCategory(identifier: id, actions: buttons, intentIdentifiers: [], options: [])
-        }
-        let alerts = alertKinds.flatMap { kind in
-            alertActionSets(kind: kind).flatMap { actions in
-                [false, true].map { hidden in
-                    make(alertCategory(kind: kind, actions: actions, hideDetails: hidden), actions: actions, hidden: hidden)
-                }
-            }
-        }
-        let categories = Set(alerts + [make("private", actions: [], hidden: true), FreezeReminders.notificationCategory,
-                                       ConfigTryJob.notificationCategory])
-        UNUserNotificationCenter.current().setNotificationCategories(categories)
+    /// A kubeconfig cluster's nodes over `thresholds` or under DiskPressure (see
+    /// storageIssues(of:warn:critical:listed:known:demo:)), with each measured node's nodefs fill
+    /// (the history); nil when the call failed. Issues nil when skipped, refused or nothing measured.
+    private static func readKubeStorage(
+        _ client: TalosClient, thresholds: StorageThresholds, listed: Set<String>,
+        known: [String: String], demo: Bool
+    ) async -> StorageRead? {
+        guard let disk = try? await client.kubeNodeDisk() else { return nil }
+        return StorageRead(
+            issues: storageIssues(
+                of: disk, warn: thresholds.warn, critical: thresholds.crit,
+                listed: listed, known: known, demo: demo),
+            volumes: historyVolumes(disk))
     }
 }

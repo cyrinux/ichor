@@ -55,9 +55,11 @@ public struct CgroupNode: Decodable, Equatable, Sendable {
     public let pressure: CgroupPressure?
     public let children: [CgroupNode]
 
-    public init(name: String, kind: String = "group", memCurrent: UInt64 = 0, memMax: UInt64 = 0, oomKills: UInt64 = 0,
-                cpuUsec: UInt64 = 0, ioRead: UInt64 = 0, ioWrite: UInt64 = 0, pressure: CgroupPressure? = nil,
-                children: [CgroupNode] = []) {
+    public init(
+        name: String, kind: String = "group", memCurrent: UInt64 = 0, memMax: UInt64 = 0, oomKills: UInt64 = 0,
+        cpuUsec: UInt64 = 0, ioRead: UInt64 = 0, ioWrite: UInt64 = 0, pressure: CgroupPressure? = nil,
+        children: [CgroupNode] = []
+    ) {
         self.name = name
         self.kind = kind
         self.memCurrent = memCurrent
@@ -191,7 +193,9 @@ public enum CgroupSort: String, CaseIterable, Sendable {
 
 /// The tree as rows, depth first, below the root (the whole node, which the pressure section
 /// already shows): children of `expanded` paths only, siblings sorted by `sort`.
-public func cgroupRows(previous: CgroupReport?, current: CgroupReport, expanded: Set<String>, sort: CgroupSort) -> [CgroupRow] {
+public func cgroupRows(previous: CgroupReport?, current: CgroupReport, expanded: Set<String>, sort: CgroupSort)
+    -> [CgroupRow]
+{
     guard let root = current.root else { return [] }
     let seconds = previous.map { Double(current.at - $0.at) / 1000 } ?? 0
     let before = previous?.root.map(cgroupsByPath) ?? [:]
@@ -219,8 +223,10 @@ public func cgroupRows(previous: CgroupReport?, current: CgroupReport, expanded:
     return rows
 }
 
-private func sortedChildren(_ node: CgroupNode, path: String, sort: CgroupSort,
-                            before: [String: CgroupNode]) -> [(CgroupNode, String)] {
+private func sortedChildren(
+    _ node: CgroupNode, path: String, sort: CgroupSort,
+    before: [String: CgroupNode]
+) -> [(CgroupNode, String)] {
     let children = node.children.map { ($0, childPath(path, $0.name)) }
     return children.sorted { a, b in
         switch sort {

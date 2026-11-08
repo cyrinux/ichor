@@ -1,27 +1,44 @@
 package name.levis.ichor.ui.nav
 
+import android.os.Bundle
+import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.model.decodeQuickEdit
+import name.levis.ichor.model.encodeQuickEdit
 import name.levis.ichor.ui.argocd.ArgoAppScreen
-import name.levis.ichor.ui.argocd.ArgoAppsScreen
+import name.levis.ichor.ui.argocd.ArgoListDetail
 import name.levis.ichor.ui.argocd.ArgoWindowsScreen
 import name.levis.ichor.ui.flux.DiffTool
 import name.levis.ichor.ui.flux.FluxAppScreen
 import name.levis.ichor.ui.flux.FluxDiffScreen
-import name.levis.ichor.ui.flux.FluxScreen
+import name.levis.ichor.ui.flux.FluxListDetail
+import name.levis.ichor.ui.gitops.SOURCE_TOOL_ARGO
+import name.levis.ichor.ui.gitops.SOURCE_TOOL_FLUX
+import name.levis.ichor.ui.gitops.SourceBrowserScreen
+import name.levis.ichor.ui.gitops.SourceEditScreen
+import name.levis.ichor.ui.gitops.SourceFileScreen
+import name.levis.ichor.ui.gitops.SourceTarget
 import name.levis.ichor.ui.kubebrowser.KubeLinks
+import name.levis.ichor.ui.settings.SettingsPage
+import name.levis.ichor.ui.updates.UpdateOpen
+import name.levis.ichor.ui.updates.UpdatesScreen
 
 /** Argo CD and Flux: their apps, sync windows and diffs. */
 internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks) {
     composable(Routes.ARGO_CD) {
-        ArgoAppsScreen(
+        ArgoListDetail(
             onBack = { nav.popBackStack() },
-            onApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
+            onOpenApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
             onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
+            onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
+            onDiff = { ns, name -> nav.navigate(Routes.argoDiff(ns, name)) },
+            onSource = { ns, name, idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_ARGO, "Application", ns, name, idx)) },
         )
     }
     composable(Routes.ARGO_WINDOWS) {
@@ -37,6 +54,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
     ) { entry ->
         val ns = entry.arguments?.getString("ns").orEmpty()
         val name = entry.arguments?.getString("name").orEmpty()
+        RecordOpened(app, ShareTarget.argoApp(ns, name).takeIf { name.isNotEmpty() }, name, ns)
         ArgoAppScreen(
             namespace = ns,
             name = name,
@@ -45,6 +63,8 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
             onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
             onDiff = { nav.navigate(Routes.argoDiff(ns, name)) },
+            onSource = { idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_ARGO, "Application", ns, name, idx)) },
+            onDiffOf = { focus -> nav.navigate(Routes.argoDiff(ns, name, focus)) },
         )
     }
     composable(
@@ -52,18 +72,31 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
         arguments = listOf(
             navArgument("ns") { type = NavType.StringType; defaultValue = "" },
             navArgument("name") { type = NavType.StringType; defaultValue = "" },
+            navArgument("focus") { type = NavType.StringType; defaultValue = "" },
         ),
     ) { entry ->
+        val ns = entry.arguments?.getString("ns").orEmpty()
+        val name = entry.arguments?.getString("name").orEmpty()
         FluxDiffScreen(
+            focus = entry.arguments?.getString("focus").orEmpty(),
             kind = "Application",
-            namespace = entry.arguments?.getString("ns").orEmpty(),
-            name = entry.arguments?.getString("name").orEmpty(),
+            namespace = ns,
+            name = name,
             onBack = { nav.popBackStack() },
             tool = DiffTool.ARGO,
+            onOpenSource = { idx, path, line -> nav.navigate(Routes.gitOpsFile(SOURCE_TOOL_ARGO, "Application", ns, name, idx, path, line)) },
+            onKeepLive = { idx, path, edit -> nav.navigate(Routes.gitOpsEdit(SOURCE_TOOL_ARGO, "Application", ns, name, idx, path, encodeQuickEdit(edit))) },
+            onAddToken = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
         )
     }
     composable(Routes.FLUX) {
-        FluxScreen(onBack = { nav.popBackStack() }, onApp = { kind, ns, name -> nav.navigate(Routes.fluxApp(kind, ns, name)) })
+        FluxListDetail(
+            onBack = { nav.popBackStack() },
+            onOpenApp = { kind, ns, name -> nav.navigate(Routes.fluxApp(kind, ns, name)) },
+            onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
+            onDiff = { kind, ns, name -> nav.navigate(Routes.fluxDiff(kind, ns, name)) },
+            onSource = { kind, ns, name, idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_FLUX, kind, ns, name, idx)) },
+        )
     }
     composable(
         Routes.FLUX_APP,
@@ -77,6 +110,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
         val kind = entry.arguments?.getString("kind").orEmpty()
         val ns = entry.arguments?.getString("ns").orEmpty()
         val name = entry.arguments?.getString("name").orEmpty()
+        RecordOpened(app, ShareTarget.fluxApp(kind, ns, name).takeIf { name.isNotEmpty() }, name, ns)
         FluxAppScreen(
             kind = kind,
             namespace = ns,
@@ -85,6 +119,8 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             onBack = { nav.popBackStack() },
             onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
             onDiff = { nav.navigate(Routes.fluxDiff(kind, ns, name)) },
+            onApp = { other -> nav.navigate(Routes.fluxApp(other.kind, other.namespace, other.name)) },
+            onSource = { idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_FLUX, kind, ns, name, idx)) },
         )
     }
     composable(
@@ -93,13 +129,136 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             navArgument("kind") { type = NavType.StringType; defaultValue = "" },
             navArgument("ns") { type = NavType.StringType; defaultValue = "" },
             navArgument("name") { type = NavType.StringType; defaultValue = "" },
+            navArgument("focus") { type = NavType.StringType; defaultValue = "" },
         ),
     ) { entry ->
+        val kind = entry.arguments?.getString("kind").orEmpty()
+        val ns = entry.arguments?.getString("ns").orEmpty()
+        val name = entry.arguments?.getString("name").orEmpty()
         FluxDiffScreen(
-            kind = entry.arguments?.getString("kind").orEmpty(),
-            namespace = entry.arguments?.getString("ns").orEmpty(),
-            name = entry.arguments?.getString("name").orEmpty(),
+            focus = entry.arguments?.getString("focus").orEmpty(),
+            kind = kind,
+            namespace = ns,
+            name = name,
             onBack = { nav.popBackStack() },
+            onOpenSource = { idx, path, line -> nav.navigate(Routes.gitOpsFile(SOURCE_TOOL_FLUX, kind, ns, name, idx, path, line)) },
+            onKeepLive = { idx, path, edit -> nav.navigate(Routes.gitOpsEdit(SOURCE_TOOL_FLUX, kind, ns, name, idx, path, encodeQuickEdit(edit))) },
+            onAddToken = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
+        )
+    }
+    composable(Routes.UPDATES) {
+        UpdatesScreen(onBack = { nav.popBackStack() }, onOpen = { open -> nav.navigate(updateRoute(open)) })
+    }
+    sourceGraph(nav)
+}
+
+/** Where a tapped update goes: its file with the image sheet prefilled, or the editor on a field's edit. */
+private fun updateRoute(open: UpdateOpen): String {
+    val a = open.app
+    return when (open) {
+        is UpdateOpen.File -> Routes.gitOpsFile(a.tool, a.kind, a.namespace, a.name, open.sourceIndex, open.path, open.line, open.prefill?.let(::encodeQuickEdit).orEmpty())
+        is UpdateOpen.Edit -> Routes.gitOpsEdit(a.tool, a.kind, a.namespace, a.name, open.sourceIndex, open.path, encodeQuickEdit(open.edit))
+    }
+}
+
+/** The route of the file [path] of [t]'s files, [line] highlighted (0 for none). */
+private fun sourceFileRoute(t: SourceTarget, path: String, line: Int = 0): String = when (t) {
+    is SourceTarget.App -> Routes.gitOpsFile(t.tool, t.kind, t.namespace, t.name, t.index, path, line)
+    SourceTarget.Repo -> Routes.repoFile(path, line)
+}
+
+/** The route of the editor of [t]'s file [path], with a [quick] edit's JSON ("" for none). */
+private fun sourceEditRoute(t: SourceTarget, path: String, quick: String = ""): String = when (t) {
+    is SourceTarget.App -> Routes.gitOpsEdit(t.tool, t.kind, t.namespace, t.name, t.index, path, quick)
+    SourceTarget.Repo -> Routes.repoEdit(path, quick)
+}
+
+/**
+ * The source browser, file view and editor, for an Argo CD or Flux app's source and for the
+ * active cluster's repository.
+ */
+private fun NavGraphBuilder.sourceGraph(nav: NavHostController) {
+    val appArgs = listOf(
+        navArgument("tool") { type = NavType.StringType; defaultValue = "" },
+        navArgument("kind") { type = NavType.StringType; defaultValue = "" },
+        navArgument("ns") { type = NavType.StringType; defaultValue = "" },
+        navArgument("name") { type = NavType.StringType; defaultValue = "" },
+        navArgument("idx") { type = NavType.IntType; defaultValue = 0 },
+    )
+    val app = { args: Bundle? ->
+        SourceTarget.App(
+            tool = args?.getString("tool").orEmpty(),
+            kind = args?.getString("kind").orEmpty(),
+            namespace = args?.getString("ns").orEmpty(),
+            name = args?.getString("name").orEmpty(),
+            index = args?.getInt("idx") ?: 0,
+        )
+    }
+    sourceScreens(nav, Routes.GITOPS_SOURCE, Routes.GITOPS_FILE, Routes.GITOPS_EDIT, appArgs, app)
+    sourceScreens(nav, Routes.REPO_SOURCE, Routes.REPO_FILE, Routes.REPO_EDIT, emptyList()) { SourceTarget.Repo }
+}
+
+/** The three screens of one kind of [SourceTarget], read from the routes' [targetArgs]. */
+private fun NavGraphBuilder.sourceScreens(
+    nav: NavHostController,
+    sourceRoute: String,
+    fileRoute: String,
+    editRoute: String,
+    targetArgs: List<NamedNavArgument>,
+    target: (Bundle?) -> SourceTarget,
+) {
+    val onAddToken = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) }
+    composable(
+        sourceRoute,
+        arguments = targetArgs + navArgument("dir") { type = NavType.StringType; defaultValue = "" },
+    ) { entry ->
+        val t = target(entry.arguments)
+        SourceBrowserScreen(
+            target = t,
+            startDir = entry.arguments?.getString("dir")?.takeIf { it.isNotEmpty() },
+            onBack = { nav.popBackStack() },
+            onFile = { path -> nav.navigate(sourceFileRoute(t, path)) },
+            onAddToken = onAddToken,
+            onHit = { path, line -> nav.navigate(sourceFileRoute(t, path, line)) },
+            onEditFile = { path -> nav.navigate(sourceEditRoute(t, path)) },
+        )
+    }
+    composable(
+        fileRoute,
+        arguments = targetArgs + navArgument("path") { type = NavType.StringType; defaultValue = "" } +
+            navArgument("line") { type = NavType.IntType; defaultValue = 0 } +
+            navArgument("noTry") { type = NavType.BoolType; defaultValue = false } +
+            navArgument("quick") { type = NavType.StringType; defaultValue = "" },
+    ) { entry ->
+        val t = target(entry.arguments)
+        val path = entry.arguments?.getString("path").orEmpty()
+        // Opened from a node's machine config: trying from there would stack a second editor.
+        val noTry = entry.arguments?.getBoolean("noTry") == true
+        SourceFileScreen(
+            target = t,
+            path = path,
+            line = entry.arguments?.getInt("line")?.takeIf { it > 0 },
+            prefill = decodeQuickEdit(entry.arguments?.getString("quick")),
+            onBack = { nav.popBackStack() },
+            onAddToken = onAddToken,
+            onEdit = { nav.navigate(sourceEditRoute(t, path)) },
+            onQuickEdit = { edit -> nav.navigate(sourceEditRoute(t, path, encodeQuickEdit(edit))) },
+            onTryPatch = if (noTry) null else { node, patch -> nav.navigate(Routes.machineConfig(node.node, node.hostname, patch = patch)) },
+        )
+    }
+    composable(
+        editRoute,
+        arguments = targetArgs + navArgument("path") { type = NavType.StringType; defaultValue = "" } +
+            navArgument("quick") { type = NavType.StringType; defaultValue = "" },
+    ) { entry ->
+        SourceEditScreen(
+            target = target(entry.arguments),
+            path = entry.arguments?.getString("path").orEmpty(),
+            onBack = { nav.popBackStack() },
+            onAddToken = onAddToken,
+            quick = decodeQuickEdit(entry.arguments?.getString("quick")),
+            // Staged: back to the browser, past the file view the editor was opened from.
+            onStaged = { if (!nav.popBackStack(sourceRoute, inclusive = false)) nav.popBackStack() },
         )
     }
 }

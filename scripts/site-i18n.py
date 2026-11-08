@@ -12,7 +12,8 @@ in English.
     scripts/site-i18n.py          write docs/<lang>/*.html, warn about missing strings
     scripts/site-i18n.py --sync   add missing strings (as null) to every docs-i18n file,
                                   drop the ones the pages no longer use
-    scripts/site-i18n.py --check  fail on a missing, empty or unused translation
+    scripts/site-i18n.py --check  fail on a missing, empty or unused translation, or on a
+                                  screenshot a page names (data-shot) with a file missing
 """
 import json
 import re
@@ -23,8 +24,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 STRINGS = ROOT / "docs-i18n"
-PAGES = ["index.html", "privacy.html"]
-LANGUAGES = ["fr", "es", "uk", "de", "it"]
+PAGES = ["index.html", "features.html", "privacy.html"]
+LANGUAGES = ["fr", "es", "uk", "de", "it", "zh-Hans", "ja", "pt-BR", "ru"]
 SITE = "https://cyrinux.github.io/ichor/"
 
 # A string unit: one of these with no UNIT or CONTAINER element inside.
@@ -135,12 +136,12 @@ def localize_urls(html: str, lang: str, page: str) -> str:
 
     def asset(match: re.Match) -> str:
         url = match.group(2)
-        local = url.startswith("#") or url in ("./", *PAGES)
+        local = url.startswith("#") or url.split("#")[0] in ("./", *PAGES)
         if local or re.match(r"^[a-z][a-z0-9+.-]*:|^/", url):
             return match.group(0)
         return f'{match.group(1)}="../{url}"'
 
-    html = re.sub(r'\b(href|src)="([^"]+)"', asset, html)
+    html = re.sub(r'\b(href|src|srcset)="([^"]+)"', asset, html)
     html = re.sub(r"<a [^>]*hreflang=\"[^\"]+\"[^>]*>", language_link, html)
     html = re.sub(r'<html lang="en"', f'<html lang="{lang}"', html, count=1)
     page_url = SITE + f"{lang}/" + ("" if page == "index.html" else page)
@@ -166,6 +167,15 @@ def render(source: str, spans, table: dict[str, str | None], missing: set[str]) 
 def load(lang: str) -> dict[str, str | None]:
     path = STRINGS / f"{lang}.json"
     return json.loads(path.read_text()) if path.exists() else {}
+
+
+def missing_shots(sources: dict[str, str], docs: Path) -> list[str]:
+    """The screenshot files a page's data-shot names need: both platforms, both themes."""
+    names = dict.fromkeys(name for text in sources.values()
+                          for name in re.findall(r'\bdata-shot="([^"]+)"', text))
+    wanted = (f"{folder}/{name}{theme}.webp" for name in names
+              for folder in ("screenshots", "screenshots/ios") for theme in ("", "-light"))
+    return [relative for relative in wanted if not (docs / relative).is_file()]
 
 
 def main() -> int:
@@ -205,6 +215,11 @@ def main() -> int:
             problems += len(missing) + len(unused)
         elif missing:
             print(f"{lang}: {len(missing)} strings left in English", file=sys.stderr)
+    if mode == "--check":
+        shots = missing_shots(sources, DOCS)
+        for relative in shots:
+            print(f"::error::site: missing docs/{relative}", file=sys.stderr)
+        problems += len(shots)
     if mode == "--check" and not problems:
         print(f"website: {len(keys)} strings translated into {', '.join(LANGUAGES)}")
     return 1 if problems else 0

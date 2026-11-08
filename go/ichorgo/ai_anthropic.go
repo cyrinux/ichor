@@ -26,9 +26,11 @@ type anthropicRequest struct {
 	MaxTokens    int                    `json:"max_tokens"`
 	Stream       bool                   `json:"stream"`
 	System       string                 `json:"system"`
-	Messages     []chatMessage          `json:"messages"`
+	Messages     []anthropicMessage     `json:"messages"`
 	OutputConfig *anthropicOutputConfig `json:"output_config,omitempty"`
 	Fallbacks    string                 `json:"fallbacks,omitempty"`
+	Tools        []anthropicTool        `json:"tools,omitempty"`
+	ToolChoice   *anthropicToolChoice   `json:"tool_choice,omitempty"`
 }
 
 type anthropicOutputConfig struct {
@@ -37,13 +39,11 @@ type anthropicOutputConfig struct {
 
 // anthropicEvent is the part of a stream event the answer is built from.
 type anthropicEvent struct {
-	Type  string `json:"type"`
-	Delta struct {
-		Type       string `json:"type"`
-		Text       string `json:"text"`
-		StopReason string `json:"stop_reason"`
-	} `json:"delta"`
-	Error struct {
+	Type         string              `json:"type"`
+	Index        int                 `json:"index"`
+	ContentBlock anthropicEventBlock `json:"content_block"`
+	Delta        anthropicEventDelta `json:"delta"`
+	Error        struct {
 		Message string `json:"message"`
 	} `json:"error"`
 }
@@ -73,13 +73,18 @@ func anthropicHeader(req aiRequest) map[string]string {
 
 // streamAnthropic asks a Claude model through the Messages API. The model is free text, so
 // the tuning below only goes to the models documented to take it.
-func streamAnthropic(ctx context.Context, req aiRequest, emit func(string)) error {
+func streamAnthropic(ctx context.Context, req aiRequest, emit func(string)) (aiTurn, error) {
 	body := anthropicRequest{
 		Model:     req.model,
 		MaxTokens: anthropicMaxTokens,
 		Stream:    true,
 		System:    req.system,
-		Messages:  req.turns(),
+		Messages:  anthropicMessages(req),
+		Tools:     anthropicTools(req.tools),
+	}
+
+	if req.forceAnswer {
+		body.ToolChoice = &anthropicToolChoice{Type: "none"}
 	}
 
 	// Claude Opus 5.5 defaults to medium effort; a diagnosis is worth the usual high.
@@ -96,17 +101,19 @@ func streamAnthropic(ctx context.Context, req aiRequest, emit func(string)) erro
 
 	raw, err := json.Marshal(body)
 	if err != nil {
-		return err
+		return aiTurn{}, err
 	}
 
 	resp, err := aiDo(ctx, req, http.MethodPost, anthropicURL(req, "messages"), header, raw)
 	if err != nil {
-		return err
+		return aiTurn{}, err
 	}
 
 	defer resp.Body.Close() //nolint:errcheck
 
 	var stop string
+
+	blocks := newAnthropicBlocks(len(req.tools) > 0)
 
 	err = readSSE(resp.Body, func(data []byte) error {
 		var ev anthropicEvent
@@ -115,11 +122,15 @@ func streamAnthropic(ctx context.Context, req aiRequest, emit func(string)) erro
 		}
 
 		switch ev.Type {
+		case "content_block_start":
+			return blocks.start(ev.Index, ev.ContentBlock)
 		case "content_block_delta":
 			// Thinking and the fallback marker are other kinds of blocks: only text is the answer.
 			if ev.Delta.Type == "text_delta" {
 				emit(ev.Delta.Text)
 			}
+
+			return blocks.delta(ev.Index, ev.Delta)
 		case "message_delta":
 			stop = ev.Delta.StopReason
 		case "error":
@@ -131,16 +142,18 @@ func streamAnthropic(ctx context.Context, req aiRequest, emit func(string)) erro
 
 	switch {
 	case err != nil:
-		return streamError(ctx, req.provider, err)
+		return aiTurn{}, streamError(ctx, req.provider, err)
 	case stop == "refusal":
-		return errors.New(answerDeclined)
+		return aiTurn{}, errors.New(answerDeclined)
 	case stop == "":
-		return errors.New(answerIncomplete)
+		return aiTurn{}, errors.New(answerIncomplete)
 	case stop == "max_tokens":
 		emit(answerCutNotice)
+	case stop == "tool_use" && len(req.tools) > 0:
+		return blocks.turn()
 	}
 
-	return nil
+	return aiTurn{}, nil
 }
 
 // anthropicFallbackModel tells whether model takes the server-side refusal fallback: the

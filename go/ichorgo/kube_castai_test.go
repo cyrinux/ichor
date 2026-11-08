@@ -114,7 +114,7 @@ func TestReadDataServicesCastAI(t *testing.T) {
 		t.Fatalf("castai: %+v", res.CastAI)
 	}
 
-	if res.Dragonfly != nil || res.Longhorn != nil {
+	if res.Longhorn != nil || res.CNPG != nil {
 		t.Errorf("only CAST AI is installed: %+v", res)
 	}
 }

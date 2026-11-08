@@ -9,6 +9,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
+import name.levis.ichor.data.Diagnostics
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.TraceListener
 import java.util.concurrent.ConcurrentHashMap
@@ -19,7 +20,10 @@ import java.util.concurrent.atomic.AtomicLong
  * step with the time since the process started and since the previous step, the Go core's
  * steps (config parse, session, first node, all nodes) in the same stream.
  *
- * Off unless the "Startup timing in logcat" setting is on or the build is a debug one. The
+ * The app's steps also go to the core's redacted diagnostics log, whatever the setting (the
+ * core writes its own there too), so an exported diagnostics zip has the last start's steps.
+ *
+ * Logcat is off unless the "Startup timing in logcat" setting is on or the build is a debug one. The
  * lines carry step names, counts and durations only: never a context name, an endpoint or an
  * address (the privacy mask does not cover logcat). This is the app's only `Log` call.
  */
@@ -38,11 +42,17 @@ object StartupTrace {
         Ichorgo.setTraceListener(if (on) GoSteps else null)
     }
 
-    /** Logs [step] now, when the trace is on. */
-    fun mark(step: String) {
-        if (!enabled) return
-        val now = SystemClock.elapsedRealtime() - Process.getStartElapsedRealtime()
-        Log.i(TAG, line(step, now, now - previous.getAndSet(now)))
+    /**
+     * Writes [step] now to the diagnostics log when [ring] (the app's steps, always: the log is
+     * redacted and on the device only), and to logcat when the trace is on.
+     */
+    private fun mark(step: String, ring: Boolean) {
+        if (!ring && !enabled) return
+        // A trace never fails its caller (nor a JVM unit test, where the clock is a stub).
+        val now = runCatching { SystemClock.elapsedRealtime() - Process.getStartElapsedRealtime() }.getOrElse { return }
+        val delta = now - previous.getAndSet(now)
+        if (ring) Diagnostics.log("info", "android", "startup $step", mapOf("since_start_ms" to now, "delta_ms" to delta))
+        if (enabled) Log.i(TAG, line(step, now, delta))
     }
 
     /**
@@ -50,8 +60,8 @@ object StartupTrace {
      * runs again later (a refresh, the monitor's read) logs once. [detail] follows the key.
      */
     fun markOnce(key: String, detail: String = "") {
-        if (!enabled || !marked.add(key)) return
-        mark(if (detail.isEmpty()) key else "$key $detail")
+        if (!marked.add(key)) return
+        mark(if (detail.isEmpty()) key else "$key $detail", ring = true)
     }
 
     /** "<step> +<ms since process start> (Δ<ms since the previous step>)". */
@@ -71,8 +81,11 @@ object StartupTrace {
         }
     }.getOrElse { "go:$json" }
 
-    /** Called on Go threads: logs right away, no hop to another thread. */
+    /**
+     * Called on Go threads: logs right away, no hop to another thread. To logcat only: the
+     * core writes its own steps to the diagnostics log.
+     */
     private object GoSteps : TraceListener {
-        override fun onTrace(json: String) = mark(goStep(json))
+        override fun onTrace(json: String) = mark(goStep(json), ring = false)
     }
 }

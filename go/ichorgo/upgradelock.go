@@ -337,6 +337,13 @@ type lockState struct {
 
 // readUpgradeLock reads the lock for the plan; a zero target (demo, tests) skips it.
 func readUpgradeLock(ctx context.Context, kube kubeTarget, now time.Time) *lockState {
+	return readUpgradeLockFor(ctx, kube, now, "")
+}
+
+// readUpgradeLockFor is readUpgradeLock for the run holding the lock as own ("" for none):
+// its own lock is free to it, so a node's plan read in the middle of its roll does not
+// refuse the roll; another holder's still blocks.
+func readUpgradeLockFor(ctx context.Context, kube kubeTarget, now time.Time, own string) *lockState {
 	if kube.config == "" || isDemoContext(kube.config, kube.context) {
 		return nil
 	}
@@ -348,7 +355,12 @@ func readUpgradeLock(ctx context.Context, kube kubeTarget, now time.Time) *lockS
 		return &lockState{err: err.Error()}
 	}
 
-	return &lockState{held: heldLock(l, now)}
+	held := heldLock(l, now)
+	if held != nil && own != "" && held.holder == own {
+		held = nil
+	}
+
+	return &lockState{held: held}
 }
 
 // upgradeLock is the lock a run holds; release frees it (a no-op when none was taken).

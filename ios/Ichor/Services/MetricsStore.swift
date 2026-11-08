@@ -11,7 +11,8 @@ enum MetricsStore {
 
     static func read(_ fingerprint: String) -> MetricsConfig {
         guard let data = Keychain.read(account(fingerprint)),
-              let config = try? JSONDecoder().decode(MetricsConfig.self, from: data) else { return MetricsConfig() }
+            let config = try? JSONDecoder().decode(MetricsConfig.self, from: data)
+        else { return MetricsConfig() }
         return config
     }
 

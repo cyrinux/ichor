@@ -1,7 +1,9 @@
 package name.levis.ichor.ui.overview
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FolderCopy
 import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.QueryStats
@@ -12,16 +14,24 @@ import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
+import name.levis.ichor.model.HomeActionGroup
 import name.levis.ichor.model.OverviewAction
 import name.levis.ichor.model.OverviewBar
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.clusterSupport
+import name.levis.ichor.model.group
+import name.levis.ichor.model.groupedHomeMenu
 import name.levis.ichor.ui.components.ActionBarActions
+import name.levis.ichor.ui.components.ActionGroups
 import name.levis.ichor.ui.components.ActionLook
+import name.levis.ichor.ui.components.SMOKE_SETTINGS
 import name.levis.ichor.ui.components.rememberClusterFeatures
+import name.levis.ichor.ui.tour.TourAnchor
+import name.levis.ichor.ui.tour.tourAnchor
 
 /** Where the overview's app-bar actions lead. */
 class OverviewNavigation(
@@ -37,6 +47,8 @@ class OverviewNavigation(
     val onSettings: () -> Unit,
     /** The search across clusters. */
     val onSearch: () -> Unit,
+    /** The cluster's own Git repository, from its root. */
+    val onRepository: () -> Unit,
 ) {
     fun open(action: OverviewAction): () -> Unit = when (action) {
         OverviewAction.HEALTH -> onHealth
@@ -49,6 +61,7 @@ class OverviewNavigation(
         OverviewAction.ETCD -> onEtcd
         OverviewAction.SEARCH -> onSearch
         OverviewAction.SETTINGS -> onSettings
+        OverviewAction.REPOSITORY -> onRepository
     }
 }
 
@@ -63,6 +76,7 @@ fun overviewActionIcon(action: OverviewAction): ImageVector = when (action) {
     OverviewAction.ETCD -> Icons.Outlined.Storage
     OverviewAction.SEARCH -> Icons.Outlined.Search
     OverviewAction.SETTINGS -> Icons.Outlined.Settings
+    OverviewAction.REPOSITORY -> Icons.Outlined.FolderCopy
 }
 
 @Composable
@@ -77,10 +91,27 @@ fun overviewActionLabel(action: OverviewAction): String = when (action) {
     OverviewAction.ETCD -> "etcd"
     OverviewAction.SEARCH -> stringResource(R.string.overview_action_search)
     OverviewAction.SETTINGS -> stringResource(R.string.overview_action_settings)
+    OverviewAction.REPOSITORY -> stringResource(R.string.repo_title)
 }
 
 /** How the overview's actions look, in its bar and its editor. */
 val overviewActionLook = ActionLook<OverviewAction>(::overviewActionIcon) { overviewActionLabel(it) }
+
+/** A home screen's menu sections, with their labels. */
+internal fun <A> homeActionGroups(group: (A) -> HomeActionGroup) = ActionGroups<A>(
+    label = { group(it).label() },
+    sections = { menu -> groupedHomeMenu(menu, group).map { (section, actions) -> section.label() to actions } },
+)
+
+private fun HomeActionGroup.label(): Int = when (this) {
+    HomeActionGroup.EXPLORE -> R.string.kube_menu_explore
+    HomeActionGroup.HEALTH -> R.string.kube_menu_health
+    HomeActionGroup.INSTALLED -> R.string.kube_menu_installed
+    HomeActionGroup.APP -> R.string.home_menu_app
+}
+
+/** The overview's menu in sections, in its bar and its editor. */
+val overviewActionGroups = homeActionGroups<OverviewAction> { it.group }
 
 /**
  * The overview's app-bar actions as arranged in [bar]: its icons, then the rest behind a menu,
@@ -95,6 +126,8 @@ fun OverviewActions(
     workloads: Boolean,
     gitOps: Boolean,
     onCustomize: () -> Unit,
+    /** A repository is saved for the cluster (the demo has one built in). */
+    repository: Boolean = false,
 ) {
     // Cluster-wide screens: only disabled when no reachable node's Talos has them.
     val features = rememberClusterFeatures(reachable)
@@ -102,6 +135,7 @@ fun OverviewActions(
         OverviewAction.EVENTS -> clusterSupport(features, TalosFeature.EVENTS).supported
         OverviewAction.KUBESPAN -> clusterSupport(features, TalosFeature.KUBESPAN).supported
         OverviewAction.ETCD -> clusterSupport(features, TalosFeature.ETCD).supported
+        OverviewAction.REPOSITORY -> repository
         else -> true
     }
     // Only offered when the config's role can run it. Workloads, the PromQL panels and the alerts reach the
@@ -112,13 +146,18 @@ fun OverviewActions(
         OverviewAction.GITOPS -> gitOps
         else -> true
     }
-    ActionBarActions(
-        bar = bar,
-        look = overviewActionLook,
-        onClick = { nav.open(it)() },
-        customizeLabel = stringResource(R.string.overview_edit_title),
-        onCustomize = onCustomize,
-        offered = ::offered,
-        enabled = ::enabled,
-    )
+    Row(Modifier.tourAnchor(TourAnchor.Actions)) {
+        ActionBarActions(
+            bar = bar,
+            look = overviewActionLook,
+            onClick = { nav.open(it)() },
+            customizeLabel = stringResource(R.string.overview_edit_title),
+            onCustomize = onCustomize,
+            offered = ::offered,
+            enabled = ::enabled,
+            marker = { if (it == OverviewAction.SETTINGS) Modifier.tourAnchor(TourAnchor.Settings) else Modifier },
+            testTag = { if (it == OverviewAction.SETTINGS) SMOKE_SETTINGS else null },
+            groups = overviewActionGroups,
+        )
+    }
 }

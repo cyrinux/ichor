@@ -237,7 +237,7 @@ func EtcdRemoveMember(configYAML, contextName, node string, memberID string) (er
 
 	defer recordAction(&err, configYAML, contextName, auditAction{Action: "etcd-remove-member", Node: node, Params: "member=" + memberID})
 
-	_, err = withNodeSession(configYAML, contextName, node, planTimeout, func(ctx context.Context, s *session) (struct{}, error) {
+	_, err = withNodeSessionFrom(context.Background(), configYAML, contextName, node, planTimeout, func(ctx context.Context, s *session) (struct{}, error) {
 		if err := removeEtcdMember(ctx, s.client, node, memberID); err != nil {
 			if isUnavailableAPI(err) {
 				return struct{}{}, s.friendlyErr(node, err)
@@ -308,7 +308,7 @@ func EtcdForfeitLeadership(configYAML, contextName, node string) (out string, er
 
 	defer recordAction(&err, configYAML, contextName, auditAction{Action: "etcd-forfeit-leadership", Node: node})
 
-	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
+	return withNodeSessionFrom(context.Background(), configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		member, err := forfeitEtcdLeadership(ctx, s.client, node)
 		if err != nil {
 			return "", s.friendlyErr(node, err)

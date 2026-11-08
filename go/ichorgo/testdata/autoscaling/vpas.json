@@ -1,0 +1,11 @@
+{"kind":"VerticalPodAutoscalerList","apiVersion":"autoscaling.k8s.io/v1","metadata":{},"items":[
+{"metadata":{"name":"invoices","namespace":"billing"},
+ "spec":{"targetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"invoices"},"updatePolicy":{"updateMode":"Off"}},
+ "status":{"recommendation":{"containerRecommendations":[
+   {"containerName":"app","target":{"cpu":"250m","memory":"384Mi"},"lowerBound":{"cpu":"120m","memory":"256Mi"},"upperBound":{"cpu":"900m","memory":"1Gi"},"uncappedTarget":{"cpu":"250m","memory":"384Mi"}},
+   {"containerName":"istio-proxy","target":{"cpu":"15m","memory":"64Mi"},"lowerBound":{"cpu":"10m","memory":"50Mi"},"upperBound":{"cpu":"40m","memory":"128Mi"}}]},
+  "conditions":[{"type":"RecommendationProvided","status":"True"}]}},
+{"metadata":{"name":"vault","namespace":"vault"},
+ "spec":{"targetRef":{"apiVersion":"apps/v1","kind":"StatefulSet","name":"vault"}},
+ "status":{"conditions":[{"type":"RecommendationProvided","status":"False","reason":"NoPodsMatched","message":"No pods match this VPA object"}]}}
+]}

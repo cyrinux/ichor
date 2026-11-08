@@ -1,0 +1,259 @@
+{
+  "kubeVersion": "v1.34.1",
+  "nodes": [
+    {
+      "cordoned": false,
+      "cpuAllocatable": 4,
+      "cpuPercent": 30,
+      "cpuRequests": 1.2,
+      "kubelet": "v1.34.1",
+      "labels": [
+        "kubernetes.io/arch=amd64",
+        "kubernetes.io/hostname=demo-cp-1",
+        "kubernetes.io/os=linux"
+      ],
+      "memoryAllocatable": 8589934592,
+      "memoryPercent": 38.8,
+      "memoryRequests": 3328599654.4,
+      "name": "demo-cp-1",
+      "podCapacity": 110,
+      "pods": 14,
+      "ready": true,
+      "roles": [
+        "control-plane"
+      ],
+      "taints": [
+        "node-role.kubernetes.io/control-plane:NoSchedule"
+      ]
+    },
+    {
+      "cordoned": false,
+      "cpuAllocatable": 4,
+      "cpuPercent": 27.5,
+      "cpuRequests": 1.1,
+      "kubelet": "v1.34.1",
+      "labels": [
+        "kubernetes.io/arch=amd64",
+        "kubernetes.io/hostname=demo-cp-2",
+        "kubernetes.io/os=linux"
+      ],
+      "memoryAllocatable": 8589934592,
+      "memoryPercent": 36.3,
+      "memoryRequests": 3113851289.6,
+      "name": "demo-cp-2",
+      "podCapacity": 110,
+      "pods": 13,
+      "ready": true,
+      "roles": [
+        "control-plane"
+      ],
+      "taints": [
+        "node-role.kubernetes.io/control-plane:NoSchedule"
+      ]
+    },
+    {
+      "cordoned": false,
+      "cpuAllocatable": 4,
+      "cpuPercent": 32.5,
+      "cpuRequests": 1.3,
+      "kubelet": "v1.34.1",
+      "labels": [
+        "kubernetes.io/arch=amd64",
+        "kubernetes.io/hostname=demo-cp-3",
+        "kubernetes.io/os=linux"
+      ],
+      "memoryAllocatable": 8589934592,
+      "memoryPercent": 42.5,
+      "memoryRequests": 3650722201.6,
+      "name": "demo-cp-3",
+      "podCapacity": 110,
+      "pods": 15,
+      "ready": true,
+      "roles": [
+        "control-plane"
+      ],
+      "taints": [
+        "node-role.kubernetes.io/control-plane:NoSchedule"
+      ]
+    }
+  ],
+  "releases": [
+    {
+      "name": "kube-prometheus-stack",
+      "namespace": "monitoring",
+      "revision": 12,
+      "status": "pending-upgrade",
+      "updated": 1767323045000
+    },
+    {
+      "name": "hello-ichor",
+      "namespace": "demo",
+      "revision": 4,
+      "status": "failed",
+      "updated": 1767323045000
+    },
+    {
+      "name": "traefik",
+      "namespace": "ingress",
+      "revision": 7,
+      "status": "deployed",
+      "updated": 1767323045000
+    }
+  ],
+  "sections": [
+    {
+      "checked": 8,
+      "findings": [
+        {
+          "count": 14,
+          "kind": "podCrashLoop",
+          "name": "worker-6f4b8-uvwxy",
+          "namespace": "demo",
+          "node": "demo-worker-1",
+          "reason": "Error (exit 1)",
+          "severity": "critical",
+          "since": 1767323045000
+        },
+        {
+          "kind": "podUnschedulable",
+          "message": "0/5 nodes are available: 1 node(s) were unschedulable, 3 node(s) had untolerated taint {node-role.kubernetes.io/control-plane: }, 1 Insufficient memory.",
+          "name": "batch-7c9d4-zzzzz",
+          "namespace": "demo",
+          "reason": "Unschedulable",
+          "severity": "critical",
+          "since": 1767323045000
+        },
+        {
+          "extra": "nginx:1.28",
+          "kind": "podImagePull",
+          "message": "failed to pull and unpack image \"docker.io/library/nginx:1.28\": failed to copy: httpReadSeeker: failed open: unexpected status code https://registry-1.docker.io/v2/library/nginx/manifests/sha256:4f1c: 429 Too Many Requests - Server message: toomanyrequests: You have reached your unauthenticated pull rate limit.",
+          "name": "reports-5b7c9-xkq2p",
+          "namespace": "demo",
+          "node": "demo-worker-2",
+          "reason": "rateLimited",
+          "severity": "critical",
+          "since": 1767323045000
+        }
+      ],
+      "id": "workloads",
+      "status": "critical"
+    },
+    {
+      "checked": 42,
+      "findings": [
+        {
+          "count": 212,
+          "extra": "Pod",
+          "kind": "event",
+          "message": "Back-off restarting failed container worker in pod worker-6f4b8-uvwxy",
+          "name": "worker-6f4b8-uvwxy",
+          "namespace": "demo",
+          "reason": "BackOff",
+          "severity": "info",
+          "since": 1767323045000
+        },
+        {
+          "count": 9,
+          "extra": "Pod",
+          "kind": "event",
+          "message": "0/5 nodes are available: 1 Insufficient memory.",
+          "name": "batch-7c9d4-zzzzz",
+          "namespace": "demo",
+          "reason": "FailedScheduling",
+          "severity": "info",
+          "since": 1767323045000
+        },
+        {
+          "count": 31,
+          "extra": "PersistentVolumeClaim",
+          "kind": "event",
+          "message": "storageclass.storage.k8s.io \"fast\" not found",
+          "name": "cache",
+          "namespace": "demo",
+          "reason": "ProvisioningFailed",
+          "severity": "info",
+          "since": 1767323045000
+        }
+      ],
+      "id": "events",
+      "status": "ok"
+    },
+    {
+      "checked": 4,
+      "findings": [
+        {
+          "extra": "postgres-0",
+          "kind": "volumeFull",
+          "limit": 21474836480,
+          "name": "data-postgres-0",
+          "namespace": "demo",
+          "node": "demo-worker-2",
+          "severity": "critical",
+          "value": 96.5
+        },
+        {
+          "extra": "prometheus-0",
+          "kind": "volumeFull",
+          "limit": 53687091200,
+          "name": "prometheus-db",
+          "namespace": "monitoring",
+          "node": "demo-worker-1",
+          "severity": "warning",
+          "value": 87
+        },
+        {
+          "extra": "fast",
+          "kind": "pvcPending",
+          "name": "cache",
+          "namespace": "demo",
+          "severity": "warning",
+          "since": 1767323045000
+        }
+      ],
+      "id": "storage",
+      "status": "critical"
+    }
+  ],
+  "status": "critical",
+  "volumes": [
+    {
+      "capacity": 21474836480,
+      "inodesPercent": 12,
+      "measured": true,
+      "name": "data-postgres-0",
+      "namespace": "demo",
+      "node": "demo-worker-2",
+      "phase": "Bound",
+      "pod": "postgres-0",
+      "storageClass": "longhorn",
+      "used": 20723217203.2,
+      "usedPercent": 96.5
+    },
+    {
+      "capacity": 53687091200,
+      "inodesPercent": 4,
+      "measured": true,
+      "name": "prometheus-db",
+      "namespace": "monitoring",
+      "node": "demo-worker-1",
+      "phase": "Bound",
+      "pod": "prometheus-0",
+      "storageClass": "longhorn",
+      "used": 46707769344,
+      "usedPercent": 87
+    },
+    {
+      "capacity": 10737418240,
+      "inodesPercent": 1,
+      "measured": true,
+      "name": "uploads",
+      "namespace": "demo",
+      "node": "demo-worker-1",
+      "phase": "Bound",
+      "pod": "hello-ichor-7d9c5-abcde",
+      "storageClass": "longhorn",
+      "used": 2254857830.4,
+      "usedPercent": 21
+    }
+  ]
+}

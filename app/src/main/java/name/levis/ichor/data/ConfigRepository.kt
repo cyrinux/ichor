@@ -13,6 +13,8 @@ import name.levis.ichor.security.SecurityKeyRequiredException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,10 +43,23 @@ class ConfigRepository(
 ) {
 
     private val strongBox = hasStrongBox(context.packageManager)
-    private val store = SecureStore(File(context.filesDir, "talosconfig.enc"), strongBoxAvailable = strongBox, outer = dekHolder)
+    private val store = SecureStore(
+        File(context.filesDir, "talosconfig.enc"), strongBoxAvailable = strongBox, outer = dekHolder, onTeeFallback = ::keyFellBack,
+    )
 
     /** Clusters added from a kubeconfig: a second sealed file with a key of its own, protected alike. */
-    private val kubeStore = SecureStore(File(context.filesDir, "kubeconfig.enc"), keyAlias = "kubeconfig", strongBoxAvailable = strongBox, outer = dekHolder)
+    private val kubeStore = SecureStore(
+        File(context.filesDir, "kubeconfig.enc"), keyAlias = "kubeconfig", strongBoxAvailable = strongBox, outer = dekHolder,
+        onTeeFallback = ::keyFellBack,
+    )
+
+    /**
+     * Their summary, so a launch skips the parse of every context (see [ConfigSummaryCache]):
+     * sealed like the stores (same DEK, so no name reads before the key tap), never backed up.
+     */
+    private val summaryCache = ConfigSummaryCache(
+        SecureStoreValue(File(context.noBackupFilesDir, ConfigSummaryCache.FILE), ConfigSummaryCache.KEY_ALIAS, strongBox, dekHolder),
+    )
 
     /**
      * Seals both files with the security-key DEK, or unseals them, for the mode just set (see
@@ -53,6 +68,7 @@ class ConfigRepository(
     suspend fun reseal() = writing {
         store.reseal()
         kubeStore.reseal()
+        summaryCache.reseal()
     }
 
     /**
@@ -64,11 +80,55 @@ class ConfigRepository(
         if (upgraded > 0) StartupTrace.markOnce("config migrated v1→v2", "$upgraded files")
     }
 
-    /** Where the key protecting the stored config lives (null before the first import). */
-    fun keyProtection(): KeyProtection? = runCatching { store.protection() ?: kubeStore.protection() }.getOrNull()
+    /**
+     * Where the keys protecting the stored configs live: the weakest of the two stores, so the
+     * TEE notice stays while either is out of the chip (null before the first import). A store
+     * whose level cannot be read is left out.
+     */
+    fun keyProtection(): KeyProtection? =
+        weakest(listOf(store, kubeStore).map { runCatching { it.protection() }.getOrNull() })
     private val prefs = context.getSharedPreferences("ichor", Context.MODE_PRIVATE)
 
+    /**
+     * A config key went to the TEE although the phone has StrongBox (the chip kept refusing):
+     * Settings → Security says so once, until dismissed. Only that fact is stored, no secret.
+     */
+    private val _keyFallback = MutableStateFlow(prefs.getBoolean(KEY_TEE_FALLBACK, false))
+    val keyFallback: StateFlow<Boolean> = _keyFallback.asStateFlow()
+
+    private fun keyFellBack() {
+        prefs.edit().putBoolean(KEY_TEE_FALLBACK, true).apply()
+        _keyFallback.value = true
+    }
+
+    /**
+     * Moves the key of each store not in StrongBox into the chip, keeping the configs (see
+     * SecureStore.rekeyToStrongBox and [moveKeys]); the user asks for it from the TEE notice.
+     * Once both are in StrongBox the notice clears, and the summary cache is dropped so its next
+     * write makes its key in the chip too (it is only a cache: the next load parses again). The
+     * configs themselves do not change, so nothing is reloaded.
+     */
+    suspend fun moveKeyToStrongBox(): KeyMoveResult = writing {
+        val result = moveKeys(
+            listOf(store, kubeStore).map { target -> MovableKey(target::protection) { target.rekeyToStrongBox() } },
+        )
+        if (result == KeyMoveResult.MOVED) {
+            summaryCache.clear()
+            dismissKeyFallback()
+        }
+        result
+    }
+
+    /** Hides the TEE notice for good (a later fallback shows it again). */
+    fun dismissKeyFallback() {
+        prefs.edit().remove(KEY_TEE_FALLBACK).apply()
+        _keyFallback.value = false
+    }
+
     private val writes = Mutex()
+
+    // Lives as long as the repository (the process): a cancel must outlive the screen that switched.
+    private val switchCalls = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _config = MutableStateFlow<StoredConfig?>(null)
     val config: StateFlow<StoredConfig?> = _config.asStateFlow()
@@ -106,8 +166,11 @@ class ConfigRepository(
         val kube = kubeStore.read()?.decodeToString()
         StartupTrace.markOnce("config decrypted")
         if (talos == null && kube == null) return null
-        val summary = linked(parse(talos.orEmpty(), kube.orEmpty()))
-        StartupTrace.markOnce("config parsed", "${summary.contexts.size} contexts")
+        val key = summaryKey(talos.orEmpty(), kube.orEmpty())
+        val cached = summaryCache.lookup(key)
+        val parsed = cached ?: parse(talos.orEmpty(), kube.orEmpty()).also { summaryCache.store(key, it) }
+        val summary = linked(parsed)
+        StartupTrace.markOnce("config parsed", "${summary.contexts.size} contexts, summary: ${if (cached != null) "cached" else "parsed"}")
         return StoredConfig(talos.orEmpty(), kube.orEmpty(), summary, resolveActive(summary, prefs.getString(KEY_CONTEXT, null), savedIndex()))
     }
 
@@ -193,7 +256,7 @@ class ConfigRepository(
         val removed = current.summary.indexOf(name)
         if (removed < 0) return@writing true
         if (current.summary.contexts.size == 1) {
-            clear()
+            clearStored()
             return@writing false
         }
         val (talos, kube) = withoutContext(current, name, current.summary.contexts[removed].isKube)
@@ -234,6 +297,10 @@ class ConfigRepository(
     suspend fun addNodes(contextName: String, nodes: List<String>) =
         edit { Ichorgo.addContextNodes(it, contextName, nodes.joinToString(",")) }
 
+    /** Takes [nodes] out of the nodes of [contextName]; its endpoints stay. Refused for the last one. */
+    suspend fun removeNodes(contextName: String, nodes: List<String>) =
+        edit { Ichorgo.removeContextNodes(it, contextName, nodes.joinToString(",")) }
+
     /** Replaces the endpoints of [contextName] with [endpoints], in order. */
     suspend fun setEndpoints(contextName: String, endpoints: List<String>) =
         edit { Ichorgo.setContextEndpoints(it, contextName, endpoints.joinToString(",")) }
@@ -253,7 +320,17 @@ class ConfigRepository(
      * stored config, changes it and writes it back, so two at once would lose one of them.
      */
     private suspend fun <T> writing(block: suspend CoroutineScope.() -> T): T =
-        writes.withLock { withContext(Dispatchers.IO, block) }
+        writes.withLock {
+            withContext(Dispatchers.IO) {
+                // Before any parse of this change: what [commit] keys the cached summary with.
+                writeMaskGeneration = Ichorgo.privacyGeneration()
+                block()
+            }
+        }
+
+    /** The mask generation when the running change started (see [writing]), read under [writes]. */
+    @Volatile
+    private var writeMaskGeneration = 0L
 
     /**
      * Stores the talosconfig changed by [change], keeping the context the user is looking at.
@@ -288,14 +365,25 @@ class ConfigRepository(
             StoreWrite({ persist(kubeStore, kube) }, { persist(kubeStore, previous?.kubeYaml.orEmpty()) })
                 .takeIf { previous == null || previous.kubeYaml != kube },
         )
+        // The Keystore checked first: a secure element that does not answer fails the import
+        // here, before any store was written, or its key is made in the TEE.
+        if (previous?.talosYaml != talos && talos.isNotBlank()) store.prepare()
+        if (previous?.kubeYaml != kube && kube.isNotBlank()) kubeStore.prepare()
         writeAll(writes)
+        summaryCache.store(SummaryKey(digest(talos), digest(kube), writeMaskGeneration), parsed)
         if (remember) saveActive(summary, shown)
         _config.value = StoredConfig(talos, kube, summary, shown)
         _generation.value++
     }
 
     private fun persist(target: SecureStore, yaml: String) {
-        if (yaml.isBlank()) target.clear() else target.write(yaml.encodeToByteArray())
+        if (yaml.isBlank()) {
+            // Its key goes too: the next one tries the chip again, so the TEE notice no longer holds.
+            target.clear()
+            dismissKeyFallback()
+        } else {
+            target.write(yaml.encodeToByteArray())
+        }
     }
 
     /**
@@ -319,6 +407,15 @@ class ConfigRepository(
         if (current.summary.contexts.none { it.name == name }) return
         saveActive(current.summary, name)
         _config.value = current.copy(activeContext = name)
+        if (name != current.activeContext) cancelCallsOf(current, current.activeContext)
+    }
+
+    /** Ends the reads still under way on the cluster just left, so they stop holding threads and the network. */
+    private fun cancelCallsOf(stored: StoredConfig, context: String) {
+        switchCalls.launch {
+            // Best effort: reads left running only finish on their own, as they always did.
+            runCatching { Ichorgo.cancelCalls(stored.yamlFor(context), context) }
+        }
     }
 
     private fun saveActive(summary: ConfigSummary, name: String) =
@@ -330,7 +427,11 @@ class ConfigRepository(
      */
     suspend fun reparse() = withContext(Dispatchers.IO) {
         val current = _config.value ?: return@withContext
-        val summary = linked(parse(current.talosYaml, current.kubeYaml))
+        // The generation read before the parse: a mask switched meanwhile makes the record stale, never wrong.
+        val key = summaryKey(current.talosYaml, current.kubeYaml)
+        val parsed = parse(current.talosYaml, current.kubeYaml)
+        summaryCache.store(key, parsed)
+        val summary = linked(parsed)
         _config.value = current.copy(summary = summary, activeContext = contextAt(summary, current.summary.indexOf(current.activeContext)))
     }
 
@@ -344,13 +445,28 @@ class ConfigRepository(
 
     private fun savedIndex(): Int = prefs.getInt(KEY_CONTEXT_INDEX, -1)
 
-    suspend fun clear() = withContext(Dispatchers.IO) {
+    /** Deletes every stored config, its keys and the app preferences; one change at a time ([writing]). */
+    suspend fun clear() = writing { clearStored() }
+
+    /** [clear] for a caller already inside [writing] (the mutex is not reentrant). */
+    private fun clearStored() {
         store.clear()
         kubeStore.clear()
+        summaryCache.clear()
         prefs.edit().clear().apply()
+        _keyFallback.value = false
         _config.value = null
         _generation.value++
     }
+
+    /**
+     * What a summary of [talos] and [kube] depends on. Read before the parse it keys: a mask
+     * switched in between then makes the record stale, never a masked summary under 0.
+     */
+    private fun summaryKey(talos: String, kube: String): SummaryKey =
+        SummaryKey(digest(talos), digest(kube), Ichorgo.privacyGeneration())
+
+    private fun digest(yaml: String): String = if (yaml.isBlank()) "" else Ichorgo.configDigest(yaml)
 
     /** Both stores as one list; a store left empty ("") holds no cluster. */
     private fun parse(talos: String, kube: String): ConfigSummary = mergeSummaries(parseTalosOrNull(talos), parseKubeOrNull(kube))
@@ -373,6 +489,7 @@ class ConfigRepository(
     private companion object {
         const val KEY_CONTEXT = "active_context"
         const val KEY_CONTEXT_INDEX = "active_context_index"
+        const val KEY_TEE_FALLBACK = "key_tee_fallback"
     }
 }
 

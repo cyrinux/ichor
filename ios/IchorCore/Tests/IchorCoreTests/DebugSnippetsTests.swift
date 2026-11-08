@@ -3,10 +3,10 @@ import XCTest
 
 final class DebugSnippetsTests: XCTestCase {
     private let json = """
-    [{"group":"interfaces","label":"addresses","command":"ip -br -c a","run":true},
-     {"group":"interfaces","label":"routes","command":"ip r","run":true},
-     {"group":"reachability","label":"ping","command":"ping -c3 ","run":false}]
-    """
+        [{"group":"interfaces","label":"addresses","command":"ip -br -c a","run":true},
+         {"group":"interfaces","label":"routes","command":"ip r","run":true},
+         {"group":"reachability","label":"ping","command":"ping -c3 ","run":false}]
+        """
 
     func testDecodesAndGroupsInOrder() throws {
         let snippets = try TalosJSON.decode([DebugSnippet].self, from: json)

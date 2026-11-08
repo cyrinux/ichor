@@ -8,7 +8,7 @@ import name.levis.ichor.TalosApp
 private const val ACTION_PREFIX = "name.levis.ichor.OPERATION_"
 private const val EXTRA_KIND = "name.levis.ichor.OPERATION_KIND"
 
-/** The buttons of a running operation's notification: Stop, Pause / Resume / Abort, Keep / Revert now. */
+/** The buttons of a running operation's notification: Stop, Pause / Resume / Abort, Keep / Revert now, Terminate. */
 class OperationActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val app = context.applicationContext as TalosApp

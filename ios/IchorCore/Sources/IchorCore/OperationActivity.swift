@@ -7,6 +7,15 @@ import Foundation
 /// The runs the app follows app-wide, one at a time each.
 public enum OperationKind: String, Codable, Hashable, Sendable, CaseIterable {
     case upgrade, maintenance, configTry, configMulti, clusterUpgrade, k8sUpgrade, imagePull, join, imageScan
+    /// Kubernetes-side runs started from the phone: an Argo CD sync, a Flux reconcile, a
+    /// rollout restart and a network test.
+    case argoSync, fluxReconcile, rollout, netPerf
+    /// A runbook's ordered steps (docs/runbooks.md).
+    case runbook
+    /// "Clean up dead pods": a namespace's dead pods deleted one after another.
+    case podSweep
+    /// A cluster's Talos API CA rotated, node by node, in five steps.
+    case caRotation
 
     /// The in-app link that opens the run's screen (ichor://open?op=…).
     public var link: URL { URL(string: "ichor://open?op=\(rawValue)")! }
@@ -14,17 +23,20 @@ public enum OperationKind: String, Codable, Hashable, Sendable, CaseIterable {
     /// The run a link opens, nil for any other link (a share link goes to ParseShareLink).
     public init?(link: URL) {
         guard link.scheme == "ichor", link.host == "open",
-              let item = URLComponents(url: link, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "op" }),
-              let kind = item.value.flatMap(OperationKind.init(rawValue:))
+            let item = URLComponents(url: link, resolvingAgainstBaseURL: false)?.queryItems?.first(where: {
+                $0.name == "op"
+            }),
+            let kind = item.value.flatMap(OperationKind.init(rawValue:))
         else { return nil }
         self = kind
     }
 
     /// Its run shows on a screen of its own, which the activity opens; a config rollout, an
-    /// image pull and an image scan show in a sheet or a section instead (the app as it was).
+    /// image pull, an image scan and a pod sweep show in a sheet or a section instead (the app
+    /// as it was).
     public var hasScreen: Bool {
         switch self {
-        case .configMulti, .imagePull, .imageScan: false
+        case .configMulti, .imagePull, .imageScan, .podSweep: false
         default: true
         }
     }
@@ -40,6 +52,13 @@ public enum OperationKind: String, Codable, Hashable, Sendable, CaseIterable {
         case .imagePull: "square.and.arrow.down"
         case .join: "plus.circle"
         case .imageScan: "shield.lefthalf.filled"
+        case .argoSync: "arrow.triangle.2.circlepath"
+        case .fluxReconcile: "arrow.clockwise"
+        case .rollout: "arrow.counterclockwise.circle"
+        case .netPerf: "speedometer"
+        case .runbook: "list.bullet.rectangle"
+        case .podSweep: "sparkles"
+        case .caRotation: "key.horizontal"
         }
     }
 }
@@ -56,10 +75,12 @@ public enum OperationPhase: String, Codable, Hashable, Sendable {
 /// (unlocked first), like the run's own screen.
 public enum OperationButton: String, Codable, Hashable, Sendable, CaseIterable {
     case stop, stopFollowing, pause, resume, abort, keep, revert
+    /// An Argo CD sync's Terminate.
+    case terminate
 
     public var opensAppWhenLocked: Bool {
         switch self {
-        case .stop, .abort, .keep: true
+        case .stop, .abort, .keep, .terminate: true
         case .stopFollowing, .pause, .resume, .revert: false
         }
     }
@@ -72,12 +93,16 @@ public enum OperationButton: String, Codable, Hashable, Sendable, CaseIterable {
 
     /// What each run offers while it runs: `stopping` once a stop was asked (nothing more to ask),
     /// `paused` for a roll waiting on Resume, `waiting` for a try holding the change.
-    public static func offered(for kind: OperationKind, stopping: Bool = false, paused: Bool = false, waiting: Bool = false) -> [OperationButton] {
+    public static func offered(
+        for kind: OperationKind, stopping: Bool = false, paused: Bool = false, waiting: Bool = false
+    ) -> [OperationButton] {
         if stopping { return [] }
         switch kind {
-        case .upgrade: return [.stopFollowing]
-        case .join: return [.stopFollowing]
-        case .maintenance, .configMulti, .k8sUpgrade, .imagePull, .imageScan: return [.stop]
+        case .upgrade, .join, .fluxReconcile, .rollout: return [.stopFollowing]
+        case .argoSync: return [.terminate]
+        case .maintenance, .configMulti, .k8sUpgrade, .imagePull, .imageScan, .netPerf, .runbook, .podSweep,
+            .caRotation:
+            return [.stop]
         case .clusterUpgrade: return paused ? [.resume, .abort] : [.pause, .abort]
         case .configTry: return waiting ? [.keep, .revert] : []
         }
@@ -100,8 +125,10 @@ public struct OperationContent: Codable, Hashable, Sendable {
     public var locked: Bool
     public var updated: Date
 
-    public init(title: String, step: String, done: Int? = nil, total: Int? = nil, deadline: Date? = nil,
-                phase: OperationPhase = .running, buttons: [OperationButton] = [], locked: Bool = false, updated: Date = Date()) {
+    public init(
+        title: String, step: String, done: Int? = nil, total: Int? = nil, deadline: Date? = nil,
+        phase: OperationPhase = .running, buttons: [OperationButton] = [], locked: Bool = false, updated: Date = Date()
+    ) {
         self.title = title
         self.step = step
         self.done = done
@@ -153,17 +180,17 @@ public enum OperationButtonHandler {
 
 // iOS only: ActivityKit imports on macOS (the package's tests run there too) but is unavailable.
 #if canImport(ActivityKit) && os(iOS)
-import ActivityKit
+    import ActivityKit
 
-/// The Live Activity of a run: one per kind at a time. Defined once here, so the app and the
-/// widget extension share the very same type.
-public struct OperationAttributes: ActivityAttributes {
-    public typealias ContentState = OperationContent
+    /// The Live Activity of a run: one per kind at a time. Defined once here, so the app and the
+    /// widget extension share the very same type.
+    public struct OperationAttributes: ActivityAttributes {
+        public typealias ContentState = OperationContent
 
-    public let kind: OperationKind
+        public let kind: OperationKind
 
-    public init(kind: OperationKind) {
-        self.kind = kind
+        public init(kind: OperationKind) {
+            self.kind = kind
+        }
     }
-}
 #endif

@@ -1,0 +1,7 @@
+• The CRD request workflow translates a draft's labels before opening its pull request
+• Draino plugin, a NodeDrain per node with its condition and last drain
+• Draino plugin labels in French, German, Spanish, Italian and Ukrainian
+• Fail over a Dragonfly instance from its master pod, and see a replica still syncing as such
+• Draino plugin draft from its CRD
+• The CRD bot finds the manifest by name, so an in-app request needs no link
+• Request an integration opens the CRD bot's plugin request

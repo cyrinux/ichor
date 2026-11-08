@@ -1,22 +1,22 @@
 package name.levis.ichor.ui.upgrade
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import name.levis.ichor.ui.components.ClusterScreenTitle
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.data.UpgradeManager
@@ -54,7 +54,7 @@ import name.levis.ichor.ui.uiText
 
 /** The version picked and its plan; releases come from the network and may be missing offline. */
 class ClusterUpgradeViewModel(
-    private val talos: TalosRepository,
+    private val lifecycle: NodeLifecycleRepository,
     private val upgrades: UpgradeManager,
     initialVersion: String,
 ) : ViewModel() {
@@ -85,7 +85,7 @@ class ClusterUpgradeViewModel(
         val version = _version.value.ifEmpty { return }
         planning?.cancel()
         _plan.value = UiState.Loading
-        planning = viewModelScope.launch { _plan.value = uiStateOf { talos.clusterUpgradePlan(version) } }
+        planning = viewModelScope.launch { _plan.value = uiStateOf { lifecycle.clusterUpgradePlan(version) } }
     }
 }
 
@@ -101,7 +101,7 @@ fun ClusterUpgradeScreen(
     onBack: () -> Unit,
     vm: ClusterUpgradeViewModel = viewModel(
         key = "cluster-upgrade",
-        factory = factory { ClusterUpgradeViewModel(app.talosRepository, app.upgradeManager, initialVersion) },
+        factory = factory { ClusterUpgradeViewModel(app.nodeLifecycleRepository, app.upgradeManager, initialVersion) },
     ),
 ) {
     val context = LocalContext.current
@@ -148,16 +148,11 @@ fun ClusterUpgradeScreen(
         maintenance?.running == true -> stringResource(R.string.maintenance_other_running, maintenance?.hostname.orEmpty())
         else -> null
     }
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(stringResource(R.string.cluster_upgrade_title))
-                        Text(cluster, style = MaterialTheme.typography.labelMedium)
-                    }
-                },
+            IchorTopAppBar(
+                title = { ClusterScreenTitle(stringResource(R.string.cluster_upgrade_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
         },

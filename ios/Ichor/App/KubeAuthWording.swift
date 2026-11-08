@@ -16,7 +16,8 @@ enum KubeAuthWording {
         case "awsRegion": String(localized: "AWS region")
         case "awsRegions": String(localized: "AWS regions (optional, comma separated)")
         case "gcpServiceAccountJson": String(localized: "Service account key (JSON)")
-        case "gcpUserCredentialsJson": String(localized: "gcloud user credentials (application_default_credentials.json)")
+        case "gcpUserCredentialsJson":
+            String(localized: "gcloud user credentials (application_default_credentials.json)")
         case "gcpProjects": String(localized: "Project IDs (optional)")
         case "gcpOAuthClientId": String(localized: "OAuth client ID")
         case "gcpOAuthClientSecret": String(localized: "OAuth client secret")
@@ -54,25 +55,52 @@ enum KubeAuthWording {
     static func fieldHint(_ field: String) -> String? {
         switch field {
         case "gcpUserCredentialsJson":
-            String(localized: "Bring your gcloud session: on your computer run gcloud auth application-default login, then import ~/.config/gcloud/application_default_credentials.json. When Google ends the session, run it again and import the new file.")
+            String(
+                localized:
+                    "Bring your gcloud session: on your computer run gcloud auth application-default login, then import ~/.config/gcloud/application_default_credentials.json. When Google ends the session, run it again and import the new file."
+            )
                 + "\n\n"
-                + String(localized: "A workforce identity session (gcloud auth application-default login --login-config=…) is imported the same way.")
+                + String(
+                    localized:
+                        "A workforce identity session (gcloud auth application-default login --login-config=…) is imported the same way."
+                )
         case kubeAWSStartURLField:
-            String(localized: "Enter the start URL from your AWS access portal and its region; the account and role are chosen after the sign-in. Leave them empty unless you know them.")
+            String(
+                localized:
+                    "Enter the start URL from your AWS access portal and its region; the account and role are chosen after the sign-in. Leave them empty unless you know them."
+            )
         case kubeAWSRegionsField:
-            String(localized: "Signs in at your AWS access portal in the browser, then lists the EKS clusters of the accounts and roles you choose in the regions given (all common regions when empty).")
+            String(
+                localized:
+                    "Signs in at your AWS access portal in the browser, then lists the EKS clusters of the accounts and roles you choose in the regions given (all common regions when empty)."
+            )
         case "gcpGcloudSignIn":
-            String(localized: "Opens Google's sign-in in the browser, as gcloud auth application-default login does on a computer. Works on every build; your organisation's SSO applies. The consent page names Google Cloud SDK.")
+            String(
+                localized:
+                    "Opens Google's sign-in in the browser, as gcloud auth application-default login does on a computer. Works on every build; your organisation's SSO applies. The consent page names Google Cloud SDK."
+            )
         case kubeLoginConfigField:
-            String(localized: "Import the login config your administrator gave you; the sign-in opens your organisation's identity provider in the browser.")
+            String(
+                localized:
+                    "Import the login config your administrator gave you; the sign-in opens your organisation's identity provider in the browser."
+            )
         case "gcpGoogleSignIn":
             String(localized: "Google lists the projects your account can see; Ichor reads their clusters.")
         case "gcpProjects":
-            String(localized: "Leave empty to search every project your account can see; list project IDs to go faster in a large organisation.")
+            String(
+                localized:
+                    "Leave empty to search every project your account can see; list project IDs to go faster in a large organisation."
+            )
         case "gcpOAuthClientId":
-            String(localized: "Ask your Google Cloud admin for a Desktop app OAuth client (APIs & Services → Credentials) with an Internal consent screen. Sign in then opens your Google account in the browser.")
+            String(
+                localized:
+                    "Ask your Google Cloud admin for a Desktop app OAuth client (APIs & Services → Credentials) with an Internal consent screen. Sign in then opens your Google account in the browser."
+            )
                 + "\n\n"
-                + String(localized: "With a Web application client instead, enter https://cyrinux.github.io/ichor/auth/google/ (or your organisation's own page) as redirect URL and add it to the client's authorised redirect URIs. Leave it empty for a Desktop app client.")
+                + String(
+                    localized:
+                        "With a Web application client instead, enter https://cyrinux.github.io/ichor/auth/google/ (or your organisation's own page) as redirect URL and add it to the client's authorised redirect URIs. Leave it empty for a Desktop app client."
+                )
         default: nil
         }
     }

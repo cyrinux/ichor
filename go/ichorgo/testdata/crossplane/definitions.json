@@ -1,0 +1,143 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "xbuckets.platform.example.org",
+        "namespace": ""
+      },
+      "spec": {
+        "group": "platform.example.org",
+        "names": {
+          "kind": "XBucket",
+          "plural": "xbuckets"
+        },
+        "versions": [
+          {
+            "name": "v1alpha1",
+            "served": true,
+            "referenceable": false
+          },
+          {
+            "name": "v1beta1",
+            "served": true,
+            "referenceable": true
+          }
+        ],
+        "claimNames": {
+          "kind": "BucketClaim",
+          "plural": "bucketclaims"
+        }
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Established",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          },
+          {
+            "type": "Offered",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "xdatabases.platform.example.org",
+        "namespace": ""
+      },
+      "spec": {
+        "group": "platform.example.org",
+        "names": {
+          "kind": "XDatabase",
+          "plural": "xdatabases"
+        },
+        "versions": [
+          {
+            "name": "v1alpha1",
+            "served": true,
+            "referenceable": false
+          },
+          {
+            "name": "v1beta1",
+            "served": true,
+            "referenceable": true
+          }
+        ],
+        "scope": "Namespaced",
+        "claimNames": {
+          "kind": "IgnoredClaim",
+          "plural": "ignoredclaims"
+        }
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Established",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          },
+          {
+            "type": "Offered",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "xbroken.platform.example.org",
+        "namespace": ""
+      },
+      "spec": {
+        "group": "platform.example.org",
+        "names": {
+          "kind": "XBroken",
+          "plural": "xbroken"
+        },
+        "versions": [
+          {
+            "name": "v1alpha1",
+            "served": true,
+            "referenceable": false
+          },
+          {
+            "name": "v1beta1",
+            "served": true,
+            "referenceable": true
+          }
+        ],
+        "scope": "Cluster"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Established",
+            "status": "False",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          },
+          {
+            "type": "Offered",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          }
+        ]
+      }
+    }
+  ]
+}

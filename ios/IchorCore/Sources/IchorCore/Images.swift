@@ -29,7 +29,8 @@ public func filterImages(_ images: [ContainerImage], query: String) -> [Containe
     let needle = query.trimmingCharacters(in: .whitespaces)
     guard !needle.isEmpty else { return images }
     return images.filter {
-        $0.name.range(of: needle, options: .caseInsensitive) != nil || $0.digest.range(of: needle, options: .caseInsensitive) != nil
+        $0.name.range(of: needle, options: .caseInsensitive) != nil
+            || $0.digest.range(of: needle, options: .caseInsensitive) != nil
     }
 }
 

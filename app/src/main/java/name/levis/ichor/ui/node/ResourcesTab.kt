@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -65,10 +65,6 @@ internal fun ResourcesTab(
     val state by vm.state.collectAsStateWithLifecycle()
     val clockState by clock.state.collectAsStateWithLifecycle()
     val pressureState by pressure.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) {
-        if (state == UiState.Loading) vm.refresh()
-        if (clockState == UiState.Loading) clock.refresh()
-    }
     // Keyed on access: the config (and so the role) can arrive after the first frame.
     val showsPressure = onPressureDetails != null
     LaunchedEffect(showsPressure) {
@@ -88,7 +84,7 @@ internal fun ResourcesTab(
                 },
                 modifier = Modifier.weight(1f),
             ) {
-                ResourcesContent(node, s.data, clockState, pressure = onPressureDetails?.let { pressureState to it })
+                ResourcesContent(node, s.data, clockState, pressure = onPressureDetails?.let { pressureState to it }, onPressureRetry = pressure::refresh)
             }
             DataFreshness(s, edgeToEdge = false)
         }
@@ -96,7 +92,13 @@ internal fun ResourcesTab(
 }
 
 @Composable
-private fun ResourcesContent(node: String, r: NodeResources, clock: UiState<NodeTime>, pressure: Pair<UiState<CgroupReport>, () -> Unit>?) {
+private fun ResourcesContent(
+    node: String,
+    r: NodeResources,
+    clock: UiState<NodeTime>,
+    pressure: Pair<UiState<CgroupReport>, () -> Unit>?,
+    onPressureRetry: () -> Unit,
+) {
     val uptime = if (r.bootTime > 0) localizedDuration(System.currentTimeMillis() / 1000 - r.bootTime) else "—"
     val cpu = if (r.cpuModel.isBlank()) {
         pluralStringResource(R.plurals.node_cpu_threads, r.cpuCount, r.cpuCount)
@@ -105,7 +107,7 @@ private fun ResourcesContent(node: String, r: NodeResources, clock: UiState<Node
     }
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Card(Modifier.fillMaxWidth()) {
+            IchorCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     SectionTitle(stringResource(R.string.node_section_system))
                     InfoRow(stringResource(R.string.node_uptime), uptime)
@@ -117,7 +119,7 @@ private fun ResourcesContent(node: String, r: NodeResources, clock: UiState<Node
             }
         }
         item {
-            Card(Modifier.fillMaxWidth()) {
+            IchorCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     SectionTitle(stringResource(R.string.node_section_memory))
                     val used = r.memTotal - r.memAvailable
@@ -128,10 +130,10 @@ private fun ResourcesContent(node: String, r: NodeResources, clock: UiState<Node
             }
         }
         // Right after memory: pressure says whether CPU, memory or disk actually hold tasks back.
-        pressure?.let { (state, onDetails) -> item { PressureCard(state, onDetails) } }
+        pressure?.let { (state, onDetails) -> item { PressureCard(state, onDetails, onPressureRetry) } }
         if (r.mounts.isNotEmpty()) {
             item {
-                Card(Modifier.fillMaxWidth()) {
+                IchorCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         SectionTitle(stringResource(R.string.node_section_disks))
                         r.mounts.forEach { m ->

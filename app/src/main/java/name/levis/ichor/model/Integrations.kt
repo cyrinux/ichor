@@ -22,6 +22,8 @@ data class IntegrationGroup(
     val name: String,
     val version: String = "",
     val kinds: List<String> = emptyList(),
+    /** The plural names, sorted: "<resource>.<group>" names the CRD a request asks for. */
+    val resources: List<String> = emptyList(),
 ) {
     val label: String get() = if (version.isEmpty()) name else "$name/$version"
 }

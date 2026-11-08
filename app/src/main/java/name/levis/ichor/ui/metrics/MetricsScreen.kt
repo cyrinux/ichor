@@ -16,8 +16,8 @@ import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,12 +26,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,13 +52,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.PromLink
 import name.levis.ichor.model.PromPanel
 import name.levis.ichor.model.isPromRefused
-import name.levis.ichor.model.legend
+import name.levis.ichor.model.chartLabels
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.LoadingBox
@@ -88,6 +90,7 @@ fun MetricsScreen(
     /** [METRICS_TAB_MONITORING] to open on Monitoring (from the checkup). */
     initialTab: Int = METRICS_TAB_PANELS,
 ) {
+    AllowLandscape()
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
@@ -122,9 +125,9 @@ fun MetricsScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.metrics_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -213,7 +216,8 @@ private fun PanelList(state: MetricsState, vm: MetricsViewModel, onEdit: (PromPa
     ) {
         item { MutedText(stringResource(R.string.metrics_source_line, state.config.source!!.label)) }
         item { RangeRow(state.range, vm::setRange) }
-        state.error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
+        // The config failed to read or save: no single read to run again, so no Retry.
+        state.error?.let { item { LoadFailureRow(it, onRetry = null) } }
         if (state.results.values.any { isPromRefused(it.error) }) item { RefusedCard(onEdit = onSource) }
         if (state.config.panels.isEmpty()) item { MutedText(stringResource(R.string.metrics_no_panels)) }
         val panels = state.config.panels
@@ -226,6 +230,7 @@ private fun PanelList(state: MetricsState, vm: MetricsViewModel, onEdit: (PromPa
                 onEdit = { onEdit(panel) },
                 onMove = { vm.movePanel(panel.id, it) },
                 onDelete = { vm.deletePanel(panel.id) },
+                onRetry = { vm.refreshPanel(panel) },
             )
         }
     }
@@ -242,8 +247,8 @@ private fun NoSource(state: MetricsState, modifier: Modifier, onSetUp: () -> Uni
             else -> {
                 Text(stringResource(R.string.metrics_none_found), style = MaterialTheme.typography.titleMedium)
                 MutedText(state.discoveryError ?: state.error ?: stringResource(R.string.metrics_none_found_hint))
-                Button(onClick = onSetUp) { Text(stringResource(R.string.metrics_set_up)) }
-                androidx.compose.material3.TextButton(onClick = onSearch) { Text(stringResource(R.string.metrics_search_again)) }
+                IchorButton(onClick = onSetUp) { Text(stringResource(R.string.metrics_set_up)) }
+                name.levis.ichor.ui.design.IchorTextButton(onClick = onSearch) { Text(stringResource(R.string.metrics_search_again)) }
             }
         }
     }
@@ -252,10 +257,10 @@ private fun NoSource(state: MetricsState, modifier: Modifier, onSetUp: () -> Uni
 /** The backend answered 401 or 403: offers to change the tenant (X-Scope-OrgID) or the credentials. */
 @Composable
 private fun RefusedCard(onEdit: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.metrics_refused), color = MaterialTheme.colorScheme.error)
-            Button(onClick = onEdit) { Text(stringResource(R.string.metrics_change_credentials)) }
+            IchorButton(onClick = onEdit) { Text(stringResource(R.string.metrics_change_credentials)) }
         }
     }
 }
@@ -285,9 +290,10 @@ private fun PanelCard(
     onEdit: () -> Unit,
     onMove: (Int) -> Unit,
     onDelete: () -> Unit,
+    onRetry: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(panel.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
@@ -303,7 +309,7 @@ private fun PanelCard(
             }
             Column(Modifier.padding(end = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (result.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
-                result.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                result.error?.let { LoadFailureRow(it, onRetry, compact = true) }
                 result.result?.let { res -> PromChart(panel, res) }
             }
         }
@@ -316,10 +322,13 @@ internal fun PromChart(panel: PromPanel, res: name.levis.ichor.model.PromResult)
     if (res.series.isEmpty()) {
         MutedText(stringResource(R.string.metrics_no_data))
     } else {
+        val title = panel.title.ifBlank { panel.query }
+        val numbered = res.series.indices.map { stringResource(R.string.metrics_series_unnamed, it + 1) }
+        val labels = res.series.chartLabels(panel.legend, title, numbered)
         TimeSeriesChart(
-            title = panel.title.ifBlank { panel.query },
+            title = title,
             times = res.times,
-            lines = res.series.map { TimeLine(it.legend(panel.legend), it.values) },
+            lines = res.series.mapIndexed { i, series -> TimeLine(labels[i], series.values) },
             format = { formatMetric(it, panel.unit) },
         )
     }

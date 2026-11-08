@@ -63,11 +63,11 @@ func isDemoContext(yaml, name string) bool {
 // that do not go through demoRead (which refuses a kubeconfig itself), so the Kubernetes
 // demo fails them with errTalosUnavailable like any kubeconfig cluster.
 func isTalosDemoContext(yaml, name string) bool {
-	if !strings.Contains(yaml, demoEndpoint) || isKubeconfig(yaml) {
+	// A text without the demo endpoint is no demo: no need to parse it.
+	if !mentionsDemo(yaml) || isKubeconfig(yaml) {
 		return false
 	}
-	_, c, err := resolveContext(yaml, name)
-	return err == nil && slices.Contains(c.Endpoints, demoEndpoint)
+	return configs.get(yaml).isDemo(name)
 }
 
 // demoTalosVersion is the Talos version the demo nodes say they run.
@@ -127,8 +127,17 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 	case "NodeStats":
 		return toJSON(sample)
 	case "ClusterStats":
-		result := clusterStats{At: now, Nodes: []nodeCounters{}}
+		result := clusterStats{At: now, Nodes: []nodeCounters{}, Total: len(nodes)}
+		names := make([]string, 0, len(nodes))
 		for _, n := range nodes {
+			names = append(names, n.Node)
+		}
+		chosen := chooseNodes(names, strings.Join(args, ","))
+		result.Sampled = len(chosen)
+		for _, n := range nodes {
+			if !slices.Contains(chosen, n.Node) {
+				continue
+			}
 			s := demoStats(n)
 			result.Nodes = append(result.Nodes, nodeCounters{Node: n.Node, CPUBusy: s.CPUBusy, CPUTotal: s.CPUTotal, CPUCount: s.CPUCount, MemTotal: s.MemTotal, MemAvailable: s.MemAvailable})
 		}
@@ -155,7 +164,7 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 		return toJSON(plan)
 	case "NodeFeatures":
 		features := computeFeatures(n.Version)
-		for _, id := range []string{"packetCapture", "upgrade", "etcdSnapshot", "etcdMemberActions", "supportBundle", "issueConfig", "debugShell", "serviceControl", "reset"} {
+		for _, id := range []string{"upgrade", "etcdSnapshot", "etcdMemberActions", "supportBundle", "issueConfig", "debugShell", "serviceControl", "reset"} {
 			features.Features[id] = featureState{Reason: errDemoUnavailable.Error()}
 		}
 		return toJSON(features)
@@ -249,10 +258,7 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 	case "TalosSystemImages":
 		return toJSON(demoSystemImages(n.Role == "controlplane"))
 	case "NodeImages":
-		return toJSON([]imageInfo{
-			{Name: "registry.k8s.io/coredns/coredns:v1.12.0", Digest: "sha256:abc123demo", Size: 20 << 20, Created: demoBoot.UnixMilli()},
-			{Name: "nginx:1.27", Digest: "sha256:def456demo", Size: 64 << 20, Created: demoBoot.UnixMilli()},
-		})
+		return toJSON(demoNodeImages())
 	case "NodeMounts":
 		return toJSON(mountList{Mounts: []mountInfo{{Filesystem: "/dev/nvme0n1p4", MountedOn: "/var", Size: 100 << 30, Available: 72 << 30, Used: 28 << 30, UsedPercent: 28}}})
 	case "NodeVolumes":
@@ -276,6 +282,7 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			Memory:     []memoryModule{{Slot: "DIMM0", SizeMiB: uint32(n.MemTotal >> 20), Type: "DDR4", SpeedMTs: 3200}},
 			Disks:      []diskInfo{{Name: "nvme0n1", DevPath: "/dev/nvme0n1", Model: "Demo NVMe", Size: 120 << 30, Type: "nvme", SystemDisk: true}},
 			Extensions: []extensionInfo{}, Security: &securityInfo{SecureBoot: true, BootedWithUKI: true}, Errors: map[string]string{},
+			Watchdog: demoWatchdog(n.Hostname),
 		})
 	case "NodeSensors":
 		return toJSON(demoSensors(n))
@@ -297,8 +304,10 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			return toJSON(hideLocations(demoTopology()))
 		}
 		return toJSON(demoTopology())
+	case "KubeSpanMeshHealth":
+		return toJSON(demoMeshHealth(name))
 	case "NodeMachineConfig":
-		return fmt.Sprintf("# Sample configuration for the Ichor demo\nversion: v1alpha1\nmachine:\n  type: %s\n  network:\n    hostname: %s\ncluster:\n  clusterName: ichor-demo\n  controlPlane:\n    endpoint: https://192.0.2.10:6443\n", n.Role, n.Hostname), nil
+		return fmt.Sprintf("# Sample configuration for the Ichor demo\nversion: v1alpha1\nmachine:\n  type: %s\n  network:\n    hostname: %s\n    nameservers:\n      - 192.0.2.1\n  install:\n    disk: /dev/sda\ncluster:\n  clusterName: ichor-demo\n  controlPlane:\n    endpoint: https://192.0.2.10:6443\n", n.Role, n.Hostname), nil
 	case "NodeDiskUsage":
 		root := "/var/log"
 		if len(args) > 0 {

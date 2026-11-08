@@ -1,0 +1,107 @@
+{
+  "multiTag": [
+    {
+      "repository": "quay.io/cilium/cilium",
+      "tags": [
+        {
+          "apps": [
+            {
+              "id": "cilium",
+              "name": "Cilium",
+              "namespace": "kube-system"
+            }
+          ],
+          "nodes": [
+            "192.0.2.21"
+          ],
+          "tag": "v1.18.1"
+        },
+        {
+          "apps": [
+            {
+              "id": "cilium",
+              "name": "Cilium",
+              "namespace": "kube-system"
+            }
+          ],
+          "nodes": [
+            "192.0.2.20"
+          ],
+          "tag": "v1.18.2"
+        }
+      ]
+    }
+  ],
+  "registries": [
+    {
+      "apps": 10,
+      "dockerHub": false,
+      "host": "ghcr.io",
+      "images": 12
+    },
+    {
+      "apps": 11,
+      "dockerHub": true,
+      "host": "docker.io",
+      "images": 11
+    },
+    {
+      "apps": 6,
+      "dockerHub": false,
+      "host": "quay.io",
+      "images": 9
+    }
+  ],
+  "summary": {
+    "dockerHub": 11,
+    "images": 38,
+    "multiTag": 1,
+    "unpinned": 2,
+    "unused": 9
+  },
+  "unpinned": [
+    {
+      "apps": [
+        {
+          "id": "uptime-kuma",
+          "name": "Uptime Kuma",
+          "namespace": "default"
+        }
+      ],
+      "image": "docker.io/louislam/uptime-kuma:latest",
+      "nodes": [
+        "192.0.2.20"
+      ]
+    },
+    {
+      "apps": [
+        {
+          "id": "image:docker.io/traefik/whoami",
+          "name": "Whoami",
+          "namespace": "networking"
+        }
+      ],
+      "image": "docker.io/traefik/whoami",
+      "nodes": [
+        "192.0.2.20"
+      ]
+    }
+  ],
+  "unusedOnNode": [
+    {
+      "image": "docker.io/library/nginx:1.27",
+      "node": "192.0.2.10",
+      "sizeBytes": 67108864
+    },
+    {
+      "image": "registry.k8s.io/coredns/coredns:v1.12.0",
+      "node": "192.0.2.10",
+      "sizeBytes": 20971520
+    },
+    {
+      "image": "docker.io/library/nginx:1.27",
+      "node": "192.0.2.11",
+      "sizeBytes": 67108864
+    }
+  ]
+}

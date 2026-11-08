@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -27,7 +28,7 @@ const (
 
 // kubeServices is KubeServices' answer. PartialAccess: EndpointSlices or routes could not be
 // read, so some ready counts or URLs may be missing. LBController names what should give a
-// LoadBalancer Service its address (metallb, cilium), set only when one waits for it.
+// LoadBalancer Service its address (metallb, kube-vip, cilium), set only when one waits for it.
 type kubeServices struct {
 	Services      []serviceRow `json:"services"`
 	PartialAccess bool         `json:"partialAccess"`
@@ -96,9 +97,10 @@ type endpointSliceObject struct {
 
 // serviceRoutes holds what serviceRows needs to find the URLs of a Service.
 type serviceRoutes struct {
-	ingresses  []ingressObject
-	httpRoutes []httpRouteObject
-	gateways   []gatewayObject
+	ingresses     []ingressObject
+	gatewayRoutes []gatewayRouteObject // HTTPRoutes, GRPCRoutes and TLSRoutes
+	gateways      []gatewayObject
+	traefik       traefikRouteSet
 }
 
 // KubeServices lists the Services of namespace ("" for all) with their addresses, ready
@@ -128,10 +130,12 @@ func readServices(ctx context.Context, k *kubeClient, namespace string, now time
 
 	// The rest only completes the rows: read together, each allowed to fail.
 	var (
-		endpointSlices          []endpointSliceObject
-		routes                  serviceRoutes
-		sliceErr, ingErr, hrErr error
-		wg                      sync.WaitGroup
+		endpointSlices         []endpointSliceObject
+		routes                 serviceRoutes
+		sliceErr, ingErr       error
+		hrErr, grpcErr, tlsErr error
+		irErr                  error
+		wg                     sync.WaitGroup
 	)
 
 	wg.Go(func() {
@@ -140,18 +144,24 @@ func readServices(ctx context.Context, k *kubeClient, namespace string, now time
 	wg.Go(func() {
 		routes.ingresses, ingErr = listObjects[ingressObject](ctx, k, scopedPath("/apis/networking.k8s.io/v1", namespace, "ingresses"))
 	})
-	// The Gateway API is optional: without its CRDs, no HTTPRoute.
+	// The Gateway API is optional: without its CRDs, no routes. GRPCRoute came with v1.1;
+	// TLSRoute is the experimental channel (v1alpha2), absent on most clusters.
 	wg.Go(func() {
-		routes.httpRoutes, hrErr = listObjects[httpRouteObject](ctx, k, scopedPath("/apis/"+groupGatewayAPI+"/v1", namespace, "httproutes"))
-		hrErr = ignoreNotFound(hrErr)
+		var http, grpc, tls []gatewayRouteObject
+
+		http, hrErr = readGatewayRoutes(ctx, k, scopedPath("/apis/"+groupGatewayAPI+"/v1", namespace, "httproutes"), "HTTPRoute")
+		grpc, grpcErr = readGatewayRoutes(ctx, k, scopedPath("/apis/"+groupGatewayAPI+"/v1", namespace, "grpcroutes"), "GRPCRoute")
+		tls, tlsErr = readGatewayRoutes(ctx, k, scopedPath("/apis/"+groupGatewayAPI+"/v1alpha2", namespace, "tlsroutes"), "TLSRoute")
+		routes.gatewayRoutes = slices.Concat(http, grpc, tls)
 	})
 	// Gateways often live in their own namespace; only used for the scheme and port.
 	wg.Go(func() {
 		routes.gateways, _ = listObjects[gatewayObject](ctx, k, "/apis/"+groupGatewayAPI+"/v1/gateways")
 	})
+	wg.Go(func() { routes.traefik, irErr = readTraefikRoutes(ctx, k, namespace, false) })
 	wg.Wait()
 
-	if len(routes.httpRoutes) > 0 {
+	if len(routes.gatewayRoutes) > 0 {
 		routes.gateways = withPublicPorts(ctx, k, routes.gateways)
 	}
 
@@ -160,9 +170,12 @@ func readServices(ctx context.Context, k *kubeClient, namespace string, now time
 		counts = countEndpoints(endpointSlices)
 	}
 
+	rows := joinServices(services, counts, routes, now)
+	withServiceRouteCerts(ctx, k, rows, now)
+
 	out := kubeServices{
-		Services:      joinServices(services, counts, routes, now),
-		PartialAccess: sliceErr != nil || ingErr != nil || hrErr != nil,
+		Services:      rows,
+		PartialAccess: sliceErr != nil || ingErr != nil || hrErr != nil || grpcErr != nil || tlsErr != nil || irErr != nil,
 	}
 
 	if anyPending(out.Services) {
@@ -172,20 +185,27 @@ func readServices(ctx context.Context, k *kubeClient, namespace string, now time
 	return out, nil
 }
 
-// readLBController names the load balancer controller installed, by its API group: MetalLB
-// first (it is installed for that alone), else Cilium's LB IPAM. "" when neither, or unknown.
+// readLBController names the load balancer controller installed: MetalLB first (it is
+// installed for that alone), then kube-vip (its ConfigMap), else Cilium's LB IPAM. "" when
+// none, or unknown.
 func readLBController(ctx context.Context, k *kubeClient) string {
 	groups, err := readAPIGroups(ctx, k)
 	if err != nil {
 		return ""
 	}
 
-	return lbControllerOf(groups)
+	_, metallb := groups[groupMetalLB]
+
+	return lbControllerOf(groups, !metallb && readKubeVipConfig(ctx, k) != nil)
 }
 
-func lbControllerOf(groups map[string]string) string {
-	if _, ok := groups["metallb.io"]; ok {
+func lbControllerOf(groups map[string]string, kubeVip bool) string {
+	if _, ok := groups[groupMetalLB]; ok {
 		return lbControllerMetalLB
+	}
+
+	if kubeVip {
+		return lbControllerKubeVip
 	}
 
 	if _, ok := groups[groupCilium]; ok {

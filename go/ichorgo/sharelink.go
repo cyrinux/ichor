@@ -13,6 +13,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/cyrinux/ichor/go/kube/flux"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 )
 
@@ -64,6 +65,8 @@ var shareTargets = map[string]shareFields{
 	"storage": {node: true},
 	// A node's Hardware screen (its sensors, the temperature alert's).
 	"hardware": {node: true},
+	// The KubeSpan map (a tunnel alert's).
+	"kubespan": {},
 }
 
 var (
@@ -80,9 +83,15 @@ var (
 )
 
 // clusterID identifies a cluster across phones and context names: a hash of its CA
-// certificate (the DER, so that a re-encoded PEM still matches). Letters only, like the
+// certificate (the DER, so that a re-encoded PEM still matches), as it was before any
+// CA rotation (see fingerprint_lineage.go). Letters only, like the
 // context fingerprint, so masking never rewrites it.
 func clusterID(ctx *clientconfig.Context) string {
+	return resolveFingerprint(rawClusterID(ctx))
+}
+
+// rawClusterID is clusterID before the lineage of a rotated CA applies.
+func rawClusterID(ctx *clientconfig.Context) string {
 	if isOmni(ctx) {
 		return letterHash(omniClusterHash(ctx))
 	}
@@ -250,7 +259,7 @@ func validShareKind(target, kind string) bool {
 		return len(kind) <= 63 && dns1123Label.MatchString(kind)
 	}
 
-	_, ok := fluxKinds[kind]
+	ok := flux.HasKind(kind)
 
 	return ok && kind != "HelmChart"
 }

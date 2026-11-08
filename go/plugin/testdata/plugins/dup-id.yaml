@@ -1,0 +1,42 @@
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: Demo_Widgets
+name: Demo Widgets
+detect:
+  - group: widgets.example.com
+    pods: widgets
+resources:
+  widget:
+    group: widgets.example.com
+    version: v1
+    resource: widgets
+    kind: Widget
+    scope: Namespaced
+cards:
+  summary:
+    title: '"Widgets"'
+actions:
+  resize:
+    label: Resize
+    on: widget
+    verb: mergePatch
+    body: { spec: { size: "{{ params.size }}", owner: "{{ params.owner }}" } }
+    rbac: { verbs: [patch], group: widgets.example.com, resource: widgets }
+    audit: demo-widgets.resize
+    params:
+      - { name: size, label: Size, type: int }
+      - { name: size, label: Size again, type: number }
+findings:
+  - id: too-big
+    from: widget
+    when: $.spec.size > 10
+    severity: warning
+    title: "{{ name }} is too big"
+  - id: too-big
+    from: widget
+    when: $.spec.size > 100
+    severity: critical
+    title: "{{ name }} is far too big"
+    opens: details
+samples:
+  widget:
+    - { metadata: { name: one, namespace: demo-shop }, spec: { size: 3 } }

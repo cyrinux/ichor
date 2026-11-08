@@ -18,11 +18,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -38,6 +40,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
+import name.levis.ichor.data.LiveFocus
 import name.levis.ichor.model.HealthCounts
 import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.NodeGroup
@@ -69,6 +73,9 @@ internal fun DenseNodes(
     onAllNodes: (NodeFilter?) -> Unit,
 ) {
     val problems = remember(groups) { groups.flatMap { it.nodes }.problemNodes() }
+    // The problems listed here are sampled live on every tick (see LiveFocus).
+    val liveFocus = (LocalContext.current.applicationContext as TalosApp).liveFocus
+    LaunchedEffect(problems) { liveFocus.publish(LiveFocus.DENSE_CARD, problems.shown.map { it.node }.toSet()) }
     groups.forEachIndexed { g, group ->
         val counts = remember(group) { group.nodes.healthCounts() }
         // One line per site with its counts; a single site says nothing, only the counts.

@@ -12,17 +12,17 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,12 +38,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
-import name.levis.ichor.data.canAsk
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.copyToClipboard
@@ -82,15 +81,14 @@ fun DiagnosisScreen(
     val source = "$generation|${config?.activeContext}|$invalidations|${settings.anonymize}"
     LaunchedEffect(source) { vm.ensureCollected(source) }
 
-    val provider = app.diagnosisRepository.providers.firstOrNull { it.id == settings.provider }
-    val providerName = provider?.name ?: settings.provider
+    val target = aiTarget(app, settings)
+    val providerName = target.name
     val ready = report is UiState.Loaded
-    // Read on every composition: the key may have been added in Settings a moment ago.
-    val askable = canAsk(app.aiPreferences.apiKey(settings.provider), settings.baseUrl)
+    val askable = target.askable
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.ai_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -117,18 +115,18 @@ fun DiagnosisScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             if (askable) {
-                Button(
+                IchorButton(
                     onClick = { vm.ask(note, language) },
                     enabled = ready && !answer.asking,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.ai_ask, providerName)) }
             } else {
-                MutedText(stringResource(R.string.ai_no_key))
-                OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) {
+                MutedText(stringResource(target.notReadyText))
+                IchorOutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.overview_action_settings))
                 }
             }
-            OutlinedButton(
+            IchorOutlinedButton(
                 onClick = { vm.prompt(note, language)?.let { shareText(context, it, context.getString(R.string.ai_share)) } },
                 enabled = ready,
                 modifier = Modifier.fillMaxWidth(),
@@ -142,17 +140,14 @@ fun DiagnosisScreen(
 @Composable
 private fun ReportCard(report: UiState<Report>, onRetry: () -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             when (report) {
                 UiState.Loading -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                     Text(stringResource(R.string.ai_collecting))
                 }
-                is UiState.Failed -> {
-                    Text(report.message.asString(), color = LocalStatusColors.current.bad)
-                    OutlinedButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
-                }
+                is UiState.Failed -> LoadFailureRow(report.message, onRetry)
                 is UiState.Loaded -> {
                     val data = report.data
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -161,7 +156,7 @@ private fun ReportCard(report: UiState<Report>, onRetry: () -> Unit) {
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f),
                         )
-                        TextButton(onClick = { expanded = !expanded }) {
+                        IchorTextButton(onClick = { expanded = !expanded }) {
                             Text(stringResource(if (expanded) R.string.ai_report_hide else R.string.ai_report_show))
                         }
                     }
@@ -179,15 +174,15 @@ private fun ReportCard(report: UiState<Report>, onRetry: () -> Unit) {
 
 @Composable
 private fun AnswerCard(answer: AnswerState, providerName: String, onStop: () -> Unit) {
-    if (!answer.asking && answer.text.isEmpty() && answer.error == null) return
+    if (!answer.asking && answer.text.isEmpty() && answer.error == null && answer.tools.isEmpty()) return
     val context = LocalContext.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.ai_answer_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 when {
-                    answer.asking -> TextButton(onClick = onStop) { Text(stringResource(R.string.ai_stop)) }
-                    answer.text.isNotEmpty() -> TextButton(onClick = { copyToClipboard(context, "answer", answer.text) }) { Text(stringResource(R.string.ai_copy)) }
+                    answer.asking -> IchorTextButton(onClick = onStop) { Text(stringResource(R.string.ai_stop)) }
+                    answer.text.isNotEmpty() -> IchorTextButton(onClick = { copyToClipboard(context, "answer", answer.text) }) { Text(stringResource(R.string.ai_copy)) }
                 }
             }
             if (answer.asking) {
@@ -196,6 +191,7 @@ private fun AnswerCard(answer: AnswerState, providerName: String, onStop: () -> 
                     Text(stringResource(R.string.ai_asking, providerName), style = MaterialTheme.typography.bodySmall)
                 }
             }
+            AiToolRows(answer.tools, answer.toolsUnsupported)
             if (answer.text.isNotEmpty()) {
                 SelectionContainer { Text(answer.text, style = MaterialTheme.typography.bodyMedium) }
             }

@@ -9,7 +9,8 @@ enum AlertSnoozeStore {
 
     static func load() -> AlertSnoozes {
         guard let data = SharedStore.defaults.data(forKey: key),
-              let snoozes = try? JSONDecoder().decode(AlertSnoozes.self, from: data) else { return AlertSnoozes() }
+            let snoozes = try? JSONDecoder().decode(AlertSnoozes.self, from: data)
+        else { return AlertSnoozes() }
         return snoozes
     }
 
@@ -42,6 +43,43 @@ enum AlertSnoozeStore {
     }
 }
 
+/// The acknowledged alerts (see AlertAcks), in the App Group defaults: written by a notification's
+/// Acknowledge action, read by the background check, which stops their repeats. One ends when its
+/// alert stops firing; they are not backed up.
+enum AlertAckStore {
+    private static let key = "monitor.acks"
+
+    static func load() -> AlertAcks {
+        guard let data = SharedStore.defaults.data(forKey: key),
+            let acks = try? JSONDecoder().decode(AlertAcks.self, from: data)
+        else { return AlertAcks() }
+        return acks
+    }
+
+    private static func save(_ acks: AlertAcks) {
+        if acks.at.isEmpty {
+            SharedStore.defaults.removeObject(forKey: key)
+        } else if let data = try? JSONEncoder().encode(acks) {
+            SharedStore.defaults.set(data, forKey: key)
+        }
+    }
+
+    /// Acknowledges `alertKey` of `cluster` (its fingerprint).
+    static func acknowledge(cluster: String, alertKey: String, now: Date = Date()) {
+        save(load().acknowledging(cluster: cluster, key: alertKey, now: now))
+    }
+
+    /// Only the acknowledgements of `clusters` (fingerprints) whose alert still fires (`firing`
+    /// by fingerprint, for the clusters read this run; the others keep theirs).
+    static func keep(clusters: [String], firing: [String: Set<String>] = [:]) -> AlertAcks {
+        let stored = load()
+        var kept = stored.keeping(clusters: clusters)
+        for (cluster, keys) in firing { kept = kept.keepingFiring(cluster: cluster, firing: keys) }
+        if kept != stored { save(kept) }
+        return kept
+    }
+}
+
 /// The actions of the alert notifications (CYR-36). Snooze and Wake run in the background;
 /// Reboot, Sync, Reconcile and Silence open the app (after Face ID or the passcode) on the
 /// alert's screen, which asks for the usual confirmation: nothing changes on the cluster from
@@ -61,22 +99,50 @@ enum AlertNotificationActions {
             switch action {
             case .snooze:
                 return alertSnoozeHours.map { hours in
-                    UNNotificationAction(identifier: snoozeActionID(hours: hours), title: String(localized: "Snooze \(hours) h"), options: [])
+                    UNNotificationAction(
+                        identifier: snoozeActionID(hours: hours), title: String(localized: "Snooze \(hours) h"),
+                        options: [])
                 }
             case .wake:
-                return [UNNotificationAction(identifier: action.rawValue, title: String(localized: "Wake"), options: [])]
+                return [
+                    UNNotificationAction(identifier: action.rawValue, title: String(localized: "Wake"), options: [])
+                ]
+            case .acknowledge:
+                return [
+                    UNNotificationAction(
+                        identifier: action.rawValue, title: String(localized: "Acknowledge"), options: [])
+                ]
+            case .acknowledgePage:
+                // Runs in the background once the device is unlocked: it changes the incident for everyone.
+                return [
+                    UNNotificationAction(
+                        identifier: action.rawValue, title: String(localized: "Acknowledge page"),
+                        options: [.authenticationRequired])
+                ]
             case .reboot:
-                return [UNNotificationAction(identifier: action.rawValue, title: String(localized: "Reboot"),
-                                             options: [.foreground, .authenticationRequired, .destructive])]
+                return [
+                    UNNotificationAction(
+                        identifier: action.rawValue, title: String(localized: "Reboot"),
+                        options: [.foreground, .authenticationRequired, .destructive])
+                ]
             case .sync:
-                return [UNNotificationAction(identifier: action.rawValue, title: String(localized: "Sync"),
-                                             options: [.foreground, .authenticationRequired])]
+                return [
+                    UNNotificationAction(
+                        identifier: action.rawValue, title: String(localized: "Sync"),
+                        options: [.foreground, .authenticationRequired])
+                ]
             case .reconcile:
-                return [UNNotificationAction(identifier: action.rawValue, title: String(localized: "Reconcile"),
-                                             options: [.foreground, .authenticationRequired])]
+                return [
+                    UNNotificationAction(
+                        identifier: action.rawValue, title: String(localized: "Reconcile"),
+                        options: [.foreground, .authenticationRequired])
+                ]
             case .silence:
-                return [UNNotificationAction(identifier: action.rawValue, title: String(localized: "Silence 1 h"),
-                                             options: [.foreground, .authenticationRequired])]
+                return [
+                    UNNotificationAction(
+                        identifier: action.rawValue, title: String(localized: "Silence 1 h"),
+                        options: [.foreground, .authenticationRequired])
+                ]
             }
         }
     }
@@ -116,8 +182,9 @@ enum AlertNotificationActions {
         // Hidden on the lock screen with the app lock on, like the alert it answers.
         if UserDefaults.standard.bool(forKey: "appLockEnabled") { content.categoryIdentifier = "private" }
         // Per cluster, like the alerts: two clusters' nodes may share an address.
-        let request = UNNotificationRequest(identifier: wakePrefix + alertNotificationID(cluster: cluster, alertKey: alertKey),
-                                            content: content, trigger: nil)
+        let request = UNNotificationRequest(
+            identifier: wakePrefix + alertNotificationID(cluster: cluster, alertKey: alertKey),
+            content: content, trigger: nil)
         try? await UNUserNotificationCenter.current().add(request)
     }
 }

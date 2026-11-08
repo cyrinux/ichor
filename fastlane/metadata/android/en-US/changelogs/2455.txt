@@ -1,0 +1,8 @@
+• An Android / iPhone switch for the website's screenshots
+• Allocate a machine to the cluster in Omni from the phone
+• Make the Talos snapshot of a Hetzner project from the phone
+• Play listing screenshots in all ten languages
+• Create a Hetzner server for a new node from the phone
+• Take the Play screenshots in all ten languages from the demo
+• Create a Hetzner server for a new node from the Go core
+• Close the demo notice on the home

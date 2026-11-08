@@ -39,6 +39,19 @@ class DebugShellsTest {
     }
 
     @Test
+    fun aVmConsoleIsOnePerVirtualMachine() {
+        val console = ShellKey("prod", "", "lab", vm = "k3s-sandbox")
+        assertTrue(console.isVM)
+        assertFalse(console.isPod)
+        assertFalse(ShellKey("prod", "", "apps", "web-0", "web").isVM)
+        assertEquals(console, ShellKey("prod", "", "lab", vm = "k3s-sandbox"))
+        // Another VM, or the same name in another namespace, is another console.
+        assertNotEquals(console.notificationId, console.copy(vm = "builder").notificationId)
+        assertNotEquals(console, console.copy(namespace = "staging"))
+        assertEquals(listOf(console), orphanedShells(listOf(console), setOf("lab")))
+    }
+
+    @Test
     fun notificationIdsArePositive() {
         listOf(ShellKey("", ""), ShellKey("prod", "10.0.0.2"), ShellKey("a", "b"))
             .forEach { assertTrue(it.notificationId > 0) }

@@ -22,12 +22,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.podSelection
 import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.rememberKubeDenial
@@ -41,6 +41,8 @@ data class AppRestartUi(
     val onRestart: (KubeWorkload) -> Unit,
     /** Opens the list of a workload's pods (a tap on its row). */
     val onPods: (KubeWorkload) -> Unit = {},
+    /** Reads the workloads again after a failed read. */
+    val onRetry: () -> Unit = {},
 )
 
 /** The app's workloads, each with a restart button; a short note while loading, on failure or with none. */
@@ -48,7 +50,7 @@ fun LazyListScope.appWorkloadsSection(restart: AppRestartUi) {
     item { SectionTitle(stringResource(R.string.apps_detail_workloads)) }
     when (val s = restart.state) {
         UiState.Loading -> item { MutedText(stringResource(R.string.apps_detail_workloads_loading)) }
-        is UiState.Failed -> item { MutedText(stringResource(R.string.apps_detail_workloads_failed, s.message.asString())) }
+        is UiState.Failed -> item { LoadFailureRow(s.message, restart.onRetry, compact = true) }
         is UiState.Loaded -> if (s.data.isEmpty()) {
             item { MutedText(stringResource(R.string.apps_detail_workloads_none)) }
         } else {

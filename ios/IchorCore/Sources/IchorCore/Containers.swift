@@ -43,9 +43,11 @@ public struct NodeContainer: Decodable, Equatable, Identifiable, Sendable {
     /// Cumulative CPU time, nanoseconds.
     public let cpuNanos: UInt64
 
-    public init(id: String, namespace: String = ContainerNamespace.kubernetes, podNamespace: String = "default", pod: String,
-                name: String, image: String = "", status: String = "CONTAINER_RUNNING", pid: UInt32 = 0, memory: UInt64 = 0,
-                cpuNanos: UInt64 = 0) {
+    public init(
+        id: String, namespace: String = ContainerNamespace.kubernetes, podNamespace: String = "default", pod: String,
+        name: String, image: String = "", status: String = "CONTAINER_RUNNING", pid: UInt32 = 0, memory: UInt64 = 0,
+        cpuNanos: UInt64 = 0
+    ) {
         self.id = id
         self.namespace = namespace
         self.podNamespace = podNamespace
@@ -58,7 +60,9 @@ public struct NodeContainer: Decodable, Equatable, Identifiable, Sendable {
         self.cpuNanos = cpuNanos
     }
 
-    private enum CodingKeys: String, CodingKey { case id, namespace, podNamespace, pod, name, image, status, pid, memory, cpuNanos }
+    private enum CodingKeys: String, CodingKey {
+        case id, namespace, podNamespace, pod, name, image, status, pid, memory, cpuNanos
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -157,7 +161,8 @@ public func groupPods(_ rows: [ContainerRow]) -> [PodGroup] {
     var byPod: [String: [ContainerRow]] = [:]
     var names: [String: (String, String)] = [:]
     for row in rows {
-        let key = row.container.isSystem ? ContainerNamespace.system : "\(row.container.podNamespace)/\(row.container.pod)"
+        let key =
+            row.container.isSystem ? ContainerNamespace.system : "\(row.container.podNamespace)/\(row.container.pod)"
         if byPod[key] == nil {
             order.append(key)
             names[key] = (row.container.podNamespace, row.container.pod)
@@ -167,7 +172,8 @@ public func groupPods(_ rows: [ContainerRow]) -> [PodGroup] {
     return order.compactMap { key in
         guard let (namespace, pod) = names[key], let containers = byPod[key] else { return nil }
         let system = containers.first?.container.isSystem ?? false
-        return PodGroup(namespace: system ? "" : namespace, pod: system ? "" : pod, containers: containers, isSystem: system)
+        return PodGroup(
+            namespace: system ? "" : namespace, pod: system ? "" : pod, containers: containers, isSystem: system)
     }
 }
 
@@ -195,6 +201,7 @@ public func filterPods(_ pods: [PodGroup], query: String) -> [PodGroup] {
     return pods.compactMap { pod in
         if has(pod.namespace) || has(pod.pod) || has(pod.id) { return pod }
         let matching = pod.containers.filter { has($0.container.name) || has($0.container.image) }
-        return matching.isEmpty ? nil : PodGroup(namespace: pod.namespace, pod: pod.pod, containers: matching, isSystem: pod.isSystem)
+        return matching.isEmpty
+            ? nil : PodGroup(namespace: pod.namespace, pod: pod.pod, containers: matching, isSystem: pod.isSystem)
     }
 }

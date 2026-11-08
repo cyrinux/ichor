@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"encoding/json"
 	"slices"
 	"strings"
 	"time"
@@ -9,10 +10,8 @@ import (
 // demoDataServices are the storage and database operators of the built-in demo cluster, in
 // every state the app shows: a degraded and a faulted volume, a Garage cluster with a node
 // down next to a healthy single-node one, Postgres clusters with failed and stale backups,
-// a MariaDB cluster whose last backup failed next to a healthy Galera one and a suspended one,
 // an expired certificate and one failing to renew,
-// Velero schedules with a failed and a partially failed backup and a storage location down, a
-// nearly full Ceph cluster with an OSD down.
+// Velero schedules with a failed and a partially failed backup and a storage location down.
 func demoDataServices(now time.Time) dataServices {
 	ms := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
 
@@ -40,6 +39,8 @@ func demoDataServices(now time.Time) dataServices {
 		},
 		BackupTargets: []longhornBackupTarget{{Name: "default", URL: "s3://longhorn-backups@garage/", Available: true}},
 	}
+	addDemoLonghornSnapshots(longhorn.Volumes, ms)
+	addDemoLonghornEngines(longhorn)
 
 	garage := &garageStatus{Instances: []garageInstance{
 		{
@@ -65,6 +66,18 @@ func demoDataServices(now time.Time) dataServices {
 		},
 	}}
 
+	// The garage-operator drives both instances: a degraded cluster (a storage replica not
+	// connected) next to a ready one, buckets with a dropped lifecycle and a website, keys
+	// with cluster-wide and per-bucket grants, and one node CR that lost its connection.
+	if layer := demoGarageOperatorLayer(now); layer != nil {
+		garage.Version = layer.Version
+		garage.Clusters = layer.Clusters
+		garage.Buckets = layer.Buckets
+		garage.Keys = layer.Keys
+		garage.Nodes = layer.Nodes
+		garage.Operator = layer.Operator
+	}
+
 	pods := func(name string, ready ...bool) []cnpgPod {
 		out := []cnpgPod{}
 		for i, r := range ready {
@@ -83,7 +96,8 @@ func demoDataServices(now time.Time) dataServices {
 	cnpg := &cnpgStatus{Version: "v1", Clusters: []cnpgCluster{
 		{Namespace: "demo", Name: "orders-db", Phase: "Waiting for the instances to become active", Health: healthCritical, Reasons: []string{cnpgReasonNoInstance},
 			Instances: 2, CurrentPrimary: "orders-db-1", TargetPrimary: "orders-db-1", InstancePods: pods("orders-db", false, false),
-			Archiving: "ok", LastBackup: "ok", BackupMethod: "plugin", ObjectStore: "garage-store", Scheduled: true,
+			FailedInstances: []string{"orders-db-2"},
+			Archiving:       "ok", LastBackup: "ok", BackupMethod: "plugin", ObjectStore: "garage-store", Scheduled: true,
 			LastSuccessAt: ms(2 * 24 * time.Hour), RecoverableAt: ms(14 * 24 * time.Hour)},
 		{Namespace: "demo", Name: "app-db", Phase: "Switchover in progress", Health: healthWarning, Reasons: []string{cnpgReasonInstances, cnpgReasonSwitchover},
 			Instances: 3, ReadyInstances: 2, CurrentPrimary: "app-db-3", TargetPrimary: "app-db-1", InstancePods: pods("app-db", true, true, false),
@@ -102,64 +116,10 @@ func demoDataServices(now time.Time) dataServices {
 			Archiving: "off", LastBackup: "ok", BackupMethod: "plugin", ObjectStore: "garage-store", Scheduled: true,
 			LastSuccessAt: ms(3 * 24 * time.Hour), RecoverableAt: ms(17 * 24 * time.Hour)},
 	}}
-
-	dragonfly := &dragonflyStatus{Version: "v1alpha1", Instances: []dragonflyInstance{
-		{Namespace: "demo", Name: "session-cache", Phase: "Ready", Health: healthWarning, Reasons: []string{dragonflyReasonPods},
-			Replicas: 2, ReadyPods: 1, Master: "session-cache-0", Pods: []dragonflyPod{
-				{Name: "session-cache-0", Node: "demo-worker-1", Phase: "Running", Role: "master", Ready: true},
-				{Name: "session-cache-1", Phase: "Pending", Role: "replica"},
-			}},
-		{Namespace: "demo", Name: "queue-cache", Phase: "Ready", Health: healthOK, Reasons: []string{},
-			Replicas: 2, ReadyPods: 2, Master: "queue-cache-1", Pods: []dragonflyPod{
-				{Name: "queue-cache-1", Node: "demo-worker-2", Phase: "Running", Role: "master", Ready: true},
-				{Name: "queue-cache-0", Node: "demo-worker-1", Phase: "Running", Role: "replica", Ready: true},
-			}},
-	}}
-
-	mariadb := &mariadbStatus{Version: "v1alpha1", Clusters: []mariadbCluster{
-		{Namespace: "demo", Name: "shop-db", Topology: "replication", Health: healthWarning, Reasons: []string{mariadbReasonBackupFailed},
-			Replicas: 2, ReadyPods: 2, Primary: "shop-db-0", Pods: []mariadbPod{
-				{Name: "shop-db-0", Node: "demo-worker-2", Phase: "Running", Role: "primary", Ready: true},
-				{Name: "shop-db-1", Node: "demo-worker-3", Phase: "Running", Role: "replica", Ready: true},
-			}, LastBackupAt: ms(3 * 24 * time.Hour), LastBackupFailedAt: ms(20 * time.Hour), BackupSchedule: "0 3 * * *"},
-		{Namespace: "demo", Name: "forum-db", Topology: "galera", Health: healthOK, Reasons: []string{},
-			Replicas: 3, ReadyPods: 3, Primary: "forum-db-1", Pods: []mariadbPod{
-				{Name: "forum-db-1", Node: "demo-worker-2", Phase: "Running", Role: "primary", Ready: true},
-				{Name: "forum-db-0", Node: "demo-worker-1", Phase: "Running", Role: "member", Ready: true},
-				{Name: "forum-db-2", Node: "demo-worker-3", Phase: "Running", Role: "member", Ready: true},
-			}, LastBackupAt: ms(9 * time.Hour), BackupSchedule: "0 */12 * * *"},
-		{Namespace: "demo", Name: "legacy-db", Topology: "standalone", Health: healthIdle, Reasons: []string{}, Suspended: true,
-			Replicas: 1, ReadyPods: 1, Primary: "legacy-db-0", Pods: []mariadbPod{
-				{Name: "legacy-db-0", Node: "demo-worker-1", Phase: "Running", Role: "primary", Ready: true},
-			}},
-	}}
-
-	pxcPods := func(name string, ready ...bool) []perconaPod {
-		out := []perconaPod{}
-		for i, r := range ready {
-			pod := perconaPod{Name: name + "-pxc-" + string(rune('0'+i)), Phase: "Pending"}
-			if r {
-				pod.Node, pod.Phase, pod.Ready = "demo-worker-"+string(rune('1'+i)), "Running", true
-			}
-
-			out = append(out, pod)
-		}
-
-		return out
+	for i := range cnpg.Clusters {
+		c := &cnpg.Clusters[i]
+		c.FailedInstances, c.MissingInstances = cnpgInstanceGaps(nil, c.FailedInstances, c.InstancePods)
 	}
-
-	daily := []perconaSchedule{{Name: "daily-backup", Schedule: "0 2 * * *", Keep: 7, StorageName: "s3-garage"}}
-
-	percona := &perconaStatus{Version: "v1", Clusters: []perconaCluster{
-		{Namespace: "demo", Name: "shop-mysql", State: "initializing", CRVersion: "1.18.0", Health: healthWarning,
-			Reasons: []string{perconaReasonMembers, perconaReasonBackupStale}, PXCSize: 3, PXCReady: 2, Pods: pxcPods("shop-mysql", true, true, false),
-			Proxy: "haproxy", ProxySize: 2, ProxyReady: 2, LastBackupAt: ms(4 * 24 * time.Hour), BackupSchedules: daily},
-		{Namespace: "demo", Name: "crm-mysql", State: "ready", CRVersion: "1.18.0", Health: healthOK, Reasons: []string{},
-			PXCSize: 3, PXCReady: 3, Pods: pxcPods("crm-mysql", true, true, true),
-			Proxy: "proxysql", ProxySize: 2, ProxyReady: 2, LastBackupAt: ms(10 * time.Hour), BackupSchedules: daily},
-		{Namespace: "demo", Name: "legacy-mysql", State: "paused", CRVersion: "1.17.0", Paused: true, Health: healthIdle, Reasons: []string{},
-			PXCSize: 1, Pods: []perconaPod{}, LastBackupAt: ms(30 * 24 * time.Hour), BackupSchedules: []perconaSchedule{}},
-	}}
 
 	in := func(d time.Duration) int64 { return now.Add(d).UnixMilli() }
 
@@ -220,32 +180,63 @@ func demoDataServices(now time.Time) dataServices {
 		},
 	}
 
-	tib := 1024 * gib
-	ceph := &cephStatus{Version: "v1",
-		Clusters: []cephCluster{
-			{Namespace: "rook-ceph", Name: "rook-ceph", Phase: "Ready", Message: "Cluster created successfully", CephHealth: "HEALTH_WARN",
-				Health: healthWarning, Reasons: []string{cephReasonHealthWarn, cephReasonNearFull, cephReasonOSDs},
-				Checks: []cephCheck{
-					{Name: "OSD_DOWN", Severity: "HEALTH_WARN", Message: "1 osds down"},
-					{Name: "OSD_NEARFULL", Severity: "HEALTH_WARN", Message: "1 nearfull osd(s)"},
-					{Name: "PG_DEGRADED", Severity: "HEALTH_WARN", Message: "Degraded data redundancy: 2114/6342 objects degraded (33.333%), 97 pgs degraded"},
-				},
-				BytesTotal: 3 * tib, BytesUsed: 2662 * gib, OSDsUp: 2, OSDsTotal: 3, MonsReady: 3, MonsTotal: 3,
-				NotReadyNodes: []string{"demo-worker-3"}, Version: "19.2.3-0"},
-		},
-		Pools: []cephPool{
-			{Namespace: "rook-ceph", Name: "ceph-objectstore", Kind: "objectStore", Phase: "Progressing", Health: healthWarning},
-			{Namespace: "rook-ceph", Name: "ceph-blockpool", Kind: "blockPool", Phase: "Ready", Health: healthOK},
-			{Namespace: "rook-ceph", Name: "ceph-filesystem", Kind: "filesystem", Phase: "Ready", Health: healthOK},
-		},
-		OSDs: []cephOSD{
-			{Namespace: "rook-ceph", ID: "0", Pod: "rook-ceph-osd-0-6d8f9c7b5-x2k4p", Node: "demo-worker-1", Phase: "Running", Ready: true},
-			{Namespace: "rook-ceph", ID: "1", Pod: "rook-ceph-osd-1-7c9b8d6f4-q8m2d", Node: "demo-worker-2", Phase: "Running", Ready: true},
-			{Namespace: "rook-ceph", ID: "2", Pod: "rook-ceph-osd-2-5f7d6c8b9-r4t7n", Node: "demo-worker-3", Phase: "Running"},
-		},
+	snapshots := demoVolumeSnapshots(now)
+	return dataServices{Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, CertManager: certManager, Velero: velero, CastAI: demoCastAI(now)}
+}
+
+// demoKubeGreenNamespace is the demo cluster's kube-green state for one namespace: staging is
+// asleep whenever the demo runs (a sleep at 00:00, waking at 23:59 Rome), so the asleep line and
+// the CronJob warning always have something to show; the other namespaces hold the kube-green
+// plugin's samples (demo-shop, demo-lab, demo-preview), so that the plugin tab's rows open the
+// schedule editor on the schedules they show.
+func demoKubeGreenNamespace(namespace string, now time.Time) kubeGreenNamespace {
+	if namespace != "staging" {
+		if objs := demoKubeGreenSamples(namespace); len(objs) > 0 {
+			return mapKubeGreenNamespace(objs, now)
+		}
+
+		return kubeGreenNamespace{Installed: true, SleepInfos: []kubeGreenSleepInfo{}}
 	}
 
-	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, Ceph: ceph, CastAI: demoCastAI(now)}
+	var o sleepInfoObject
+	o.Metadata.Namespace, o.Metadata.Name = "staging", "nights"
+	o.Spec.Weekdays, o.Spec.SleepTime, o.Spec.WakeUpTime, o.Spec.TimeZone = "*", "00:00", "23:59", "Europe/Rome"
+	o.Spec.SuspendCronJobs = true
+	o.Status.Operation = "SLEEP"
+
+	loc, _ := time.LoadLocation("Europe/Rome")
+	if sleep, err := kubeGreenCron("00:00", "*"); err == nil {
+		o.Status.LastScheduleTime = kubeGreenPrevRun(sleep, true, now.In(loc)).Format(time.RFC3339)
+	} else {
+		o.Status.LastScheduleTime = now.In(loc).Format(time.RFC3339)
+	}
+
+	return mapKubeGreenNamespace([]sleepInfoObject{o}, now)
+}
+
+// demoKubeGreenSamples are the SleepInfo samples of the kube-green plugin in namespace, their
+// relative times resolved as the plugin's demo resolves them; none without the plugin.
+func demoKubeGreenSamples(namespace string) []sleepInfoObject {
+	c, err := findPlugin("kube-green")
+	if err != nil || namespace == "" {
+		return nil
+	}
+
+	var out []sleepInfoObject
+
+	for _, obj := range demoPluginInput(c, namespace, "").Objects["sleepinfo"] {
+		raw, err := json.Marshal(obj)
+		if err != nil {
+			continue
+		}
+
+		var o sleepInfoObject
+		if json.Unmarshal(raw, &o) == nil {
+			out = append(out, o)
+		}
+	}
+
+	return out
 }
 
 // demoCastAI is the demo cluster's CAST AI recommendations: the Workload Autoscaler right-sizing
@@ -285,6 +276,84 @@ func demoCastAI(now time.Time) *castAIStatus {
 	return out
 }
 
+// demoGarageOperatorLayer is the demo cluster's garage-operator layer: a degraded cluster
+// (a storage replica not connected) next to a ready one, buckets with a dropped lifecycle
+// and a website, keys with cluster-wide and per-bucket grants, and one node CR that lost
+// its connection.
+func demoGarageOperatorLayer(now time.Time) *garageOperatorLayer {
+	ms := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
+
+	return &garageOperatorLayer{
+		Version: garageOpClusterV2,
+		Clusters: []garageOpCluster{
+			{
+				Namespace: "garage", Name: "garage", Phase: "Degraded", ClusterID: "1b7e44c9a2f03d589c2f61a0d4e8b7c3",
+				GarageVersion: "v2.3.0", Replicas: 5, ReadyReplicas: 4, StorageReplicas: 3, StorageReady: 2,
+				GatewayReplicas: 2, GatewayReady: 2, LayoutVersion: 12,
+				Tombstones: []string{}, Conditions: []garageOpCondition{
+					{Type: "NodesConnected", Status: "False", Reason: "NodesNotConnected", Message: "1 node is not connected", Time: ms(2 * time.Hour)},
+				},
+				Health: healthWarning, Reasons: []string{garageOpReasonStorageReplicas, garageOpReasonNodeDisconnected},
+			},
+			{
+				Namespace: "garage-archive", Name: "archive", Phase: "Ready", ClusterID: "6d03b8f15e9a2c47e41a7f0c93b2d865",
+				GarageVersion: "v2.3.0", Replicas: 1, ReadyReplicas: 1, StorageReplicas: 1, StorageReady: 1,
+				LayoutVersion: 1, Tombstones: []string{}, Conditions: []garageOpCondition{},
+				Health: healthOK, Reasons: []string{},
+			},
+		},
+		Buckets: []garageOpBucket{
+			{
+				Namespace: "garage", Name: "backups", Cluster: "garage", Phase: "Ready",
+				BucketID: "a3f8c2e19b4d5706a3f8c2e19b4d5706", Size: "3.0 GiB", MaxSize: "10Gi",
+				Quota: &garageOpQuotaUsage{SizeBytes: 3070230528, SizeLimit: 10 << 30, SizePercent: 28, Objects: 1204},
+				Keys:  2,
+				Conditions: []garageOpCondition{
+					{Type: "LifecycleConfigured", Status: "False", Reason: "GarageTooOld", Message: "lifecycle rules need Garage v2.3.0 or newer", Time: ms(6 * time.Hour)},
+				},
+				Health: healthWarning, Reasons: []string{garageOpReasonLifecycle},
+			},
+			{
+				Namespace: "garage", Name: "files", Cluster: "garage", Phase: "Ready",
+				BucketID: "4f1d0c2e9b7a65834f1d0c2e9b7a6583", Size: "52 MiB",
+				Quota:   &garageOpQuotaUsage{SizeBytes: 54525952, Objects: 312},
+				Website: true, WebsiteURL: "https://files.example.com", Keys: 1,
+				Conditions: []garageOpCondition{}, Health: healthOK, Reasons: []string{},
+			},
+		},
+		Keys: []garageOpKey{
+			{
+				Namespace: "garage", Name: "backup-agent", Cluster: "garage", Phase: "Ready",
+				KeyID: "e41a7f0c93b2d865", ClusterWide: true,
+				AllBuckets: &struct {
+					Read  bool `json:"read"`
+					Write bool `json:"write"`
+					Owner bool `json:"owner"`
+				}{Read: true, Write: true, Owner: true},
+				Buckets: []garageOpKeyPermission{}, BucketsTotal: 0, Health: healthOK, Reasons: []string{},
+			},
+			{
+				Namespace: "garage", Name: "app-writer", Cluster: "garage", Phase: "Ready",
+				KeyID:   "6d03b8f15e9a2c47",
+				Buckets: []garageOpKeyPermission{{Bucket: "files", Read: true, Write: true}}, BucketsTotal: 1,
+				Health: healthOK, Reasons: []string{},
+			},
+		},
+		Nodes: []garageOpNode{
+			{
+				Namespace: "garage", Name: "garage-2xv9p", Cluster: "garage", Phase: "Degraded",
+				NodeID: "9c2f61a0d4e8b7c3", Zone: "zone-3", Capacity: "500Gi",
+				Connected: false, InLayout: true, LastSeen: 2 * 24 * 3600,
+				Health: healthWarning, Reasons: []string{garageOpReasonNodeDisconnected},
+			},
+		},
+		Operator: &garageOperatorStatus{
+			Namespace: "garage-operator-system", Name: "garage-operator", Ready: 1, Desired: 1,
+			Health: healthOK, Reasons: []string{},
+		},
+	}
+}
+
 // demoGarageBlockReport is the demo cluster's blocks failing to resync: one a live object
 // references, one kept by a stale reference, one deleted data awaiting cleanup.
 func demoGarageBlockReport() garageBlockReport {
@@ -306,5 +375,60 @@ func demoGarageBlockReport() garageBlockReport {
 			}},
 			{ID: "9c2f61a0d4e8b7c3", Hostname: "garage-2xv9p", Error: "Network error: Not connected: 9c2f61a0d4e8b7c3", Blocks: []garageBlock{}},
 		},
+	}
+}
+
+// addDemoLonghornSnapshots: postgres-data well covered, uploads with a failed last backup,
+// search-data a stale one, scratch none at all.
+func addDemoLonghornSnapshots(volumes []longhornVolume, ms func(time.Duration) int64) {
+	const mib = int64(1) << 20
+
+	snap := func(name string, age time.Duration, size int64, user, backed bool) longhornSnapshot {
+		return longhornSnapshot{Name: name, CreatedAt: ms(age), Size: size * mib, Ready: true, UserCreated: user, BackedUp: backed}
+	}
+	backup := func(name, snapshot, state string, age time.Duration, size int64) longhornBackup {
+		b := longhornBackup{Name: name, Snapshot: snapshot, State: state, Progress: 100, CreatedAt: ms(age), Size: size * mib}
+		if state == "Error" {
+			b.Progress, b.Error = 37, "failed to upload block: connection reset by peer"
+		}
+
+		return b
+	}
+	day := 24 * time.Hour
+
+	for i := range volumes {
+		v := &volumes[i]
+		v.Snapshots, v.Backups = []longhornSnapshot{}, []longhornBackup{}
+		v.VolumeSnapshotsKnown = true
+
+		switch v.PVCName {
+		case "postgres-data":
+			v.Snapshots = []longhornSnapshot{
+				snap("snapshot-7c1e0d2a", 20*time.Hour, 182, true, true),
+				snap("snapshot-41b9f6c3", day+20*time.Hour, 96, true, true),
+				snap("a3f0c5e1-system", 3*day, 12, false, false),
+				snap("snapshot-0e8d7b54", 7*day+20*time.Hour, 640, true, true),
+			}
+			v.Snapshots[1].VolumeSnapshot = "demo/postgres-nightly"
+			v.Backups = []longhornBackup{
+				backup("backup-3b7f2e91", "snapshot-7c1e0d2a", "Completed", 20*time.Hour, 2950),
+				backup("backup-9a04c6d8", "snapshot-41b9f6c3", "Completed", day+20*time.Hour, 2870),
+				backup("backup-1d5e8f30", "snapshot-0e8d7b54", "Completed", 7*day+20*time.Hour, 2790),
+			}
+			v.BackupCount = 14
+		case "uploads":
+			v.Snapshots = []longhornSnapshot{snap("snapshot-c4d1a9e7", 2*time.Hour, 410, true, false), snap("snapshot-5f2b8e10", 20*time.Hour, 1220, true, true)}
+			v.SnapshotsRemoving = 1
+			v.Backups = []longhornBackup{
+				backup("backup-e71c4b02", "snapshot-c4d1a9e7", "Error", 2*time.Hour, 0),
+				backup("backup-2c9d0a6f", "snapshot-5f2b8e10", "Completed", 20*time.Hour, 6800),
+			}
+			v.BackupCount = 2
+		case "search-data":
+			v.Snapshots = []longhornSnapshot{snap("snapshot-8e3a1f47", 9*day, 3100, true, true)}
+			v.Backups = []longhornBackup{backup("backup-6b2e9c15", "snapshot-8e3a1f47", "Completed", 9*day, 11800)}
+			v.BackupCount = 1
+			v.BackupStale = true
+		}
 	}
 }

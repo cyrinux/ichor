@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"regexp"
 	"slices"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/cyrinux/ichor/go/kube"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -191,9 +191,9 @@ type kubeResourceRow struct {
 }
 
 var (
-	kubeGroupPattern    = regexp.MustCompile(`^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$`)
-	kubeVersionPattern  = regexp.MustCompile(`^v[0-9]+((alpha|beta)[0-9]+)?$`)
-	kubeResourcePattern = regexp.MustCompile(`^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$`)
+	kubeGroupPattern    = kube.GroupPattern
+	kubeVersionPattern  = kube.VersionPattern
+	kubeResourcePattern = kube.ResourcePattern
 )
 
 // resourceRef names a resource of the API: "" group for the core one.
@@ -202,32 +202,17 @@ type resourceRef struct {
 }
 
 func newResourceRef(group, version, resource string) (resourceRef, error) {
-	ref := resourceRef{strings.TrimSpace(group), strings.TrimSpace(version), strings.TrimSpace(resource)}
-
-	switch {
-	case !kubeGroupPattern.MatchString(ref.group):
-		return resourceRef{}, fmt.Errorf("invalid API group %q", ref.group)
-	case !kubeVersionPattern.MatchString(ref.version):
-		return resourceRef{}, fmt.Errorf("invalid API version %q", ref.version)
-	case !kubeResourcePattern.MatchString(ref.resource):
-		return resourceRef{}, fmt.Errorf("invalid resource %q", ref.resource)
+	r, err := kube.NewResource(group, version, resource)
+	if err != nil {
+		return resourceRef{}, err
 	}
 
-	return ref, nil
+	return resourceRef{r.Group, r.Version, r.Name}, nil
 }
 
 // path is the collection, in namespace when set.
 func (r resourceRef) path(namespace string) string {
-	prefix := "/apis/" + r.group + "/" + r.version
-	if r.group == "" {
-		prefix = "/api/" + r.version
-	}
-
-	if namespace != "" {
-		prefix += "/namespaces/" + url.PathEscape(namespace)
-	}
-
-	return prefix + "/" + r.resource
+	return kube.Resource{Group: r.group, Version: r.version, Name: r.resource}.Path(namespace)
 }
 
 // KubeResourcePage reads a page of any resource (all namespaces when namespace is ""), as a
@@ -353,24 +338,7 @@ func objectYAML(obj map[string]any, ref resourceRef, reveal bool) (string, error
 	}
 
 	if ref.group == "" && ref.resource == "secrets" && !reveal {
-		for _, field := range []string{"data", "stringData"} {
-			values, ok := obj[field].(map[string]any)
-			if !ok {
-				continue
-			}
-
-			for key, v := range values {
-				s, _ := v.(string)
-				values[key] = fmt.Sprintf("<hidden, %d characters>", len(s))
-			}
-		}
-
-		if meta, ok := obj["metadata"].(map[string]any); ok {
-			if annotations, ok := meta["annotations"].(map[string]any); ok {
-				// kubectl apply keeps the whole Secret, values included, in this annotation.
-				delete(annotations, "kubectl.kubernetes.io/last-applied-configuration")
-			}
-		}
+		maskSecretValues(obj)
 	}
 
 	data, err := yaml.Marshal(obj)
@@ -379,6 +347,28 @@ func objectYAML(obj map[string]any, ref resourceRef, reveal bool) (string, error
 	}
 
 	return string(data), nil
+}
+
+// maskSecretValues replaces a Secret's values by their size, in place.
+func maskSecretValues(obj map[string]any) {
+	for _, field := range []string{"data", "stringData"} {
+		values, ok := obj[field].(map[string]any)
+		if !ok {
+			continue
+		}
+
+		for key, v := range values {
+			s, _ := v.(string)
+			values[key] = fmt.Sprintf("<hidden, %d characters>", len(s))
+		}
+	}
+
+	if meta, ok := obj["metadata"].(map[string]any); ok {
+		if annotations, ok := meta["annotations"].(map[string]any); ok {
+			// kubectl apply keeps the whole Secret, values included, in this annotation.
+			delete(annotations, "kubectl.kubernetes.io/last-applied-configuration")
+		}
+	}
 }
 
 func demoAPIResources() kubeBrowserResourceList {

@@ -1,5 +1,9 @@
 package name.levis.ichor.ui.upgrade
 
+import name.levis.ichor.ui.components.LoadFailureRow
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import name.levis.ichor.ui.components.ClusterScreenTitle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,31 +19,29 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -128,7 +130,6 @@ fun UpgradeScreen(
     var rollingBack by remember { mutableStateOf(false) }
     var prePullShown by remember { mutableStateOf(false) }
     val following = current?.takeIf { it.node == node }
-    LaunchedEffect(Unit) { if (plan == UiState.Loading) planVm.refresh() }
 
     // App lock first (a fresh fingerprint/PIN), then the typed-hostname confirmation.
     fun requestStart(choice: UpgradeChoice) {
@@ -163,7 +164,7 @@ fun UpgradeScreen(
     fun rollback() {
         rollingBack = false
         scope.launch {
-            val result = runCatching { app.talosRepository.rollback(node) }
+            val result = runCatching { app.nodeLifecycleRepository.rollback(node) }
             snackbar.showSnackbar(result.exceptionOrNull()?.uiText()?.resolve(context) ?: context.getString(R.string.rollback_started, hostname))
         }
     }
@@ -208,16 +209,11 @@ fun UpgradeScreen(
     }
 
     val showForce = (plan as? UiState.Loaded)?.data?.etcdBlocked ?: false
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(stringResource(R.string.upgrade_title))
-                        Text(hostname, style = MaterialTheme.typography.labelMedium)
-                    }
-                },
+            IchorTopAppBar(
+                title = { ClusterScreenTitle(stringResource(R.string.upgrade_title), hostname) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
                     if (following == null) {
@@ -358,7 +354,7 @@ private fun UpgradeSetup(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 InfoRow(stringResource(R.string.upgrade_current_version), plan.currentVersion.ifEmpty { "—" })
                 if (plan.controlPlane) InfoRow(stringResource(R.string.upgrade_role), stringResource(R.string.upgrade_control_plane))
@@ -383,14 +379,14 @@ private fun UpgradeSetup(
             textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
             modifier = Modifier.fillMaxWidth(),
         )
-        ReleaseChips(releases, plan.currentVersion, version) { version = it }
+        ReleaseChips(releases, plan.currentVersion, version, targetVm::loadReleases) { version = it }
 
         if (image.isNotEmpty()) {
             Text(stringResource(R.string.upgrade_image), style = MaterialTheme.typography.labelMedium)
             SelectionContainer { Text(image, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace) }
             ExtensionCheckRow(plan.node, image)
             // Pulling the installer on every node first keeps each node's reboot short.
-            OutlinedButton(onClick = { onPrePull(image) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.upgrade_prepull)) }
+            IchorOutlinedButton(onClick = { onPrePull(image) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.upgrade_prepull)) }
             MutedText(stringResource(R.string.upgrade_prepull_desc))
         }
         if (version.trim().isNotEmpty() && version.trim() == plan.currentVersion) {
@@ -419,7 +415,7 @@ private fun UpgradeSetup(
         if (otherRunning != null) {
             Text(stringResource(R.string.upgrade_other_running, otherRunning), color = colors.warn, style = MaterialTheme.typography.bodySmall)
         }
-        Button(
+        IchorButton(
             onClick = {
                 val drained = plan.drainable && drain
                 onStart(UpgradeChoice(version.trim(), image, stage && !plan.drainable, force, upgradeRisks(plan, versionRisk), drained))
@@ -432,13 +428,19 @@ private fun UpgradeSetup(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ReleaseChips(releases: UiState<List<TalosRelease>>, currentVersion: String, selected: String, onPick: (String) -> Unit) {
+private fun ReleaseChips(
+    releases: UiState<List<TalosRelease>>,
+    currentVersion: String,
+    selected: String,
+    onRetry: () -> Unit,
+    onPick: (String) -> Unit,
+) {
     when (releases) {
         UiState.Loading -> Unit
-        is UiState.Failed -> MutedText(stringResource(R.string.upgrade_releases_failed, releases.message.asString()))
+        is UiState.Failed -> LoadFailureRow(releases.message, onRetry, compact = true)
         is UiState.Loaded -> FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             releaseSuggestions(releases.data).filter { it.version != currentVersion }.take(MAX_RELEASE_CHIPS).forEach { r ->
-                FilterChip(
+                IchorFilterChip(
                     selected = selected.trim() == r.version,
                     onClick = { onPick(r.version) },
                     label = {
@@ -454,7 +456,7 @@ private fun ReleaseChips(releases: UiState<List<TalosRelease>>, currentVersion: 
 private fun PlanChecks(plan: UpgradePlan, versionRisk: String) {
     val colors = LocalStatusColors.current
     val risks = upgradeRisks(plan, versionRisk)
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SectionTitle(stringResource(R.string.upgrade_checks))
             plan.etcd?.takeIf { it.thisNodeMember }?.let { e ->
@@ -498,7 +500,7 @@ private fun ExtensionCheckRow(node: String, image: String) {
     val app = LocalContext.current.applicationContext as TalosApp
     val colors = LocalStatusColors.current
     val check by produceState<UpgradeExtensionCheck?>(null, node, image) {
-        value = runCatching { app.talosRepository.upgradeExtensionCheck(node, image) }.getOrNull()
+        value = runCatching { app.nodeLifecycleRepository.upgradeExtensionCheck(node, image) }.getOrNull()
     }
     val c = check ?: return
     when {

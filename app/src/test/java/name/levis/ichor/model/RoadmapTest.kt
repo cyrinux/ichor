@@ -62,6 +62,14 @@ class RoadmapTest {
     }
 
     @Test
+    fun anyFundableIsFalseOnceEveryFeatureShipped() {
+        assertTrue(decodeRoadmap(sample)!!.anyFundable)
+        val shipped = decodeRoadmap("""{"tips": ["tip_2"], "features": [{"id": "a", "title": {"en": "A"}, "status": "shipped", "products": ["fund_a_2"]}]}""")!!
+        assertFalse(shipped.anyFundable)
+        assertFalse(decodeRoadmap("""{"features": []}""")!!.anyFundable)
+    }
+
+    @Test
     fun unknownStatusIsOpen() {
         assertEquals(FeatureStatus.OPEN, decodeRoadmap(sample)!!.features.first { it.id == "future" }.status)
     }

@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"context"
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
@@ -27,6 +28,21 @@ type fakeOmniAPI struct {
 	clusters []string
 	denyList bool
 	endpoint string // what the talosconfigs name
+
+	// The join config: the default token's ID and the kernel args and the config document
+	// given for it ("" for a bare SideroLinkConfig).
+	joinToken  string
+	joinArgs   []string
+	joinConfig string
+	denyJoin   bool
+	// joinLabels are the machine_labels of the last join request (field 3).
+	joinLabels map[string]string
+
+	// machineStatuses are the YAML specs of Omni's machine statuses.
+	machineStatuses []string
+
+	// store holds resources by type and id, for omni_allocate_test.go.
+	store fakeOmniStore
 }
 
 func (f *fakeOmniAPI) handle(_ any, stream grpc.ServerStream) error {
@@ -59,6 +75,27 @@ func (f *fakeOmniAPI) handle(_ any, stream grpc.ServerStream) error {
 		config := fmt.Sprintf("context: acme-%[1]s\ncontexts:\n    acme-%[1]s:\n        endpoints:\n            - %[2]s\n        auth:\n            siderov1:\n                identity: %[3]s\n        cluster: %[1]s\n", cluster[0], f.endpoint, testUserIdentity)
 		resp = protowire.AppendTag(resp, 1, protowire.BytesType)
 		resp = protowire.AppendString(resp, config)
+	case omniJoinConfigMethod:
+		if f.denyJoin {
+			return status.Error(codes.PermissionDenied, "no access")
+		}
+
+		token, _ := protoField(req, 2)
+		if string(token) != f.joinToken {
+			return status.Errorf(codes.NotFound, "join token %q", token)
+		}
+
+		if f.joinLabels, err = decodeTestJoinLabels(req); err != nil {
+			return status.Error(codes.InvalidArgument, err.Error())
+		}
+
+		for _, arg := range f.joinArgs {
+			resp = protowire.AppendTag(resp, 1, protowire.BytesType)
+			resp = protowire.AppendString(resp, arg)
+		}
+
+		resp = protowire.AppendTag(resp, 2, protowire.BytesType)
+		resp = protowire.AppendString(resp, cmpOr(f.joinConfig, "apiVersion: v1alpha1\nkind: SideroLinkConfig\n"))
 	default:
 		_ = req
 
@@ -85,12 +122,53 @@ func sendRaw(stream grpc.ServerStream, msg []byte) error {
 	return stream.SendMsg(out)
 }
 
+// Get is Omni's COSI state: the default join token, to a signed call.
+func (f *fakeOmniAPI) Get(ctx context.Context, req *v1alpha1.GetRequest) (*v1alpha1.GetResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+
+	if err := message.NewGRPC(md, "/cosi.resource.State/Get").VerifySignature(f.key); err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	if res := f.store.get(req.GetType(), req.GetId()); res != nil {
+		return &v1alpha1.GetResponse{Resource: res}, nil
+	}
+
+	if req.GetNamespace() != "default" || req.GetType() != omniDefaultJoinTokenType || req.GetId() != "default" || f.joinToken == "" {
+		return nil, status.Errorf(codes.NotFound, "%s/%s/%s", req.GetNamespace(), req.GetType(), req.GetId())
+	}
+
+	return &v1alpha1.GetResponse{Resource: &v1alpha1.Resource{
+		Metadata: &v1alpha1.Metadata{Namespace: "default", Type: req.GetType(), Id: "default"},
+		Spec:     &v1alpha1.Spec{YamlSpec: "tokenid: " + f.joinToken + "\n"},
+	}}, nil
+}
+
 // List is Omni's COSI state: the clusters, to a signed call.
 func (f *fakeOmniAPI) List(req *v1alpha1.ListRequest, stream grpc.ServerStreamingServer[v1alpha1.ListResponse]) error {
 	md, _ := metadata.FromIncomingContext(stream.Context())
 
 	if err := message.NewGRPC(md, "/cosi.resource.State/List").VerifySignature(f.key); err != nil {
 		return status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	if f.store.has(req.GetType()) {
+		return f.store.list(req.GetType(), stream)
+	}
+
+	if req.GetNamespace() == "default" && req.GetType() == "MachineStatuses.omni.sidero.dev" {
+		for i, spec := range f.machineStatuses {
+			res := &v1alpha1.Resource{
+				Metadata: &v1alpha1.Metadata{Namespace: "default", Type: req.GetType(), Id: fmt.Sprintf("machine-%d", i)},
+				Spec:     &v1alpha1.Spec{YamlSpec: spec},
+			}
+
+			if err := stream.Send(&v1alpha1.ListResponse{Resource: res}); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	}
 
 	if req.GetNamespace() != "default" || req.GetType() != "Clusters.omni.sidero.dev" {

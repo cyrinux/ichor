@@ -1,0 +1,11 @@
+{"kind":"VirtualMachineInstanceList","apiVersion":"kubevirt.io/v1","metadata":{},"items":[
+ {"metadata":{"name":"web-01","namespace":"vms"},
+  "status":{"phase":"Running","nodeName":"worker-1","launcherContainerImageVersion":"quay.io/kubevirt/virt-launcher:v1.6.0",
+   "interfaces":[{"name":"default","ipAddress":"10.244.1.23","ipAddresses":["10.244.1.23","fd10:244::17"]},{"name":"lan","ipAddress":"192.168.50.20"},{"name":"dup","ipAddresses":["10.244.1.23"]}],
+   "guestOSInfo":{"prettyName":"Debian GNU/Linux 13 (trixie)","name":"Debian GNU/Linux","version":"13"}}},
+ {"metadata":{"name":"db-01","namespace":"vms"},
+  "status":{"phase":"Running","nodeName":"worker-2","guestOSInfo":{"name":"Rocky Linux","version":"10.0"},
+   "migrationState":{"sourceNode":"worker-2","targetNode":"worker-3","startTimestamp":"2026-10-14T09:58:00Z"}}},
+ {"metadata":{"name":"old-migrated","namespace":"vms"},"status":{"phase":"Running","nodeName":"worker-3"}},
+ {"metadata":{"name":"orphan","namespace":"vms"},"status":{"phase":"Running","nodeName":"worker-1"}}
+]}

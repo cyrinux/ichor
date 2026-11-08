@@ -10,8 +10,10 @@ public struct NodeNetwork: Decodable, Equatable, Sendable {
     public let timeServers: [String]
     public let errors: [String: String]
 
-    public init(links: [NetLink] = [], addresses: [NetAddress] = [], routes: [NetRoute] = [],
-                resolvers: [String] = [], timeServers: [String] = [], errors: [String: String] = [:]) {
+    public init(
+        links: [NetLink] = [], addresses: [NetAddress] = [], routes: [NetRoute] = [],
+        resolvers: [String] = [], timeServers: [String] = [], errors: [String: String] = [:]
+    ) {
         self.links = links
         self.addresses = addresses
         self.routes = routes
@@ -51,8 +53,10 @@ public struct NetLink: Decodable, Equatable, Identifiable, Sendable {
     public var id: String { name }
     public var isUp: Bool { state.lowercased() == "up" }
 
-    public init(name: String, type: String = "ether", kind: String = "", state: String = "up",
-                hardwareAddr: String = "", mtu: UInt32 = 1500, speedMbit: Int = 0, virtual: Bool = false) {
+    public init(
+        name: String, type: String = "ether", kind: String = "", state: String = "up",
+        hardwareAddr: String = "", mtu: UInt32 = 1500, speedMbit: Int = 0, virtual: Bool = false
+    ) {
         self.name = name
         self.type = type
         self.kind = kind
@@ -75,7 +79,9 @@ public struct NetAddress: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { "\(link)/\(address)" }
 
-    public init(address: String, link: String, family: String = "inet4", scope: String = "global", virtual: Bool = false) {
+    public init(
+        address: String, link: String, family: String = "inet4", scope: String = "global", virtual: Bool = false
+    ) {
         self.address = address
         self.link = link
         self.family = family
@@ -96,8 +102,10 @@ public struct NetRoute: Decodable, Equatable, Sendable {
 
     public var isDefault: Bool { destination == "default" }
 
-    public init(destination: String, gateway: String = "", link: String = "", metric: UInt32 = 0,
-                table: String = "main", family: String = "inet4", virtual: Bool = false) {
+    public init(
+        destination: String, gateway: String = "", link: String = "", metric: UInt32 = 0,
+        table: String = "main", family: String = "inet4", virtual: Bool = false
+    ) {
         self.destination = destination
         self.gateway = gateway
         self.link = link
@@ -146,8 +154,11 @@ public struct NodeConnection: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { "\(`protocol`) \(localIp):\(localPort) \(remoteIp):\(remotePort) \(pid)" }
 
-    public init(protocol proto: String = "tcp", localIp: String = "0.0.0.0", localPort: UInt32, remoteIp: String = "0.0.0.0",
-                remotePort: UInt32 = 0, state: String = "LISTEN", listening: Bool = true, pid: UInt32 = 0, processName: String = "") {
+    public init(
+        protocol proto: String = "tcp", localIp: String = "0.0.0.0", localPort: UInt32, remoteIp: String = "0.0.0.0",
+        remotePort: UInt32 = 0, state: String = "LISTEN", listening: Bool = true, pid: UInt32 = 0,
+        processName: String = ""
+    ) {
         self.protocol = proto
         self.localIp = localIp
         self.localPort = localPort
@@ -192,12 +203,16 @@ public enum ConnectionFilter: String, CaseIterable, Sendable {
 
 /// Listening sockets only (or all), matching the query on addresses, ports, state, process
 /// name or pid, case-insensitively; the Go core's order (listeners first, by port) is kept.
-public func filterConnections(_ connections: [NodeConnection], filter: ConnectionFilter, query: String) -> [NodeConnection] {
+public func filterConnections(_ connections: [NodeConnection], filter: ConnectionFilter, query: String)
+    -> [NodeConnection]
+{
     let needle = query.trimmingCharacters(in: .whitespaces)
     return connections.filter { c in
         if filter == .listening && !c.listening { return false }
         guard !needle.isEmpty else { return true }
-        let fields = [c.localEndpoint, c.remoteEndpoint, c.state, c.processName, c.protocol, c.pid > 0 ? "\(c.pid)" : ""]
+        let fields = [
+            c.localEndpoint, c.remoteEndpoint, c.state, c.processName, c.protocol, c.pid > 0 ? "\(c.pid)" : "",
+        ]
         return fields.contains { $0.range(of: needle, options: .caseInsensitive) != nil }
     }
 }

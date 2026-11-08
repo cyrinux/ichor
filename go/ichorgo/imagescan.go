@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -82,6 +83,9 @@ type imageScanOptions struct {
 	Images []string `json:"images,omitempty"`
 	// App names what is scanned in the kept report (an inventory app id, "talos:<node>").
 	App string `json:"app,omitempty"`
+	// Cluster is the name the app lists kept reports under (its context): a Talos cluster
+	// scanned through a linked kubeconfig has another Kubernetes context. Empty: that context.
+	Cluster string `json:"cluster,omitempty"`
 	// Scanner is "trivy" (the default when empty) or "grype".
 	Scanner string `json:"scanner,omitempty"`
 	// GrypeDBUpdateURL replaces Grype's database listing URL, for a cluster that cannot
@@ -163,6 +167,7 @@ func StartImageScan(configYAML, contextName, kubeServer, pods, options string, l
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		report, err := startImageScan(ctx, kubeTarget{configYAML, contextName, kubeServer}, pods, options, emit)
 
@@ -193,7 +198,7 @@ func startImageScan(ctx context.Context, target kubeTarget, pods, options string
 
 	// A completed scan is kept, its findings marked against the last scan of each image.
 	if err == nil {
-		report = keepScan(target.context, opts.App, report)
+		report = keepScan(cmp.Or(privacy.unmaskContext(strings.TrimSpace(opts.Cluster)), target.context), opts.App, report)
 	}
 
 	return report, err
@@ -202,27 +207,9 @@ func startImageScan(ctx context.Context, target kubeTarget, pods, options string
 // runImageScanWith runs a scan with target's client. A refusal is returned as is, outside
 // withKubeContext, which would take it for a failed call.
 func runImageScanWith(ctx context.Context, target kubeTarget, refs []routePod, opts imageScanOptions, emit func(imageScanProgress)) (imageScanReport, error) {
-	var (
-		report  imageScanReport
-		refusal error
-	)
-
-	_, err := withKubeContext(ctx, target, func(ctx context.Context, k *kubeClient) (struct{}, error) {
-		var runErr error
-		report, runErr = runImageScan(ctx, k, refs, opts, emit)
-
-		var r *netPerfRefusal
-		if errors.As(runErr, &r) {
-			refusal, runErr = runErr, nil
-		}
-
-		return struct{}{}, runErr
+	return withKubeRefusal(ctx, target, func(ctx context.Context, k *kubeClient) (imageScanReport, error) {
+		return runImageScan(ctx, k, refs, opts, emit)
 	})
-	if refusal != nil {
-		err = refusal
-	}
-
-	return report, err
 }
 
 // imageScanDone is what OnDone gets for a scan that returned report and err.

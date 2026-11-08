@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,13 +45,13 @@ fun MaintenanceRunView(run: MaintenanceRunState, onStop: () -> Unit, onClose: ()
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 steps.forEach { TimelineRow(stringResource(it.phase.label), it.status, it.at, it.message) }
             }
         }
         if (run.pods.isNotEmpty()) {
-            Card(Modifier.fillMaxWidth()) {
+            IchorCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     val gone = run.pods.count { it.state == DrainPod.STATE_GONE }
                     SectionTitle(stringResource(R.string.maintenance_pods_progress, gone, run.pods.size))
@@ -63,17 +63,17 @@ fun MaintenanceRunView(run: MaintenanceRunState, onStop: () -> Unit, onClose: ()
             run.running && run.stopping -> MutedText(stringResource(R.string.maintenance_stopping, run.hostname))
             run.running -> {
                 MutedText(stringResource(R.string.maintenance_stop_hint))
-                OutlinedButton(onClick = { confirmStop = true }, modifier = Modifier.fillMaxWidth()) {
+                IchorOutlinedButton(onClick = { confirmStop = true }, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.maintenance_stop))
                 }
             }
             run.error != null -> {
                 Text(stringResource(R.string.maintenance_failed, run.error), color = colors.bad)
-                Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
+                IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
             }
             else -> {
                 Text(stringResource(run.doneText, run.hostname), color = colors.ok, style = MaterialTheme.typography.titleMedium)
-                Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
+                IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
             }
         }
     }

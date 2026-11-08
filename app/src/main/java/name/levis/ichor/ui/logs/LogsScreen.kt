@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.logs
 
+import name.levis.ichor.data.MaskScoped
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,13 +16,13 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,12 +41,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import name.levis.ichor.R
@@ -57,6 +55,7 @@ import name.levis.ichor.model.LogSource
 import name.levis.ichor.model.LogTail
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.support
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.rememberNodeFeatures
@@ -82,6 +81,8 @@ class LogsViewModel(
     private val node: String,
     private val source: LogSource,
 ) : LoadingViewModel<LogTail>() {
+    // No tail read while following the stream.
+    override val loadsOnOpen = false
     override val keepsDataOnFailure = true
     override suspend fun fetch() = when (source) {
         is LogSource.Service -> talos.logs(node, source.name)
@@ -97,9 +98,6 @@ data class FollowState(
     val nextSeq: Long = 0,
 )
 
-/** Pause between two applied batches of followed lines, so bursts redraw a few times only. */
-private const val FOLLOW_BATCH_MS = 100L
-
 /** Follows the log (`talosctl logs -f`) while [follow] is collected. */
 class LogFollowViewModel(
     private val talos: TalosRepository,
@@ -109,29 +107,22 @@ class LogFollowViewModel(
     private val _state = MutableStateFlow(FollowState())
     val state: StateFlow<FollowState> = _state.asStateFlow()
 
-    /** Starts over with the last FOLLOW_TAIL_LINES lines; runs until cancelled or the stream ends. */
-    suspend fun follow() {
+    private val mask = MaskScoped()
+
+    /**
+     * Starts over with the last FOLLOW_TAIL_LINES lines; runs until cancelled or the stream
+     * ends, and starts over after a screenshot mode switch.
+     */
+    suspend fun follow() = mask.run(clear = { _state.value = FollowState() }) { followOnce() }
+
+    private suspend fun followOnce() {
         _state.value = FollowState(streaming = true)
         try {
-            coroutineScope {
-                val lines = when (source) {
-                    is LogSource.Service -> talos.followLogs(node, source.name, FOLLOW_TAIL_LINES)
-                    is LogSource.Container -> talos.followContainerLogs(node, source.id, FOLLOW_TAIL_LINES)
-                }
-                val items = lines.produceIn(this)
-                while (true) {
-                    val next = items.receiveCatching()
-                    next.exceptionOrNull()?.let { throw it }
-                    val first = next.getOrNull() ?: break
-                    // Everything already queued joins the batch.
-                    val batch = buildList {
-                        add(first)
-                        while (true) add(items.tryReceive().getOrNull() ?: break)
-                    }
-                    apply(batch)
-                    delay(FOLLOW_BATCH_MS)
-                }
+            val lines = when (source) {
+                is LogSource.Service -> talos.followLogs(node, source.name, FOLLOW_TAIL_LINES)
+                is LogSource.Container -> talos.followContainerLogs(node, source.id, FOLLOW_TAIL_LINES)
             }
+            lines.collectLogBatches(::apply)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
@@ -172,6 +163,7 @@ fun LogsScreen(
         factory = factory { LogFollowViewModel(app.talosRepository, node, source) },
     ),
 ) {
+    AllowLandscape()
     val canFollow = rememberNodeFeatures(node).support(TalosFeature.LOG_FOLLOW).supported
     val state by vm.state.collectAsStateWithLifecycle()
     val followState by followVm.state.collectAsStateWithLifecycle()
@@ -187,7 +179,7 @@ fun LogsScreen(
         if (follow) lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { followVm.follow() }
     }
 
-    Scaffold(
+    IchorScaffold(
         bottomBar = {
             if (follow) {
                 Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
@@ -202,7 +194,7 @@ fun LogsScreen(
             }
         },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         when (source) {
@@ -224,7 +216,7 @@ fun LogsScreen(
                 },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
-                    FilterChip(
+                    IchorFilterChip(
                         selected = follow,
                         enabled = canFollow || follow,
                         onClick = {

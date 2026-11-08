@@ -80,7 +80,12 @@ class OperationService : Service() {
             show(states)
         } else {
             collecting = true
-            scope.launch { combine(operations.map { it.states }) { it.filterNotNull() }.collect(::show) }
+            scope.launch {
+                // Screenshot mode switched: the running ones are shown again, masked or not.
+                val masks = (application as TalosApp).uiPreferences.privacyMask
+                combine(combine(operations.map { it.states }) { it.filterNotNull() }, masks) { states, _ -> states }
+                    .collect(::show)
+            }
         }
         return START_NOT_STICKY
     }
@@ -133,10 +138,13 @@ class OperationService : Service() {
     private fun progressNotification(state: OperationState): Notification {
         val res = AppLocale.wrap(this)
         val shown = requireNotNull(state.progress)
-        val text = shown.text.resolve(res)
-        val builder = baseNotification(shown.title.resolve(res), state.kind)
+        val publicTitle = res.getString(state.kind.publicTitle)
+        // In screenshot mode, the generic title only, as on the lock screen: no node is named.
+        val masked = masked()
+        val text = if (masked) null else shown.text.resolve(res)
+        val builder = baseNotification(if (masked) publicTitle else shown.title.resolve(res), state.kind)
             .setContentText(text)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setStyle(text?.let { NotificationCompat.BigTextStyle().bigText(it) })
             .setOngoing(true)
             .setSilent(true)
             .setOnlyAlertOnce(true)
@@ -148,18 +156,20 @@ class OperationService : Service() {
             builder.setWhen(shown.countdownTo).setShowWhen(true).setUsesChronometer(true).setChronometerCountDown(true)
         }
         shown.actions.forEach { builder.addAction(action(res, state.kind, it)) }
-        return lockScreenSafe(builder, res.getString(state.kind.publicTitle), state.kind)
+        return lockScreenSafe(builder, publicTitle, state.kind)
     }
 
     private fun resultNotification(state: OperationState): Notification {
         val res = AppLocale.wrap(this)
         val result = requireNotNull(state.result)
-        val builder = baseNotification(result.title.resolve(res), state.kind)
-            .setContentText(result.text.resolve(res))
-            .setStyle(NotificationCompat.BigTextStyle())
+        val publicTitle = res.getString(state.kind.resultPublicTitle)
+        val masked = masked()
+        val builder = baseNotification(if (masked) publicTitle else result.title.resolve(res), state.kind)
+            .setContentText(if (masked) null else result.text.resolve(res))
+            .setStyle(if (masked) null else NotificationCompat.BigTextStyle())
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
-        return lockScreenSafe(builder, res.getString(state.kind.resultPublicTitle), state.kind)
+        return lockScreenSafe(builder, publicTitle, state.kind)
     }
 
     // With the app lock on, the lock screen does not name the node.
@@ -215,6 +225,8 @@ class OperationService : Service() {
     }
 
     private fun appLocked(): Boolean = (application as TalosApp).appLock.enabled.value
+
+    private fun masked(): Boolean = (application as TalosApp).uiPreferences.privacyMask.value.enabled
 
     /** (Re)creating the channel also updates its name and description to the current language. */
     private fun ensureChannel() {

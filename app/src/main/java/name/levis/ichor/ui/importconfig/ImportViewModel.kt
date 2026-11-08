@@ -139,6 +139,8 @@ class ImportViewModel(
     private val auth: KubeAuthRepository,
     /** The Omni sign-in worked: the user is still in the browser, bring the app back. */
     private val onBrowserDone: () -> Unit = {},
+    /** A demo was added ([kube]: the Kubernetes one); the Talos one offers its tour once. */
+    private val onDemoSaved: (kube: Boolean) -> Unit = {},
 ) : ViewModel() {
     /** The browser sign-in in progress (Omni account, cloud discovery); cancelled on reset. */
     private var browserRun: Job? = null
@@ -458,7 +460,10 @@ class ImportViewModel(
         _state.value = ImportState.Validating()
         viewModelScope.launch {
             _state.value = runCatching { if (kube) configs.saveKubeDemo() else configs.saveDemo() }.fold(
-                onSuccess = { ImportState.Saved },
+                onSuccess = {
+                    onDemoSaved(kube)
+                    ImportState.Saved
+                },
                 onFailure = { ImportState.Invalid(it.userMessage()) },
             )
         }

@@ -9,6 +9,10 @@ public struct LonghornStatus: Decodable, Equatable, Sendable {
     public let volumes: [LonghornVolume]
     public let nodes: [LonghornNode]
     public let backupTargets: [LonghornBackupTarget]
+    /// Longhorn's `default-engine-image` setting, "" when unread.
+    public let defaultEngineImage: String
+    /// The engine images, the default first.
+    public let engineImages: [LonghornEngineImageStatus]
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -17,9 +21,62 @@ public struct LonghornStatus: Decodable, Equatable, Sendable {
         volumes = try c.field(.volumes, [])
         nodes = try c.field(.nodes, [])
         backupTargets = try c.field(.backupTargets, [])
+        defaultEngineImage = try c.field(.defaultEngineImage, "")
+        engineImages = try c.field(.engineImages, [])
     }
 
-    private enum CodingKeys: String, CodingKey { case version, error, volumes, nodes, backupTargets }
+    /// The default engine's version ("v1.13.0"), its image tag when the version is unknown.
+    public var defaultEngineVersion: String {
+        engineImages.first { $0.image == defaultEngineImage }?.version.nonEmpty ?? longhornImageTag(defaultEngineImage)
+    }
+
+    /// Volumes whose engine lags the default image.
+    public var outdatedEngineVolumes: Int {
+        // Only when the cluster really runs more than one engine (as on Android).
+        guard engineImages.filter({ $0.refCount > 0 }).count > 1 else { return 0 }
+        return volumes.filter(\.engineOutdated).count
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case version, error, volumes, nodes, backupTargets, defaultEngineImage, engineImages
+    }
+}
+
+/// A Longhorn engine image (engineimages.longhorn.io) as the status lists it.
+public struct LonghornEngineImageStatus: Decodable, Equatable, Identifiable, Sendable {
+    public let image: String
+    public let version: String
+    /// deploying or deployed.
+    public let state: String
+    /// Volumes running it.
+    public let refCount: Int
+    public let incompatible: Bool
+    public let deployedNodes: Int
+    public let nodes: Int
+
+    public var id: String { image }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        image = try c.field(.image, "")
+        version = try c.field(.version, "")
+        state = try c.field(.state, "")
+        refCount = try c.field(.refCount, 0)
+        incompatible = try c.field(.incompatible, false)
+        deployedNodes = try c.field(.deployedNodes, 0)
+        nodes = try c.field(.nodes, 0)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case image, version, state, refCount, incompatible, deployedNodes, nodes
+    }
+}
+
+/// The tag of an image reference ("v1.12.0" of "longhornio/longhorn-engine:v1.12.0"), "" without one.
+public func longhornImageTag(_ image: String) -> String {
+    let last = image.split(separator: "/").last.map(String.init) ?? image
+    guard let colon = last.lastIndex(of: ":") else { return "" }
+    return String(last[last.index(after: colon)...])
 }
 
 public struct LonghornVolume: Decodable, Equatable, Identifiable, Sendable {
@@ -55,8 +112,41 @@ public struct LonghornVolume: Decodable, Equatable, Identifiable, Sendable {
     public let scheduleError: String
     /// Close to Longhorn's snapshot limit.
     public let tooManySnapshots: Bool
+    /// Longhorn's own snapshots still in use, newest first.
+    public let snapshots: [LonghornSnapshot]
+    /// Deleted snapshots Longhorn has yet to purge.
+    public let snapshotsRemoving: Int
+    /// Newest backups first, at most 20: backupCount has them all.
+    public let backups: [LonghornBackup]
+    public let backupCount: Int
+    /// The last backup is more than a week old.
+    public let backupStale: Bool
+    /// The VolumeSnapshotContents were read: a snapshot without volumeSnapshot keeps none.
+    public let volumeSnapshotsKnown: Bool
+    /// The engine image asked for (spec.image) and the one running (status.currentImage).
+    public let engineImage: String
+    public let engineCurrentImage: String
+    /// The two differ: Longhorn is replacing the engine.
+    public let engineUpgrading: Bool
+    /// The running engine is not the default one, which is deployed.
+    public let engineOutdated: Bool
+    /// The running engine's version, "" when unknown.
+    public let engineVersion: String
 
     public var id: String { name }
+
+    public var attached: Bool { state == "attached" }
+
+    /// Its engine can be upgraded now: outdated, not already upgrading, attached (live) or detached (offline).
+    public var engineUpgradable: Bool {
+        engineOutdated && !engineUpgrading && (state == "attached" || state == "detached")
+    }
+
+    /// The running engine's version, else its image tag.
+    public var engineLabel: String { engineVersion.nonEmpty ?? longhornImageTag(engineCurrentImage) }
+
+    /// The newest backup failed.
+    public var latestBackupFailed: Bool { backups.first?.failed ?? false }
 
     /// The claim it backs ("namespace/name"), or the volume's own name when unbound.
     public var label: String { pvcName.isEmpty ? name : "\(pvcNamespace)/\(pvcName)" }
@@ -85,13 +175,91 @@ public struct LonghornVolume: Decodable, Equatable, Identifiable, Sendable {
         restoreProgress = try c.field(.restoreProgress, 0)
         scheduleError = try c.field(.scheduleError, "")
         tooManySnapshots = try c.field(.tooManySnapshots, false)
+        snapshots = try c.field(.snapshots, [])
+        snapshotsRemoving = try c.field(.snapshotsRemoving, 0)
+        backups = try c.field(.backups, [])
+        backupCount = try c.field(.backupCount, 0)
+        backupStale = try c.field(.backupStale, false)
+        volumeSnapshotsKnown = try c.field(.volumeSnapshotsKnown, false)
+        engineImage = try c.field(.engineImage, "")
+        engineCurrentImage = try c.field(.engineCurrentImage, "")
+        engineUpgrading = try c.field(.engineUpgrading, false)
+        engineOutdated = try c.field(.engineOutdated, false)
+        engineVersion = try c.field(.engineVersion, "")
     }
 
     private enum CodingKeys: String, CodingKey {
         case name, namespace, pvcNamespace, pvcName, state, robustness, health, replicasDesired, replicasHealthy
         case rebuilding, replicaNodes, node, size, actualSize, lastBackupAt
         case rebuildProgress, backingUp, backupProgress, restoring, restoreProgress, scheduleError, tooManySnapshots
+        case snapshots, snapshotsRemoving, backups, backupCount, backupStale, volumeSnapshotsKnown
+        case engineImage, engineCurrentImage, engineUpgrading, engineOutdated, engineVersion
     }
+}
+
+/// A Longhorn snapshot of a volume (snapshots.longhorn.io), not a CSI VolumeSnapshot.
+public struct LonghornSnapshot: Decodable, Equatable, Identifiable, Sendable {
+    public let name: String
+    /// Unix ms, 0 when Longhorn has none (the base of a restored volume).
+    public let createdAt: Int64
+    /// Data it holds on top of its parent.
+    public let size: Int64
+    public let ready: Bool
+    /// Asked for (by someone, a job, a CSI snapshot), not taken by Longhorn itself.
+    public let userCreated: Bool
+    /// A completed backup was taken from it.
+    public let backedUp: Bool
+    /// The CSI VolumeSnapshot ("namespace/name") it keeps: delete that one, not this.
+    public let volumeSnapshot: String
+    public let error: String
+
+    public var id: String { name }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decode(String.self, forKey: .name)
+        createdAt = try c.field(.createdAt, 0)
+        size = try c.field(.size, 0)
+        ready = try c.field(.ready, false)
+        userCreated = try c.field(.userCreated, false)
+        backedUp = try c.field(.backedUp, false)
+        volumeSnapshot = try c.field(.volumeSnapshot, "")
+        error = try c.field(.error, "")
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case name, createdAt, size, ready, userCreated, backedUp, volumeSnapshot, error
+    }
+}
+
+/// A Longhorn backup of a volume (backups.longhorn.io).
+public struct LonghornBackup: Decodable, Equatable, Identifiable, Sendable {
+    public let name: String
+    public let snapshot: String
+    /// Completed, InProgress, Pending, Error or Unknown.
+    public let state: String
+    public let progress: Int
+    /// Unix ms.
+    public let createdAt: Int64
+    public let size: Int64
+    public let error: String
+
+    public var id: String { name }
+    public var completed: Bool { state == "Completed" }
+    public var failed: Bool { state == "Error" || !error.isEmpty }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decode(String.self, forKey: .name)
+        snapshot = try c.field(.snapshot, "")
+        state = try c.field(.state, "")
+        progress = try c.field(.progress, 0)
+        createdAt = try c.field(.createdAt, 0)
+        size = try c.field(.size, 0)
+        error = try c.field(.error, "")
+    }
+
+    private enum CodingKeys: String, CodingKey { case name, snapshot, state, progress, createdAt, size, error }
 }
 
 public struct LonghornNode: Decodable, Equatable, Identifiable, Sendable {
@@ -179,6 +347,7 @@ public func filterVolumes(_ volumes: [LonghornVolume], filter: VolumeFilter, que
         case .problems: kept = v.health.needsAttention
         case .detached: kept = v.state == "detached"
         }
-        return kept && (q.isEmpty || v.label.localizedCaseInsensitiveContains(q) || v.name.localizedCaseInsensitiveContains(q))
+        return kept
+            && (q.isEmpty || v.label.localizedCaseInsensitiveContains(q) || v.name.localizedCaseInsensitiveContains(q))
     }
 }

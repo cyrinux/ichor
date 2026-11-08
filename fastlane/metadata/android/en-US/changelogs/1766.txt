@@ -1,0 +1,5 @@
+• Propose a kept machine config change back to the node's file of the cluster repository
+• Turn a kept machine config change into a patch and write it into the node's file of the repository
+• Compare a Talos node with the cluster repository: its files there and what differs from its live config
+• A Talos cluster's Kubernetes screen offers Data services, ExternalDNS, cert-manager, Sealed Secrets and CAST AI
+• Find text across a whole repository from the source browser, downloaded once per commit

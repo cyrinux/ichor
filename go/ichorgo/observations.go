@@ -25,9 +25,24 @@ type driftSnapshot struct {
 type driftChange struct {
 	Node      string `json:"node"`
 	Reference string `json:"reference"`
-	Key       string `json:"key"`
-	Before    string `json:"before"`
-	After     string `json:"after"`
+	// NodeName and ReferenceName are the hostnames, empty when the snapshot lacks them.
+	NodeName      string `json:"nodeName"`
+	ReferenceName string `json:"referenceName"`
+	Key           string `json:"key"`
+	// Before and After keep the whole value (the patch is derived from After).
+	Before string `json:"before"`
+	After  string `json:"after"`
+	// Added, Removed and Changed itemise a list-valued setting; empty for a scalar.
+	Added   []string    `json:"added"`
+	Removed []string    `json:"removed"`
+	Changed []driftPair `json:"changed"`
+}
+
+// driftPair is one name=value item of a list-valued setting whose value differs.
+type driftPair struct {
+	Name   string `json:"name"`
+	Before string `json:"before"`
+	After  string `json:"after"`
 }
 
 // ClusterDriftSnapshot captures effective DNS, NTP, MTU, extensions, security and
@@ -84,7 +99,7 @@ func ClusterDriftSnapshot(configYAML, contextName string) (out string, err error
 		if e := decodeObservation(raw, e, &hw); e != nil {
 			d.Errors["hardware"] = e.Error()
 		} else {
-			for _, k := range []string{"extensions", "security"} {
+			for _, k := range []string{"extensions", "security", "watchdog"} {
 				if hw.Errors[k] != "" {
 					d.Errors[k] = hw.Errors[k]
 				}
@@ -100,9 +115,15 @@ func ClusterDriftSnapshot(configYAML, contextName string) (out string, err error
 				d.Values["secureBoot"] = fmt.Sprint(hw.Security.SecureBoot)
 				d.Values["uki"] = fmt.Sprint(hw.Security.BootedWithUKI)
 			}
+			if hw.Errors["watchdog"] == "" {
+				d.Values["watchdog"] = watchdogSetting(hw.Watchdog)
+			}
 		}
 		result.Nodes[i] = d
 	})
+	if isDemoContext(configYAML, contextName) {
+		result.Nodes = demoDriftNodes(result.Nodes)
+	}
 	sort.Slice(result.Nodes, func(i, j int) bool { return result.Nodes[i].Node < result.Nodes[j].Node })
 	return toJSON(result)
 }
@@ -173,7 +194,7 @@ func compareDrift(baseline, current driftSnapshot, saved bool) []driftChange {
 			if !known || old == value {
 				continue
 			}
-			out = append(out, driftChange{Node: n.Node, Reference: ref.Node, Key: k, Before: old, After: value})
+			out = append(out, newDriftChange(n, ref, k, old, value))
 		}
 	}
 	sort.Slice(out, func(i, j int) bool {

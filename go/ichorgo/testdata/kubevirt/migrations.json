@@ -1,0 +1,9 @@
+{"kind":"VirtualMachineInstanceMigrationList","apiVersion":"kubevirt.io/v1","metadata":{},"items":[
+ {"metadata":{"name":"db-01-mig-old","namespace":"vms","creationTimestamp":"2026-10-13T08:00:00Z"},
+  "spec":{"vmiName":"db-01"},"status":{"phase":"Succeeded"}},
+ {"metadata":{"name":"db-01-mig-new","namespace":"vms","creationTimestamp":"2026-10-14T09:57:50Z"},
+  "spec":{"vmiName":"db-01"},"status":{"phase":"Running"}},
+ {"metadata":{"name":"old-migrated-mig","namespace":"vms","creationTimestamp":"2026-10-14T07:00:00Z"},
+  "spec":{"vmiName":"old-migrated"},
+  "status":{"phase":"Succeeded","migrationState":{"sourceNode":"worker-1","targetNode":"worker-3","startTimestamp":"2026-10-14T07:00:05Z","endTimestamp":"2026-10-14T07:02:00Z","completed":true}}}
+]}

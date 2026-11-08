@@ -1,0 +1,306 @@
+package name.levis.ichor.model
+
+import kotlinx.serialization.json.JsonPrimitive
+import name.levis.ichor.data.JoinRequest
+import name.levis.ichor.data.TalosJson
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class CloudGCPTest {
+    // The same fixture as ios/IchorCore/Tests/IchorCoreTests/CloudGCPTests.swift.
+    private val options = TalosJson.decodeFromString(
+        GCPOptions.serializer(),
+        """
+        {"project":"example-project","zone":"europe-west1-b",
+         "projects":[{"id":"example-project","name":"Example project"},{"id":"other-project","name":"other-project"}],
+         "zones":[{"name":"europe-west1-b","region":"europe-west1"},{"name":"europe-west1-c","region":"europe-west1"}],
+         "machineTypes":[{"name":"e2-medium","vcpus":2,"memoryGB":4,"arch":"amd64"},
+                         {"name":"t2a-standard-1","vcpus":1,"memoryGB":4,"arch":"arm64"},
+                         {"name":"e2-standard-2","vcpus":2,"memoryGB":8,"arch":"amd64"},
+                         {"name":"t2a-standard-2","vcpus":2,"memoryGB":8,"arch":"arm64"}],
+         "networks":[{"name":"default","selfLink":"https://example.test/networks/default","autoSubnets":true,
+                      "subnets":[{"name":"default","selfLink":"https://example.test/subnetworks/default","region":"europe-west1","cidr":"10.132.0.0/20"}]},
+                     {"name":"empty","selfLink":"https://example.test/networks/empty","autoSubnets":false,"subnets":null}],
+         "images":[{"name":"talos-v1-12-0-amd64","selfLink":"https://example.test/images/talos-amd64","arch":"amd64","sizeGB":10,
+                    "talosVersion":"v1.12.0","schematic":"","uefi":false},
+                   {"name":"talos-v1-12-0-arm64","selfLink":"https://example.test/images/talos-arm64","arch":"arm64","sizeGB":10,
+                    "talosVersion":"v1.12.0","schematic":"","uefi":true},
+                   {"name":"my-own-arm","selfLink":"https://example.test/images/my-own-arm","arch":"arm64","sizeGB":10,
+                    "talosVersion":"","schematic":"","uefi":false}],
+         "warnings":["a warning","network default has no Cloud NAT in europe-west1: without a public address, the node needs a route out"]}
+        """,
+    )
+
+    @Test
+    fun theArchCouplesTypesAndImages() {
+        assertEquals(listOf("amd64", "arm64"), options.arches())
+        assertEquals(listOf("e2-medium", "e2-standard-2"), options.typesFor("amd64").map { it.name })
+        val arm = options.typesFor("arm64").first()
+        // An Arm VM boots UEFI images only: the unlabelled one without it is not offered.
+        assertEquals(listOf("talos-v1-12-0-arm64"), options.imagesFor(arm).map { it.name })
+        assertEquals(listOf("talos-v1-12-0-amd64"), options.imagesFor(options.typesFor("amd64").first()).map { it.name })
+    }
+
+    @Test
+    fun onlyNetworksWithASubnetHereArePicked() {
+        assertEquals(listOf("default"), options.usableNetworks().map { it.name })
+        assertEquals("10.132.0.0/20", options.usableNetworks().single().subnets.single().cidr)
+        assertTrue(options.networks.last().subnets.isEmpty())
+    }
+
+    @Test
+    fun theNATWarningGoesUnderTheSwitch() {
+        assertEquals(listOf("a warning"), options.otherWarnings())
+        assertEquals(1, options.natWarnings().size)
+    }
+
+    @Test
+    fun nullListsDecodeEmpty() {
+        val empty = TalosJson.decodeFromString(GCPOptions.serializer(), """{"project":"p","zones":null,"machineTypes":null,"images":null,"warnings":null}""")
+        assertTrue(empty.zones.isEmpty() && empty.machineTypes.isEmpty() && empty.images.isEmpty() && empty.warnings.isEmpty())
+    }
+
+    @Test
+    fun theCheckAndThePriceDecode() {
+        val check = TalosJson.decodeFromString(
+            GCPCheck.serializer(),
+            """{"account":"node-creator@example-project.iam.gserviceaccount.com","project":"example-project","canCreate":false,"checked":true,"missing":["compute.instances.create"]}""",
+        )
+        assertTrue(check.checked)
+        assertFalse(check.canCreate)
+        assertEquals(listOf("compute.instances.create"), check.missing)
+        assertEquals("0.0335", TalosJson.decodeFromString(GCPPrice.serializer(), """{"hourly":"0.0335","currency":"USD"}""").hourly)
+        assertEquals("", TalosJson.decodeFromString(GCPPrice.serializer(), """{"hourly":""}""").hourly)
+    }
+
+    @Test
+    fun theSpecUsesTheCoresNamesAndKeepsItsDefaults() {
+        val spec = GCPCreateSpec(
+            project = "example-project", zone = "europe-west1-b", machineType = "e2-medium",
+            image = "https://example.test/images/talos-amd64", subnetwork = "https://example.test/subnetworks/default",
+            associatePublicIp = true, diskGB = 20, hostname = "node-c",
+        )
+        val json = TalosJson.encodeToString(GCPCreateSpec.serializer(), spec)
+        // TalosJson drops default values: these must be there, or the core reads false and 0.
+        listOf("\"machineType\"", "\"image\"", "\"subnetwork\"", "\"associatePublicIp\":true", "\"diskGB\":20").forEach {
+            assertTrue(json, json.contains(it))
+        }
+        assertFalse(json, json.contains("serviceAccount"))
+    }
+
+    @Test
+    fun theCredentialKeepsTheKeyInAnotherZone() {
+        val credential = GCPCredential(serviceAccountJson = "{}", project = "example-project", zone = "europe-west1-b")
+        val moved = TalosJson.decodeFromString(
+            GCPCredential.serializer(),
+            TalosJson.encodeToString(GCPCredential.serializer(), credential.copy(zone = "europe-west1-c")),
+        )
+        assertEquals("{}", moved.serviceAccountJson)
+        assertEquals("europe-west1-c", moved.zone)
+    }
+
+    // An invented sign-in state: the app never reads inside it.
+    private val signedIn =
+        """{"googleSignIn":{"method":"gke","secrets":{"gcpGcloudSignIn":"1"},"session":{"refresh":"r-1"},"user":"someone@example.org"},""" +
+            """"account":"someone@example.org","project":"","zone":""}"""
+
+    @Test
+    fun aGoogleSignInIsToldFromAKey() {
+        val google = TalosJson.decodeFromString(GCPCredential.serializer(), signedIn)
+        assertTrue(google.googleAccount)
+        assertEquals("someone@example.org", google.account)
+        val key = TalosJson.decodeFromString(GCPCredential.serializer(), """{"serviceAccountJson":"{}","project":"example-project","zone":""}""")
+        assertFalse(key.googleAccount)
+        // A key is still encoded without the sign-in's fields.
+        val json = TalosJson.encodeToString(GCPCredential.serializer(), key)
+        assertFalse(json, json.contains("googleSignIn") || json.contains("account"))
+    }
+
+    @Test
+    fun theSignInResultDecodes() {
+        val result = TalosJson.decodeFromString(
+            GCPSignInResult.serializer(),
+            """{"credential":${JsonPrimitive(signedIn)},"account":"someone@example.org",
+               "projects":[{"id":"example-project","name":"example-project"},{"id":"other-project","name":"Other"}],"more":true}""",
+        )
+        assertEquals(signedIn, result.credential)
+        assertEquals("someone@example.org", result.account)
+        assertEquals(listOf("example-project", "other-project"), result.projects.map { it.id })
+        assertTrue(result.more)
+        val none = TalosJson.decodeFromString(GCPSignInResult.serializer(), """{"credential":"{}","account":"a","projects":null}""")
+        assertTrue(none.projects.isEmpty())
+        assertFalse(none.more)
+    }
+
+    @Test
+    fun theCheckAndOptionsCarryARenewedSignIn() {
+        val check = TalosJson.decodeFromString(
+            GCPCheck.serializer(),
+            """{"account":"someone@example.org","project":"example-project","canCreate":true,"checked":true,"missing":null,
+               "credential":"{\"googleSignIn\":{}}","renewHint":"sign in with Google again from the Google Cloud card"}""",
+        )
+        assertEquals("{\"googleSignIn\":{}}", check.credential)
+        assertEquals("sign in with Google again from the Google Cloud card", check.renewHint)
+        val key = TalosJson.decodeFromString(GCPCheck.serializer(), """{"account":"a","project":"p","canCreate":true,"checked":true}""")
+        assertEquals("", key.credential)
+        assertEquals("", key.renewHint)
+        assertEquals("", TalosJson.decodeFromString(GCPOptions.serializer(), """{"project":"p"}""").credential)
+        assertEquals("{}", TalosJson.decodeFromString(GCPOptions.serializer(), """{"project":"p","credential":"{}"}""").credential)
+    }
+
+    @Test
+    fun settingTheProjectKeepsTheSignInState() {
+        val withProject = gcpCredentialWith(signedIn, "project" to "example-project", "zone" to "europe-west1-b")!!
+        val parsed = TalosJson.decodeFromString(GCPCredential.serializer(), withProject)
+        assertEquals("example-project", parsed.project)
+        assertEquals("europe-west1-b", parsed.zone)
+        assertEquals(TalosJson.decodeFromString(GCPCredential.serializer(), signedIn).googleSignIn, parsed.googleSignIn)
+        assertNull(gcpCredentialWith("not json", "project" to "p"))
+    }
+
+    @Test
+    fun aRenewedSignInKeepsTheProjectAndZonePickedMeanwhile() {
+        val stored = gcpCredentialWith(signedIn, "project" to "example-project", "zone" to "europe-west1-c")!!
+        val renewed = signedIn.replace("r-1", "r-2")
+        val merged = TalosJson.decodeFromString(GCPCredential.serializer(), gcpMergeRenewed(stored, renewed)!!)
+        assertEquals("example-project", merged.project)
+        assertEquals("europe-west1-c", merged.zone)
+        assertTrue(merged.googleSignIn.toString().contains("r-2"))
+        assertNull(gcpMergeRenewed(stored, ""))
+        assertNull(gcpMergeRenewed(stored, """{"project":"p"}"""))
+    }
+
+    @Test
+    fun theKeyShowsItsEmailAndProjectOnly() {
+        val key = """{"type":"service_account","project_id":"example-project","private_key":"-----BEGIN PRIVATE KEY-----\nAAA\n-----END PRIVATE KEY-----\n",
+            "client_email":"node-creator@example-project.iam.gserviceaccount.com"}"""
+        val identity = gcpKeyIdentity(key)
+        assertEquals("node-creator@example-project.iam.gserviceaccount.com", identity?.clientEmail)
+        assertEquals("example-project", identity?.projectId)
+        assertNull(gcpKeyIdentity("""{"type":"authorized_user","client_email":"a@b.c","private_key":"k"}"""))
+        assertNull(gcpKeyIdentity("not json"))
+    }
+
+    @Test
+    fun theHostNameFollowsComputeEngineNames() {
+        assertTrue(gcpValidName("node-c"))
+        assertFalse(gcpValidName("Node-C"))
+        assertFalse(gcpValidName("1node"))
+        assertFalse(gcpValidName("node-"))
+        assertFalse(gcpValidName("a".repeat(64)))
+    }
+
+    @Test
+    fun theActivationLinkIsFoundInTheCoresMessage() {
+        val message = "the Compute Engine API is not enabled in project example-project: enable it at " +
+            "https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=example-project"
+        assertEquals(
+            "https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=example-project",
+            gcpActivationLink(message),
+        )
+        assertNull(gcpActivationLink("Google Cloud refused compute.instances.create"))
+    }
+
+    @Test
+    fun aRunWithAVMHasTheCloudTimeline() {
+        val spec = GCPCreateSpec(
+            project = "example-project", zone = "europe-west1-b", machineType = "e2-medium", image = "img", subnetwork = "sub",
+            associatePublicIp = true, diskGB = 20, hostname = "node-c",
+        )
+        val plain = JoinRequest(address = "", template = "", role = "", hostname = "node-c", disk = "", staticAddress = "", gcp = spec)
+        assertTrue(plain.cloud)
+        assertEquals(JoinPhase.cloudRun, plain.phases)
+        assertEquals(JoinPhase.cloudOmniRun, plain.copy(omni = true).phases)
+    }
+
+    @Test
+    fun theImageSpecUsesTheCoresNames() {
+        val spec = GCPImageSpec(
+            templateNode = "10.0.0.2", arch = "arm64", project = "example-project", zone = "europe-west1-b",
+            subnetwork = "https://example.test/subnetworks/default", associatePublicIp = false,
+        )
+        val json = TalosJson.encodeToString(GCPImageSpec.serializer(), spec)
+        listOf(
+            "\"templateNode\":\"10.0.0.2\"", "\"arch\":\"arm64\"", "\"project\":\"example-project\"", "\"zone\":\"europe-west1-b\"",
+            "\"subnetwork\":\"https://example.test/subnetworks/default\"", "\"associatePublicIp\":false",
+        ).forEach { assertTrue(json, json.contains(it)) }
+    }
+
+    @Test
+    fun theImageResultAndItsEstimateDecode() {
+        val result = TalosJson.decodeFromString(
+            GCPImageResult.serializer(),
+            """{"image":"talos-v1-12-0-gcp-amd64-0123456789ab","selfLink":"https://example.test/global/images/talos-v1-12-0-gcp-amd64-0123456789ab",
+               "arch":"amd64","talosVersion":"v1.12.0","schematic":"0123","sizeGB":12}""",
+        )
+        assertEquals("v1.12.0", result.talosVersion)
+        assertEquals(12, result.sizeGB)
+        val made: MadeImage = result
+        assertEquals("https://example.test/global/images/talos-v1-12-0-gcp-amd64-0123456789ab", made.imageId)
+        assertEquals("talos-v1-12-0-gcp-amd64-0123456789ab", made.name)
+        assertEquals("talos-a", GCPImageResult(image = "talos-a").imageId)
+        val estimate = TalosJson.decodeFromString(
+            GCPImageEstimate.serializer(),
+            """{"machineType":"e2-small","hourly":"0.0168","currency":"USD","diskMonthlyPerGB":"0.1000","imageMonthlyPerGB":"0.0500","minutes":10}""",
+        )
+        assertEquals("e2-small", estimate.machineType)
+        assertEquals("0.0168", estimate.hourly)
+        assertEquals("0.0500", estimate.imageMonthlyPerGB)
+        assertEquals(10, estimate.minutes)
+        val unpriced = TalosJson.decodeFromString(GCPImageEstimate.serializer(), """{"machineType":"t2a-standard-1","minutes":10}""")
+        assertEquals("", unpriced.hourly)
+        assertEquals("", unpriced.imageMonthlyPerGB)
+    }
+
+    @Test
+    fun anImageRunHasItsOwnSteps() {
+        val spec = GCPImageSpec(arch = "amd64", project = "example-project", zone = "europe-west1-b", subnetwork = "s", associatePublicIp = true)
+        val request = JoinRequest(address = "", template = "", role = "", hostname = "Talos amd64", disk = "", staticAddress = "", gcpImage = spec)
+        assertEquals(ImageRunKind.GCP_IMAGE, request.imageKind)
+        assertEquals(JoinPhase.gcpImageRun, request.phases)
+        assertTrue(request.imageRun)
+        assertFalse(request.cloud)
+        val steps = joinTimeline(listOf(JoinProgress(phase = "creating"), JoinProgress(phase = "register")), finished = false, failed = false, phases = request.phases)
+        assertEquals(listOf(JoinPhase.CREATING, JoinPhase.WRITING, JoinPhase.REGISTER, JoinPhase.CLEANUP, JoinPhase.DONE), steps.map { it.phase })
+        assertEquals(StepStatus.DONE, steps[1].status)
+        assertEquals(StepStatus.CURRENT, steps[2].status)
+        assertEquals(StepStatus.PENDING, steps[3].status)
+    }
+
+    // The same fixture as CloudGCPTests.testGuidedNetwork on iOS.
+    @Test
+    fun theGuidedNetworkTellsThePhonesRule() {
+        val network = TalosJson.decodeFromString(
+            GCPNetworkResult.serializer(),
+            """
+            {"network":"default","networkLink":"https://example.test/networks/default","subnetwork":"regions/europe-west1/subnetworks/default",
+             "subnetworkLink":"https://example.test/subnetworks/default","phoneIp":"203.0.113.7","created":["ichor-nodes-internal"],
+             "updated":["ichor-phone-50000"],
+             "rules":[{"name":"ichor-nodes-internal","protocol":"all","ports":"","source":"tag:ichor-node","self":true},
+                      {"name":"ichor-phone-50000","protocol":"tcp","ports":"50000","source":"198.51.100.4/32","description":"Ichor phone 2026-10-01"},
+                      {"name":"ichor-phone-50000","protocol":"tcp","ports":"50000","source":"203.0.113.7/32","description":"Ichor phone 2026-11-07"}],
+             "warnings":[]}
+            """,
+        )
+        assertEquals("regions/europe-west1/subnetworks/default", network.subnetwork)
+        assertEquals(listOf("ichor-nodes-internal"), network.created)
+        assertEquals(listOf("ichor-phone-50000"), network.updated)
+        assertTrue(network.rules[0].self)
+        assertEquals(listOf(false, false, true), network.rules.map { it.isPhone(network.phoneIp) })
+        assertEquals("tcp/50000 ← 198.51.100.4/32 · Ichor phone 2026-10-01", network.rules[1].plain)
+        assertEquals("all ← tag:ichor-node", network.rules[0].plain)
+        // On Omni no address is opened: no rule is the phone's.
+        assertFalse(network.rules[2].isPhone(""))
+
+        val flagged = TalosJson.decodeFromString(GCPNetwork.serializer(), """{"name":"open","wideOpen":true,"managed":true}""")
+        assertTrue(flagged.wideOpen && flagged.managed)
+        assertFalse(options.networks.any { it.wideOpen || it.managed })
+        assertEquals(
+            """{"project":"example-project","zone":"europe-west1-b","role":"worker","omni":true}""",
+            TalosJson.encodeToString(GCPNetworkSpec.serializer(), GCPNetworkSpec("example-project", "europe-west1-b", "worker", omni = true)),
+        )
+    }
+}

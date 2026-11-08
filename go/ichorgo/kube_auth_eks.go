@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // EKS sign-in, as `aws eks get-token` and aws-iam-authenticator do it: the bearer is a
@@ -39,7 +41,7 @@ var (
 	awsSSOPortalEndpoint = func(region string) string {
 		return "https://portal.sso." + region + ".amazonaws.com" + awsDomainSuffix(region)
 	}
-	awsHTTPClient = func() *http.Client { return newHTTPClient(httpClientOpts{timeout: oidcHTTPTimeout}) }
+	awsHTTPClient = func() *http.Client { return httpx.New(httpx.Opts{Timeout: oidcHTTPTimeout}) }
 )
 
 // awsDomainSuffix completes the China partition's domain.
@@ -183,6 +185,8 @@ func (m *eksMethod) credentials(ctx context.Context, state kubeAuthState) (awsCr
 		return c, state, nil
 	}
 
+	cached := state.session("ssoAccess")
+
 	token, state, err := m.ssoAccessToken(ctx, state)
 	if err != nil {
 		return awsCredentials{}, state, err
@@ -193,7 +197,20 @@ func (m *eksMethod) credentials(ctx context.Context, state kubeAuthState) (awsCr
 		return awsCredentials{}, state, signInRequired(authEKS, "choose an account and role")
 	}
 
-	return m.ssoRoleCredentials(ctx, token, state)
+	creds, next, err := m.ssoRoleCredentials(ctx, token, state)
+
+	// A cached access token AWS no longer takes (revoked, or the phone's clock off): renewed
+	// once with the refresh token before asking to sign in again.
+	var needSignIn *errSignInRequired
+	if cached != "" && token == cached && errors.As(err, &needSignIn) {
+		if token, next, err = m.ssoAccessToken(ctx, next); err != nil {
+			return awsCredentials{}, next, err
+		}
+
+		return m.ssoRoleCredentials(ctx, token, next)
+	}
+
+	return creds, next, err
 }
 
 // sessionCredentials reads cached credentials stored under prefix, if still valid a while.
@@ -224,19 +241,40 @@ func (m *eksMethod) ssoAccessToken(ctx context.Context, state kubeAuthState) (st
 		return "", state, signInRequired(authEKS, "")
 	}
 
-	var t awsSSOToken
+	t, status, err := m.sso(state).refresh(ctx, state.session("ssoClientId"), state.session("ssoClientSecret"), state.session("ssoRefresh"))
 
-	err := m.postJSON(ctx, awsSSOOIDCEndpoint(state.secret(awsFieldSSORegion))+"/token", map[string]any{
-		"clientId": state.session("ssoClientId"), "clientSecret": state.session("ssoClientSecret"),
-		"grantType": "refresh_token", "refreshToken": state.session("ssoRefresh"),
-	}, &t)
-	if err != nil || t.AccessToken == "" {
+	// Only AWS refusing the refresh token ends the session; the phone off its network or VPN,
+	// a timeout or AWS failing is an error to retry, the refresh token kept for the next try.
+	switch {
+	case err != nil:
+		return "", state, fmt.Errorf("renew the IAM Identity Center token: %w", err)
+	case awsSessionOver(t.Error):
 		cleared := state.withSession(map[string]string{"ssoRefresh": "", "ssoAccess": ""})
 
-		return "", cleared, signInRequired(authEKS, cmpOr(t.Description, t.Error, errText(err)))
+		return "", cleared, signInRequired(authEKS, sessionEndedReason(authEKS, t.Error, "", cmpOr(t.Description, awsSessionEnded), state.SignedInAt))
+	case status >= http.StatusInternalServerError:
+		return "", state, fmt.Errorf("renew the IAM Identity Center token: AWS answered %d", status)
+	case t.AccessToken == "":
+		return "", state, fmt.Errorf("renew the IAM Identity Center token: %s", cmpOr(t.Description, t.Error, "AWS answered "+strconv.Itoa(status)))
 	}
 
 	return t.AccessToken, m.withSSOToken(state, t), nil
+}
+
+// awsSessionEnded is why a new sign-in is needed once AWS refuses the refresh token with a
+// code sessionEndedReason has no sentence for (unauthorized_client, access_denied) and no
+// description.
+const awsSessionEnded = "Your IAM Identity Center session ended; its length is set by your administrator."
+
+// awsSessionOver reports whether a CreateToken error code means the sign-in is over (the
+// refresh token expired or was revoked, the client registration too), not a failure to retry.
+func awsSessionOver(code string) bool {
+	switch code {
+	case "expired_token", "invalid_grant", "invalid_client", "unauthorized_client", "access_denied":
+		return true
+	default:
+		return false
+	}
 }
 
 type awsSSOToken struct {
@@ -256,42 +294,23 @@ func (m *eksMethod) withSSOToken(state kubeAuthState, t awsSSOToken) kubeAuthSta
 }
 
 func (m *eksMethod) ssoRoleCredentials(ctx context.Context, token string, state kubeAuthState) (awsCredentials, kubeAuthState, error) {
-	q := url.Values{"account_id": {state.secret(awsFieldAccountID)}, "role_name": {state.secret(awsFieldRoleName)}}
+	c, expiry, err := m.sso(state).roleCredentials(ctx, token, state.secret(awsFieldAccountID), state.secret(awsFieldRoleName))
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, awsSSOPortalEndpoint(state.secret(awsFieldSSORegion))+"/federation/credentials?"+q.Encode(), nil)
+	var refused *errAWSSSOUnauthorized
+	if errors.As(err, &refused) {
+		return awsCredentials{}, state.withSession(map[string]string{"ssoAccess": ""}), signInRequired(authEKS, refused.message)
+	}
+
 	if err != nil {
 		return awsCredentials{}, state, err
 	}
 
-	req.Header.Set("X-Amz-Sso_bearer_token", token)
+	return c, withSessionCredentials(state, "role", c, expiry), nil
+}
 
-	var answer struct {
-		RoleCredentials struct {
-			AccessKeyID     string `json:"accessKeyId"`
-			SecretAccessKey string `json:"secretAccessKey"`
-			SessionToken    string `json:"sessionToken"`
-			Expiration      int64  `json:"expiration"` // milliseconds
-		} `json:"roleCredentials"`
-		Message string `json:"message"`
-	}
-
-	status, err := m.doJSON(req, &answer)
-	if err != nil {
-		return awsCredentials{}, state, err
-	}
-
-	rc := answer.RoleCredentials
-	if status == http.StatusUnauthorized || status == http.StatusForbidden {
-		return awsCredentials{}, state.withSession(map[string]string{"ssoAccess": ""}), signInRequired(authEKS, answer.Message)
-	}
-
-	if rc.AccessKeyID == "" {
-		return awsCredentials{}, state, fmt.Errorf("IAM Identity Center gave no role credentials: %s", cmpOr(answer.Message, strconv.Itoa(status)))
-	}
-
-	c := awsCredentials{rc.AccessKeyID, rc.SecretAccessKey, rc.SessionToken}
-
-	return c, withSessionCredentials(state, "role", c, time.UnixMilli(rc.Expiration)), nil
+// sso is IAM Identity Center in the sign-in's SSO region, with the method's HTTP client.
+func (m *eksMethod) sso(state kubeAuthState) awsSSO {
+	return awsSSO{region: state.secret(awsFieldSSORegion), http: m.http}
 }
 
 // assumedRole switches to roleARN with STS AssumeRole, cached until it expires.
@@ -344,46 +363,6 @@ func (m *eksMethod) assumedRole(ctx context.Context, base awsCredentials, state 
 	return creds, withSessionCredentials(state, "assumed", creds, c.Expiration), nil
 }
 
-func (m *eksMethod) postJSON(ctx context.Context, endpoint string, body any, out any) error {
-	data, err := json.Marshal(body)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(data))
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	_, err = m.doJSON(req, out)
-
-	return err
-}
-
-// doJSON decodes the answer whatever its status (AWS sends errors as JSON too).
-func (m *eksMethod) doJSON(req *http.Request, out any) (int, error) {
-	resp, err := m.http.Do(req)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close() //nolint:errcheck
-
-	data, err := io.ReadAll(io.LimitReader(resp.Body, awsMaxBody))
-	if err != nil {
-		return resp.StatusCode, err
-	}
-
-	if len(bytes.TrimSpace(data)) > 0 {
-		if err := json.Unmarshal(data, out); err != nil {
-			return resp.StatusCode, fmt.Errorf("AWS answered %d", resp.StatusCode)
-		}
-	}
-
-	return resp.StatusCode, nil
-}
-
 // signIn runs the IAM Identity Center device flow (like `aws sso login`): register a public
 // client allowed refresh tokens, show the code, wait for approval.
 func (m *eksMethod) signIn(ctx context.Context, state kubeAuthState, prompt func(signInPrompt), _ <-chan string) (kubeAuthState, error) {
@@ -391,52 +370,16 @@ func (m *eksMethod) signIn(ctx context.Context, state kubeAuthState, prompt func
 		return state, errors.New("enter AWS access keys or an IAM Identity Center start URL first")
 	}
 
-	endpoint := awsSSOOIDCEndpoint(state.secret(awsFieldSSORegion))
+	sso := m.sso(state)
 
-	var client struct {
-		ClientID     string `json:"clientId"`
-		ClientSecret string `json:"clientSecret"`
-		Error        string `json:"error"`
-	}
-
-	err := m.postJSON(ctx, endpoint+"/client/register", map[string]any{
-		"clientName": "ichor", "clientType": "public", "scopes": []string{"sso:account:access"},
-		"grantTypes": []string{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"},
-	}, &client)
-	if err != nil || client.ClientID == "" {
-		return state, fmt.Errorf("IAM Identity Center refused the app: %s", cmpOr(client.Error, errText(err)))
-	}
-
-	var device struct {
-		DeviceCode              string `json:"deviceCode"`
-		UserCode                string `json:"userCode"`
-		VerificationURI         string `json:"verificationUri"`
-		VerificationURIComplete string `json:"verificationUriComplete"`
-		ExpiresIn               int    `json:"expiresIn"`
-		Interval                int    `json:"interval"`
-	}
-
-	err = m.postJSON(ctx, endpoint+"/device_authorization", map[string]any{
-		"clientId": client.ClientID, "clientSecret": client.ClientSecret, "startUrl": state.secret(awsFieldSSOStartURL),
-	}, &device)
-	if err != nil || device.DeviceCode == "" {
-		return state, fmt.Errorf("IAM Identity Center gave no device code: %s", errText(err))
+	client, device, err := sso.deviceStart(ctx, state.secret(awsFieldSSOStartURL))
+	if err != nil {
+		return state, err
 	}
 
 	prompt(signInPrompt{Kind: "device", URL: cmpOr(device.VerificationURIComplete, device.VerificationURI), UserCode: device.UserCode, VerificationURL: device.VerificationURI, ExpiresIn: device.ExpiresIn})
 
-	var token awsSSOToken
-
-	_, err = pollDeviceToken(ctx, oidcDeviceAnswer{ExpiresIn: device.ExpiresIn, Interval: device.Interval}, func(ctx context.Context) (oidcTokens, error) {
-		token = awsSSOToken{}
-
-		err := m.postJSON(ctx, endpoint+"/token", map[string]any{
-			"clientId": client.ClientID, "clientSecret": client.ClientSecret,
-			"grantType": "urn:ietf:params:oauth:grant-type:device_code", "deviceCode": device.DeviceCode,
-		}, &token)
-
-		return oidcTokens{Error: awsDeviceError(token.Error)}, err
-	})
+	token, err := sso.deviceFinish(ctx, client, device)
 	if err != nil {
 		return state, err
 	}

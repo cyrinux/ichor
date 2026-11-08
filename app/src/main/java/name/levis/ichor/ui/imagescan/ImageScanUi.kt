@@ -4,7 +4,10 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
@@ -16,6 +19,7 @@ import name.levis.ichor.model.IMAGESCAN_TIMED_OUT
 import name.levis.ichor.model.ImageScanReport
 import name.levis.ichor.model.VulnSeverity
 import name.levis.ichor.model.VulnSummary
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
@@ -41,20 +45,45 @@ fun severityColor(severity: VulnSeverity): Color {
     }
 }
 
-/** "Critical 2 · High 5 · …": one pill per severity found, muted when none. */
+/** "Critical 2 · High 5 · …": one pill per severity, muted when none; [foundOnly] leaves those out. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SeverityPills(summary: VulnSummary) {
+fun SeverityPills(summary: VulnSummary, foundOnly: Boolean = false) {
     val muted = LocalStatusColors.current.muted
     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         VulnSeverity.entries.forEach { severity ->
             val count = summary.count(severity)
-            if (severity == VulnSeverity.UNKNOWN && count == 0) return@forEach
+            if ((foundOnly || severity == VulnSeverity.UNKNOWN) && count == 0) return@forEach
             StatusPill(
                 stringResource(R.string.imagescan_severity_count, stringResource(severityLabel(severity)), count.toString()),
                 if (count > 0) severityColor(severity) else muted,
             )
         }
+    }
+}
+
+/**
+ * What is new since the last scan of the same images: "3 new" and their severities, or
+ * "Nothing new since the last scan" when [hasPrevious] says there was one to compare with.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun NewFindingsLine(new: VulnSummary, hasPrevious: Boolean) {
+    if (new.total == 0) {
+        if (hasPrevious) MutedText(stringResource(R.string.imagescan_nothing_new))
+        return
+    }
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            stringResource(R.string.imagescan_new_count, new.total.toString()),
+            style = MaterialTheme.typography.labelLarge,
+            color = LocalStatusColors.current.warn,
+        )
+        SeverityPills(new, foundOnly = true)
     }
 }
 

@@ -54,7 +54,7 @@ func TestParseQuantity(t *testing.T) {
 func checkCheckupProgress(t *testing.T, p readProgressOut) {
 	t.Helper()
 
-	if p.Running || p.Total != 17 || p.Done != 17 || len(p.Steps) != 17 {
+	if p.Running || p.Total != 22 || p.Done != 22 || len(p.Steps) != 22 {
 		t.Fatalf("progress = %+v", p)
 	}
 
@@ -161,7 +161,7 @@ func TestReadCheckup(t *testing.T) {
 
 	progress := startReadProgress("test-checkup", "", checkupSteps...)
 
-	r, err := readCheckup(withReadProgress(context.Background(), progress), k, checkupNow)
+	r, err := readCheckup(withReadProgress(context.Background(), progress), k, checkupNow, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,6 +175,7 @@ func TestReadCheckup(t *testing.T) {
 		checkStorage:       {"volumeFull:critical:data", "pvcPending:critical:scratch", "pvReleased:info:pv-1"},
 		checkUpgrade:       {"deprecatedAPI:critical:flowschemas.v1beta3.flowcontrol.apiserver.k8s.io", "deprecatedAPI:warning:things.v1beta1.example.io", "deprecatedAPI:info:componentstatuses.v1"},
 		checkWebhooks:      {"webhookDown:critical:policy", "webhookSkipped:warning:inject"},
+		checkPolicies:      {},
 		checkCapacity:      {"nodeRequestsHigh:warning:n1", "quotaNearLimit:warning:compute"},
 		checkNodes:         {"nodePressure:warning:n1", "nodeCordoned:warning:n2", "nodeVersionSkew:warning:n2"},
 		checkLoadBalancers: {"lbPending:critical:public", "lbPoolExhausted:critical:pool"},
@@ -183,6 +184,10 @@ func TestReadCheckup(t *testing.T) {
 		checkSecrets:       {"secretStoreNotReady:critical:vault", "externalSecretFailed:warning:db"},
 		checkHelm:          {"helmFailed:warning:shop", "helmPending:warning:mon"},
 		checkMonitoring:    {},
+		checkCrossplane:    {},
+		checkTailscale:     {},
+		checkClusterAPI:    {},
+		checkPlugins:       {},
 	}
 
 	if len(r.Sections) != len(want) {
@@ -206,6 +211,10 @@ func TestReadCheckup(t *testing.T) {
 	events := sectionByID(t, r, checkEvents)
 	if e := events.Findings[0]; e.Count != 10 || e.Message != "new" || e.Extra != "Pod" || events.Status != healthOK {
 		t.Fatalf("events %+v status %s", e, events.Status)
+	}
+
+	if pending := sectionByID(t, r, checkLoadBalancers).Findings[0]; pending.Reason != lbCausePoolExhausted {
+		t.Errorf("pending load balancer: reason %q, want %q", pending.Reason, lbCausePoolExhausted)
 	}
 
 	if csr := sectionByID(t, r, checkCertificates).Findings[0]; csr.Count != 2 || csr.Extra != "kubernetes.io/kubelet-serving" {
@@ -251,14 +260,14 @@ func TestReadCheckupEmptyCluster(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r, err := readCheckup(context.Background(), k, checkupNow)
+	r, err := readCheckup(context.Background(), k, checkupNow, "")
 	if err != nil || r.Status != healthOK {
 		t.Fatalf("%+v %v", r, err)
 	}
 
 	for _, s := range r.Sections {
 		want := healthOK
-		if s.ID == checkLoadBalancers || s.ID == checkSecrets || s.ID == checkHelm || s.ID == checkMonitoring {
+		if s.ID == checkLoadBalancers || s.ID == checkPolicies || s.ID == checkSecrets || s.ID == checkHelm || s.ID == checkMonitoring || s.ID == checkCrossplane || s.ID == checkTailscale || s.ID == checkClusterAPI || s.ID == checkPlugins {
 			want = checkAbsent
 		}
 
@@ -281,7 +290,7 @@ func TestReadCheckupSectionErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r, err := readCheckup(context.Background(), k, checkupNow)
+	r, err := readCheckup(context.Background(), k, checkupNow, "")
 	if err != nil || r.Status != healthOK {
 		t.Fatalf("%+v %v", r, err)
 	}
@@ -329,6 +338,13 @@ func TestPodFinding(t *testing.T) {
 		if ok != (c.kind != "") || (ok && (f.Kind != c.kind || f.Severity != c.sev)) {
 			t.Errorf("%s: %+v %v", name, f, ok)
 		}
+	}
+
+	// A pull problem's kind is the finding's reason, for the apps to word it.
+	limited := checkPod{kubePod: kubePod{Status: "ImagePullBackOff", Created: checkupNow.UnixMilli(), Images: []string{demoPullImage},
+		Pull: explainPull("ImagePullBackOff", demoPullMessage, demoPullImage, nil)}, Phase: "Pending", Waiting: demoPullMessage}
+	if f, ok := podFinding(limited, checkupNow); !ok || f.Reason != pullRateLimited || f.Message != demoPullMessage || f.Extra != demoPullImage {
+		t.Errorf("rate limited %+v %v", f, ok)
 	}
 }
 
@@ -426,7 +442,7 @@ func TestKubeEventsValidatesAndDemo(t *testing.T) {
 
 // The demo shows every section, with findings the apps can word.
 func TestKubeCheckupDemo(t *testing.T) {
-	out, err := KubeCheckup(demoConfigForTest(t), "", "")
+	out, err := KubeCheckup(demoConfigForTest(t), "", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -436,7 +452,7 @@ func TestKubeCheckupDemo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if r.Status != healthCritical || len(r.Sections) != 13 || len(r.Nodes) != 5 || len(r.Volumes) == 0 || len(r.Releases) == 0 {
+	if r.Status != healthCritical || len(r.Sections) != 18 || len(r.Nodes) != 5 || len(r.Volumes) == 0 || len(r.Releases) == 0 {
 		t.Fatalf("%+v", r)
 	}
 

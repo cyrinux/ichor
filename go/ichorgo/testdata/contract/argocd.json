@@ -1,0 +1,573 @@
+{
+  "appSets": [
+    {
+      "apps": 4,
+      "conditions": [
+        {
+          "message": "Successfully generated parameters for all Applications",
+          "status": "False",
+          "type": "ErrorOccurred"
+        },
+        {
+          "message": "ApplicationSet up to date",
+          "status": "True",
+          "type": "ResourcesUpToDate"
+        }
+      ],
+      "level": "critical",
+      "name": "infra",
+      "namespace": "argocd"
+    }
+  ],
+  "appSetsError": "",
+  "apps": [
+    {
+      "autoSync": {
+        "enabled": true,
+        "prune": false,
+        "selfHeal": true
+      },
+      "conditions": [],
+      "destination": {
+        "name": "",
+        "namespace": "demo",
+        "server": "https://kubernetes.default.svc"
+      },
+      "externalURLs": [],
+      "freeze": {
+        "byIchor": true,
+        "manualSync": true,
+        "project": "apps",
+        "until": 1767323045000,
+        "windows": [
+          "51cd7204b6ff"
+        ]
+      },
+      "health": "Degraded",
+      "healthMessage": "Deployment \"worker\" exceeded its progress deadline",
+      "history": [
+        {
+          "chart": "",
+          "deployedAt": 1767323045000,
+          "id": 12,
+          "initiatedBy": "automated",
+          "revision": "4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d",
+          "targetRevision": "main",
+          "url": ""
+        },
+        {
+          "chart": "",
+          "deployedAt": 1767323045000,
+          "id": 11,
+          "initiatedBy": "automated",
+          "revision": "91c0a7e6d5b4c3a29180f7e6d5c4b3a291807f6e",
+          "targetRevision": "main",
+          "url": ""
+        }
+      ],
+      "images": [
+        "busybox:1.37"
+      ],
+      "level": "critical",
+      "name": "demo-worker",
+      "namespace": "argocd",
+      "operation": {
+        "done": 3,
+        "dryRun": false,
+        "failed": [],
+        "finishedAt": 1767323045000,
+        "initiatedBy": "automated",
+        "message": "successfully synced (all tasks run)",
+        "phase": "Succeeded",
+        "retryCount": 0,
+        "revision": "4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d",
+        "revisionUrl": "",
+        "startedAt": 1767323045000,
+        "total": 3,
+        "wave": 0,
+        "waves": [
+          0
+        ]
+      },
+      "owner": null,
+      "project": "apps",
+      "reconciledAt": 1767323045000,
+      "refreshing": "",
+      "resources": [
+        {
+          "group": "",
+          "health": "",
+          "healthMessage": "",
+          "hook": false,
+          "kind": "ConfigMap",
+          "name": "worker-config",
+          "namespace": "demo",
+          "prune": false,
+          "sync": "Synced",
+          "syncResult": "Synced",
+          "wave": 0
+        },
+        {
+          "group": "",
+          "health": "Healthy",
+          "healthMessage": "",
+          "hook": false,
+          "kind": "Service",
+          "name": "worker",
+          "namespace": "demo",
+          "prune": false,
+          "sync": "Synced",
+          "syncResult": "Synced",
+          "wave": 0
+        },
+        {
+          "group": "apps",
+          "health": "Degraded",
+          "healthMessage": "",
+          "hook": false,
+          "kind": "Deployment",
+          "name": "worker",
+          "namespace": "demo",
+          "prune": false,
+          "sync": "Synced",
+          "syncResult": "Synced",
+          "wave": 0
+        }
+      ],
+      "revision": "4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d",
+      "revisionUrl": "",
+      "sources": [
+        {
+          "chart": "",
+          "path": "apps/worker",
+          "repo": "https://git.example.com/homelab/gitops.git",
+          "repoUrl": "",
+          "targetRevision": "main"
+        }
+      ],
+      "sync": "Synced",
+      "syncOptions": [
+        "CreateNamespace=true"
+      ],
+      "unhealthyPods": [
+        {
+          "containerNames": null,
+          "containers": 1,
+          "created": 1767323045000,
+          "healthy": false,
+          "images": [
+            "busybox:1.37"
+          ],
+          "lastTermination": "",
+          "name": "worker-6f4b8-uvwxy",
+          "namespace": "demo",
+          "node": "demo-worker-1",
+          "owner": "ReplicaSet/worker-6f4b8",
+          "ready": 0,
+          "restarts": 14,
+          "status": "CrashLoopBackOff"
+        },
+        {
+          "containerNames": null,
+          "containers": 1,
+          "created": 1767323045000,
+          "healthy": false,
+          "images": [
+            "nginx:1.28"
+          ],
+          "lastTermination": "",
+          "name": "reports-5b7c9-xkq2p",
+          "namespace": "demo",
+          "node": "demo-worker-2",
+          "owner": "ReplicaSet/reports-5b7c9",
+          "pull": {
+            "image": "nginx:1.28",
+            "kind": "rateLimited",
+            "registry": "docker.io",
+            "secrets": []
+          },
+          "ready": 0,
+          "restarts": 0,
+          "status": "ImagePullBackOff",
+          "waiting": "failed to pull and unpack image \"docker.io/library/nginx:1.28\": failed to copy: httpReadSeeker: failed open: unexpected status code https://registry-1.docker.io/v2/library/nginx/manifests/sha256:4f1c: 429 Too Many Requests - Server message: toomanyrequests: You have reached your unauthenticated pull rate limit."
+        }
+      ]
+    },
+    {
+      "autoSync": {
+        "enabled": true,
+        "prune": true,
+        "selfHeal": false
+      },
+      "conditions": [
+        {
+          "message": "Failed sync attempt to 8.6.0: one or more objects failed to apply (retried 5 times).",
+          "type": "SyncError"
+        }
+      ],
+      "destination": {
+        "name": "",
+        "namespace": "monitoring",
+        "server": "https://kubernetes.default.svc"
+      },
+      "externalURLs": [
+        "https://grafana.homelab.lan"
+      ],
+      "freeze": {
+        "byIchor": false,
+        "manualSync": false,
+        "project": "infra",
+        "until": 1767323045000,
+        "windows": [
+          "40358be7485b"
+        ]
+      },
+      "health": "Healthy",
+      "healthMessage": "",
+      "history": [
+        {
+          "chart": "grafana",
+          "deployedAt": 1767323045000,
+          "id": 31,
+          "initiatedBy": "automated",
+          "revision": "8.5.2",
+          "targetRevision": "8.5.2",
+          "url": ""
+        },
+        {
+          "chart": "grafana",
+          "deployedAt": 1767323045000,
+          "id": 30,
+          "initiatedBy": "automated",
+          "revision": "8.5.1",
+          "targetRevision": "8.5.1",
+          "url": ""
+        }
+      ],
+      "icon": "grafana",
+      "images": [
+        "grafana/grafana:11.4.0"
+      ],
+      "level": "critical",
+      "name": "grafana",
+      "namespace": "argocd",
+      "operation": {
+        "done": 3,
+        "dryRun": false,
+        "failed": [
+          {
+            "kind": "Deployment",
+            "message": "Deployment.apps \"grafana\" is invalid: spec.template.spec.containers[0].image: Required value",
+            "name": "grafana",
+            "namespace": "monitoring"
+          }
+        ],
+        "finishedAt": 1767323045000,
+        "initiatedBy": "automated",
+        "message": "one or more objects failed to apply, reason: Deployment.apps \"grafana\" is invalid: spec.template.spec.containers[0].image: Required value",
+        "phase": "Failed",
+        "retryCount": 5,
+        "revision": "8.6.0",
+        "revisionUrl": "",
+        "startedAt": 1767323045000,
+        "total": 4,
+        "wave": 0,
+        "waves": [
+          0
+        ]
+      },
+      "owner": {
+        "kind": "ApplicationSet",
+        "name": "infra"
+      },
+      "project": "infra",
+      "reconciledAt": 1767323045000,
+      "refreshing": "",
+      "resources": [
+        {
+          "group": "",
+          "health": "",
+          "healthMessage": "",
+          "hook": false,
+          "kind": "Secret",
+          "name": "grafana",
+          "namespace": "monitoring",
+          "prune": false,
+          "sync": "Synced",
+          "syncResult": "Synced",
+          "wave": 0
+        },
+        {
+          "group": "",
+          "health": "",
+          "healthMessage": "",
+          "hook": false,
+          "kind": "ConfigMap",
+          "name": "grafana",
+          "namespace": "monitoring",
+          "prune": false,
+          "sync": "Synced",
+          "syncResult": "Synced",
+          "wave": 0
+        },
+        {
+          "group": "",
+          "health": "Healthy",
+          "healthMessage": "",
+          "hook": false,
+          "kind": "Service",
+          "name": "grafana",
+          "namespace": "monitoring",
+          "prune": false,
+          "sync": "Synced",
+          "syncResult": "Synced",
+          "wave": 0
+        }
+      ],
+      "revision": "8.5.2",
+      "revisionUrl": "",
+      "sources": [
+        {
+          "chart": "grafana",
+          "path": "",
+          "repo": "https://grafana.github.io/helm-charts",
+          "repoUrl": "",
+          "targetRevision": "8.6.0"
+        }
+      ],
+      "sync": "OutOfSync",
+      "syncOptions": [
+        "ServerSideApply=true"
+      ],
+      "unhealthyPods": []
+    },
+    {
+      "autoSync": {
+        "enabled": true,
+        "prune": true,
+        "selfHeal": false
+      },
+      "conditions": [],
+      "destination": {
+        "name": "",
+        "namespace": "longhorn-system",
+        "server": "https://kubernetes.default.svc"
+      },
+      "externalURLs": [],
+      "freeze": {
+        "byIchor": false,
+        "manualSync": false,
+        "project": "infra",
+        "until": 1767323045000,
+        "windows": [
+          "40358be7485b"
+        ]
+      },
+      "health": "Progressing",
+      "healthMessage": "Waiting for rollout to finish: 1 of 3 updated pods are available",
+      "history": [
+        {
+          "chart": "longhorn",
+          "deployedAt": 1767323045000,
+          "id": 18,
+          "initiatedBy": "automated",
+          "revision": "1.12.0",
+          "targetRevision": "1.12.0",
+          "url": ""
+        },
+        {
+          "chart": "longhorn",
+          "deployedAt": 1767323045000,
+          "id": 17,
+          "initiatedBy": "automated",
+          "revision": "1.11.2",
+          "targetRevision": "1.11.2",
+          "url": ""
+        }
+      ],
+      "icon": "longhorn",
+      "images": [
+        "longhornio/longhorn-manager:v1.12.0",
+        "longhornio/longhorn-ui:v1.12.0"
+      ],
+      "level": "warning",
+      "name": "longhorn",
+      "namespace": "argocd",
+      "operation": {
+        "done": 5,
+        "dryRun": false,
+        "failed": [],
+        "finishedAt": 0,
+        "initiatedBy": "automated",
+        "message": "waiting for healthy state of apps/DaemonSet/longhorn-manager",
+        "phase": "Running",
+        "retryCount": 0,
+        "revision": "1.12.1",
+        "revisionUrl": "",
+        "startedAt": 1767323045000,
+        "total": 9,
+        "wave": 1,
+        "waves": [
+          -1,
+          0,
+          1
+        ]
+      },
+      "owner": {
+        "kind": "ApplicationSet",
+        "name": "infra"
+      },
+      "project": "infra",
+      "reconciledAt": 1767323045000,
+      "refreshing": "",
+      "resources": [
+        {
+          "group": "apiextensions.k8s.io",
+          "health": "",
+          "healthMessage": "",
+          "hook": false,
+          "kind": "CustomResourceDefinition",
+          "name": "volumes.longhorn.io",
+          "namespace": "",
+          "prune": false,
+          "sync": "Synced",
+          "syncResult": "Synced",
+          "wave": -1
+        },
+        {
+          "group": "apiextensions.k8s.io",
+          "health": "",
+          "healthMessage": "",
+          "hook": false,
+          "kind": "CustomResourceDefinition",
+          "name": "engines.longhorn.io",
+          "namespace": "",
+          "prune": false,
+          "sync": "Synced",
+          "syncResult": "Synced",
+          "wave": -1
+        },
+        {
+          "group": "",
+          "health": "",
+          "healthMessage": "",
+          "hook": false,
+          "kind": "ServiceAccount",
+          "name": "longhorn-service-account",
+          "namespace": "longhorn-system",
+          "prune": false,
+          "sync": "Synced",
+          "syncResult": "Synced",
+          "wave": 0
+        }
+      ],
+      "revision": "1.12.0",
+      "revisionUrl": "",
+      "sources": [
+        {
+          "chart": "longhorn",
+          "path": "",
+          "repo": "https://charts.longhorn.io",
+          "repoUrl": "",
+          "targetRevision": "1.12.1"
+        }
+      ],
+      "sync": "OutOfSync",
+      "syncOptions": [
+        "ServerSideApply=true"
+      ],
+      "unhealthyPods": []
+    }
+  ],
+  "installed": true,
+  "projects": [
+    {
+      "description": "Self-hosted applications",
+      "managedBy": "",
+      "managedServerSide": false,
+      "name": "apps",
+      "namespace": "argocd",
+      "syncWindows": 2,
+      "windows": [
+        {
+          "active": true,
+          "applications": [],
+          "apps": 2,
+          "clusters": [],
+          "duration": "61m",
+          "end": 1767323045000,
+          "error": "",
+          "ichor": {
+            "createdAt": 1767323045000,
+            "expired": false,
+            "expiresAt": 1767323045000,
+            "reason": "hotfix: worker memory limit"
+          },
+          "id": "51cd7204b6ff",
+          "kind": "deny",
+          "manualSync": true,
+          "namespaces": [
+            "demo"
+          ],
+          "schedule": "42 2 2 1 *",
+          "start": 1767323045000,
+          "timeZone": "UTC"
+        },
+        {
+          "active": false,
+          "applications": [
+            "nightly-reports"
+          ],
+          "apps": 1,
+          "clusters": [],
+          "duration": "31m",
+          "end": 1767323045000,
+          "error": "",
+          "ichor": {
+            "createdAt": 1767323045000,
+            "expired": true,
+            "expiresAt": 1767323045000,
+            "reason": ""
+          },
+          "id": "e3c3dee76fb4",
+          "kind": "deny",
+          "manualSync": true,
+          "namespaces": [],
+          "schedule": "4 23 1 1 *",
+          "start": 1767323045000,
+          "timeZone": "UTC"
+        }
+      ]
+    },
+    {
+      "description": "Cluster infrastructure",
+      "managedBy": "",
+      "managedServerSide": false,
+      "name": "infra",
+      "namespace": "argocd",
+      "syncWindows": 1,
+      "windows": [
+        {
+          "active": true,
+          "applications": [
+            "*"
+          ],
+          "apps": 5,
+          "clusters": [],
+          "duration": "8h",
+          "end": 1767323045000,
+          "error": "",
+          "ichor": null,
+          "id": "40358be7485b",
+          "kind": "deny",
+          "manualSync": false,
+          "namespaces": [],
+          "schedule": "0 22 * * *",
+          "start": 1767323045000,
+          "timeZone": ""
+        }
+      ]
+    }
+  ],
+  "version": "v3.4.5"
+}

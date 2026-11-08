@@ -207,7 +207,7 @@ func TestCapturePairRefusesBadTargets(t *testing.T) {
 	}
 }
 
-func TestCapturePairDemoIsRefused(t *testing.T) {
+func TestCapturePairDemoCapturesBothNodes(t *testing.T) {
 	cfg, err := DemoConfig()
 	if err != nil {
 		t.Fatal(err)
@@ -216,10 +216,10 @@ func TestCapturePairDemoIsRefused(t *testing.T) {
 	nodes := demoNodes()
 	ev := newPairEvents()
 
-	StartPacketCapturePair(cfg, "", nodes[0].Node+","+nodes[1].Node, "eth0", "", false, 0, 5, 0, filepath.Join(t.TempDir(), "x.pcapng"), ev)
+	StartPacketCapturePair(cfg, "", nodes[0].Node+","+nodes[1].Node, "eth0", "", false, 0, 1, 0, filepath.Join(t.TempDir(), "x.pcapng"), ev)
 	ev.wait(t)
 
-	if ev.path != "" || ev.errText == "" {
+	if ev.path == "" || ev.errText != "" {
 		t.Errorf("demo: path=%q err=%q", ev.path, ev.errText)
 	}
 }

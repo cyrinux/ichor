@@ -1,7 +1,8 @@
 import Foundation
 
 /// An action a screen's toolbar offers. Raw values are the Android enum's names, the saved form.
-public protocol BarAction: RawRepresentable, CaseIterable, Sendable, Hashable, Identifiable where RawValue == String, AllCases == [Self] {
+public protocol BarAction: RawRepresentable, CaseIterable, Sendable, Hashable, Identifiable
+where RawValue == String, AllCases == [Self] {
     /// The `@AppStorage` key the screen's encoded bar is kept under.
     static var barStorageKey: String { get }
     /// How many of `allCases` (in that order) are icons by default; the rest are in the menu.
@@ -30,8 +31,9 @@ public enum OverviewAction: String, BarAction {
     public static let defaultIcons = 4
 }
 
-/// What the Kubernetes screen's toolbar offers: the screens it leads to, its share link and the
-/// API address. Raw values are Android's `KubernetesAction` names.
+/// What the Kubernetes screen's toolbar offers: the screens it leads to and its share link (the
+/// API address is set from the cluster's row now; a saved bar drops it). Raw values are Android's
+/// `KubernetesAction` names.
 public enum KubernetesAction: String, BarAction {
     case checkup = "CHECKUP"
     case networkPolicies = "NETWORK_POLICIES"
@@ -40,16 +42,80 @@ public enum KubernetesAction: String, BarAction {
     case flows = "FLOWS"
     case resources = "RESOURCES"
     case helm = "HELM"
+    /// Volumes and claims, services and jobs, as the Kubernetes home lists them.
+    case storage = "STORAGE"
+    case services = "SERVICES"
+    case jobs = "JOBS"
     /// The cluster's events kept live.
     case events = "EVENTS"
-    case apiAddress = "API_ADDRESS"
-    /// Free room per node, workloads by priority, and what losing a node costs; last, so the
-    /// default icons stay.
+    /// Kyverno's admission policies (the screens' `policies` are the network ones).
+    case admissionPolicies = "POLICIES"
+    /// What scales the cluster: HPAs, KEDA, VPA, Karpenter.
+    case autoscaling = "AUTOSCALING"
+    /// KubeVirt (and Harvester) virtual machines. Clean up dead pods was here: it is a control of
+    /// the Pods tab now, and a saved bar drops it.
+    case virtualMachines = "VIRTUAL_MACHINES"
+    /// Crossplane, the Tailscale operator, Argo Rollouts and Cluster API / Sidero Metal, each
+    /// offered when the cluster runs it (as on the Kubernetes home); last, so the saved bars keep theirs.
+    case crossplane = "CROSSPLANE"
+    case tailscale = "TAILSCALE"
+    case argoRollouts = "ARGO_ROLLOUTS"
+    case clusterLifecycle = "CLUSTER_LIFECYCLE"
+    /// Data services, and the systems the Kubernetes home files in another family (cert-manager,
+    /// CAST AI), each offered when the cluster runs it; last, so the saved bars keep theirs.
+    /// Sealed Secrets and ExternalDNS are plugins now: the Security and Networking families open
+    /// them, and a saved bar drops their entries.
+    case dataServices = "DATA_SERVICES"
+    case certManager = "CERT_MANAGER"
+    case castai = "CASTAI"
+    /// Free room per node, workloads by priority, and what losing a node costs; last. The order
+    /// is Android's, name for name (KubernetesBarTests.testTheSameActionsAsAndroid).
     case capacity = "CAPACITY"
+
+    /// Which section of the menu the action is in: a property of the action, whatever the saved bar.
+    public var group: KubernetesActionGroup {
+        switch self {
+        case .resources, .helm, .storage, .services, .jobs, .events, .share: .explore
+        case .checkup, .capacity, .apiHealth, .networkPolicies, .flows: .health
+        case .admissionPolicies, .autoscaling, .virtualMachines, .crossplane, .tailscale, .argoRollouts,
+            .clusterLifecycle, .dataServices, .certManager, .castai:
+            .installed
+        }
+    }
+
+    /// The system read with Data services an action opens alone; nil for the others.
+    public var dataServiceKind: DataServiceKind? {
+        switch self {
+        case .certManager: .certManager
+        case .castai: .castai
+        default: nil
+        }
+    }
 
     public var id: String { rawValue }
     public static let barStorageKey = "kubernetes.bar"
     public static let defaultIcons = 3
+}
+
+/// The sections of the Kubernetes screen's menu, in their order.
+public enum KubernetesActionGroup: CaseIterable, Sendable {
+    case explore, health, installed
+}
+
+/// One section of the Kubernetes screen's menu and its actions, in the saved order.
+public struct KubernetesMenuSection: Identifiable, Equatable, Sendable {
+    public let group: KubernetesActionGroup
+    public let actions: [KubernetesAction]
+    public var id: KubernetesActionGroup { group }
+}
+
+/// `menu` in sections, in section order; inside a section the saved order holds. Empty
+/// sections are left out.
+public func groupedMenu(_ menu: [KubernetesAction]) -> [KubernetesMenuSection] {
+    KubernetesActionGroup.allCases.compactMap { group in
+        let actions = menu.filter { $0.group == group }
+        return actions.isEmpty ? nil : KubernetesMenuSection(group: group, actions: actions)
+    }
 }
 
 /// The screens the Kubernetes home's toolbar leads to (a cluster added from a kubeconfig): the
@@ -139,18 +205,23 @@ public struct ActionBar<Action: BarAction>: Equatable, Sendable {
     public func toMenu(_ action: Action) -> ActionBar {
         guard icons.contains(action) else { return self }
         let rest = order.filter { $0 != action }
-        return ActionBar(order: Array(rest.prefix(iconCount - 1)) + [action] + rest.dropFirst(iconCount - 1), iconCount: iconCount - 1)
+        return ActionBar(
+            order: Array(rest.prefix(iconCount - 1)) + [action] + rest.dropFirst(iconCount - 1),
+            iconCount: iconCount - 1)
     }
 
     /// Shows a menu action as the last icon.
     public func toBar(_ action: Action) -> ActionBar {
         guard menu.contains(action) else { return self }
         let rest = order.filter { $0 != action }
-        return ActionBar(order: Array(rest.prefix(iconCount)) + [action] + rest.dropFirst(iconCount), iconCount: iconCount + 1)
+        return ActionBar(
+            order: Array(rest.prefix(iconCount)) + [action] + rest.dropFirst(iconCount), iconCount: iconCount + 1)
     }
 
     /// The editor's rows: the icons, the menu line, then the menu.
-    public var slots: [ActionBarSlot<Action>] { icons.map(ActionBarSlot<Action>.action) + [.menuLine] + menu.map(ActionBarSlot<Action>.action) }
+    public var slots: [ActionBarSlot<Action>] {
+        icons.map(ActionBarSlot<Action>.action) + [.menuLine] + menu.map(ActionBarSlot<Action>.action)
+    }
 
     /// The same as a SwiftUI `onMove` over `slots`: an action dragged across the menu line
     /// moves between the icons and the menu. The line itself does not move.
@@ -167,13 +238,15 @@ public struct ActionBar<Action: BarAction>: Equatable, Sendable {
 
     /// "HEALTH,EVENTS|METRICS,SETTINGS": the icons, then the menu after the bar.
     public var encoded: String {
-        icons.map(\.rawValue).joined(separator: ",") + String(Self.separator) + menu.map(\.rawValue).joined(separator: ",")
+        icons.map(\.rawValue).joined(separator: ",") + String(Self.separator)
+            + menu.map(\.rawValue).joined(separator: ",")
     }
 
     /// Reads `encoded`'s form; unknown or repeated names are skipped, missing actions go last in the menu.
     public static func parse(_ text: String?) -> ActionBar {
         guard let text, !text.trimmingCharacters(in: .whitespaces).isEmpty,
-              let cut = text.firstIndex(of: separator) else { return ActionBar() }
+            let cut = text.firstIndex(of: separator)
+        else { return ActionBar() }
         let icons = unique(names(text[..<cut]))
         let menu = unique(names(text[text.index(after: cut)...]).filter { !icons.contains($0) })
         let known = icons + menu

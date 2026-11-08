@@ -25,12 +25,17 @@ object AppLocale {
         AppLanguage("uk", "Українська"),
         AppLanguage("de", "Deutsch"),
         AppLanguage("it", "Italiano"),
+        // The region picks values-zh-rCN (Simplified Chinese).
+        AppLanguage("zh-CN", "简体中文"),
+        AppLanguage("ru", "Русский"),
+        AppLanguage("pt-BR", "Português (Brasil)"),
+        AppLanguage("ja", "日本語"),
     )
 
     /** Normalizes a stored or system tag to a supported one, or [SYSTEM]. */
     fun normalize(tag: String?): String {
         val language = tag?.substringBefore(',')?.let { Locale.forLanguageTag(it).language }.orEmpty()
-        return languages.firstOrNull { it.tag == language }?.tag ?: SYSTEM
+        return languages.firstOrNull { Locale.forLanguageTag(it.tag).language == language }?.tag ?: SYSTEM
     }
 
     /** Whether Android manages per-app languages itself (API 33+). */
@@ -54,6 +59,15 @@ object AppLocale {
         if (!systemManaged) return null
         val locales = context.getSystemService(LocaleManager::class.java).applicationLocales
         return if (locales.isEmpty) SYSTEM else normalize(locales.toLanguageTags())
+    }
+
+    /**
+     * The language the app shows ("fr"), for what Go translates outside any screen (the
+     * background monitor's plugin findings): the user's choice, else the system's.
+     */
+    fun language(context: Context): String {
+        val chosen = systemChoice(context) ?: UiPreferences.storedLanguage(context)
+        return if (chosen == SYSTEM) Locale.getDefault().language else Locale.forLanguageTag(chosen).language
     }
 
     /**

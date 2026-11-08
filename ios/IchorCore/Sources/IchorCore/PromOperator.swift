@@ -68,7 +68,9 @@ public struct PromRule: Decodable, Equatable, Sendable {
         lastEvaluation = try c.field(.lastEvaluation, 0)
     }
 
-    private enum CodingKeys: String, CodingKey { case name, type, state, health, lastError, query, severity, duration, alerts, lastEvaluation }
+    private enum CodingKeys: String, CodingKey {
+        case name, type, state, health, lastError, query, severity, duration, alerts, lastEvaluation
+    }
 }
 
 /// A rule group, troubled first; `ruleNamespace`/`ruleName` name its PrometheusRule ("" when unknown).
@@ -105,7 +107,8 @@ public struct PromRuleGroup: Decodable, Equatable, Sendable, Identifiable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case name, file, ruleNamespace, ruleName, interval, evaluationTime, lastEvaluation, lastError, firing, pending, errors, rules
+        case name, file, ruleNamespace, ruleName, interval, evaluationTime, lastEvaluation, lastError, firing, pending,
+            errors, rules
     }
 
     public var inTrouble: Bool { errors > 0 || firing > 0 || pending > 0 }
@@ -113,8 +116,9 @@ public struct PromRuleGroup: Decodable, Equatable, Sendable, Identifiable {
     /// The PrometheusRule the group comes from, nil when Go could not tell.
     public var ruleLink: KubeObjectLink? {
         guard !ruleNamespace.isEmpty, !ruleName.isEmpty else { return nil }
-        return KubeObjectLink(resource: KubeAPIResource(group: promOperatorGroup, resource: "prometheusrules", kind: "PrometheusRule"),
-                              namespace: ruleNamespace, name: ruleName)
+        return KubeObjectLink(
+            resource: KubeAPIResource(group: promOperatorGroup, resource: "prometheusrules", kind: "PrometheusRule"),
+            namespace: ruleNamespace, name: ruleName)
     }
 }
 
@@ -191,7 +195,9 @@ public struct PromDownTarget: Decodable, Equatable, Sendable, Identifiable {
         instance = try c.field(.instance, "")
     }
 
-    private enum CodingKeys: String, CodingKey { case scrapeUrl, lastError, lastScrape, lastScrapeDuration, job, namespace, service, pod, instance }
+    private enum CodingKeys: String, CodingKey {
+        case scrapeUrl, lastError, lastScrape, lastScrapeDuration, job, namespace, service, pod, instance
+    }
 
     /// The pod it scrapes, nil when the target has none (kubelet, API server).
     public var podLink: KubeObjectLink? {
@@ -202,7 +208,8 @@ public struct PromDownTarget: Decodable, Equatable, Sendable, Identifiable {
     /// The Service it scrapes through, nil when unknown.
     public var serviceLink: KubeObjectLink? {
         guard !namespace.isEmpty, !service.isEmpty else { return nil }
-        return KubeObjectLink(resource: KubeAPIResource(resource: "services", kind: "Service"), namespace: namespace, name: service)
+        return KubeObjectLink(
+            resource: KubeAPIResource(resource: "services", kind: "Service"), namespace: namespace, name: service)
     }
 
     /// Where a tap goes: the pod, else the Service, else (`pool`) the monitor.
@@ -237,7 +244,9 @@ public struct PromScrapePool: Decodable, Equatable, Sendable, Identifiable {
         targets = try c.field(.targets, [])
     }
 
-    private enum CodingKeys: String, CodingKey { case pool, kind, namespace, name, endpoint, up, down, unknown, targets }
+    private enum CodingKeys: String, CodingKey {
+        case pool, kind, namespace, name, endpoint, up, down, unknown, targets
+    }
 
     /// "ServiceMonitor demo/hello-ichor", or the job name for a pool of the configuration.
     public var label: String { kind.isEmpty || name.isEmpty ? pool : "\(kind) \(namespace)/\(name)" }
@@ -247,10 +256,13 @@ public struct PromScrapePool: Decodable, Equatable, Sendable, Identifiable {
         guard !namespace.isEmpty, !name.isEmpty else { return nil }
         let resource: KubeAPIResource
         switch kind {
-        case "ServiceMonitor": resource = KubeAPIResource(group: promOperatorGroup, resource: "servicemonitors", kind: kind)
+        case "ServiceMonitor":
+            resource = KubeAPIResource(group: promOperatorGroup, resource: "servicemonitors", kind: kind)
         case "PodMonitor": resource = KubeAPIResource(group: promOperatorGroup, resource: "podmonitors", kind: kind)
         case "Probe": resource = KubeAPIResource(group: promOperatorGroup, resource: "probes", kind: kind)
-        case "ScrapeConfig": resource = KubeAPIResource(group: promOperatorGroup, version: "v1alpha1", resource: "scrapeconfigs", kind: kind)
+        case "ScrapeConfig":
+            resource = KubeAPIResource(
+                group: promOperatorGroup, version: "v1alpha1", resource: "scrapeconfigs", kind: kind)
         default: return nil
         }
         return KubeObjectLink(resource: resource, namespace: namespace, name: name)
@@ -340,7 +352,9 @@ public struct PromOperatorServer: Decodable, Equatable, Sendable, Identifiable {
         conditions = try c.field(.conditions, [])
     }
 
-    private enum CodingKeys: String, CodingKey { case namespace, name, version, replicas, shards, desired, available, paused, health, conditions }
+    private enum CodingKeys: String, CodingKey {
+        case namespace, name, version, replicas, shards, desired, available, paused, health, conditions
+    }
 }
 
 /// The answer of PromOperatorStatus; not `installed` when the cluster has no monitoring.coreos.com.
@@ -380,12 +394,14 @@ public struct PromOperatorStatus: Decodable, Equatable, Sendable {
 
     /// Each server's object in the browser.
     public static func link(prometheus server: PromOperatorServer) -> KubeObjectLink {
-        KubeObjectLink(resource: KubeAPIResource(group: promOperatorGroup, resource: "prometheuses", kind: "Prometheus"),
-                       namespace: server.namespace, name: server.name)
+        KubeObjectLink(
+            resource: KubeAPIResource(group: promOperatorGroup, resource: "prometheuses", kind: "Prometheus"),
+            namespace: server.namespace, name: server.name)
     }
 
     public static func link(alertmanager server: PromOperatorServer) -> KubeObjectLink {
-        KubeObjectLink(resource: KubeAPIResource(group: promOperatorGroup, resource: "alertmanagers", kind: "Alertmanager"),
-                       namespace: server.namespace, name: server.name)
+        KubeObjectLink(
+            resource: KubeAPIResource(group: promOperatorGroup, resource: "alertmanagers", kind: "Alertmanager"),
+            namespace: server.namespace, name: server.name)
     }
 }

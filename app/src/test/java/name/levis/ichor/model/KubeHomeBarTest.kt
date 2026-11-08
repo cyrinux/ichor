@@ -3,6 +3,8 @@ package name.levis.ichor.model
 import name.levis.ichor.model.KubeHomeAction.ALERTS
 import name.levis.ichor.model.KubeHomeAction.API_HEALTH
 import name.levis.ichor.model.KubeHomeAction.CHECKUP
+import name.levis.ichor.model.KubeHomeAction.CLUSTER_LIFECYCLE
+import name.levis.ichor.model.KubeHomeAction.CROSSPLANE
 import name.levis.ichor.model.KubeHomeAction.DATA_SERVICES
 import name.levis.ichor.model.KubeHomeAction.GITOPS
 import name.levis.ichor.model.KubeHomeAction.HELM
@@ -10,7 +12,9 @@ import name.levis.ichor.model.KubeHomeAction.METRICS
 import name.levis.ichor.model.KubeHomeAction.NETWORK_POLICIES
 import name.levis.ichor.model.KubeHomeAction.RESOURCES
 import name.levis.ichor.model.KubeHomeAction.SEARCH
+import name.levis.ichor.model.KubeHomeAction.REPOSITORY
 import name.levis.ichor.model.KubeHomeAction.SETTINGS
+import name.levis.ichor.model.KubeHomeAction.TAILSCALE
 import name.levis.ichor.model.KubeHomeAction.WORKLOADS
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -20,17 +24,17 @@ import org.junit.Test
 class KubeHomeBarTest {
 
     @Test
-    fun defaultKeepsFourIconsWithGitOps() {
+    fun defaultKeepsTwoIconsAndEveryOtherActionInTheMenu() {
         val bar = KubeHomeAction.bar.default
-        assertEquals(listOf(WORKLOADS, RESOURCES, GITOPS, METRICS), bar.icons)
-        assertEquals(listOf(ALERTS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SEARCH, SETTINGS), bar.menu)
+        assertEquals(listOf(WORKLOADS, RESOURCES), bar.icons)
+        assertEquals(listOf(GITOPS, METRICS, ALERTS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SEARCH, SETTINGS, CROSSPLANE, TAILSCALE, CLUSTER_LIFECYCLE, REPOSITORY), bar.menu)
         assertTrue(bar.isDefault)
     }
 
     @Test
     fun encodeRoundTrips() {
         val bar = KubeHomeAction.bar.default.toBar(DATA_SERVICES).toMenu(RESOURCES)
-        assertEquals("WORKLOADS,GITOPS,METRICS,DATA_SERVICES|RESOURCES,ALERTS,HELM,CHECKUP,API_HEALTH,NETWORK_POLICIES,SEARCH,SETTINGS", bar.encode())
+        assertEquals("WORKLOADS,DATA_SERVICES|RESOURCES,GITOPS,METRICS,ALERTS,HELM,CHECKUP,API_HEALTH,NETWORK_POLICIES,SEARCH,SETTINGS,CROSSPLANE,TAILSCALE,CLUSTER_LIFECYCLE,REPOSITORY", bar.encode())
         assertEquals(bar, KubeHomeAction.bar.parse(bar.encode()))
         assertFalse(bar.isDefault)
     }
@@ -39,8 +43,15 @@ class KubeHomeBarTest {
     fun aBarSavedBeforeGitOpsKeepsItsArrangement() {
         val bar = KubeHomeAction.bar.parse("WORKLOADS,RESOURCES,METRICS|HELM,DATA_SERVICES,CHECKUP,API_HEALTH,NETWORK_POLICIES,SETTINGS")
         assertEquals(listOf(WORKLOADS, RESOURCES, METRICS), bar.icons)
-        assertEquals(listOf(HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SETTINGS, GITOPS, ALERTS, SEARCH), bar.menu)
+        assertEquals(listOf(HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SETTINGS, GITOPS, ALERTS, SEARCH, CROSSPLANE, TAILSCALE, CLUSTER_LIFECYCLE, REPOSITORY), bar.menu)
         assertFalse(bar.isDefault)
+    }
+
+    @Test
+    fun theMenuReadsInSectionsWithEveryAction() {
+        val sections = groupedHomeMenu(KubeHomeAction.bar.default.menu) { it.group }
+        assertEquals(HomeActionGroup.entries, sections.map { it.first })
+        assertEquals(KubeHomeAction.bar.default.menu.toSet(), sections.flatMap { it.second }.toSet())
     }
 
     @Test

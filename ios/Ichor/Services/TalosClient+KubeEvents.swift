@@ -24,7 +24,8 @@ extension TalosClient {
                     continuation.finish()
                 }
             )
-            let run = IchorgoStartKubeEvents(kubeConfig, kubeContext, kubeAPIServer, namespace ?? "", warningsOnly, bridge)
+            let run = IchorgoStartKubeEvents(
+                kubeConfig, kubeContext, kubeAPIServer, namespace ?? "", warningsOnly, bridge)
             return BridgedRun(bridge) { run?.cancel() }
         }
     }
@@ -32,26 +33,32 @@ extension TalosClient {
 
 /// Bridges the Go listener (called from Go goroutines) to the stream: each JSON decoded, one
 /// that does not decode dropped.
-private final class KubeEventsBridge: NSObject, IchorgoKubeEventsListenerProtocol, @unchecked Sendable {
+private final class KubeEventsBridge: NSObject, IchorgoKubeEventsListenerProtocol, Sendable {
     private let batch: @Sendable (LiveKubeEventsBatch) -> Void
     private let status: @Sendable (LiveKubeEventsStatus) -> Void
     private let done: @Sendable (String?) -> Void
 
-    init(batch: @escaping @Sendable (LiveKubeEventsBatch) -> Void,
-         status: @escaping @Sendable (LiveKubeEventsStatus) -> Void,
-         done: @escaping @Sendable (String?) -> Void) {
+    init(
+        batch: @escaping @Sendable (LiveKubeEventsBatch) -> Void,
+        status: @escaping @Sendable (LiveKubeEventsStatus) -> Void,
+        done: @escaping @Sendable (String?) -> Void
+    ) {
         self.batch = batch
         self.status = status
         self.done = done
     }
 
     func onEvents(_ batchJSON: String?) {
-        guard let batchJSON, let decoded = try? TalosJSON.decode(LiveKubeEventsBatch.self, from: batchJSON) else { return }
+        guard let batchJSON, let decoded = try? TalosJSON.decode(LiveKubeEventsBatch.self, from: batchJSON) else {
+            return
+        }
         batch(decoded)
     }
 
     func onStatus(_ stateJSON: String?) {
-        guard let stateJSON, let decoded = try? TalosJSON.decode(LiveKubeEventsStatus.self, from: stateJSON) else { return }
+        guard let stateJSON, let decoded = try? TalosJSON.decode(LiveKubeEventsStatus.self, from: stateJSON) else {
+            return
+        }
         status(decoded)
     }
 

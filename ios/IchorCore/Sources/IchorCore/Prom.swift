@@ -26,9 +26,12 @@ public struct PromSource: Codable, Equatable, Hashable, Sendable, CustomStringCo
     public var insecureSkipVerify: Bool
     public var tenant: String
 
-    public init(mode: String = PromSource.proxy, kind: String = "", namespace: String = "", service: String = "", port: Int = 0,
-                pathPrefix: String = "", url: String = "", auth: String = PromSource.authNone, username: String = "", secret: String = "",
-                ca: String = "", insecureSkipVerify: Bool = false, tenant: String = "") {
+    public init(
+        mode: String = PromSource.proxy, kind: String = "", namespace: String = "", service: String = "", port: Int = 0,
+        pathPrefix: String = "", url: String = "", auth: String = PromSource.authNone, username: String = "",
+        secret: String = "",
+        ca: String = "", insecureSkipVerify: Bool = false, tenant: String = ""
+    ) {
         self.mode = mode
         self.kind = kind
         self.namespace = namespace
@@ -47,15 +50,18 @@ public struct PromSource: Codable, Equatable, Hashable, Sendable, CustomStringCo
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
-            mode: try c.field(.mode, PromSource.proxy), kind: try c.field(.kind, ""), namespace: try c.field(.namespace, ""),
+            mode: try c.field(.mode, PromSource.proxy), kind: try c.field(.kind, ""),
+            namespace: try c.field(.namespace, ""),
             service: try c.field(.service, ""), port: try c.field(.port, 0), pathPrefix: try c.field(.pathPrefix, ""),
             url: try c.field(.url, ""), auth: try c.field(.auth, ""), username: try c.field(.username, ""),
-            secret: try c.field(.secret, ""), ca: try c.field(.ca, ""), insecureSkipVerify: try c.field(.insecureSkipVerify, false),
+            secret: try c.field(.secret, ""), ca: try c.field(.ca, ""),
+            insecureSkipVerify: try c.field(.insecureSkipVerify, false),
             tenant: try c.field(.tenant, ""))
     }
 
     private enum CodingKeys: String, CodingKey {
-        case mode, kind, namespace, service, port, pathPrefix, url, auth, username, secret, ca, insecureSkipVerify, tenant
+        case mode, kind, namespace, service, port, pathPrefix, url, auth, username, secret, ca, insecureSkipVerify,
+            tenant
     }
 
     /// "monitoring/prometheus-operated:9090" or the URL.
@@ -69,7 +75,9 @@ public struct PromSource: Codable, Equatable, Hashable, Sendable, CustomStringCo
         var s = self
         s.mode = mode
         if mode == PromSource.proxy {
-            (s.url, s.auth, s.username, s.secret, s.ca, s.insecureSkipVerify) = ("", PromSource.authNone, "", "", "", false)
+            (s.url, s.auth, s.username, s.secret, s.ca, s.insecureSkipVerify) = (
+                "", PromSource.authNone, "", "", "", false
+            )
         } else {
             (s.namespace, s.service, s.port, s.pathPrefix, s.kind) = ("", "", 0, "", "")
         }
@@ -111,7 +119,10 @@ public struct PromResult: Decodable, Equatable, Sendable {
     public let truncated: Bool
     public let total: Int
 
-    public init(resultType: String = "", times: [Int64] = [], series: [PromSeries] = [], warnings: [String] = [], truncated: Bool = false, total: Int = 0) {
+    public init(
+        resultType: String = "", times: [Int64] = [], series: [PromSeries] = [], warnings: [String] = [],
+        truncated: Bool = false, total: Int = 0
+    ) {
         self.resultType = resultType
         self.times = times
         self.series = series
@@ -122,8 +133,10 @@ public struct PromResult: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(resultType: try c.field(.resultType, ""), times: try c.field(.times, []), series: try c.field(.series, []),
-                  warnings: try c.field(.warnings, []), truncated: try c.field(.truncated, false), total: try c.field(.total, 0))
+        self.init(
+            resultType: try c.field(.resultType, ""), times: try c.field(.times, []), series: try c.field(.series, []),
+            warnings: try c.field(.warnings, []), truncated: try c.field(.truncated, false),
+            total: try c.field(.total, 0))
     }
 
     private enum CodingKeys: String, CodingKey { case resultType, times, series, warnings, truncated, total }
@@ -191,8 +204,9 @@ public struct PromPanel: Codable, Equatable, Hashable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(id: try c.field(.id, ""), title: try c.field(.title, ""), query: try c.field(.query, ""),
-                  unit: try c.field(.unit, ""), legend: try c.field(.legend, ""))
+        self.init(
+            id: try c.field(.id, ""), title: try c.field(.title, ""), query: try c.field(.query, ""),
+            unit: try c.field(.unit, ""), legend: try c.field(.legend, ""))
     }
 
     private enum CodingKeys: String, CodingKey { case id, title, query, unit, legend }
@@ -230,7 +244,9 @@ public struct MetricsConfig: Codable, Equatable, Sendable {
 
     /// The panel `id` moved by `delta` places (−1 up, +1 down); unchanged at the ends.
     public func moving(_ id: String, by delta: Int) -> MetricsConfig {
-        guard let from = panels.firstIndex(where: { $0.id == id }), panels.indices.contains(from + delta) else { return self }
+        guard let from = panels.firstIndex(where: { $0.id == id }), panels.indices.contains(from + delta) else {
+            return self
+        }
         var copy = self
         copy.panels.swapAt(from, from + delta)
         return copy

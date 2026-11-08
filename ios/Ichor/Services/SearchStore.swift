@@ -19,12 +19,20 @@ enum SearchRecents {
 @MainActor
 final class SearchStore {
     private(set) var results: SearchResults = .empty
+    /// The active cluster's screens that match the query (see screenCatalog).
+    private(set) var screens: ScreenMatches = .empty
+    /// The nodes the active cluster's overview lists, for its node screens.
+    private(set) var nodes: [NodeOverview] = []
+    /// The catalog the screens are ranked over, set by the view.
+    private var catalog: [ScreenEntry] = []
     private(set) var recent: [String] = SearchRecents.load()
     /// The blobs are being read from the phone.
     private(set) var building = true
     private(set) var refreshing = false
     /// What a refresh could not fetch, nil when it all came.
     private(set) var refreshError: String?
+    /// The last refresh read the active cluster: said once it lands, as a failure is.
+    private(set) var refreshed = false
     /// Nothing is known about any cluster (no blob at all).
     private(set) var nothingKnown = false
 
@@ -41,11 +49,20 @@ final class SearchStore {
         let active = model.activeContext
         let extra = activeEntries(model: model)
         let demo = contexts.contains(where: \.demo) ? TalosClient.demoSearchEntries() : []
-        entries = await Task.detached(priority: .userInitiated) {
-            searchEntries(contexts: contexts, activeContext: active, read: { LastKnownStore.read(fingerprint: $0, key: $1) }, active: extra) + demo
-        }.value
+        entries = await offMainActor {
+            searchEntries(
+                contexts: contexts, activeContext: active, read: { LastKnownStore.read(fingerprint: $0, key: $1) },
+                active: extra) + demo
+        }
+        nodes = searchOverviewNodes(entries, context: active)
         nothingKnown = entries.isEmpty
         building = false
+        run(query, debounce: false)
+    }
+
+    /// The active cluster's screens, titles localised: ranked with the query from now on.
+    func setCatalog(_ screens: [ScreenEntry]) {
+        catalog = screens
         run(query, debounce: false)
     }
 
@@ -59,15 +76,22 @@ final class SearchStore {
         task?.cancel()
         guard !text.trimmingCharacters(in: .whitespaces).isEmpty else {
             results = .empty
+            screens = .empty
             return
         }
         let entries = self.entries
+        let catalog = self.catalog
         task = Task {
             if debounce { try? await Task.sleep(for: .milliseconds(150)) }
             guard !Task.isCancelled else { return }
             let ranked = (try? await TalosClient.search(entries: entries, query: text)) ?? .empty
+            var matched = ScreenMatches.empty
+            if !catalog.isEmpty, let found = try? await TalosClient.searchScreens(entries: catalog, query: text) {
+                matched = found
+            }
             guard !Task.isCancelled else { return }
             results = ranked
+            screens = matched
         }
     }
 
@@ -88,13 +112,15 @@ final class SearchStore {
         guard let client = model.client, let context = model.activeSummary, !context.demo else { return }
         refreshing = true
         refreshError = nil
+        refreshed = false
         let cluster = searchCluster(of: context)
         var domains: [LastKnownDomain] = model.activeIsKube ? [] : [.overview]
         if model.allows(.workloads) { domains += [.pods, .workloads, .cronJobs] }
         for domain in domains {
             do {
                 let json = try await client.rawJSON(domain)
-                fetched[domain.key] = SearchEntry(cluster: cluster, context: context.name, key: domain.key, at: Date(), json: json)
+                fetched[domain.key] = SearchEntry(
+                    cluster: cluster, context: context.name, key: domain.key, at: Date(), json: json)
             } catch {
                 refreshError = error.localizedDescription
             }
@@ -105,6 +131,7 @@ final class SearchStore {
             _ = try? await FluxStore.shared.load(with: client, key: model.fluxKey)
         }
         refreshing = false
+        refreshed = refreshError == nil
         await build(model: model)
     }
 
@@ -114,10 +141,12 @@ final class SearchStore {
         let cluster = searchCluster(of: context)
         var out = Array(fetched.values).filter { $0.cluster == cluster }
         if let argo = ArgoCDStore.shared.status(for: model.argoKey), argo.installed {
-            out.append(SearchEntry(cluster: cluster, context: context.name, key: "argocd", at: Date(), json: argo.searchJSON))
+            out.append(
+                SearchEntry(cluster: cluster, context: context.name, key: "argocd", at: Date(), json: argo.searchJSON))
         }
         if let flux = FluxStore.shared.status(for: model.fluxKey), flux.installed {
-            out.append(SearchEntry(cluster: cluster, context: context.name, key: "flux", at: Date(), json: flux.searchJSON))
+            out.append(
+                SearchEntry(cluster: cluster, context: context.name, key: "flux", at: Date(), json: flux.searchJSON))
         }
         return out.sorted { $0.key < $1.key }
     }

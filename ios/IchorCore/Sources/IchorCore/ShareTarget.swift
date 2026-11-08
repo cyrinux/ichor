@@ -10,6 +10,8 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         /// The data services screen, on the tab `kind` names (a catalog id); the cluster checkup;
         /// the Alertmanager alerts; a node's Storage or Hardware screen (`addr`, `host`).
         case data, checkup, alerts, storage, hardware
+        /// The KubeSpan screen, which opens on its map.
+        case kubespan
     }
 
     public var cluster: String
@@ -21,8 +23,10 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
     public var namespace: String
     public var name: String
 
-    public init(cluster: String = "", target: Target, host: String = "", addr: String = "", tab: String = "",
-                kind: String = "", namespace: String = "", name: String = "") {
+    public init(
+        cluster: String = "", target: Target, host: String = "", addr: String = "", tab: String = "",
+        kind: String = "", namespace: String = "", name: String = ""
+    ) {
         self.cluster = cluster
         self.target = target
         self.host = host
@@ -53,7 +57,9 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         if !cluster.isEmpty { try c.encode(cluster, forKey: .cluster) }
         try c.encode(target, forKey: .target)
-        for (key, value) in [(CodingKeys.host, host), (.addr, addr), (.tab, tab), (.kind, kind), (.namespace, namespace), (.name, name)]
+        for (key, value) in [
+            (CodingKeys.host, host), (.addr, addr), (.tab, tab), (.kind, kind), (.namespace, namespace), (.name, name),
+        ]
         where !value.isEmpty {
             try c.encode(value, forKey: key)
         }
@@ -112,6 +118,23 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         target == .data ? DataServiceKind(rawValue: kind) : nil
     }
 
+    /// A `data` link's kind that names a CRD plugin rather than a data services tab: Go's share
+    /// links have no plugin target, and a version that does not know the prefix opens the data
+    /// services screen on its first tab.
+    public static let pluginKindPrefix = "plugin-"
+
+    /// The screen of CRD plugin `id` (a plugin finding's alert).
+    public static func plugin(id: String) -> ShareTarget {
+        ShareTarget(target: .data, kind: pluginKindPrefix + id)
+    }
+
+    /// The plugin a `data` link opens (see plugin(id:)); nil for a data services link.
+    public var pluginID: String? {
+        guard target == .data, kind.hasPrefix(Self.pluginKindPrefix) else { return nil }
+        let id = String(kind.dropFirst(Self.pluginKindPrefix.count))
+        return id.isEmpty ? nil : id
+    }
+
     /// The screen a background alert is about (see evaluate for its keys), a node's hostname read
     /// from `snapshot`; nil when there is none: the Talos certificate alert opens the renewal.
     public static func forAlert(key: String, snapshot: ClusterSnapshot) -> ShareTarget? {
@@ -137,8 +160,13 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
             // "<node>|…": the node's hostname from the issue kept, else from its state.
             let address = storageIssueNode(subject)
             guard !address.isEmpty else { return nil }
+            // A Kubernetes node's disk ("<node>|nodefs", or its trend) has no Storage screen: the node.
+            if snapshot.kube, subject == kubeNodeDiskKey(address) || subject == "\(kubeNodeDiskKey(address)):trend" {
+                return .node(address: address, hostname: address, tab: "")
+            }
             // A trend alert ("<node>|<volume>:trend") names it in its own issue.
-            let kept = storageTrendVolumeKey(subject: subject).flatMap { snapshot.storageTrends[$0] }
+            let kept =
+                storageTrendVolumeKey(subject: subject).flatMap { snapshot.storageTrends[$0] }
                 .map { StorageTrendIssue(value: $0).hostname }
                 ?? snapshot.storageIssues[subject].map { StorageIssue(value: $0).hostname } ?? ""
             return .storage(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept)
@@ -148,7 +176,12 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
             guard !address.isEmpty else { return nil }
             let kept = snapshot.sensorIssues[subject].map { SensorIssue(value: $0).hostname } ?? ""
             return .hardware(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept)
+        case "kubespan": return .screen(.kubespan)
         case "unreachable": return .screen(.cluster)
+        case "plugin":
+            // "plugin:<id>:<finding>:…": the plugin's screen.
+            let id = pluginIDOfFindingKey(key)
+            return id.isEmpty ? nil : .plugin(id: id)
         default: return nil
         }
     }
@@ -171,9 +204,7 @@ extension DataServiceKind {
         let system = alertKey.split(separator: "|", maxSplits: 1).first.map(String.init) ?? ""
         switch system {
         case "cnpg": self = .cnpg
-        case "percona": self = .percona
         case "certmanager": self = .certManager
-        case "ceph": self = .ceph
         default: self.init(rawValue: system)
         }
     }

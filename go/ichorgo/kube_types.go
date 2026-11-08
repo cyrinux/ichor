@@ -1,30 +1,18 @@
 package ichorgo
 
+import "github.com/cyrinux/ichor/go/kube"
+
 // kubeCondition is a status condition as Kubernetes objects and operators report it.
-type kubeCondition struct {
-	Type               string `json:"type"`
-	Status             string `json:"status"`
-	Reason             string `json:"reason"`
-	Message            string `json:"message"`
-	LastTransitionTime string `json:"lastTransitionTime"`
-}
+type kubeCondition = kube.Condition
 
 // kubeConditions is an object's status.conditions.
 type kubeConditions []kubeCondition
 
 // get is the condition of type typ, zero (Status "") when absent.
-func (c kubeConditions) get(typ string) kubeCondition {
-	for _, x := range c {
-		if x.Type == typ {
-			return x
-		}
-	}
-
-	return kubeCondition{}
-}
+func (c kubeConditions) get(typ string) kubeCondition { return kube.Conditions(c).Get(typ) }
 
 // is tells whether the condition typ is True.
-func (c kubeConditions) is(typ string) bool { return c.get(typ).Status == "True" }
+func (c kubeConditions) is(typ string) bool { return kube.Conditions(c).Is(typ) }
 
 // conditionStatus is the status ("True", "False") of a condition type, "" when absent.
 func conditionStatus(conds []kubeCondition, typ string) string {

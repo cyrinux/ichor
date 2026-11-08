@@ -180,16 +180,17 @@ func TestSessionCacheTracesOpenThenReused(t *testing.T) {
 	}
 }
 
-func TestTraceWithoutListenerDoesNotAllocate(t *testing.T) {
+// Without a listener a step still lands in the diagnostics ring, so the zip carries the
+// cold start; the listener is not called.
+func TestTraceWithoutListenerGoesToTheDiagRing(t *testing.T) {
+	withDiagRing(t)
 	SetTraceListener(nil)
 
-	start := time.Now()
+	traceCounts("overview.all_nodes", time.Now(), 8, 1)
 
-	if allocs := testing.AllocsPerRun(100, func() {
-		trace("overview.total", start)
-		traceCounts("overview.all_nodes", start, 8, 1)
-	}); allocs != 0 {
-		t.Errorf("trace without a listener allocates %v times", allocs)
+	e, ok := findDiag(diagEntriesOf(t, 0), "startup step")
+	if !ok || e.Component != "trace" || e.Attrs["step"] != "overview.all_nodes" || e.Attrs["count"] != float64(8) {
+		t.Errorf("ring entry = %+v (found %v)", e, ok)
 	}
 }
 

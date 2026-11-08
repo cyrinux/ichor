@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -67,7 +67,7 @@ fun ClusterUpgradeRunView(run: ClusterUpgradeRunState, onPause: () -> Unit, onRe
         }
 
         SectionTitle(stringResource(R.string.cluster_upgrade_nodes))
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 run.nodes.forEach { node ->
                     val current = progress?.node == node.node && run.running
@@ -92,16 +92,16 @@ fun ClusterUpgradeRunView(run: ClusterUpgradeRunState, onPause: () -> Unit, onRe
             } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                     if (run.paused) {
-                        Button(onClick = onResume, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.cluster_upgrade_resume)) }
+                        IchorButton(onClick = onResume, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.cluster_upgrade_resume)) }
                     } else {
-                        OutlinedButton(onClick = onPause, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.cluster_upgrade_pause)) }
+                        IchorOutlinedButton(onClick = onPause, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.cluster_upgrade_pause)) }
                     }
-                    OutlinedButton(onClick = { confirmingAbort = true }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.cluster_upgrade_abort)) }
+                    IchorOutlinedButton(onClick = { confirmingAbort = true }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.cluster_upgrade_abort)) }
                 }
             }
             MutedText(stringResource(R.string.cluster_upgrade_leave_note))
         } else {
-            Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_close)) }
+            IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_close)) }
         }
     }
 

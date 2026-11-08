@@ -59,11 +59,13 @@ public struct KubeNodeInfo: Decodable, Hashable, Identifiable, Sendable {
 
     public var id: String { name }
 
-    public init(name: String, roles: [String] = [], ready: Bool = false, cordoned: Bool = false,
-                internalIP: String? = nil, externalIP: String? = nil, kubelet: String? = nil, osImage: String? = nil,
-                kernel: String? = nil, runtime: String? = nil, arch: String? = nil, pool: String? = nil,
-                poolKind: String? = nil, instanceType: String? = nil, capacity: String? = nil, cpu: Double = 0,
-                memory: Double = 0, podLimit: Int = 0, pressure: [String] = [], created: Int64 = 0) {
+    public init(
+        name: String, roles: [String] = [], ready: Bool = false, cordoned: Bool = false,
+        internalIP: String? = nil, externalIP: String? = nil, kubelet: String? = nil, osImage: String? = nil,
+        kernel: String? = nil, runtime: String? = nil, arch: String? = nil, pool: String? = nil,
+        poolKind: String? = nil, instanceType: String? = nil, capacity: String? = nil, cpu: Double = 0,
+        memory: Double = 0, podLimit: Int = 0, pressure: [String] = [], created: Int64 = 0
+    ) {
         self.name = name
         self.roles = roles
         self.ready = ready

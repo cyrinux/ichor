@@ -15,6 +15,12 @@ final class JoinJob {
     enum Outcome: Equatable {
         /// The joined node's address.
         case joined(String)
+        /// The server's machine appeared in Omni, which keeps its own list.
+        case appearedInOmni
+        /// The finished snapshot of a request with `snapshot`.
+        case snapshotMade(HetznerSnapshotResult)
+        /// The finished AMI or Azure image of a request with `awsImage` or `azureImage`.
+        case imageMade(MadeImage)
         case failed(String)
     }
 
@@ -32,15 +38,24 @@ final class JoinJob {
     var isActive: Bool { task != nil }
 
     var timeline: [JoinStep] {
-        switch outcome {
-        case .joined?: joinTimeline(events, finished: true)
-        case .failed(let message)?: joinTimeline(events, failure: message)
-        case nil: joinTimeline(events)
+        let phases = request?.phases ?? JoinPhase.maintenanceRun
+        return switch outcome {
+        case .joined?, .appearedInOmni?, .snapshotMade?, .imageMade?:
+            joinTimeline(events, finished: true, phases: phases)
+        case .failed(let message)?:
+            // An image run's failure stays on the step that failed, not on the cleanup that followed.
+            joinTimeline(events.filter { $0.phase != JoinPhase.cleanup.rawValue }, failure: message, phases: phases)
+        case nil: joinTimeline(events, phases: phases)
         }
     }
 
-    /// `register` adds the joined node's address to the stored talosconfig.
-    func start(client: TalosClient, request: JoinRequest, register: @escaping @MainActor (String) async throws -> Void) {
+    /// `register` adds the joined node's address to the stored talosconfig. `providerToken` is the
+    /// provider's credential for a request with a machine to create: kept out of the request, which
+    /// stays on screen.
+    func start(
+        client: TalosClient, request: JoinRequest, providerToken: String = "",
+        register: @escaping @MainActor (String) async throws -> Void
+    ) {
         guard !isActive else { return }
         self.request = request
         events = []
@@ -53,7 +68,7 @@ final class JoinJob {
         }
         // For the reminder posted when the app leaves the screen.
         Task { _ = await BackgroundMonitor.requestPermission() }
-        let run = client.startNodeJoin(request)
+        let run = Self.startRun(client: client, request: request, providerToken: providerToken)
         stop = run.stop
         task = Task {
             var result = Outcome.failed(String(localized: "The join ended without a result."))
@@ -61,14 +76,37 @@ final class JoinJob {
                 switch event {
                 case .progress(let progress): events.append(progress)
                 case .done(let address, let error):
-                    result = error.map { .failed($0) } ?? (address.isEmpty ? result : .joined(address))
+                    if let error {
+                        result = .failed(error)
+                    } else if request.snapshot != nil {
+                        // The "address" of a snapshot run is its result.
+                        let made = try? JSONDecoder().decode(HetznerSnapshotResult.self, from: Data(address.utf8))
+                        if let made { result = .snapshotMade(made) }
+                    } else if request.awsImage != nil {
+                        let made = try? JSONDecoder().decode(AWSImageResult.self, from: Data(address.utf8))
+                        if let made { result = .imageMade(made.made) }
+                    } else if request.azureImage != nil {
+                        let made = try? JSONDecoder().decode(AzureImageResult.self, from: Data(address.utf8))
+                        if let made { result = .imageMade(made.made) }
+                    } else if request.gcpImage != nil {
+                        let made = try? JSONDecoder().decode(GCPImageResult.self, from: Data(address.utf8))
+                        if let made { result = .imageMade(made.made) }
+                    } else if !address.isEmpty {
+                        result = .joined(address)
+                    } else if request.omni {
+                        result = .appearedInOmni
+                    }
                 }
             }
             if case .joined(let address) = result {
                 do {
                     try await register(address)
                 } catch {
-                    result = .failed(String(localized: "\(request.hostname) joined, but \(address) could not be added to the cluster's nodes: \(error.localizedDescription)"))
+                    result = .failed(
+                        String(
+                            localized:
+                                "\(request.hostname) joined, but \(address) could not be added to the cluster's nodes: \(error.localizedDescription)"
+                        ))
                 }
             }
             outcome = result
@@ -76,9 +114,29 @@ final class JoinJob {
             stop = nil
             stopping = false
             endBackgroundTask()
-            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [Self.foregroundNotification])
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [
+                Self.foregroundNotification
+            ])
             UIApplication.shared.isIdleTimerDisabled = UpgradeJob.shared.isActive || MaintenanceJob.shared.isActive
         }
+    }
+
+    /// The Go run of `request`: an Omni allocation, an image run, a cloud create or a plain join.
+    /// One `if` per kind: a single chain of `??` is too slow for the type checker.
+    private static func startRun(
+        client: TalosClient, request: JoinRequest, providerToken: String
+    ) -> (events: AsyncStream<JoinEvent>, stop: @Sendable () -> Void) {
+        if let spec = request.omniAllocate { return client.startOmniAllocate(spec) }
+        if let spec = request.snapshot { return client.startHetznerSnapshot(spec, token: providerToken) }
+        if let spec = request.awsImage { return client.startAWSImage(spec, credential: providerToken) }
+        if let spec = request.azureImage { return client.startAzureImage(spec, credential: providerToken) }
+        if let spec = request.gcpImage { return client.startGCPImage(spec, credential: providerToken) }
+        if let spec = request.hetzner { return client.startHetznerCreate(spec, token: providerToken) }
+        if let spec = request.ovh { return client.startOVHCreate(spec, credential: providerToken) }
+        if let spec = request.aws { return client.startAWSCreate(spec, credential: providerToken) }
+        if let spec = request.azure { return client.startAzureCreate(spec, credential: providerToken) }
+        if let spec = request.gcp { return client.startGCPCreate(spec, credential: providerToken) }
+        return client.startNodeJoin(request)
     }
 
     /// The scene went to the background: reminds the user to come back while the run needs the
@@ -87,7 +145,9 @@ final class JoinJob {
         guard isActive else { return }
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Keep Ichor open")
-        content.body = String(localized: "Ichor stops following the new node while it is in the background. Open it until the node joins.")
+        content.body = String(
+            localized: "Ichor stops following the new node while it is in the background. Open it until the node joins."
+        )
         content.sound = .default
         let request = UNNotificationRequest(identifier: Self.foregroundNotification, content: content, trigger: nil)
         Task { try? await UNUserNotificationCenter.current().add(request) }

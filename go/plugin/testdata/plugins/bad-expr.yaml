@@ -1,0 +1,41 @@
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: demo-widgets
+name: Demo Widgets
+detect:
+  - group: widgets.example.com
+resources:
+  widget:
+    group: widgets.example.com
+    version: v1
+    resource: widgets
+    kind: Widget
+    scope: Namespaced
+fields:
+  widget:
+    size: $.spec.size ==
+    ready: conditions.Ready
+    later: fields.after
+    after: $.spec.after | nope()
+health:
+  widget:
+    - when: $.status.phase
+      health: warning
+    - when: '"failed"'
+      health: critical
+    - when: fields.ready
+      health: green
+cards:
+  summary:
+    title: |
+      dataServices.total +
+        1 1
+  list:
+    from: widget
+    row:
+      title: $.metadata.name
+      status:
+        tone: fields.size > 3 ? 1
+        text: $.status.phase
+samples:
+  widget:
+    - { metadata: { name: one, namespace: demo-shop } }

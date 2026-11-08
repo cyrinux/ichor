@@ -65,7 +65,7 @@ func hideLocations(t clusterTopology) clusterTopology {
 		return fakes[zone]
 	}
 
-	out := clusterTopology{Nodes: slices.Clone(t.Nodes), Links: t.Links, Sites: slices.Clone(t.Sites)}
+	out := clusterTopology{Nodes: slices.Clone(t.Nodes), Links: t.Links, Sites: slices.Clone(t.Sites), Mesh: t.Mesh}
 
 	for i, n := range out.Nodes {
 		n.Zone, n.Region, n.Country = fake(n.Zone), "", ""
@@ -103,7 +103,7 @@ func observeTopology(ctx context.Context, c *client.Client, node string) topolog
 
 	if peers, err := safe.StateListAll[*kubespan.PeerStatus](nodeCtx, c.COSI); err == nil {
 		for res := range peers.All() {
-			o.peers = append(o.peers, kubespanPeerInput{id: res.Metadata().ID(), spec: *res.TypedSpec()})
+			o.peers = append(o.peers, kubespanPeerInput{id: res.Metadata().ID(), created: res.Metadata().Created(), spec: *res.TypedSpec()})
 		}
 	}
 

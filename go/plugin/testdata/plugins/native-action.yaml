@@ -1,0 +1,77 @@
+# yaml-language-server: $schema=../../schema/plugin.schema.json
+# An action run by a Go function (verb native) on a resource read by a Go reader whose rows
+# open another object (ref). Built-ins only: an imported plugin that declares it is refused.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: demo-caches
+name: Demo Caches
+category: data-services
+
+detect:
+  - pods: demo-cache
+
+resources:
+  entry:
+    group: ichor.dev
+    version: v1alpha1
+    resource: democacheentries
+    kind: DemoCacheEntry
+    scope: Namespaced
+    source: native:demo-cache-entries
+    ref: $.source
+
+fields:
+  entry:
+    warm: $.status.warm | default(false)
+
+dataServices:
+  summary:
+    aggregate: { total: count(entry) }
+    health: '"ok"'
+
+cards:
+  summary:
+    title: { count: dataServices.summary.total, one: "%d entry", other: "%d entries" }
+    health: dataServices.summary.health
+  entries:
+    from: entry
+    sort: [$.metadata.name]
+    empty: "No entries."
+    row:
+      title: $.metadata.name
+      detail:
+        - type: actions
+          items: [evict]
+
+actions:
+  evict:
+    label: "Evict"
+    on: entry
+    verb: native
+    run: native:demo-evict
+    rbac: { verbs: [create], group: "", resource: services/proxy }
+    confirm: typedName
+    audit: demo-caches.evict
+    enabledWhen: fields.warm
+    disabledReason: "not in memory"
+    params:
+      - { name: force, label: "Even if in use", type: bool, default: false }
+
+samples:
+  entry:
+    - metadata: { name: "pages:v2", namespace: demo-shop }
+      spec: { server: cache-a }
+      status: { warm: true }
+      source: { group: apps, version: v1, resource: deployments, kind: Deployment, namespace: demo-shop, name: cache-a }
+    - metadata: { name: "carts:v1", namespace: demo-shop }
+      spec: { server: cache-a }
+      status: { warm: false }
+      source: { group: apps, version: v1, resource: deployments, kind: Deployment, namespace: demo-shop, name: cache-a }
+
+i18n:
+  fr:
+    "%d entry": "%d entrée"
+    "%d entries": "%d entrées"
+    "No entries.": "Aucune entrée."
+    "Evict": "Évincer"
+    "not in memory": "pas en mémoire"
+    "Even if in use": "Même si utilisée"

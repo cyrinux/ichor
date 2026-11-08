@@ -59,11 +59,15 @@ final class ConfigMultiJob {
                 }
             }
             // Stopped before the core said how it ended (a late stop leaves its answer).
-            if stopped, !answered { result = String(localized: "Stopped: the nodes done keep the change, the others were not reached.") }
+            if stopped, !answered {
+                result = String(localized: "Stopped: the nodes done keep the change, the others were not reached.")
+            }
             outcome = .some(result)
             task = nil
             endBackgroundTask()
-            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [Self.foregroundNotification])
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [
+                Self.foregroundNotification
+            ])
             UIApplication.shared.isIdleTimerDisabled = UpgradeJob.shared.isActive || MaintenanceJob.shared.isActive
             announce(result ?? String(localized: "Every node has the change."))
         }
@@ -84,7 +88,8 @@ final class ConfigMultiJob {
         guard isActive else { return }
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Keep Ichor open")
-        content.body = String(localized: "The config rollout stops while Ichor is in the background. Open it until every node is done.")
+        content.body = String(
+            localized: "The config rollout stops while Ichor is in the background. Open it until every node is done.")
         content.sound = .default
         let request = UNNotificationRequest(identifier: Self.foregroundNotification, content: content, trigger: nil)
         Task { try? await UNUserNotificationCenter.current().add(request) }

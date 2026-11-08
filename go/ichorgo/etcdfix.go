@@ -86,6 +86,7 @@ func StartEtcdNospaceFix(configYAML, contextName, snapshotNode, destPath, recipi
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(configYAML, contextName)()
 
 		snapshot := "no"
 		if destPath != "" {

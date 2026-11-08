@@ -180,19 +180,21 @@ func TestServicesRefusedIsAnError(t *testing.T) {
 
 func TestLBControllerOf(t *testing.T) {
 	for _, tc := range []struct {
-		groups []string
-		want   string
+		groups  []string
+		kubeVip bool
+		want    string
 	}{
-		{[]string{"metallb.io", "cilium.io"}, lbControllerMetalLB},
-		{[]string{"cilium.io"}, lbControllerCilium},
-		{[]string{"apps"}, ""},
+		{[]string{"metallb.io", "cilium.io"}, true, lbControllerMetalLB},
+		{[]string{"cilium.io"}, true, lbControllerKubeVip},
+		{[]string{"cilium.io"}, false, lbControllerCilium},
+		{[]string{"apps"}, false, ""},
 	} {
 		groups := map[string]string{}
 		for _, g := range tc.groups {
 			groups[g] = "v1"
 		}
 
-		if got := lbControllerOf(groups); got != tc.want {
+		if got := lbControllerOf(groups, tc.kubeVip); got != tc.want {
 			t.Errorf("%v: %q, want %q", tc.groups, got, tc.want)
 		}
 	}
@@ -221,7 +223,7 @@ func TestKubeServicesDemo(t *testing.T) {
 	}
 
 	// The checkup demo's pending load balancer comes first, with its pool hint.
-	if first := s.Services[0]; first.Name != "hello-ichor-public" || first.Level != serviceCritical || s.LBController != lbControllerCilium {
+	if first := s.Services[0]; first.Name != "hello-ichor-public" || first.Level != serviceCritical || s.LBController != lbControllerMetalLB {
 		t.Errorf("demo first %+v, controller %q", first, s.LBController)
 	}
 

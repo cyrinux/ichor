@@ -1,0 +1,24 @@
+{"kind":"ClusterList","apiVersion":"cluster.x-k8s.io/v1beta2","metadata":{},"items":[
+{"metadata":{"name":"prod-edge","namespace":"fleet","creationTimestamp":"2026-09-01T08:00:00Z"},
+ "spec":{"paused":false,"controlPlaneEndpoint":{"host":"10.0.0.5","port":6443},
+  "controlPlaneRef":{"apiGroup":"controlplane.cluster.x-k8s.io","kind":"TalosControlPlane","name":"prod-edge-cp"},
+  "infrastructureRef":{"apiGroup":"infrastructure.cluster.x-k8s.io","kind":"MetalCluster","name":"prod-edge"}},
+ "status":{"phase":"Provisioned",
+  "initialization":{"infrastructureProvisioned":true,"controlPlaneInitialized":true},
+  "controlPlane":{"desiredReplicas":3,"replicas":3,"upToDateReplicas":3,"versions":[{"version":"v1.34.1","replicas":3}]},
+  "workers":{"desiredReplicas":4,"replicas":4,"upToDateReplicas":4,"readyReplicas":4,"availableReplicas":4},
+  "conditions":[
+   {"type":"Available","status":"True","reason":"Available","message":""},
+   {"type":"Paused","status":"False","reason":"NotPaused","message":""},
+   {"type":"ScalingUp","status":"False","reason":"NotScalingUp","message":""}]}},
+{"metadata":{"name":"old-lab","namespace":"fleet","creationTimestamp":"2026-08-01T08:00:00Z"},
+ "spec":{"controlPlaneEndpoint":{"host":"10.0.2.5","port":6443},
+  "controlPlaneRef":{"apiGroup":"controlplane.cluster.x-k8s.io","kind":"TalosControlPlane","name":"old-lab-cp"},
+  "infrastructureRef":{"apiGroup":"infrastructure.cluster.x-k8s.io","kind":"MetalCluster","name":"old-lab"}},
+ "status":{"phase":"Failed",
+  "initialization":{"infrastructureProvisioned":true},
+  "conditions":[
+   {"type":"Available","status":"False","reason":"NotAvailable","message":"control plane not available"},
+   {"type":"ControlPlaneInitialized","status":"Unknown","reason":"Unknown","message":""}],
+  "deprecated":{"v1beta1":{"failureReason":"CreateError","failureMessage":"the control plane machine failed to provision"}}}}
+]}

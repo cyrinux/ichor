@@ -4,7 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -94,7 +94,7 @@ fun DetectPublicIpsButton(detection: PublicIpDetection) {
             val label = stringResource(R.string.overview_public_ip_detecting)
             CircularProgressIndicator(Modifier.size(16.dp).semantics { contentDescription = label }, strokeWidth = 2.dp)
         }
-        detection.detect != null -> TextButton(onClick = detection.detect) {
+        detection.detect != null -> IchorTextButton(onClick = detection.detect) {
             Text(stringResource(R.string.overview_public_ip_detect))
         }
     }

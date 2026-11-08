@@ -1,0 +1,5 @@
+• Rank every cluster's last background check worst first, with a top finding, in Go
+• Remove a CloudNativePG instance stranded on a node that is gone, from the cluster sheet
+• MetricKit crash and hang reports and a diagnostics zip on iOS
+• Export a redacted diagnostics zip with the system's crash records on Android
+• Show stopped and not-starting apps in the Apps inventory

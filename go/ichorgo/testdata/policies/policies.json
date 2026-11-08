@@ -1,0 +1,12 @@
+{
+  "kind": "PolicyList",
+  "apiVersion": "kyverno.io/v1",
+  "metadata": {},
+  "items": [
+    {
+      "metadata": { "name": "audit-image-registry", "namespace": "shop" },
+      "spec": { "validationFailureAction": "Audit", "rules": [ { "name": "check-registry", "validate": {} } ] },
+      "status": { "ready": true }
+    }
+  ]
+}

@@ -1,5 +1,11 @@
 package name.levis.ichor.ui.importconfig
 
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,25 +16,34 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.KUBE_AUTH_TOKEN
+import name.levis.ichor.model.KUBE_PROBLEM_EXEC
 import name.levis.ichor.model.KubeImportRow
 import name.levis.ichor.model.kubeAuthLabel
+import name.levis.ichor.model.kubeExecHintText
 import name.levis.ichor.model.kubeImportRows
 import name.levis.ichor.model.kubeProblemText
 import name.levis.ichor.model.parseCloudContext
+import name.levis.ichor.model.proxyHost
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.cloudDetail
@@ -50,6 +65,8 @@ internal fun KubePreviewCard(
     onCancel: () -> Unit,
 ) {
     val rows = remember(preview) { kubeImportRows(preview.summary, preview.conflicts, preview.choices) }
+    var serviceAccountHelp by rememberSaveable { mutableStateOf(false) }
+    if (serviceAccountHelp) ServiceAccountHelpDialog(onDismiss = { serviceAccountHelp = false })
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -65,6 +82,10 @@ internal fun KubePreviewCard(
                 onReplace = { onReplace(row.index, it) },
             )
         }
+        // A token context: a dedicated ServiceAccount's beats an admin's.
+        if (rows.any { it.context.auth == KUBE_AUTH_TOKEN }) {
+            IchorTextButton(onClick = { serviceAccountHelp = true }) { Text(stringResource(R.string.sa_help_title)) }
+        }
         if (rows.none { it.importable }) {
             Text(stringResource(R.string.import_kube_none_importable), color = LocalStatusColors.current.warn, style = MaterialTheme.typography.bodyMedium)
         }
@@ -79,8 +100,8 @@ internal fun KubePreviewCard(
         preview.error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
         MutedText(stringResource(R.string.import_stored_encrypted))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
-            Button(onClick = onConfirm, enabled = preview.canImport, modifier = Modifier.weight(1f)) {
+            IchorOutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
+            IchorButton(onClick = onConfirm, enabled = preview.canImport, modifier = Modifier.weight(1f)) {
                 Text(stringResource(R.string.import_import))
             }
         }
@@ -100,10 +121,27 @@ private fun KubeContextRow(
     val ctx = row.context
     // EKS and GKE name contexts by ARN or gke_project_location_name: show the cluster's name.
     val cloud = parseCloudContext(ctx.name)
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = row.included, onCheckedChange = onInclude, enabled = row.importable)
+            // One target: tapping the name toggles too, and TalkBack hears the full context name
+            // (not the shortened one shown) with why it cannot be included, on one focus stop.
+            val label = stringResource(
+                R.string.import_include_context,
+                if (current) stringResource(R.string.import_context_current, ctx.name) else ctx.name,
+            )
+            val reason = if (row.importable) null else problemSentence(ctx.problem, ctx.problemDetail)
+            Row(
+                Modifier.fillMaxWidth()
+                    .semantics {
+                        contentDescription = label
+                        reason?.let { stateDescription = it }
+                    }
+                    .toggleable(value = row.included, enabled = row.importable, role = Role.Checkbox, onValueChange = onInclude)
+                    .padding(start = 12.dp, top = 12.dp, bottom = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Checkbox(checked = row.included, onCheckedChange = null, enabled = row.importable)
                 val shown = cloud?.cluster ?: ctx.name
                 val name = if (current) stringResource(R.string.import_context_current, shown) else shown
                 Text(name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
@@ -111,6 +149,7 @@ private fun KubeContextRow(
             Column(Modifier.padding(start = 12.dp)) {
                 if (cloud != null) MutedText(cloudDetail(cloud))
                 InfoRow(stringResource(R.string.import_kube_server), ctx.endpoints.joinToString("\n"), mono = true)
+                ctx.proxyHost?.let { MutedText(stringResource(R.string.kube_proxy_via, it)) }
                 InfoRow(stringResource(R.string.import_kube_auth), authText(ctx.auth, ctx.authDetail))
                 if (ctx.user.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_user), ctx.user)
                 if (ctx.namespace.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_namespace), ctx.namespace)
@@ -120,7 +159,7 @@ private fun KubeContextRow(
                 if (row.importable && ctx.signIn.isNotEmpty()) {
                     MutedText(stringResource(R.string.import_kube_signin_follows, signInMethodText(ctx.signIn)))
                 }
-                if (!row.importable) Problem(ctx.problem, ctx.problemDetail)
+                if (!row.importable) Problem(ctx.problem, ctx.problemDetail, ctx.execHint)
                 row.conflict?.let { conflict ->
                     NameConflict(
                         name = ctx.name,
@@ -143,12 +182,33 @@ private fun authText(auth: String, detail: String): String {
     return if (detail.isEmpty()) label else "$label · $detail"
 }
 
-/** Why the context cannot be added, with the raw detail (a file path, a plugin) under it. */
+/** Why the context cannot be added, in one sentence: an exec plugin by its name. */
 @Composable
-private fun Problem(problem: String, detail: String) {
+private fun problemSentence(problem: String, detail: String): String =
+    if (problem == KUBE_PROBLEM_EXEC && detail.isNotEmpty()) {
+        stringResource(R.string.kube_problem_exec_named, detail)
+    } else {
+        stringResource(kubeProblemText(problem))
+    }
+
+/**
+ * Why the context cannot be added, with the raw detail (a file path) under it. An exec plugin
+ * is named in the sentence, with what to do instead under it.
+ */
+@Composable
+private fun Problem(problem: String, detail: String, execHint: String) {
+    val namedPlugin = problem == KUBE_PROBLEM_EXEC && detail.isNotEmpty()
     Column(Modifier.padding(top = 8.dp)) {
-        Text(stringResource(kubeProblemText(problem)), color = LocalStatusColors.current.warn, style = MaterialTheme.typography.bodyMedium)
-        if (detail.isNotEmpty()) {
+        // Already read on the row's checkbox, with the context it is about.
+        Text(
+            problemSentence(problem, detail),
+            color = LocalStatusColors.current.warn,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.clearAndSetSemantics {},
+        )
+        if (namedPlugin) {
+            MutedText(stringResource(kubeExecHintText(execHint)))
+        } else if (detail.isNotEmpty()) {
             Text(
                 detail,
                 fontFamily = FontFamily.Monospace,

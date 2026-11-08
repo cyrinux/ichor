@@ -1,0 +1,4 @@
+{"kind":"DNSConfigList","apiVersion":"tailscale.com/v1alpha1","metadata":{},"items":[
+ {"metadata":{"name":"ts-dns","generation":1},
+  "status":{"conditions":[{"type":"NameserverReady","status":"True","reason":"NameserverCreated","observedGeneration":1}],"nameserver":{"ip":"10.96.0.53"}}}
+]}

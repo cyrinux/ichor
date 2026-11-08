@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.node
 
+import name.levis.ichor.ui.components.SMOKE_NODE_SCREEN
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,12 +16,12 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,10 +39,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.Alignment
+import name.levis.ichor.ui.components.JumpSection
+import name.levis.ichor.ui.components.SectionJumpRail
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.ContextNodeRemoval
 import name.levis.ichor.model.Feature
+import name.levis.ichor.model.NodeOverview
+import name.levis.ichor.model.NodeReachability
+import name.levis.ichor.model.down
 import name.levis.ichor.model.ResetRequest
+import name.levis.ichor.model.ResetWipe
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.allows
 import name.levis.ichor.security.AuthResult
@@ -51,9 +63,14 @@ import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.pageContent
-import name.levis.ichor.ui.components.rememberNodeFeatures
+import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.agoLabel
+import name.levis.ichor.ui.components.rememberNodeState
+import name.levis.ichor.ui.overview.rememberWakeOnLan
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.history.NodeUptime
+import name.levis.ichor.ui.share.PinButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.ui.share.rememberShareLink
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
@@ -75,7 +92,7 @@ fun NodeDetailScreen(
     initialCordon: Boolean = false,
     onTab: (Int) -> Unit,
     onMenu: (NodeMenuEntry) -> Unit,
-    power: PowerViewModel = viewModel(key = "power-$node", factory = factory { PowerViewModel(app.talosRepository, node) }),
+    power: PowerViewModel = viewModel(key = "power-$node", factory = factory { PowerViewModel(app.nodeLifecycleRepository, node) }),
 ) {
     var confirming by remember { mutableStateOf<PowerAction?>(null) }
     // A reboot/shutdown started from the overview opens its confirmation once (not again on rotation).
@@ -93,7 +110,14 @@ fun NodeDetailScreen(
     val share = rememberShareLink()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val canPower = config?.activeSummary?.allows(Feature.POWER) ?: false
-    val features = rememberNodeFeatures(node)
+    val (features, reachability) = rememberNodeState(node)
+    // Only on a node that does not answer, and only once its MAC is known (nothing in screenshot mode).
+    val wakeOnLan = rememberWakeOnLan(config?.activeSummary?.fingerprint)
+    val onWake = if (reachability.down) {
+        wakeOnLan(NodeOverview(node = node, hostname = hostname, reachable = false))?.takeIf { it.targets.isNotEmpty() }?.onWake
+    } else {
+        null
+    }
     // One upgrade at a time in the app: the entry stays open for the node being upgraded.
     val upgrading by app.upgradeManager.current.collectAsStateWithLifecycle()
     val upgradeBusyElsewhere = upgrading?.let { it.running && it.node != node } ?: false
@@ -108,8 +132,11 @@ fun NodeDetailScreen(
         confirmingCordon = true
     }
     var confirmingReset by remember { mutableStateOf(false) }
-    val reset: ResetViewModel = viewModel(key = "reset-$node", factory = factory { ResetViewModel(app.talosRepository, node) })
+    val reset: ResetViewModel = viewModel(key = "reset-$node", factory = factory { ResetViewModel(app.nodeLifecycleRepository, node) })
     val resetState by reset.state.collectAsStateWithLifecycle()
+    // What the reset in progress wipes; a node that keeps its system disk stays in the cluster.
+    var resetWipe by remember { mutableStateOf(ResetWipe.SYSTEM) }
+    var removalOffer by remember { mutableStateOf<ContextNodeRemoval?>(null) }
     var cordonBusy by remember { mutableStateOf(false) }
 
     LaunchedEffect(powerState) {
@@ -130,9 +157,19 @@ fun NodeDetailScreen(
     LaunchedEffect(resetState) {
         when (val s = resetState) {
             ResetState.Done -> {
-                snackbar.showSnackbar(context.getString(R.string.reset_requested, hostname))
-                reset.dismiss()
-                onBack()
+                val removal = if (resetWipe == ResetWipe.USER) {
+                    null
+                } else {
+                    runCatching { app.nodeLifecycleRepository.removalPlan(node) }.getOrNull()?.takeIf { it.allowed }
+                }
+                if (removal != null) {
+                    removalOffer = removal
+                    reset.dismiss()
+                } else {
+                    snackbar.showSnackbar(context.getString(R.string.reset_requested, hostname))
+                    reset.dismiss()
+                    onBack()
+                }
             }
             is ResetState.Failed -> {
                 snackbar.showSnackbar(s.message.resolve(context), withDismissAction = true, duration = SnackbarDuration.Long)
@@ -145,6 +182,7 @@ fun NodeDetailScreen(
     // Like power actions: with the app lock on, a fresh fingerprint/PIN first.
     fun resetConfirmed(request: ResetRequest) {
         confirmingReset = false
+        resetWipe = request.wipe
         val activity = context.findFragmentActivity()
         if (!appLock.enabled.value || activity == null) {
             reset.run(request)
@@ -187,10 +225,10 @@ fun NodeDetailScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(hostname)
@@ -202,48 +240,68 @@ fun NodeDetailScreen(
                     if (powerState is PowerState.Running || cordonBusy || resetState is ResetState.Running) {
                         CircularProgressIndicator(Modifier.size(20.dp).padding(end = 4.dp), strokeWidth = 2.dp)
                     }
+                    PinButton(ShareTarget(target = ShareTarget.NODE, addr = node, host = hostname), hostname)
                     // No tab: the link opens this screen.
                     TooltipIconButton(Icons.Outlined.Share, stringResource(R.string.share_link), onClick = {
                         share(ShareTarget(target = ShareTarget.NODE, addr = node, host = hostname))
                     })
+                    AddToHomeButton(ShareTarget(target = ShareTarget.NODE, addr = node, host = hostname), hostname)
                 },
             )
         },
     ) { padding ->
-        LazyColumn(
-            Modifier.pageContent(padding).fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            item(key = "header") { NodeHeader(node, role, cordoned[node]) }
-            nodeSections(
-                groups = nodeMenuGroups(config?.activeSummary),
-                features = features,
-                // One upgrade at a time in the app.
-                busy = buildSet {
-                    if (upgradeBusyElsewhere || maintenanceRunning) add(NodeMenuEntry.UPGRADE)
-                    if (upgrading?.running == true || (maintenanceRunning && maintenance?.node != node)) {
-                        add(NodeMenuEntry.MAINTENANCE)
-                        add(NodeMenuEntry.DRAIN)
+        val groups = nodeMenuGroups(config?.activeSummary)
+        // Power actions only exist for configs whose role allows them.
+        val powerActions = if (canPower) PowerAction.entries else emptyList()
+        val jumps = nodeJumpSections(groups, power = powerActions.isNotEmpty(), wake = onWake != null)
+        val labels = jumps.map { stringResource(it.title) }
+        val sections = remember(jumps, labels) { jumps.mapIndexed { i, jump -> JumpSection(jump.key, labels[i], jump.index) } }
+        val listState = rememberLazyListState()
+        Box(Modifier.pageContent(padding).fillMaxSize()) {
+            LazyColumn(
+                Modifier.fillMaxSize().testTag(SMOKE_NODE_SCREEN),
+                state = listState,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                // One item: the jump rail counts them.
+                item(key = "header") {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        NodeHeader(node, role, cordoned[node], reachability)
+                        ForgetNodeCard(app, node, hostname, reachability.down, onForgotten = onBack)
                     }
-                    if (cordonBusy || (maintenanceRunning && maintenance?.node == node)) add(NodeMenuEntry.CORDON)
-                    if (resetState is ResetState.Running || upgrading?.running == true || maintenanceRunning) add(NodeMenuEntry.RESET)
-                },
-                cordoned = cordoned[node],
-                // Power actions only exist for configs whose role allows them.
-                powerActions = if (canPower) PowerAction.entries else emptyList(),
-                powerEnabled = powerState !is PowerState.Running,
-                onPick = { entry ->
-                    val tab = entry.tab
-                    when {
-                        tab != null -> onTab(tab)
-                        entry == NodeMenuEntry.CORDON -> confirmingCordon = true
-                        entry == NodeMenuEntry.RESET -> confirmingReset = true
-                        else -> onMenu(entry)
-                    }
-                },
-                onPower = { confirming = it },
-            )
+                }
+                nodeSections(
+                    groups = groups,
+                    features = features,
+                    // One upgrade at a time in the app.
+                    busy = buildSet {
+                        if (upgradeBusyElsewhere || maintenanceRunning) add(NodeMenuEntry.UPGRADE)
+                        if (upgrading?.running == true || (maintenanceRunning && maintenance?.node != node)) {
+                            add(NodeMenuEntry.MAINTENANCE)
+                            add(NodeMenuEntry.DRAIN)
+                        }
+                        if (cordonBusy || (maintenanceRunning && maintenance?.node == node)) add(NodeMenuEntry.CORDON)
+                        if (resetState is ResetState.Running || upgrading?.running == true || maintenanceRunning) add(NodeMenuEntry.RESET)
+                    },
+                    cordoned = cordoned[node],
+                    powerActions = powerActions,
+                    powerEnabled = powerState !is PowerState.Running,
+                    reachability = reachability,
+                    onPick = { entry ->
+                        val tab = entry.tab
+                        when {
+                            tab != null -> onTab(tab)
+                            entry == NodeMenuEntry.CORDON -> confirmingCordon = true
+                            entry == NodeMenuEntry.RESET -> confirmingReset = true
+                            else -> onMenu(entry)
+                        }
+                    },
+                    onPower = { confirming = it },
+                    onWake = onWake,
+                )
+            }
+            SectionJumpRail(sections, listState, Modifier.align(Alignment.CenterEnd))
         }
     }
 
@@ -253,6 +311,22 @@ fun NodeDetailScreen(
 
     if (confirmingReset) {
         ResetConfirmDialog(vm = reset, hostname = hostname, onConfirm = ::resetConfirmed, onDismiss = { confirmingReset = false })
+    }
+
+    removalOffer?.let { removal ->
+        RemoveAfterResetDialog(
+            hostname = hostname,
+            removal = removal,
+            onRemove = {
+                removalOffer = null
+                app.removeNodeForGood(node, hostname, deleteKubeNode = true)
+                onBack()
+            },
+            onKeep = {
+                removalOffer = null
+                onBack()
+            },
+        )
     }
 
     confirming?.let { action ->
@@ -266,9 +340,12 @@ fun NodeDetailScreen(
     }
 }
 
-/** The node's role and cordoned state as pills (each only when known), then its uptime strip. */
+/**
+ * The node's role and cordoned state as pills (each only when known), Unreachable with why and
+ * when it last answered for a node known not to answer, then its uptime strip.
+ */
 @Composable
-private fun NodeHeader(node: String, role: String, cordoned: Boolean?) {
+private fun NodeHeader(node: String, role: String, cordoned: Boolean?, reachability: NodeReachability?) {
     val roleLabel = when (role) {
         "controlplane" -> R.string.topology_role_controlplane
         "worker" -> R.string.topology_role_worker
@@ -276,12 +353,27 @@ private fun NodeHeader(node: String, role: String, cordoned: Boolean?) {
     }
     // No card: without a known role or uptime history it would be an empty box.
     Column(Modifier.fillMaxWidth()) {
-        if (roleLabel != null || cordoned == true) {
+        val down = reachability.down
+        if (roleLabel != null || cordoned == true || down) {
             Row(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 roleLabel?.let { StatusPill(stringResource(it), MaterialTheme.colorScheme.primary) }
                 if (cordoned == true) StatusPill(stringResource(R.string.kube_node_cordoned), LocalStatusColors.current.warn)
+                if (down) StatusPill(stringResource(R.string.common_status_unreachable), LocalStatusColors.current.bad)
             }
         }
-        NodeUptime(node, Modifier.padding(vertical = 4.dp))
+        if (reachability != null && down) UnreachableReason(reachability)
+        NodeUptime(node, Modifier.padding(vertical = 4.dp), reachability)
     }
+}
+
+/** Why the node does not answer, by its error kind (else the core's words), and when it last did. */
+@Composable
+private fun UnreachableReason(reachability: NodeReachability) {
+    val reason = when (reachability.errorKind) {
+        "network" -> stringResource(R.string.node_hub_unreachable_network)
+        "tls", "auth" -> stringResource(R.string.node_hub_unreachable_credentials)
+        else -> reachability.error
+    }
+    val seen = reachability.lastSeen?.let { stringResource(R.string.overview_node_last_seen, agoLabel(System.currentTimeMillis() - it)) }
+    listOfNotNull(reason, seen).takeIf { it.isNotEmpty() }?.let { MutedText(it.joinToString(" · ")) }
 }

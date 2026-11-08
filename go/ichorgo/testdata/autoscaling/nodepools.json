@@ -1,0 +1,16 @@
+{"kind":"NodePoolList","apiVersion":"karpenter.sh/v1","metadata":{},"items":[
+{"metadata":{"name":"general"},
+ "spec":{"weight":10,"limits":{"cpu":"64","memory":"256Gi"},
+  "disruption":{"consolidationPolicy":"WhenEmptyOrUnderutilized","consolidateAfter":"1m",
+   "budgets":[{"nodes":"10%"},{"nodes":"0","schedule":"0 9 * * mon-fri","duration":"8h","reasons":["Underutilized"]}]},
+  "template":{"spec":{"requirements":[
+   {"key":"karpenter.sh/capacity-type","operator":"In","values":["spot","on-demand"]},
+   {"key":"kubernetes.io/arch","operator":"In","values":["arm64"]}]}}},
+ "status":{"resources":{"cpu":"64","memory":"212Gi","nodes":"2","pods":"880"},
+  "conditions":[{"type":"Ready","status":"True","reason":"Ready"}]}},
+{"metadata":{"name":"gpu"},
+ "spec":{"limits":{"cpu":"32"},"disruption":{"consolidationPolicy":"WhenEmpty","consolidateAfter":"10m","budgets":[{"nodes":"1"}]},
+  "template":{"spec":{"requirements":[{"key":"karpenter.sh/capacity-type","operator":"In","values":["on-demand"]}]}}},
+ "status":{"resources":{"cpu":"8","memory":"60Gi"},
+  "conditions":[{"type":"Ready","status":"False","reason":"NodeClassNotReady","message":"NodeClassReady=False"}]}}
+]}

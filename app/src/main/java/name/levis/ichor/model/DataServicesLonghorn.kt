@@ -12,6 +12,10 @@ data class LonghornStatus(
     val volumes: List<LonghornVolume> = emptyList(),
     val nodes: List<LonghornNode> = emptyList(),
     val backupTargets: List<LonghornBackupTarget> = emptyList(),
+    /** Longhorn's default-engine-image setting, "" when unread. */
+    val defaultEngineImage: String = "",
+    /** The installed engine images, the default first. */
+    val engineImages: List<LonghornEngineImageStatus> = emptyList(),
 )
 
 @Serializable
@@ -47,13 +51,70 @@ data class LonghornVolume(
     val scheduleError: String = "",
     /** Close to Longhorn's snapshot limit. */
     val tooManySnapshots: Boolean = false,
+    /** Longhorn's own snapshots still in use, newest first. */
+    val snapshots: List<LonghornSnapshot> = emptyList(),
+    /** Deleted snapshots Longhorn has yet to purge. */
+    val snapshotsRemoving: Int = 0,
+    /** Newest backups first, at most 20: [backupCount] has them all. */
+    val backups: List<LonghornBackup> = emptyList(),
+    val backupCount: Int = 0,
+    /** The last backup is more than a week old. */
+    val backupStale: Boolean = false,
+    /** The VolumeSnapshotContents were read: a snapshot without [LonghornSnapshot.volumeSnapshot] keeps none. */
+    val volumeSnapshotsKnown: Boolean = false,
+    /** The engine image asked for (spec.image). */
+    val engineImage: String = "",
+    /** The engine image running (status.currentImage). */
+    val engineCurrentImage: String = "",
+    /** [engineImage] differs from [engineCurrentImage]: an upgrade is in flight. */
+    val engineUpgrading: Boolean = false,
+    /** Runs an engine other than the deployed default. */
+    val engineOutdated: Boolean = false,
+    /** The running engine's version, "" when unknown. */
+    val engineVersion: String = "",
 ) {
     val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
 
     val attached: Boolean get() = state == "attached"
 
+    /** Its menu offers "Upgrade engine": an old engine, no upgrade in flight, attached or detached. */
+    val engineUpgradable: Boolean get() = engineOutdated && !engineUpgrading && (state == "attached" || state == "detached")
+
     /** The claim it backs ("namespace/name"), or the volume's own name when unbound. */
     val label: String get() = if (pvcName.isNotEmpty()) "$pvcNamespace/$pvcName" else name
+}
+
+@Serializable
+data class LonghornSnapshot(
+    val name: String,
+    /** Unix millis, 0 when Longhorn has none (the base of a restored volume). */
+    val createdAt: Long = 0,
+    /** Data it holds on top of its parent. */
+    val size: Long = 0,
+    val ready: Boolean = false,
+    /** Asked for (by someone, a job, a CSI snapshot), not taken by Longhorn itself. */
+    val userCreated: Boolean = false,
+    /** A completed backup was taken from it. */
+    val backedUp: Boolean = false,
+    /** The CSI VolumeSnapshot ("namespace/name") it keeps: delete that one, not this. */
+    val volumeSnapshot: String = "",
+    val error: String = "",
+)
+
+@Serializable
+data class LonghornBackup(
+    val name: String,
+    val snapshot: String = "",
+    /** Completed, InProgress, Pending, Error or Unknown. */
+    val state: String = "",
+    val progress: Int = 0,
+    /** Unix millis. */
+    val createdAt: Long = 0,
+    val size: Long = 0,
+    val error: String = "",
+) {
+    val completed: Boolean get() = state == "Completed"
+    val failed: Boolean get() = state == "Error" || error.isNotEmpty()
 }
 
 @Serializable
@@ -87,3 +148,13 @@ data class LonghornBackupTarget(
     val available: Boolean = false,
     val message: String = "",
 )
+
+/**
+ * The one disk path every node mounts, to state once above the node rows; null when the
+ * nodes' paths differ (each row then names its own) or none is known.
+ */
+fun List<LonghornNode>.sharedDiskPath(): String? =
+    flatMap { it.disks }.map { it.path }.filter { it.isNotEmpty() }.distinct().singleOrNull()
+
+/** A disk path's last segment, the meter's label: "/var/mnt/storage/longhorn" is "longhorn". */
+fun diskPathLabel(path: String): String = path.trimEnd('/').substringAfterLast('/').ifEmpty { path }

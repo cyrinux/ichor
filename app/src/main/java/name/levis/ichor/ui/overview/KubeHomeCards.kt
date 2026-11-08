@@ -1,9 +1,18 @@
 package name.levis.ichor.ui.overview
 
-import name.levis.ichor.ui.components.rememberKubeTopNodes
+import name.levis.ichor.model.KubeTopNodes
 import name.levis.ichor.ui.components.NodeUsage
 import name.levis.ichor.model.KubeTopNode
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.CardDefaults
+import androidx.compose.animation.animateContentSize
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.ui.res.pluralStringResource
+import name.levis.ichor.model.status
+import name.levis.ichor.ui.components.SectionHeader
+import name.levis.ichor.ui.components.expandable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -15,12 +24,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -39,13 +46,10 @@ import name.levis.ichor.model.address
 import name.levis.ichor.model.byStatus
 import name.levis.ichor.model.healthy
 import name.levis.ichor.model.isDenseCluster
-import name.levis.ichor.model.readyCount
 import name.levis.ichor.monitor.CERT_WARN_DAYS
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
-import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.components.rememberKubeWhoAmI
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.importconfig.certExpiry
 import name.levis.ichor.ui.kubeauth.SignInAction
@@ -57,7 +61,7 @@ import name.levis.ichor.util.daysUntil
 internal fun KubeCredentialsBanner(cluster: ContextSummary) {
     if (cluster.certNotAfter <= 0 || daysUntil(cluster.certNotAfter) > CERT_WARN_DAYS) return
     val color = if (daysUntil(cluster.certNotAfter) < 0) LocalStatusColors.current.bad else LocalStatusColors.current.warn
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Text("${stringResource(R.string.import_kube_expires)}: ${certExpiry(cluster.certNotAfter)}", style = MaterialTheme.typography.bodyMedium, color = color)
             MutedText(stringResource(R.string.kube_home_renew))
@@ -68,56 +72,15 @@ internal fun KubeCredentialsBanner(cluster: ContextSummary) {
 /** The API server did not answer, or refused the credentials: why, and try again. */
 @Composable
 internal fun KubeUnreachableCard(message: UiText, onRetry: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.overview_unreachable_title), style = MaterialTheme.typography.titleMedium)
             Text(message.asString(), style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.bad)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SignInAction(message, onSignedIn = onRetry)
-                Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+                IchorButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
             }
         }
-    }
-}
-
-/**
- * The cluster at a glance: its API server and version, how many nodes are ready, and who the
- * credentials are. [nodes] is null until the API server answered.
- */
-@Composable
-internal fun KubeSummaryCard(name: String, cluster: ContextSummary, nodes: KubeNodesOverview?) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    val version = nodes?.serverVersion?.takeIf { it.isNotEmpty() }
-                    MutedText(version?.let { stringResource(R.string.kube_home_version, it) } ?: stringResource(R.string.common_kind_kubernetes))
-                }
-                nodes?.takeIf { !it.forbidden && it.nodes.isNotEmpty() }?.let { KubeStatusPill(it) }
-            }
-            HorizontalDivider(Modifier.padding(vertical = 12.dp))
-            InfoRow(stringResource(R.string.import_kube_server), cluster.endpoints.joinToString("\n"), mono = true)
-            if (nodes != null && !nodes.forbidden) {
-                InfoRow(stringResource(R.string.overview_stat_nodes), "${nodes.readyCount}/${nodes.nodes.size}")
-            }
-            if (cluster.user.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_user), cluster.user)
-            // Who the API server takes the credentials for (an OIDC or cloud identity); hidden when it cannot say.
-            rememberKubeWhoAmI(cluster.name)?.let { who ->
-                InfoRow(stringResource(R.string.kube_whoami_user), listOf(who.user, who.groups.joinToString(", ")).filter { it.isNotEmpty() }.joinToString("\n"), mono = true)
-            }
-            if (cluster.certNotAfter > 0) InfoRow(stringResource(R.string.import_kube_expires), certExpiry(cluster.certNotAfter))
-        }
-    }
-}
-
-@Composable
-private fun KubeStatusPill(nodes: KubeNodesOverview) {
-    val colors = LocalStatusColors.current
-    when (nodes.readyCount) {
-        nodes.nodes.size -> StatusPill(stringResource(R.string.overview_status_healthy), colors.ok)
-        0 -> StatusPill(stringResource(R.string.overview_status_down), colors.bad)
-        else -> StatusPill(stringResource(R.string.overview_status_degraded), colors.warn)
     }
 }
 
@@ -125,45 +88,57 @@ private fun KubeStatusPill(nodes: KubeNodesOverview) {
  * The nodes as Kubernetes sees them: roles, readiness, cordon, address, kubelet version,
  * pressure, and where the cloud put them (autoscaler pool, machine type, spot), those needing
  * attention first. A tap opens [onNode]'s actions (cordon, drain): there is no node detail
- * screen, it reads the node through Talos. Past NODE_DENSE_THRESHOLD nodes the card turns
- * dense (see DenseKubeNodes) and the title opens the Kubernetes nodes screen ([onAllNodes]):
- * a card holding hundreds of rows defeats the home. Credentials that may not list nodes get a
- * note instead; the rest of the home still works.
+ * screen, it reads the node through Talos. Like the Talos home's NodesCard, collapsed (the
+ * default, [expanded] shared with it) a dense row per node up to FEW_NODES, else a chip per
+ * node; expanded, a full row per node with its usage. The header toggles between the two. Past
+ * NODE_DENSE_THRESHOLD nodes the card turns dense (see DenseKubeNodes) and the title opens the
+ * Kubernetes nodes screen ([onAllNodes]): a card holding hundreds of rows defeats the home.
+ * Credentials that may not list nodes get a note instead; the rest of the home still works.
  */
 @Composable
-internal fun KubeNodesCard(overview: KubeNodesOverview, onNode: (KubeNodeInfo) -> Unit, onAllNodes: (NodeFilter?) -> Unit) {
-    val dense = isDenseCluster(overview.nodes.size)
-    Card(Modifier.fillMaxWidth()) {
-        Row(
-            (if (dense) Modifier.clickable(role = Role.Button, onClickLabel = stringResource(R.string.overview_nodes_open_all)) { onAllNodes(null) } else Modifier)
-                .padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(stringResource(R.string.common_label_nodes), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            if (!overview.forbidden) {
-                Text(overview.nodes.size.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (dense) {
-                Icon(
-                    Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 4.dp),
-                )
-            }
-        }
+internal fun KubeNodesCard(
+    overview: KubeNodesOverview,
+    /** CPU and memory in use per node, from metrics-server; null without it. */
+    top: KubeTopNodes?,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    onNode: (KubeNodeInfo) -> Unit,
+    onAllNodes: (NodeFilter?) -> Unit,
+    /** What a full row's swipe and long press lead to. */
+    rowActions: KubeNodeRowActions,
+) {
+    val total = overview.nodes.size
+    val dense = isDenseCluster(total)
+    val listed = !overview.forbidden && total > 0
+    val nodes = remember(overview) { overview.nodes.byStatus().flatMap { it.nodes } }
+    IchorCard(Modifier.fillMaxWidth().animateContentSize()) {
+        SectionHeader(
+            stringResource(R.string.overview_stat_nodes),
+            when {
+                dense -> Modifier.clickable(role = Role.Button, onClickLabel = stringResource(R.string.overview_nodes_open_all)) { onAllNodes(null) }
+                listed -> Modifier.expandable(expanded, onToggle = onToggle)
+                else -> Modifier
+            }.padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
+            subtitle = if (overview.forbidden) null else pluralStringResource(R.plurals.overview_summary_nodes, total, total),
+            pill = if (listed) nodesPillOf(nodes.map { it.status }) else null,
+            chevron = when {
+                dense -> Icons.AutoMirrored.Outlined.KeyboardArrowRight
+                !listed -> null
+                expanded -> Icons.Outlined.ExpandLess
+                else -> Icons.Outlined.ExpandMore
+            },
+        )
         when {
             overview.forbidden -> MutedText(stringResource(R.string.kube_home_nodes_forbidden), modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp))
             overview.nodes.isEmpty() -> MutedText(stringResource(R.string.kube_home_no_nodes), modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp))
-            dense -> DenseKubeNodes(overview.nodes, onNode, onAllNodes)
+            dense -> DenseKubeNodes(overview.nodes, onNode, onAllNodes, rowActions)
+            !expanded -> KubeNodesCompact(nodes, onNode)
             else -> {
-                val nodes = remember(overview) { overview.nodes.byStatus().flatMap { it.nodes } }
-                // Read again with every refresh of the list; no bars without metrics-server.
-                val top = rememberKubeTopNodes(overview)
+                // No bars without metrics-server.
                 val usage = remember(top) { top?.byName.orEmpty() }
                 nodes.forEachIndexed { i, node ->
                     if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                    KubeNodeRow(node, onClick = { onNode(node) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp), usage = usage[node.name])
+                    KubeNodeRow(node, onClick = { onNode(node) }, rowActions, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp), usage = usage[node.name])
                 }
             }
         }
@@ -173,13 +148,20 @@ internal fun KubeNodesCard(overview: KubeNodesOverview, onNode: (KubeNodeInfo) -
 
 /**
  * A node's row: name and status, then its details, provenance, CPU and memory in use ([usage],
- * from metrics-server, when there is one) and problem pills; a tap is [onClick].
+ * from metrics-server, when there is one) and problem pills; a tap is [onClick], a swipe left or
+ * a long press [actions]' (see KubeNodeQuickActions).
  */
+@Composable
+internal fun KubeNodeRow(node: KubeNodeInfo, onClick: () -> Unit, actions: KubeNodeRowActions, modifier: Modifier = Modifier, usage: KubeTopNode? = null) {
+    KubeNodeQuickActions(node, actions, onClick) { KubeNodeRowContent(node, modifier, usage) }
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun KubeNodeRow(node: KubeNodeInfo, onClick: () -> Unit, modifier: Modifier = Modifier, usage: KubeTopNode? = null) {
+private fun KubeNodeRowContent(node: KubeNodeInfo, modifier: Modifier, usage: KubeTopNode?) {
     val colors = LocalStatusColors.current
-    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).then(modifier), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    // Opaque, so the swipe's colour shows only beside the row.
+    Column(Modifier.fillMaxWidth().background(CardDefaults.cardColors().containerColor).then(modifier), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(node.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             if (node.ready) {
@@ -222,30 +204,4 @@ private fun nodeCapacityLabel(node: KubeNodeInfo): String? = when (node.capacity
     "on-demand" -> stringResource(R.string.kube_node_capacity_on_demand)
     "reserved" -> stringResource(R.string.kube_node_capacity_reserved)
     else -> null
-}
-
-/** The Kubernetes screens that work with these credentials alone. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-internal fun KubeToolsCard(nav: KubeHomeNavigation) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.common_kind_kubernetes), style = MaterialTheme.typography.titleMedium)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = nav.onWorkloads) { Text(stringResource(R.string.overview_action_workloads)) }
-                OutlinedButton(onClick = nav.onResources) { Text(stringResource(R.string.kb_title)) }
-                OutlinedButton(onClick = nav.onHelm) { Text(stringResource(R.string.kb_helm_title)) }
-                OutlinedButton(onClick = nav.onStorage) { Text(stringResource(R.string.storage_title)) }
-                OutlinedButton(onClick = nav.onServices) { Text(stringResource(R.string.kube_services_title)) }
-                OutlinedButton(onClick = nav.onJobs) { Text(stringResource(R.string.kube_jobs_title)) }
-                OutlinedButton(onClick = nav.onEvents) { Text(stringResource(R.string.kube_events_stream_title)) }
-                OutlinedButton(onClick = nav.onMetrics) { Text(stringResource(R.string.metrics_title)) }
-                OutlinedButton(onClick = { nav.onDataServices(null) }) { Text(stringResource(R.string.data_services_title)) }
-                OutlinedButton(onClick = nav.onCheckup) { Text(stringResource(R.string.checkup_title)) }
-                OutlinedButton(onClick = nav.onCapacity) { Text(stringResource(R.string.capacity_title)) }
-                OutlinedButton(onClick = nav.onApiHealth) { Text(stringResource(R.string.apihealth_title)) }
-                OutlinedButton(onClick = nav.onNetworkPolicies) { Text(stringResource(R.string.netpol_title)) }
-            }
-        }
-    }
 }

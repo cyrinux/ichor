@@ -36,6 +36,10 @@ public struct CnpgCluster: Decodable, Equatable, Identifiable, Sendable {
     public let currentPrimary: String
     public let targetPrimary: String
     public let instancePods: [CnpgPod]
+    /// Instances the operator marks failed.
+    public let failedInstances: [String]
+    /// Instances the operator knows (a volume left) that have no pod, such as an evicted primary.
+    public let missingInstances: [String]
     /// ok, failing, off or unknown.
     public let archiving: String
     /// ok, failed, stale or none.
@@ -65,6 +69,8 @@ public struct CnpgCluster: Decodable, Equatable, Identifiable, Sendable {
         currentPrimary = try c.field(.currentPrimary, "")
         targetPrimary = try c.field(.targetPrimary, "")
         instancePods = try c.field(.instancePods, [])
+        failedInstances = try c.field(.failedInstances, [])
+        missingInstances = try c.field(.missingInstances, [])
         archiving = try c.field(.archiving, "")
         lastBackup = try c.field(.lastBackup, "")
         backupMethod = try c.field(.backupMethod, "")
@@ -77,7 +83,8 @@ public struct CnpgCluster: Decodable, Equatable, Identifiable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case namespace, name, phase, phaseReason, health, hibernated, reasons, instances, readyInstances
-        case currentPrimary, targetPrimary, instancePods, archiving, lastBackup, backupMethod, objectStore, scheduled
+        case currentPrimary, targetPrimary, instancePods, failedInstances, missingInstances
+        case archiving, lastBackup, backupMethod, objectStore, scheduled
         case lastSuccessfulBackupAt, lastFailedBackupAt, firstRecoverabilityAt
     }
 }

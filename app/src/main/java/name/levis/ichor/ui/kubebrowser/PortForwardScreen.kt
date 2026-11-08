@@ -19,18 +19,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -161,9 +161,9 @@ fun PortForwardScreen(
     LaunchedEffect(declared) { if (typed.isEmpty()) declared.firstOrNull()?.let { typed = it.port.toString() } }
     val port = typed.trim().toIntOrNull()?.takeIf { it in 1..65535 }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.kb_forward_title))
@@ -187,7 +187,7 @@ fun PortForwardScreen(
                 } else {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         p.data.forEach { c ->
-                            FilterChip(
+                            IchorFilterChip(
                                 selected = typed == c.port.toString(),
                                 onClick = { typed = c.port.toString() },
                                 label = { Text(if (c.name.isEmpty()) "${c.port}" else "${c.port} · ${c.name}", fontFamily = FontFamily.Monospace) },
@@ -208,9 +208,9 @@ fun PortForwardScreen(
                     modifier = Modifier.weight(1f),
                 )
                 if (running) {
-                    OutlinedButton(onClick = vm::stop) { Text(stringResource(R.string.kb_forward_stop)) }
+                    IchorOutlinedButton(onClick = vm::stop) { Text(stringResource(R.string.kb_forward_stop)) }
                 } else {
-                    Button(onClick = { port?.let(vm::start) }, enabled = port != null) { Text(stringResource(R.string.kb_forward_start)) }
+                    IchorButton(onClick = { port?.let(vm::start) }, enabled = port != null) { Text(stringResource(R.string.kb_forward_start)) }
                 }
             }
             forward?.let { ForwardStatus(it) }
@@ -229,14 +229,14 @@ private fun ForwardStatus(f: ForwardState) {
     }
     if (f.running && address != null) {
         val url = forwardUrl(address)
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 MutedText(stringResource(R.string.kb_forward_ready, f.port))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     SelectionContainer(Modifier.weight(1f)) { Text(url, style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace) }
                     TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.kb_copy), onClick = { copyWithToast(context, url, url, sensitive = false) })
                 }
-                Button(onClick = {
+                IchorButton(onClick = {
                     try {
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                     } catch (_: ActivityNotFoundException) {

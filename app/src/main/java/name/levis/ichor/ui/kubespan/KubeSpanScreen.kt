@@ -5,6 +5,7 @@ import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.PrimaryTabRow
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -18,13 +19,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,6 +62,8 @@ import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.components.SwipeTabPager
 
 class KubeSpanViewModel(private val talos: TalosRepository) : LoadingViewModel<KubeSpanOverview>() {
+    // Read when its tab is open.
+    override val loadsOnOpen = false
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<KubeSpanOverview>? = talos.cached(KUBESPAN)
     override val restores get() = talos.restores
@@ -83,6 +86,8 @@ fun KubeSpanScreen(
     diagVm: KubeSpanDiagViewModel = viewModel(factory = factory { KubeSpanDiagViewModel(app.talosRepository) }),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
+    // The map uses the width: that tab rotates on a phone, the peer list does not.
+    if (tab == MAP_TAB) AllowLandscape()
     val state by vm.state.collectAsStateWithLifecycle()
     val mapState by mapVm.state.collectAsStateWithLifecycle()
     LaunchedEffect(tab) {
@@ -94,10 +99,10 @@ fun KubeSpanScreen(
     // The peer whose sheet is open: node address and public key.
     var opened by remember { mutableStateOf<Pair<KubeSpanNode, KubeSpanPeer>?>(null) }
 
-    Scaffold(
+    IchorScaffold(
         bottomBar = { DataFreshness(if (tab == MAP_TAB) mapState else state) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text("KubeSpan") },
                 navigationIcon = { BackButton(onBack) },
             )
@@ -116,7 +121,8 @@ fun KubeSpanScreen(
                         val hostnames = vm.hostnames()
                         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             item { Summary(data.nodes) }
-                            items(data.nodes, key = { it.node }) { node ->
+                            // The nodes with a problem first.
+                            items(data.nodes.sortedWith(compareBy({ it.broken == 0 }, { hostnames[it.node] ?: it.node })), key = { it.node }) { node ->
                                 NodeCard(
                                     node,
                                     hostnames[node.node] ?: node.node,
@@ -135,6 +141,7 @@ fun KubeSpanScreen(
             nodeName = vm.hostnames()[node.node] ?: node.node,
             peerName = peer.label.ifBlank { peer.publicKey.take(12) },
             diag = diag,
+            onRetry = diagVm::refresh,
             node = node.node,
             publicKey = peer.publicKey,
             onDismiss = { opened = null },
@@ -146,10 +153,13 @@ private const val MAP_TAB = 0
 
 private const val PEERS_TAB = 1
 
+/** The reasons of a peer that no handshake ever reached. */
+private val NEVER_CONNECTED = setOf("noEndpoint", "neverHandshaked")
+
 @Composable
 private fun Summary(nodes: List<KubeSpanNode>) {
     val enabled = nodes.count { it.enabled }
-    val down = nodes.sumOf { it.down }
+    val down = nodes.sumOf { it.broken }
     val links = if (down > 0) {
         pluralStringResource(R.plurals.kubespan_links_down, down, down)
     } else {
@@ -165,7 +175,7 @@ private fun Summary(nodes: List<KubeSpanNode>) {
 @Composable
 private fun NodeCard(node: KubeSpanNode, hostname: String, siderolink: SiderolinkDiag?, onPeer: (KubeSpanPeer) -> Unit) {
     val colors = LocalStatusColors.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -175,7 +185,7 @@ private fun NodeCard(node: KubeSpanNode, hostname: String, siderolink: Siderolin
                 when {
                     node.error != null -> StatusPill(stringResource(R.string.common_status_unreachable), colors.bad)
                     !node.enabled -> StatusPill(stringResource(R.string.kubespan_status_off), colors.muted)
-                    node.down > 0 -> StatusPill(stringResource(R.string.kubespan_status_down_count, node.down), colors.bad)
+                    node.broken > 0 -> StatusPill(stringResource(R.string.kubespan_status_down_count, node.broken), colors.bad)
                     else -> StatusPill(stringResource(R.string.kubespan_status_up_count, node.up, node.peers.size), colors.ok)
                 }
             }
@@ -196,9 +206,10 @@ private fun PeerRow(peer: KubeSpanPeer, onClick: () -> Unit) {
     Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(peer.label.ifBlank { peer.publicKey.take(12) }, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-            when (peer.state) {
-                "up" -> StatusPill(stringResource(R.string.kubespan_peer_up), colors.ok)
-                "down" -> StatusPill(stringResource(R.string.kubespan_peer_down), colors.bad)
+            when {
+                peer.state == "up" -> StatusPill(stringResource(R.string.kubespan_peer_up), colors.ok)
+                peer.broken && peer.reason in NEVER_CONNECTED -> StatusPill(stringResource(R.string.kubespan_peer_never), colors.bad)
+                peer.broken -> StatusPill(stringResource(R.string.kubespan_peer_down), colors.bad)
                 else -> StatusPill(stringResource(R.string.kubespan_peer_unknown), colors.muted)
             }
         }

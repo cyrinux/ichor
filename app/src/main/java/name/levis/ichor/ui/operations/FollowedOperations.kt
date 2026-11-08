@@ -70,4 +70,25 @@ fun TalosApp.followedOperations(): List<FollowedOperation<*>> = listOf(
     FollowedOperation(OperationKind.IMAGE_SCAN, imageScanRepository.session, ImageScanPresenter) { action ->
         if (action == OperationAction.STOP) imageScanRepository.stop()
     },
+    FollowedOperation(OperationKind.ARGO_SYNC, gitOpsOperations.argoSync, ArgoSyncPresenter) { action ->
+        if (action == OperationAction.TERMINATE) gitOpsOperations.terminate()
+    },
+    FollowedOperation(OperationKind.FLUX_RECONCILE, gitOpsOperations.fluxReconcile, FluxReconcilePresenter) { action ->
+        if (action == OperationAction.STOP_FOLLOWING) gitOpsOperations.stopFollowingFlux()
+    },
+    FollowedOperation(OperationKind.ROLLOUT, rolloutManager.current, RolloutPresenter) { action ->
+        if (action == OperationAction.STOP_FOLLOWING) rolloutManager.stop()
+    },
+    FollowedOperation(OperationKind.NETPERF, netPerfManager.current, NetPerfPresenter) { action ->
+        if (action == OperationAction.STOP) netPerfManager.stop()
+    },
+    FollowedOperation(OperationKind.RUNBOOK, runbookManager.current, RunbookPresenter) { action ->
+        if (action == OperationAction.STOP) runbookManager.stop()
+    },
+    FollowedOperation(OperationKind.POD_SWEEP, podSweepManager.current, PodSweepPresenter) { action ->
+        if (action == OperationAction.STOP) podSweepManager.stop()
+    },
+    FollowedOperation(OperationKind.CA_ROTATION, caRotationManager.current, CARotationPresenter) { action ->
+        if (action == OperationAction.STOP) caRotationManager.stop()
+    },
 )

@@ -44,7 +44,10 @@ public struct EnrolledKey: Codable, Equatable, Sendable {
     /// needed to unwrap, and the other one is refused with a clear message.
     public var uv: Bool
 
-    public init(credentialId: Data, publicKey: Data, label: String, enrolledAt: Date = Date(), wrappedDek: Data? = nil, uv: Bool = false) {
+    public init(
+        credentialId: Data, publicKey: Data, label: String, enrolledAt: Date = Date(), wrappedDek: Data? = nil,
+        uv: Bool = false
+    ) {
         self.credentialId = credentialId
         self.publicKey = publicKey
         self.label = label

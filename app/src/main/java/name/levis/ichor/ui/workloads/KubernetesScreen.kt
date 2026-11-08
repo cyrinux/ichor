@@ -6,11 +6,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,16 +30,25 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.isMeteredNetwork
 import name.levis.ichor.data.realFingerprint
+import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.KubeNamespaces
 import name.levis.ichor.model.KubeScope
 import name.levis.ichor.model.KubernetesAction
 import name.levis.ichor.model.defaultScope
+import name.levis.ichor.model.detected
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.rememberShareLink
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.argorollouts.ArgoRolloutsViewModel
+import name.levis.ichor.ui.crossplane.CrossplaneViewModel
+import name.levis.ichor.ui.dataservices.DataServicesViewModel
 import name.levis.ichor.ui.flows.CiliumViewModel
+import name.levis.ichor.ui.lifecycle.ClusterLifecycleViewModel
+import name.levis.ichor.ui.policies.PoliciesViewModel
+import name.levis.ichor.ui.tailscale.TailscaleViewModel
+import name.levis.ichor.ui.vms.VirtualMachinesViewModel
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.ActionBarActions
@@ -47,8 +56,11 @@ import name.levis.ichor.ui.components.ActionBarEditor
 import name.levis.ichor.ui.components.SwipeTabPager
 import name.levis.ichor.ui.components.pageContent
 
+/** The network test's tab (its notification opens it). */
+const val NETPERF_TAB = 3
+
 /** Workloads, Pods, CronJobs and NetPerf. */
-private val KUBE_TABS = listOf(0, 1, 2, 3)
+private val KUBE_TABS = listOf(0, 1, 2, NETPERF_TAB)
 
 /**
  * The cluster's Kubernetes side, through the Kubernetes API with the admin kubeconfig Talos
@@ -61,7 +73,9 @@ private val KUBE_TABS = listOf(0, 1, 2, 3)
  * policies and, with Cilium or Calico,
  * the live flows ([onFlows] with the namespace and pod to narrow them to, or nulls), and from
  * its menu the browser of every kind ([onResources]), the Helm releases ([onHelm]) and the
- * live cluster events ([onEvents]).
+ * live cluster events ([onEvents]), and the admission policies ([onPolicies]). Crossplane,
+ * the Tailscale operator, Argo Rollouts and Cluster API / Sidero Metal are offered once the
+ * cluster answered it runs them, as on the Kubernetes home of a cluster added from a kubeconfig.
  * [focus] (a share link) opens a tab, scoped to and searched for one item, whose sheet opens
  * once its row loads.
  */
@@ -73,6 +87,7 @@ fun KubernetesScreen(
     onNetworkPolicies: () -> Unit,
     onApiHealth: () -> Unit,
     onCheckup: () -> Unit,
+    onCapacity: () -> Unit,
     onFlows: (namespace: String?, pod: String?) -> Unit,
     onResources: () -> Unit,
     onHelm: () -> Unit,
@@ -80,7 +95,18 @@ fun KubernetesScreen(
     onServices: () -> Unit,
     onJobs: () -> Unit,
     onEvents: () -> Unit,
+    onPolicies: () -> Unit,
+    onAutoscaling: () -> Unit,
+    onVirtualMachines: () -> Unit,
+    onCrossplane: () -> Unit,
+    onTailscale: () -> Unit,
+    onArgoRollouts: () -> Unit,
+    onClusterLifecycle: () -> Unit,
+    /** Data services on one system (null: the hub), alone (solo) for one the Kubernetes home files elsewhere. */
+    onDataServices: (DataServiceKind?, Boolean) -> Unit,
     focus: KubeFocus = KubeFocus(0),
+    /** Where a pod's pull problem leads; null on a cluster without Talos nodes. */
+    pullLinks: PodPullLinks? = null,
 ) {
     var tab by rememberSaveable { mutableIntStateOf(focus.tab) }
     var query by rememberSaveable { mutableStateOf(focus.name) }
@@ -99,43 +125,64 @@ fun KubernetesScreen(
     val netPerf = netPerfViewModel()
     val cilium: CiliumViewModel = viewModel(factory = factory { CiliumViewModel(app.ciliumRepository) })
     val ciliumState by cilium.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (ciliumState == UiState.Loading) cilium.refresh() }
     // Unknown until read, or unreadable: no entry rather than one that fails.
     val hasFlows = (ciliumState as? UiState.Loaded)?.data?.installed == true
+    // The operators' screens, offered like on the Kubernetes home: each read answers "not installed" quickly.
+    val crossplane: CrossplaneViewModel = viewModel(factory = factory { CrossplaneViewModel(app.kubeBrowser) })
+    val tailscale: TailscaleViewModel = viewModel(factory = factory { TailscaleViewModel(app.kubeBrowser) })
+    val rollouts: ArgoRolloutsViewModel = viewModel(factory = factory { ArgoRolloutsViewModel(app.argoRolloutsRepository) })
+    val lifecycle: ClusterLifecycleViewModel = viewModel(factory = factory { ClusterLifecycleViewModel(app.kubeBrowser) })
+    val vms: VirtualMachinesViewModel = viewModel(factory = factory { VirtualMachinesViewModel(app.vmRepository) })
+    val admission: PoliciesViewModel = viewModel(factory = factory { PoliciesViewModel(app.policyRepository) })
+    val operators = listOf<LoadingViewModel<*>>(crossplane, tailscale, rollouts, lifecycle, vms, admission)
+    val crossplaneState by crossplane.state.collectAsStateWithLifecycle()
+    val tailscaleState by tailscale.state.collectAsStateWithLifecycle()
+    val rolloutsState by rollouts.state.collectAsStateWithLifecycle()
+    val lifecycleState by lifecycle.state.collectAsStateWithLifecycle()
+    val vmsState by vms.state.collectAsStateWithLifecycle()
+    val admissionState by admission.state.collectAsStateWithLifecycle()
+    val hasCrossplane = (crossplaneState as? UiState.Loaded)?.data?.installed == true
+    val hasTailscale = (tailscaleState as? UiState.Loaded)?.data?.installed == true
+    val hasRollouts = (rolloutsState as? UiState.Loaded)?.data?.installed == true
+    val hasLifecycle = (lifecycleState as? UiState.Loaded)?.data?.installed == true
+    val hasVms = (vmsState as? UiState.Loaded)?.data?.installed == true
+    val hasPolicies = (admissionState as? UiState.Loaded)?.data?.installed == true
+    // Which systems Data services reads, to offer those filed outside it; never blocks the tabs.
+    val dataServices: DataServicesViewModel = viewModel(factory = factory { DataServicesViewModel(app.dataServicesRepository) })
+    LaunchedEffect(Unit) { dataServices.load(Unit, dataServices.inventoryHints()) }
+    val dataState by dataServices.state.collectAsStateWithLifecycle()
+    val detected = (dataState as? UiState.Loaded)?.data?.detected.orEmpty()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val servers by app.kubeServers.servers.collectAsStateWithLifecycle()
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
-    val fingerprint = config?.realFingerprint?.takeUnless { mask.enabled }
-    var editing by remember { mutableStateOf(false) }
-    // Screenshot mode turned on with the dialog open: closed, not just hidden until it is off.
-    LaunchedEffect(fingerprint) { if (fingerprint == null) editing = false }
+    // The API address, set from the cluster's row in Manage clusters: a new one (also set while
+    // this screen was in the back stack) reloads every list through it, and a load in flight
+    // through the old one is cancelled.
+    val server = config?.realFingerprint?.let { servers[it] }.orEmpty()
+    var listedThrough by rememberSaveable { mutableStateOf(server) }
+    LaunchedEffect(server) {
+        if (server != listedThrough) {
+            listedThrough = server
+            (listOf<LoadingViewModel<*>>(workloads, pods, cronJobs, netPerf, cilium, namespaces, dataServices) + operators).forEach { it.refresh(reset = true) }
+        }
+    }
     val scope = rememberKubeScope(app, namespaces, mask.enabled, focus.namespace)
     val bar by app.uiPreferences.kubernetesBar.collectAsStateWithLifecycle()
     var customizing by rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = customizing) { customizing = false }
     val share = rememberShareLink()
-
-    if (editing && fingerprint != null) {
-        KubeServerDialog(
-            saved = servers[fingerprint].orEmpty(),
-            onSave = { server ->
-                editing = false
-                if (server != servers[fingerprint].orEmpty()) {
-                    app.setKubeServer(fingerprint, server)
-                    // Both reload through the new address; a load in flight through the old one is cancelled.
-                    listOf<LoadingViewModel<*>>(workloads, pods, cronJobs, netPerf, cilium, namespaces).forEach { it.refresh(reset = true) }
-                }
-            },
-            onDismiss = { editing = false },
-        )
+    // The pods tab's "Clean up dead pods", for the namespace listed.
+    var sanitizing by rememberSaveable { mutableStateOf(false) }
+    if (sanitizing) {
+        SanitizeSheet(scope.scope.namespace, app.kubeRepository, app.podSweepManager, config?.activeContext.orEmpty(), onDismiss = { sanitizing = false })
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            if (customizing) TopAppBar(
+            if (customizing) IchorTopAppBar(
                 title = { Text(stringResource(R.string.bar_edit_title)) },
-                actions = { TextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
-            ) else TopAppBar(
+                actions = { IchorTextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
+            ) else IchorTopAppBar(
                 title = { Text("Kubernetes") },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -155,7 +202,17 @@ fun KubernetesScreen(
                                 KubernetesAction.SERVICES -> onServices()
                                 KubernetesAction.JOBS -> onJobs()
                                 KubernetesAction.EVENTS -> onEvents()
-                                KubernetesAction.API_ADDRESS -> editing = true
+                                KubernetesAction.POLICIES -> onPolicies()
+                                KubernetesAction.AUTOSCALING -> onAutoscaling()
+                                KubernetesAction.VIRTUAL_MACHINES -> onVirtualMachines()
+                                KubernetesAction.CAPACITY -> onCapacity()
+                                KubernetesAction.CROSSPLANE -> onCrossplane()
+                                KubernetesAction.TAILSCALE -> onTailscale()
+                                KubernetesAction.ARGO_ROLLOUTS -> onArgoRollouts()
+                                KubernetesAction.CLUSTER_LIFECYCLE -> onClusterLifecycle()
+                                KubernetesAction.DATA_SERVICES -> onDataServices(null, false)
+                                KubernetesAction.CERT_MANAGER, KubernetesAction.CASTAI ->
+                                    onDataServices(action.dataServiceKind, true)
                             }
                         },
                         customizeLabel = stringResource(R.string.bar_edit_title),
@@ -164,29 +221,38 @@ fun KubernetesScreen(
                             when (action) {
                                 KubernetesAction.SHARE -> tab < ShareTarget.KUBE_TABS.size
                                 KubernetesAction.FLOWS -> hasFlows
-                                KubernetesAction.API_ADDRESS -> fingerprint != null
+                                KubernetesAction.CROSSPLANE -> hasCrossplane
+                                KubernetesAction.TAILSCALE -> hasTailscale
+                                KubernetesAction.ARGO_ROLLOUTS -> hasRollouts
+                                KubernetesAction.CLUSTER_LIFECYCLE -> hasLifecycle
+                                KubernetesAction.VIRTUAL_MACHINES -> hasVms
+                                KubernetesAction.POLICIES -> hasPolicies
+                                // Unknown until read, or unreadable: no entry rather than one that fails.
+                                KubernetesAction.CERT_MANAGER, KubernetesAction.CASTAI ->
+                                    action.dataServiceKind in detected
                                 else -> true
                             }
                         },
+                        groups = kubernetesActionGroups,
                     )
                 },
             )
         },
     ) { padding ->
         if (customizing) {
-            ActionBarEditor(bar, kubernetesActionLook, app.uiPreferences::setKubernetesBar, Modifier.pageContent(padding))
-            return@Scaffold
+            ActionBarEditor(bar, kubernetesActionLook, app.uiPreferences::setKubernetesBar, Modifier.pageContent(padding), groups = kubernetesActionGroups)
+            return@IchorScaffold
         }
         Column(Modifier.pageContent(padding).fillMaxSize()) {
             PrimaryScrollableTabRow(selectedTabIndex = tab, edgePadding = 0.dp) {
                 AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.workloads_title)) })
                 AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.pods_title)) })
                 AppTab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.cronjobs_title)) })
-                AppTab(selected = tab == 3, onClick = { tab = 3 }, text = { Text(stringResource(R.string.netperf_tab)) })
+                AppTab(selected = tab == NETPERF_TAB, onClick = { tab = NETPERF_TAB }, text = { Text(stringResource(R.string.netperf_tab)) })
             }
             SwipeTabPager(KUBE_TABS, tab, onSelect = { tab = it }) { page ->
                 when (page) {
-                    0 -> WorkloadsTab(scope, query, onQuery = { query = it }, vm = workloads, focusKey = focusKey(page), onFocused = onFocused)
+                    0 -> WorkloadsTab(scope, query, onQuery = { query = it }, vm = workloads, focusKey = focusKey(page), onFocused = onFocused, onAutoscaling = onAutoscaling)
                     1 -> PodsTab(
                         scope,
                         query,
@@ -195,6 +261,8 @@ fun KubernetesScreen(
                         vm = pods,
                         focusKey = focusKey(page),
                         onFocused = onFocused,
+                        pullLinks = pullLinks,
+                        onCleanUp = { sanitizing = true },
                     )
                     2 -> CronJobsTab(scope, query, onQuery = { query = it }, vm = cronJobs, focusKey = focusKey(page), onFocused = onFocused)
                     else -> NetPerfTab(netPerf)
@@ -220,7 +288,6 @@ internal fun rememberKubeScope(app: TalosApp, namespaces: NamespacesViewModel, m
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val stored by app.kubeScopes.scopes.collectAsStateWithLifecycle()
     val listed by namespaces.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (listed == UiState.Loading) namespaces.refresh() }
     val cluster = config?.realFingerprint?.takeUnless { masked }
     var local by rememberSaveable { mutableStateOf<String?>(null) }
     var fromLink by rememberSaveable { mutableStateOf(linked.ifEmpty { null }) }

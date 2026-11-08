@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cyrinux/ichor/go/ichorgo"
@@ -23,7 +25,22 @@ var kubeCommands = []command{
 		return out, err
 	}},
 	{name: "search", args: "QUERY", run: probeSearch},
+	{name: "image-report", args: "[kube]", run: probeImageReport},
+	{name: "renew-signins", args: "", run: func(e env) (string, error) {
+		// renew-signins: renews every signed-in context like the apps on foreground and before a
+		// background check. The probe's sign-ins live for one run: a kubeconfig reports the
+		// contexts it signs in itself, a talosconfig its Omni contexts.
+		if ichorgo.IsKubeconfig(e.cfg) {
+			return ichorgo.KubeRenewSignIns(e.cfg, "")
+		}
+
+		return ichorgo.KubeRenewSignIns("", e.cfg)
+	}},
+	{name: "kube-signin", args: "[CONTEXT]", run: probeKubeSignIn},
 	{name: "discover", args: "PROVIDER SECRETS_JSON", noConfig: true, run: probeDiscover},
+	{name: "oncall-incidents", args: "ONCALL_JSON_FILE [AM_ALERTS_JSON_FILE]", run: probeOnCallIncidents},
+	{name: "oncall-test", args: "ONCALL_JSON_FILE", noConfig: true, run: probeOnCallTest},
+	{name: "oncall-act", args: "ONCALL_JSON_FILE INCIDENT_ID acknowledge|resolve", run: probeOnCallAct},
 	{name: "workloads", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.KubeWorkloads(e.cfg, e.context, e.kubeServer)
 
@@ -38,6 +55,17 @@ var kubeCommands = []command{
 	{name: "kube-services", args: "[NAMESPACE]", run: func(e env) (out string, err error) {
 		// kube-services [NAMESPACE]: every namespace when omitted.
 		out, err = ichorgo.KubeServices(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+
+		return out, err
+	}},
+	{name: "kube-loadbalancing", args: "", run: func(e env) (out string, err error) {
+		out, err = ichorgo.KubeLoadBalancing(e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
+	{name: "app-routes", args: "PODS_JSON", run: func(e env) (out string, err error) {
+		// app-routes '[{"namespace":"shop","pod":"web-1"}]': the URLs those pods are served at.
+		out, err = ichorgo.KubeAppRoutes(e.cfg, e.context, e.kubeServer, flag.Arg(1))
 
 		return out, err
 	}},
@@ -58,8 +86,14 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
-	{name: "node-loss", args: "[NODE]", run: func(e env) (out string, err error) {
-		// node-loss [NODE]: what losing NODE costs; the worst node when omitted.
+	{name: "node-disk", args: "", run: func(e env) (out string, err error) {
+		// node-disk: each ready node's nodefs/imagefs fill and DiskPressure, as the monitor reads it.
+		out, err = ichorgo.KubeNodeDisk(e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
+	{name: "node-loss", args: "[NODE[,NODE...]]", run: func(e env) (out string, err error) {
+		// node-loss [NODE[,NODE...]]: what losing the nodes costs; the worst node when omitted.
 		out, err = ichorgo.KubeCapacityNodeLoss(e.cfg, e.context, e.kubeServer, flag.Arg(1))
 
 		return out, err
@@ -135,15 +169,19 @@ var kubeCommands = []command{
 		return out, err
 	}},
 	{name: "apihealth", args: "", run: func(e env) (out string, err error) {
+		// apihealth: the API server's health and load, with its progress on stderr (the
+		// wait between the two scrapes counts its seconds).
+		stop := watchReadProgress(e, "apihealth")
 		out, err = ichorgo.KubeAPIHealth(e.cfg, e.context, e.kubeServer)
+		stop()
 
 		return out, err
 	}},
-	{name: "checkup", args: "", run: func(e env) (out string, err error) {
-		// checkup: what no other screen shows (failing pods, full volumes, dead webhooks...),
-		// with its progress on stderr every 500 ms while it reads.
+	{name: "checkup", args: "[LOCALE]", run: func(e env) (out string, err error) {
+		// checkup [LOCALE]: what no other screen shows (failing pods, full volumes, dead webhooks...),
+		// the plugins' findings worded in LOCALE, with its progress on stderr every 500 ms while it reads.
 		stop := watchReadProgress(e, "checkup")
-		out, err = ichorgo.KubeCheckup(e.cfg, e.context, e.kubeServer)
+		out, err = ichorgo.KubeCheckup(e.cfg, e.context, e.kubeServer, flag.Arg(1))
 		stop()
 
 		return out, err
@@ -159,27 +197,36 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
-	{name: "helm-rollback-plan", args: "NAMESPACE NAME [REVISION]", run: func(e env) (out string, err error) {
-		// helm-rollback-plan NAMESPACE NAME [REVISION]: what a rollback would change, dry-run only.
+	{name: "helm-rollback-plan", args: "NAMESPACE NAME [REVISION] [OPTIONS_JSON]", run: func(e env) (out string, err error) {
+		// helm-rollback-plan NAMESPACE NAME [REVISION] [OPTIONS_JSON]: what a rollback would
+		// change and the chart's rollback hooks it would run ("hooks"), dry-run only, e.g.
+		// `web site 1 '{"force":true,"historyMax":2}'`.
 		revision, err := helmRevisionArg(flag.Arg(3))
 		if err == nil {
-			out, err = ichorgo.KubeHelmRollbackPlan(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), revision)
+			out, err = ichorgo.KubeHelmRollbackPlan(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), revision, flag.Arg(4))
 		}
 
 		return out, err
 	}},
-	{name: "helm-rollback", args: "NAMESPACE NAME [REVISION]", run: func(e env) (out string, err error) {
-		// helm-rollback NAMESPACE NAME [REVISION]: rolls the release back (0 or none: the previous revision).
+	{name: "helm-rollback", args: "NAMESPACE NAME [REVISION] [OPTIONS_JSON]", run: func(e env) (out string, err error) {
+		// helm-rollback NAMESPACE NAME [REVISION] [OPTIONS_JSON]: rolls the release back (0 or
+		// none: the previous revision), with {"force","historyMax"}, running the chart's pre-
+		// and post-rollback hooks around the changes.
 		revision, err := helmRevisionArg(flag.Arg(3))
 		if err != nil {
 			return "", err
 		}
 
-		if err = ichorgo.KubeHelmRollback(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), revision); err == nil {
+		if err = ichorgo.KubeHelmRollback(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), revision, flag.Arg(4)); err == nil {
 			out = "rolled back"
 		}
 
 		return out, err
+	}},
+	{name: "helm-rollback-follow", args: "NAMESPACE NAME", run: func(e env) (string, error) {
+		// helm-rollback-follow NAMESPACE NAME, after helm-rollback: prints the workloads'
+		// progress to stderr until they are ready, one failed, or 5 minutes passed.
+		return helmRollbackFollowRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2)), nil
 	}},
 	{name: "audit", args: "[MINUTES]", run: func(e env) (out string, err error) {
 		// audit [MINUTES]: reads the control planes' audit logs (os:admin), 15 minutes by default.
@@ -258,6 +305,13 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "sanitize-preview", args: "[NAMESPACE]", run: func(e env) (out string, err error) {
+		// sanitize-preview [NAMESPACE]: the pods k9s's sanitize would delete, every namespace when omitted.
+		out, err = ichorgo.KubeSanitizePreview(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+
+		return out, err
+	}},
+	{name: "sanitize", args: "NAMESPACE", run: probeSanitize},
 	{name: "scale", args: "KIND NAMESPACE NAME REPLICAS", run: func(e env) (out string, err error) {
 		// scale KIND NAMESPACE NAME REPLICAS
 		replicas, convErr := strconv.Atoi(flag.Arg(4))
@@ -272,28 +326,47 @@ var kubeCommands = []command{
 	}},
 	{name: "suspend-cronjob", args: "NAMESPACE NAME", run: runSuspendCronjob},
 	{name: "resume-cronjob", args: "NAMESPACE NAME", run: runSuspendCronjob},
-	{name: "revisions", args: "NAMESPACE NAME", run: func(e env) (out string, err error) {
-		out, err = ichorgo.KubeDeploymentRevisions(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+	{name: "revisions", args: "KIND NAMESPACE NAME", run: func(e env) (out string, err error) {
+		// revisions Deployment|StatefulSet|DaemonSet NAMESPACE NAME
+		out, err = ichorgo.KubeWorkloadRevisions(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
 
 		return out, err
 	}},
-	{name: "rollback", args: "NAMESPACE NAME REVISION", run: func(e env) (out string, err error) {
-		// rollback NAMESPACE DEPLOYMENT REVISION
-		revision, convErr := strconv.Atoi(flag.Arg(3))
-		if convErr != nil {
-			fmt.Fprintf(os.Stderr, "rollback: revision %q is not a number\n", flag.Arg(3))
-			os.Exit(2)
-		}
+	{name: "revision-diff", args: "KIND NAMESPACE NAME REVISION", run: func(e env) (out string, err error) {
+		// revision-diff KIND NAMESPACE NAME REVISION: what a rollback to REVISION would undo.
+		out, err = ichorgo.KubeRevisionDiff(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), probeRevision(4))
 
-		if err = ichorgo.KubeRollbackDeployment(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), revision); err == nil {
+		return out, err
+	}},
+	{name: "rollback", args: "KIND NAMESPACE NAME REVISION", run: func(e env) (out string, err error) {
+		// rollback KIND NAMESPACE NAME REVISION
+		if err = ichorgo.KubeRollbackWorkload(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), probeRevision(4)); err == nil {
 			out = "rolled back"
 		}
 
 		return out, err
 	}},
+	{name: "rollout-pause", args: "NAMESPACE DEPLOYMENT", run: runRolloutPause},
+	{name: "rollout-resume", args: "NAMESPACE DEPLOYMENT", run: runRolloutPause},
 	{name: "pod-logs", args: "NAMESPACE POD [CONTAINER] [previous]", run: func(e env) (out string, err error) {
 		// pod-logs NAMESPACE POD [CONTAINER] (previous run with -previous via the 4th arg "previous")
 		out, err = ichorgo.KubePodLogs(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4) == "previous", 50)
+
+		return out, err
+	}},
+	{name: "workload-logs", args: "KIND NAMESPACE NAME [FILTER]", run: func(e env) (out string, err error) {
+		out, err = ichorgo.KubeWorkloadLogs(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), "", flag.Arg(4), false, 0, 0)
+
+		return out, err
+	}},
+	{name: "logs-discover", args: "", run: func(e env) (out string, err error) {
+		out, err = ichorgo.LogsDiscover(e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
+	{name: "logs-query", args: "QUERY [SOURCE_JSON]", run: runLogsQuery},
+	{name: "logs-labels", args: "SOURCE_JSON [LABEL]", run: func(e env) (out string, err error) {
+		out, err = ichorgo.LogsLabels(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
 
 		return out, err
 	}},
@@ -304,6 +377,9 @@ var kubeCommands = []command{
 	}},
 	{name: "cordon", args: "NODE", run: runCordon},
 	{name: "uncordon", args: "NODE", run: runCordon},
+	{name: "node-meta", args: "NODE", run: runNodeMeta},
+	{name: "node-meta-plan", args: "NODE EDITS_JSON [force]", run: runNodeMeta},
+	{name: "node-meta-apply", args: "NODE EDITS_JSON [force]", run: runNodeMeta},
 	{name: "maintenance", args: "NODE ACTION [IMAGE]", run: func(e env) (out string, err error) {
 		// maintenance NODE reboot|shutdown|none, or NODE upgrade IMAGE: cordons and drains the
 		// node for real (then upgrades it to IMAGE).
@@ -380,12 +456,104 @@ func runSuspendCronjob(e env) (out string, err error) {
 }
 
 // runCordon serves cordon, uncordon: e.cmd tells which.
+// runLogsQuery searches the last 24 hours of the log backend SOURCE_JSON, else the likeliest
+// one found in the cluster.
+func runLogsQuery(e env) (string, error) {
+	source := flag.Arg(2)
+
+	if source == "" {
+		found, err := ichorgo.LogsDiscover(e.cfg, e.context, e.kubeServer)
+		if err != nil {
+			return "", err
+		}
+
+		var discovery struct {
+			Candidates []struct {
+				Source json.RawMessage `json:"source"`
+			} `json:"candidates"`
+		}
+
+		if err := json.Unmarshal([]byte(found), &discovery); err != nil {
+			return "", err
+		}
+
+		if len(discovery.Candidates) == 0 {
+			return "", errors.New("no log backend found: pass SOURCE_JSON")
+		}
+
+		source = string(discovery.Candidates[0].Source)
+	}
+
+	now := time.Now()
+
+	return ichorgo.LogsQuery(e.cfg, e.context, e.kubeServer, source, flag.Arg(1), now.Add(-24*time.Hour).UnixMilli(), now.UnixMilli(), 100)
+}
+
 func runCordon(e env) (out string, err error) {
 	if err = ichorgo.KubeCordon(e.cfg, e.context, e.kubeServer, flag.Arg(1), e.cmd == "cordon"); err == nil {
 		out = e.cmd + "ed"
 	}
 
 	return out, err
+}
+
+// runNodeMeta reads, plans or applies a node's taints and labels: NODE is the Kubernetes
+// node name on a kubeconfig, the Talos address otherwise. "force" allows protected changes
+// (for the plan, it sets the edits' force).
+func runNodeMeta(e env) (string, error) {
+	node, edits, force := flag.Arg(1), flag.Arg(2), flag.Arg(3) == "force"
+	kube := ichorgo.IsKubeconfig(e.cfg)
+
+	switch e.cmd {
+	case "node-meta":
+		if kube {
+			return ichorgo.KubeNodeMeta(e.cfg, e.context, e.kubeServer, node)
+		}
+
+		return ichorgo.NodeMeta(e.cfg, e.context, e.kubeServer, node)
+	case "node-meta-plan":
+		edits, err := withForce(edits, force)
+		if err != nil {
+			return "", err
+		}
+
+		if kube {
+			return ichorgo.KubeNodeMetaPlan(e.cfg, e.context, e.kubeServer, node, edits)
+		}
+
+		return ichorgo.NodeMetaPlan(e.cfg, e.context, e.kubeServer, node, edits)
+	default:
+		var err error
+		if kube {
+			err = ichorgo.KubeNodeMetaApply(e.cfg, e.context, e.kubeServer, node, edits, force)
+		} else {
+			err = ichorgo.NodeMetaApply(e.cfg, e.context, e.kubeServer, node, edits, force)
+		}
+
+		if err != nil {
+			return "", err
+		}
+
+		return "applied", nil
+	}
+}
+
+// withForce sets "force": true in an edits document.
+func withForce(edits string, force bool) (string, error) {
+	if !force {
+		return edits, nil
+	}
+
+	var doc map[string]any
+	if err := json.Unmarshal([]byte(edits), &doc); err != nil {
+		return "", fmt.Errorf("bad edits: %w", err)
+	}
+
+	doc["force"] = true
+
+	out, err := json.Marshal(doc)
+
+	return string(out), err
 }
 
 // probeCluster stands for the cluster id the apps store: the probe only prints the targets.
@@ -422,6 +590,58 @@ func probeDiscover(e env) (string, error) {
 	}
 
 	return ichorgo.ParseKubeconfig(yaml)
+}
+
+// probeSanitize deletes the pods sanitize-preview lists in NAMESPACE (required: never every
+// namespace by mistake), the way the apps pass back the preview's rows.
+func probeSanitize(e env) (string, error) {
+	namespace := flag.Arg(1)
+	if namespace == "" {
+		fmt.Fprintln(os.Stderr, "sanitize: NAMESPACE is required")
+		os.Exit(2)
+	}
+
+	preview, err := ichorgo.KubeSanitizePreview(e.cfg, e.context, e.kubeServer, namespace)
+	if err != nil {
+		return "", err
+	}
+
+	var p struct {
+		Pods []struct {
+			Namespace string `json:"namespace"`
+			Name      string `json:"name"`
+		} `json:"pods"`
+	}
+	if err := json.Unmarshal([]byte(preview), &p); err != nil {
+		return "", err
+	}
+
+	if len(p.Pods) == 0 {
+		return "nothing to clean up", nil
+	}
+
+	names := make([]string, 0, len(p.Pods))
+	for _, pod := range p.Pods {
+		names = append(names, pod.Namespace+"/"+pod.Name)
+	}
+
+	l := sweepProbe{done: make(chan [2]string, 1)}
+	ichorgo.StartKubeSanitize(e.cfg, e.context, e.kubeServer, namespace, strings.Join(names, "\n"), l)
+
+	res := <-l.done
+	if res[1] != "" {
+		return "", errors.New(res[1])
+	}
+
+	return res[0], nil
+}
+
+// sweepProbe prints a pod sweep's progress, then hands over its result and error.
+type sweepProbe struct{ done chan [2]string }
+
+func (s sweepProbe) OnProgress(json string) { fmt.Println(json) }
+func (s sweepProbe) OnDone(resultJSON, errMessage string) {
+	s.done <- [2]string{resultJSON, errMessage}
 }
 
 // probeSearch reads the context's overview, pods and workloads the way the apps cache them,
@@ -508,4 +728,72 @@ func helmRevisionArg(arg string) (int, error) {
 	}
 
 	return revision, nil
+}
+
+// probeRevision is the revision number of argument i; a typo stops the probe.
+func probeRevision(i int) int {
+	revision, err := strconv.Atoi(flag.Arg(i))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "revision %q is not a number\n", flag.Arg(i))
+		os.Exit(2)
+	}
+
+	return revision
+}
+
+// runRolloutPause: rollout-pause|rollout-resume NAMESPACE DEPLOYMENT.
+func runRolloutPause(e env) (out string, err error) {
+	paused := e.cmd == "rollout-pause"
+	if err = ichorgo.KubeRolloutPause(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), paused); err == nil {
+		out = map[bool]string{true: "paused", false: "resumed"}[paused]
+	}
+
+	return out, err
+}
+
+// probeOnCallIncidents lists the open incidents of the on-call settings in ONCALL_JSON_FILE
+// ({"kind":"pagerduty","token":…,"from":…,"serviceIds":[…],"region":"us"}), matched to the alerts of
+// AM_ALERTS_JSON_FILE ([{fingerprint,labels}]) when given.
+func probeOnCallIncidents(e env) (string, error) {
+	if flag.NArg() < 2 {
+		return "", errors.New("usage: oncall-incidents ONCALL_JSON_FILE [AM_ALERTS_JSON_FILE]")
+	}
+
+	settings, err := os.ReadFile(argPath(flag.Arg(1)))
+	if err != nil {
+		return "", err
+	}
+
+	var alerts []byte
+	if arg := flag.Arg(2); arg != "" {
+		if alerts, err = os.ReadFile(argPath(arg)); err != nil {
+			return "", err
+		}
+	}
+
+	return ichorgo.OnCallIncidents(e.cfg, e.context, string(settings), string(alerts))
+}
+
+// probeOnCallTest checks the token of the on-call settings in ONCALL_JSON_FILE.
+func probeOnCallTest(env) (string, error) {
+	settings, err := os.ReadFile(argPath(flag.Arg(1)))
+	if err != nil {
+		return "", err
+	}
+
+	return ichorgo.OnCallTest(string(settings))
+}
+
+// probeOnCallAct acknowledges or resolves an incident with the settings in ONCALL_JSON_FILE.
+func probeOnCallAct(e env) (string, error) {
+	if flag.NArg() < 4 {
+		return "", errors.New("usage: oncall-act ONCALL_JSON_FILE INCIDENT_ID acknowledge|resolve")
+	}
+
+	settings, err := os.ReadFile(argPath(flag.Arg(1)))
+	if err != nil {
+		return "", err
+	}
+
+	return "done", ichorgo.OnCallAct(e.cfg, e.context, string(settings), flag.Arg(2), flag.Arg(3))
 }

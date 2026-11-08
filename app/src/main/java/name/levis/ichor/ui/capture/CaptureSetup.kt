@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.capture
 
+import androidx.compose.ui.platform.testTag
+import name.levis.ichor.ui.components.LoadFailureRow
+import name.levis.ichor.ui.components.SMOKE_CAPTURE_START
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,8 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -37,7 +40,6 @@ import name.levis.ichor.model.captureInterfaces
 import name.levis.ichor.model.isUp
 import name.levis.ichor.model.problem
 import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.ToggleRow
@@ -69,7 +71,7 @@ private fun PeerPicker(peers: UiState<List<NodeOverview>>, options: CaptureOptio
     SectionTitle(stringResource(R.string.capture_second_node))
     MutedText(stringResource(R.string.capture_second_node_desc))
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(
+        IchorFilterChip(
             selected = !options.paired,
             onClick = { onChange { it.copy(peer = "", peerHost = "", peerIface = "") } },
             label = { Text(stringResource(R.string.capture_second_node_none)) },
@@ -81,7 +83,7 @@ private fun PeerPicker(peers: UiState<List<NodeOverview>>, options: CaptureOptio
             nodes
         }
         shown.forEach { n ->
-            FilterChip(
+            IchorFilterChip(
                 selected = n.node == options.peer,
                 onClick = { onChange { it.copy(peer = n.node, peerHost = n.hostname.ifBlank { n.node }) } },
                 label = { Text(n.hostname.ifBlank { n.node }) },
@@ -120,6 +122,8 @@ fun CaptureSetup(
     onStart: () -> Unit,
     /** The other nodes a second capture can run on (null: not offered). */
     peers: UiState<List<NodeOverview>>? = null,
+    /** Reads the interfaces again after a failed read (null: no Retry). */
+    onRetryLinks: (() -> Unit)? = null,
 ) {
     val colors = LocalStatusColors.current
     var showVirtual by rememberSaveable { mutableStateOf(false) }
@@ -131,7 +135,7 @@ fun CaptureSetup(
         SectionTitle(stringResource(R.string.capture_interface))
         when (links) {
             UiState.Loading -> Text(stringResource(R.string.capture_loading_interfaces), style = MaterialTheme.typography.bodySmall)
-            is UiState.Failed -> Text(links.message.asString(), color = colors.bad, style = MaterialTheme.typography.bodySmall)
+            is UiState.Failed -> LoadFailureRow(links.message, onRetryLinks, compact = true)
             is UiState.Loaded -> {
                 val shown = captureInterfaces(links.data, showVirtual)
                 val hidden = links.data.count { it.virtual }
@@ -140,7 +144,7 @@ fun CaptureSetup(
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     shown.forEach { link ->
-                        FilterChip(
+                        IchorFilterChip(
                             selected = link.name == options.iface,
                             onClick = { onChange { it.copy(iface = link.name) } },
                             label = {
@@ -183,7 +187,7 @@ fun CaptureSetup(
         )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterPreset.entries.forEach { preset ->
-                FilterChip(
+                IchorFilterChip(
                     selected = options.filter.trim() == preset.expression,
                     onClick = { onChange { it.copy(filter = if (it.filter.trim() == preset.expression) "" else preset.expression) } },
                     label = { Text(stringResource(preset.label)) },
@@ -194,7 +198,7 @@ fun CaptureSetup(
         SectionTitle(stringResource(R.string.capture_duration))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CAPTURE_DURATIONS.forEach { seconds ->
-                FilterChip(
+                IchorFilterChip(
                     selected = options.maxSeconds == seconds,
                     onClick = { onChange { it.copy(maxSeconds = seconds) } },
                     label = { Text(durationLabel(seconds)) },
@@ -205,7 +209,7 @@ fun CaptureSetup(
         SectionTitle(stringResource(if (options.paired) R.string.capture_max_size_each else R.string.capture_max_size))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CAPTURE_MAX_SIZES.forEach { bytes ->
-                FilterChip(
+                IchorFilterChip(
                     selected = options.maxBytes == bytes,
                     onClick = { onChange { it.copy(maxBytes = bytes) } },
                     label = { Text(sizeLabel(bytes)) },
@@ -224,7 +228,7 @@ fun CaptureSetup(
         if (problem != null && links is UiState.Loaded) {
             MutedText(stringResource(problem.message))
         }
-        Button(onClick = onStart, enabled = problem == null && !filterChecking, modifier = Modifier.fillMaxWidth()) {
+        IchorButton(onClick = onStart, enabled = problem == null && !filterChecking, modifier = Modifier.fillMaxWidth().testTag(SMOKE_CAPTURE_START)) {
             Text(stringResource(R.string.capture_start))
         }
     }

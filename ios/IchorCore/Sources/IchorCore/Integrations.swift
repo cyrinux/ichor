@@ -52,13 +52,16 @@ public struct IntegrationGroup: Codable, Equatable, Identifiable, Sendable {
     public let version: String
     /// Sorted; empty when the group's discovery did not answer.
     public let kinds: [String]
+    /// The plural names, sorted: "<resource>.<group>" names the CRD a request asks for.
+    public let resources: [String]
 
     public var id: String { name }
 
-    public init(name: String, version: String, kinds: [String]) {
+    public init(name: String, version: String, kinds: [String], resources: [String] = []) {
         self.name = name
         self.version = version
         self.kinds = kinds
+        self.resources = resources
     }
 
     public init(from decoder: Decoder) throws {
@@ -66,7 +69,8 @@ public struct IntegrationGroup: Codable, Equatable, Identifiable, Sendable {
         name = try c.decode(String.self, forKey: .name)
         version = try c.field(.version, "")
         kinds = try c.field(.kinds, [])
+        resources = try c.field(.resources, [])
     }
 
-    private enum CodingKeys: String, CodingKey { case name, version, kinds }
+    private enum CodingKeys: String, CodingKey { case name, version, kinds, resources }
 }

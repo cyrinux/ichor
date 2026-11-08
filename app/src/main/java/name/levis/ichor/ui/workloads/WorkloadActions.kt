@@ -14,6 +14,8 @@ import name.levis.ichor.R
 import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.KubeRevision
+import name.levis.ichor.model.KubeRevisionDiff
+import name.levis.ichor.model.KubeRevisionList
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.argocd.ArgoSelfHealer
@@ -86,15 +88,35 @@ class WorkloadActions(
         onChanged()
     }
 
-    suspend fun revisions(workload: KubeWorkload): List<KubeRevision> = kube.deploymentRevisions(workload)
+    suspend fun revisions(workload: KubeWorkload): KubeRevisionList = kube.workloadRevisions(workload)
 
-    fun rollback(workload: KubeWorkload, revision: KubeRevision) = run(workload) {
-        val outcome = cancellableCatching { kube.rollbackDeployment(workload, revision.revision) }
+    suspend fun revisionDiff(workload: KubeWorkload, revision: Int): KubeRevisionDiff = kube.revisionDiff(workload, revision)
+
+    /**
+     * Rolls [workload] back to [revision], then follows its rollout. [manual]: its pods only
+     * take the template when deleted (OnDelete), which the toast says.
+     */
+    fun rollback(workload: KubeWorkload, revision: KubeRevision, manual: Boolean = false) = run(workload) {
+        val outcome = cancellableCatching { kube.rollbackWorkload(workload, revision.revision) }
         outcome.exceptionOrNull()?.let {
             _messages.send(ActionMessage(UiText.Res(R.string.workloads_rollback_failed, workload.name, it.uiText()), error = true))
             return@run
         }
+        if (manual) _messages.send(ActionMessage(UiText.Res(R.string.revision_diff_rolled_back_manual, workload.name), error = false))
         restarts.follow(workload)
+        onChanged()
+    }
+
+    /** Pauses or resumes a Deployment's rollout; a resume follows the rollout it may start. */
+    fun pauseRollout(workload: KubeWorkload, paused: Boolean) = run(workload) {
+        val outcome = cancellableCatching { kube.pauseRollout(workload, paused) }
+        outcome.exceptionOrNull()?.let {
+            _messages.send(ActionMessage(UiText.Res(R.string.rollout_pause_failed, workload.name, it.uiText()), error = true))
+            return@run
+        }
+        val done = if (paused) R.string.rollout_pause_done else R.string.rollout_resume_done
+        _messages.send(ActionMessage(UiText.Res(done, workload.name), error = false))
+        if (!paused) restarts.follow(workload)
         onChanged()
     }
 

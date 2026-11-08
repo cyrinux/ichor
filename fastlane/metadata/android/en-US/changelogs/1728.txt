@@ -1,0 +1,4 @@
+• Long names are confirmed by typing their last 5 characters, so a Longhorn pvc-<uuid> volume no longer has to be typed in full
+• Both apps run plugin actions with a params form, the declared confirmation and a result message
+• The checkup names a Flux Kustomization that can no longer decrypt its SOPS secrets, on both apps
+• Plugins declare actions that Go runs on their own resource only, with typed params, a fresh enabledWhen check, can-I rows and audit entries

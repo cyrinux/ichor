@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,6 +55,7 @@ fun JoinApplyStep(request: JoinRequest?, onOpenNode: (address: String, hostname:
     SectionTitle(stringResource(R.string.join_node_step_apply))
     val current = run
     when {
+        current?.request?.imageRun == true -> ImageRunView(current, onStop = app.joinManager::stop, onClose = app.joinManager::dismiss)
         current != null -> JoinRunView(
             run = current,
             onStop = app.joinManager::stop,
@@ -66,30 +67,38 @@ fun JoinApplyStep(request: JoinRequest?, onOpenNode: (address: String, hostname:
     }
 }
 
+/** Runs an action on a host name behind the app lock, when it is on. */
+@Composable
+internal fun rememberAuthenticated(): (hostname: String, action: () -> Unit) -> Unit {
+    val context = LocalContext.current
+    val app = context.applicationContext as TalosApp
+    val scope = rememberCoroutineScope()
+    return { hostname, action ->
+        val activity = context.findFragmentActivity()
+        if (!app.appLock.enabled.value || activity == null) {
+            action()
+        } else {
+            scope.launch {
+                if (authenticate(activity, context.getString(R.string.join_apply_confirm_title, hostname)) is AuthResult.Success) action()
+            }
+        }
+    }
+}
+
 @Composable
 private fun JoinSummary(request: JoinRequest, onJoin: (JoinRequest) -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
-    val scope = rememberCoroutineScope()
     var warnings by remember(request.role) { mutableStateOf<List<String>>(emptyList()) }
     var confirm by remember { mutableStateOf(false) }
     var replacing by remember(request.hostname) { mutableStateOf(false) }
     LaunchedEffect(request.role) {
-        warnings = runCatching { app.talosRepository.nodeJoinWarnings(request.role) }.getOrDefault(emptyList())
+        warnings = runCatching { app.nodeLifecycleRepository.nodeJoinWarnings(request.role) }.getOrDefault(emptyList())
     }
 
-    fun authenticated(action: () -> Unit) {
-        val activity = context.findFragmentActivity()
-        if (!app.appLock.enabled.value || activity == null) {
-            action()
-            return
-        }
-        scope.launch {
-            if (authenticate(activity, context.getString(R.string.join_apply_confirm_title, request.hostname)) is AuthResult.Success) action()
-        }
-    }
+    val authenticated = rememberAuthenticated()
 
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SummaryRow(R.string.join_apply_address, request.address)
             SummaryRow(R.string.join_apply_role, if (request.role == "controlplane") stringResource(R.string.overview_role_control_plane) else request.role)
@@ -104,7 +113,7 @@ private fun JoinSummary(request: JoinRequest, onJoin: (JoinRequest) -> Unit) {
                 onChange = { replacing = it },
                 description = stringResource(R.string.join_apply_replacing_help, request.hostname),
             )
-            Button(onClick = { confirm = true }, modifier = Modifier.fillMaxWidth()) {
+            IchorButton(onClick = { confirm = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.join_apply_join))
             }
         }
@@ -117,7 +126,7 @@ private fun JoinSummary(request: JoinRequest, onJoin: (JoinRequest) -> Unit) {
             confirmLabel = stringResource(R.string.join_apply_join),
             onConfirm = {
                 confirm = false
-                authenticated { onJoin(request.copy(replacing = replacing)) }
+                authenticated(request.hostname) { onJoin(request.copy(replacing = replacing)) }
             },
             onDismiss = { confirm = false },
             emphasized = true,
@@ -135,47 +144,88 @@ private fun SummaryRow(@StringRes label: Int, value: String) {
     }
 }
 
-/** The followed join: phase timeline, then the result and "Open node". */
+/** The followed join: phase timeline, then the result and "Open node" where a screen can open it. */
 @Composable
-private fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: () -> Unit, onClose: () -> Unit) {
+internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() -> Unit)?, onClose: () -> Unit, onAllocate: (() -> Unit)? = null) {
     val colors = LocalStatusColors.current
     var confirmStop by remember { mutableStateOf(false) }
-    val steps = remember(run.events, run.finished, run.error) { joinTimeline(run.events, run.finished, run.error != null) }
+    val steps = remember(run.events, run.finished, run.error) { joinTimeline(run.events, run.finished, run.error != null, run.request.phases) }
+    val cloud = run.request.cloud
+    val allocating = run.request.omniAllocate != null
     if (run.running) KeepScreenOn()
 
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             steps.forEach { TimelineRow(stringResource(it.phase.label), it.status, it.at, it.message) }
         }
     }
     when {
         run.running -> {
-            MutedText(stringResource(R.string.join_run_stop_hint))
-            OutlinedButton(onClick = { confirmStop = true }, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.join_run_stop))
+            MutedText(
+                stringResource(
+                    when {
+                        allocating -> R.string.omni_allocate_stop_hint
+                        cloud -> R.string.hetzner_stop_hint
+                        else -> R.string.join_run_stop_hint
+                    },
+                ),
+            )
+            IchorOutlinedButton(onClick = { confirmStop = true }, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(if (cloud) R.string.hetzner_stop else R.string.join_run_stop))
             }
         }
         run.error != null -> {
             Text(run.error, color = colors.bad)
-            Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
+            IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
         }
         else -> {
-            Text(stringResource(R.string.join_run_done, run.hostname, run.address), color = colors.ok, style = MaterialTheme.typography.titleMedium)
-            Button(
-                onClick = {
-                    onClose()
-                    onOpenNode()
+            Text(
+                when {
+                    allocating -> stringResource(R.string.omni_allocate_done, run.hostname)
+                    run.request.omni -> stringResource(R.string.hetzner_run_done_omni, run.hostname)
+                    else -> stringResource(R.string.join_run_done, run.hostname, run.address)
                 },
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text(stringResource(R.string.join_run_open_node)) }
+                color = colors.ok,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            if (onAllocate != null && cloud && run.request.omni) {
+                IchorButton(
+                    onClick = {
+                        onClose()
+                        onAllocate()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.omni_allocate_title)) }
+            } else if (onOpenNode == null) {
+                IchorButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
+            } else {
+                IchorButton(
+                    onClick = {
+                        onClose()
+                        onOpenNode()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.join_run_open_node)) }
+            }
         }
     }
 
     if (confirmStop) {
         ConfirmDialog(
-            title = stringResource(R.string.join_run_stop),
-            text = stringResource(R.string.join_run_stop_body, run.hostname),
-            confirm = stringResource(R.string.join_run_stop),
+            title = stringResource(if (cloud) R.string.hetzner_stop else R.string.join_run_stop),
+            text = stringResource(
+                when {
+                    allocating -> R.string.omni_allocate_stop_body
+                    run.request.ovh != null -> R.string.ovh_stop_body
+                    run.request.aws != null -> R.string.aws_stop_body
+                    run.request.azure != null -> R.string.azure_stop_body
+                    run.request.gcp != null -> R.string.gcp_stop_body
+                    cloud -> R.string.hetzner_stop_body
+                    else -> R.string.join_run_stop_body
+                },
+                run.hostname,
+            ),
+            confirm = stringResource(if (cloud) R.string.hetzner_stop else R.string.join_run_stop),
             onConfirm = {
                 confirmStop = false
                 onStop()
@@ -188,9 +238,20 @@ private fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: () ->
 
 /** Label of the step in the join timeline. */
 @get:StringRes
-private val JoinPhase.label: Int
+internal val JoinPhase.label: Int
     get() = when (this) {
+        JoinPhase.KEY -> R.string.hetzner_phase_key
+        JoinPhase.RESCUE -> R.string.hetzner_phase_rescue
+        JoinPhase.WRITING -> R.string.hetzner_phase_writing
+        JoinPhase.SNAPSHOT -> R.string.hetzner_phase_snapshot
+        JoinPhase.REGISTER -> R.string.aws_phase_register
+        JoinPhase.CLEANUP -> R.string.hetzner_phase_cleanup
+        JoinPhase.CREATING -> R.string.hetzner_create
+        JoinPhase.STARTING -> R.string.hetzner_phase_starting
+        JoinPhase.OMNI -> R.string.hetzner_phase_omni
         JoinPhase.APPLYING -> R.string.join_phase_applying
+        JoinPhase.ALLOCATED -> R.string.omni_phase_allocated
+        JoinPhase.OMNI_BOOTING -> R.string.omni_phase_booting
         JoinPhase.INSTALLING -> R.string.join_phase_installing
         JoinPhase.REBOOTING -> R.string.join_phase_rebooting
         JoinPhase.BOOTED -> R.string.join_phase_booted

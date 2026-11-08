@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"sync/atomic"
 
 	"go.yaml.in/yaml/v4"
 )
@@ -90,8 +91,23 @@ type kubeconfigShape struct {
 	Contexts yaml.Node `yaml:"contexts"`
 }
 
-// isKubeconfig reports whether configYAML is a kubeconfig rather than a talosconfig.
+// isKubeconfig reports whether configYAML is a kubeconfig rather than a talosconfig, decoded
+// once per text (config_cache.go).
 func isKubeconfig(configYAML string) bool {
+	if p := configs.peek(configYAML); p != nil {
+		return p.kube()
+	}
+
+	// A text without the word is no kubeconfig: no need to hash it.
+	if !strings.Contains(configYAML, "clusters") {
+		return false
+	}
+
+	return configs.get(configYAML).kube()
+}
+
+// kubeconfigShaped is isKubeconfig without the cache.
+func kubeconfigShaped(configYAML string) bool {
 	if !strings.Contains(configYAML, "clusters") {
 		return false
 	}
@@ -109,10 +125,15 @@ func IsKubeconfig(configYAML string) bool {
 	return isKubeconfig(configYAML)
 }
 
+// kubeconfigParses counts kubeconfig parses, for the tests.
+var kubeconfigParses atomic.Int64
+
 func loadKubeconfigDoc(configYAML string) (*kubeconfigDoc, error) {
 	if strings.TrimSpace(configYAML) == "" {
 		return nil, errors.New("kubeconfig is empty")
 	}
+
+	kubeconfigParses.Add(1)
 
 	var doc kubeconfigDoc
 	if err := yaml.Unmarshal([]byte(configYAML), &doc); err != nil {

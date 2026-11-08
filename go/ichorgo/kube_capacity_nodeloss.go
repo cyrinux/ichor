@@ -19,9 +19,10 @@ const systemPriority = 1_000_000_000
 
 // Why a pod stays Pending: the first resource no remaining node has room for.
 const (
-	pendingPods   = "pods"
-	pendingMemory = "memory"
-	pendingCPU    = "cpu"
+	pendingPods      = "pods"
+	pendingMemory    = "memory"
+	pendingEphemeral = "ephemeral"
+	pendingCPU       = "cpu"
 )
 
 // nodeLossAssumptions say what the simulation leaves out, for the apps to word it as an estimate.
@@ -37,7 +38,8 @@ var nodeLossAssumptions = []string{
 // elsewhere is in Placed too. Covered: the suggestions free at least what the Pending pods
 // ask beyond the room left (true when nothing is Pending).
 type nodeLossPlan struct {
-	Node          string               `json:"node"`
+	Node          string               `json:"node"`  // the lost node, or the joined names when several are lost
+	Nodes         []string             `json:"nodes"` // the explicit selection; empty for the worst case
 	WorstCase     bool                 `json:"worstCase"`
 	CPULost       float64              `json:"cpuLost"`
 	MemoryLost    float64              `json:"memoryLost"`
@@ -78,7 +80,7 @@ type nodeLossPending struct {
 	Priority          int32  `json:"priority"`
 	PriorityClassName string `json:"priorityClassName"`
 	QoS               string `json:"qos"`
-	Reason            string `json:"reason"` // cpu, memory or pods
+	Reason            string `json:"reason"` // pods, memory, ephemeral or cpu
 }
 
 // nodeLossSuggestion: scale Kind/Namespace/Name from Replicas to ScaleTo. PDBBlocks: its
@@ -110,43 +112,75 @@ type nodeLossCandidate struct {
 	Preempted int    `json:"preempted"`
 }
 
-// KubeCapacityNodeLoss simulates losing the Kubernetes node kubeNode, as JSON (see
-// nodeLossPlan): where its pods land, what they preempt, what stays Pending and what to scale
-// down. kubeNode "" simulates every schedulable node and answers the worst, with the others
-// as candidates. It only reads, the same lists as KubeCapacity (same RBAC). kubeServer: see
-// KubePods.
+// KubeCapacityNodeLoss simulates losing the Kubernetes nodes of the comma-separated
+// kubeNode list, as JSON (see nodeLossPlan): where their pods land, what they preempt, what
+// stays Pending and what to scale down. One name behaves like a single lost node; ""
+// simulates every schedulable node and answers the worst, with the others as candidates. It
+// only reads, the same lists as KubeCapacity (same RBAC). kubeServer: see KubePods.
 func KubeCapacityNodeLoss(configYAML, contextName, kubeServer, kubeNode string) (out string, err error) {
 	defer maskResult(&out, &err)
 
-	contextName, kubeNode = unmaskTarget(configYAML, contextName, strings.TrimSpace(kubeNode))
+	contextName, kubeNode = unmaskTargets(configYAML, contextName, kubeNode)
 
-	if kubeNode != "" && (!kubeNamePattern.MatchString(kubeNode) || strings.Contains(kubeNode, "..")) {
-		return "", fmt.Errorf("invalid Kubernetes node name %q", kubeNode)
+	nodes, err := parseKubeNodeList(kubeNode)
+	if err != nil {
+		return "", err
 	}
 
 	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer},
-		func() nodeLossPlan { return demoKubeNodeLoss(kubeNode) },
+		func() nodeLossPlan { return demoKubeNodeLoss(nodes) },
 		func(ctx context.Context, k *kubeClient) (nodeLossPlan, error) {
-			in, err := readCapacityInput(ctx, k)
+			in, err := readCapacityInput(ctx, k, false)
 			if err != nil {
 				return nodeLossPlan{}, err
 			}
 
-			if kubeNode != "" && !slices.ContainsFunc(in.nodes, func(n checkNodeObject) bool { return n.Metadata.Name == kubeNode }) {
-				return nodeLossPlan{}, fmt.Errorf("no Kubernetes node %q", kubeNode)
+			for _, node := range nodes {
+				if !slices.ContainsFunc(in.nodes, func(n checkNodeObject) bool { return n.Metadata.Name == node }) {
+					return nodeLossPlan{}, fmt.Errorf("no Kubernetes node %q", node)
+				}
 			}
 
-			return simulateNodeLoss(in, kubeNode), nil
+			return simulateNodeLoss(in, nodes), nil
 		})
 }
 
-// simulateNodeLoss is the plan for losing node, or the worst node when node is ""; pure.
-func simulateNodeLoss(in capacityInput, node string) nodeLossPlan {
+// parseKubeNodeList reads a comma-separated node list: "" is no node (the worst case), one
+// name a single lost node. Empty elements and duplicates are refused.
+func parseKubeNodeList(kubeNode string) ([]string, error) {
+	if strings.TrimSpace(kubeNode) == "" {
+		return nil, nil
+	}
+
+	var nodes []string
+
+	for _, part := range strings.Split(kubeNode, ",") {
+		name := strings.TrimSpace(part)
+
+		switch {
+		case name == "":
+			return nil, fmt.Errorf("invalid Kubernetes node list %q: empty node", kubeNode)
+		case slices.Contains(nodes, name):
+			return nil, fmt.Errorf("duplicate Kubernetes node %q", name)
+		case !kubeNamePattern.MatchString(name) || strings.Contains(name, ".."):
+			return nil, fmt.Errorf("invalid Kubernetes node name %q", name)
+		}
+
+		nodes = append(nodes, name)
+	}
+
+	return nodes, nil
+}
+
+// simulateNodeLoss is the plan for losing nodes, or the worst node when the list is empty;
+// pure.
+func simulateNodeLoss(in capacityInput, nodes []string) nodeLossPlan {
 	s := newLossSim(in)
 
-	if node != "" {
-		plan := s.lose(node)
+	if len(nodes) > 0 {
+		plan := s.lose(nodes...)
 		plan.Candidates = []nodeLossCandidate{}
+		plan.Nodes = nodes
 
 		return plan
 	}
@@ -174,14 +208,14 @@ func simulateNodeLoss(in capacityInput, node string) nodeLossPlan {
 		worst = emptyNodeLossPlan("")
 	}
 
-	worst.WorstCase, worst.Candidates = true, candidates
+	worst.WorstCase, worst.Candidates, worst.Nodes = true, candidates, []string{}
 
 	return worst
 }
 
 func emptyNodeLossPlan(node string) nodeLossPlan {
 	return nodeLossPlan{
-		Node: node, Placed: []nodeLossPlaced{}, Preempted: []nodeLossPreempted{}, Pending: []nodeLossPending{},
+		Node: node, Nodes: []string{}, Placed: []nodeLossPlaced{}, Preempted: []nodeLossPreempted{}, Pending: []nodeLossPending{},
 		Suggestions: []nodeLossSuggestion{}, Covered: true, Candidates: []nodeLossCandidate{}, Assumptions: nodeLossAssumptions,
 	}
 }
@@ -202,10 +236,10 @@ type lossSim struct {
 
 func newLossSim(in capacityInput) lossSim {
 	pods := resolvePriorities(in.pods, in.classes)
-	nodes := capacityNodes(mapCheckupNodes(in.nodes, pods), pods, kubeTopNodes{})
+	nodes := capacityNodes(in.nodes, pods, kubeTopNodes{})
 	s := lossSim{
 		nodes: nodes, pods: pods, owners: controllerOwners(in.sets),
-		workloads: capacityWorkloads(pods, in.sets, in.pdbs, map[string]kubeTopPod{}, nodes),
+		workloads: capacityWorkloads(pods, in.sets, in.pdbs, map[string]kubeTopPod{}, nil, nodes),
 		never:     map[string]bool{}, pdbs: map[string]pdbObject{}, byKey: map[string]capacityWorkload{},
 		unscheduled: map[string]int{},
 	}
@@ -243,15 +277,18 @@ type simPod struct {
 }
 
 // simNode is a remaining node: its free room and the pods a preemption may evict from it.
+// ephemeralKnown is false when the node does not say its ephemeral storage: not a limit then.
 type simNode struct {
-	name        string
-	cpu, memory float64
-	slots       int
-	pods        []simPod
+	name                   string
+	cpu, memory, ephemeral float64
+	ephemeralKnown         bool
+	slots                  int
+	pods                   []simPod
 }
 
 func (n simNode) fits(p simPod) bool {
-	return n.slots > 0 && n.cpu >= p.CPU && n.memory >= p.Memory
+	return n.slots > 0 && n.cpu >= p.CPU && n.memory >= p.Memory &&
+		(!n.ephemeralKnown || p.Ephemeral <= 0 || n.ephemeral >= p.Ephemeral)
 }
 
 func (s lossSim) simPod(p checkPod) simPod {
@@ -265,16 +302,16 @@ func stays(p checkPod) bool {
 	return p.Static || strings.HasPrefix(p.Owner, "DaemonSet/") || strings.HasPrefix(p.Owner, "Node/")
 }
 
-// lose simulates losing node: queue its pods, place, preempt, then suggest.
-func (s lossSim) lose(node string) nodeLossPlan {
-	plan := emptyNodeLossPlan(node)
-	room := s.remaining(node)
+// lose simulates losing nodes: queue their pods, place, preempt, then suggest.
+func (s lossSim) lose(nodes ...string) nodeLossPlan {
+	plan := emptyNodeLossPlan(strings.Join(nodes, ", "))
+	room := s.remaining(nodes...)
 	budget := s.disruptionBudget()
 
 	var queue []simPod
 
 	for _, p := range s.pods {
-		if p.Node != node || !p.running() {
+		if !slices.Contains(nodes, p.Node) || !p.running() {
 			continue
 		}
 
@@ -336,16 +373,20 @@ func sortQueue(queue []simPod) {
 	})
 }
 
-// remaining is the schedulable nodes but node, with their free room and evictable pods.
-func (s lossSim) remaining(node string) []simNode {
+// remaining is the schedulable nodes but the lost ones, with their free room and evictable
+// pods.
+func (s lossSim) remaining(nodes ...string) []simNode {
 	var room []simNode
 
 	for _, n := range s.nodes {
-		if n.Name == node || !n.schedulable() {
+		if slices.Contains(nodes, n.Name) || !n.schedulable() {
 			continue
 		}
 
-		r := simNode{name: n.Name, cpu: n.CPUFree, memory: n.MemoryFree, slots: n.PodsFree}
+		r := simNode{
+			name: n.Name, cpu: n.CPUFree, memory: n.MemoryFree, slots: n.PodsFree,
+			ephemeral: n.EphemeralFree, ephemeralKnown: n.EphemeralAllocatable > 0,
+		}
 
 		for _, p := range s.pods {
 			if p.Node == n.Name && p.running() && !stays(p) {
@@ -382,6 +423,7 @@ func placeOn(room []simNode, p simPod) string {
 func (n *simNode) add(p simPod) {
 	n.cpu -= p.CPU
 	n.memory -= p.Memory
+	n.ephemeral -= p.Ephemeral
 	n.slots--
 	n.pods = append(n.pods, p)
 }
@@ -389,6 +431,7 @@ func (n *simNode) add(p simPod) {
 func (n *simNode) remove(p simPod) {
 	n.cpu += p.CPU
 	n.memory += p.Memory
+	n.ephemeral += p.Ephemeral
 	n.slots++
 	n.pods = slices.DeleteFunc(n.pods, func(q simPod) bool { return q.Namespace == p.Namespace && q.Name == p.Name })
 }
@@ -447,7 +490,7 @@ func evictionSet(n simNode, p simPod) ([]simPod, bool) {
 	})
 
 	for i, q := range lower {
-		n.cpu, n.memory, n.slots = n.cpu+q.CPU, n.memory+q.Memory, n.slots+1
+		n.cpu, n.memory, n.ephemeral, n.slots = n.cpu+q.CPU, n.memory+q.Memory, n.ephemeral+q.Ephemeral, n.slots+1
 		if n.fits(p) {
 			return reprieve(n, p, slices.Clone(lower[:i+1])), true
 		}
@@ -463,7 +506,7 @@ func reprieve(n simNode, p simPod, set []simPod) []simPod {
 		q := set[j]
 
 		kept := n
-		kept.cpu, kept.memory, kept.slots = n.cpu-q.CPU, n.memory-q.Memory, n.slots-1
+		kept.cpu, kept.memory, kept.ephemeral, kept.slots = n.cpu-q.CPU, n.memory-q.Memory, n.ephemeral-q.Ephemeral, n.slots-1
 
 		if kept.fits(p) {
 			n = kept
@@ -533,15 +576,18 @@ func (b disruptionBudget) take(e simPod) bool {
 	return allowed <= 0
 }
 
-// pendingReason is the first resource no remaining node has: a pod slot, then memory, then CPU.
+// pendingReason is the first resource no remaining node has: a pod slot, then memory, then
+// ephemeral storage (only on nodes that say theirs, for a pod that requests some), then CPU.
 func pendingReason(room []simNode, p simPod) string {
-	slot, memory := false, false
+	slot, memory, ephemeral := false, false, false
 
 	for _, n := range room {
-		if n.slots > 0 {
-			slot = true
-			memory = memory || n.memory >= p.Memory
+		if n.slots > 0 && n.memory >= p.Memory {
+			memory = true
+			ephemeral = ephemeral || !n.ephemeralKnown || p.Ephemeral <= 0 || n.ephemeral >= p.Ephemeral
 		}
+
+		slot = slot || n.slots > 0
 	}
 
 	switch {
@@ -549,6 +595,8 @@ func pendingReason(room []simNode, p simPod) string {
 		return pendingPods
 	case !memory:
 		return pendingMemory
+	case !ephemeral:
+		return pendingEphemeral
 	default:
 		return pendingCPU
 	}

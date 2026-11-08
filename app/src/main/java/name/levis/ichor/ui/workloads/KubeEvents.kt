@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
@@ -32,7 +33,7 @@ import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.checkup.ageSince
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.netpol.TagBadge
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiStateOf
 
@@ -68,7 +69,7 @@ fun KubeEventRows(events: List<KubeEvent>, showObject: Boolean, now: Long, key: 
     if (events.isEmpty()) MutedText(stringResource(R.string.kube_events_empty))
     (if (all) events else events.take(EVENTS_PREVIEW)).forEach { EventRow(it, now, showObject) }
     if (events.size > EVENTS_PREVIEW) {
-        TextButton(onClick = { all = !all }) {
+        IchorTextButton(onClick = { all = !all }) {
             Text(if (all) stringResource(R.string.checkup_show_less) else stringResource(R.string.checkup_show_all, events.size.toString()))
         }
     }
@@ -80,13 +81,21 @@ private fun EventRow(e: KubeEvent, now: Long, showObject: Boolean) {
     val colors = LocalStatusColors.current
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            TagBadge(e.reason, if (e.isWarning) colors.warn else colors.muted)
+            Tag(e.reason, if (e.isWarning) colors.warn else colors.muted)
             if (e.count > 1) MutedText("× ${e.count}")
             MutedText(stringResource(R.string.kube_events_ago, ageSince(e.last, now)), modifier = Modifier.weight(1f), maxLines = 1)
             if (e.source.isNotEmpty()) MutedText(e.source, maxLines = 1)
         }
         if (showObject) {
             Text("${e.kind} ${e.name}", style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        e.policy?.let { p ->
+            Text(
+                if (p.rule.isEmpty()) stringResource(R.string.kube_events_deniedByPolicy, p.policy)
+                else stringResource(R.string.kube_events_deniedByPolicy_rule, p.policy, p.rule),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium,
+            )
         }
         Text(e.message, style = MaterialTheme.typography.bodySmall, maxLines = 6, overflow = TextOverflow.Ellipsis)
     }

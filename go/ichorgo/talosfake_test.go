@@ -51,6 +51,7 @@ type fakeTalos struct {
 	pull             func(stream grpc.ServerStreamingServer[machineapi.ImageServicePullResponse]) error
 	lifecycleUpgrade func(stream grpc.ServerStreamingServer[machineapi.LifecycleServiceUpgradeResponse]) error
 	health           func(node string, stream grpc.ServerStreamingServer[clusterapi.HealthCheckProgress]) error
+	healthInfos      []*clusterapi.ClusterInfo // the ClusterInfo of each HealthCheck, in order
 	snapshot         func(stream grpc.ServerStreamingServer[common.Data]) error
 	rebootErr        error
 	resets           []*machineapi.ResetRequest   // the Reset requests received, in order
@@ -91,6 +92,11 @@ type fakeTalos struct {
 	// clockOffsets are a node's clock offsets to its NTP server, in ms, for TimeService.Time
 	// (a node without one: Unimplemented).
 	clockOffsets map[string]int64
+	// versionHold holds a node's Version answer until the channel is closed (or the call
+	// gives up): a slow node.
+	versionHold map[string]chan struct{}
+	// events answers MachineService.Events for the nodes it targets (nil: Unimplemented).
+	events func(nodes []string, req *machineapi.EventsRequest, stream grpc.ServerStreamingServer[machineapi.Event]) error
 }
 
 type fakeConfigApply struct {
@@ -201,6 +207,29 @@ func (f *fakeTalos) called(prefix string) []string {
 	return out
 }
 
+// waitVersion blocks while the node ctx targets is held (see versionHold).
+func (f *fakeTalos) waitVersion(ctx context.Context) {
+	md, _ := metadata.FromIncomingContext(ctx)
+
+	v := md.Get("node")
+	if len(v) == 0 {
+		return
+	}
+
+	f.mu.Lock()
+	hold := f.versionHold[v[0]]
+	f.mu.Unlock()
+
+	if hold == nil {
+		return
+	}
+
+	select {
+	case <-hold:
+	case <-ctx.Done():
+	}
+}
+
 // start serves f over TLS on loopback and returns a talosconfig for nodes through it.
 func (f *fakeTalos) start(t *testing.T, nodes ...string) string {
 	t.Helper()
@@ -239,6 +268,8 @@ type fakeTalosMachine struct {
 }
 
 func (m fakeTalosMachine) Version(ctx context.Context, _ *emptypb.Empty) (*machineapi.VersionResponse, error) {
+	m.f.waitVersion(ctx)
+
 	node, err := m.f.enter(ctx, "Version")
 	if err != nil {
 		return nil, err
@@ -782,6 +813,46 @@ func (m fakeTalosMachine) Read(req *machineapi.ReadRequest, stream grpc.ServerSt
 	return stream.Send(&common.Data{Bytes: []byte(content)})
 }
 
+// Copy sends the node's files entry as is: a test stores there the tar.gz Talos would send.
+func (m fakeTalosMachine) Copy(req *machineapi.CopyRequest, stream grpc.ServerStreamingServer[common.Data]) error {
+	node, err := m.f.enter(stream.Context(), "Copy")
+	if err != nil {
+		return err
+	}
+
+	m.f.mu.Lock()
+	content, ok := m.f.files[node][req.GetRootPath()]
+	m.f.mu.Unlock()
+
+	if !ok {
+		return status.Errorf(codes.Unknown, "lstat %s: no such file or directory", req.GetRootPath())
+	}
+
+	return stream.Send(&common.Data{Bytes: []byte(content)})
+}
+
+// Events hands the stream to the events script with the nodes it targets ("nodes"
+// metadata, as client.WithNodes sends, else "node").
+func (m fakeTalosMachine) Events(req *machineapi.EventsRequest, stream grpc.ServerStreamingServer[machineapi.Event]) error {
+	md, _ := metadata.FromIncomingContext(stream.Context())
+
+	nodes := md.Get("nodes")
+	if len(nodes) == 0 {
+		nodes = md.Get("node")
+	}
+
+	m.f.mu.Lock()
+	m.f.calls = append(m.f.calls, "Events "+strings.Join(nodes, ","))
+	script := m.f.events
+	m.f.mu.Unlock()
+
+	if script == nil {
+		return status.Error(codes.Unimplemented, "unknown method Events for service machine.MachineService")
+	}
+
+	return script(nodes, req, stream)
+}
+
 func (m fakeTalosMachine) ApplyConfiguration(ctx context.Context, req *machineapi.ApplyConfigurationRequest) (*machineapi.ApplyConfigurationResponse, error) {
 	node, err := m.f.enter(ctx, "ApplyConfiguration")
 	if err != nil {
@@ -901,11 +972,15 @@ type fakeTalosCluster struct {
 	f *fakeTalos
 }
 
-func (c fakeTalosCluster) HealthCheck(_ *clusterapi.HealthCheckRequest, stream grpc.ServerStreamingServer[clusterapi.HealthCheckProgress]) error {
+func (c fakeTalosCluster) HealthCheck(req *clusterapi.HealthCheckRequest, stream grpc.ServerStreamingServer[clusterapi.HealthCheckProgress]) error {
 	node, err := c.f.enter(stream.Context(), "HealthCheck")
 	if err != nil {
 		return err
 	}
+
+	c.f.mu.Lock()
+	c.f.healthInfos = append(c.f.healthInfos, req.GetClusterInfo())
+	c.f.mu.Unlock()
 
 	return c.f.health(node, stream)
 }

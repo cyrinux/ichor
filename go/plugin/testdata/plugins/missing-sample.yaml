@@ -1,0 +1,47 @@
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: demo-widgets
+name: Demo Widgets
+detect:
+  - group: widgets.example.com
+resources:
+  widget:
+    group: widgets.example.com
+    version: v1
+    resource: widgets
+    kind: Widget
+    scope: Namespaced
+  gadget:
+    group: widgets.example.com
+    version: v1
+    resource: gadgets
+    kind: Gadget
+    scope: Cluster
+cards:
+  summary:
+    title: '"Widgets"'
+  list:
+    from: gizmo
+    row:
+      title: $.metadata.name
+  groups:
+    from: dataServices.byScope
+    row:
+      title: $.key
+      detail:
+        - type: actions
+          items: [restart]
+dataServices:
+  byScope:
+    from: widget
+    groupBy: $.spec.scope
+    aggregate: { count: count() }
+actions:
+  restart:
+    label: Restart
+    on: widget
+    verb: restart
+samples:
+  widget:
+    - { metadata: { name: one, namespace: demo-shop } }
+  gizmo:
+    - { metadata: { name: two } }

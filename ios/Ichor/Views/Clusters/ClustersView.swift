@@ -1,0 +1,505 @@
+import SwiftUI
+import IchorCore
+import UIKit
+
+extension UIColor {
+    /// From 0xRRGGBB.
+    convenience init(rgb: Int) {
+        self.init(
+            red: CGFloat(rgb >> 16 & 0xFF) / 255,
+            green: CGFloat(rgb >> 8 & 0xFF) / 255,
+            blue: CGFloat(rgb & 0xFF) / 255,
+            alpha: 1
+        )
+    }
+
+    /// As 0xRRGGBB (sRGB, alpha dropped).
+    var rgb: Int {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        func channel(_ value: CGFloat) -> Int { Int((min(max(value, 0), 1) * 255).rounded()) }
+        return channel(red) << 16 | channel(green) << 8 | channel(blue)
+    }
+}
+
+/// A cluster's main color (0xRRGGBB) as an accent: its hue at the tone that reads on the
+/// light and on the dark backgrounds (the tones of Android's primary color).
+func clusterAccent(_ seed: Int) -> Color {
+    Color(
+        uiColor: UIColor { traits in
+            UIColor(
+                rgb: tonalColor(seed: seed, tone: traits.userInterfaceStyle == .dark ? darkAccentTone : lightAccentTone)
+            )
+        })
+}
+
+extension AppModel {
+    /// The app's accent color: the one of the cluster on screen.
+    var accent: Color { clusterAccent(seed(of: activeSummary)) }
+}
+
+/// Under the overview's title when several clusters are imported: a dot per cluster, in its
+/// color. Swipe it sideways for the previous or next cluster (left: the next one), tap it
+/// for the list.
+struct ClusterBar: View {
+    @Environment(AppModel.self) private var model
+    let onOpen: () -> Void
+
+    private static let swipeDistance: CGFloat = 48
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(model.summary?.contexts ?? []) { context in
+                let active = context.name == model.activeContext
+                Circle()
+                    .fill(clusterAccent(model.seed(of: context)))
+                    .opacity(active ? 1 : 0.5)
+                    .frame(width: active ? 10 : 7, height: active ? 10 : 7)
+            }
+        }
+        // 44 pt: the minimum touch target; the dots stay small.
+        .frame(maxWidth: .infinity, minHeight: 44)
+        .background(.bar)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onOpen)
+        .gesture(
+            DragGesture(minimumDistance: 24).onEnded { value in
+                let distance = value.translation.width
+                guard abs(distance) > abs(value.translation.height), abs(distance) >= Self.swipeDistance else { return }
+                model.selectAdjacentCluster(step: distance < 0 ? 1 : -1)
+            }
+        )
+        .animation(.snappy, value: model.activeContext)
+        .accessibilityElement()
+        .accessibilityLabel(Text("Switch cluster"))
+        .accessibilityValue(Text(model.activeLabel))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAdjustableAction { direction in
+            model.selectAdjacentCluster(step: direction == .increment ? 1 : -1)
+        }
+    }
+}
+
+/// The imported clusters: pick the one on screen, rename it, give it a color, remove it, add one.
+struct ClustersView: View {
+    @Environment(AppModel.self) private var model
+    @Environment(ClusterGitStore.self) private var git
+    @Environment(SettingsStore.self) private var settings
+    @State private var removing: ContextSummary?
+    @State private var renaming: ContextSummary?
+    @State private var newName = ""
+    /// The cluster whose tags sheet is open.
+    @State private var tagging: ContextSummary?
+    @State private var error: String?
+    @State private var editingEndpoints: ContextSummary?
+    /// The cluster whose repository sheet is open.
+    @State private var editingRepo: ContextSummary?
+    /// The cluster whose on-call sheet is open.
+    @State private var editingOnCall: ContextSummary?
+    /// The cluster whose Kubernetes API address is being set.
+    @State private var editingServer: ContextSummary?
+    /// The cluster whose action audit log is open.
+    @State private var activityOf: String?
+    @State private var scanning = false
+    /// The sign-in of each kubeconfig cluster that signs in through a method, by fingerprint.
+    @State private var signIns: [String: KubeSignInInfo] = [:]
+    @State private var signingIn: KubeSignInTarget?
+    @State private var showingServiceAccountHelp = false
+
+    var body: some View {
+        List {
+            let contexts = model.summary?.contexts ?? []
+            Section {
+                NavigationLink(value: Route.fleet) {
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("All clusters")
+                            Text("Every cluster's last check, worst first").font(.caption).foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        Image(systemName: "rectangle.stack")
+                    }
+                }
+            }
+            // A long list in sections, per provider and account; a short one as it is.
+            if let groups = clusterGroups(contexts, masked: model.labels.masked) {
+                ForEach(groups) { group in
+                    Section {
+                        ForEach(group.contexts) { row($0) }
+                    } header: {
+                        Label {
+                            Text(verbatim: group.localizedTitle)
+                        } icon: {
+                            BundledLogo(name: group.logo).frame(width: 18, height: 18).accessibilityHidden(true)
+                        }
+                    } footer: {
+                        if group.id == groups.last?.id { footer }
+                    }
+                }
+            } else {
+                Section {
+                    ForEach(contexts) { row($0) }
+                } footer: {
+                    footer
+                }
+            }
+            if let error {
+                Section { Text(error).font(.footnote).foregroundStyle(.statusBad) }
+            }
+            Section {
+                NavigationLink(value: Route.importConfig) { Label("Add a cluster", systemImage: "plus") }
+                // It looks for Talos endpoints, with the talosconfig's credentials.
+                if model.yaml != nil {
+                    Button {
+                        scanning = true
+                    } label: {
+                        Label("Search the local network", systemImage: "antenna.radiowaves.left.and.right")
+                    }
+                }
+            }
+        }
+        .endpointTools(editing: $editingEndpoints, scanning: $scanning)
+        .sheet(item: $signingIn) { KubeSignInSheet(target: $0) }
+        .kubeServerAlert(for: $editingServer)
+        .sheet(item: $editingRepo) { context in
+            ClusterRepoSheet(
+                context: context, label: model.labels.of(context), saved: git.repos[context.fingerprint])
+        }
+        .sheet(item: $editingOnCall) { OnCallSheet(fingerprint: $0.fingerprint) }
+        .sheet(item: $tagging) { ClusterTagsSheet(context: $0) }
+        .sheet(isPresented: $showingServiceAccountHelp) { ServiceAccountHelpSheet() }
+        .navigationDestination(item: $activityOf) { ActivityLogView(cluster: $0) }
+        .task(id: "\(model.summary?.contexts.map(\.fingerprint) ?? [])#\(model.dataGeneration)") { await loadSignIns() }
+        .themedBackground()
+        .navigationTitle("Clusters")
+        .confirmationDialog(
+            removing.map { String(localized: "Remove \(model.labels.of($0))?") } ?? "",
+            isPresented: $removing.isPresent(),
+            titleVisibility: .visible,
+            presenting: removing
+        ) { context in
+            Button("Delete", role: .destructive) { remove(context) }
+        } message: { _ in
+            Text("This cluster's config and client key will be removed from this device. The other clusters are kept.")
+        }
+        .alert(
+            renaming.map { String(localized: "Rename \(model.labels.of($0))") } ?? "",
+            isPresented: $renaming.isPresent(),
+            presenting: renaming
+        ) { context in
+            TextField(
+                "Name", text: $newName, prompt: Text(verbatim: parseCloudContext(context.name)?.cluster ?? context.name)
+            )
+            Button("OK") { model.rename(context, to: newName) }
+            Button("Cancel", role: .cancel) {}
+        } message: { context in
+            Text("Shown on this device only, the talosconfig keeps \(context.name). Leave empty to use it again.")
+        }
+    }
+
+    /// Under the clusters, once.
+    private var footer: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("The app takes the colors of the cluster on screen.")
+            // What the lock on a row means, once there is one.
+            if model.summary?.contexts.contains(where: { settings.vpnOnly.contains($0.fingerprint) }) == true {
+                Text(
+                    "VPN only: without a VPN connected the app does not try the cluster, and background checks wait for it."
+                )
+            }
+            Text("Touch and hold a cluster for its endpoints and the VPN only setting.")
+        }
+    }
+
+    private func startRenaming(_ context: ContextSummary) {
+        newName = model.labels.given(context) ?? ""
+        renaming = context
+    }
+
+    private func row(_ context: ContextSummary) -> some View {
+        let active = context.name == model.activeContext
+        return HStack {
+            Button {
+                model.activeContext = context.name
+            } label: {
+                HStack {
+                    ClusterLogoView(context: context, color: color(of: context).wrappedValue, selected: active)
+                    VStack(alignment: .leading) {
+                        HStack(spacing: 4) {
+                            Text(model.labels.of(context)).foregroundStyle(Color.primary)
+                            if settings.vpnOnly.contains(context.fingerprint) {
+                                Image(systemName: "lock.shield")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.secondary)
+                                    .accessibilityLabel(Text("VPN only"))
+                            }
+                            if !model.watchesInBackground(context) {
+                                Image(systemName: "bell.slash")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.secondary)
+                                    .accessibilityLabel(Text("Not watched in the background"))
+                            }
+                        }
+                        let cloud = model.labels.cloud(context)
+                        // Renamed: which talosconfig context that is.
+                        if model.labels.given(context) != nil {
+                            Text(verbatim: cloud?.cluster ?? context.name).font(.caption).foregroundStyle(
+                                Color.secondary)
+                        }
+                        if let cloud {
+                            Text(verbatim: cloud.localizedDetail).font(.caption).foregroundStyle(Color.secondary)
+                        }
+                        Text(
+                            [context.endpoints.first, context.localizedAccessLabel].compactMap { $0 }.joined(
+                                separator: " · ")
+                        )
+                        .font(.caption)
+                        .foregroundStyle(Color.secondary)
+                        if let proxy = context.proxyHost {
+                            Text("Through proxy \(proxy)")
+                                .font(.caption)
+                                .foregroundStyle(Color.secondary)
+                                .lineLimit(1)
+                        }
+                        // Set on this device instead of the kubeconfig's; hidden in screenshot mode.
+                        if !settings.privacyMask, model.usesOwnKubeServer(context),
+                            let server = model.kubeServers[context.fingerprint]
+                        {
+                            Text("API address: \(server)")
+                                .font(.caption)
+                                .foregroundStyle(Color.secondary)
+                                .lineLimit(1)
+                        }
+                        if let kube = model.kubeAccessTarget(of: context) {
+                            Text("Kubernetes through \(model.labels.of(kube))")
+                                .font(.caption)
+                                .foregroundStyle(Color.secondary)
+                        }
+                        if let user = signIns[context.fingerprint].flatMap({ $0.signedIn ? $0.user : nil }) {
+                            Text("Signed in as \(user)")
+                                .font(.caption)
+                                .foregroundStyle(Color.secondary)
+                        }
+                        tagChips(context)
+                    }
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(active ? .isSelected : [])
+            if signIns[context.fingerprint]?.signedIn == false, let target = model.signInTarget(for: context) {
+                Button("Sign in") { signingIn = target }
+                    .buttonStyle(.borderless)
+                    .font(.caption)
+            }
+            ColorPicker(
+                String(localized: "Color of \(model.labels.of(context))"), selection: color(of: context),
+                supportsOpacity: false
+            )
+            .labelsHidden()
+        }
+        .contextMenu { menu(context) }
+        .swipeActions(edge: .trailing) {
+            // Not a destructive-role button: the row must stay until the removal is confirmed.
+            Button {
+                removing = context
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+            .tint(.red)
+            // Not in the screenshot mode: the field would show the given name.
+            if !model.labels.masked && !context.fingerprint.isEmpty {
+                Button {
+                    startRenaming(context)
+                } label: {
+                    Label("Rename", systemImage: "pencil")
+                }
+            }
+        }
+    }
+
+    /// The cluster's tags under its name. Shown in screenshot mode too: they are the user's words.
+    @ViewBuilder
+    private func tagChips(_ context: ContextSummary) -> some View {
+        let tags = clusterTagsOf(
+            saved: model.clusterTags,
+            fingerprints: clusterFingerprints(of: context, contexts: model.summary?.contexts ?? []))
+        if !tags.isEmpty {
+            Text(verbatim: tags.joined(separator: " · "))
+                .font(.caption2)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(Color.secondary.opacity(0.14), in: RoundedRectangle(cornerRadius: 6))
+                .foregroundStyle(Color.secondary)
+                .accessibilityLabel(Text("Tags"))
+                .accessibilityValue(Text(verbatim: tags.joined(separator: ", ")))
+        }
+    }
+
+    @ViewBuilder
+    private func menu(_ context: ContextSummary) -> some View {
+        if !context.fingerprint.isEmpty {
+            Toggle(
+                isOn: Binding(
+                    get: { settings.vpnOnly.contains(context.fingerprint) },
+                    set: { model.setVpnOnly($0, for: context) })
+            ) {
+                Label("VPN only", systemImage: "lock.shield")
+            }
+            // Per cluster: off on any of its contexts, the background checks skip it.
+            Toggle(
+                isOn: Binding(
+                    get: { model.watchesInBackground(context) },
+                    set: { model.setWatchInBackground($0, for: context) })
+            ) {
+                Label("Watch in the background", systemImage: "bell.badge")
+            }
+            // Per cluster, off by default: a Kubernetes Event on each object the app changes there.
+            if !context.demo {
+                Toggle(
+                    isOn: Binding(
+                        get: { model.recordsActions(context) },
+                        set: { model.setRecordActions($0, for: context) })
+                ) {
+                    Label("Record actions in the cluster", systemImage: "clock.badge.checkmark")
+                }
+            }
+        }
+        // Not in screenshot mode (the endpoints shown are fake), nor for the demo; Talos endpoints
+        // only (a kubeconfig cluster's server comes with its kubeconfig).
+        if !model.labels.masked && !context.demo && !context.isKube {
+            Button {
+                editingEndpoints = context
+            } label: {
+                Label("Edit endpoints", systemImage: "point.3.connected.trianglepath.dotted")
+            }
+        }
+        // Next to the endpoints: both say how this phone reaches the cluster. Not in screenshot
+        // mode (the field shows the real address), nor for the demo, nor where the calls do not
+        // use it (Omni, a linked Kubernetes access).
+        if !model.labels.masked && !settings.privacyMask && !context.demo && !context.fingerprint.isEmpty
+            && model.usesOwnKubeServer(context)
+        {
+            Button {
+                editingServer = context
+            } label: {
+                Label("Kubernetes API address…", systemImage: "server.rack")
+            }
+        }
+        if !model.labels.masked && !context.fingerprint.isEmpty {
+            Button {
+                startRenaming(context)
+            } label: {
+                Label("Rename", systemImage: "pencil")
+            }
+        }
+        if !context.demo && !context.fingerprint.isEmpty {
+            Button {
+                tagging = context
+            } label: {
+                Label("Tags…", systemImage: "tag")
+            }
+        }
+        // The demo's repository is built in.
+        if !context.demo && !context.fingerprint.isEmpty {
+            Button {
+                editingRepo = context
+            } label: {
+                Label("Cluster repository", systemImage: "folder.badge.gearshape")
+            }
+            Button {
+                editingOnCall = context
+            } label: {
+                Label("On-call", systemImage: "bell.and.waves.left.and.right")
+            }
+        }
+        // An Omni cluster's Kubernetes goes through Omni, with its sign-in: no link.
+        if !context.isKube && !context.demo && !context.omni && !context.fingerprint.isEmpty
+            && !model.kubeContexts.isEmpty
+        {
+            kubeAccessPicker(context)
+        }
+        if context.isKube || context.omni, let target = model.signInTarget(for: context) {
+            Button {
+                signingIn = target
+            } label: {
+                Label("Sign in", systemImage: "person.badge.key")
+            }
+        }
+        // Added with a token: how to make a least-privilege ServiceAccount one.
+        if context.usesKubeToken {
+            Button {
+                showingServiceAccountHelp = true
+            } label: {
+                Label("Service account", systemImage: "person.badge.key")
+            }
+        }
+        Button {
+            activityOf = context.name
+        } label: {
+            Label("Activity", systemImage: "clock.arrow.circlepath")
+        }
+        Button(role: .destructive) {
+            removing = context
+        } label: {
+            Label("Delete", systemImage: "trash")
+        }
+    }
+
+    /// A Talos cluster's Kubernetes access: the admin kubeconfig Talos issues, or a kubeconfig
+    /// cluster (its own identity and RBAC, e.g. an OIDC sign-in).
+    private func kubeAccessPicker(_ context: ContextSummary) -> some View {
+        Picker(
+            selection: Binding(
+                get: { model.kubeAccessTarget(of: context)?.fingerprint ?? "" },
+                set: { fingerprint in
+                    model.setKubeAccess(model.kubeContexts.first { $0.fingerprint == fingerprint }, for: context)
+                }
+            )
+        ) {
+            Text("Talos admin kubeconfig").tag("")
+            ForEach(model.kubeContexts) { kube in
+                Text(model.labels.of(kube)).tag(kube.fingerprint)
+            }
+        } label: {
+            Label("Kubernetes access", systemImage: "key")
+        }
+        .pickerStyle(.menu)
+    }
+
+    /// Whether each cluster that signs in through a method (kubeconfig, Omni) is signed in.
+    private func loadSignIns() async {
+        var loaded: [String: KubeSignInInfo] = [:]
+        for context in model.summary?.contexts ?? [] where context.signIn != nil {
+            guard let target = model.signInTarget(for: context), target.context == context.name else { continue }
+            if let info = try? await TalosClient.signInInfo(
+                kube: target.kube, context: target.context, talos: target.talos)
+            {
+                loaded[context.fingerprint] = info
+            }
+        }
+        signIns = loaded
+    }
+
+    private func color(of context: ContextSummary) -> Binding<Color> {
+        Binding(
+            get: { Color(uiColor: UIColor(rgb: model.seed(of: context))) },
+            set: { model.setColor(UIColor($0).rgb, for: context) }
+        )
+    }
+
+    private func remove(_ context: ContextSummary) {
+        Task {
+            do {
+                try await model.removeCluster(context.name)
+                error = nil
+            } catch {
+                self.error = error.localizedDescription
+            }
+        }
+    }
+}

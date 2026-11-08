@@ -1,0 +1,660 @@
+import SwiftUI
+import IchorCore
+import UniformTypeIdentifiers
+
+/// Import a talosconfig or a kubeconfig from a file, pasted text or a QR code; told apart,
+/// validated by the Go core and previewed before it is stored in the Keychain.
+struct ImportView: View {
+    var onImported: () -> Void
+
+    // Explicit: the private @State properties make the memberwise init private.
+    init(onImported: @escaping () -> Void = {}) {
+        self.onImported = onImported
+    }
+
+    @Environment(AppModel.self) private var model
+    /// The paste or QR sheet, when open.
+    @State private var source: Source?
+    @State private var sourceDismissing = false
+    @State private var pendingDiscovery: DiscoveryStart?
+    @State private var pasted = ""
+    @State private var showingImporter = false
+    @State private var preview: Preview?
+    @State private var error: String?
+    @State private var busy = false
+    /// Whether the phone had no cluster when this screen opened: the first real one then makes
+    /// the home offer background alerts, once (AlertsOffer).
+    @State private var firstCluster: Bool?
+    @State private var showingHelp = false
+    /// The provider cloud discovery opens on, while its sheet is up.
+    @State private var discovery: DiscoveryStart?
+    /// The credentials cloud discovery found the previewed clusters with: the added ones that
+    /// sign in with credentials are signed in with them.
+    @State private var discovered: DiscoveredClusters?
+    /// How far the sign-ins of the discovered clusters just added got, while they run.
+    @State private var signIn: SignInProgress?
+    /// The Sidero Omni sheet, while up (its clusters come as a talosconfig); prefilled from a
+    /// scanned omnictl config.
+    @State private var omniStart: DiscoveryStart?
+
+    /// A validated config waiting for the user's go: a talosconfig, or a kubeconfig with the
+    /// stored clusters its contexts are named like.
+    enum Preview {
+        case talos(yaml: String, summary: ConfigSummary)
+        case kube(yaml: String, summary: ConfigSummary, conflicts: [KubeImportConflict])
+    }
+
+    /// The sources the drop zone opens in a sheet; a file goes straight to the file picker.
+    enum Source: String, Identifiable {
+        case paste, qr, form
+        var id: String { rawValue }
+
+        var label: String {
+            switch self {
+            case .paste: String(localized: "Paste")
+            case .qr: String(localized: "QR code")
+            case .form: String(localized: "Enter details")
+            }
+        }
+    }
+
+    struct DiscoveryStart: Identifiable {
+        let provider: String
+        var initialValues: [String: String] = [:]
+        /// Omni only: open on the service account key.
+        var serviceAccount = false
+        var id: String { provider }
+    }
+
+    /// Opens Omni's own sheet, or cloud discovery for the other providers.
+    private func open(_ start: DiscoveryStart) {
+        if start.provider == "omni" { omniStart = start } else { discovery = start }
+    }
+
+    var body: some View {
+        Group {
+            if let signIn {
+                SignInProgressCard(progress: signIn)
+            } else {
+                content.accessibilityIdentifier(SmokeID.screen("import"))
+            }
+        }
+        .navigationTitle("Add a cluster")
+        .onAppear { if firstCluster == nil { firstCluster = model.summary?.contexts.isEmpty ?? true } }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingHelp = true
+                } label: {
+                    Image(systemName: "questionmark.circle")
+                }
+                .accessibilityLabel("How to add a cluster")
+            }
+        }
+        .onDisappear { TalosClient.forgetDiscoverSignIn() }
+        .sheet(isPresented: $showingHelp) { HelpSheet() }
+        .sheet(item: $omniStart) { start in
+            OmniDiscoveryView(initialValues: start.initialValues, initialServiceAccount: start.serviceAccount) {
+                talosconfig in validate(talosconfig)
+            }
+        }
+        .sheet(item: $discovery) { start in
+            CloudDiscoveryView(provider: start.provider, initialValues: start.initialValues) { found in
+                validate(found.kubeconfig, discovered: found)
+            }
+        }
+        .sheet(
+            item: $source,
+            onDismiss: {
+                sourceDismissing = false
+                if let start = pendingDiscovery {
+                    pendingDiscovery = nil
+                    open(start)
+                }
+            }
+        ) { source in
+            if source == .form {
+                // A talosconfig built from what is typed, previewed like an imported one.
+                TalosFormView { yaml in validate(yaml) }
+            } else {
+                sourceSheet(source)
+            }
+        }
+        // A file opened with Ichor (IncomingConfig): previewed like a picked one.
+        .task(id: NotificationRouter.shared.pendingImportText) {
+            guard let text = NotificationRouter.shared.pendingImportText else { return }
+            NotificationRouter.shared.pendingImportText = nil
+            preview = nil
+            validate(text)
+        }
+    }
+
+    /// The preview waiting for the user's go, else the sources.
+    @ViewBuilder private var content: some View {
+        switch preview {
+        case .talos(let yaml, let summary)?:
+            PreviewList(summary: summary, adding: model.hasConfig, busy: busy, onCancel: cancelPreview) {
+                Task { await save(yaml) }
+            }
+        case .kube(let yaml, let summary, let conflicts)?:
+            KubePreviewList(
+                summary: summary, conflicts: conflicts, refused: discovered?.refused ?? [], busy: busy,
+                onCancel: cancelPreview
+            ) { choices in
+                Task { await saveKube(yaml, summary: summary, conflicts: conflicts, choices: choices) }
+            }
+        case nil:
+            picker
+        }
+    }
+
+    /// One drop zone for either config (the core tells them apart), the cloud accounts
+    /// discovery reaches, then the demo and a backup restore.
+    private var picker: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                dropZone
+                if let error { Text(error).foregroundStyle(.statusBad).font(.footnote) }
+                if busy { ProgressView() }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Add from a cloud account").font(.headline)
+                    ChipFlow(spacing: 8) {
+                        ForEach(kubeDiscoverProviders, id: \.self) { provider in
+                            Button {
+                                discovery = DiscoveryStart(provider: provider)
+                            } label: {
+                                Label {
+                                    Text(verbatim: KubeAuthWording.providerLabel(provider))
+                                } icon: {
+                                    BundledLogo(name: discoveryLogo(provider)).frame(width: 18, height: 18)
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                        Button {
+                            omniStart = DiscoveryStart(provider: "omni")
+                        } label: {
+                            Label {
+                                Text(verbatim: KubeAuthWording.providerLabel("omni"))
+                            } icon: {
+                                BundledLogo(name: discoveryLogo("omni")).frame(width: 18, height: 18)
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .disabled(busy)
+                HStack(spacing: 20) {
+                    Menu("Try demo") {
+                        Button("Talos cluster") { startDemo(kube: false) }
+                        Button("Kubernetes cluster (EKS)") { startDemo(kube: true) }
+                    }
+                    // A restore replaces every cluster: offered when there is none yet.
+                    if !model.hasConfig {
+                        RestoreBackupButton(confirmFirst: false, onRestored: onImported) { error = $0 }
+                    }
+                }
+                .buttonStyle(.borderless)
+                .disabled(busy)
+            }
+            .padding()
+        }
+    }
+
+    /// The Ichor glyph over the two config kinds, and the three ways to bring one in.
+    private var dropZone: some View {
+        VStack(spacing: 12) {
+            IchorGlyph()
+                .foregroundStyle(.tint)
+                .frame(width: 64, height: 64)
+            Text("Import a config file").font(.headline)
+            HStack(spacing: 6) {
+                FormatPill(text: "talosconfig", color: .orange)
+                FormatPill(text: "kubeconfig", color: .blue)
+            }
+            Text("From ~/.talos/config or ~/.kube/config on your workstation. Ichor recognizes which one it is.")
+                .font(.footnote).foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            HStack(spacing: 8) {
+                // On the tile, not the screen: the restore button has a file importer of its own.
+                // Any file: a kubeconfig is often named "config", with no extension.
+                SourceTile(title: String(localized: "File"), systemImage: "doc") { showingImporter = true }
+                    .fileImporter(
+                        isPresented: $showingImporter, allowedContentTypes: [.yaml, .plainText, .data, .item]
+                    ) { result in
+                        switch result {
+                        case .success(let url): readFile(url)
+                        case .failure(let failure): error = failure.localizedDescription
+                        }
+                    }
+                SourceTile(title: Source.paste.label, systemImage: "doc.on.clipboard") { source = .paste }
+                SourceTile(title: Source.qr.label, systemImage: "qrcode.viewfinder") { source = .qr }
+                SourceTile(title: Source.form.label, systemImage: "square.and.pencil") { source = .form }
+            }
+            .disabled(busy)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(.tertiary, style: StrokeStyle(lineWidth: 1.5, dash: [8, 6]))
+        }
+    }
+
+    /// Pasted YAML or a scanned QR code; what they give is previewed once the sheet closes.
+    private func sourceSheet(_ source: Source) -> some View {
+        NavigationStack {
+            Group {
+                switch source {
+                case .paste:
+                    VStack(spacing: 16) {
+                        TextEditor(text: $pasted)
+                            .font(.system(.footnote, design: .monospaced))
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .border(.quaternary)
+                        Button("Validate") {
+                            sourceDismissing = true
+                            self.source = nil
+                            validate(pasted)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(pasted.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                    .padding()
+                case .qr:
+                    QRScannerView { text in
+                        sourceDismissing = true
+                        self.source = nil
+                        validate(text)
+                    }
+                case .form:
+                    EmptyView()  // its own sheet, TalosFormView
+                }
+            }
+            .navigationTitle(source.label)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", role: .cancel) { self.source = nil }
+                }
+            }
+        }
+    }
+
+    private func readFile(_ url: URL) {
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        do {
+            guard let data = try IncomingFile.readOrThrow(url, limit: IncomingConfig.maxBytes),
+                let text = String(data: data, encoding: .utf8)
+            else {
+                error = String(localized: "This file is not a talosconfig or a kubeconfig.")
+                return
+            }
+            validate(text)
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    /// Expands a compressed payload (a large config in a QR code), then takes the talosconfig
+    /// or the kubeconfig flow.
+    private func validate(_ text: String, discovered found: DiscoveredClusters? = nil) {
+        busy = true
+        discovered = found
+        Task {
+            defer { busy = false }
+            do {
+                let yaml = try await TalosClient.decodeImportText(text)
+                let route = try await TalosClient.classifyImportText(yaml)
+                if route.isGkeCredential || route.isEksIdentityCenter || route.isOmni {
+                    let start =
+                        route.isGkeCredential
+                        ? DiscoveryStart(provider: "gke", initialValues: [route.field: yaml])
+                        : DiscoveryStart(
+                            provider: route.isOmni ? "omni" : "eks", initialValues: route.values,
+                            serviceAccount: route.isOmniServiceAccount)
+                    if sourceDismissing { pendingDiscovery = start } else { open(start) }
+                    error = nil
+                    return
+                }
+                if route.isAwsAccessKeys {
+                    error = String(
+                        localized: "This file holds AWS access keys. Enter them in the EKS cluster search instead.")
+                    return
+                }
+                if await TalosClient.isKubeconfig(yaml) {
+                    let summary = try await TalosClient.parseKubeconfig(yaml)
+                    let conflicts = try await TalosClient.kubeImportConflicts(
+                        stored: model.kubeYAML ?? "", talos: model.yaml ?? "", added: yaml)
+                    preview = .kube(yaml: yaml, summary: summary, conflicts: conflicts)
+                } else {
+                    preview = .talos(yaml: yaml, summary: try await TalosClient.parse(yaml))
+                }
+                error = nil
+            } catch {
+                self.error = error.localizedDescription
+            }
+        }
+    }
+
+    /// Adds the Talos demo, or with `kube` the Kubernetes one (a kubeconfig cluster).
+    private func startDemo(kube: Bool) {
+        busy = true
+        Task {
+            do {
+                if kube {
+                    try await model.saveKubeDemo()
+                    busy = false
+                    onImported()
+                } else {
+                    await save(try await TalosClient.demoConfig(), replacingSameCluster: true)
+                    // The first time: its tour on the demo's overview (none for the Kubernetes demo).
+                    if model.activeSummary?.demo == true { DemoTour.offerOnce() }
+                }
+            } catch {
+                self.error = error.localizedDescription
+                busy = false
+            }
+        }
+    }
+
+    /// After a real (not demo) save: the home offers background alerts when it was the first.
+    private func importedReal() {
+        if firstCluster == true, model.summary?.contexts.contains(where: { !$0.demo }) == true {
+            AlertsOffer.offerOnce()
+        }
+        onImported()
+    }
+
+    private func save(_ yaml: String, replacingSameCluster: Bool = false) async {
+        busy = true
+        defer { busy = false }
+        do {
+            try await model.save(yaml: yaml, replacingSameCluster: replacingSameCluster)
+            importedReal()
+        } catch {
+            self.error = error.localizedDescription
+            preview = nil
+        }
+    }
+
+    private func cancelPreview() {
+        preview = nil
+        discovered = nil
+        TalosClient.forgetDiscoverSignIn()
+    }
+
+    private func saveKube(
+        _ yaml: String, summary: ConfigSummary, conflicts: [KubeImportConflict],
+        choices: [KubeImportChoice]
+    ) async {
+        busy = true
+        defer { busy = false }
+        do {
+            try await model.saveKube(added: yaml, choices: choices)
+        } catch {
+            self.error = error.localizedDescription
+            preview = nil
+            return
+        }
+        guard let found = discovered else {
+            importedReal()
+            return
+        }
+        discovered = nil
+        let failures = await signInDiscovered(
+            summary: summary, conflicts: conflicts, choices: choices, secrets: found.secrets)
+        TalosClient.forgetDiscoverSignIn()
+        if failures.isEmpty {
+            importedReal()
+        } else {
+            // The clusters are added; those not signed in say so on their home.
+            error = String(
+                localized: "Clusters added. Some could not be signed in: \(failures.joined(separator: "; "))")
+            preview = nil
+        }
+    }
+
+    /// Signs the discovered clusters just added in with the account's credentials, one after
+    /// the other in the core, the screen naming each; those that sign in otherwise (OIDC, Azure
+    /// device code, a browser) wait for the user. The errors of the others, by context.
+    private func signInDiscovered(
+        summary: ConfigSummary, conflicts: [KubeImportConflict],
+        choices: [KubeImportChoice], secrets: String
+    ) async -> [String] {
+        guard let kube = model.kubeYAML else { return [] }
+        let skipped = Set(choices.filter { $0.skip == true }.map(\.index))
+        let names = importedSignInContexts(
+            summary: summary,
+            selected: Set(summary.contexts.indices).subtracting(skipped),
+            replacing: Set(choices.filter { $0.replace == true }.map(\.index)),
+            conflicts: conflicts.map { (index: $0.index, suggested: $0.suggested) }
+        )
+        let poll = Task { await pollSignInProgress() }
+        defer {
+            poll.cancel()
+            signIn = nil
+        }
+        let failures: [String]
+        do {
+            failures = try await TalosClient.signInDiscovered(kube: kube, names: names, secrets: secrets)
+        } catch {
+            failures = [error.localizedDescription]
+        }
+        model.reloadKubernetes()
+        return failures
+    }
+
+    /// Shows which discovered cluster is being signed in until cancelled.
+    private func pollSignInProgress() async {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .milliseconds(250))
+            if !Task.isCancelled, let read = TalosClient.signInProgress(), read.running { signIn = read }
+        }
+    }
+}
+
+/// A config format the drop zone takes, as a small tinted tag.
+private struct FormatPill: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        Text(verbatim: text)
+            .font(.caption.monospaced())
+            .padding(.horizontal, 8).padding(.vertical, 2)
+            .foregroundStyle(color)
+            .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+}
+
+/// One way into the drop zone: an icon over its name.
+private struct SourceTile: View {
+    let title: String
+    let systemImage: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: systemImage).font(.title3)
+                Text(verbatim: title).font(.footnote)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.tint)
+    }
+}
+
+private struct PreviewList: View {
+    let summary: ConfigSummary
+    /// A config is already stored: this one is added to it.
+    let adding: Bool
+    let busy: Bool
+    let onCancel: () -> Void
+    let onImport: () -> Void
+
+    var body: some View {
+        List {
+            Section {
+                Text("Config is valid").font(.headline)
+            }
+            ForEach(summary.contexts) { ctx in
+                Section(ctx.name == summary.current ? String(localized: "\(ctx.name) (current)") : ctx.name) {
+                    LabeledContent("Endpoints", value: ctx.endpoints.joined(separator: "\n"))
+                    let noNodes = ctx.omni ? String(localized: "learned from Omni") : String(localized: "endpoints")
+                    LabeledContent("Nodes", value: ctx.nodes.isEmpty ? noNodes : "\(ctx.nodes.count)")
+                    if ctx.omni {
+                        LabeledContent("Omni cluster", value: ctx.cluster ?? "")
+                        LabeledContent("Omni identity", value: ctx.identity ?? "")
+                    } else {
+                        LabeledContent("Roles", value: ctx.roles.joined(separator: ", "))
+                        LabeledContent("Cert expires", value: localizedCertExpiry(ctx.certNotAfter))
+                    }
+                }
+            }
+            if adding {
+                Section {
+                    Text(
+                        "It is added to the clusters already on this device. A cluster imported before (same name and CA) is updated."
+                    )
+                    .font(.footnote)
+                }
+            }
+            Section {
+                Text("Stored in the Keychain on this device only, never synced or backed up.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                Button("Import", action: onImport).disabled(busy)
+                Button("Cancel", role: .cancel, action: onCancel)
+            }
+        }
+    }
+}
+
+/// The contexts of an imported kubeconfig, one section each: on (importable ones) or off, how
+/// it signs in, and why it cannot be added; a name already taken gets another one, or replaces
+/// the stored context of the same cluster.
+private struct KubePreviewList: View {
+    let summary: ConfigSummary
+    let conflicts: [KubeImportConflict]
+    /// The AWS regions a discovery could not read.
+    let refused: [String]
+    let busy: Bool
+    let onCancel: () -> Void
+    let onImport: ([KubeImportChoice]) -> Void
+
+    @State private var selected: Set<Int>
+    @State private var replacing: Set<Int> = []
+    @State private var showingServiceAccountHelp = false
+
+    init(
+        summary: ConfigSummary, conflicts: [KubeImportConflict], refused: [String] = [], busy: Bool,
+        onCancel: @escaping () -> Void, onImport: @escaping ([KubeImportChoice]) -> Void
+    ) {
+        self.summary = summary
+        self.conflicts = conflicts
+        self.refused = refused
+        self.busy = busy
+        self.onCancel = onCancel
+        self.onImport = onImport
+        _selected = State(initialValue: summary.importableIndices)
+    }
+
+    var body: some View {
+        List {
+            Section {
+                Text("Choose the clusters to add").font(.headline)
+            } footer: {
+                Text(
+                    "A client certificate or a token works as it is. A cluster that signs in (OIDC, EKS, GKE, AKS, DigitalOcean, Rancher) asks for it once added."
+                )
+            }
+            ForEach(Array(summary.contexts.enumerated()), id: \.element.id) { index, ctx in
+                Section {
+                    row(ctx, index: index)
+                }
+            }
+            // A token context: a dedicated ServiceAccount's beats an admin's.
+            if summary.contexts.contains(where: { $0.auth == "token" }) {
+                Section {
+                    Button("How to create a service account") { showingServiceAccountHelp = true }
+                }
+            }
+            if !refused.isEmpty {
+                Section {
+                    Text(
+                        "No access in \(refused.joined(separator: ", ")): clusters in these regions, if any, are not listed."
+                    )
+                    .font(.footnote).foregroundStyle(.statusWarn)
+                }
+            }
+            Section {
+                Text("Stored in the Keychain on this device only, never synced or backed up.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                Button("Import") {
+                    onImport(kubeImportChoices(count: summary.contexts.count, selected: selected, replacing: replacing))
+                }
+                .disabled(busy || selected.isEmpty)
+                Button("Cancel", role: .cancel, action: onCancel)
+            }
+        }
+        .sheet(isPresented: $showingServiceAccountHelp) { ServiceAccountHelpSheet() }
+    }
+
+    @ViewBuilder
+    private func row(_ ctx: ContextSummary, index: Int) -> some View {
+        // EKS and GKE name contexts by ARN or gke_project_location_name: show the cluster's name.
+        let cloud = parseCloudContext(ctx.name)
+        let shown = cloud?.cluster ?? ctx.name
+        Toggle(isOn: member(index, of: $selected)) {
+            Text(verbatim: ctx.name == summary.current ? String(localized: "\(shown) (current)") : shown)
+                .font(.headline)
+        }
+        .disabled(ctx.problem != nil)
+        if let cloud { Text(verbatim: cloud.localizedDetail).font(.footnote).foregroundStyle(.secondary) }
+        LabeledContent("Server", value: ctx.endpoints.first ?? "")
+        if let proxy = ctx.proxyHost {
+            Text("Through proxy \(proxy)").font(.footnote).foregroundStyle(.secondary)
+        }
+        LabeledContent("Sign-in", value: ctx.localizedAuthLabel)
+        if ctx.problem == nil, let method = ctx.signIn {
+            Text("Signs in with \(KubeAuthWording.methodLabel(method)) once added.")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+        if let user = ctx.user, !user.isEmpty { LabeledContent("Signed in as", value: user) }
+        if let namespace = ctx.namespace, !namespace.isEmpty { LabeledContent("Namespace", value: namespace) }
+        if ctx.certNotAfter > 0 { LabeledContent("Expires", value: localizedCertExpiry(ctx.certNotAfter)) }
+        if ctx.insecure {
+            Text("The server certificate is not checked (insecure-skip-tls-verify).")
+                .font(.footnote).foregroundStyle(.statusWarn)
+        }
+        if let problem = ctx.localizedKubeProblem {
+            Text(problem).font(.footnote).foregroundStyle(.statusBad)
+        } else if let conflict = conflicts.first(where: { $0.index == index }) {
+            if let sameAs = conflict.sameAs {
+                Toggle(String(localized: "Replace \(sameAs)"), isOn: member(index, of: $replacing))
+                    .disabled(!selected.contains(index))
+            }
+            if !replacing.contains(index) {
+                Text("The name is taken: added as \(conflict.suggested).")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    /// Whether `index` is in `set`, as a toggle sets it.
+    private func member(_ index: Int, of set: Binding<Set<Int>>) -> Binding<Bool> {
+        Binding(
+            get: { set.wrappedValue.contains(index) },
+            set: { on in
+                if on { set.wrappedValue.insert(index) } else { set.wrappedValue.remove(index) }
+            }
+        )
+    }
+}

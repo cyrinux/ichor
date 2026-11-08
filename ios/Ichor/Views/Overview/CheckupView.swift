@@ -1,0 +1,526 @@
+import SwiftUI
+import IchorCore
+
+/// The cluster checkup (os:admin): what no other screen shows, one group per kind of trouble.
+/// A group opens on its findings, each worded with what to do; the capacity, storage, nodes and
+/// Helm groups also list what they measured. Reading it lists the cluster's pods and asks every
+/// kubelet: loaded on demand, never polled.
+struct CheckupView: View {
+    @Environment(AppModel.self) private var model
+    @State private var state: LoadState<CheckupReport> = .loading
+    /// The sections shown open; those in trouble until the user chooses.
+    @State private var open: Set<String> = []
+    @State private var chosen = false
+    /// The leftover namespace whose deletion waits for a confirmation.
+    @State private var confirmDelete: String?
+    @State private var message: String?
+    /// How far the first read got, while there is nothing else to show.
+    @State private var progress: ReadProgress?
+
+    var body: some View {
+        LoadStateView(state: state, retry: load, progress: progress, stepLabel: Self.stepLabel) { report in
+            let now = Int64(Date().timeIntervalSince1970 * 1000)
+            SectionRailScroll(sections: jumpSections(report)) {
+                List {
+                    CheckupVerdictSection(report: report)
+                    ForEach(report.shownSections) { section in
+                        Section {
+                            DisclosureGroup(isExpanded: expanded(section.id)) {
+                                CheckupSectionBody(section: section, report: report, now: now) { confirmDelete = $0 }
+                            } label: {
+                                CheckupSectionLabel(section: section)
+                            }
+                            .sectionTarget(section.id)
+                        }
+                    }
+                }
+                .refreshable { await load() }
+                .themedBackground()
+            }
+        }
+        .task { await load() }
+        // A new API address (set on the Kubernetes screen): read again through it.
+        .id(model.client?.kubeServer)
+        .confirmationDialog(
+            confirmDelete.map(CheckupText.checkupDeleteNamespaceTitle) ?? "",
+            isPresented: $confirmDelete.isPresent(),
+            titleVisibility: .visible,
+            presenting: confirmDelete
+        ) { namespace in
+            Button("Delete", role: .destructive) { Task { await deleteLeftover(namespace) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text(verbatim: CheckupText.checkupDeleteNamespaceText)
+        }
+        .messageAlert($message)
+        .navigationTitle(Text(verbatim: CheckupText.checkupTitle))
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func expanded(_ id: String) -> Binding<Bool> {
+        Binding(
+            get: { open.contains(id) },
+            set: { on in
+                chosen = true
+                if on { open.insert(id) } else { open.remove(id) }
+            }
+        )
+    }
+
+    /// Deletes a namespace a network test left behind, then reads the checkup again.
+    private func deleteLeftover(_ namespace: String) async {
+        guard let client = model.client else { return }
+        do {
+            try await client.deleteNetPerfNamespace(namespace)
+            message = String(localized: "\(namespace) is being deleted")
+            await load()
+        } catch {
+            message = String(localized: "Could not delete \(namespace): \(error.localizedDescription)")
+        }
+    }
+
+    /// The verdict, then one per card shown, named as on the card.
+    private func jumpSections(_ report: CheckupReport) -> [JumpSection] {
+        [JumpSection(id: "verdict", label: String(localized: "Verdict"))]
+            + report.shownSections.map { JumpSection(id: $0.id, label: $0.section?.title ?? $0.id) }
+    }
+
+    private func load() async {
+        guard let client = model.client else { return }
+        // A checkup on a large cluster takes a while: its steps show while nothing else does.
+        let waiting: Bool = { if case .loading = state { return true } else { return false } }()
+        let loaded: LoadState<CheckupReport> = await client.withReadProgress(
+            TalosClient.checkupProgressOp, watching: waiting, update: { progress = $0 }
+        ) {
+            await .from { try await client.checkup() }
+        }
+        progress = nil
+        if case .loaded(let report, _, _) = loaded, !chosen {
+            open = Set(report.shownSections.filter { $0.status == .critical || $0.status == .warning }.map(\.id))
+        }
+        state = state.refreshed(with: loaded)
+    }
+
+    /// A checkup step by name: the shared reads first ("nodes" is the node list here, not the
+    /// nodes section), then the section readers by their titles.
+    private static func stepLabel(_ id: String) -> String {
+        switch id {
+        case "api": String(localized: "API groups")
+        case "pods": String(localized: "Reading pods")
+        case "nodes": String(localized: "Reading nodes")
+        case "pvcs": String(localized: "Volume claims")
+        case "version": String(localized: "Kubernetes version")
+        default: CheckupSectionID(rawValue: id)?.title ?? id
+        }
+    }
+}
+
+/// The verdict, how many findings of each weight, and what the checkup is.
+private struct CheckupVerdictSection: View {
+    let report: CheckupReport
+
+    private var label: String {
+        switch report.status {
+        case .critical: CheckupText.checkupVerdictCritical
+        case .warning: CheckupText.checkupVerdictWarning
+        default: CheckupText.checkupVerdictOk
+        }
+    }
+
+    var body: some View {
+        let critical = report.count(.critical)
+        let warnings = report.count(.warning)
+        Section {
+            HStack {
+                StatusPill(
+                    label: label, color: report.status == .unknown ? CheckupStatus.ok.color : report.status.color)
+                Spacer()
+                if !report.kubeVersion.isEmpty {
+                    Text(verbatim: "Kubernetes \(report.kubeVersion)").font(.caption.monospaced()).foregroundStyle(
+                        .secondary)
+                }
+            }
+            .sectionTarget("verdict")
+            Text(
+                verbatim: critical + warnings == 0
+                    ? CheckupText.checkupAllClear("\(report.shownSections.count)")
+                    : CheckupText.checkupCounts("\(critical)", "\(warnings)")
+            )
+            .font(.callout)
+        } footer: {
+            Text(verbatim: CheckupText.checkupIntro)
+        }
+    }
+}
+
+/// A section's header: its icon in its status colour, its name, what it looks for and its counts.
+private struct CheckupSectionLabel: View {
+    let section: CheckupSection
+
+    var body: some View {
+        let critical = section.count(.critical)
+        let warnings = section.count(.warning)
+        let notes = section.findings.count - critical - warnings
+        HStack(spacing: 10) {
+            Image(systemName: section.section?.symbol ?? "questionmark.circle")
+                .foregroundStyle(section.status.color)
+                .frame(width: 26)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: section.section?.title ?? section.id).font(.subheadline.weight(.semibold))
+                if let hint = section.section?.hint {
+                    Text(verbatim: hint).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                }
+            }
+            Spacer(minLength: 4)
+            if critical > 0 { CheckupCount(count: critical, color: Color.statusBad) }
+            if warnings > 0 { CheckupCount(count: warnings, color: Color.statusWarn) }
+            if notes > 0 { CheckupCount(count: notes, color: .secondary) }
+            if section.findings.isEmpty {
+                if section.status == .unknown {
+                    Text(verbatim: "?").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                } else {
+                    Image(systemName: "checkmark.circle").foregroundStyle(Color.statusOK)
+                        .accessibilityLabel(Text(verbatim: CheckupText.checkupNothingFound))
+                }
+            }
+        }
+    }
+}
+
+private struct CheckupCount: View {
+    let count: Int
+    let color: Color
+
+    var body: some View {
+        Text(verbatim: "\(count)")
+            .font(.caption.weight(.semibold).monospacedDigit())
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .foregroundStyle(color)
+            .background(color.opacity(0.15), in: Capsule())
+    }
+}
+
+/// A section's findings, then what it measured: node requests, volume levels, taints, releases.
+private struct CheckupSectionBody: View {
+    let section: CheckupSection
+    let report: CheckupReport
+    let now: Int64
+    /// Asks to delete a namespace a network test left behind.
+    let onDeleteLeftover: (String) -> Void
+
+    var body: some View {
+        if !section.error.isEmpty {
+            ErrorOrNoticeText(message: CheckupText.checkupSectionError(section.error))
+        }
+        if section.findings.isEmpty && section.error.isEmpty {
+            Text(verbatim: CheckupText.checkupNothingIn("\(section.checked)")).font(.caption).foregroundStyle(
+                .secondary)
+        }
+        ForEach(Array(section.findings.enumerated()), id: \.offset) { _, finding in
+            if let plugin = finding.plugin, !plugin.plugin.isEmpty {
+                CheckupPluginFindingRow(finding: finding, plugin: plugin)
+            } else {
+                CheckupFindingRow(
+                    finding: finding, now: now,
+                    onDelete: finding.kind == .netperfLeftover ? { onDeleteLeftover(finding.name) } : nil)
+            }
+        }
+        if section.truncated > 0 {
+            Text(verbatim: CheckupText.checkupTruncated("\(section.truncated)")).font(.caption).foregroundStyle(
+                .secondary)
+        }
+        switch section.section {
+        case .capacity:
+            NavigationLink {
+                KubeCapacityView()
+            } label: {
+                Text(verbatim: CapacityText.capacityCheckupLink)
+            }
+            let nodes = report.nodes.sorted {
+                max($0.cpuPercent, $0.memoryPercent) > max($1.cpuPercent, $1.memoryPercent)
+            }
+            CheckupRows(title: CheckupText.checkupRequestsTitle, rows: nodes) { CheckupNodeRequests(node: $0) }
+        case .nodes:
+            CheckupRows(title: CheckupText.checkupTaintsTitle, rows: report.nodes) { CheckupNodeTaints(node: $0) }
+        case .storage:
+            CheckupRows(title: CheckupText.checkupVolumesTitle, rows: report.volumes) { CheckupVolumeRow(volume: $0) }
+        case .helm:
+            CheckupRows(title: CheckupText.checkupReleasesTitle, rows: report.releases) { release in
+                NavigationLink {
+                    HelmReleaseView(namespace: release.namespace, name: release.name)
+                } label: {
+                    CheckupReleaseRow(release: release, now: now)
+                }
+            }
+        case .loadbalancers:
+            if !section.findings.isEmpty || !section.error.isEmpty {
+                NavigationLink {
+                    KubeLoadBalancingView()
+                } label: {
+                    Label(LoadBalancingText.open, systemImage: "point.3.connected.trianglepath.dotted").font(.callout)
+                }
+            }
+        case .monitoring:
+            // Each down target and failing rule, from the Metrics screen's source (or the first found).
+            NavigationLink {
+                PromMonitoringView(source: nil)
+            } label: {
+                Label(PromMonitoringText.openFromCheckup, systemImage: "waveform.path.ecg").font(.callout)
+            }
+        case .policies:
+            if !section.findings.isEmpty || !section.error.isEmpty {
+                NavigationLink {
+                    PoliciesView()
+                } label: {
+                    Label(CheckupText.checkupOpenPolicies, systemImage: "checklist").font(.callout)
+                }
+            }
+        case .tailscale:
+            if !section.findings.isEmpty || !section.error.isEmpty {
+                NavigationLink {
+                    TailscaleView()
+                } label: {
+                    Label(CheckupText.checkupOpenTailscale, systemImage: "network.badge.shield.half.filled").font(
+                        .callout)
+                }
+            }
+        case .clusterapi:
+            if !section.findings.isEmpty || !section.error.isEmpty {
+                NavigationLink {
+                    ClusterLifecycleView()
+                } label: {
+                    Label(CheckupText.checkupOpenClusterLifecycle, systemImage: "server.rack").font(.callout)
+                }
+            }
+        default:
+            EmptyView()
+        }
+    }
+}
+
+/// One problem: what it is about, what happens, Kubernetes' own words and what to do, and
+/// `onDelete` when the checkup can remove it (a namespace a network test left behind).
+private struct CheckupFindingRow: View {
+    let finding: CheckupFinding
+    let now: Int64
+    var onDelete: (() -> Void)?
+
+    private var subject: String {
+        finding.kind == .event && !finding.extra.isEmpty ? "\(finding.extra) \(finding.subject)" : finding.subject
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: finding.severity.symbol).foregroundStyle(finding.severity.color).accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(verbatim: subject).font(.subheadline.monospaced().weight(.semibold)).lineLimit(2).truncationMode(
+                    .middle)
+                Text(verbatim: finding.title(now: now)).font(.callout)
+                if !finding.node.isEmpty {
+                    Text(verbatim: CheckupText.checkupOnNode(finding.node)).font(.caption).foregroundStyle(.secondary)
+                }
+                if !finding.detail.isEmpty {
+                    Text(verbatim: finding.detail).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(6)
+                }
+                if let fix = finding.fix {
+                    Text(verbatim: fix).font(.caption).foregroundStyle(.secondary)
+                }
+                if let onDelete {
+                    Button("Delete", role: .destructive, action: onDelete)
+                        .font(.callout)
+                        .buttonStyle(.borderless)
+                }
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+/// A plugin's finding, in its words (translated by Go): its title, detail and the plugin that
+/// raised it; opens the plugin's screen.
+private struct CheckupPluginFindingRow: View {
+    let finding: CheckupFinding
+    let plugin: PluginFindingInfo
+
+    var body: some View {
+        NavigationLink(value: Route.plugin(id: plugin.plugin)) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: finding.severity.symbol).foregroundStyle(finding.severity.color).accessibilityHidden(
+                    true)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(verbatim: plugin.headline).font(.subheadline.monospaced().weight(.semibold)).lineLimit(2)
+                        .truncationMode(.middle)
+                    if !plugin.detail.isEmpty {
+                        Text(verbatim: plugin.detail).font(.callout)
+                    }
+                    Text(verbatim: CheckupText.checkupPluginNamed(plugin.pluginLabel)).font(.caption).foregroundStyle(
+                        .secondary)
+                }
+            }
+            .padding(.vertical, 2)
+        }
+    }
+}
+
+/// A measured list cut to its first rows, with a button for the rest.
+private struct CheckupRows<Item: Identifiable, Row: View>: View {
+    let title: String
+    let rows: [Item]
+    @ViewBuilder let row: (Item) -> Row
+    @State private var all = false
+
+    private let preview = 6
+
+    var body: some View {
+        if !rows.isEmpty {
+            Text(verbatim: title).font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
+            ForEach(all ? rows : Array(rows.prefix(preview))) { row($0) }
+            if rows.count > preview {
+                Button {
+                    all.toggle()
+                } label: {
+                    Text(verbatim: all ? CheckupText.checkupShowLess : CheckupText.checkupShowAll("\(rows.count)"))
+                        .font(.callout)
+                }
+            }
+        }
+    }
+}
+
+/// What a node's pods request of what it offers: the scheduler's view, not live usage.
+private struct CheckupNodeRequests: View {
+    let node: CheckupNode
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(verbatim: node.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+                Spacer()
+                Text(verbatim: CheckupText.checkupPodsOf("\(node.pods)", "\(node.podCapacity)")).font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            bar(
+                CheckupText.checkupCpu, percent: node.cpuPercent,
+                amount: CheckupText.checkupCoresOf(
+                    String(format: "%.1f", node.cpuRequests), String(format: "%.1f", node.cpuAllocatable)))
+            bar(
+                CheckupText.checkupMemory, percent: node.memoryPercent,
+                amount: "\(formatBytes(Int64(node.memoryRequests))) / \(formatBytes(Int64(node.memoryAllocatable)))")
+        }
+        .padding(.vertical, 2)
+    }
+
+    private func bar(_ label: String, percent: Double, amount: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text(verbatim: label).font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Text(verbatim: "\(checkupPercent(percent.rounded()))  \(amount)").font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            UsageBar(fraction: percent / 100)
+        }
+    }
+}
+
+/// A node's roles, taints and labels: what keeps pods away from it or draws them to it.
+private struct CheckupNodeTaints: View {
+    let node: CheckupNode
+    @State private var showLabels = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(verbatim: node.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+                Spacer()
+                if !node.kubelet.isEmpty {
+                    Text(verbatim: node.kubelet).font(.caption.monospaced()).foregroundStyle(.secondary)
+                }
+            }
+            Text(verbatim: summary).font(.caption).foregroundStyle(
+                node.ready && !node.cordoned ? Color.secondary : Color.statusWarn)
+            ForEach(node.taints, id: \.self) { taint in
+                Text(verbatim: taint).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            if !node.labels.isEmpty {
+                Button {
+                    showLabels.toggle()
+                } label: {
+                    Text(
+                        verbatim: showLabels
+                            ? CheckupText.checkupShowLess : CheckupText.checkupLabels("\(node.labels.count)")
+                    ).font(.caption)
+                }
+                .buttonStyle(.borderless)
+                if showLabels {
+                    ForEach(node.labels, id: \.self) { label in
+                        Text(verbatim: label).font(.caption2.monospaced()).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 2)
+    }
+
+    /// "worker · cordoned", or "no taint" for a node nothing keeps pods away from.
+    private var summary: String {
+        var parts = node.roles
+        if node.cordoned { parts.append(CheckupText.checkupCordoned) }
+        if node.taints.isEmpty { parts.append(CheckupText.checkupNoTaint) }
+        return parts.joined(separator: " · ")
+    }
+}
+
+/// A claim with its level; an unmeasured one says so.
+private struct CheckupVolumeRow: View {
+    let volume: CheckupVolume
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack {
+                Text(verbatim: volume.id).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+                Spacer()
+                Text(
+                    verbatim: volume.measured
+                        ? "\(formatBytes(Int64(volume.used))) / \(formatBytes(Int64(volume.capacity)))"
+                        : formatBytes(Int64(volume.capacity))
+                )
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+            }
+            if volume.measured {
+                UsageBar(fraction: volume.usedPercent / 100)
+            } else {
+                Text(verbatim: volume.phase == "Bound" ? CheckupText.checkupVolumeUnmeasured : volume.phase)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+/// A Helm release at its latest revision; opens it (history, rollback).
+private struct CheckupReleaseRow: View {
+    let release: CheckupRelease
+    let now: Int64
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: release.id).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+                Text(
+                    verbatim: CheckupText.checkupReleaseRevision(
+                        "\(release.revision)", checkupAge(release.updated, now: now))
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Tag(release.status, color: release.inTrouble ? Color.statusWarn : Color.statusOK)
+        }
+    }
+}

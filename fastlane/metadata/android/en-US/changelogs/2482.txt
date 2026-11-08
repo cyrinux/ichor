@@ -1,0 +1,8 @@
+• Create an OVHcloud instance for a new node from the phone
+• Offer credential recovery when a cluster refuses your talosconfig
+• Ask where the new machine is when adding a node
+• Label kubeconfig import choices for TalkBack
+• Ask before replacing or deleting a drift baseline
+• Make metric chart samples accessible and name unlabeled series
+• Bound iOS file-picker reads before allocating memory
+• Satisfy swift-format in the add node views

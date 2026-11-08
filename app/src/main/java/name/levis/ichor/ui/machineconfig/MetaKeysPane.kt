@@ -18,16 +18,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -213,7 +213,7 @@ private fun MetaKeyListView(list: MetaKeyList, enabled: Boolean, onAdd: () -> Un
         if (list.keys.isEmpty()) item { MutedText(stringResource(R.string.meta_empty)) }
         items(list.keys, key = { it.key }) { key -> MetaKeyCard(key, enabled, onEdit, onDelete) }
         item {
-            OutlinedButton(onClick = onAdd, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+            IchorOutlinedButton(onClick = onAdd, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.meta_add))
             }
         }
@@ -223,7 +223,7 @@ private fun MetaKeyListView(list: MetaKeyList, enabled: Boolean, onAdd: () -> Un
 @Composable
 private fun MetaBanner() {
     val bad = LocalStatusColors.current.bad
-    Card(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
+    IchorCard(colors = CardDefaults.cardColors(containerColor = bad.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.meta_banner), color = bad, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
     }
 }
@@ -231,7 +231,7 @@ private fun MetaBanner() {
 @Composable
 private fun MetaKeyCard(key: MetaKey, enabled: Boolean, onEdit: (MetaKey) -> Unit, onDelete: (MetaKey) -> Unit) {
     val context = LocalContext.current
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 16.dp, top = 8.dp, bottom = 12.dp, end = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -273,7 +273,7 @@ private fun MetaEditDialog(current: MetaKey?, known: List<MetaKey>, onWrite: (In
     val key = parseMetaKey(keyText)
     val knownKey = known.firstOrNull { it.key == key }
     val writable = key != null && key != 0 && knownKey?.writable != false
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.meta_dialog_title)) },
         text = {
@@ -300,7 +300,7 @@ private fun MetaEditDialog(current: MetaKey?, known: List<MetaKey>, onWrite: (In
                 if (current == null) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         known.filter { it.writable }.forEach { k ->
-                            FilterChip(selected = k.key == key, onClick = { keyText = k.hex }, label = { Text("${k.hex} ${k.name}") })
+                            IchorFilterChip(selected = k.key == key, onClick = { keyText = k.hex }, label = { Text("${k.hex} ${k.name}") })
                         }
                     }
                 }
@@ -315,10 +315,10 @@ private fun MetaEditDialog(current: MetaKey?, known: List<MetaKey>, onWrite: (In
             }
         },
         confirmButton = {
-            TextButton(onClick = { key?.let { onWrite(it, value) } }, enabled = writable && value.isNotEmpty()) {
+            IchorTextButton(onClick = { key?.let { onWrite(it, value) } }, enabled = writable && value.isNotEmpty()) {
                 Text(stringResource(R.string.meta_write_action))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

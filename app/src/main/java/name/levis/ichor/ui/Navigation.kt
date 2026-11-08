@@ -1,9 +1,14 @@
 package name.levis.ichor.ui
 
+import name.levis.ichor.selectCluster
 import android.content.Context
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -16,18 +21,27 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import name.levis.ichor.BuildConfig
+import name.levis.ichor.ui.nav.TestRoute
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.model.DataServiceKind
+import name.levis.ichor.model.opensAlone
 import name.levis.ichor.model.Feature
+import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.allows
+import name.levis.ichor.model.configuredNode
 import name.levis.ichor.model.contextFor
 import name.levis.ichor.model.kubeFocus
+import name.levis.ichor.model.kubeNodeName
+import name.levis.ichor.model.linkedPlugin
 import name.levis.ichor.model.nodeTab
+import name.levis.ichor.ui.plugins.pluginRouteFor
+import name.levis.ichor.ui.workloads.NETPERF_TAB
 import name.levis.ichor.monitor.AlertAction
 import name.levis.ichor.monitor.AlertActionRequest
 import name.levis.ichor.ui.backup.IncomingBackup
@@ -37,13 +51,18 @@ import name.levis.ichor.ui.importconfig.ImportScreen
 import name.levis.ichor.ui.kubebrowser.KubeBrowserRoutes
 import name.levis.ichor.ui.kubebrowser.KubeLinks
 import name.levis.ichor.ui.overview.OverviewScreen
+import name.levis.ichor.ui.overview.OverviewScreenNavigation
 import name.levis.ichor.ui.share.OpenLink
 import name.levis.ichor.ui.share.parseShareLink
 import name.levis.ichor.ui.nav.Routes
+import name.levis.ichor.ui.nav.WithClusterRail
 import name.levis.ichor.ui.nav.appGraph
 import name.levis.ichor.ui.nav.gitOpsGraph
+import name.levis.ichor.ui.settings.SettingsPage
 import name.levis.ichor.ui.nav.kubeGraph
 import name.levis.ichor.ui.nav.openNodeAction
+import name.levis.ichor.ui.nav.navMaskMark
+import name.levis.ichor.ui.nav.rebuildAfterMaskSwitch
 import name.levis.ichor.ui.nav.resetTo
 import name.levis.ichor.ui.nav.talosGraph
 import kotlinx.coroutines.launch
@@ -56,8 +75,11 @@ import kotlinx.coroutines.launch
 enum class DeepLink {
     ISSUE_CONFIG, DEMO, DEMO_KUBE, ARGO_WINDOWS, ARGO_CD, FLUX, CHECKUP, CONFIG_TRY, SEARCH,
 
+    // The fleet widget (FleetWidget): the fleet screen.
+    FLEET,
+
     // A followed run's notification (OperationService): the screen it shows on.
-    UPGRADE, MAINTENANCE, CONFIG_MULTI, CLUSTER_UPGRADE, K8S_UPGRADE, JOIN_NODE;
+    UPGRADE, MAINTENANCE, CONFIG_MULTI, CLUSTER_UPGRADE, K8S_UPGRADE, JOIN_NODE, ARGO_APP, FLUX_APP, WORKLOAD, NETPERF, RUNBOOK, CA_ROTATION;
 
     companion object {
         /** The screen an EXTRA_OPEN value names; null for anything else. */
@@ -112,6 +134,13 @@ fun Navigation(
         onLinkOpened()
     }
 
+    if (BuildConfig.DEBUG) {
+        DisposableEffect(nav) {
+            TestRoute.nav = nav
+            onDispose { TestRoute.nav = null }
+        }
+    }
+
     // A search result: opened the way its share link would be.
     val scope = rememberCoroutineScope()
     val openTarget: (ShareTarget) -> Unit = remember(nav) { { target -> scope.launch { openShareTarget(app, nav, context, target) } } }
@@ -123,7 +152,10 @@ fun Navigation(
         val active = app.configRepository.config.value?.activeContext.orEmpty()
         val key = shell.key
         val args = top?.arguments
-        val showing = if (key.kubeNode) {
+        val showing = if (key.isVM) {
+            top?.destination?.route == Routes.VM_CONSOLE && args?.getString("ctx") == key.context &&
+                args.getString("ns") == key.namespace && args.getString("vm") == key.vm
+        } else if (key.kubeNode) {
             top?.destination?.route == Routes.KUBE_NODE_DEBUG && args?.getString("ctx") == key.context && args.getString("node") == key.node
         } else if (key.isPod) {
             top?.destination?.route == Routes.POD_SHELL && args?.getString("ctx") == key.context &&
@@ -134,6 +166,7 @@ fun Navigation(
         }
         val route = when {
             key.kubeNode -> Routes.kubeNodeDebug(key.context, key.node, key.namespace)
+            key.isVM -> Routes.vmConsole(key.context, key.namespace, key.vm)
             key.isPod -> Routes.podShell(key.context, key.namespace, key.pod, key.container)
             else -> Routes.debug(key.node, shell.hostname, key.context)
         }
@@ -188,6 +221,10 @@ fun Navigation(
             DeepLink.SEARCH -> if (!startWithImport) {
                 nav.navigate(Routes.SEARCH) { launchSingleTop = true }
             }
+            // The fleet widget: the last background checks only, so no role check either.
+            DeepLink.FLEET -> if (!startWithImport) {
+                nav.navigate(Routes.FLEET) { launchSingleTop = true }
+            }
             // A followed run's notification: back on the screen that shows it, while it is followed.
             DeepLink.UPGRADE -> app.upgradeManager.current.value?.takeIf { !startWithImport }?.let {
                 nav.navigate(Routes.upgrade(it.node, it.hostname)) { launchSingleTop = true }
@@ -206,7 +243,29 @@ fun Navigation(
                 nav.navigate(Routes.K8S_UPGRADE) { launchSingleTop = true }
             }
             DeepLink.JOIN_NODE -> if (!startWithImport && app.joinManager.current.value != null) {
-                nav.navigate(Routes.JOIN_NODE) { launchSingleTop = true }
+                // An allocation is followed on its own screen; Add a node shows the other runs.
+                val route = if (app.joinManager.current.value?.request?.omniAllocate != null) Routes.OMNI_ALLOCATE else Routes.JOIN_NODE
+                nav.navigate(route) { launchSingleTop = true }
+            }
+            // The Kubernetes runs: the screen they were started from, while the manager holds them.
+            DeepLink.ARGO_APP -> app.gitOpsOperations.argoSync.value?.takeIf { !startWithImport && canUseKube() }?.let {
+                nav.navigate(Routes.argoApp(it.namespace, it.name)) { launchSingleTop = true }
+            }
+            DeepLink.FLUX_APP -> app.gitOpsOperations.fluxReconcile.value?.takeIf { !startWithImport && canUseKube() }?.let {
+                nav.navigate(Routes.fluxApp(it.kind, it.namespace, it.name)) { launchSingleTop = true }
+            }
+            DeepLink.WORKLOAD -> app.rolloutManager.current.value?.takeIf { !startWithImport && canUseKube() }?.let {
+                val w = it.workload
+                nav.navigate(Routes.workloads(KubeFocus(0, w.key, w.namespace, w.name))) { launchSingleTop = true }
+            }
+            DeepLink.NETPERF -> if (!startWithImport && canUseKube() && app.netPerfManager.current.value != null) {
+                nav.navigate(Routes.workloads(KubeFocus(NETPERF_TAB))) { launchSingleTop = true }
+            }
+            DeepLink.RUNBOOK -> if (!startWithImport && app.runbookManager.current.value != null) {
+                nav.navigate(Routes.RUNBOOK_RUN) { launchSingleTop = true }
+            }
+            DeepLink.CA_ROTATION -> if (!startWithImport && app.caRotationManager.current.value != null) {
+                nav.navigate(Routes.ROTATE_CA) { launchSingleTop = true }
             }
         }
         onDeepLinkHandled()
@@ -221,95 +280,131 @@ fun Navigation(
                 val active = app.configRepository.config.value?.activeContext.orEmpty()
                 nav.navigate(Routes.podShell(active, ns, pod, container))
             },
+            onLogSearch = { nav.navigate(Routes.logSearch(it)) },
         )
     }
 
-    NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW) {
-        talosGraph(nav, app, kubeLinks)
-        kubeGraph(nav, app, kubeLinks)
-        gitOpsGraph(nav, app, kubeLinks)
-        appGraph(nav, app, kubeLinks, openTarget)
-        composable(Routes.IMPORT) {
-            ImportScreen(
-                incoming = incomingConfig,
-                onIncomingTaken = { incomingConfig = null },
-                onImported = {
-                    app.launchSync(runNow = true)
-                    nav.resetTo(Routes.OVERVIEW)
-                },
-                // Adding a cluster comes from the overview or the settings: one can go back.
-                onBack = if (nav.previousBackStackEntry != null) ({ nav.popBackStack() }) else null,
-            )
-        }
-        composable(Routes.DEMO) {
-            ImportScreen(
-                autoStartDemo = true,
-                onImported = {
-                    app.launchSync(runNow = true)
-                    nav.resetTo(Routes.OVERVIEW)
-                },
-                onBack = { nav.popBackStack() },
-            )
-        }
-        composable(Routes.DEMO_KUBE) {
-            ImportScreen(
-                autoStartDemo = true,
-                kubeDemo = true,
-                onImported = {
-                    app.launchSync(runNow = true)
-                    nav.resetTo(Routes.OVERVIEW)
-                },
-                onBack = { nav.popBackStack() },
-            )
-        }
-        composable(Routes.OVERVIEW) {
-            OverviewScreen(
-                onNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
-                onNodeAction = nav::openNodeAction,
-                onEtcd = { nav.navigate(Routes.ETCD) },
-                onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
-                onWorkloads = { nav.navigate(Routes.workloads()) },
-                onMetrics = { nav.navigate(Routes.metrics()) },
-                onAlerts = { nav.navigate(Routes.alerts()) },
-                onDataServices = { nav.navigate(Routes.dataServices(it)) },
-                onArgoCD = { nav.navigate(Routes.ARGO_CD) },
-                onFlux = { nav.navigate(Routes.FLUX) },
-                onHealth = { nav.navigate(Routes.HEALTH) },
-                onEvents = { nav.navigate(Routes.events()) },
-                onInsights = { nav.navigate(Routes.INSIGHTS) },
-                onApps = { attention -> nav.navigate(Routes.apps(attention)) },
-                onSettings = { nav.navigate(Routes.SETTINGS) },
-                onFunding = { nav.navigate(Routes.FUNDING) },
-                onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
-                onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
-                onUpgradeCluster = { version -> nav.navigate(Routes.clusterUpgrade(version)) },
-                onUpgradeKubernetes = { nav.navigate(Routes.K8S_UPGRADE) },
-                onAddNode = { nav.navigate(Routes.JOIN_NODE) },
-                onDiagnose = { nav.navigate(Routes.diagnosis()) },
-                onAddCluster = { nav.navigate(Routes.IMPORT) },
-                onClustersCleared = { nav.resetTo(Routes.IMPORT) },
-                onChangelog = { nav.navigate(Routes.CHANGELOG) },
-                onAllNodes = { nav.navigate(Routes.nodes(it)) },
-                onKubeNodes = { nav.navigate(Routes.kubeNodes(it)) },
-                onCheckup = { nav.navigate(Routes.CHECKUP) },
-                onCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
-                onApiHealth = { nav.navigate(Routes.API_HEALTH) },
-                onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
-                onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
-                onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
-                onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
-                onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
-                onJobs = { nav.navigate(KubeBrowserRoutes.JOBS) },
-                onKubeEvents = { nav.navigate(Routes.KUBE_EVENTS) },
-                onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
-                onNodeDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
-                onActivity = { nav.navigate(Routes.activity(it)) },
-                onSearch = { nav.navigate(Routes.SEARCH) { launchSingleTop = true } },
-            )
-            // After an update: what changed since the build that ran before.
-            WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
-        }
+    // While screenshot mode switches, every screen is covered: none can draw a name read
+    // under the previous setting, nor one half-way through the switch.
+    val maskSwitching by app.maskTransition.collectAsStateWithLifecycle()
+    // Once switched, every screen but Settings is rebuilt: none keeps what it read before.
+    // Also for a switch that ended while this was not composed or the app was in the background.
+    val maskEpoch by app.maskSwitcher.epoch.collectAsStateWithLifecycle()
+    LaunchedEffect(nav, maskEpoch) {
+        if (!navMaskMark.due(maskEpoch)) return@LaunchedEffect
+        navMaskMark.done(maskEpoch)
+        val start = if (app.configRepository.config.value != null) Routes.OVERVIEW else Routes.IMPORT
+        nav.rebuildAfterMaskSwitch(start)
     }
+    // On a tablet, the clusters and the cluster's sections in a rail beside the screens.
+    WithClusterRail(nav, app) { Box(Modifier.fillMaxSize()) {
+        NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW, modifier = Modifier.fillMaxSize()) {
+            talosGraph(nav, app, kubeLinks)
+            kubeGraph(nav, app, kubeLinks)
+            gitOpsGraph(nav, app, kubeLinks)
+            appGraph(nav, app, kubeLinks, openTarget)
+            composable(Routes.IMPORT) {
+                ImportScreen(
+                    incoming = incomingConfig,
+                    onIncomingTaken = { incomingConfig = null },
+                    onImported = {
+                        app.launchSync(runNow = true)
+                        nav.resetTo(Routes.OVERVIEW)
+                    },
+                    // Adding a cluster comes from the overview or the settings: one can go back.
+                    onBack = if (nav.previousBackStackEntry != null) ({ nav.popBackStack() }) else null,
+                )
+            }
+            composable(Routes.DEMO) {
+                ImportScreen(
+                    autoStartDemo = true,
+                    onImported = {
+                        app.launchSync(runNow = true)
+                        nav.resetTo(Routes.OVERVIEW)
+                    },
+                    onBack = { nav.popBackStack() },
+                )
+            }
+            composable(Routes.DEMO_KUBE) {
+                ImportScreen(
+                    autoStartDemo = true,
+                    kubeDemo = true,
+                    onImported = {
+                        app.launchSync(runNow = true)
+                        nav.resetTo(Routes.OVERVIEW)
+                    },
+                    onBack = { nav.popBackStack() },
+                )
+            }
+            composable(Routes.OVERVIEW) {
+                OverviewScreen(
+                    OverviewScreenNavigation(
+                        onNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
+                        onNodeAction = nav::openNodeAction,
+                        onEtcd = { nav.navigate(Routes.ETCD) },
+                        onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
+                        onWorkloads = { nav.navigate(Routes.workloads()) },
+                        onMetrics = { nav.navigate(Routes.metrics()) },
+                        onAlerts = { nav.navigate(Routes.alerts()) },
+                        onDataServices = { kind, solo -> nav.navigate(Routes.dataServices(kind, solo)) },
+                        onPlugin = { nav.navigate(name.levis.ichor.ui.plugins.pluginRoute(it)) },
+                        onArgoCD = { nav.navigate(Routes.ARGO_CD) },
+                        onFlux = { nav.navigate(Routes.FLUX) },
+                        onHealth = { nav.navigate(Routes.HEALTH) },
+                        onEvents = { nav.navigate(Routes.events()) },
+                        onInsights = { nav.navigate(Routes.INSIGHTS) },
+                        onApps = { attention -> nav.navigate(Routes.apps(attention)) },
+                        onSettings = { nav.navigate(Routes.SETTINGS) },
+                        onFunding = { nav.navigate(Routes.FUNDING) },
+                        onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
+                        onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
+                        onUpgradeCluster = { version -> nav.navigate(Routes.clusterUpgrade(version)) },
+                        onUpgradeKubernetes = { nav.navigate(Routes.K8S_UPGRADE) },
+                        onAddNode = { nav.navigate(Routes.JOIN_NODE) },
+                        onRunbooks = { nav.navigate(Routes.RUNBOOKS) },
+                        onUpdates = { nav.navigate(Routes.UPDATES) },
+                        onDiagnose = { nav.navigate(Routes.diagnosis()) },
+                        onAddCluster = { nav.navigate(Routes.IMPORT) },
+                        onClustersCleared = { nav.resetTo(Routes.IMPORT) },
+                        onChangelog = { nav.navigate(Routes.CHANGELOG) },
+                        onAllNodes = { nav.navigate(Routes.nodes(it)) },
+                        onKubeNodes = { nav.navigate(Routes.kubeNodes(it)) },
+                        onCheckup = { nav.navigate(Routes.CHECKUP) },
+                        onCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
+                        onLogSearch = { nav.navigate(Routes.logSearch()) },
+                        onApiHealth = { nav.navigate(Routes.API_HEALTH) },
+                        onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
+                        onPolicies = { nav.navigate(Routes.POLICIES) },
+                        onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
+                        onVirtualMachines = { nav.navigate(Routes.VIRTUAL_MACHINES) },
+                        onArgoRollouts = { nav.navigate(Routes.ARGO_ROLLOUTS) },
+                        onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
+                        onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
+                        onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
+                        onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
+                        onRepository = { nav.navigate(Routes.repoSource()) },
+                        onGitHosts = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
+                        onCrossplane = { nav.navigate(KubeBrowserRoutes.CROSSPLANE) },
+                        onTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
+                        onClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
+                        onLoadBalancing = { nav.navigate(KubeBrowserRoutes.LOAD_BALANCING) },
+                        onJobs = { nav.navigate(KubeBrowserRoutes.JOBS) },
+                        onKubeEvents = { nav.navigate(Routes.KUBE_EVENTS) },
+                        onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
+                        onNodeDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
+                        onNodeMeta = { nav.navigate(Routes.nodeMeta(it, it)) },
+                        onActivity = { nav.navigate(Routes.activity(it)) },
+                        onSearch = { nav.navigate(Routes.SEARCH) { launchSingleTop = true } },
+                        onFleet = { nav.navigate(Routes.FLEET) { launchSingleTop = true } },
+                        onOpenTarget = openTarget,
+                    ),
+                )
+                // After an update: what changed since the build that ran before.
+                WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
+            }
+        }
+        if (maskSwitching) MaskSwitchingPlaceholder()
+    } }
 
     // Its dialogs are windows over the lock screen: kept for after the unlock.
     val locked by app.appLock.locked.collectAsStateWithLifecycle()
@@ -359,10 +454,18 @@ private suspend fun openShareTarget(
  * The route a share link opens over the overview; null for the overview itself. A node only
  * when it is one of the cluster's (with its role, for the control-plane warnings): a link
  * cannot point the app's Talos calls at another address. A Talos screen on a cluster added
- * from a kubeconfig (another phone's context of the same name) stays on its home. [action]: the
+ * from a kubeconfig (another phone's context of the same name) stays on its home, but a node of
+ * it (a node or disk alert) opens its nodes searched for that node. [action]: the
  * confirmation to open there (a reboot, a sync, a reconcile, a 1 h silence), checked to match.
  */
-private suspend fun ShareTarget.route(app: TalosApp, action: AlertActionRequest? = null): String? = when (target) {
+private suspend fun ShareTarget.route(app: TalosApp, action: AlertActionRequest? = null): String? =
+    if (app.configRepository.config.value?.activeIsKube == true && (target == ShareTarget.NODE || target == ShareTarget.STORAGE)) {
+        kubeNodeRoute(app)
+    } else {
+        talosRoute(app, action)
+    }
+
+private suspend fun ShareTarget.talosRoute(app: TalosApp, action: AlertActionRequest?): String? = when (target) {
     ShareTarget.ETCD -> Routes.ETCD.takeUnless { app.configRepository.config.value?.activeIsKube == true }
     ShareTarget.HEALTH -> Routes.HEALTH.takeUnless { app.configRepository.config.value?.activeIsKube == true }
     ShareTarget.ARGO_CD -> Routes.ARGO_CD
@@ -377,15 +480,34 @@ private suspend fun ShareTarget.route(app: TalosApp, action: AlertActionRequest?
     }
     ShareTarget.STORAGE -> clusterNode(app)?.let { n -> Routes.storage(n.node, n.hostname) }
     ShareTarget.HARDWARE -> clusterNode(app)?.let { n -> Routes.hardware(n.node, n.hostname) }
+    // The screen opens on its map, the first tab.
+    ShareTarget.KUBESPAN -> Routes.KUBESPAN.takeUnless { app.configRepository.config.value?.activeIsKube == true }
     ShareTarget.ARGO_APP -> Routes.argoApp(namespace, name, sync = action?.action == AlertAction.SYNC)
     ShareTarget.FLUX_APP -> Routes.fluxApp(kind, namespace, name, reconcile = action?.action == AlertAction.RECONCILE)
-    ShareTarget.DATA -> Routes.dataServices(DataServiceKind.entries.firstOrNull { it.catalogId == kind })
+    // A data service's catalog id opens its tab; "plugin-<id>" (a plugin finding's alert) where
+    // that plugin's tile leads, its own screen when this build cannot tell.
+    ShareTarget.DATA -> linkedPlugin?.let { id -> pluginRouteFor(app.pluginRepository, id) ?: KubeBrowserRoutes.plugin(id) }
+        ?: DataServiceKind.entries.firstOrNull { it.catalogId == kind }.let { Routes.dataServices(it, solo = it?.opensAlone == true) }
     ShareTarget.CHECKUP -> Routes.CHECKUP
     ShareTarget.ALERTS -> Routes.alerts(silence = action?.takeIf { it.action == AlertAction.SILENCE }?.target.orEmpty())
     else -> kubeFocus?.let { Routes.workloads(it) }
 }
 
-/** The cluster's node the link names, by address or hostname; null when it is none of its. */
+/**
+ * On a cluster added from a kubeconfig, a node (a node or disk alert) opens its nodes searched
+ * for that node; null (its home) when it is none of its.
+ */
+private suspend fun ShareTarget.kubeNodeRoute(app: TalosApp): String? {
+    val names = runCatching { app.kubeRepository.kubeNodes() }.getOrNull()?.nodes.orEmpty().map { it.name }
+    return kubeNodeName(names)?.let { Routes.kubeNodes(null, query = it) }
+}
+
+/**
+ * The cluster's node the link names, by address or hostname; null when it is none of its. When
+ * the overview does not have it (it could not be read, say right after a cold start from a
+ * notification), a storage or hardware link to a node of the context's config still opens.
+ */
 private suspend fun ShareTarget.clusterNode(app: TalosApp): NodeOverview? =
     runCatching { app.talosRepository.overview() }.getOrNull()?.nodes
         ?.firstOrNull { n -> addr.isNotEmpty() && n.node == addr || host.isNotEmpty() && n.hostname == host }
+        ?: configuredNode(app.configRepository.config.value?.activeSummary)?.let { NodeOverview(it, host.ifEmpty { it }, reachable = false) }

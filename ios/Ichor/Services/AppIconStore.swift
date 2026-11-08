@@ -17,9 +17,11 @@ enum AppIconSettings {
 /// Icons bundled with the app (appicons/<name>.webp, shared with Android), with their light
 /// "-night" variant for dark themes when there is one. iOS 17 decodes WebP itself.
 enum BundledAppIcons {
-    // NSCache is thread-safe; a miss (most icons have no -night variant) is remembered too.
-    private static let images = NSCache<NSString, UIImage>()
-    private static let missing = NSCache<NSString, NSNumber>()
+    // nonisolated(unsafe), and why it is sound: NSCache is documented thread-safe but not marked
+    // Sendable, and both are immutable references. A miss (most icons have no -night variant) is
+    // remembered too.
+    nonisolated(unsafe) private static let images = NSCache<NSString, UIImage>()
+    nonisolated(unsafe) private static let missing = NSCache<NSString, NSNumber>()
 
     static func image(_ name: String, dark: Bool) -> UIImage? {
         // Defense in depth: InventoryApp.iconSource already drops names that are not slugs.
@@ -33,7 +35,8 @@ enum BundledAppIcons {
         if let image = images.object(forKey: key) { return image }
         guard missing.object(forKey: key) == nil else { return nil }
         guard let url = Bundle.main.url(forResource: file, withExtension: "webp", subdirectory: "appicons"),
-              let image = UIImage(contentsOfFile: url.path) else {
+            let image = UIImage(contentsOfFile: url.path)
+        else {
             missing.setObject(NSNumber(value: true), forKey: key)
             return nil
         }
@@ -42,7 +45,8 @@ enum BundledAppIcons {
     }
 }
 
-/// Icons of recognised apps the app does not bundle, from Dashboard Icons on jsDelivr, and the
+/// Icons of recognised apps the app does not bundle, from Dashboard Icons on jsDelivr (GitHub
+/// when jsDelivr refuses), and the
 /// icons resources name for themselves (an https URL, or inline bytes that are only decoded).
 /// Only asked once the user allowed it, with nothing but the validated icon name or the
 /// annotation's URL in the request (no cookies, no cache shared with other requests, no
@@ -73,13 +77,14 @@ actor RemoteAppIcons {
         .appendingPathComponent("appicons-remote", isDirectory: true)
 
     func image(slug: String) async -> UIImage? {
-        guard let url = remoteIconURL(slug: slug) else { return nil }
-        return await image(key: slug, url: url)
+        let urls = remoteIconURLs(slug: slug)
+        guard !urls.isEmpty else { return nil }
+        return await image(key: slug, urls: urls)
     }
 
     /// A resource's own icon at an https URL, cached under a hash of the URL.
     func image(url: URL) async -> UIImage? {
-        await image(key: "url-" + Self.sha256(Data(url.absoluteString.utf8)), url: url)
+        await image(key: "url-" + Self.sha256(Data(url.absoluteString.utf8)), urls: [url])
     }
 
     /// A resource's own inline icon: decoded once, never fetched.
@@ -91,11 +96,11 @@ actor RemoteAppIcons {
         return image
     }
 
-    private func image(key: String, url: URL) async -> UIImage? {
+    private func image(key: String, urls: [URL]) async -> UIImage? {
         if let image = images[key] { return image }
         guard !failed.contains(key) else { return nil }
         if let running = loading[key] { return await running.value }
-        let task = Task { await fetch(key: key, url: url) }
+        let task = Task { await fetch(key: key, urls: urls) }
         loading[key] = task
         let image = await task.value
         loading[key] = nil
@@ -107,13 +112,21 @@ actor RemoteAppIcons {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
-    private func fetch(key: String, url: URL) async -> UIImage? {
+    /// The cached icon, else the first of urls that answers with an image.
+    private func fetch(key: String, urls: [URL]) async -> UIImage? {
         let file = Self.directory?.appendingPathComponent("\(key).webp")
         if let file, let data = try? Data(contentsOf: file) {
             if data.count <= remoteIconMaxBytes, let image = Self.decode(data) { return image }
             try? FileManager.default.removeItem(at: file)
         }
-        guard let data = await download(url), let image = Self.decode(data) else { return nil }
+        var downloaded: (Data, UIImage)?
+        for url in urls {
+            if let data = await download(url), let image = Self.decode(data) {
+                downloaded = (data, image)
+                break
+            }
+        }
+        guard let (data, image) = downloaded else { return nil }
         if let file, let directory = Self.directory {
             try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             try? data.write(to: file, options: .atomic)
@@ -125,8 +138,9 @@ actor RemoteAppIcons {
     /// download stops there).
     private func download(_ url: URL) async -> Data? {
         guard let result = try? await session.bytes(from: url),
-              let http = result.1 as? HTTPURLResponse, http.statusCode == 200,
-              http.expectedContentLength <= Int64(remoteIconMaxBytes) else { return nil }
+            let http = result.1 as? HTTPURLResponse, http.statusCode == 200,
+            http.expectedContentLength <= Int64(remoteIconMaxBytes)
+        else { return nil }
         let bytes = result.0
         var data = Data()
         do {
@@ -150,16 +164,21 @@ actor RemoteAppIcons {
             kCGImageSourceCreateThumbnailWithTransform: true,
             kCGImageSourceThumbnailMaxPixelSize: maxPixels,
         ]
-        guard let source = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary),
-              let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        guard
+            let source = CGImageSourceCreateWithData(
+                data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary),
+            let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+        else { return nil }
         return UIImage(cgImage: image)
     }
 }
 
 /// Refuses every redirect: the icon must come from the validated URL itself.
 private final class NoRedirects: NSObject, URLSessionTaskDelegate {
-    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
-                    newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
+    func urlSession(
+        _ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void
+    ) {
         completionHandler(nil)
     }
 }

@@ -101,6 +101,7 @@ func StartPacketCapture(
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", 0, 0, msg) })
+		defer holdCalls(configYAML, contextName)()
 
 		res, path, err := runCapture(ctx, configYAML, contextName, node, destPath, opts, listener)
 
@@ -125,6 +126,10 @@ func runCapture(
 ) (captureResult, string, error) {
 	if opts.iface == "" {
 		return captureResult{}, "", errors.New("pick an interface to capture on")
+	}
+
+	if isTalosDemoContext(configYAML, contextName) {
+		return runDemoCapture(ctx, node, destPath, opts, listener)
 	}
 
 	s, release, err := acquireNode(configYAML, contextName, node)

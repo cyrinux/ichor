@@ -18,7 +18,10 @@ public enum CheckupSeverity: String, Sendable, WireEnum {
 
 /// The sections of a checkup, as Go names them.
 public enum CheckupSectionID: String, Sendable {
-    case workloads, events, storage, upgrade, webhooks, capacity, nodes, loadbalancers, terminating, certificates, secrets, helm, monitoring
+    case workloads, events, storage, upgrade, webhooks, policies, capacity, nodes, loadbalancers, terminating,
+        certificates, secrets, helm, monitoring, crossplane, tailscale, clusterapi
+    /// The findings the plugins of the apps the cluster runs declare (docs/plugins.md "Findings").
+    case plugins
 }
 
 /// What a finding is about, as Go names it.
@@ -27,9 +30,14 @@ public enum CheckupKind: String, Sendable {
     case event
     case volumeFull, volumeInodes, pvcPending, pvcLost, pvFailed, pvReleased
     case deprecatedAPI, webhookDown, webhookSkipped
+    /// The admission-policy engine cannot admit, a policy not ready, a workload a policy
+    /// denies, an Audit policy whose background scans keep failing.
+    case policyEngineDown, policyNotReady, policyBlocks, policyFailures
     case nodeRequestsHigh, nodePodsFull, noRoomToDrain, quotaNearLimit
     case nodeNotReady, nodePressure, nodeCordoned, nodeVersionSkew
-    case lbPending, lbPoolExhausted, lbPoolConflict
+    case lbPending, lbPoolExhausted, lbPoolConflict, lbPoolUnadvertised, lbConfigError, lbBGPPeerDown
+    /// A Cilium pool whose Services no CiliumL2AnnouncementPolicy announces, BGP being off.
+    case lbCiliumPoolUnannounced
     case namespaceTerminating, podTerminating, pvcTerminating
     /// A network test namespace the app could not delete (it was closed mid-run).
     case netperfLeftover
@@ -37,6 +45,29 @@ public enum CheckupKind: String, Sendable {
     case externalSecretFailed, secretStoreNotReady
     case helmFailed, helmPending
     case scrapeTargetsDown, prometheusRuleErrors, ruleGroupErrors
+    /// A Crossplane resource that cannot sync, a package not healthy, a resource not ready past
+    /// the grace, a definition not established. Name: "Kind/name".
+    case crossplaneSyncFailed, crossplaneProviderUnhealthy, crossplaneNotReady, crossplaneDefinitionNotEstablished
+    /// The Tailscale operator down (extra: "ready/desired"), a Connector not ready (extra: its
+    /// roles), a ProxyGroup with proxies down (extra: its type), a ProxyClass in use not ready
+    /// (count: its users).
+    case tailscaleOperatorDown, tailscaleConnectorNotReady, tailscaleProxyGroupDown, tailscaleProxyClassNotReady
+    /// On a management cluster: a workload cluster failed or still provisioning past an hour, a
+    /// Machine failed or stuck (extra: "cluster/phase"), a MachineDeployment short of available
+    /// replicas (value of limit), a Sidero server in use but off, one not accepted (name "" and
+    /// count: that many more).
+    case capiClusterFailed, capiClusterProvisioning, capiMachineFailed, capiMachineStuck, capiWorkersShort
+    case sideroServerOff, sideroServerUnaccepted
+    /// A Flux Kustomization that cannot decrypt its SOPS files (extra: its decryption secretRef,
+    /// "" when not configured; reason, message: its Ready condition's).
+    case sopsDecryptionFailed
+    /// A certificate a route's host serves (read by TLS handshake) that expired, expires within
+    /// 14 days (count: days left) or does not name the host (message: the names it covers).
+    /// Namespace, name: its Secret; extra: the route; reason: the host.
+    case routeCertExpired, routeCertExpiring, routeCertHostMismatch
+    /// A finding a plugin declares, in the plugin's words (`plugin`, already translated by Go);
+    /// namespace and name are its object's.
+    case plugin
 }
 
 /// What the cluster hides behind green nodes: one section per kind of trouble.
@@ -70,11 +101,27 @@ public struct CheckupReport: Decodable, Equatable, Sendable {
 
     /// The findings worth a background alert, keyed "section|kind|subject" and valued by
     /// severity: everything but the notes and the events, which only describe.
-    public var alertIssues: [String: String] {
+    public var alertIssues: [String: String] { alertIssues(gitopsWatched: false) }
+
+    /// `alertIssues`, leaving out as well the kinds the GitOps alert already raises
+    /// (`gitopsAlertedKinds`) when that track is watched, and the plugin findings when the
+    /// plugins' own track (pluginIssuesOf) is watched.
+    /// An imported plugin's finding alerts only with `importedPluginsWatched`.
+    public func alertIssues(gitopsWatched: Bool, pluginsWatched: Bool = false, importedPluginsWatched: Bool = false)
+        -> [String: String]
+    {
+        var skipped: Set<String> = gitopsWatched ? gitopsAlertedKinds : []
+        if pluginsWatched { skipped.insert(CheckupKind.plugin.rawValue) }
         var issues: [String: String] = [:]
         for section in sections where section.id != CheckupSectionID.events.rawValue {
-            for finding in section.findings where finding.severity != .info {
-                issues["\(section.id)|\(finding.kindName)|\(finding.subject)"] = finding.severity.rawValue
+            for finding in section.findings
+            where finding.severity != .info && !skipped.contains(finding.kindName)
+                && !(finding.plugin?.user == true && !importedPluginsWatched)
+            {
+                let key = "\(section.id)|\(finding.kindName)|\(finding.alertSubject)"
+                // Two plugin findings on one object: the worst one.
+                if issues[key] == CheckupSeverity.critical.rawValue { continue }
+                issues[key] = finding.severity.rawValue
             }
         }
         return issues
@@ -124,6 +171,9 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
     public let count: Int
     /// Unix ms, 0 when unknown.
     public let since: Int64
+    /// Kind `plugin`: the plugin, its finding's words (already translated) and where it leads;
+    /// nil for the other kinds.
+    public let plugin: PluginFindingInfo?
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -139,20 +189,35 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
         limit = try c.field(.limit, 0)
         count = try c.field(.count, 0)
         since = try c.field(.since, 0)
+        plugin = if kindName == CheckupKind.plugin.rawValue { try? PluginFindingInfo(from: decoder) } else { nil }
     }
 
-    private enum CodingKeys: String, CodingKey { case kind, severity, namespace, name, node, reason, message, extra, value, limit, count, since }
+    private enum CodingKeys: String, CodingKey {
+        case kind, severity, namespace, name, node, reason, message, extra, value, limit, count, since
+    }
 
     public var kind: CheckupKind? { CheckupKind(rawValue: kindName) }
 
     /// "namespace/name", or the name alone for what has no namespace.
     public var subject: String { namespace.isEmpty ? name : "\(namespace)/\(name)" }
 
+    /// What a background alert names: the subject, else (a plugin finding about no object) the
+    /// finding's title.
+    var alertSubject: String { subject.isEmpty ? plugin?.headline ?? "" : subject }
+
     /// Kubernetes' own words about the finding, "" when it has none: the reason where it says
     /// more than the title does, then the message.
     public var detail: String {
-        let reasonKinds: Set<CheckupKind> = [.podCrashLoop, .podOOMKilled, .podStuckStarting, .jobFailed, .nodeNotReady, .nodePressure,
-                                             .externalSecretFailed, .secretStoreNotReady, .prometheusRuleErrors, .ruleGroupErrors]
+        if let plugin { return plugin.detail }
+        let reasonKinds: Set<CheckupKind> = [
+            .podCrashLoop, .podOOMKilled, .podStuckStarting, .jobFailed, .nodeNotReady, .nodePressure,
+            .externalSecretFailed, .secretStoreNotReady, .prometheusRuleErrors, .ruleGroupErrors,
+            .crossplaneSyncFailed, .crossplaneProviderUnhealthy, .crossplaneNotReady,
+            .crossplaneDefinitionNotEstablished, .tailscaleConnectorNotReady,
+            .tailscaleProxyGroupDown, .tailscaleProxyClassNotReady, .capiClusterFailed,
+            .capiClusterProvisioning, .capiMachineFailed, .capiMachineStuck,
+            .sopsDecryptionFailed,
+        ]
         let shownReason = kind.map(reasonKinds.contains) == true ? reason : ""
         return [shownReason, message].filter { !$0.isEmpty }.joined(separator: ": ")
     }
@@ -275,6 +340,8 @@ public struct KubeEvent: Decodable, Equatable, Sendable {
     public let first: Int64
     public let last: Int64
     public let source: String
+    /// The admission policy that caused a FailedCreate denial, when one did.
+    public let policy: EventPolicy?
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -288,11 +355,32 @@ public struct KubeEvent: Decodable, Equatable, Sendable {
         first = try c.field(.first, 0)
         last = try c.field(.last, 0)
         source = try c.field(.source, "")
+        policy = try c.decodeIfPresent(EventPolicy.self, forKey: .policy)
     }
 
-    private enum CodingKeys: String, CodingKey { case type, reason, message, kind, namespace, name, count, first, last, source }
+    private enum CodingKeys: String, CodingKey {
+        case type, reason, message, kind, namespace, name, count, first, last, source, policy
+    }
 
     public var isWarning: Bool { type != "Normal" }
+}
+
+/// The admission policy one denial event names (Go policy_denial.go).
+public struct EventPolicy: Decodable, Equatable, Sendable {
+    public let source: String
+    public let policy: String
+    public let rule: String
+    public let message: String
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        source = try c.field(.source, "")
+        policy = try c.field(.policy, "")
+        rule = try c.field(.rule, "")
+        message = try c.field(.message, "")
+    }
+
+    private enum CodingKeys: String, CodingKey { case source, policy, rule, message }
 }
 
 public struct KubeEventList: Decodable, Equatable, Sendable {
@@ -322,13 +410,26 @@ public struct CheckupSubject: Equatable, Sendable {
     }
 }
 
+/// Checkup finding kinds whose problem the GitOps alert already raises when it is on
+/// (`gitopsIssuesWithGaps`): a Kustomization that cannot decrypt its SOPS files is Ready=False, a
+/// Flux app the GitOps track notifies about.
+public let gitopsAlertedKinds: Set<String> = [CheckupKind.sopsDecryptionFailed.rawValue]
+
 /// The checkup findings worth a notification, for a report where a section could not be read:
 /// that section keeps the issues `known` had for it, so they neither clear falsely nor come back
-/// as new once it reads again.
-public func checkupIssuesWithGaps(_ report: CheckupReport, known: [String: String]) -> [String: String] {
+/// as new once it reads again. With `gitopsWatched`, the kinds the GitOps alert already raises
+/// are left to it; with `pluginsWatched`, the plugin findings to the plugins' track.
+public func checkupIssuesWithGaps(
+    _ report: CheckupReport, known: [String: String], gitopsWatched: Bool = false,
+    pluginsWatched: Bool = false, importedPluginsWatched: Bool = false
+) -> [String: String] {
     let unread = report.sections.filter { !$0.error.isEmpty }.map { "\($0.id)|" }
-    var issues = report.alertIssues
-    for (key, value) in known where issues[key] == nil && unread.contains(where: key.hasPrefix) {
+    var issues = report.alertIssues(
+        gitopsWatched: gitopsWatched, pluginsWatched: pluginsWatched,
+        importedPluginsWatched: importedPluginsWatched)
+    let pluginKind = "|\(CheckupKind.plugin.rawValue)|"
+    for (key, value) in known
+    where issues[key] == nil && unread.contains(where: key.hasPrefix) && !(pluginsWatched && key.contains(pluginKind)) {
         issues[key] = value
     }
     return issues
@@ -337,20 +438,28 @@ public func checkupIssuesWithGaps(_ report: CheckupReport, known: [String: Strin
 /// The checkup issues a partial read may carry over: the previous snapshot's, only when it is the
 /// same cluster and that check watched and read them. Another cluster's issues must never leak in.
 public func knownCheckupIssues(_ previous: ClusterSnapshot?, context: String) -> [String: String] {
-    guard let previous, previous.context == context, previous.checkupWatched, previous.checkupChecked else { return [:] }
+    guard let previous, previous.context == context, previous.checkupWatched, previous.checkupChecked else {
+        return [:]
+    }
     return previous.checkupIssues
 }
 
 /// Checkup findings (see evaluateTrack), keyed "checkup:section|kind|subject".
-func evaluateCheckup(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert]) -> IssueTrack {
+func evaluateCheckup(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert])
+    -> IssueTrack
+{
     evaluateTrack(
         previous: previous?.checkupTrack, current: current.checkupTrack, comparable: comparable, severity: { $0 },
         problem: { key, severity in
             let subject = CheckupSubject(key: key)
-            return Alert(key: "checkup:\(key)", title: "\(subject.section): \(subject.subject)", text: "Cluster checkup · \(severity)", problem: true)
+            return Alert(
+                key: "checkup:\(key)", title: "\(subject.section): \(subject.subject)",
+                text: "Cluster checkup · \(severity)", problem: true)
         },
         cleared: { key in
-            Alert(key: "checkup:\(key)", title: "Resolved: \(CheckupSubject(key: key).subject)", text: "Cluster checkup", problem: false)
+            Alert(
+                key: "checkup:\(key)", title: "Resolved: \(CheckupSubject(key: key).subject)", text: "Cluster checkup",
+                problem: false)
         },
         alerts: &alerts)
 }

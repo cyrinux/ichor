@@ -1,0 +1,691 @@
+package name.levis.ichor.data
+
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import name.levis.ichor.model.BootMedia
+import name.levis.ichor.model.CARotationPlan
+import name.levis.ichor.model.CARotationProgress
+import name.levis.ichor.model.CloudUserData
+import name.levis.ichor.model.ContextNodeRemoval
+import name.levis.ichor.model.NodeForgetCheck
+import name.levis.ichor.model.ClusterUpgradeCommand
+import name.levis.ichor.model.ClusterUpgradePlan
+import name.levis.ichor.model.CpReplacePlan
+import name.levis.ichor.model.CpReplaceWait
+import name.levis.ichor.model.EndpointMatch
+import name.levis.ichor.model.EndpointProbe
+import name.levis.ichor.model.HetznerCreateSpec
+import name.levis.ichor.model.HetznerOptions
+import name.levis.ichor.model.HetznerSnapshotCost
+import name.levis.ichor.model.HetznerSnapshotSpec
+import name.levis.ichor.model.HetznerTokenCheck
+import name.levis.ichor.model.AWSCheck
+import name.levis.ichor.model.AWSCreateSpec
+import name.levis.ichor.model.AWSImageCost
+import name.levis.ichor.model.AWSImageSpec
+import name.levis.ichor.model.AWSNetwork
+import name.levis.ichor.model.AWSNetworkSpec
+import name.levis.ichor.model.AWSOptions
+import name.levis.ichor.model.AWSPrice
+import name.levis.ichor.model.AWSRenewed
+import name.levis.ichor.model.AWSSignInChoice
+import name.levis.ichor.model.AWSSignInFinish
+import name.levis.ichor.model.AWSSignInStart
+import name.levis.ichor.model.SsoRoleChoice
+import name.levis.ichor.model.AzureCheck
+import name.levis.ichor.model.AzureImageEstimate
+import name.levis.ichor.model.AzureImageSpec
+import name.levis.ichor.model.AzureCreateSpec
+import name.levis.ichor.model.AzureOptions
+import name.levis.ichor.model.AzureNetworkResult
+import name.levis.ichor.model.AzureNetworkSpec
+import name.levis.ichor.model.AzurePrice
+import name.levis.ichor.model.AzureSignInChoice
+import name.levis.ichor.model.AzureSignInFinish
+import name.levis.ichor.model.AzureSignInStart
+import name.levis.ichor.model.GCPCheck
+import name.levis.ichor.model.GCPCreateSpec
+import name.levis.ichor.model.GCPImageEstimate
+import name.levis.ichor.model.GCPImageSpec
+import name.levis.ichor.model.GCPNetworkResult
+import name.levis.ichor.model.GCPNetworkSpec
+import name.levis.ichor.model.GCPOptions
+import name.levis.ichor.model.GCPPrice
+import name.levis.ichor.model.GCPSignInResult
+import name.levis.ichor.model.SignInPrompt
+import name.levis.ichor.model.OVHCheck
+import name.levis.ichor.model.OVHCreateSpec
+import name.levis.ichor.model.OVHOptions
+import name.levis.ichor.model.JoinConfigPreview
+import name.levis.ichor.model.K8sUpgradePlan
+import name.levis.ichor.model.K8sVersionChoice
+import name.levis.ichor.model.MaintenanceAction
+import name.levis.ichor.model.MaintenanceInspection
+import name.levis.ichor.model.MaintenancePlan
+import name.levis.ichor.model.MaintenanceUpgrade
+import name.levis.ichor.model.NodeDiscovery
+import name.levis.ichor.model.NodeResetPlan
+import name.levis.ichor.model.OmniAllocateSpec
+import name.levis.ichor.model.OmniMachine
+import name.levis.ichor.model.OmniMachineSets
+import name.levis.ichor.model.ResetRequest
+import name.levis.ichor.model.UpgradeExtensionCheck
+import name.levis.ichor.ui.goErrorText
+import name.levis.ichorgo.TalosCARotationListener
+import name.levis.ichorgo.ClusterUpgradeListener
+import name.levis.ichorgo.Ichorgo
+import name.levis.ichorgo.K8sUpgradeListener
+import name.levis.ichorgo.MaintenanceListener
+import name.levis.ichorgo.MaintenanceRun
+import name.levis.ichorgo.SignInListener
+import name.levis.ichorgo.SignInRun
+
+/**
+ * A node's life in the cluster: maintenance (cordon, drain, then an action), power, reset and
+ * rollback, Talos and Kubernetes upgrades, control-plane replacement, and finding and joining
+ * new nodes.
+ */
+class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
+
+    private val configs = go.configs
+    private val kubeServers = go.kubeServers
+    private val streams = TalosStreams(configs)
+
+    /**
+     * What a maintenance of [node] would do: pods to evict, budgets, reboot checks (os:admin).
+     * On a kubeconfig cluster [node] is the Kubernetes node name, and the plan is a drain's
+     * (no Talos checks). Never cached.
+     */
+    suspend fun maintenancePlan(node: String): MaintenancePlan {
+        val json = if (configs.forCall().activeIsKube) {
+            kubeCall { cfg, ctx, server -> Ichorgo.kubeDrainPlan(cfg, ctx, server, node) }
+        } else {
+            talosKubeCall { cfg, ctx, server -> Ichorgo.nodeMaintenancePlan(cfg, ctx, server, node) }
+        }
+        return TalosJson.decodeFromString(MaintenancePlan.serializer(), json)
+    }
+
+    /**
+     * `kubectl cordon` ([on]) or `uncordon` of [node] (os:admin): its Talos address, or its
+     * Kubernetes name on a kubeconfig cluster. The Talos one resolves the node through Talos.
+     */
+    suspend fun cordon(node: String, on: Boolean) = if (configs.forCall().activeIsKube) {
+        kubeCall { cfg, ctx, server -> Ichorgo.kubeNodeCordon(cfg, ctx, server, node, on) }
+    } else {
+        talosKubeCall { cfg, ctx, server -> Ichorgo.kubeCordon(cfg, ctx, server, node, on) }
+    }
+
+    /**
+     * Starts the maintenance of [node] (cordon, drain, then [action]); returns at once, the
+     * run reports to [listener]. The core refuses blockers, and acknowledgments unless [acknowledged].
+     * A kubeconfig cluster only drains ([node]: the Kubernetes node name). [upgrade]: what
+     * [MaintenanceAction.UPGRADE] installs, required for it.
+     */
+    fun startMaintenance(
+        node: String,
+        action: MaintenanceAction,
+        includeBare: Boolean,
+        acknowledged: Boolean,
+        listener: MaintenanceListener,
+        upgrade: MaintenanceUpgrade? = null,
+    ): MaintenanceRun {
+        val stored = configs.forCall()
+        if (stored.activeIsKube) {
+            require(action == MaintenanceAction.NONE) { "a cluster without Talos can only be drained" }
+            val target = kubeServers.targetFor(stored)
+            return Ichorgo.startKubeDrain(target.yaml, target.context, target.server, node, includeBare, listener)
+        }
+        val server = kubeServers.serverFor(stored)
+        if (action == MaintenanceAction.UPGRADE) {
+            val up = requireNotNull(upgrade) { "an upgrade maintenance needs its installer image" }
+            return Ichorgo.startNodeMaintenanceUpgrade(
+                stored.yaml, stored.activeContext, server, node, up.image, includeBare, acknowledged, up.force, listener,
+            )
+        }
+        return Ichorgo.startNodeMaintenance(stored.yaml, stored.activeContext, server, node, action.wire, includeBare, acknowledged, listener)
+    }
+
+    /** The Kubernetes versions offered (K8sUpgradeVersions): one minor up at most, inside the Talos range. */
+    suspend fun k8sUpgradeVersions(): K8sVersionChoice = call { cfg, ctx ->
+        TalosJson.decodeFromString(K8sVersionChoice.serializer(), Ichorgo.k8sUpgradeVersions(cfg, ctx))
+    }
+
+    /** What upgrading Kubernetes to [version] would change (K8sUpgradePlan), read-only. */
+    suspend fun k8sUpgradePlan(version: String): K8sUpgradePlan = talosKubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(K8sUpgradePlan.serializer(), Ichorgo.k8sUpgradePlan(cfg, ctx, server, version))
+    }
+
+    /** StartK8sUpgrade: returns at once, the run reports to [onProgress] and [onDone] (once). */
+    fun startK8sUpgrade(version: String, dryRun: Boolean, onProgress: (String) -> Unit, onDone: (String) -> Unit): K8sUpgradeHandle {
+        val stored = configs.forCall()
+        val run = Ichorgo.startK8sUpgrade(
+            stored.yaml,
+            stored.activeContext,
+            kubeServers.serverFor(stored),
+            version,
+            dryRun,
+            object : K8sUpgradeListener {
+                override fun onProgress(json: String) = onProgress(json)
+                override fun onDone(errMessage: String) = onDone(errMessage)
+            },
+        )
+        return K8sUpgradeHandle { run.cancel() }
+    }
+
+    /**
+     * Every node of the context to [version], in the order the roll follows, with each node's
+     * checks (ClusterUpgradePlan). Nodes already on [version] are "done": a rerun continues.
+     */
+    suspend fun clusterUpgradePlan(version: String): ClusterUpgradePlan = talosKubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(ClusterUpgradePlan.serializer(), Ichorgo.clusterUpgradePlan(cfg, ctx, server, version))
+    }
+
+    /** StartClusterUpgrade: returns at once, the roll reports to [onProgress] and [onDone] (once). */
+    fun startClusterUpgrade(
+        version: String,
+        drain: Boolean,
+        acknowledged: Boolean,
+        onProgress: (String) -> Unit,
+        onDone: (String) -> Unit,
+    ): ClusterUpgradeHandle {
+        val stored = configs.forCall()
+        val run = Ichorgo.startClusterUpgrade(
+            stored.yaml,
+            stored.activeContext,
+            kubeServers.serverFor(stored),
+            version,
+            drain,
+            acknowledged,
+            object : ClusterUpgradeListener {
+                override fun onProgress(json: String) = onProgress(json)
+                override fun onDone(errMessage: String) = onDone(errMessage)
+            },
+        )
+        return object : ClusterUpgradeHandle {
+            override fun send(command: ClusterUpgradeCommand) = when (command) {
+                ClusterUpgradeCommand.PAUSE -> run.pause()
+                ClusterUpgradeCommand.RESUME -> run.resume()
+                ClusterUpgradeCommand.ABORT -> run.abort()
+            }
+
+            override fun cancel() = run.cancel()
+        }
+    }
+
+    /** [node]'s extensions against the Image Factory's official list for [image]'s version. Read-only. */
+    suspend fun upgradeExtensionCheck(node: String, image: String): UpgradeExtensionCheck = call { cfg, ctx ->
+        TalosJson.decodeFromString(UpgradeExtensionCheck.serializer(), Ichorgo.upgradeExtensionCheck(cfg, ctx, node, image))
+    }
+
+    /** `talosctl reboot -m [mode]` (default, powercycle, force); needs os:operator or higher. */
+    suspend fun reboot(node: String, mode: String) = call { cfg, ctx -> Ichorgo.reboot(cfg, ctx, node, mode) }
+
+    /** What resetting [node] would wipe and leave, and what forbids it. Read-only. */
+    suspend fun resetPlan(node: String): NodeResetPlan = talosKubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(NodeResetPlan.serializer(), Ichorgo.nodeResetPlan(cfg, ctx, server, node))
+    }
+
+    /** `talosctl reset --wipe-mode --graceful --reboot` on [node] (os:admin); refused on a plan blocker. */
+    suspend fun reset(node: String, request: ResetRequest) = call { cfg, ctx ->
+        Ichorgo.nodeReset(cfg, ctx, node, request.wipe.wire, request.graceful, request.reboot)
+    }
+
+    /** `talosctl rollback`: [node] reboots into the Talos it ran before its last upgrade (os:admin). */
+    suspend fun rollback(node: String) = call { cfg, ctx -> Ichorgo.rollback(cfg, ctx, node) }
+
+    /** `talosctl shutdown [--force]` (force skips cordon/drain); needs os:operator or higher. */
+    suspend fun shutdown(node: String, force: Boolean) = call { cfg, ctx -> Ichorgo.shutdown(cfg, ctx, node, force) }
+
+    /**
+     * Where replacing the failed etcd member [memberId] stands (steps from live state). [node]:
+     * the member's address as last seen, which names the old node once the member is removed. Read-only.
+     */
+    suspend fun controlPlaneReplacePlan(memberId: String, node: String): CpReplacePlan = call { cfg, ctx ->
+        TalosJson.decodeFromString(CpReplacePlan.serializer(), Ichorgo.controlPlaneReplacePlan(cfg, ctx, memberId, node))
+    }
+
+    /**
+     * Removes the failed member [memberId] as the replacement's step 2 (os:admin): Go reads the
+     * plan again and refuses a member that recovered or a removal that loses quorum.
+     */
+    suspend fun controlPlaneReplaceRemove(memberId: String) = call { cfg, ctx -> Ichorgo.controlPlaneReplaceRemove(cfg, ctx, memberId) }
+
+    /** Polls etcd up to [timeoutSec] until it has more healthy voting members than [membersBefore]. Read-only. */
+    suspend fun controlPlaneReplaceWait(membersBefore: Int, timeoutSec: Int): CpReplaceWait = call { cfg, ctx ->
+        TalosJson.decodeFromString(CpReplaceWait.serializer(), Ichorgo.controlPlaneReplaceWait(cfg, ctx, membersBefore.toLong(), timeoutSec.toLong()))
+    }
+
+    /** Whether [node] can leave the active context, and whether it is also an endpoint. No network. */
+    suspend fun removalPlan(node: String): ContextNodeRemoval = call { cfg, ctx ->
+        TalosJson.decodeFromString(ContextNodeRemoval.serializer(), Ichorgo.contextNodeRemovalPlan(cfg, ctx, node))
+    }
+
+    /** Whether [node] does not answer and the cluster no longer lists it. Read-only. */
+    suspend fun forgettable(node: String): Boolean = call { cfg, ctx ->
+        TalosJson.decodeFromString(NodeForgetCheck.serializer(), Ichorgo.nodeForgettable(cfg, ctx, node)).forgettable
+    }
+
+    /** Deletes the Node of a node being reset once its kubelet has stopped; waits up to [timeoutSeconds]. */
+    suspend fun deleteDepartedNode(hostname: String, node: String, timeoutSeconds: Long = 300) =
+        talosKubeCall { cfg, ctx, server -> Ichorgo.kubeDeleteDepartedNode(cfg, ctx, server, hostname, node, timeoutSeconds) }
+
+    /** Addresses and hostnames taken out of a context, per context, until the app restarts. */
+    private val forgotten = ConcurrentHashMap<String, Set<String>>()
+
+    fun noteForgotten(context: String, names: List<String>) {
+        forgotten.merge(context, names.filter { it.isNotBlank() }.toSet()) { known, added -> known + added }
+    }
+
+    fun forgottenNodes(context: String): Set<String> = forgotten[context].orEmpty()
+
+    /** The cluster's members (Talos cluster discovery), flagged when the context already targets them. */
+    suspend fun discoverNodes(): NodeDiscovery = call { cfg, ctx ->
+        TalosJson.decodeFromString(NodeDiscovery.serializer(), Ichorgo.discoverNodes(cfg, ctx))
+    }
+
+    /**
+     * Hosts of [networks] (IPv4 or IPv6 CIDRs) answering the Talos API with the credentials of one of
+     * the stored Talos contexts. Not through [call]: it looks for any cluster, on whatever network.
+     */
+    suspend fun findEndpoints(networks: List<String>): List<EndpointMatch> {
+        val stored = configs.config.value ?: throw NoConfigException()
+        // Only clusters added from a kubeconfig: no Talos credentials to search with.
+        if (stored.talosYaml.isBlank()) return emptyList()
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(
+                ListSerializer(EndpointMatch.serializer()),
+                Ichorgo.findEndpoints(stored.talosYaml, networks.joinToString(",")),
+            )
+        }
+    }
+
+    /** Asks [endpoint] its version with [contextName]'s credentials, before adding it. */
+    suspend fun probeEndpoint(contextName: String, endpoint: String): EndpointProbe {
+        val stored = configs.config.value ?: throw NoConfigException()
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(EndpointProbe.serializer(), Ichorgo.probeEndpoint(stored.yamlFor(contextName), contextName, endpoint))
+        }
+    }
+
+    /**
+     * A node in maintenance mode at [address] (IP or host name on the LAN or VPN): version, disks
+     * and links over the unauthenticated maintenance API. Not through [call]: the node belongs to
+     * no cluster yet, so no talosconfig is involved.
+     */
+    suspend fun maintenanceNodeInspect(address: String): MaintenanceInspection = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(MaintenanceInspection.serializer(), Ichorgo.maintenanceNodeInspect(address, 0L))
+    }
+
+    /**
+     * What boots a new machine of the active cluster: [template]'s (or the first member's, "")
+     * version and schematic, the Image Factory links and the booter command, for [arch] ("" for
+     * the template's). Never cached: on Omni it carries the join token.
+     */
+    suspend fun nodeBootMedia(template: String, arch: String, secureBoot: Boolean): BootMedia = call { cfg, ctx ->
+        TalosJson.decodeFromString(BootMedia.serializer(), Ichorgo.nodeBootMedia(cfg, ctx, template, arch, secureBoot))
+    }
+
+    /**
+     * The user data of a new node on a cloud host and the Talos cloud images to create it from:
+     * Omni's join config on Omni (the other arguments are not used), else a new member's full
+     * config made from [template]'s. Never cached: it carries a credential.
+     */
+    suspend fun nodeCloudUserData(template: String, role: String, hostname: String, installDisk: String, extraEditsJson: String = ""): CloudUserData =
+        call { cfg, ctx ->
+            TalosJson.decodeFromString(
+                CloudUserData.serializer(),
+                Ichorgo.nodeCloudUserData(cfg, ctx, template, role, hostname, installDisk, extraEditsJson),
+            )
+        }
+
+    /** [nodeBootMedia] on Omni, with [labelsJson] signed into the join token. */
+    suspend fun nodeBootMediaOmni(template: String, arch: String, secureBoot: Boolean, labelsJson: String): BootMedia = call { cfg, ctx ->
+        TalosJson.decodeFromString(BootMedia.serializer(), Ichorgo.nodeBootMediaOmni(cfg, ctx, template, arch, secureBoot, labelsJson))
+    }
+
+    /** Omni's join config with [labelsJson] signed into the join token, and the cloud images. */
+    suspend fun nodeCloudUserDataOmni(template: String, labelsJson: String): CloudUserData = call { cfg, ctx ->
+        TalosJson.decodeFromString(CloudUserData.serializer(), Ichorgo.nodeCloudUserDataOmni(cfg, ctx, template, labelsJson))
+    }
+
+    /** The machine sets of the active cluster and how each takes machines. */
+    suspend fun omniMachineSets(): OmniMachineSets = call { cfg, ctx ->
+        TalosJson.decodeFromString(OmniMachineSets.serializer(), Ichorgo.omniMachineSets(cfg, ctx))
+    }
+
+    /** The machines registered in Omni that no cluster has. */
+    suspend fun omniUnallocatedMachines(): List<OmniMachine> = call { cfg, ctx ->
+        TalosJson.decodeFromString(ListSerializer(OmniMachine.serializer()), Ichorgo.omniUnallocatedMachines(cfg, ctx))
+    }
+
+    /** See [TalosStreams.omniAllocate]. */
+    fun omniAllocate(spec: OmniAllocateSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.omniAllocate(spec.machineId, spec.machineSetId, stop)
+
+    /** A new node's config from [template]'s, redacted (never cached; the full one only goes to the node). */
+    suspend fun joinNodeConfigPreview(template: String, role: String, hostname: String, installDisk: String, staticAddress: String): JoinConfigPreview =
+        call { cfg, ctx ->
+            TalosJson.decodeFromString(
+                JoinConfigPreview.serializer(),
+                Ichorgo.joinNodeConfigPreview(cfg, ctx, template, role, hostname, installDisk, staticAddress, ""),
+            )
+        }
+
+    /** What to confirm before joining a node of [role]: one warning per line, from the Go core. */
+    suspend fun nodeJoinWarnings(role: String): List<String> = withContext(Dispatchers.IO) {
+        Ichorgo.nodeJoinWarnings(role).lines().filter { it.isNotBlank() }
+    }
+
+    /** See [TalosStreams.joinNode]. */
+    fun joinNode(
+        address: String,
+        template: String,
+        role: String,
+        hostname: String,
+        installDisk: String,
+        staticAddress: String,
+        replacing: Boolean,
+        stop: Flow<Any>,
+    ): Flow<JoinEvent> = streams.joinNode(address, template, role, hostname, installDisk, staticAddress, replacing, stop)
+
+    /** What a Hetzner token may do. Creates nothing. */
+    suspend fun hetznerTest(token: String): HetznerTokenCheck = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(HetznerTokenCheck.serializer(), Ichorgo.hetznerTest(hetznerTokenJson(token)))
+    }
+
+    /** Server types, locations and snapshots ([token] may be blank on the demo). Never cached. */
+    suspend fun hetznerOptions(token: String): HetznerOptions = call { cfg, ctx ->
+        TalosJson.decodeFromString(HetznerOptions.serializer(), Ichorgo.hetznerOptions(cfg, ctx, hetznerTokenJson(token)))
+    }
+
+    /** See [TalosStreams.hetznerCreate]. */
+    fun hetznerCreate(token: String, spec: HetznerCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.hetznerCreate(hetznerTokenJson(token), TalosJson.encodeToString(HetznerCreateSpec.serializer(), spec), stop)
+
+    /** The cost line of a snapshot run. Creates nothing. */
+    suspend fun hetznerSnapshotEstimate(token: String, arch: String, location: String): HetznerSnapshotCost = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(HetznerSnapshotCost.serializer(), Ichorgo.hetznerSnapshotEstimate(hetznerTokenJson(token), arch, location))
+    }
+
+    /** See [TalosStreams.hetznerSnapshot]. */
+    fun hetznerSnapshot(token: String, spec: HetznerSnapshotSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.hetznerSnapshot(hetznerTokenJson(token), TalosJson.encodeToString(HetznerSnapshotSpec.serializer(), spec), stop)
+
+    /** What an OVHcloud service account sees and may do. Creates nothing. */
+    suspend fun ovhTest(credentialJson: String): OVHCheck = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(OVHCheck.serializer(), Ichorgo.ovhTest(credentialJson))
+    }
+
+    /** Regions, flavors and images ([credentialJson] may be empty on the demo). */
+    suspend fun ovhOptions(credentialJson: String): OVHOptions = call { cfg, ctx ->
+        TalosJson.decodeFromString(OVHOptions.serializer(), Ichorgo.ovhOptions(cfg, ctx, credentialJson))
+    }
+
+    /** The IAM policy to give the service account, on [project] when known. */
+    suspend fun ovhPolicy(project: String): String = withContext(Dispatchers.IO) { Ichorgo.ovhServiceAccountPolicy(project) }
+
+    /** See [TalosStreams.ovhCreate]. */
+    fun ovhCreate(credentialJson: String, spec: OVHCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.ovhCreate(credentialJson, TalosJson.encodeToString(OVHCreateSpec.serializer(), spec), stop)
+
+    /** Whose AWS keys these are and whether they may run instances (a dry run). Creates nothing. */
+    suspend fun awsTest(credentialJson: String): AWSCheck = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSCheck.serializer(), Ichorgo.awsTest(credentialJson))
+    }
+
+    /** Regions, instance types, subnets, security groups and images ([credentialJson] may be empty on the demo). */
+    suspend fun awsOptions(credentialJson: String): AWSOptions = call { cfg, ctx ->
+        TalosJson.decodeFromString(AWSOptions.serializer(), Ichorgo.awsOptions(cfg, ctx, credentialJson))
+    }
+
+    /**
+     * Finds or makes the guided network in the default VPC: a public subnet and the ichor-nodes
+     * group, opened to nothing but the group itself and (plain Talos) this phone on port 50000.
+     * Writes at AWS; refused in the demo and without a default VPC.
+     */
+    suspend fun awsNetworkPrepare(credentialJson: String, spec: AWSNetworkSpec): AWSNetwork = call { cfg, ctx ->
+        val specJson = TalosJson.encodeToString(AWSNetworkSpec.serializer(), spec)
+        TalosJson.decodeFromString(AWSNetwork.serializer(), Ichorgo.awsNetworkPrepare(cfg, ctx, credentialJson, specJson))
+    }
+
+    /** The IAM policy to give the keys' user: only the calls Ichor makes. */
+    suspend fun awsPolicy(): String = withContext(Dispatchers.IO) { Ichorgo.awsiamPolicy() }
+
+    /** The hourly price of [instanceType] in the keys' region; an empty hourly when unknown. */
+    suspend fun awsPrice(credentialJson: String, instanceType: String): AWSPrice = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSPrice.serializer(), Ichorgo.awsPrice(credentialJson, instanceType))
+    }
+
+    /** See [TalosStreams.awsCreate]. */
+    fun awsCreate(credentialJson: String, spec: AWSCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.awsCreate(credentialJson, TalosJson.encodeToString(AWSCreateSpec.serializer(), spec), stop)
+
+    /** The cost line of an AMI run. Creates nothing. */
+    suspend fun awsImageEstimate(credentialJson: String, arch: String, region: String): AWSImageCost = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSImageCost.serializer(), Ichorgo.awsImageEstimate(credentialJson, arch, region))
+    }
+
+    /** See [TalosStreams.awsImage]. */
+    fun awsImage(credentialJson: String, spec: AWSImageSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.awsImage(credentialJson, TalosJson.encodeToString(AWSImageSpec.serializer(), spec), stop)
+
+    /** Starts an IAM Identity Center sign-in: the device code to approve. */
+    suspend fun awsSignInStart(credentialJson: String): AWSSignInStart = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSSignInStart.serializer(), Ichorgo.awsSignInStart(credentialJson))
+    }
+
+    /** Waits for the code to be approved (minutes; ended by [awsSignInCancel]), then lists the roles. */
+    suspend fun awsSignInFinish(credentialJson: String): AWSSignInFinish = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSSignInFinish.serializer(), Ichorgo.awsSignInFinish(credentialJson))
+    }
+
+    fun awsSignInCancel() = Ichorgo.awsSignInCancel()
+
+    /** The credentials of one account and role of the list. */
+    suspend fun awsSignInChoose(credentialJson: String, role: SsoRoleChoice): AWSSignInChoice = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSSignInChoice.serializer(), Ichorgo.awsSignInChoose(credentialJson, role.accountId, role.roleName))
+    }
+
+    /** Role credentials that last a run; "" when the stored credential is good as it is. */
+    suspend fun awsRenew(credentialJson: String): AWSRenewed = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AWSRenewed.serializer(), Ichorgo.awsRenew(credentialJson))
+    }
+
+    /** Whose service principal this is and whether it may create VMs (its permissions, read only). Creates nothing. */
+    suspend fun azureTest(credentialJson: String): AzureCheck = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AzureCheck.serializer(), Ichorgo.azureTest(credentialJson))
+    }
+
+    /** Resource groups, locations, sizes, networks, security groups and images ([credentialJson] may be empty on the demo). */
+    suspend fun azureOptions(credentialJson: String): AzureOptions = call { cfg, ctx ->
+        TalosJson.decodeFromString(AzureOptions.serializer(), Ichorgo.azureOptions(cfg, ctx, credentialJson))
+    }
+
+    /** The custom role to give the principal on [resourceGroup]: only the calls Ichor makes. */
+    suspend fun azureRole(subscriptionId: String, resourceGroup: String): String = withContext(Dispatchers.IO) {
+        Ichorgo.azureRoleDefinition(subscriptionId, resourceGroup)
+    }
+
+    /** The hourly price of [size] in [location]; an empty hourly when unknown. */
+    suspend fun azurePrice(credentialJson: String, location: String, size: String): AzurePrice = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AzurePrice.serializer(), Ichorgo.azurePrice(credentialJson, location, size))
+    }
+
+    /**
+     * Finds or makes the guided network in the resource group: the ichor-nodes security group and
+     * virtual network, opened to nothing but (plain Talos) this phone on port 50000. Writes at
+     * Azure; the demo answers samples.
+     */
+    suspend fun azureNetworkPrepare(credentialJson: String, spec: AzureNetworkSpec): AzureNetworkResult = call { cfg, ctx ->
+        val specJson = TalosJson.encodeToString(AzureNetworkSpec.serializer(), spec)
+        TalosJson.decodeFromString(AzureNetworkResult.serializer(), Ichorgo.azureNetworkPrepare(cfg, ctx, credentialJson, specJson))
+    }
+
+    /** Starts a Microsoft-account sign-in: the device code to enter. */
+    suspend fun azureSignInStart(credentialJson: String): AzureSignInStart = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AzureSignInStart.serializer(), Ichorgo.azureSignInStart(credentialJson))
+    }
+
+    /** Waits for the code to be entered (minutes; ended by [azureSignInCancel]), then lists the subscriptions. */
+    suspend fun azureSignInFinish(credentialJson: String): AzureSignInFinish = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AzureSignInFinish.serializer(), Ichorgo.azureSignInFinish(credentialJson))
+    }
+
+    fun azureSignInCancel() = Ichorgo.azureSignInCancel()
+
+    /** The credential bound to one subscription of the list. */
+    suspend fun azureSignInChoose(credentialJson: String, subscriptionId: String): AzureSignInChoice = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AzureSignInChoice.serializer(), Ichorgo.azureSignInChoose(credentialJson, subscriptionId))
+    }
+
+    /** See [TalosStreams.azureCreate]. */
+    fun azureCreate(credentialJson: String, spec: AzureCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.azureCreate(credentialJson, TalosJson.encodeToString(AzureCreateSpec.serializer(), spec), stop)
+
+    /** The cost line of an Azure image run. Creates nothing. */
+    suspend fun azureImageEstimate(credentialJson: String, arch: String, location: String): AzureImageEstimate = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(AzureImageEstimate.serializer(), Ichorgo.azureImageEstimate(credentialJson, arch, location))
+    }
+
+    /** See [TalosStreams.azureImage]. */
+    fun azureImage(credentialJson: String, spec: AzureImageSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.azureImage(credentialJson, TalosJson.encodeToString(AzureImageSpec.serializer(), spec), stop)
+
+    /** Whose service account key this is and which of the printed role's permissions it lacks. Creates nothing. */
+    suspend fun gcpTest(credentialJson: String): GCPCheck = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(GCPCheck.serializer(), Ichorgo.gcpTest(credentialJson))
+    }
+
+    /** Projects, zones, and the zone's machine types, networks and images ([credentialJson] may be empty on the demo). */
+    suspend fun gcpOptions(credentialJson: String): GCPOptions = call { cfg, ctx ->
+        TalosJson.decodeFromString(GCPOptions.serializer(), Ichorgo.gcpOptions(cfg, ctx, credentialJson))
+    }
+
+    /**
+     * Readies the default network: its subnet of the zone's region and the firewall rules aimed at
+     * the ichor-node tag (the nodes to each other, and on plain Talos port 50000 from this phone).
+     * Writes at Google Cloud; refused without the default network.
+     */
+    suspend fun gcpNetworkPrepare(credentialJson: String, spec: GCPNetworkSpec): GCPNetworkResult = call { cfg, ctx ->
+        val specJson = TalosJson.encodeToString(GCPNetworkSpec.serializer(), spec)
+        TalosJson.decodeFromString(GCPNetworkResult.serializer(), Ichorgo.gcpNetworkPrepare(cfg, ctx, credentialJson, specJson))
+    }
+
+    /** The custom role to create in [project] and grant the service account: only the calls Ichor makes. */
+    suspend fun gcpRole(project: String): String = withContext(Dispatchers.IO) { Ichorgo.gcpRoleDefinition(project) }
+
+    /** The hourly price of [machineType] in [zone]; an empty hourly when unknown. */
+    suspend fun gcpPrice(credentialJson: String, zone: String, machineType: String): GCPPrice = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(GCPPrice.serializer(), Ichorgo.gcpPrice(credentialJson, zone, machineType))
+    }
+
+    /** See [TalosStreams.gcpCreate]. */
+    fun gcpCreate(credentialJson: String, spec: GCPCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.gcpCreate(credentialJson, TalosJson.encodeToString(GCPCreateSpec.serializer(), spec), stop)
+
+    /** The cost line of a Compute Engine image run. Creates nothing. */
+    suspend fun gcpImageEstimate(credentialJson: String, arch: String, zone: String): GCPImageEstimate = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(GCPImageEstimate.serializer(), Ichorgo.gcpImageEstimate(credentialJson, arch, zone))
+    }
+
+    /** See [TalosStreams.gcpImage]. */
+    fun gcpImage(credentialJson: String, spec: GCPImageSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.gcpImage(credentialJson, TalosJson.encodeToString(GCPImageSpec.serializer(), spec), stop)
+
+    /** The Google sign-ins this build offers for the create, in the order shown ("native" never on Android). */
+    suspend fun gcpSignInChoices(): List<String> = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(ListSerializer(String.serializer()), Ichorgo.gcpSignInChoices())
+    }
+
+    /** The Google sign-in in progress, to hand it the code the redirect page shows. */
+    private val gcpSignIn = AtomicReference<SignInRun?>(null)
+
+    /**
+     * Signs a Google account in, in the browser, with the [kind]'s [secrets] (as the GKE discovery
+     * does); then [gcpSignInCredential] takes the result. Cancelling the collector stops it.
+     */
+    fun gcpSignInStart(kind: String, secrets: Map<String, String>): Flow<SignInEvent> = callbackFlow {
+        val listener = object : SignInListener {
+            override fun onPrompt(json: String) {
+                runCatching { TalosJson.decodeFromString(SignInPrompt.serializer(), json) }
+                    .onSuccess { trySend(SignInEvent.Prompt(it)) }
+            }
+
+            override fun onDone(errMessage: String) {
+                trySend(SignInEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+                close()
+            }
+        }
+        val secretsJson = if (secrets.isEmpty()) "" else TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), secrets)
+        val run = Ichorgo.gcpSignInStart(kind, secretsJson, listener)
+        gcpSignIn.set(run)
+        awaitClose {
+            gcpSignIn.compareAndSet(run, null)
+            run.cancel()
+        }
+    }
+
+    /** Hands [code] (or the URL the browser came back with) to the Google sign-in in progress; false when none is. */
+    fun gcpSignInComplete(code: String): Boolean {
+        val run = gcpSignIn.get() ?: return false
+        run.complete(code)
+        return true
+    }
+
+    /** The account, its credential (no project yet) and its projects, once after a successful [gcpSignInStart]. */
+    suspend fun gcpSignInCredential(): GCPSignInResult = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(GCPSignInResult.serializer(), Ichorgo.gcpSignInCredential())
+    }
+
+    private fun hetznerTokenJson(token: String): String =
+        TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), mapOf("token" to token))
+
+    /** What rotating the active context's Talos API CA would do (os:admin). Never cached. */
+    suspend fun caRotationPlan(): CARotationPlan = call { cfg, ctx ->
+        TalosJson.decodeFromString(CARotationPlan.serializer(), Ichorgo.talosCARotationPlan(cfg, ctx))
+    }
+
+    /**
+     * Starts rotating the active context's Talos API CA, for [CARotationManager]. The
+     * talosconfigs it hands over are credentials: they only go through the channel, never logged.
+     */
+    fun startCARotation(): CARotationHandle {
+        val stored = configs.forCall()
+        val events = Channel<CARotationEvent>(Channel.UNLIMITED) // never drop the final event
+        val run = Ichorgo.startTalosCARotation(
+            stored.yaml,
+            stored.activeContext,
+            object : TalosCARotationListener {
+                override fun onProgress(json: String) {
+                    runCatching { TalosJson.decodeFromString(CARotationProgress.serializer(), json) }
+                        .onSuccess { events.trySend(CARotationEvent.Progress(it)) }
+                }
+
+                override fun onTalosconfig(talosconfigYAML: String, isFinal: Boolean) {
+                    events.trySend(CARotationEvent.Talosconfig(talosconfigYAML, isFinal))
+                }
+
+                override fun onDone(errMessage: String) {
+                    events.trySend(CARotationEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+                    events.close()
+                }
+            },
+        )
+        return CARotationHandle(events, run::proceed, run::cancel)
+    }
+
+    private suspend fun <T> call(block: (config: String, context: String) -> T): T = go.talos(block)
+
+    private suspend fun <T> kubeCall(block: (config: String, context: String, kubeServer: String) -> T): T = go.kube(block)
+
+    private suspend fun <T> talosKubeCall(block: (config: String, context: String, kubeServer: String) -> T): T = go.talosKube(block)
+}

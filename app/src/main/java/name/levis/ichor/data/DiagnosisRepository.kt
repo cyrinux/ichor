@@ -1,6 +1,8 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.BuildConfig
 import name.levis.ichor.ui.goErrorText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -18,6 +20,12 @@ import name.levis.ichorgo.Ichorgo
 sealed interface AnswerEvent {
     data class Text(val text: String) : AnswerEvent
 
+    /** The model asks for more: [args] are the placeholders it used. */
+    data class Tool(val tool: String, val args: AiToolArgs) : AnswerEvent
+
+    /** What went back for the request: [result] is the exact text sent. An empty [tool]: the server takes no tools. */
+    data class ToolDone(val tool: String, val bytes: Long, val result: String, val error: String?) : AnswerEvent
+
     /** [error] is null when the answer is complete or the user stopped it. */
     data class Done(val error: String?) : AnswerEvent
 }
@@ -26,11 +34,20 @@ sealed interface AnswerEvent {
  * The optional AI diagnosis, through the Go core: a report about the cluster, shown to the
  * user, then sent to the model they chose only when they ask.
  */
-class DiagnosisRepository(private val configs: ConfigRepository, private val kubeServers: KubeServers) {
+class DiagnosisRepository(
+    private val configs: ConfigRepository,
+    private val kubeServers: KubeServers,
+    /** The base URL the calls get (the cluster's Ollama: its forward's, opened first; see [AiForwardRepository]). */
+    private val baseUrlOf: suspend (AiSettings) -> String = { it.baseUrl },
+) {
 
-    /** Providers and their default models, the same on Android and iOS. */
+    /**
+     * Providers and their default models, the same on Android and iOS; "This phone" only in a
+     * build with the on-device engine (it says on the phone itself when that cannot run it).
+     */
     val providers: List<AiProvider> by lazy {
         TalosJson.decodeFromString(ListSerializer(AiProvider.serializer()), Ichorgo.aiProviders())
+            .filter { it.id != AiSettings.DEVICE_PROVIDER || BuildConfig.LOCAL_MODEL }
     }
 
     /** The models the key can use, newest first; fails with a readable message on a bad key or URL. */
@@ -67,16 +84,35 @@ class DiagnosisRepository(private val configs: ConfigRepository, private val kub
      */
     fun ask(diagnosis: Diagnosis, settings: AiSettings, apiKey: String, language: String, note: String): Flow<AnswerEvent> =
         callbackFlow {
+            // The cluster's Ollama: a forward that could not open is the answer's error.
+            val baseUrl = try {
+                baseUrlOf(settings)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                send(AnswerEvent.Done(goErrorText(e.message.orEmpty())))
+                close()
+                return@callbackFlow
+            }
             val run = diagnosis.ask(
                 settings.provider,
                 apiKey,
                 settings.model,
-                settings.baseUrl,
+                baseUrl,
                 language,
                 note,
+                settings.allowTools,
                 object : DiagnosisListener {
                     override fun onAnswer(text: String) {
                         trySend(AnswerEvent.Text(text))
+                    }
+
+                    override fun onTool(name: String, argsJSON: String) {
+                        trySend(AnswerEvent.Tool(name, TalosJson.decodeFromString(AiToolArgs.serializer(), argsJSON)))
+                    }
+
+                    override fun onToolDone(name: String, bytes: Long, result: String, errMessage: String) {
+                        trySend(AnswerEvent.ToolDone(name, bytes, result, errMessage.ifEmpty { null }?.let(::goErrorText)))
                     }
 
                     override fun onDone(errMessage: String) {

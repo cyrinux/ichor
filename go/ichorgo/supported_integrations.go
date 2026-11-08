@@ -2,8 +2,11 @@ package ichorgo
 
 import (
 	"context"
+	"slices"
 	"sync"
 	"time"
+
+	"github.com/cyrinux/ichor/go/plugin"
 )
 
 // integrationSpec is a project the app reads through the Kubernetes API, and how to tell the
@@ -20,40 +23,84 @@ type integrationSpec struct {
 	// Resource of Groups[0] that must be served too, when the group is shared with other
 	// projects ("" when the group is enough).
 	Resource string
+	// FallbackVersion of Groups[0] also asked for Resource when the preferred version does not
+	// serve it: Kyverno 1.15 prefers v2 while its policies stay under v1.
+	FallbackVersion string
 	// ServiceKind also finds a project without API by its Services: a promMatch kind.
 	ServiceKind string
+	// PodsFallback also finds a project whose API group is optional by its running pods:
+	// Garage (the garage-operator's CRDs when it runs, else its Helm-chart pods).
+	PodsFallback bool
+	// fromPlugin is the plugin a row comes from (pluginSpecs): its detect entries decide, the
+	// fields above but Groups are unset.
+	fromPlugin *plugin.Compiled
 }
 
 // integrationSpecs lists every project the app integrates with, in the order Settings shows
-// them. A reader that asks a new API group adds it here: TestIntegrationsCoverEveryGroup fails
-// otherwise.
-var integrationSpecs = []integrationSpec{
+// them: the native readers', then one per built-in plugin (pluginSpecs).
+var integrationSpecs = sync.OnceValue(func() []integrationSpec {
+	return slices.Concat(nativeIntegrationSpecs, pluginSpecs(plugin.Builtins()))
+})
+
+// nativeIntegrationSpecs are the projects read by Go readers. A reader that asks a new API
+// group adds it here: TestIntegrationsCoverEveryGroup fails otherwise.
+var nativeIntegrationSpecs = []integrationSpec{
 	{ID: "argo-cd", Name: "Argo CD", Website: "https://argo-cd.readthedocs.io", Groups: []string{groupArgo}, Resource: "applications"},
-	{ID: "flux", Name: "Flux", Website: "https://fluxcd.io", Groups: []string{groupFluxKustomize, groupFluxHelm, groupFluxSource}},
+	{ID: "flux", Name: "Flux", Website: "https://fluxcd.io", Groups: []string{groupFluxKustomize, groupFluxHelm, groupFluxSource, groupFluxImage}},
 	{ID: "cloudnative-pg", Name: "CloudNativePG", Website: "https://cloudnative-pg.io", Groups: []string{groupCNPG, groupBarmanPlug}},
-	{ID: "mariadb", Name: "MariaDB Operator", Website: "https://github.com/mariadb-operator/mariadb-operator", Groups: []string{groupMariaDB}},
-	{ID: "percona-xtradb", Name: "Percona XtraDB Cluster", Website: "https://docs.percona.com/percona-operator-for-mysql/pxc/", Groups: []string{groupPercona}},
-	{ID: "dragonfly", Name: "Dragonfly", Website: "https://www.dragonflydb.io", Groups: []string{groupDragonfly}},
 	{ID: "longhorn", Name: "Longhorn", Website: "https://longhorn.io", Groups: []string{groupLonghorn}},
-	{ID: "rook", Name: "Rook Ceph", Website: "https://rook.io", Groups: []string{groupCeph}},
-	{ID: "garage", Name: "Garage", Website: "https://garagehq.deuxfleurs.fr"},
+	// Garage: the garage-operator's CRDs when it runs, else its pods (the Helm chart).
+	{ID: "garage", Name: "Garage", Website: "https://garagehq.deuxfleurs.fr", Groups: []string{groupGarageOperator}, PodsFallback: true},
 	{ID: "velero", Name: "Velero", Website: "https://velero.io", Groups: []string{groupVelero}},
 	{ID: "cert-manager", Name: "cert-manager", Website: "https://cert-manager.io", Groups: []string{groupCertManager, groupACME}},
 	{ID: "castai", Name: "CAST AI", Website: "https://cast.ai", Groups: []string{groupCastAI}},
 	{ID: "cilium", Name: "Cilium", Website: "https://cilium.io", Groups: []string{groupCilium}},
+	{ID: "metallb", Name: "MetalLB", Website: "https://metallb.io", Groups: []string{groupMetalLB}},
+	{ID: "kube-vip", Name: "kube-vip", Website: "https://kube-vip.io"},
 	// Calico's CRDs come with the Kubernetes datastore; with the etcd one only its API server tells.
 	{ID: "calico", Name: "Calico", Website: "https://docs.tigera.io/calico/latest/about/", Groups: []string{groupCalicoCRD, groupCalico}, AnyGroup: true},
-	{ID: "external-secrets", Name: "External Secrets Operator", Website: "https://external-secrets.io", Groups: []string{groupExternalSecrets}},
+	{ID: "crossplane", Name: "Crossplane", Website: "https://www.crossplane.io", Groups: []string{groupCrossplanePkg, groupCrossplaneAPIExt}, AnyGroup: true},
+	// Kyverno is read through its policies and the (standard) policy reports it writes.
+	{ID: "kyverno", Name: "Kyverno", Website: "https://kyverno.io", Groups: []string{groupKyverno, groupPolicyReport}, Resource: "clusterpolicies", FallbackVersion: kyvernoPoliciesVersion},
+	// Gatekeeper: its constraint kinds are only served once a template is created.
+	{ID: "gatekeeper", Name: "OPA Gatekeeper", Website: "https://open-policy-agent.github.io/gatekeeper/website/", Groups: []string{groupGatekeeperTemplates, groupGatekeeperConstraints}, AnyGroup: true},
+	// The autoscalers: KEDA's ScaledObjects, the VPA's recommendations and Karpenter's pools.
+	{ID: "keda", Name: "KEDA", Website: "https://keda.sh", Groups: []string{groupKEDA}, Resource: "scaledobjects"},
+	{ID: "vpa", Name: "Vertical Pod Autoscaler", Website: "https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler", Groups: []string{groupVPA}, Resource: "verticalpodautoscalers"},
+	{ID: "karpenter", Name: "Karpenter", Website: "https://karpenter.sh", Groups: []string{groupKarpenter}, Resource: "nodepools"},
 	{ID: "gateway-api", Name: "Gateway API", Website: "https://gateway-api.sigs.k8s.io", Groups: []string{groupGatewayAPI}},
+	{ID: "kgateway", Name: "kgateway", Website: "https://kgateway.dev", Groups: []string{groupKgateway}},
+	{ID: "traefik", Name: "Traefik", Website: "https://traefik.io", Groups: []string{groupTraefik}},
 	{ID: "prometheus-operator", Name: "Prometheus Operator", Website: "https://prometheus-operator.dev", Groups: []string{groupMonitoring}},
 	{ID: "prometheus", Name: "Prometheus", Website: "https://prometheus.io", ServiceKind: "prometheus"},
 	{ID: "thanos", Name: "Thanos", Website: "https://thanos.io", ServiceKind: "thanos"},
 	{ID: "mimir", Name: "Mimir", Website: "https://grafana.com/oss/mimir/", ServiceKind: "mimir"},
 	{ID: "victoriametrics", Name: "VictoriaMetrics", Website: "https://victoriametrics.com", ServiceKind: "victoriametrics"},
+	{ID: "loki", Name: "Loki", Website: "https://grafana.com/oss/loki/", ServiceKind: logsKindLoki},
+	{ID: "victorialogs", Name: "VictoriaLogs", Website: "https://docs.victoriametrics.com/victorialogs/", ServiceKind: logsKindVictoriaLogs},
+	// KubeVirt VMs, the CDI DataVolumes that fill their disks, Harvester (which runs both) and
+	// the group KubeVirt's start, stop, restart, migrate, pause and unpause live under.
+	{ID: "kubevirt", Name: "KubeVirt", Website: "https://kubevirt.io", Groups: []string{groupKubeVirt, groupCDI, groupHarvester, groupKubeVirtSub}},
+	// The Tailscale operator's Connectors, ProxyGroups, ProxyClasses and DNSConfig.
+	{ID: "tailscale", Name: "Tailscale", Website: "https://tailscale.com/kb/1236/kubernetes-operator", Groups: []string{groupTailscale}, Resource: "connectors"},
+	// The operators the network maps read a Service's outside name from (externalMatchers).
+	{ID: "netbird", Name: "NetBird", Website: "https://docs.netbird.io/how-to/kubernetes-operator", Groups: []string{groupNetBird}},
+	{ID: "twingate", Name: "Twingate", Website: "https://github.com/Twingate/kubernetes-operator", Groups: []string{groupTwingate}},
+	{ID: "ngrok", Name: "ngrok", Website: "https://ngrok.com/docs/k8s/", Groups: []string{groupNgrok}},
+	{ID: "cloudflared", Name: "Cloudflare Tunnel", Website: "https://github.com/adyanth/cloudflare-operator", Groups: []string{groupCloudflare}},
+	// Cluster API: the core objects, plus the Talos control-plane and bootstrap providers' groups
+	// the reader asks (kubeadm's control plane shares the group: clusters tells Cluster API apart).
+	{ID: "cluster-api", Name: "Cluster API", Website: "https://cluster-api.sigs.k8s.io", Groups: []string{groupClusterAPI, groupCAPIControlPlane, groupCAPIBootstrap}, Resource: "clusters"},
+	{ID: "sidero", Name: "Sidero Metal", Website: "https://www.sidero.dev", Groups: []string{groupSidero}},
+	{ID: "kubernetes-csi", Name: "CSI VolumeSnapshots", Website: "https://kubernetes.io/docs/concepts/storage/volume-snapshots/", Groups: []string{groupSnapshot}, Resource: "volumesnapshots"},
 }
 
-// groupGatewayAPI is the Gateway API's group: HTTPRoutes and Gateways.
+// groupGatewayAPI is the Gateway API's group: HTTPRoutes, GRPCRoutes, TLSRoutes and Gateways.
 const groupGatewayAPI = "gateway.networking.k8s.io"
+
+// groupKgateway is kgateway's own CRD group (TrafficPolicy, Backend, GatewayParameters...):
+// its routing objects are the standard Gateway API ones.
+const groupKgateway = "gateway.kgateway.dev"
 
 // How an integration was found.
 const (
@@ -96,7 +143,7 @@ type detection struct {
 func SupportedIntegrations() (out string, err error) {
 	defer maskResult(&out, &err)
 
-	return toJSON(supportedIntegrations{Items: integrationList(func(integrationSpec) detection { return detection{} })})
+	return toJSON(supportedIntegrations{Items: integrationList(integrationSpecs(), func(integrationSpec) detection { return detection{} })})
 }
 
 // KubeSupportedIntegrations lists the projects the app integrates with and whether the cluster runs
@@ -116,6 +163,11 @@ func KubeSupportedIntegrations(configYAML, contextName, kubeServer, hints string
 }
 
 func readSupportedIntegrations(ctx context.Context, k *kubeClient, hints hintSet) (supportedIntegrations, error) {
+	return detectIntegrations(ctx, k, hints, integrationSpecs())
+}
+
+// detectIntegrations tells which of specs the cluster runs.
+func detectIntegrations(ctx context.Context, k *kubeClient, hints hintSet, specs []integrationSpec) (supportedIntegrations, error) {
 	var (
 		groups      map[string]string
 		groupsErr   error
@@ -138,10 +190,13 @@ func readSupportedIntegrations(ctx context.Context, k *kubeClient, hints hintSet
 	// Shared groups: ask whether the project's own resource is served, in parallel.
 	var mu sync.Mutex
 
-	for _, s := range integrationSpecs {
-		if version, ok := groups[firstGroup(s)]; ok && s.Resource != "" {
+	for _, s := range specs {
+		if version, ok := groups[firstGroup(s)]; ok && s.Resource != "" && s.fromPlugin == nil {
 			wg.Go(func() {
 				served := servesResource(ctx, k, s.Groups[0], version, s.Resource)
+				if !served && s.FallbackVersion != "" && s.FallbackVersion != version {
+					served = servesResource(ctx, k, s.Groups[0], s.FallbackVersion, s.Resource)
+				}
 
 				mu.Lock()
 				resourceFor[s.ID] = served
@@ -152,14 +207,33 @@ func readSupportedIntegrations(ctx context.Context, k *kubeClient, hints hintSet
 
 	wg.Wait()
 
-	items := integrationList(func(s integrationSpec) detection {
+	// A plugin's row is detected as its tile is: by its own detect entries.
+	probe := &pluginProbe{groups: groups, services: services, hints: hints, served: map[string]bool{}}
+	if podsErr == nil {
+		probe.apps = pods
+	}
+
+	items := integrationList(specs, func(s integrationSpec) detection {
+		if s.fromPlugin != nil {
+			return probe.detection(ctx, k, s.fromPlugin)
+		}
+
 		if len(s.Groups) > 0 {
-			version, ok := servedGroup(s, groups)
-			if !ok || s.Resource != "" && !resourceFor[s.ID] {
-				return detection{}
+			if version, ok := servedGroup(s, groups); ok && (s.Resource == "" || resourceFor[s.ID]) {
+				return detection{via: detectedByAPI, version: version}
 			}
 
-			return detection{via: detectedByAPI, version: version}
+			if s.PodsFallback {
+				if f, ok := pods[s.ID]; ok {
+					return f
+				}
+
+				if podsErr != nil && hints[s.ID] {
+					return detection{via: detectedByInventory}
+				}
+			}
+
+			return detection{}
 		}
 
 		if f, ok := pods[s.ID]; ok {
@@ -234,17 +308,23 @@ func runningApps(ctx context.Context, k *kubeClient) (map[string]detection, erro
 	return out, nil
 }
 
-// queryServices maps the kinds of metrics query APIs (promMatch) to the likeliest Service;
-// empty when the Services cannot be listed.
+// queryServices maps the kinds of metrics query APIs (promMatch) and log backends (logsMatch)
+// to the likeliest Service; empty when the Services cannot be listed.
 func queryServices(ctx context.Context, k *kubeClient) map[string]detection {
-	out := map[string]detection{}
+	var list kubeList[promService]
 
-	d, err := discoverProm(ctx, k)
-	if err != nil {
-		return out
+	if err := getList(ctx, k, "/api/v1/services", &list); err != nil {
+		return map[string]detection{}
 	}
 
-	for _, src := range d.Sources {
+	return servicesByKind(slices.Concat(promCandidates(list.Items), rankSources(list.Items, logsMatch)))
+}
+
+// servicesByKind keeps the first source of each kind.
+func servicesByKind(sources []promSource) map[string]detection {
+	out := map[string]detection{}
+
+	for _, src := range sources {
 		if _, seen := out[src.Kind]; !seen {
 			out[src.Kind] = detection{via: detectedByServices, namespace: src.Namespace}
 		}
@@ -275,11 +355,11 @@ func servesResource(ctx context.Context, k *kubeClient, group, version, resource
 }
 
 // integrationList builds the items, detect telling how each one was found.
-func integrationList(detect func(integrationSpec) detection) []supportedIntegration {
+func integrationList(specs []integrationSpec, detect func(integrationSpec) detection) []supportedIntegration {
 	catalog := loadAppCatalog()
-	out := make([]supportedIntegration, 0, len(integrationSpecs))
+	out := make([]supportedIntegration, 0, len(specs))
 
-	for _, s := range integrationSpecs {
+	for _, s := range specs {
 		// Bundled icons are named after the catalog id, as in the inventory.
 		icon := ""
 		if app := catalog.byName[s.ID]; app != nil && app.ID == s.ID && app.hasIcon() {
@@ -304,30 +384,34 @@ func demoSupportedIntegrations() supportedIntegrations {
 		"argo-cd":             demoArgoCD(now).Installed,
 		"flux":                demoFlux(now).Installed,
 		"cloudnative-pg":      ds.CNPG != nil,
-		"mariadb":             ds.MariaDB != nil,
-		"percona-xtradb":      ds.Percona != nil,
-		"dragonfly":           ds.Dragonfly != nil,
 		"longhorn":            ds.Longhorn != nil,
-		"rook":                ds.Ceph != nil,
 		"velero":              ds.Velero != nil,
 		"cert-manager":        ds.CertManager != nil,
 		"castai":              ds.CastAI != nil,
 		"cilium":              demoCiliumStatus().Installed,
 		"gateway-api":         true,
+		"crossplane":          true,
 		"prometheus-operator": demoPromOperator().Installed,
 	}
 
-	services := map[string]detection{}
-	for _, src := range demoPromDiscovery().Sources {
-		if _, seen := services[src.Kind]; !seen {
-			services[src.Kind] = detection{via: detectedByServices, namespace: src.Namespace}
-		}
+	// The demo renders every plugin from its samples (demoPluginDetect).
+	for _, s := range pluginSpecs(plugin.Builtins()) {
+		api[s.ID] = true
 	}
 
-	return supportedIntegrations{Checked: true, Items: integrationList(func(s integrationSpec) detection {
+	sources := demoPromDiscovery().Sources
+	for _, c := range demoLogsDiscovery().Candidates {
+		sources = append(sources, c.Source)
+	}
+
+	services := servicesByKind(sources)
+
+	return supportedIntegrations{Checked: true, Items: integrationList(integrationSpecs(), func(s integrationSpec) detection {
 		switch {
 		case api[s.ID]:
 			return detection{via: detectedByAPI}
+		case s.ID == "garage" && ds.Garage != nil && ds.Garage.Version != "":
+			return detection{via: detectedByAPI, version: ds.Garage.Version}
 		case s.ID == "garage" && ds.Garage != nil:
 			return detection{via: detectedByPods}
 		case s.ServiceKind != "":

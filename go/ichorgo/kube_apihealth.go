@@ -14,6 +14,24 @@ import (
 // counters to move on a quiet cluster, short enough to stay well inside callTimeout.
 const apiHealthWindow = 5 * time.Second
 
+// The ReadProgress op of API health and its steps. wait is the window between the two
+// scrapes: while it runs its count and total are its seconds gone and in all.
+const (
+	apiHealthProgressOp = "apihealth"
+	apiStepReadyz       = "readyz"
+	apiStepLivez        = "livez"
+	apiStepVersion      = "version"
+	apiStepQueued       = "queued"
+	apiStepScrape1      = "scrape1"
+	apiStepWait         = "wait"
+	apiStepScrape2      = "scrape2"
+)
+
+var (
+	apiHealthSteps     = []string{apiStepReadyz, apiStepLivez, apiStepVersion, apiStepQueued, apiStepScrape1, apiStepWait, apiStepScrape2}
+	apiHealthDemoSteps = []string{apiStepReadyz, apiStepScrape1, apiStepWait, apiStepScrape2}
+)
+
 // The overall verdict of apiHealthReport.Status, worst first.
 const (
 	apiStatusUnhealthy  = "unhealthy"  // a readyz or livez check fails
@@ -116,7 +134,8 @@ func KubeAPIHealth(configYAML, contextName, kubeServer string) (out string, err 
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demoAPIHealth, readAPIHealth)
+	return kubeReadProgressJSON(kubeTarget{configYAML, contextName, kubeServer}, apiHealthProgressOp,
+		apiHealthSteps, apiHealthDemoSteps, demoAPIHealth, readAPIHealth)
 }
 
 func readAPIHealth(ctx context.Context, k *kubeClient) (apiHealthReport, error) {
@@ -132,12 +151,29 @@ func readAPIHealthOver(ctx context.Context, k *kubeClient, window time.Duration)
 		win     promWindow
 		metrErr error
 		wg      sync.WaitGroup
+		p       = readProgressFrom(ctx)
 	)
 
-	wg.Go(func() { report.Ready = readAPIProbe(ctx, k, "/readyz?verbose") })
-	wg.Go(func() { report.Live = readAPIProbe(ctx, k, "/livez?verbose") })
-	wg.Go(func() { report.Version = readAPIVersion(ctx, k) })
-	wg.Go(func() { queued = readAPIQueued(ctx, k) })
+	wg.Go(func() {
+		end := p.track(apiStepReadyz)
+		report.Ready = readAPIProbe(ctx, k, "/readyz?verbose")
+		end(report.Ready.Error != "")
+	})
+	wg.Go(func() {
+		end := p.track(apiStepLivez)
+		report.Live = readAPIProbe(ctx, k, "/livez?verbose")
+		end(report.Live.Error != "")
+	})
+	wg.Go(func() {
+		end := p.track(apiStepVersion)
+		report.Version = readAPIVersion(ctx, k)
+		end(false)
+	})
+	wg.Go(func() {
+		end := p.track(apiStepQueued)
+		queued = readAPIQueued(ctx, k)
+		end(false)
+	})
 	wg.Go(func() { win, metrErr = scrapeAPIWindow(ctx, k, window) })
 	wg.Wait()
 
@@ -209,23 +245,37 @@ func readAPIVersion(ctx context.Context, k *kubeClient) string {
 
 // scrapeAPIWindow scrapes /metrics twice, window apart. The window runs from the start of
 // one request to the start of the other: the server takes each snapshot as it answers.
+// Each is a progress step; the wait counts its seconds from the first request.
 func scrapeAPIWindow(ctx context.Context, k *kubeClient, window time.Duration) (promWindow, error) {
+	p := readProgressFrom(ctx)
 	first := time.Now()
 
+	end := p.track(apiStepScrape1)
 	before, err := scrapeAPIMetrics(ctx, k)
+	end(err != nil)
+
 	if err != nil {
 		return promWindow{}, err
 	}
 
+	p.wait(apiStepWait, first, window)
+
 	select {
 	case <-ctx.Done():
+		p.fail(apiStepWait)
+
 		return promWindow{}, ctx.Err()
 	case <-time.After(time.Until(first.Add(window))):
 	}
 
+	p.done(apiStepWait)
+
 	second := time.Now()
 
+	end = p.track(apiStepScrape2)
 	after, err := scrapeAPIMetrics(ctx, k)
+	end(err != nil)
+
 	if err != nil {
 		return promWindow{}, err
 	}

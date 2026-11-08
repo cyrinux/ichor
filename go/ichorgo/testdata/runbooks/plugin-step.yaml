@@ -1,0 +1,7 @@
+schemaVersion: ichor.dev/runbook/v1alpha1
+name: Refresh a secret
+description: A plugin's action as a step.
+steps:
+  - id: refresh
+    action: plugin/external-secrets/forceSync
+    target: {kind: ExternalSecret, namespace: demo-shop, name: db-creds}

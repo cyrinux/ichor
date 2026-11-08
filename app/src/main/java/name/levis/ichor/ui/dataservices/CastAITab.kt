@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import name.levis.ichor.R
 import name.levis.ichor.model.CastAIStatus
 
@@ -48,7 +49,7 @@ fun CastAITab(status: CastAIStatus) {
                             CastAIPane.WORKLOADS -> stringResource(R.string.castai_pane_workloads, status.recommendations.size)
                             CastAIPane.NODES -> stringResource(R.string.castai_pane_nodes, status.plans.size)
                         },
-                        maxLines = 1,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                 }
             }

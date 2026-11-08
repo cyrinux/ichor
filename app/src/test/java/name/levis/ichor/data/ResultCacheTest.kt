@@ -33,6 +33,50 @@ class ResultCacheTest {
     }
 
     @Test
+    fun theLastKnownOverviewIsThereBeforeTheClusterWasRestored() = runBlocking {
+        val sealer = object : OfflineCache.Sealer {
+            override fun write(file: java.io.File, bytes: ByteArray) = file.writeBytes(bytes)
+            override fun read(file: java.io.File): ByteArray? = if (file.exists()) file.readBytes() else null
+            override fun forget() = Unit
+        }
+        val dir = kotlin.io.path.createTempDirectory("offline").toFile()
+        try {
+            val json = """{"context":"lab","nodes":[{"node":"192.0.2.10","hostname":"cp-1","reachable":true}]}"""
+            OfflineCache(dir, sealer, enabled = { true }).save("fp", OVERVIEW, json, at = System.currentTimeMillis(), epoch = 0)
+            // A new launch: restoreOffline has not run yet.
+            val launch = ResultCache(OfflineCache(dir, sealer, enabled = { true }), scope = { "1|lab|" }, cluster = { "fp" })
+            val cached = launch.cached<name.levis.ichor.model.ClusterOverview>(OVERVIEW)
+            assertEquals("cp-1", cached?.value?.nodes?.single()?.hostname)
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun theOverviewCardsSurviveARelaunch() = runBlocking {
+        val sealer = object : OfflineCache.Sealer {
+            override fun write(file: java.io.File, bytes: ByteArray) = file.writeBytes(bytes)
+            override fun read(file: java.io.File): ByteArray? = if (file.exists()) file.readBytes() else null
+            override fun forget() = Unit
+        }
+        val dir = kotlin.io.path.createTempDirectory("offline").toFile()
+        try {
+            val first = ResultCache(OfflineCache(dir, sealer, enabled = { true }), scope = { "1|lab|" }, cluster = { "fp" })
+            first.remember(DATA_SERVICES) { name.levis.ichor.model.DataServices(garage = name.levis.ichor.model.GarageStatus()) }
+            first.remember(ARGO_CD) { name.levis.ichor.model.ArgoStatus(installed = true) }
+            first.remember(FLUX) { name.levis.ichor.model.FluxStatus(installed = true) }
+
+            // The app reopened: the cards show their last reading instead of a skeleton.
+            val launch = ResultCache(OfflineCache(dir, sealer, enabled = { true }), scope = { "1|lab|" }, cluster = { "fp" })
+            assertEquals(true, launch.cached<name.levis.ichor.model.DataServices>(DATA_SERVICES)?.value?.garage != null)
+            assertEquals(true, launch.cached<name.levis.ichor.model.ArgoStatus>(ARGO_CD)?.value?.installed)
+            assertEquals(true, launch.cached<name.levis.ichor.model.FluxStatus>(FLUX)?.value?.installed)
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
+
+    @Test
     fun invalidateDropsEverythingAndSignals() = runBlocking {
         cache.remember("a") { "1" }
         cache.remember("b|features|n1") { "2" }

@@ -65,7 +65,8 @@ public struct Certificate: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, secretName, dnsNames, dnsNameCount, issuer, health, reasons, ready, issuing, message, notAfter, renewalTime, failedAttempts
+        case namespace, name, secretName, dnsNames, dnsNameCount, issuer, health, reasons, ready, issuing, message,
+            notAfter, renewalTime, failedAttempts
     }
 }
 
@@ -105,4 +106,31 @@ public struct CertIssuer: Decodable, Equatable, Identifiable, Sendable {
 /// Why a certificate is not ok, as the Go core names it.
 public enum CertReason: String, Sendable {
     case expired, expiring, renewalOverdue, notReady, issuer
+}
+
+public extension Certificate {
+    /// A certificate expiring sooner than this is worth a renew button on its row.
+    static let renewSoonMillis: Int64 = 30 * 86_400_000
+
+    func expired(now: Int64) -> Bool { notAfter > 0 && notAfter <= now }
+
+    /// Expired, or expiring within 30 days.
+    func expiresSoon(now: Int64) -> Bool { notAfter > 0 && notAfter - now < Self.renewSoonMillis }
+
+    /// The row shows a renew button only where it matters; the details always offer it.
+    func showsRenew(now: Int64) -> Bool { health.needsAttention || expiresSoon(now: now) }
+
+    /// "letsencrypt-prod" for "ClusterIssuer/letsencrypt-prod".
+    var issuerName: String { issuer.split(separator: "/").last.map(String.init) ?? "" }
+}
+
+public extension CertManagerStatus {
+    /// Expired first, then those expiring within 30 days, then the rest; within each, the
+    /// core's order (worst health, then the soonest expiry).
+    func certificatesByExpiry(now: Int64) -> [Certificate] {
+        let rank: (Certificate) -> Int = { $0.expired(now: now) ? 0 : $0.expiresSoon(now: now) ? 1 : 2 }
+        return certificates.enumerated()
+            .sorted { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }
+            .map(\.element)
+    }
 }

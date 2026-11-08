@@ -62,29 +62,31 @@ type (
 	}
 )
 
-func (f recNetPerf) OnProgress(j string)                    { f.add(j) }
-func (f recNetPerf) OnDone(report, e string)                { f.add(report, e) }
-func (f recHubble) OnUpdate(j string)                       { f.add(j) }
-func (f recHubble) OnDone(e string)                         { f.add(e) }
-func (f recEvent) OnEvent(j string)                         { f.add(j) }
-func (f recEvent) OnDone(e string)                          { f.add(e) }
-func (f recLog) OnLine(l string)                            { f.add(l) }
-func (f recLog) OnDone(e string)                            { f.add(e) }
-func (f recHealth) OnProgress(node, m string)               { f.add(node, m) }
-func (f recHealth) OnDone(e string)                         { f.add(e) }
-func (f recDiagnosis) OnAnswer(t string)                    { f.add(t) }
-func (f recDiagnosis) OnDone(e string)                      { f.add(e) }
-func (f recSnapshot) OnDone(_ string, _ int64, _, e string) { f.add(e) }
-func (f recDebug) OnStatus(m string)                        { f.add(m) }
-func (f recDebug) OnExit(_ int, e string)                   { f.add(e) }
-func (f recMaintenance) OnProgress(j string)                { f.add(j) }
-func (f recMaintenance) OnDone(e string)                    { f.add(e) }
-func (f recCapture) OnPacket(j string)                      { f.add(j) }
-func (f recCapture) OnDone(_ string, _, _ int64, e string)  { f.add(e) }
-func (f recSupport) OnProgress(j string)                    { f.add(j) }
-func (f recSupport) OnDone(_ string, _ int64, e string)     { f.add(e) }
-func (f recUpgrade) OnProgress(j string)                    { f.add(j) }
-func (f recUpgrade) OnDone(version, e string)               { f.add(version, e) }
+func (f recNetPerf) OnProgress(j string)                       { f.add(j) }
+func (f recNetPerf) OnDone(report, e string)                   { f.add(report, e) }
+func (f recHubble) OnUpdate(j string)                          { f.add(j) }
+func (f recHubble) OnDone(e string)                            { f.add(e) }
+func (f recEvent) OnEvent(j string)                            { f.add(j) }
+func (f recEvent) OnDone(e string)                             { f.add(e) }
+func (f recLog) OnLine(l string)                               { f.add(l) }
+func (f recLog) OnDone(e string)                               { f.add(e) }
+func (f recHealth) OnProgress(node, m string)                  { f.add(node, m) }
+func (f recHealth) OnDone(e string)                            { f.add(e) }
+func (f recDiagnosis) OnAnswer(t string)                       { f.add(t) }
+func (f recDiagnosis) OnDone(e string)                         { f.add(e) }
+func (f recDiagnosis) OnTool(_, args string)                   { f.add(args) }
+func (f recDiagnosis) OnToolDone(_ string, _ int, r, e string) { f.add(r, e) }
+func (f recSnapshot) OnDone(_ string, _ int64, _, e string)    { f.add(e) }
+func (f recDebug) OnStatus(m string)                           { f.add(m) }
+func (f recDebug) OnExit(_ int, e string)                      { f.add(e) }
+func (f recMaintenance) OnProgress(j string)                   { f.add(j) }
+func (f recMaintenance) OnDone(e string)                       { f.add(e) }
+func (f recCapture) OnPacket(j string)                         { f.add(j) }
+func (f recCapture) OnDone(_ string, _, _ int64, e string)     { f.add(e) }
+func (f recSupport) OnProgress(j string)                       { f.add(j) }
+func (f recSupport) OnDone(_ string, _ int64, e string)        { f.add(e) }
+func (f recUpgrade) OnProgress(j string)                       { f.add(j) }
+func (f recUpgrade) OnDone(version, e string)                  { f.add(version, e) }
 
 // Whatever a run reports back to the app goes through the screenshot mask: a learnt
 // hostname never reaches a listener, in a JSON payload or in an error message.
@@ -115,7 +117,13 @@ func TestMaskedListenersHideLearntNames(t *testing.T) {
 	call(2, func() { l := maskedEventListener{recEvent{rec: r}}; l.OnEvent(js); l.OnDone(text) })
 	call(2, func() { l := maskedLogListener{recLog{rec: r}}; l.OnLine(text); l.OnDone(text) })
 	call(3, func() { l := maskedHealthListener{recHealth{rec: r}}; l.OnProgress(host, text); l.OnDone(text) })
-	call(2, func() { l := maskedDiagnosisListener{recDiagnosis{rec: r}}; l.OnAnswer(text); l.OnDone(text) })
+	call(5, func() {
+		l := maskedDiagnosisListener{recDiagnosis{rec: r}}
+		l.OnAnswer(text)
+		l.OnTool("pod_logs", js)
+		l.OnToolDone("pod_logs", 1, text, text)
+		l.OnDone(text)
+	})
 	call(1, func() { maskedSnapshotListener{recSnapshot{rec: r}}.OnDone("/data/snap.db", 1, "abc", text) })
 	call(2, func() { l := maskedDebugListener{recDebug{rec: r}}; l.OnStatus(text); l.OnExit(1, text) })
 	call(2, func() { l := maskedMaintenanceListener{recMaintenance{rec: r}}; l.OnProgress(js); l.OnDone(text) })

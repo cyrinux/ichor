@@ -22,7 +22,10 @@ extension K8sUpgradeProgress {
         case "proxy": String(localized: "kube-proxy DaemonSet")
         default:
             total > 0
-                ? String(localized: "Kubernetes upgrade \(min(index + 1, total))/\(total): \(name) \(component.isEmpty ? phase : component)")
+                ? String(
+                    localized:
+                        "Kubernetes upgrade \(min(index + 1, total))/\(total): \(name) \(component.isEmpty ? phase : component)"
+                )
                 : message
         }
     }
@@ -60,6 +63,13 @@ extension OperationKind {
         case .imagePull: String(localized: "Image pull")
         case .join: String(localized: "Node join")
         case .imageScan: String(localized: "Image scan")
+        case .argoSync: String(localized: "Argo CD sync")
+        case .fluxReconcile: String(localized: "Flux reconcile")
+        case .rollout: String(localized: "Rollout restart")
+        case .netPerf: String(localized: "Network test")
+        case .runbook: String(localized: "Runbook")
+        case .podSweep: String(localized: "Cleaning up dead pods")
+        case .caRotation: String(localized: "Cluster CA rotation")
         }
     }
 }

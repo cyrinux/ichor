@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -110,7 +110,7 @@ private fun Pills(plan: CastAIPlan) {
 /** Monthly cost of the nodes the plan touches, before and after, and what that is for the cluster. */
 @Composable
 private fun CostCard(plan: CastAIPlan) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(stringResource(R.string.castai_cost_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -136,7 +136,7 @@ private fun CostCard(plan: CastAIPlan) {
 /** A node the plan removes: its outcome, then each step with its time. */
 @Composable
 private fun RemovedNode(node: CastAIPlanNode) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             NodeTitle(node)
             if (node.events.size > 1 || node.nodeStatus != CastAINodeStatus.SUCCESS) {
@@ -153,7 +153,7 @@ private fun RemovedNode(node: CastAIPlanNode) {
 /** A node the plan adds: its type and price, and how long it took to be ready. */
 @Composable
 private fun AddedNode(node: CastAIPlanNode, currency: String) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             NodeTitle(node, node.instanceType.ifEmpty { node.name })
             val details = listOfNotNull(
@@ -194,7 +194,7 @@ private fun EventLine(event: CastAIPlanEvent) {
 
 @Composable
 private fun Budget(budget: CastAINodeBudget) {
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row {
                 Text(budget.nodePool, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))

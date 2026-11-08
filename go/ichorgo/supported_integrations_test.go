@@ -21,7 +21,7 @@ func TestIntegrationsCoverEveryGroup(t *testing.T) {
 	}
 
 	listed := map[string]bool{}
-	for _, s := range integrationSpecs {
+	for _, s := range integrationSpecs() {
 		for _, g := range s.Groups {
 			listed[g] = true
 		}
@@ -82,7 +82,7 @@ func TestIntegrationSpecs(t *testing.T) {
 	catalog := loadAppCatalog()
 	seen := map[string]bool{}
 
-	for _, s := range integrationSpecs {
+	for _, s := range integrationSpecs() {
 		if seen[s.ID] {
 			t.Errorf("%s listed twice", s.ID)
 		}
@@ -110,7 +110,7 @@ func TestSupportedIntegrationsStatic(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if res.Checked || len(res.Items) != len(integrationSpecs) {
+	if res.Checked || len(res.Items) != len(integrationSpecs()) {
 		t.Fatalf("got %+v", res)
 	}
 
@@ -122,9 +122,15 @@ func TestSupportedIntegrationsStatic(t *testing.T) {
 		icons[it.ID] = it.Icon
 	}
 
-	// Bundled icons are named after the catalog id (as in the inventory); none for Dragonfly.
-	if icons["longhorn"] != "longhorn" || icons["cloudnative-pg"] != "cloudnative-pg" || icons["dragonfly"] != "" || icons["gateway-api"] != "" {
+	// Bundled icons are named after the catalog id (as in the inventory); every project has one.
+	if icons["longhorn"] != "longhorn" || icons["cloudnative-pg"] != "cloudnative-pg" || icons["dragonfly"] != "dragonfly" {
 		t.Errorf("icons: %v", icons)
+	}
+
+	for id, icon := range icons {
+		if icon == "" {
+			t.Errorf("%s has no bundled icon", id)
+		}
 	}
 }
 
@@ -254,6 +260,97 @@ func TestReadSupportedIntegrationsArgoCD(t *testing.T) {
 
 	if !res.Items[0].Detected || res.Items[0].ID != "argo-cd" || res.Items[0].Version != "v1alpha1" {
 		t.Errorf("argo-cd: %+v", res.Items[0])
+	}
+}
+
+// Kyverno 1.15 prefers v2, which does not serve clusterpolicies: detection retries v1, the
+// version the Policies screen reads them from.
+func TestReadSupportedIntegrationsKyvernoFallback(t *testing.T) {
+	cases := []struct {
+		name      string
+		preferred string
+		answers   map[string]string
+		detected  bool
+		calls     []string // discovery calls under kyverno.io, in any order
+	}{
+		{
+			name:      "v2 preferred, policies under v1",
+			preferred: "v2",
+			answers: map[string]string{
+				"GET /apis/kyverno.io/v2": `{"resources":[{"name":"updaterequests"},{"name":"cleanuppolicies"}]}`,
+				"GET /apis/kyverno.io/v1": `{"resources":[{"name":"clusterpolicies"},{"name":"policies"}]}`,
+			},
+			detected: true,
+			calls:    []string{"/apis/kyverno.io/v1", "/apis/kyverno.io/v2"},
+		},
+		{
+			name:      "v1 preferred serves them: one call",
+			preferred: "v1",
+			answers: map[string]string{
+				"GET /apis/kyverno.io/v1": `{"resources":[{"name":"clusterpolicies"}]}`,
+			},
+			detected: true,
+			calls:    []string{"/apis/kyverno.io/v1"},
+		},
+		{
+			name:      "v1 preferred without them: no retry",
+			preferred: "v1",
+			answers: map[string]string{
+				"GET /apis/kyverno.io/v1": `{"resources":[{"name":"updaterequests"}]}`,
+			},
+			calls: []string{"/apis/kyverno.io/v1"},
+		},
+		{
+			name:      "neither version serves them",
+			preferred: "v2",
+			answers: map[string]string{
+				"GET /apis/kyverno.io/v2": `{"resources":[{"name":"updaterequests"}]}`,
+			},
+			calls: []string{"/apis/kyverno.io/v1", "/apis/kyverno.io/v2"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			answers := map[string]string{
+				"GET /apis":            `{"groups":[{"name":"kyverno.io","preferredVersion":{"version":"` + tc.preferred + `"}}]}`,
+				"GET /api/v1/pods":     `{"items":[]}`,
+				"GET /api/v1/services": `{"items":[]}`,
+			}
+			for key, body := range tc.answers {
+				answers[key] = body
+			}
+
+			f := newFakeKubeAPI(t, answers)
+
+			k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			res, err := readSupportedIntegrations(context.Background(), k, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for _, it := range res.Items {
+				if it.ID == "kyverno" && (it.Detected != tc.detected || tc.detected && (it.Via != detectedByAPI || it.Version != tc.preferred)) {
+					t.Errorf("kyverno: %+v, want detected=%v", it, tc.detected)
+				}
+			}
+
+			var calls []string
+			for _, r := range f.recorded() {
+				if strings.HasPrefix(r.path, "/apis/kyverno.io/") {
+					calls = append(calls, r.path)
+				}
+			}
+			slices.Sort(calls)
+
+			if !slices.Equal(calls, tc.calls) {
+				t.Errorf("calls %v, want %v", calls, tc.calls)
+			}
+		})
 	}
 }
 

@@ -14,12 +14,11 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorOutlinedButton
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -30,6 +29,8 @@ import name.levis.ichor.R
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.ApiCount
 import name.levis.ichor.model.ApiHealthReport
+import name.levis.ichor.model.ReadProgress
+import name.levis.ichor.model.ReadStep
 import name.levis.ichor.model.formatMs
 import name.levis.ichor.model.formatRate
 import name.levis.ichor.ui.LoadingViewModel
@@ -49,6 +50,33 @@ import name.levis.ichor.ui.components.pageContent
 /** Reading it scrapes /metrics twice a few seconds apart: loaded on demand, never polled. */
 class ApiHealthViewModel(private val kube: KubeRepository) : LoadingViewModel<ApiHealthReport>() {
     override suspend fun fetch() = kube.apiHealth()
+    override val progressReader: suspend () -> ReadProgress = { kube.readProgress(APIHEALTH_PROGRESS_OP) }
+}
+
+/** The ReadProgress op of the API health read (Go KubeAPIHealth). */
+const val APIHEALTH_PROGRESS_OP = "apihealth"
+
+/**
+ * An API health progress step by name. The wait between the two /metrics samples counts its
+ * seconds (count of total): it says how many are left while it runs.
+ */
+@Composable
+private fun apiHealthStepLabel(id: String, progress: ReadProgress?): String = when (id) {
+    "readyz" -> stringResource(R.string.read_progress_step_readyz)
+    "livez" -> stringResource(R.string.read_progress_step_livez)
+    "version" -> stringResource(R.string.read_progress_step_version)
+    "queued" -> stringResource(R.string.read_progress_step_queued)
+    "scrape1" -> stringResource(R.string.read_progress_step_scrape1)
+    "scrape2" -> stringResource(R.string.read_progress_step_scrape2)
+    "wait" -> {
+        val step = progress?.steps?.firstOrNull { it.id == id }
+        if (step != null && step.state == ReadStep.RUNNING && step.total > 0) {
+            stringResource(R.string.read_progress_step_wait, (step.total - step.count).coerceAtLeast(0).toString())
+        } else {
+            stringResource(R.string.read_progress_step_wait_idle)
+        }
+    }
+    else -> id
 }
 
 /**
@@ -65,11 +93,11 @@ fun ApiHealthScreen(
     vm: ApiHealthViewModel = viewModel(factory = factory { ApiHealthViewModel(app.kubeRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
+    val progress by vm.readProgress.collectAsStateWithLifecycle()
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.apihealth_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
@@ -77,7 +105,7 @@ fun ApiHealthScreen(
         },
     ) { padding ->
         val modifier = Modifier.pageContent(padding)
-        Loaded(state, vm::refresh, modifier) { data ->
+        Loaded(state, vm::refresh, modifier, progress = progress, stepLabel = { apiHealthStepLabel(it, progress) }) { data ->
             ApiHealthList(data, onAudit)
             
         }
@@ -90,7 +118,7 @@ private fun ApiHealthList(report: ApiHealthReport, onAudit: () -> Unit) {
         item(key = "verdict") { VerdictHeader(report) }
         // The metrics group clients; the audit log names them, and what they do wrong.
         item(key = "audit") {
-            OutlinedButton(onClick = onAudit, modifier = Modifier.padding(horizontal = 16.dp)) {
+            IchorOutlinedButton(onClick = onAudit, modifier = Modifier.padding(horizontal = 16.dp)) {
                 Icon(Icons.Outlined.PersonSearch, contentDescription = null)
                 Text(stringResource(R.string.audit_open), Modifier.padding(start = 8.dp))
             }

@@ -1,0 +1,34 @@
+# The web front of the example app.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app # keep in sync with the service
+  labels: {app: app, tier: "web"}
+spec:
+  # Two replicas survive a node drain.
+  replicas: 2
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      initContainers:
+        - name: migrate
+          image: 'ghcr.io/example-org/app-migrate:1.4.0'
+          args: [--wait, "--timeout=30s"]
+      containers:
+        - name: app
+          image: "ghcr.io/example-org/app:1.4.1" # bumped by hand
+          ports:
+            - containerPort: 8080
+          command: ["/app", "serve"]
+          env:
+            - name: GREETING
+              value: |
+                Hello,
+                  world
+        - name: sidecar
+          image: ghcr.io/example-org/proxy:2.0.0

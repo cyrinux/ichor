@@ -33,7 +33,9 @@ public struct StorageNode: Decodable, Equatable, Sendable {
     public let disks: [StorageDisk]
     public let error: String?
 
-    public init(node: String, hostname: String, volumes: [StorageVolume] = [], disks: [StorageDisk] = [], error: String? = nil) {
+    public init(
+        node: String, hostname: String, volumes: [StorageVolume] = [], disks: [StorageDisk] = [], error: String? = nil
+    ) {
         self.node = node
         self.hostname = hostname
         self.volumes = volumes
@@ -63,7 +65,9 @@ public struct StorageVolume: Decodable, Equatable, Sendable {
     public let freeBytes: UInt64
     public let sizeBytes: UInt64
 
-    public init(key: String, name: String, mount: String = "", usedPercent: Double, freeBytes: UInt64 = 0, sizeBytes: UInt64 = 0) {
+    public init(
+        key: String, name: String, mount: String = "", usedPercent: Double, freeBytes: UInt64 = 0, sizeBytes: UInt64 = 0
+    ) {
         self.key = key
         self.name = name
         self.mount = mount
@@ -147,7 +151,8 @@ public struct StorageThresholds: Equatable, Sendable {
 /// "91" or "91.5": a fill as alerts name it.
 public func storagePercentText(_ percent: Double) -> String {
     let tenths = (percent * 10).rounded()
-    return tenths.truncatingRemainder(dividingBy: 10) == 0 ? String(Int(tenths / 10)) : String(format: "%.1f", tenths / 10)
+    return tenths.truncatingRemainder(dividingBy: 10) == 0
+        ? String(Int(tenths / 10)) : String(format: "%.1f", tenths / 10)
 }
 
 /// A storage issue's stored value, "severity|kind|hostname|name|percent|free|size|detail", split
@@ -170,8 +175,10 @@ public struct StorageIssue: Equatable, Sendable {
     /// Why a disk fails SMART, else its model.
     public let detail: String
 
-    public init(severity: String, kind: String, hostname: String, name: String, percent: String = "",
-                freeBytes: UInt64 = 0, sizeBytes: UInt64 = 0, detail: String = "") {
+    public init(
+        severity: String, kind: String, hostname: String, name: String, percent: String = "",
+        freeBytes: UInt64 = 0, sizeBytes: UInt64 = 0, detail: String = ""
+    ) {
         self.severity = severity
         self.kind = kind
         self.hostname = hostname
@@ -200,8 +207,10 @@ public struct StorageIssue: Equatable, Sendable {
     /// The stored form; the fields but the last lose any "|" so the parts still split.
     public var value: String {
         let safe = { (s: String) in s.replacingOccurrences(of: "|", with: "/") }
-        return [severity, kind, safe(hostname), safe(name), safe(percent), String(freeBytes), String(sizeBytes), detail]
-            .joined(separator: "|")
+        return [
+            severity, kind, safe(hostname), safe(name), safe(percent), String(freeBytes), String(sizeBytes), detail,
+        ]
+        .joined(separator: "|")
     }
 }
 
@@ -209,8 +218,10 @@ public struct StorageIssue: Equatable, Sendable {
 /// "<node>|smart|<device>"): a volume at or over `thresholds`, a disk failing SMART (always
 /// critical). A disk without SMART data or a healthy one is no issue. A node that did not answer
 /// keeps its issues `known` (the previous snapshot's): unreadable, not resolved.
-public func storageIssuesOf(_ health: ClusterStorageHealth, thresholds: StorageThresholds,
-                            known: [String: String] = [:]) -> [String: String] {
+public func storageIssuesOf(
+    _ health: ClusterStorageHealth, thresholds: StorageThresholds,
+    known: [String: String] = [:]
+) -> [String: String] {
     var out: [String: String] = [:]
     for node in health.nodes {
         let hostname = node.hostname.isEmpty ? node.node : node.hostname
@@ -221,13 +232,19 @@ public func storageIssuesOf(_ health: ClusterStorageHealth, thresholds: StorageT
         }
         for volume in node.volumes where !volume.key.isEmpty {
             guard let severity = thresholds.severity(usedPercent: volume.usedPercent) else { continue }
-            out[volume.key] = StorageIssue(severity: severity, kind: StorageIssue.fill, hostname: hostname, name: volume.name,
-                                           percent: storagePercentText(volume.usedPercent),
-                                           freeBytes: volume.freeBytes, sizeBytes: volume.sizeBytes).value
+            out[volume.key] =
+                StorageIssue(
+                    severity: severity, kind: StorageIssue.fill, hostname: hostname, name: volume.name,
+                    percent: storagePercentText(volume.usedPercent),
+                    freeBytes: volume.freeBytes, sizeBytes: volume.sizeBytes
+                ).value
         }
         for disk in node.disks where disk.health == "failing" && !disk.key.isEmpty {
-            out[disk.key] = StorageIssue(severity: dataCritical, kind: StorageIssue.smart, hostname: hostname, name: disk.device,
-                                         detail: String((disk.reason.isEmpty ? disk.model : disk.reason).prefix(200))).value
+            out[disk.key] =
+                StorageIssue(
+                    severity: dataCritical, kind: StorageIssue.smart, hostname: hostname, name: disk.device,
+                    detail: String((disk.reason.isEmpty ? disk.model : disk.reason).prefix(200))
+                ).value
         }
     }
     return out
@@ -236,7 +253,9 @@ public func storageIssuesOf(_ health: ClusterStorageHealth, thresholds: StorageT
 /// The storage issues a node that did not answer may carry over: the previous snapshot's, only
 /// when it is the same cluster and that check watched and read them.
 public func knownStorageIssues(_ previous: ClusterSnapshot?, context: String) -> [String: String] {
-    guard let previous, previous.context == context, previous.storageWatched, previous.storageChecked else { return [:] }
+    guard let previous, previous.context == context, previous.storageWatched, previous.storageChecked else {
+        return [:]
+    }
     return previous.storageIssues
 }
 
@@ -248,34 +267,45 @@ public func storageIssueNode(_ key: String) -> String {
 /// English title of a storage issue.
 func storageProblemTitle(_ issue: StorageIssue) -> String {
     if issue.isSmart { return "SMART failing on \(issue.name) (\(issue.hostname))" }
+    if issue.detail == kubeDiskPressure { return "\(issue.name) on \(issue.hostname): DiskPressure" }
     let title = "\(issue.name) on \(issue.hostname) at \(issue.percent) %"
     return issue.severity == dataCritical ? "\(title), almost full" : title
 }
 
-/// English text of a storage issue: the free space, or why the disk fails.
+/// English text of a storage issue: the free space, or why the disk fails; none for a node in
+/// DiskPressure whose kubelet gave no size.
 func storageProblemText(_ issue: StorageIssue) -> String {
-    issue.isSmart ? issue.detail : "\(formatBytes(issue.freeBytes)) free of \(formatBytes(issue.sizeBytes))"
+    if issue.isSmart { return issue.detail }
+    return issue.sizeBytes == 0 ? "" : "\(formatBytes(issue.freeBytes)) free of \(formatBytes(issue.sizeBytes))"
 }
 
 /// English title of a storage issue resolved, `warn` the warning threshold of that check.
 func storageClearedTitle(_ issue: StorageIssue, warn: Int) -> String {
-    issue.isSmart ? "\(issue.name) on \(issue.hostname) passes SMART again" : "\(issue.name) on \(issue.hostname) back under \(warn) %"
+    issue.isSmart
+        ? "\(issue.name) on \(issue.hostname) passes SMART again"
+        : "\(issue.name) on \(issue.hostname) back under \(warn) %"
 }
 
 /// Node storage issues (see evaluateTrack), keyed "storage:<key>". A resolved one is named from
 /// what the previous snapshot kept of it.
-func evaluateStorage(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert]) -> IssueTrack {
+func evaluateStorage(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert])
+    -> IssueTrack
+{
     let known = previous?.storageIssues ?? [:]
     return evaluateTrack(
         previous: previous?.storageTrack, current: current.storageTrack, comparable: comparable,
         severity: { StorageIssue(value: $0).severity },
         problem: { key, value in
             let issue = StorageIssue(value: value)
-            return Alert(key: "storage:\(key)", title: storageProblemTitle(issue), text: storageProblemText(issue), problem: true)
+            return Alert(
+                key: "storage:\(key)", title: storageProblemTitle(issue), text: storageProblemText(issue), problem: true
+            )
         },
         cleared: { key in
             let issue = StorageIssue(value: known[key] ?? "")
-            return Alert(key: "storage:\(key)", title: storageClearedTitle(issue, warn: current.storageWarn), text: "", problem: false)
+            return Alert(
+                key: "storage:\(key)", title: storageClearedTitle(issue, warn: current.storageWarn), text: "",
+                problem: false)
         },
         alerts: &alerts)
 }

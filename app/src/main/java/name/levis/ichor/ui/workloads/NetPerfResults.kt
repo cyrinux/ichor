@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,7 +35,7 @@ fun NetPerfResults(setup: NetPerfSetup, results: List<NetPerfResult>, running: B
     paths.forEach { path ->
         val measured = results.filter { it.path == path }
         if (measured.isEmpty() && !running) return@forEach
-        Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        IchorCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(pathLabel(path), style = MaterialTheme.typography.titleSmall)

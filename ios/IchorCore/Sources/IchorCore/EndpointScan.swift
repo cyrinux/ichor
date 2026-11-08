@@ -10,7 +10,9 @@ public struct EndpointMatch: Decodable, Equatable, Hashable, Sendable {
     public let role: String
     public let contexts: [String]
 
-    public init(endpoint: String, hostname: String = "", version: String = "", role: String = "", contexts: [String] = []) {
+    public init(
+        endpoint: String, hostname: String = "", version: String = "", role: String = "", contexts: [String] = []
+    ) {
         self.endpoint = endpoint
         self.hostname = hostname
         self.version = version
@@ -190,8 +192,10 @@ private func parseNetwork(_ cidr: String) -> IPNetwork? {
     return network(ip, bits)
 }
 
-private let privateNetworks: [IPNetwork] = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10", "fc00::/7"]
-    .compactMap(parseNetwork)
+private let privateNetworks: [IPNetwork] = [
+    "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10", "fc00::/7",
+]
+.compactMap(parseNetwork)
 
 private func isPrivate(_ ip: IPAddress) -> Bool {
     privateNetworks.contains { $0.contains(network(ip, ip.width)) }
@@ -210,7 +214,8 @@ private func parseIPv4(_ text: String) -> [UInt8]? {
     var bytes: [UInt8] = []
     for part in parts {
         guard !part.isEmpty, part.count <= 3, part.allSatisfy({ $0.isASCII && $0.isNumber }),
-              let octet = Int(part), octet <= 255 else { return nil }
+            let octet = Int(part), octet <= 255
+        else { return nil }
         bytes.append(UInt8(octet))
     }
     return bytes
@@ -245,7 +250,8 @@ private func ipv6Groups(_ part: String) -> [UInt16]? {
             groups.append(UInt16(v4[2]) << 8 | UInt16(v4[3]))
         } else {
             guard !field.isEmpty, field.count <= 4, field.allSatisfy({ $0.isHexDigit && $0.isASCII }),
-                  let value = UInt16(field, radix: 16) else { return nil }
+                let value = UInt16(field, radix: 16)
+            else { return nil }
             groups.append(value)
         }
     }

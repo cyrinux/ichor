@@ -36,6 +36,8 @@ func StartNodeMaintenanceUpgrade(configYAML, contextName, kubeServer, node, imag
 	}
 
 	return runMaintenance(listener, func(ctx context.Context) error {
+		defer holdCalls(configYAML, contextName)()
+
 		return recordedRun(configYAML, contextName, func() auditAction {
 			return auditAction{Action: "maintenance-upgrade", Node: node, Params: fmt.Sprintf("image=%s include-bare=%t force=%t", image, includeBare, force)}
 		}, func() error { return m.run(ctx) })

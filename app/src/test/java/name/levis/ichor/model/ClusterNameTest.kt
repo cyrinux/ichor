@@ -58,6 +58,22 @@ class ClusterNameTest {
     }
 
     @Test
+    fun eksDiscoveryNameIsParsed() {
+        val many = parseCloudContext("dev-eks-eu-west-1.eu-west-1.488739384012.eks")!!
+        assertEquals(CloudContext.EKS, many.provider)
+        assertEquals("eu-west-1", many.location)
+        assertEquals("488739384012", many.owner)
+        assertEquals("dev-eks-eu-west-1", many.cluster)
+        val one = parseCloudContext("orbit_prod.us-gov-west-1.eks")!!
+        assertEquals("us-gov-west-1", one.location)
+        assertEquals("", one.owner)
+        assertEquals("orbit_prod", one.cluster)
+        assertEquals("dev-eks-eu-west-1", ClusterLabels().of(ContextSummary(name = "dev-eks-eu-west-1.eu-west-1.488739384012.eks")))
+        assertNull(parseCloudContext("prod.lab.eks"))
+        assertNull(parseCloudContext("prod.eu-west-1.123.eks"))
+    }
+
+    @Test
     fun gkeContextIsParsed() {
         val gke = parseCloudContext(gke.name)!!
         assertEquals(CloudContext.GKE, gke.provider)

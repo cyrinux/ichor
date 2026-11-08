@@ -75,7 +75,9 @@ public func isWolAddress(_ input: String) -> Bool {
 /// [A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?
 private func isHostLabel(_ label: Substring) -> Bool {
     func alnum(_ c: Character) -> Bool { c.isASCII && (c.isLetter || c.isNumber) }
-    guard let first = label.first, let last = label.last, label.count <= 63, alnum(first), alnum(last) else { return false }
+    guard let first = label.first, let last = label.last, label.count <= 63, alnum(first), alnum(last) else {
+        return false
+    }
     return label.allSatisfy { alnum($0) || $0 == "-" }
 }
 
@@ -86,7 +88,8 @@ public func parseWolTarget(mac: String, broadcast: String, port: String) -> Resu
     let trimmedPort = port.trimmingCharacters(in: .whitespaces)
     let number = trimmedPort.isEmpty ? wolDefaultPort : Int(trimmedPort)
     guard let number, (1...65535).contains(number) else { return .failure(.port) }
-    return .success(WolTarget(mac: formatMac(bytes), broadcast: broadcast.trimmingCharacters(in: .whitespaces), port: number))
+    return .success(
+        WolTarget(mac: formatMac(bytes), broadcast: broadcast.trimmingCharacters(in: .whitespaces), port: number))
 }
 
 /// The store key of `node` (its talosconfig address) in the cluster `fingerprint`.
@@ -98,7 +101,9 @@ public func encodeWolTarget(_ target: WolTarget) -> String { "\(target.mac)|\(ta
 /// The `WolTarget` `encodeWolTarget` stored as `value`; nil if it is not one.
 public func decodeWolTarget(_ value: String) -> WolTarget? {
     let parts = value.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
-    guard parts.count == 3, let bytes = parseMac(parts[0]), let port = Int(parts[2]), (1...65535).contains(port) else { return nil }
+    guard parts.count == 3, let bytes = parseMac(parts[0]), let port = Int(parts[2]), (1...65535).contains(port) else {
+        return nil
+    }
     return WolTarget(mac: formatMac(bytes), broadcast: parts[1], port: port)
 }
 
@@ -138,14 +143,18 @@ public func decodeSeenMacs(_ value: String) -> [SeenMac] {
 public func wolCandidates(_ links: [NetLink]) -> [NetLink] {
     var seen = Set<[UInt8]>()
     return links.filter { link in
-        guard !link.virtual, link.kind.isEmpty, link.type == "ether", let mac = parseMac(link.hardwareAddr) else { return false }
+        guard !link.virtual, link.kind.isEmpty, link.type == "ether", let mac = parseMac(link.hardwareAddr) else {
+            return false
+        }
         return seen.insert(mac).inserted
     }
 }
 
 /// The MACs worth remembering from a node's `links`: those of its physical Ethernet links.
 public func seenMacs(_ links: [NetLink]) -> [SeenMac] {
-    wolCandidates(links).compactMap { link in parseMac(link.hardwareAddr).map { SeenMac(link: link.name, mac: formatMac($0)) } }
+    wolCandidates(links).compactMap { link in
+        parseMac(link.hardwareAddr).map { SeenMac(link: link.name, mac: formatMac($0)) }
+    }
 }
 
 /// Where "Wake" sends magic packets: the `saved` setting; else, so a node that went down

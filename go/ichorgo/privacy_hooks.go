@@ -48,7 +48,14 @@ func maskErr(err *error) {
 		*err = panicError(r)
 	}
 
-	if *err == nil || !privacy.isEnabled() {
+	// Not a failure, and the apps match its text: a masked word must not change it.
+	if *err == nil || errors.Is(*err, errCallsCancelled) {
+		return
+	}
+
+	diagCallFailed(*err)
+
+	if !privacy.isEnabled() {
 		return
 	}
 
@@ -63,6 +70,17 @@ func (l maskedNetPerfListener) OnProgress(json string) {
 
 func (l maskedNetPerfListener) OnDone(reportJSON string, errMessage string) {
 	l.NetPerfListener.OnDone(privacy.mask(reportJSON), privacy.maskPlain(errMessage))
+}
+
+// maskedOverviewListener masks each streamed node and the complete overview.
+type maskedOverviewListener struct{ OverviewListener }
+
+func (l maskedOverviewListener) OnNode(json string) {
+	l.OverviewListener.OnNode(privacy.mask(json))
+}
+
+func (l maskedOverviewListener) OnDone(overviewJSON, errMessage string) {
+	l.OverviewListener.OnDone(privacy.mask(overviewJSON), privacy.maskPlain(errMessage))
 }
 
 type maskedHubbleListener struct{ HubbleListener }
@@ -133,6 +151,14 @@ func (l maskedDiagnosisListener) OnAnswer(text string) {
 	l.DiagnosisListener.OnAnswer(privacy.maskPlain(text))
 }
 
+func (l maskedDiagnosisListener) OnTool(name, argsJSON string) {
+	l.DiagnosisListener.OnTool(name, privacy.maskPlain(argsJSON))
+}
+
+func (l maskedDiagnosisListener) OnToolDone(name string, bytes int, result, errMessage string) {
+	l.DiagnosisListener.OnToolDone(name, bytes, privacy.maskPlain(result), privacy.maskPlain(errMessage))
+}
+
 func (l maskedDiagnosisListener) OnDone(errMessage string) {
 	l.DiagnosisListener.OnDone(privacy.maskPlain(errMessage))
 }
@@ -160,11 +186,33 @@ func (l maskedSnapshotListener) OnDone(path string, size int64, sha256 string, e
 // Best effort, and only while the mask is on: it costs one extra call per overview.
 func learnClusterHosts(ctx context.Context, c *client.Client, nodes []nodeOverview, domains []string) {
 	if !privacy.isEnabled() {
+		// The diagnostics mask still learns the overview's own nodes (no extra call).
+		diagMask.learnDomains(domains...)
+		diagMask.learnHosts(overviewHostEntries(nodes))
+
 		return
 	}
 
 	privacy.learnDomains(domains...)
 	privacy.learnHosts(clusterHostEntries(ctx, c, nodes))
+}
+
+// learnNodeHost teaches the mask one node's hostname and domain before that node is shown
+// on its own (a streamed overview node); learnClusterHosts still learns the whole cluster
+// once the overview is complete.
+func learnNodeHost(n nodeOverview, domain string) {
+	if !privacy.isEnabled() {
+		diagMask.learnDomains(domain)
+		diagMask.learnHosts(overviewHostEntries([]nodeOverview{n}))
+
+		return
+	}
+
+	privacy.learnDomains(domain)
+
+	if n.Hostname != n.Node {
+		privacy.learnHosts([]hostEntry{{address: n.Node, hostname: n.Hostname, role: n.Role}})
+	}
 }
 
 // clusterHostEntries lists the hosts of the cluster: the overview nodes plus the members
@@ -185,6 +233,19 @@ func clusterHostEntries(ctx context.Context, c *client.Client, nodes []nodeOverv
 
 	if via != "" {
 		entries = append(entries, clusterMembers(ctx, c, via)...)
+	}
+
+	return entries
+}
+
+// overviewHostEntries is clusterHostEntries without the member call.
+func overviewHostEntries(nodes []nodeOverview) []hostEntry {
+	entries := make([]hostEntry, 0, len(nodes))
+
+	for _, n := range nodes {
+		if n.Hostname != n.Node {
+			entries = append(entries, hostEntry{address: n.Node, hostname: n.Hostname, role: n.Role})
+		}
 	}
 
 	return entries
@@ -221,13 +282,16 @@ func learnSearchDomains(resolvers []*network.ResolverStatus) {
 // learnDiscoveredHosts names the discovered members like the overview's, so the masked
 // addresses the app gets back map to real ones when it adds them to the talosconfig.
 func learnDiscoveredHosts(nodes []discoveredNode) {
-	if !privacy.isEnabled() {
-		return
-	}
-
 	entries := make([]hostEntry, 0, len(nodes))
 	for _, n := range nodes {
 		entries = append(entries, hostEntry{address: n.Address, hostname: n.Hostname, role: n.Role})
+	}
+
+	// privacy.learnHosts passes them on to diagMask, which learns them either way.
+	if !privacy.isEnabled() {
+		diagMask.learnHosts(entries)
+
+		return
 	}
 
 	privacy.learnHosts(entries)
@@ -310,6 +374,17 @@ func (l maskedImageScanListener) OnDone(reportJSON string, errMessage string) {
 	l.ImageScanListener.OnDone(privacy.mask(reportJSON), privacy.maskPlain(errMessage))
 }
 
+// maskedKubeSanitizeListener masks a pod sweep's progress, result and error.
+type maskedKubeSanitizeListener struct{ KubeSanitizeListener }
+
+func (l maskedKubeSanitizeListener) OnProgress(json string) {
+	l.KubeSanitizeListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedKubeSanitizeListener) OnDone(resultJSON string, errMessage string) {
+	l.KubeSanitizeListener.OnDone(privacy.mask(resultJSON), privacy.maskPlain(errMessage))
+}
+
 // maskedEtcdFixListener masks the NOSPACE fix's progress and error.
 type maskedEtcdFixListener struct{ EtcdFixListener }
 
@@ -365,6 +440,14 @@ func (l maskedImagePullListener) OnDone(errMessage string) {
 	l.ImagePullListener.OnDone(privacy.maskPlain(errMessage))
 }
 
+// maskedOllamaPullListener masks a model pull's error (the namespace and server it names);
+// the steps are Ollama's own words and digests.
+type maskedOllamaPullListener struct{ OllamaPullListener }
+
+func (l maskedOllamaPullListener) OnDone(errMessage string) {
+	l.OllamaPullListener.OnDone(privacy.maskPlain(errMessage))
+}
+
 // maskedK8sUpgradeListener masks a Kubernetes upgrade's progress and error.
 type maskedK8sUpgradeListener struct{ K8sUpgradeListener }
 
@@ -396,4 +479,49 @@ func (l maskedJoinListener) OnProgress(json string) {
 func (l maskedJoinListener) OnDone(nodeAddress string, errMessage string) {
 	// The address goes into the stored talosconfig: it stays real (joins refuse privacy mode).
 	l.JoinListener.OnDone(nodeAddress, privacy.maskPlain(errMessage))
+}
+
+type maskedCARotationListener struct{ TalosCARotationListener }
+
+func (l maskedCARotationListener) OnProgress(json string) {
+	l.TalosCARotationListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedCARotationListener) OnTalosconfig(talosconfigYAML string, isFinal bool) {
+	// A credential the app stores: never masked.
+	l.TalosCARotationListener.OnTalosconfig(talosconfigYAML, isFinal)
+}
+
+func (l maskedCARotationListener) OnDone(errMessage string) {
+	l.TalosCARotationListener.OnDone(privacy.maskPlain(errMessage))
+}
+
+type maskedArgoSyncListener struct{ ArgoSyncListener }
+
+func (l maskedArgoSyncListener) OnProgress(json string) {
+	l.ArgoSyncListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedArgoSyncListener) OnDone(result, errMessage string) {
+	l.ArgoSyncListener.OnDone(result, privacy.maskPlain(errMessage))
+}
+
+type maskedFluxReconcileListener struct{ FluxReconcileListener }
+
+func (l maskedFluxReconcileListener) OnProgress(json string) {
+	l.FluxReconcileListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedFluxReconcileListener) OnDone(result, errMessage string) {
+	l.FluxReconcileListener.OnDone(result, privacy.maskPlain(errMessage))
+}
+
+type maskedHelmRollbackListener struct{ HelmRollbackListener }
+
+func (l maskedHelmRollbackListener) OnProgress(json string) {
+	l.HelmRollbackListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedHelmRollbackListener) OnDone(result, errMessage string) {
+	l.HelmRollbackListener.OnDone(result, privacy.maskPlain(errMessage))
 }

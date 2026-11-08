@@ -14,8 +14,28 @@ data class Bottlenecks(val wait: Double, val steal: Double, val network: List<De
 data class DriftNode(val node: String, val hostname: String, val role: String, val values: Map<String, String>, val errors: Map<String, String>)
 @Serializable
 data class DriftSnapshot(val scope: String, val at: Long, val nodes: List<DriftNode>)
+/** One `name=value` item whose value differs between the two nodes. */
 @Serializable
-data class DriftChange(val node: String, val reference: String, val key: String, val before: String, val after: String)
+data class DriftPair(val name: String, val before: String, val after: String)
+
+/**
+ * One setting that differs between [node] and [reference]. A list-valued setting (extensions,
+ * mtu, dns, ntp) also itemises its [added], [removed] and [changed] items; an older core leaves
+ * them empty and only [before] → [after] is known.
+ */
+@Serializable
+data class DriftChange(
+    val node: String,
+    val reference: String,
+    val key: String,
+    val before: String,
+    val after: String,
+    val nodeName: String = "",
+    val referenceName: String = "",
+    val added: List<String> = emptyList(),
+    val removed: List<String> = emptyList(),
+    val changed: List<DriftPair> = emptyList(),
+)
 @Serializable
 data class IncidentEntry(val id: String, val at: Long, val node: String, val kind: String, val subject: String, val detail: String, val severity: String, val metrics: Bottlenecks? = null, val metricsOmitted: Int = 0)
 @Serializable

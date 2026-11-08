@@ -1,0 +1,41 @@
+{"kind":"HorizontalPodAutoscalerList","apiVersion":"autoscaling/v2","metadata":{},"items":[
+{"metadata":{"name":"web","namespace":"shop"},
+ "spec":{"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"web"},"minReplicas":2,"maxReplicas":6,
+  "metrics":[{"type":"Resource","resource":{"name":"cpu","target":{"type":"Utilization","averageUtilization":70}}}]},
+ "status":{"currentReplicas":6,"desiredReplicas":6,"lastScaleTime":"2026-10-01T08:00:00Z",
+  "currentMetrics":[{"type":"Resource","resource":{"name":"cpu","current":{"averageUtilization":94,"averageValue":"470m"}}}],
+  "conditions":[
+   {"type":"AbleToScale","status":"True","reason":"ReadyForNewScale","message":"recommended size matches current size"},
+   {"type":"ScalingActive","status":"True","reason":"ValidMetricFound","message":"the HPA was able to successfully calculate a replica count from cpu resource utilization"},
+   {"type":"ScalingLimited","status":"True","reason":"TooManyReplicas","message":"the desired replica count is more than the maximum replica count"}]}},
+{"metadata":{"name":"keda-hpa-transcoder","namespace":"media",
+  "ownerReferences":[{"apiVersion":"keda.sh/v1alpha1","kind":"ScaledObject","name":"transcoder","uid":"0b6e2a52-1111-4c3b-9a55-000000000001"}]},
+ "spec":{"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"transcoder"},"minReplicas":1,"maxReplicas":8,
+  "metrics":[{"type":"External","external":{"metric":{"name":"s0-prometheus"},"target":{"type":"AverageValue","averageValue":"10"}}}]},
+ "status":{"currentReplicas":4,"desiredReplicas":5,
+  "currentMetrics":[{"type":"External","external":{"metric":{"name":"s0-prometheus"},"current":{"averageValue":"41"}}}],
+  "conditions":[
+   {"type":"AbleToScale","status":"True","reason":"ReadyForNewScale"},
+   {"type":"ScalingActive","status":"True","reason":"ValidMetricFound"},
+   {"type":"ScalingLimited","status":"False","reason":"DesiredWithinRange"}]}},
+{"metadata":{"name":"invoices","namespace":"billing"},
+ "spec":{"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"invoices"},"maxReplicas":4,
+  "metrics":[{"type":"Resource","resource":{"name":"cpu","target":{"type":"Utilization","averageUtilization":75}}}]},
+ "status":{"currentReplicas":1,"desiredReplicas":1,
+  "conditions":[
+   {"type":"AbleToScale","status":"True","reason":"SucceededGetScale"},
+   {"type":"ScalingActive","status":"False","reason":"FailedGetResourceMetric","message":"the HPA was unable to compute the replica count: unable to get metrics for resource cpu"}]}},
+{"metadata":{"name":"api","namespace":"shop"},
+ "spec":{"scaleTargetRef":{"apiVersion":"apps/v1","kind":"StatefulSet","name":"api"},"minReplicas":3,"maxReplicas":10,
+  "metrics":[
+   {"type":"Pods","pods":{"metric":{"name":"http_requests_per_second"},"target":{"type":"AverageValue","averageValue":"100"}}},
+   {"type":"ContainerResource","containerResource":{"name":"memory","container":"app","target":{"type":"AverageValue","averageValue":"512Mi"}}}]},
+ "status":{"currentReplicas":4,"desiredReplicas":4,
+  "currentMetrics":[
+   {"type":"Pods","pods":{"metric":{"name":"http_requests_per_second"},"current":{"averageValue":"62"}}},
+   {"type":"ContainerResource","containerResource":{"name":"memory","container":"app","current":{"averageValue":"301Mi"}}}],
+  "conditions":[
+   {"type":"AbleToScale","status":"True","reason":"ReadyForNewScale"},
+   {"type":"ScalingActive","status":"True","reason":"ValidMetricFound"},
+   {"type":"ScalingLimited","status":"False","reason":"DesiredWithinRange"}]}}
+]}

@@ -35,14 +35,17 @@ import name.levis.ichor.R
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.InventoryImage
 import name.levis.ichor.model.InventoryPod
+import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.PodState
 import name.levis.ichor.model.driftVersions
 import name.levis.ichor.model.driftingRepos
 import name.levis.ichor.model.memory
+import name.levis.ichor.model.notStarting
 import name.levis.ichor.model.shortDigest
 import name.levis.ichor.model.state
+import name.levis.ichor.model.stopped
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.imagescan.AppScanUi
 import name.levis.ichor.ui.imagescan.appScanSection
@@ -72,6 +75,7 @@ fun AppDetailSheet(
     flux: AppFluxUi? = null,
     scan: AppScanUi? = null,
     onPodNode: (String) -> Unit,
+    onObject: (KubeObjectRef) -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -81,8 +85,9 @@ fun AppDetailSheet(
         ) {
             item { Header(app) }
             item { Badges(app) }
+            if (app.reason.isNotEmpty()) item { MutedText(app.reason, maxLines = 6, overflow = TextOverflow.Ellipsis) }
             item { Stats(app) }
-            routes?.let { appRoutesSection(it) }
+            routes?.let { appRoutesSection(it, onObject) }
             restart?.let { appWorkloadsSection(it) }
             argo?.let { appArgoSection(it) }
             flux?.let { appFluxSection(it) }
@@ -120,9 +125,12 @@ private fun Header(app: InventoryApp) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Badges(app: InventoryApp) {
-    val warn = LocalStatusColors.current.warn
-    if (app.version.isEmpty() && !app.drift && !app.unpinned) return
+    val colors = LocalStatusColors.current
+    val warn = colors.warn
+    if (app.version.isEmpty() && !app.drift && !app.unpinned && app.state.isEmpty()) return
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (app.notStarting) StatusPill(stringResource(R.string.apps_not_starting), colors.bad)
+        if (app.stopped) StatusPill(stringResource(R.string.pod_state_stopped), colors.muted)
         if (app.version.isNotEmpty()) {
             Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Text(
@@ -152,8 +160,8 @@ private fun Stats(app: InventoryApp) {
 private fun StatTile(value: String, label: String, modifier: Modifier) {
     Surface(modifier, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-            Text(value, style = MaterialTheme.typography.titleMedium, maxLines = 1)
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            Text(value, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

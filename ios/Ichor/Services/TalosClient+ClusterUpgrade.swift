@@ -9,23 +9,23 @@ enum ClusterUpgradeEvent: Sendable {
 }
 
 /// A started roll: its events, and what the run screen can ask of it.
-final class ClusterUpgradeHandle: @unchecked Sendable {
+final class ClusterUpgradeHandle: Sendable {
     let events: AsyncStream<ClusterUpgradeEvent>
-    private let run: IchorgoClusterUpgradeRun?
+    private let run: GoObject<IchorgoClusterUpgradeRun>?
 
     fileprivate init(events: AsyncStream<ClusterUpgradeEvent>, run: IchorgoClusterUpgradeRun?) {
         self.events = events
-        self.run = run
+        self.run = run.map(GoObject.init)
     }
 
     /// Stops before the next node (a node being upgraded finishes).
-    func pause() { run?.pause() }
+    func pause() { run?.value.pause() }
 
     /// Goes on after a pause, retries a failed gate, or skips the rest of the settle time.
-    func resume() { run?.resume() }
+    func resume() { run?.value.resume() }
 
     /// Ends the roll before its next node; the nodes upgraded stay upgraded.
-    func abort() { run?.abort() }
+    func abort() { run?.value.abort() }
 }
 
 /// The rolling cluster upgrade (see TalosClient for the conventions).
@@ -33,7 +33,9 @@ extension TalosClient {
     /// Every node to `version`, in the order the roll follows, with each node's checks. Nodes
     /// already on the version are done: a rerun continues with the others.
     func clusterUpgradePlan(version: String) async throws -> ClusterUpgradePlan {
-        try await Self.json { [config, context, kubeServer] in IchorgoClusterUpgradePlan(config, context, kubeServer, version, $0) }
+        try await Self.json { [config, context, kubeServer] in
+            IchorgoClusterUpgradePlan(config, context, kubeServer, version, $0)
+        }
     }
 
     /// Upgrades every node to `version`, one after the other (StartClusterUpgrade). Ending the
@@ -47,20 +49,21 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartClusterUpgrade(config, context, kubeServer, version, drain, acknowledged, bridge)
+        let started = IchorgoStartClusterUpgrade(config, context, kubeServer, version, drain, acknowledged, bridge)
+        let run = started.map(GoObject.init)
         continuation.onTermination = { _ in
-            run?.cancel()
-            _ = bridge // keep the listener alive for the whole roll
+            run?.value.cancel()
+            _ = bridge  // keep the listener alive for the whole roll
         }
         if run == nil {
             continuation.yield(.done(error: String(localized: "The cluster upgrade could not start.")))
             continuation.finish()
         }
-        return ClusterUpgradeHandle(events: stream, run: run)
+        return ClusterUpgradeHandle(events: stream, run: run?.value)
     }
 }
 
-private final class ClusterUpgradeBridge: NSObject, IchorgoClusterUpgradeListenerProtocol, @unchecked Sendable {
+private final class ClusterUpgradeBridge: NSObject, IchorgoClusterUpgradeListenerProtocol, Sendable {
     private let sink: JSONSink<ClusterUpgradeProgress>
 
     init(progress: @escaping @Sendable (ClusterUpgradeProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {

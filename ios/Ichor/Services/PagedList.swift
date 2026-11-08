@@ -13,7 +13,8 @@ import IchorCore
 @MainActor
 final class PagedList<T: Codable & Sendable> {
     /// One page of a scope's namespace (nil for every one), "" token for the first page.
-    typealias Fetch = @Sendable (_ client: TalosClient, _ namespace: String?, _ token: String) async throws -> KubePage<T>
+    typealias Fetch =
+        @Sendable (_ client: TalosClient, _ namespace: String?, _ token: String) async throws -> KubePage<T>
 
     private(set) var state: LoadState<PagedLoad<T>> = .loading
     /// The load in flight, for its progress bar; nil when none runs.
@@ -40,8 +41,10 @@ final class PagedList<T: Codable & Sendable> {
     /// Rows the first load reads before further pages wait for a scroll; nil for eagerLimit.
     private let eagerRows: Int?
 
-    init(base: String, persist: Bool = true, eagerRows: Int? = nil,
-         detailed: @escaping @Sendable ([T]) -> Bool = { _ in true }, fetch: @escaping Fetch) {
+    init(
+        base: String, persist: Bool = true, eagerRows: Int? = nil,
+        detailed: @escaping @Sendable ([T]) -> Bool = { _ in true }, fetch: @escaping Fetch
+    ) {
         self.base = base
         self.persist = persist
         self.eagerRows = eagerRows
@@ -127,7 +130,8 @@ final class PagedList<T: Codable & Sendable> {
     /// every page left with `all`.
     func loadMore(model: AppModel, all: Bool = false) {
         guard case .loaded(let start, let at, _) = state, start.hasMore, !loadingMore, progress == nil,
-              let client = model.client, let scope else { return }
+            let client = model.client, let scope
+        else { return }
         let mine = generation
         let key = kubeListKey(base, namespace: scope.namespace)
         let target = model.lastKnownTarget
@@ -165,10 +169,13 @@ final class PagedList<T: Codable & Sendable> {
     /// Keeps a complete list as the last known state, encoded off the main actor.
     private func keep(_ items: [T], key: String, target: LastKnownTarget?, model: AppModel) {
         guard persist, let target else { return }
-        Task.detached(priority: .utility) {
-            guard let data = try? JSONEncoder().encode(items) else { return }
-            let json = String(decoding: data, as: UTF8.self)
-            await model.remember(key: key, json: json, at: Date(), for: target)
+        Task(priority: .utility) {
+            let json = await offMainActor { () -> String? in
+                guard let data = try? JSONEncoder().encode(items) else { return nil }
+                return String(decoding: data, as: UTF8.self)
+            }
+            guard let json else { return }
+            model.remember(key: key, json: json, at: Date(), for: target)
         }
     }
 }

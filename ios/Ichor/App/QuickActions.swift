@@ -59,12 +59,35 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         configuration.delegateClass = QuickActionSceneDelegate.self
         return configuration
     }
+
+    /// iOS relaunched the app for the model download's background session (ModelDownloadSession).
+    func application(
+        _ application: UIApplication, handleEventsForBackgroundURLSession identifier: String,
+        completionHandler: @escaping () -> Void
+    ) {
+        guard identifier == ModelDownloadSession.identifier else {
+            completionHandler()
+            return
+        }
+        ModelDownloadSession.backgroundCompletion = completionHandler
+        _ = ModelDownloadSession.shared
+    }
+
+    /// iPhone: portrait, except while a wide screen holds landscape (OrientationLock); iPad: all.
+    @MainActor
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?)
+        -> UIInterfaceOrientationMask
+    {
+        OrientationLock.shared.mask
+    }
 }
 
 /// A quick action or share link launching the app (cold start) or brought to it while it runs.
 @MainActor
 final class QuickActionSceneDelegate: NSObject, UIWindowSceneDelegate {
-    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+    func scene(
+        _ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions
+    ) {
         if let item = connectionOptions.shortcutItem { open(item) }
         if let url = connectionOptions.urlContexts.first?.url { open(url) }
         // A Spotlight result launching the app.
@@ -98,6 +121,10 @@ final class QuickActionSceneDelegate: NSObject, UIWindowSceneDelegate {
         }
         if let kind = OperationKind(link: url) {
             NotificationRouter.shared.pendingOperation = kind
+            return
+        }
+        if isFleetLink(url) {
+            NotificationRouter.shared.pendingFleet = true
             return
         }
         guard url.scheme == "ichor", url.host == "open" else { return }

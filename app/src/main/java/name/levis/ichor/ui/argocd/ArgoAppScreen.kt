@@ -1,6 +1,11 @@
 package name.levis.ichor.ui.argocd
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import name.levis.ichor.ui.components.ClusterScreenTitle
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.share.PinButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,20 +20,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -62,6 +66,8 @@ import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.shortRevision
 import name.levis.ichor.model.waveSteps
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.uiStateOf
+import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.node.HostnameConfirmDialog
@@ -74,9 +80,13 @@ import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.gitops.GitOpsSourceSection
+import name.levis.ichor.ui.gitops.ProposalsCard
+import name.levis.ichor.ui.gitops.SOURCE_TOOL_ARGO
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
 import name.levis.ichor.ui.workloads.RolloutStatusSheet
+import name.levis.ichor.ui.workloads.rememberRolloutFollow
 import name.levis.ichor.ui.components.pageContent
 
 /**
@@ -95,6 +105,10 @@ fun ArgoAppScreen(
     onWindows: (() -> Unit)? = null,
     onDiff: (() -> Unit)? = null,
     initialSync: Boolean = false,
+    /** Opens the source browser on the app's source at that index. */
+    onSource: ((Int) -> Unit)? = null,
+    /** Opens the diff scrolled to one object ("kind/namespace/name"): a resource whose sync failed. */
+    onDiffOf: ((focus: String) -> Unit)? = null,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
     val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(talos.gitOpsRepository, talos.kubeRepository, freezeReminderHook(talos)) })
@@ -112,14 +126,16 @@ fun ArgoAppScreen(
     RolloutStatusSheet(vm.restarts)
     val app = (state as? UiState.Loaded)?.data?.apps?.firstOrNull { it.namespace == namespace && it.name == name }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
-                title = { Text(name) },
+            IchorTopAppBar(
+                title = { ClusterScreenTitle(name) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    PinButton(ShareTarget.argoApp(namespace, name), name)
                     ShareLinkButton(ShareTarget.argoApp(namespace, name))
+                    AddToHomeButton(ShareTarget.argoApp(namespace, name), name)
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
                 },
             )
@@ -139,7 +155,7 @@ fun ArgoAppScreen(
                         val network = NetworkContext(s.fetchedAt, downNodes, overview?.nodes.orEmpty(), onNode)
                         val project = s.data.projectOf(app)
                         val freeze = FreezeContext(s.data, project, vm.freezeBusy(busy, project), onWindows)
-                        AppDetail(app, downNodes, app.key in busy, vm, network, freeze, onDiff, initialSync)
+                        AppDetail(app, downNodes, app.key in busy, vm, network, freeze, onDiff, initialSync, onSource, onDiffOf)
                     }
                 }
                 DataFreshness(s, edgeToEdge = false)
@@ -158,6 +174,8 @@ private fun AppDetail(
     freeze: FreezeContext,
     onDiff: (() -> Unit)?,
     initialSync: Boolean,
+    onSource: ((Int) -> Unit)?,
+    onDiffOf: ((focus: String) -> Unit)?,
 ) {
     var selecting by rememberSaveable { mutableStateOf(false) }
     var freezeSheet by remember { mutableStateOf(false) }
@@ -168,7 +186,14 @@ private fun AppDetail(
     var rollback by remember { mutableStateOf<ArgoHistory?>(null) }
     var restart by remember { mutableStateOf<KubeWorkload?>(null) }
     val chosen = app.resources.filter { it.key in selected }
-    val act = { action: ArgoAction, options: ArgoSyncOptions? -> vm.act(listOf(app), action, options) }
+    val talos = LocalContext.current.applicationContext as TalosApp
+    val act = { action: ArgoAction, options: ArgoSyncOptions? ->
+        // A sync is followed app-wide once Argo CD has it: its notification shows the waves.
+        vm.act(listOf(app), action, options) {
+            if (action == ArgoAction.SYNC) runCatching { talos.gitOpsOperations.followArgoSync(app.namespace, app.name) }
+        }
+    }
+    val followRollout = rememberRolloutFollow()
     // Sync, refresh, auto-sync and rollback all patch the Application.
     val argoDenial = rememberKubeDenial(KubeAction.ARGO_SYNC, app.namespace)
     val denied = argoDenial != null
@@ -180,9 +205,15 @@ private fun AppDetail(
     }
 
     if (sheet) {
+        // Loaded once per opening, cancelled when the sheet closes; the sheet never waits for it.
+        val diff by produceState<UiState<FluxDiff>>(UiState.Loading, app.namespace, app.name) {
+            value = uiStateOf { talos.gitOpsRepository.argoDiff(app.namespace, app.name) }
+        }
         ArgoSyncSheet(
             app,
             resources = if (selecting) chosen else emptyList(),
+            diff = diff,
+            onFullDiff = onDiff?.let { open -> { sheet = false; open() } },
             onSync = { options ->
                 sheet = false
                 selecting = false
@@ -243,7 +274,7 @@ private fun AppDetail(
             val fresh = vm.restarts.current(w)
             if (restart?.key == w.key) restart = fresh
         }
-        RestartConfirmDialog(w, onConfirm = { restart = null; vm.restarts.restart(w) }, onDismiss = { restart = null })
+        RestartConfirmDialog(w, onConfirm = { restart = null; vm.restarts.restart(w, followRollout) }, onDismiss = { restart = null })
     }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -265,6 +296,13 @@ private fun AppDetail(
         if (onDiff != null) {
             item(key = "diff") { ArgoDiffButton(app, onDiff) }
         }
+        item(key = "source") {
+            GitOpsSourceSection(SOURCE_TOOL_ARGO, "Application", app.namespace, app.name, app.revision, onSource)
+        }
+        // The pull requests opened from the phone for it; a merged one not running yet syncs from here.
+        item(key = "proposals") {
+            ProposalsCard(talos.gitOpsRepository, SOURCE_TOOL_ARGO, "Application", app.namespace, app.name, refresh = app.revision, onReconcile = { sheet = true })
+        }
         item(key = "freeze") {
             ArgoFreezeCard(
                 app,
@@ -281,8 +319,12 @@ private fun AppDetail(
                 onWindows = freeze.onWindows,
             )
         }
-        if (app.conditions.isNotEmpty()) item(key = "conditions") { ConditionBanners(app.conditions) }
-        app.operation?.let { op -> item(key = "operation") { ArgoOperationCard(app, op, busy || denied) { terminate = true } } }
+        if (app.conditions.isNotEmpty()) item(key = "conditions") { ConditionBanners(app.conditions, onDiff) }
+        app.operation?.let { op ->
+            item(key = "operation") {
+                ArgoOperationCard(app, op, busy || denied, onCompare = onDiffOf?.let { open -> { f -> open("${f.kind}/${f.namespace}/${f.name}") } }) { terminate = true }
+            }
+        }
         item(key = "network") {
             ArgoNetworkSection(app, network.fetchedAt, network.downNodes, network.talosNodes, network.onNode)
         }
@@ -354,10 +396,10 @@ private fun WavesHeader(selecting: Boolean, count: Int, onSelecting: (Boolean) -
     Row(verticalAlignment = Alignment.CenterVertically) {
         SectionTitle(stringResource(R.string.argo_waves), Modifier.weight(1f))
         if (selecting) {
-            TextButton(onClick = { onSelecting(false) }) { Text(stringResource(R.string.common_cancel)) }
+            IchorTextButton(onClick = { onSelecting(false) }) { Text(stringResource(R.string.common_cancel)) }
             FilledTonalButton(onClick = onSyncSelected, enabled = enabled && count > 0) { Text(stringResource(R.string.argo_sync_selected, count)) }
         } else {
-            TextButton(onClick = { onSelecting(true) }, enabled = enabled) { Text(stringResource(R.string.argo_select)) }
+            IchorTextButton(onClick = { onSelecting(true) }, enabled = enabled) { Text(stringResource(R.string.argo_select)) }
         }
     }
 }

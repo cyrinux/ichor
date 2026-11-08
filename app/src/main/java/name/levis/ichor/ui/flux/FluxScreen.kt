@@ -2,6 +2,7 @@ package name.levis.ichor.ui.flux
 
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -10,12 +11,12 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -75,10 +76,10 @@ fun FluxScreen(onBack: () -> Unit, onApp: (kind: String, namespace: String, name
         FluxConfirmDialog(c, onConfirm = { confirm = null; vm.act(c.kind, c.namespace, c.name, c.action) }, onDismiss = { confirm = null })
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.flux_title))
@@ -88,6 +89,7 @@ fun FluxScreen(onBack: () -> Unit, onApp: (kind: String, namespace: String, name
                 navigationIcon = { BackButton(onBack) },
                 actions = {
                     ShareLinkButton(ShareTarget.screen(ShareTarget.FLUX))
+                    AddToHomeButton(ShareTarget.screen(ShareTarget.FLUX), stringResource(R.string.flux_title))
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
                 },
             )
@@ -109,7 +111,12 @@ fun FluxScreen(onBack: () -> Unit, onApp: (kind: String, namespace: String, name
                 PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
                     SwipeTabPager(TWO_TABS, tab, onSelect = { tab = it }) { page ->
                         if (page == 0) {
-                            FluxAppsTab(s.data, busy, onOpen = { onApp(it.kind, it.namespace, it.name) })
+                            FluxAppsTab(
+                                s.data,
+                                busy,
+                                onOpen = { onApp(it.kind, it.namespace, it.name) },
+                                onAct = { fluxApp, action -> confirm = FluxConfirm(action, fluxApp.kind, fluxApp.namespace, fluxApp.name, owner = fluxApp.ownerKey) },
+                            )
                         } else {
                             FluxSourcesTab(s.data, busy, onAct = { src, action -> confirm = FluxConfirm(action, src.kind, src.namespace, src.name) })
                         }

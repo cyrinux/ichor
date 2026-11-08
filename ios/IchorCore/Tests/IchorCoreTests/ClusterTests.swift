@@ -2,7 +2,8 @@ import XCTest
 @testable import IchorCore
 
 final class ClusterTests: XCTestCase {
-    private let three = ConfigSummary(current: "a", contexts: [ContextSummary(name: "a"), ContextSummary(name: "b"), ContextSummary(name: "c")])
+    private let three = ConfigSummary(
+        current: "a", contexts: [ContextSummary(name: "a"), ContextSummary(name: "b"), ContextSummary(name: "c")])
 
     func testAdjacentContextStopsAtBothEnds() {
         XCTAssertEqual(three.adjacentContext(to: "a", step: 1), "b")
@@ -22,7 +23,8 @@ final class ClusterTests: XCTestCase {
     }
 
     func testFingerprintDecodesAndDefaultsToEmpty() throws {
-        let json = #"{"current":"a","contexts":[{"name":"a","fingerprint":"abcdefgh","endpoints":["10.0.0.1"]},{"name":"b"}]}"#
+        let json =
+            #"{"current":"a","contexts":[{"name":"a","fingerprint":"abcdefgh","endpoints":["10.0.0.1"]},{"name":"b"}]}"#
         let summary = try JSONDecoder().decode(ConfigSummary.self, from: Data(json.utf8))
         XCTAssertEqual(summary.contexts.map(\.fingerprint), ["abcdefgh", ""])
     }
@@ -32,7 +34,9 @@ final class ClusterTests: XCTestCase {
         XCTAssertEqual(fresh["a"], defaultClusterSeed)
         XCTAssertEqual(Set(fresh.values).count, 3)
 
-        let kept = assignClusterColors(saved: ["b": defaultClusterSeed, "c": 0x123456, "gone": clusterSeeds[2]], fingerprints: ["a", "", "b", "c", "a"])
+        let kept = assignClusterColors(
+            saved: ["b": defaultClusterSeed, "c": 0x123456, "gone": clusterSeeds[2]],
+            fingerprints: ["a", "", "b", "c", "a"])
         XCTAssertEqual(kept, ["a": clusterSeeds[1], "b": defaultClusterSeed, "c": 0x123456])
 
         let many = (0..<clusterSeeds.count + 2).map { "c\($0)" }

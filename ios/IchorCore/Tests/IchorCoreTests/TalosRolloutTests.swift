@@ -4,10 +4,13 @@ import XCTest
 final class TalosRolloutTests: XCTestCase {
     private let latest = "v1.14.2"
 
-    private func node(_ name: String, _ version: String = "v1.14.1", cp: Bool = false, reachable: Bool = true,
-                      ready: Bool = true) -> NodeOverview {
-        NodeOverview(node: name, hostname: name, reachable: reachable, version: version,
-                     role: cp ? "controlplane" : "worker", ready: reachable && ready)
+    private func node(
+        _ name: String, _ version: String = "v1.14.1", cp: Bool = false, reachable: Bool = true,
+        ready: Bool = true
+    ) -> NodeOverview {
+        NodeOverview(
+            node: name, hostname: name, reachable: reachable, version: version,
+            role: cp ? "controlplane" : "worker", ready: reachable && ready)
     }
 
     /// The cluster with `name` replaced by another state of that node.
@@ -64,8 +67,9 @@ final class TalosRolloutTests: XCTestCase {
         XCTAssertFalse(plan.canOpen(plan.next!))
 
         let rebooted = cluster(node("cp1", cp: true, reachable: false))
-        let waiting = TalosRollout(nodes: rebooted, latest: latest, run: RolloutRun(node: "cp1", waiting: true),
-                                   etcd: EtcdHealth(healthy: 2, members: 3))
+        let waiting = TalosRollout(
+            nodes: rebooted, latest: latest, run: RolloutRun(node: "cp1", waiting: true),
+            etcd: EtcdHealth(healthy: 2, members: 3))
         XCTAssertEqual(row(waiting, "cp1").state, .waitingHealthy)
         XCTAssertEqual(waiting.hold, .upgrading(row(waiting, "cp1").node, waiting: true))
         XCTAssertEqual(waiting.etcd, EtcdHealth(healthy: 2, members: 3))
@@ -80,21 +84,24 @@ final class TalosRolloutTests: XCTestCase {
         XCTAssertFalse(plan.canOpen(row(plan, "cp2")))
 
         // The run ended well, the overview still shows the old version: not pending again.
-        let stale = TalosRollout(nodes: cluster(), latest: latest,
-                                 run: RolloutRun(node: "cp1", waiting: true, finished: true, reached: latest))
+        let stale = TalosRollout(
+            nodes: cluster(), latest: latest,
+            run: RolloutRun(node: "cp1", waiting: true, finished: true, reached: latest))
         XCTAssertEqual(row(stale, "cp1").state, .waitingHealthy)
         XCTAssertEqual(stale.hold, .upgrading(row(stale, "cp1").node, waiting: true))
 
         // A finished run that did not bring the node to latest (staged, another target) holds nothing.
         for reached in ["", "v1.14.1"] {
-            let other = TalosRollout(nodes: cluster(), latest: latest, run: RolloutRun(node: "cp1", finished: true, reached: reached))
+            let other = TalosRollout(
+                nodes: cluster(), latest: latest, run: RolloutRun(node: "cp1", finished: true, reached: reached))
             XCTAssertEqual(row(other, "cp1").state, .pending)
             XCTAssertNil(other.hold)
         }
     }
 
     func testFailedNodeIsRetriedFirst() {
-        let plan = TalosRollout(nodes: cluster(), latest: latest, run: RolloutRun(node: "cp2", finished: true, failed: true))
+        let plan = TalosRollout(
+            nodes: cluster(), latest: latest, run: RolloutRun(node: "cp2", finished: true, failed: true))
         XCTAssertEqual(row(plan, "cp2").state, .failed)
         XCTAssertNil(plan.hold)
         XCTAssertEqual(plan.next?.node.hostname, "cp2")
@@ -127,7 +134,8 @@ final class TalosRolloutTests: XCTestCase {
 
     func testWaitsForNodeOnceItRebooted() {
         XCTAssertFalse(upgradeWaitsForNode([UpgradeProgress(phase: "requested"), UpgradeProgress(phase: "rebooting")]))
-        XCTAssertTrue(upgradeWaitsForNode([UpgradeProgress(phase: "rebooting"), UpgradeProgress(phase: "waiting for node")]))
+        XCTAssertTrue(
+            upgradeWaitsForNode([UpgradeProgress(phase: "rebooting"), UpgradeProgress(phase: "waiting for node")]))
         XCTAssertTrue(upgradeWaitsForNode([UpgradeProgress(phase: "booted")]))
         XCTAssertFalse(upgradeWaitsForNode([]))
     }
@@ -136,20 +144,27 @@ final class TalosRolloutTests: XCTestCase {
         func status(_ node: String, member: String, error: String? = nil, errors: [String] = []) -> String {
             let failure = error.map { #""error":"\#($0)","# } ?? ""
             let list = errors.map { #""\#($0)""# }.joined(separator: ",")
-            return #"{"node":"\#(node)",\#(failure)"memberId":"\#(member)","isLeader":false,"isLearner":false,"dbSize":0,"dbSizeInUse":0,"raftIndex":0,"raftTerm":0,"version":"3.5.0","errors":[\#(list)]}"#
+            return
+                #"{"node":"\#(node)",\#(failure)"memberId":"\#(member)","isLeader":false,"isLearner":false,"dbSize":0,"dbSizeInUse":0,"raftIndex":0,"raftTerm":0,"version":"3.5.0","errors":[\#(list)]}"#
         }
-        let members = ["a", "b", "c"].map { #"{"id":"\#($0)","hostname":"cp-\#($0)","peerUrls":[],"clientUrls":[],"isLearner":false}"# }
+        let members = ["a", "b", "c"].map {
+            #"{"id":"\#($0)","hostname":"cp-\#($0)","peerUrls":[],"clientUrls":[],"isLearner":false}"#
+        }
         let statuses = [
             status("1", member: "a"),
             status("2", member: "b", errors: ["etcdserver: no leader"]),
             status("3", member: "", error: "unreachable"),
         ]
-        let etcd = try TalosJSON.decode(EtcdOverview.self, from: """
-        {"leaderId":"a","members":[\(members.joined(separator: ","))],"statuses":[\(statuses.joined(separator: ","))],"alarms":[]}
-        """)
+        let etcd = try TalosJSON.decode(
+            EtcdOverview.self,
+            from: """
+                {"leaderId":"a","members":[\(members.joined(separator: ","))],"statuses":[\(statuses.joined(separator: ","))],"alarms":[]}
+                """)
         XCTAssertEqual(etcd.health, EtcdHealth(healthy: 1, members: 3))
         XCTAssertTrue(EtcdHealth(healthy: 1, members: 3).degraded)
-        let failed = try TalosJSON.decode(EtcdOverview.self, from: #"{"error":"no control plane answered","leaderId":"","members":[],"statuses":[],"alarms":[]}"#)
+        let failed = try TalosJSON.decode(
+            EtcdOverview.self,
+            from: #"{"error":"no control plane answered","leaderId":"","members":[],"statuses":[],"alarms":[]}"#)
         XCTAssertNil(failed.health)
     }
 }

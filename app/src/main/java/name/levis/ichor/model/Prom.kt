@@ -125,5 +125,19 @@ fun PromSeries.legend(template: String): String {
     return LEGEND_LABEL.replace(template) { labels[it.groupValues[1]].orEmpty() }.trim().ifEmpty { name }
 }
 
+/**
+ * Each series' name in a chart. One without a usable name ("{}", an aggregate without labels)
+ * gets [title] when it is alone, else its entry in [numbered] (its position in the result).
+ */
+fun List<PromSeries>.chartLabels(template: String, title: String, numbered: List<String>): List<String> =
+    mapIndexed { i, series ->
+        val legend = series.legend(template)
+        when {
+            legend.isNotBlank() && legend != "{}" -> legend
+            size == 1 -> title
+            else -> numbered[i]
+        }
+    }
+
 /** The last value that is not a gap, or null. */
 fun PromSeries.latest(): Double? = values.lastOrNull { it != null }

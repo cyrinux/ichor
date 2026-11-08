@@ -127,11 +127,16 @@ public struct ResourceTypeGroup: Equatable, Identifiable, Sendable {
 /// grouped by namespace, namespaces and types sorted by name.
 public func groupResourceTypes(_ types: [ResourceType], query: String = "") -> [ResourceTypeGroup] {
     let needle = query.trimmingCharacters(in: .whitespaces).lowercased()
-    let shown = needle.isEmpty ? types : types.filter { type in
-        type.type.lowercased().contains(needle) || type.aliases.contains { $0.lowercased().contains(needle) }
-    }
+    let shown =
+        needle.isEmpty
+        ? types
+        : types.filter { type in
+            type.type.lowercased().contains(needle) || type.aliases.contains { $0.lowercased().contains(needle) }
+        }
     return Dictionary(grouping: shown, by: \.namespace)
-        .map { ResourceTypeGroup(namespace: $0.key, types: $0.value.sorted { $0.type.lowercased() < $1.type.lowercased() }) }
+        .map {
+            ResourceTypeGroup(namespace: $0.key, types: $0.value.sorted { $0.type.lowercased() < $1.type.lowercased() })
+        }
         .sorted { $0.namespace < $1.namespace }
 }
 

@@ -1,0 +1,16 @@
+{"kind":"NodeClaimList","apiVersion":"karpenter.sh/v1","metadata":{},"items":[
+{"metadata":{"name":"general-4mq9d","creationTimestamp":"2026-09-30T10:00:00Z",
+  "labels":{"karpenter.sh/nodepool":"general","karpenter.sh/capacity-type":"spot","node.kubernetes.io/instance-type":"m7g.2xlarge"}},
+ "status":{"nodeName":"node-10-0-12-7","conditions":[
+  {"type":"Launched","status":"True"},{"type":"Registered","status":"True"},{"type":"Initialized","status":"True"},
+  {"type":"Ready","status":"True"},{"type":"Drifted","status":"True","reason":"NodePoolDrifted"}]}},
+{"metadata":{"name":"general-x7k2p","creationTimestamp":"2026-10-01T09:00:00Z",
+  "labels":{"karpenter.sh/nodepool":"general","karpenter.sh/capacity-type":"spot","node.kubernetes.io/instance-type":"m7g.2xlarge"}},
+ "status":{"conditions":[
+  {"type":"Launched","status":"True"},{"type":"Registered","status":"Unknown","reason":"AwaitingReconciliation","message":"Node not registered with cluster"},
+  {"type":"Ready","status":"Unknown"}]}},
+{"metadata":{"name":"gpu-s2v8w","creationTimestamp":"2026-09-29T08:00:00Z",
+  "labels":{"karpenter.sh/nodepool":"gpu","karpenter.sh/capacity-type":"on-demand","node.kubernetes.io/instance-type":"g6.2xlarge"}},
+ "status":{"nodeName":"node-10-0-40-3","conditions":[
+  {"type":"Launched","status":"True"},{"type":"Registered","status":"True"},{"type":"Initialized","status":"True"},{"type":"Ready","status":"True"}]}}
+]}

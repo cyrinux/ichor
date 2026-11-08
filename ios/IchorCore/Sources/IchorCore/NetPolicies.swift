@@ -54,7 +54,10 @@ public struct NetPolicyReport: Decodable, Equatable, Sendable {
     /// A kind that could not be read, "" otherwise.
     public let error: String
 
-    public init(cilium: Bool = false, calico: Bool = false, policies: [NetPolicy] = [], namespaces: [NetPolicyNamespace] = [], error: String = "") {
+    public init(
+        cilium: Bool = false, calico: Bool = false, policies: [NetPolicy] = [], namespaces: [NetPolicyNamespace] = [],
+        error: String = ""
+    ) {
         self.cilium = cilium
         self.calico = calico
         self.policies = policies
@@ -183,10 +186,13 @@ public struct NetPolicy: Decodable, Equatable, Identifiable, Sendable {
     public var ref: NetPolicyRef { NetPolicyRef(kind: kindName, namespace: namespace, name: name) }
     public var clusterWide: Bool { namespace.isEmpty }
 
-    public init(kind: NetPolicyKind, namespace: String = "", name: String, created: Int64 = 0, subject: String = "",
-                subjectNamespace: String = "", nodes: Bool = false, description: String = "", tier: String = "", order: Double? = nil,
-                ingress: Bool = false, egress: Bool = false, ingressRules: [NetRule] = [], egressRules: [NetRule] = [],
-                pods: [String] = [], podCount: Int = 0) {
+    public init(
+        kind: NetPolicyKind, namespace: String = "", name: String, created: Int64 = 0, subject: String = "",
+        subjectNamespace: String = "", nodes: Bool = false, description: String = "", tier: String = "",
+        order: Double? = nil,
+        ingress: Bool = false, egress: Bool = false, ingressRules: [NetRule] = [], egressRules: [NetRule] = [],
+        pods: [String] = [], podCount: Int = 0
+    ) {
         self.kind = kind
         kindName = kind.rawValue
         self.namespace = namespace
@@ -303,7 +309,10 @@ public struct NetRule: Decodable, Equatable, Sendable {
     /// "HTTP GET /api", "DNS *".
     public let l7: [String]
 
-    public init(deny: Bool = false, action: NetRuleAction = .allow, peers: [NetPeer] = [], ports: [NetPort] = [], l7: [String] = []) {
+    public init(
+        deny: Bool = false, action: NetRuleAction = .allow, peers: [NetPeer] = [], ports: [NetPort] = [],
+        l7: [String] = []
+    ) {
         self.deny = deny
         self.action = deny ? .deny : action
         self.peers = peers
@@ -349,8 +358,10 @@ public struct NetPeer: Decodable, Equatable, Sendable {
     public let value: String
     public let except: [String]
 
-    public init(kind: NetPeerKind, namespace: String = "", namespaceSelector: String = "", selector: String = "",
-                value: String = "", except: [String] = []) {
+    public init(
+        kind: NetPeerKind, namespace: String = "", namespaceSelector: String = "", selector: String = "",
+        value: String = "", except: [String] = []
+    ) {
         self.kind = kind
         self.namespace = namespace
         self.namespaceSelector = namespaceSelector
@@ -460,14 +471,16 @@ public extension NetPolicyReport {
         let q = query.trimmingCharacters(in: .whitespaces)
         let kept = policies.filter { p in
             (namespace == nil || p.namespace == namespace || p.clusterWide)
-                && (q.isEmpty || [p.name, p.subject, p.namespace, p.description, p.kindName, p.kind.short, p.kind.family]
-                    .contains { $0.localizedCaseInsensitiveContains(q) })
+                && (q.isEmpty
+                    || [p.name, p.subject, p.namespace, p.description, p.kindName, p.kind.short, p.kind.family]
+                        .contains { $0.localizedCaseInsensitiveContains(q) })
         }
         let grouped = Dictionary(grouping: kept) { $0.namespace }
         let named = grouped.keys.filter { !$0.isEmpty }.sorted().map { ns in
             NetPolicySection(namespace: ns, policies: grouped[ns, default: []].sorted { $0.name < $1.name })
         }
-        let clusterWide = grouped[""].map { [NetPolicySection(namespace: nil, policies: $0.sorted { $0.name < $1.name })] } ?? []
+        let clusterWide =
+            grouped[""].map { [NetPolicySection(namespace: nil, policies: $0.sorted { $0.name < $1.name })] } ?? []
         return named + clusterWide
     }
 }

@@ -1,0 +1,9 @@
+{
+  "uniqueId": "llama.cpp",
+  "artifactVersion": "b11550",
+  "name": "llama.cpp",
+  "description": "Runs the AI model on the phone (Settings, AI diagnosis, This phone); built into libichorllm.so.",
+  "website": "https://github.com/ggml-org/llama.cpp",
+  "organization": { "name": "The ggml authors", "url": "https://github.com/ggml-org" },
+  "licenses": ["MIT"]
+}

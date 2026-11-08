@@ -64,7 +64,7 @@ func isDemoServer(cluster *kubeStoreCluster) bool {
 // isKubeDemoContext reports whether the named context ("" for the current one) of the
 // kubeconfig yaml is the Kubernetes demo.
 func isKubeDemoContext(yaml, name string) bool {
-	if !strings.Contains(yaml, demoEndpoint) || !isKubeconfig(yaml) {
+	if !mentionsDemo(yaml) || !isKubeconfig(yaml) {
 		return false
 	}
 

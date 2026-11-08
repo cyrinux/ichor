@@ -46,7 +46,7 @@ import kotlinx.coroutines.launch
  * required, losing every key leaves wiping as the only way out too.
  */
 @Composable
-fun LockScreen(onUnlocked: () -> Unit, onWipe: () -> Unit, securityKeys: SecurityKeyEnrolment? = null) {
+fun LockScreen(onUnlocked: () -> Unit, onWipe: () -> Unit, securityKeys: SecurityKeyEnrolment? = null, onBack: (() -> Unit)? = null) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var error by remember { mutableStateOf<String?>(null) }
@@ -65,7 +65,7 @@ fun LockScreen(onUnlocked: () -> Unit, onWipe: () -> Unit, securityKeys: Securit
 
     LaunchedEffect(Unit) { if (available) prompt() }
     // Back must not reach the (hidden) screens underneath.
-    BackHandler { context.findFragmentActivity()?.moveTaskToBack(true) }
+    BackHandler { onBack?.invoke() ?: context.findFragmentActivity()?.moveTaskToBack(true) }
 
     Surface(Modifier.fillMaxSize()) {
         Column(

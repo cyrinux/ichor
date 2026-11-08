@@ -19,16 +19,24 @@ final class OperationActivityTests: XCTestCase {
         XCTAssertEqual(OperationButton.offered(for: .upgrade), [.stopFollowing])
         XCTAssertEqual(OperationButton.offered(for: .imagePull), [.stop])
         XCTAssertEqual(OperationButton.offered(for: .maintenance, stopping: true), [])
+        XCTAssertEqual(OperationButton.offered(for: .argoSync), [.terminate])
+        XCTAssertEqual(OperationButton.offered(for: .fluxReconcile), [.stopFollowing])
+        XCTAssertEqual(OperationButton.offered(for: .rollout), [.stopFollowing])
+        XCTAssertEqual(OperationButton.offered(for: .netPerf), [.stop])
+        XCTAssertEqual(OperationButton.offered(for: .podSweep), [.stop])
+        XCTAssertEqual(OperationButton.offered(for: .podSweep, stopping: true), [])
+        XCTAssertEqual(OperationButton.offered(for: .argoSync, stopping: true), [])
     }
 
     func testStopAbortAndKeepOpenTheAppWhenLocked() {
-        XCTAssertEqual(OperationButton.allCases.filter(\.opensAppWhenLocked), [.stop, .abort, .keep])
+        XCTAssertEqual(OperationButton.allCases.filter(\.opensAppWhenLocked), [.stop, .abort, .keep, .terminate])
         XCTAssertTrue(OperationButton.stop.opensApp(for: .maintenance, locked: true))
         XCTAssertFalse(OperationButton.stop.opensApp(for: .maintenance, locked: false))
         XCTAssertFalse(OperationButton.pause.opensApp(for: .clusterUpgrade, locked: true))
         // No screen to open: the button stays a button.
         XCTAssertFalse(OperationButton.stop.opensApp(for: .imagePull, locked: true))
-        XCTAssertEqual(OperationKind.allCases.filter { !$0.hasScreen }, [.configMulti, .imagePull, .imageScan])
+        XCTAssertEqual(
+            OperationKind.allCases.filter { !$0.hasScreen }, [.configMulti, .imagePull, .imageScan, .podSweep])
     }
 
     func testABarOnlyWhereTheCoreCounts() {
@@ -53,7 +61,8 @@ final class OperationActivityTests: XCTestCase {
     }
 
     func testAnEndedRunHasNoButtons() {
-        let done = OperationContent(title: "Upgrading v1.11.0", step: "Every node runs v1.11.0", phase: .succeeded, buttons: [.pause, .abort])
+        let done = OperationContent(
+            title: "Upgrading v1.11.0", step: "Every node runs v1.11.0", phase: .succeeded, buttons: [.pause, .abort])
         XCTAssertEqual(done.buttons, [])
         XCTAssertTrue(OperationPhase.stopped.ended)
         XCTAssertFalse(OperationPhase.paused.ended)
@@ -61,7 +70,9 @@ final class OperationActivityTests: XCTestCase {
 
     func testTheLockedContentNamesNothing() {
         let deadline = Date(timeIntervalSince1970: 1_000)
-        let content = OperationContent(title: "Trying a config change on cp-1", step: "Reverts at 10:42", deadline: deadline, buttons: [.keep, .revert])
+        let content = OperationContent(
+            title: "Trying a config change on cp-1", step: "Reverts at 10:42", deadline: deadline,
+            buttons: [.keep, .revert])
         let masked = content.masked(title: "Config try")
         XCTAssertEqual(masked.title, "Config try")
         XCTAssertEqual(masked.step, "")

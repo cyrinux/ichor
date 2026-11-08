@@ -121,9 +121,42 @@ public struct JoinRequest: Equatable, Sendable {
     public let staticAddress: String
     /// The new node replaces a member discovery still lists under `hostname` (a dead node).
     public let replacing: Bool
+    /// A server to create at Hetzner for the node, with the config as its user data (`address` unused).
+    public let hetzner: HetznerCreateSpec?
+    /// An instance to create at OVHcloud for the node, likewise.
+    public let ovh: OVHCreateSpec?
+    /// An instance to create at AWS EC2 for the node, likewise.
+    public let aws: AWSCreateSpec?
+    /// A VM to create at Azure for the node, likewise.
+    public let azure: AzureCreateSpec?
+    /// A Compute Engine VM to create at Google Cloud for the node, likewise.
+    public let gcp: GCPCreateSpec?
+    /// The cloud machine joins Omni, not the cluster directly.
+    public let omni: Bool
+    /// No node at all: a throwaway server becomes a Talos snapshot (`hostname` only labels the run).
+    public let snapshot: HetznerSnapshotSpec?
+    /// No node either: a throwaway AWS instance becomes a Talos AMI (`hostname` only labels the run).
+    public let awsImage: AWSImageSpec?
+    /// No node either: a throwaway Azure VM's data disk becomes a Talos managed image.
+    public let azureImage: AzureImageSpec?
+    /// No node either: a throwaway Compute Engine VM's data disk becomes a Talos image.
+    public let gcpImage: GCPImageSpec?
+    /// A machine of Omni to put in the cluster (`hostname` and `role` are the machine's and the set's).
+    public let omniAllocate: OmniAllocateSpec?
 
-    public init(address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
-                replacing: Bool = false) {
+    public init(
+        address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
+        replacing: Bool = false, hetzner: HetznerCreateSpec? = nil, ovh: OVHCreateSpec? = nil,
+        aws: AWSCreateSpec? = nil, azure: AzureCreateSpec? = nil,
+        gcp: GCPCreateSpec? = nil, omni: Bool = false,
+        snapshot: HetznerSnapshotSpec? = nil, awsImage: AWSImageSpec? = nil, azureImage: AzureImageSpec? = nil,
+        gcpImage: GCPImageSpec? = nil, omniAllocate: OmniAllocateSpec? = nil
+    ) {
+        self.omniAllocate = omniAllocate
+        self.awsImage = awsImage
+        self.azureImage = azureImage
+        self.gcpImage = gcpImage
+        self.snapshot = snapshot
         self.address = address
         self.template = template
         self.role = role
@@ -131,12 +164,71 @@ public struct JoinRequest: Equatable, Sendable {
         self.disk = disk
         self.staticAddress = staticAddress
         self.replacing = replacing
+        self.hetzner = hetzner
+        self.ovh = ovh
+        self.aws = aws
+        self.azure = azure
+        self.gcp = gcp
+        self.omni = omni
     }
+
+    /// The steps of this run's timeline.
+    public var phases: [JoinPhase] {
+        if omniAllocate != nil { return JoinPhase.omniAllocateRun }
+        if let imageKind { return imageKind.phases }
+        guard cloud else { return JoinPhase.maintenanceRun }
+        return omni ? JoinPhase.cloudOmniRun : JoinPhase.cloudRun
+    }
+
+    /// A machine to create at a cloud provider.
+    public var cloud: Bool { hetzner != nil || ovh != nil || aws != nil || azure != nil || gcp != nil }
+
+    /// What the run makes when it makes a Talos image instead of a node; nil for a node.
+    public var imageKind: ImageRunKind? {
+        if snapshot != nil { return .hetznerSnapshot }
+        if awsImage != nil { return .awsAMI }
+        if azureImage != nil { return .azureImage }
+        if gcpImage != nil { return .gcpImage }
+        return nil
+    }
+
+    /// No node at all: the run makes a Talos image (a Hetzner snapshot, an AWS AMI, an Azure or a
+    /// Compute Engine image).
+    public var imageRun: Bool { imageKind != nil }
 
     /// The same request, replacing (or not) the member already named `hostname`.
     public func withReplacing(_ on: Bool) -> JoinRequest {
-        JoinRequest(address: address, template: template, role: role, hostname: hostname, disk: disk,
-                    staticAddress: staticAddress, replacing: on)
+        JoinRequest(
+            address: address, template: template, role: role, hostname: hostname, disk: disk,
+            staticAddress: staticAddress, replacing: on, hetzner: hetzner, ovh: ovh, aws: aws, azure: azure, gcp: gcp,
+            omni: omni, snapshot: snapshot, awsImage: awsImage, azureImage: azureImage, gcpImage: gcpImage,
+            omniAllocate: omniAllocate)
+    }
+}
+
+/// What a run with no node makes: a Talos image at a cloud provider, with that run's steps.
+public enum ImageRunKind: Sendable {
+    case hetznerSnapshot, awsAMI, azureImage, gcpImage
+
+    public var phases: [JoinPhase] {
+        switch self {
+        case .hetznerSnapshot: JoinPhase.snapshotRun
+        case .awsAMI: JoinPhase.awsImageRun
+        case .azureImage: JoinPhase.imageRun
+        case .gcpImage: JoinPhase.gcpImageRun
+        }
+    }
+}
+
+/// An image an image run made (an AMI, an Azure managed image, a Compute Engine image): its id to
+/// pick it, its name to say so.
+public struct MadeImage: Equatable, Sendable {
+    public let id: String
+    public let name: String
+
+    public init(id: String, name: String) {
+        self.id = id
+        self.name = name
     }
 }
 
@@ -167,7 +259,29 @@ public struct JoinProgress: Decodable, Equatable, Sendable {
 
 /// Phases of a node join, in order.
 public enum JoinPhase: String, CaseIterable, Comparable, Sendable {
-    case applying, installing, rebooting, booted, joining, registering, done
+    case key, creating, starting, applying, allocated, installing, booting, rebooting, booted, joining, omni
+    case registering, rescue, writing, snapshot, register, cleanup, done
+
+    /// A node in maintenance mode that gets its config from the app.
+    public static let maintenanceRun: [JoinPhase] = [
+        .applying, .installing, .rebooting, .booted, .joining, .registering, .done,
+    ]
+    /// A server created with the config as its user data.
+    public static let cloudRun: [JoinPhase] = [
+        .creating, .starting, .rebooting, .booted, .joining, .registering, .done,
+    ]
+    /// A server created with Omni's join config.
+    public static let cloudOmniRun: [JoinPhase] = [.creating, .starting, .omni, .done]
+    /// A throwaway server that becomes a Talos snapshot.
+    public static let snapshotRun: [JoinPhase] = [.key, .creating, .rescue, .writing, .snapshot, .cleanup, .done]
+    /// A throwaway AWS instance whose volume becomes a Talos AMI.
+    public static let awsImageRun: [JoinPhase] = [.creating, .writing, .snapshot, .register, .cleanup, .done]
+    /// A throwaway helper VM whose data disk becomes a Talos image (Azure's managed image).
+    public static let imageRun: [JoinPhase] = [.creating, .writing, .snapshot, .cleanup, .done]
+    /// A throwaway Compute Engine VM whose data disk becomes a Talos image: no snapshot in between.
+    public static let gcpImageRun: [JoinPhase] = [.creating, .writing, .register, .cleanup, .done]
+    /// A machine put in a cluster through Omni.
+    public static let omniAllocateRun: [JoinPhase] = [.allocated, .installing, .booting, .done]
 
     public static func < (a: Self, b: Self) -> Bool {
         allCases.firstIndex(of: a)! < allCases.firstIndex(of: b)!
@@ -179,7 +293,12 @@ public typealias JoinStep = TimelineStep<JoinPhase>
 
 /// Timeline of the join from the events so far, like maintenanceTimeline: phases only move
 /// forward, `finished` marks them all done, `failure` marks the furthest one failed.
-public func joinTimeline(_ events: [JoinProgress], finished: Bool = false, failure: String? = nil) -> [JoinStep] {
-    foldTimeline(events, phases: JoinPhase.allCases, finished: finished, failure: failure,
-                 phase: { JoinPhase(rawValue: $0.phase) }, at: \.at, message: \.message)
+public func joinTimeline(
+    _ events: [JoinProgress], finished: Bool = false, failure: String? = nil,
+    phases: [JoinPhase] = JoinPhase.maintenanceRun
+) -> [JoinStep] {
+    foldTimeline(
+        events, phases: phases, finished: finished, failure: failure,
+        phase: { event in JoinPhase(rawValue: event.phase).flatMap { phases.contains($0) ? $0 : nil } },
+        at: \.at, message: \.message)
 }

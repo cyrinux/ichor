@@ -1,0 +1,124 @@
+{
+  "nodes": [
+    {
+      "broken": 0,
+      "down": 0,
+      "enabled": true,
+      "node": "192.0.2.10",
+      "peers": [
+        {
+          "broken": false,
+          "endpoint": "192.0.2.11:51820",
+          "label": "demo-cp-2",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-cp-2",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        },
+        {
+          "broken": false,
+          "endpoint": "198.51.100.20:51820",
+          "label": "demo-cp-3",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-cp-3",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        },
+        {
+          "broken": false,
+          "endpoint": "192.0.2.20:51820",
+          "label": "demo-worker-1",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-worker-1",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        }
+      ],
+      "unknown": 0,
+      "up": 4
+    },
+    {
+      "broken": 0,
+      "down": 0,
+      "enabled": true,
+      "node": "192.0.2.11",
+      "peers": [
+        {
+          "broken": false,
+          "endpoint": "192.0.2.10:51820",
+          "label": "demo-cp-1",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-cp-1",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        },
+        {
+          "broken": false,
+          "endpoint": "198.51.100.20:51820",
+          "label": "demo-cp-3",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-cp-3",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        },
+        {
+          "broken": false,
+          "endpoint": "192.0.2.20:51820",
+          "label": "demo-worker-1",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-worker-1",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        }
+      ],
+      "unknown": 0,
+      "up": 4
+    },
+    {
+      "broken": 0,
+      "down": 0,
+      "enabled": true,
+      "node": "192.0.2.12",
+      "peers": [
+        {
+          "broken": false,
+          "endpoint": "198.51.100.10:51820",
+          "label": "demo-cp-1",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-cp-1",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        },
+        {
+          "broken": false,
+          "endpoint": "198.51.100.10:51820",
+          "label": "demo-cp-2",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-cp-2",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        },
+        {
+          "broken": false,
+          "endpoint": "198.51.100.10:51820",
+          "label": "demo-worker-1",
+          "lastHandshake": 1767323045,
+          "publicKey": "demo-demo-worker-1",
+          "rx": 1048576,
+          "state": "up",
+          "tx": 524288
+        }
+      ],
+      "unknown": 0,
+      "up": 4
+    }
+  ]
+}

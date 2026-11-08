@@ -88,6 +88,20 @@ fun upgradeAcknowledged(risks: List<String>, understood: Boolean): Boolean = ris
 fun releaseSuggestions(releases: List<TalosRelease>, includePrerelease: Boolean = true): List<TalosRelease> =
     releases.filter { includePrerelease || !it.prerelease }.sortedBy { it.prerelease }
 
+/** The picker's chips: [versions], how many releases are [hidden], and whether the selection is no release at all. */
+data class OfferedVersions(val versions: List<String>, val hidden: Int, val selectedUnlisted: Boolean)
+
+/**
+ * The first [max] [releases] in their order (or all with [showAll]), always with [selected]: at
+ * its place when it is a release beyond the cutoff, last when it is none.
+ */
+fun offeredVersions(releases: List<String>, selected: String, showAll: Boolean, max: Int = 6): OfferedVersions {
+    val listed = releases.filter { it.isNotEmpty() }.distinct()
+    val kept = if (showAll) listed else listed.filterIndexed { i, v -> i < max || v == selected }
+    val unlisted = selected.isNotEmpty() && selected !in listed
+    return OfferedVersions(if (unlisted) kept + selected else kept, listed.size - kept.size, unlisted)
+}
+
 enum class StepStatus { DONE, CURRENT, PENDING, FAILED }
 
 data class TimelineStep(val phase: UpgradePhase, val status: StepStatus, val at: Long = 0, val message: String = "")

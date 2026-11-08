@@ -6,9 +6,11 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"sync"
 )
 
@@ -32,35 +34,84 @@ var nodeNames struct {
 	sync.Mutex
 	dir  string
 	aead cipher.AEAD
+	// reason is why the last SetDataDir left the store off ("" when it is on).
+	reason string
 }
 
 // dataKeySize is the length of the key SetDataDir takes: AES-256.
 const dataKeySize = 32
 
+var (
+	errDataDirEmpty = errors.New("no data directory")
+	errDataKeySize  = errors.New("data key must be 32 bytes")
+)
+
 // SetDataDir sets the private directory where the core keeps what it remembers across
 // launches (node names, the action audit log), and the 32-byte key that encrypts it (AES-256-GCM), which the app
 // keeps in its Keystore or Keychain. Call it once at startup, before any other call; until
-// then, or with an empty directory or a key of another size, nothing is remembered.
-func SetDataDir(dir string, key []byte) {
+// then, or with an empty directory or a key of another size, nothing is remembered, and the
+// error says why (DataStoreStatus keeps it for the Support screen).
+func SetDataDir(dir string, key []byte) (err error) {
+	defer maskErr(&err)
+	// After the unlock below: the diagnostics ring moves to the new directory.
+	defer func() { diagDataDirChanged(dataDir()) }()
+
 	nodeNames.Lock()
 	defer nodeNames.Unlock()
 
 	nodeNames.dir, nodeNames.aead = "", nil
-	if dir == "" || len(key) != dataKeySize {
-		return
+
+	defer func() {
+		nodeNames.reason = ""
+		if err != nil {
+			nodeNames.reason = err.Error()
+		}
+	}()
+
+	switch {
+	case dir == "":
+		return errDataDirEmpty
+	case len(key) != dataKeySize:
+		return fmt.Errorf("%w, got %d", errDataKeySize, len(key))
 	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return
+		return fmt.Errorf("data key: %w", err)
 	}
 
 	aead, err := cipher.NewGCM(block)
 	if err != nil {
-		return
+		return fmt.Errorf("data cipher: %w", err)
 	}
 
 	nodeNames.dir, nodeNames.aead = dir, aead
+
+	return nil
+}
+
+// dataStoreStatus is what DataStoreStatus reports: whether the core remembers anything, the
+// last element of its directory, and why not when it does not.
+type dataStoreStatus struct {
+	Persisting bool   `json:"persisting"`
+	Dir        string `json:"dir"`
+	Reason     string `json:"reason"`
+}
+
+// DataStoreStatus says whether the action audit log and the node names are being saved (the
+// last SetDataDir), for the apps' Support screen: {"persisting", "dir", "reason"}. The
+// directory is reduced to its last element, so no device path leaves the core.
+func DataStoreStatus() (out string, err error) {
+	defer maskResult(&out, &err)
+
+	nodeNames.Lock()
+	status := dataStoreStatus{Persisting: nodeNames.aead != nil, Reason: nodeNames.reason}
+	if nodeNames.dir != "" {
+		status.Dir = filepath.Base(nodeNames.dir)
+	}
+	nodeNames.Unlock()
+
+	return toJSON(status)
 }
 
 // dataDir is the directory given to SetDataDir ("" when there is none).
@@ -156,17 +207,12 @@ func fillKnownNames(nodes []nodeOverview, known map[string]knownNode) {
 
 // contextFingerprints lists the fingerprint of every context of the talosconfig.
 func contextFingerprints(configYAML string) []string {
-	cfg, err := loadConfig(configYAML)
-	if err != nil {
+	p := configs.get(configYAML)
+	if _, err := p.parsed(); err != nil {
 		return nil
 	}
 
-	out := make([]string, 0, len(cfg.Contexts))
-	for name, ctx := range cfg.Contexts {
-		out = append(out, contextFingerprint(name, ctx))
-	}
-
-	return out
+	return slices.Clone(p.fingerprints)
 }
 
 // readKnownNodes decrypts the file with aead. plaintext reports a file written in clear by

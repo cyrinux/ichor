@@ -29,7 +29,7 @@ import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -159,7 +159,7 @@ private fun ResourceRow(r: ArgoResource, selecting: Boolean, checked: Boolean, o
             }
         }
         if (onRestart != null && !selecting) {
-            IconButton(onClick = onRestart) {
+            IchorIconButton(onClick = onRestart) {
                 Icon(Icons.Outlined.RestartAlt, contentDescription = stringResource(R.string.workloads_restart_confirm), tint = muted, modifier = Modifier.size(18.dp))
             }
         }

@@ -8,15 +8,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,6 +32,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
+import name.levis.ichor.model.OnCallIncident
+import name.levis.ichor.model.OnCallVerb
+import name.levis.ichor.data.onCallRepository
+import name.levis.ichor.model.isDemo
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KUBE_NODES
 import name.levis.ichor.data.OVERVIEW
@@ -59,6 +63,8 @@ import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.components.rememberKubeCanDenial
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.metrics.SourceDialog
+import name.levis.ichor.ui.share.AddToHomeButton
+import name.levis.ichor.model.ShareTarget
 
 /**
  * The alerts of the cluster's Alertmanager (found in the cluster through the service proxy,
@@ -76,7 +82,12 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
     val key = "alerts-$fingerprint-$invalidations"
     val vm: AlertsViewModel = viewModel(
         key = key,
-        factory = factory { AlertsViewModel(app.alertmanagerRepository, app.kubeRepository, app.alertmanagerStore, fingerprint) },
+        factory = factory {
+            AlertsViewModel(
+                app.alertmanagerRepository, app.kubeRepository, app.alertmanagerStore, fingerprint,
+                app.onCallRepository, app.onCallStore, config?.activeSummary?.isDemo == true,
+            )
+        },
     )
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
@@ -84,6 +95,7 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
     var sourceOpen by remember { mutableStateOf(false) }
     var opened by remember { mutableStateOf<AmAlert?>(null) }
     var silencing by remember { mutableStateOf<AmAlert?>(null) }
+    var resolving by remember { mutableStateOf<OnCallIncident?>(null) }
     LaunchedEffect(key) { vm.load() }
     ActionToasts(vm)
     // Asked from a notification: once the alerts are read, if it still fires (not again on rotation).
@@ -105,12 +117,13 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
     val silenceDenial = rememberProxyDenial(source, "create")
     val expireDenial = rememberProxyDenial(source, "delete")
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.alerts_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    AddToHomeButton(ShareTarget.screen(ShareTarget.ALERTS), stringResource(R.string.alerts_title))
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = vm::refresh)
                     TooltipIconButton(Icons.Outlined.Tune, stringResource(R.string.alerts_source), onClick = { sourceOpen = true })
                 },
@@ -129,7 +142,22 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
                 }
                 SwipeTabPager(TWO_TABS, tab, onSelect = { tab = it }) { page ->
                     when (page) {
-                        0 -> AlertsTab(state.alerts, state.filter, vm::setFilter, onAlert = { opened = it }, onRefresh = vm::refresh)
+                        0 -> AlertsTab(
+                            state.alerts,
+                            state.filter,
+                            vm::setFilter,
+                            onAlert = { opened = it },
+                            onRefresh = vm::refresh,
+                            rowCallbacks = AlertRowCallbacks(
+                                silenceDenial = silenceDenial,
+                                onSilence = { silencing = it },
+                                onCallBusy = { it in busy },
+                                onAcknowledge = { vm.act(it, OnCallVerb.ACKNOWLEDGE) },
+                                onResolve = { resolving = it },
+                            ),
+                            onCall = state.onCall,
+                            onCallError = state.onCallError,
+                        )
                         else -> SilencesTab(
                             state.silences,
                             state.withExpired,
@@ -153,6 +181,19 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
             silenceDenial = silenceDenial,
             onSilence = { opened = null; silencing = alert },
             onDismiss = { opened = null },
+            onCall = state.onCall,
+            onCallBusy = { it in busy },
+            onCallAct = vm::act,
+        )
+    }
+    resolving?.let { incident ->
+        OnCallResolveDialog(
+            incident,
+            onConfirm = {
+                resolving = null
+                vm.act(incident, OnCallVerb.RESOLVE)
+            },
+            onDismiss = { resolving = null },
         )
     }
     silencing?.let { alert ->
@@ -217,8 +258,8 @@ private fun NoSource(state: AlertsState, modifier: Modifier, onSetUp: () -> Unit
         }
         Text(stringResource(R.string.alerts_none_found), style = MaterialTheme.typography.titleMedium)
         MutedText(state.discoveryError ?: state.error ?: stringResource(R.string.alerts_none_found_hint))
-        Button(onClick = onSetUp) { Text(stringResource(R.string.metrics_set_up)) }
-        TextButton(onClick = onSearch) { Text(stringResource(R.string.metrics_search_again)) }
+        IchorButton(onClick = onSetUp) { Text(stringResource(R.string.metrics_set_up)) }
+        IchorTextButton(onClick = onSearch) { Text(stringResource(R.string.metrics_search_again)) }
     }
 }
 
@@ -227,6 +268,9 @@ private fun NoSource(state: AlertsState, modifier: Modifier, onSetUp: () -> Unit
 private fun ActionToasts(vm: AlertsViewModel) = ResultToasts(vm.results) { context, r ->
     val error = r.error?.resolve(context)
     val text = when {
+        error != null && r.onCallVerb != null -> context.getString(R.string.oncall_action_failed, error)
+        r.onCallVerb == OnCallVerb.ACKNOWLEDGE -> context.getString(R.string.oncall_acknowledged)
+        r.onCallVerb == OnCallVerb.RESOLVE -> context.getString(R.string.oncall_resolved)
         error != null && r.expired -> context.getString(R.string.alerts_expire_failed, error)
         error != null -> context.getString(R.string.alerts_silence_failed, error)
         r.expired -> context.getString(R.string.alerts_expired)

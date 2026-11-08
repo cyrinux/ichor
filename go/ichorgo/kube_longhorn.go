@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type longhornStatus struct {
@@ -15,6 +16,10 @@ type longhornStatus struct {
 	Volumes       []longhornVolume       `json:"volumes"`
 	Nodes         []longhornNode         `json:"nodes"`
 	BackupTargets []longhornBackupTarget `json:"backupTargets"`
+	// Longhorn's default engine image (setting default-engine-image) and every EngineImage,
+	// the default first; both empty when they cannot be read.
+	DefaultEngineImage string                `json:"defaultEngineImage"`
+	EngineImages       []longhornEngineImage `json:"engineImages"`
 }
 
 type longhornVolume struct {
@@ -41,6 +46,22 @@ type longhornVolume struct {
 	RestoreProgress  int    `json:"restoreProgress"`
 	ScheduleError    string `json:"scheduleError"`    // why a replica cannot be placed, "" when it can
 	TooManySnapshots bool   `json:"tooManySnapshots"` // near Longhorn's snapshot limit
+	// Longhorn's own snapshots and backups (kube_longhorn_snapshots.go).
+	Snapshots         []longhornSnapshot `json:"snapshots"`         // live ones, newest first
+	SnapshotsRemoving int                `json:"snapshotsRemoving"` // deleted, waiting to be purged
+	Backups           []longhornBackup   `json:"backups"`           // newest first, at most lhBackupsPerVolume
+	BackupCount       int                `json:"backupCount"`
+	BackupStale       bool               `json:"backupStale"` // last backup older than lhBackupStaleAfter
+	// The VolumeSnapshotContents were read: a snapshot without volumeSnapshot keeps none.
+	VolumeSnapshotsKnown bool `json:"volumeSnapshotsKnown"`
+	// The engine image the volume should run (spec.image) and the one it runs
+	// (status.currentImage); upgrading while they differ, outdated when the current one is not
+	// Longhorn's deployed default. EngineVersion is the current image's version, "" unknown.
+	EngineImage        string `json:"engineImage"`
+	EngineCurrentImage string `json:"engineCurrentImage"`
+	EngineUpgrading    bool   `json:"engineUpgrading"`
+	EngineOutdated     bool   `json:"engineOutdated"`
+	EngineVersion      string `json:"engineVersion"`
 }
 
 type longhornNode struct {
@@ -77,9 +98,11 @@ type lhVolumeObject struct {
 	} `json:"metadata"`
 	Spec struct {
 		NumberOfReplicas int    `json:"numberOfReplicas"`
-		Size             string `json:"size"` // bytes, as a string
+		Size             string `json:"size"`  // bytes, as a string
+		Image            string `json:"image"` // engine image, Longhorn >= 1.5 (v1beta1 had engineImage)
 	} `json:"spec"`
 	Status struct {
+		CurrentImage     string          `json:"currentImage"`
 		State            string          `json:"state"`
 		Robustness       string          `json:"robustness"`
 		CurrentNodeID    string          `json:"currentNodeID"`
@@ -101,8 +124,14 @@ type lhReplicaTimes struct {
 }
 
 type lhReplicaObject struct {
+	Metadata struct {
+		Name              string `json:"name"`
+		Namespace         string `json:"namespace"`
+		DeletionTimestamp string `json:"deletionTimestamp"`
+	} `json:"metadata"`
 	Spec struct {
 		lhReplicaTimes
+		DiskID     string `json:"diskID"`
 		VolumeName string `json:"volumeName"`
 		NodeID     string `json:"nodeID"`
 	} `json:"spec"`
@@ -138,6 +167,7 @@ type lhNodeObject struct {
 	Status struct {
 		Conditions []kubeCondition `json:"conditions"`
 		DiskStatus map[string]struct {
+			DiskUUID         string          `json:"diskUUID"`
 			DiskPath         string          `json:"diskPath"`
 			Conditions       []kubeCondition `json:"conditions"`
 			StorageAvailable int64           `json:"storageAvailable"`
@@ -193,6 +223,10 @@ func readLonghorn(ctx context.Context, k *kubeClient, version string) *longhornS
 		nodes    kubeList[lhNodeObject]
 		targets  kubeList[lhBackupTargetObject]
 		engines  kubeList[lhEngineObject]
+		snaps    kubeList[lhSnapshotObject]
+		backups  kubeList[lhBackupObject]
+		images   kubeList[lhEngineImageObject]
+		csi      map[string]string
 		errs     = make([]error, 3)
 		wg       sync.WaitGroup
 	)
@@ -204,16 +238,24 @@ func readLonghorn(ctx context.Context, k *kubeClient, version string) *longhornS
 	wg.Go(func() { _ = getList(ctx, k, base+"backuptargets", &targets) })
 	// Engines only add progress: without them the volumes still read right.
 	wg.Go(func() { _ = getList(ctx, k, base+"engines", &engines) })
+	// Snapshots and backups too: a volume without them is still described.
+	wg.Go(func() { _ = getList(ctx, k, base+"snapshots", &snaps) })
+	wg.Go(func() { _ = getList(ctx, k, base+"backups", &backups) })
+	wg.Go(func() { csi = readLonghornCSIRefs(ctx, k) })
+	// Engine images only add the engine upgrade: a failure leaves the volumes as they are.
+	wg.Go(func() { _ = getList(ctx, k, base+"engineimages", &images) })
 	wg.Wait()
 
 	out := mapLonghorn(version, volumes.Items, replicas.Items, nodes.Items, targets.Items, sectionError(errs...))
 	addLonghornProgress(out.Volumes, engines.Items)
+	addLonghornSnapshots(out.Volumes, snaps.Items, backups.Items, csi, time.Now())
+	addLonghornEngines(out, images.Items, readLonghornDefaultEngine(ctx, k, base, images.Items))
 
 	return out
 }
 
 func mapLonghorn(version string, volumes []lhVolumeObject, replicas []lhReplicaObject, nodes []lhNodeObject, targets []lhBackupTargetObject, errMsg string) *longhornStatus {
-	out := &longhornStatus{Version: version, Error: errMsg, Volumes: []longhornVolume{}, Nodes: []longhornNode{}, BackupTargets: []longhornBackupTarget{}}
+	out := &longhornStatus{Version: version, Error: errMsg, Volumes: []longhornVolume{}, Nodes: []longhornNode{}, BackupTargets: []longhornBackupTarget{}, EngineImages: []longhornEngineImage{}}
 
 	byVolume := map[string][]lhReplicaObject{}
 	for _, r := range replicas {
@@ -263,7 +305,11 @@ func mapLonghornVolume(v lhVolumeObject, replicas []lhReplicaObject) longhornVol
 		State: st.State, Robustness: st.Robustness, Node: st.CurrentNodeID,
 		ReplicasDesired: v.Spec.NumberOfReplicas, ActualSize: st.ActualSize,
 		LastBackupAt: unixMilli(st.LastBackupAt), ReplicaNodes: []string{},
+		Snapshots: []longhornSnapshot{}, Backups: []longhornBackup{},
+		EngineImage: v.Spec.Image, EngineCurrentImage: st.CurrentImage,
 	}
+
+	out.EngineUpgrading = v.Spec.Image != "" && st.CurrentImage != "" && v.Spec.Image != st.CurrentImage
 
 	out.Size, _ = strconv.ParseInt(v.Spec.Size, 10, 64)
 

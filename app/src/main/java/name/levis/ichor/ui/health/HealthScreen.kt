@@ -1,7 +1,10 @@
 package name.levis.ichor.ui.health
 
+import name.levis.ichor.ui.components.LoadFailureRow
+import name.levis.ichor.data.MaskScoped
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import androidx.compose.foundation.layout.Arrangement
@@ -14,14 +17,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,7 +53,12 @@ import name.levis.ichor.model.healthLineStatus
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.RoleNotice
+import name.levis.ichor.data.TOPOLOGY
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.model.ClusterTopology
+import name.levis.ichor.model.TopologyMesh
+import name.levis.ichor.ui.design.IchorTextButton
+import androidx.compose.ui.res.pluralStringResource
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
@@ -99,6 +107,27 @@ class HealthViewModel(
     val explain: StateFlow<ExplainState> = _explain.asStateFlow()
     private var explainJob: Job? = null
 
+    /** The KubeSpan links: `talosctl health` does not look at them. Null until read. */
+    private val _mesh = MutableStateFlow<TopologyMesh?>(null)
+    val mesh: StateFlow<TopologyMesh?> = _mesh.asStateFlow()
+
+    // A run started under the previous screenshot mode setting stops, its lines dropped.
+    init {
+        MaskScoped().watch(viewModelScope) {
+            job?.cancel()
+            explainJob?.cancel()
+            _explain.value = ExplainState()
+            _state.value = HealthState()
+            _mesh.value = null
+        }
+    }
+
+    /** Best effort, with any role: a failure keeps what the last read saw, and shows nothing without one. */
+    fun loadMesh() {
+        _mesh.value = talos.cached<ClusterTopology>(TOPOLOGY)?.value?.mesh
+        viewModelScope.launch { runCatching { talos.topology() }.onSuccess { _mesh.value = it.mesh } }
+    }
+
     fun start() {
         job?.cancel()
         // The previous answer was about the previous run.
@@ -137,6 +166,8 @@ class HealthViewModel(
                     _explain.update { s ->
                         when (event) {
                             is AnswerEvent.Text -> s.copy(text = event.text)
+                            // This report takes no tools: Go never asks for any here.
+                            is AnswerEvent.Tool, is AnswerEvent.ToolDone -> s
                             is AnswerEvent.Done -> s.copy(asking = false, error = event.error)
                         }
                     }
@@ -156,6 +187,7 @@ class HealthViewModel(
 fun HealthScreen(
     onBack: () -> Unit,
     onDiagnose: (note: String) -> Unit,
+    onKubeSpan: () -> Unit,
     vm: HealthViewModel = viewModel(factory = factory { HealthViewModel(app.talosRepository, app.diagnosisRepository, app.aiPreferences) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -166,23 +198,39 @@ fun HealthScreen(
     val summary = config?.activeSummary
     val allowed = summary?.allows(Feature.HEALTH) ?: true
     LaunchedEffect(allowed) { if (allowed && !state.running && !state.finished) vm.start() }
+    val isTalos = summary != null && !summary.isKube
+    LaunchedEffect(isTalos) { if (isTalos) vm.loadMesh() }
+    val mesh by vm.mesh.collectAsStateWithLifecycle()
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.health_title)) },
                 navigationIcon = { BackButton(onBack) },
-                actions = { ShareLinkButton(ShareTarget.screen(ShareTarget.HEALTH)) },
+                actions = {
+                    ShareLinkButton(ShareTarget.screen(ShareTarget.HEALTH))
+                    AddToHomeButton(ShareTarget.screen(ShareTarget.HEALTH), stringResource(R.string.health_title))
+                },
             )
         },
     ) { padding ->
         Column(Modifier.pageContent(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            // Above the role check: reading the mesh needs no more than os:reader.
+            mesh?.takeIf { it.checked }?.let { m ->
+                MeshCard(m, serverHealthy = state.finished && state.error == null, onOpenMap = onKubeSpan)
+            }
             if (!allowed) {
                 summary?.let { RoleNotice(Feature.HEALTH, it) }
                 if (summary?.isKube != true) MutedText(stringResource(R.string.health_any_role_hint))
                 return@Column
             }
-            HealthHeader(state, onRerun = vm::start)
+            HealthHeader(
+                state,
+                onRerun = {
+                    vm.start()
+                    if (isTalos) vm.loadMesh()
+                },
+            )
             // Only when the optional AI diagnosis is on, and there is a failure to explain.
             state.error?.takeIf { ai.enabled && state.finished }?.let { error ->
                 HealthExplainCard(
@@ -192,7 +240,7 @@ fun HealthScreen(
                     onContinue = { onDiagnose(healthCheckNote(error)) },
                 )
             }
-            Card(Modifier.fillMaxWidth().weight(1f)) {
+            IchorCard(Modifier.fillMaxWidth().weight(1f)) {
                 LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     itemsIndexed(state.lines) { index, line ->
                         val failed = state.error != null && index == state.lines.lastIndex
@@ -205,6 +253,29 @@ fun HealthScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+/** The KubeSpan links, which the server's checks do not cover; a clean server run must not hide a tunnel down. */
+@Composable
+private fun MeshCard(mesh: TopologyMesh, serverHealthy: Boolean, onOpenMap: () -> Unit) {
+    val colors = LocalStatusColors.current
+    IchorCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(start = 16.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("KubeSpan", style = MaterialTheme.typography.titleSmall)
+                    if (mesh.broken > 0) {
+                        Text(pluralStringResource(R.plurals.kubespan_links_down, mesh.broken, mesh.broken), color = colors.bad)
+                    } else {
+                        Text(stringResource(R.string.health_mesh_up, mesh.links), color = colors.ok)
+                    }
+                }
+                IchorTextButton(onClick = onOpenMap) { Text(stringResource(R.string.health_mesh_open_map)) }
+            }
+            mesh.pairs.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
+            if (mesh.broken > 0 && serverHealthy) MutedText(stringResource(R.string.health_mesh_server_note))
         }
     }
 }
@@ -239,7 +310,8 @@ private fun HealthHeader(state: HealthState, onRerun: () -> Unit) {
                 Text("", Modifier.weight(1f))
             }
         }
-        if (!state.running) Button(onClick = onRerun) { Text(stringResource(R.string.health_rerun)) }
+        if (!state.running) IchorButton(onClick = onRerun) { Text(stringResource(R.string.health_rerun)) }
     }
-    state.error?.let { Text(it, color = colors.bad, style = MaterialTheme.typography.bodyMedium) }
+    // Rerun, right above, is the retry.
+    state.error?.let { LoadFailureRow(it, onRetry = null) }
 }

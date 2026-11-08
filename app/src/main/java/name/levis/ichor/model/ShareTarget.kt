@@ -37,6 +37,7 @@ data class ShareTarget(
         const val ALERTS = "alerts"
         const val STORAGE = "storage"
         const val HARDWARE = "hardware"
+        const val KUBESPAN = "kubespan"
 
         /** The node screen's tabs, by their index there. */
         val NODE_TABS = listOf("services", "resources", "live", "processes", "pods", "cgroups", "kube-pods")
@@ -71,11 +72,41 @@ data class ShareTarget(
 
         /** The data services screen on the tab of [catalogId] (see [DataServiceKind.catalogId]); "" for the first. */
         fun dataServices(catalogId: String = "") = ShareTarget(target = DATA, kind = catalogId)
+
+        /** The prefix of a plugin's id in a data services link's kind (no plugin target in Go's links). */
+        const val PLUGIN_KIND_PREFIX = "plugin-"
+
+        /** Where CRD plugin [pluginId]'s tile leads (a plugin finding's alert), as iOS reads it too. */
+        fun plugin(pluginId: String) = dataServices(PLUGIN_KIND_PREFIX + pluginId)
     }
 }
 
+/** The CRD plugin a data services link names ([ShareTarget.plugin]), null for a data service's tab. */
+val ShareTarget.linkedPlugin: String?
+    get() = kind.takeIf { target == ShareTarget.DATA && it.startsWith(ShareTarget.PLUGIN_KIND_PREFIX) }
+        ?.removePrefix(ShareTarget.PLUGIN_KIND_PREFIX)?.takeIf { it.isNotEmpty() }
+
 /** The tab of the node screen the link opens (0 when it names none). */
 val ShareTarget.nodeTab: Int get() = ShareTarget.NODE_TABS.indexOf(tab).coerceAtLeast(0)
+
+/**
+ * The node of a cluster added from a kubeconfig a node or storage link names (a node or disk
+ * alert), by its Kubernetes name, when it is one of [nodes]; null otherwise (its home opens).
+ */
+fun ShareTarget.kubeNodeName(nodes: Collection<String>): String? =
+    addr.ifEmpty { host }.takeIf { (target == ShareTarget.NODE || target == ShareTarget.STORAGE) && it.isNotEmpty() && it in nodes }
+
+/**
+ * The node a Talos storage or hardware link names (a disk or temperature alert) when the
+ * overview cannot tell (not read, or without it): its address, only when it is one of the
+ * nodes [context]'s config targets (its nodes, else its endpoints), so a link still cannot
+ * point the app's Talos calls at another address. Null for any other link.
+ */
+fun ShareTarget.configuredNode(context: ContextSummary?): String? {
+    if (target != ShareTarget.STORAGE && target != ShareTarget.HARDWARE) return null
+    val targets = context?.let { it.nodes.ifEmpty { it.endpoints } }.orEmpty()
+    return addr.takeIf { it.isNotEmpty() && it in targets }
+}
 
 /**
  * What the Kubernetes screen opens for the link: its tab, and the item to show (a workload,

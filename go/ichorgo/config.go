@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"maps"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/client"
@@ -51,53 +50,29 @@ type contextSummary struct {
 func ParseConfig(configYAML string) (out string, err error) {
 	defer maskResult(&out, &err)
 
+	return parseConfig(configYAML)
+}
+
+// parseConfig is ParseConfig before masking.
+func parseConfig(configYAML string) (string, error) {
 	start := time.Now()
 
 	privacy.learnConfig(configYAML)
 
-	cfg, err := loadConfig(configYAML)
+	out, count, err := configs.get(configYAML).summary()
 	if err != nil {
 		return "", err
 	}
 
-	names := sortedContextNames(cfg)
-	summary := configSummary{Contexts: make([]contextSummary, 0, len(names))}
+	traceCounts("config.parse", start, count, 0)
 
-	for _, name := range names {
-		s, err := summarizeContext(name, cfg.Contexts[name])
-		if err != nil {
-			return "", fmt.Errorf("context %q: %w", name, err)
-		}
-
-		summary.Contexts = append(summary.Contexts, s)
-	}
-
-	summary.Current = defaultContextName(cfg)
-
-	traceCounts("config.parse", start, len(summary.Contexts), 0)
-
-	return toJSON(summary)
+	return out, nil
 }
 
+// loadConfig is the parsed talosconfig, from the cache (config_cache.go): shared, so read
+// only. Its callers only read it (they copy a context before changing it).
 func loadConfig(configYAML string) (*clientconfig.Config, error) {
-	if strings.TrimSpace(configYAML) == "" {
-		return nil, errors.New("talosconfig is empty")
-	}
-
-	if isKubeconfig(configYAML) {
-		return nil, errTalosUnavailable
-	}
-
-	cfg, err := parseTalosconfig(configYAML)
-	if err != nil {
-		return nil, fmt.Errorf("invalid talosconfig YAML: %w", err)
-	}
-
-	if len(cfg.Contexts) == 0 {
-		return nil, errors.New("talosconfig has no contexts")
-	}
-
-	return cfg, nil
+	return configs.get(configYAML).parsed()
 }
 
 // parseTalosconfig is clientconfig.FromString, safe on malformed input: the library
@@ -163,9 +138,14 @@ func summarizeContext(name string, ctx *clientconfig.Context) (contextSummary, e
 }
 
 // contextFingerprint is stable for a context name within a cluster (its CA): it survives a
-// renewed certificate and moved endpoints. Letters only, so that masking, which rewrites
+// renewed certificate, moved endpoints and, through the lineage, a rotated CA. Letters only, so that masking, which rewrites
 // names and addresses, never touches it.
 func contextFingerprint(name string, ctx *clientconfig.Context) string {
+	return resolveFingerprint(rawContextFingerprint(name, ctx))
+}
+
+// rawContextFingerprint is contextFingerprint before the lineage of a rotated CA applies.
+func rawContextFingerprint(name string, ctx *clientconfig.Context) string {
 	if isOmni(ctx) {
 		return letterHash(sha256.Sum256([]byte(name + "\x00" + omniClusterKey(ctx))))
 	}
@@ -176,22 +156,23 @@ func contextFingerprint(name string, ctx *clientconfig.Context) string {
 const fingerprintLength = 16
 
 // resolveContext returns the named context, or the config's current one when name is empty.
+// The context is a copy: the parsed config is shared (config_cache.go).
 func resolveContext(configYAML, name string) (string, *clientconfig.Context, error) {
-	cfg, err := loadConfig(configYAML)
-	if err != nil {
+	p := configs.get(configYAML)
+	if _, err := p.parsed(); err != nil {
 		return "", nil, err
 	}
 
 	if name == "" {
-		name = defaultContextName(cfg)
+		name = p.defaultName()
 	}
 
-	ctx, ok := cfg.Contexts[name]
+	ctx, ok := p.cfg.Contexts[name]
 	if !ok {
 		return "", nil, fmt.Errorf("context %q not found in talosconfig", name)
 	}
 
-	return name, ctx, nil
+	return name, cloneContext(ctx), nil
 }
 
 func sortedContextNames(cfg *clientconfig.Config) []string {

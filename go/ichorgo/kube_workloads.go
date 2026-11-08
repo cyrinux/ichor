@@ -59,6 +59,22 @@ type kubeWorkload struct {
 	RestartedAt int64    `json:"restartedAt"` // unix ms of the last rollout restart, 0 when never
 	Created     int64    `json:"created"`     // unix ms
 	Images      []string `json:"images"`
+	// Autoscaler is what drives the replica count (an HPA, or the KEDA ScaledObject behind
+	// one), nil when nothing does or its list failed.
+	Autoscaler *workloadAutoscaler `json:"autoscaler,omitempty"`
+}
+
+// workloadAutoscaler is the autoscaler of one workload: the same fields and state rules as
+// the workloads index of KubeAutoscaling, for the sheet's chip.
+type workloadAutoscaler struct {
+	By      string `json:"by"` // hpa or keda
+	Name    string `json:"name"`
+	Min     int    `json:"min"`
+	Max     int    `json:"max"`
+	Current int    `json:"current"`
+	Desired int    `json:"desired"`
+	Paused  bool   `json:"paused"`
+	State   string `json:"state"`
 }
 
 type kubeWorkloadList struct {
@@ -133,6 +149,7 @@ func KubeWorkloads(configYAML, contextName, kubeServer string) (out string, err 
 func listWorkloads(ctx context.Context, k *kubeClient) (kubeWorkloadList, error) {
 	results := make([][]kubeWorkload, len(workloadKinds))
 	errs := make([]error, len(workloadKinds))
+	var index map[string]workloadAutoscaler
 
 	var wg sync.WaitGroup
 
@@ -148,6 +165,10 @@ func listWorkloads(ctx context.Context, k *kubeClient) (kubeWorkloadList, error)
 			})
 		})
 	}
+
+	// The autoscalers join by (kind, namespace, name); their read failing only takes the
+	// chips away, never the list.
+	wg.Go(func() { index, _ = autoscaledWorkloads(ctx, k) })
 
 	wg.Wait()
 
@@ -173,7 +194,76 @@ func listWorkloads(ctx context.Context, k *kubeClient) (kubeWorkloadList, error)
 		return a.Kind < b.Kind
 	})
 
+	for i := range workloads {
+		if a, ok := index[workloads[i].Kind+"/"+workloads[i].Namespace+"/"+workloads[i].Name]; ok {
+			workloads[i].Autoscaler = &a
+		}
+	}
+
 	return kubeWorkloadList{Workloads: workloads}, nil
+}
+
+// autoscaledWorkloads indexes the cluster's autoscalers by the workload they drive
+// ("Kind/namespace/name"): one HPA listing and, when KEDA is served, one ScaledObject
+// listing. A KEDA-owned HPA is its ScaledObject's: the index names the ScaledObject only.
+func autoscaledWorkloads(ctx context.Context, k *kubeClient) (map[string]workloadAutoscaler, error) {
+	groups, err := readAPIGroups(ctx, k)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		hpaList kubeList[hpaObject]
+		objs    []scaledObjectObject
+		hpaErr  error
+		wg      sync.WaitGroup
+	)
+
+	// One page of autoscalingRowsMax: the chip needs no more, and the read stays light on
+	// the workloads screen's hot path.
+	wg.Go(func() {
+		page, pageErr := k.getPage(ctx, "/apis/autoscaling/v2/horizontalpodautoscalers", pageQuery{limit: autoscalingRowsMax})
+		if pageErr != nil {
+			hpaErr = pageErr
+
+			return
+		}
+
+		hpaList.Items, hpaErr = decodeItems[hpaObject](page)
+	})
+	if groups[groupKEDA] != "" {
+		wg.Go(func() { objs, _, _ = readKEDA(ctx, k, groups[groupKEDA]) })
+	}
+
+	wg.Wait()
+
+	if hpaErr != nil {
+		return nil, hpaErr
+	}
+	// A KEDA read that failed only takes the ScaledObject chips away: the HPA ones still show.
+
+	hpas := mapRows(hpaList.Items, hpaRowOf)
+
+	index := make(map[string]workloadAutoscaler, len(hpas)+len(objs))
+	for _, h := range hpas {
+		if h.ManagedBy == autoscaledByKEDA {
+			continue
+		}
+
+		index[h.Target.Kind+"/"+h.Namespace+"/"+h.Target.Name] = workloadAutoscaler{
+			By: autoscaledByHPA, Name: h.Name, Min: h.Min, Max: h.Max, Current: h.Current, Desired: h.Desired,
+			Paused: h.State == autoscalePaused, State: h.State,
+		}
+	}
+
+	for _, s := range scaledObjectRows(objs, hpas) {
+		index[s.Target.Kind+"/"+s.Namespace+"/"+s.Target.Name] = workloadAutoscaler{
+			By: autoscaledByKEDA, Name: s.Name, Min: s.Min, Max: s.Max, Current: s.Current, Desired: s.Desired,
+			Paused: s.Paused, State: s.State,
+		}
+	}
+
+	return index, nil
 }
 
 func mapWorkload(kind string, obj appsObject) kubeWorkload {

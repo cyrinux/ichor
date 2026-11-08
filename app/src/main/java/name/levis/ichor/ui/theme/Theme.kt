@@ -60,10 +60,16 @@ val LocalChartColors = staticCompositionLocalOf { DarkChart }
 
 /**
  * The app's theme: [mode] decides light, dark or true black; the colors are generated from
- * [seed], the main color of the cluster on screen.
+ * [seed], the main color of the cluster on screen. [material] draws them: Material 3 by default,
+ * another design language's theme for a UI style (ui/design).
  */
 @Composable
-fun TalosTheme(mode: ThemeMode = ThemeMode.AUTO, seed: Int = DEFAULT_CLUSTER_SEED, content: @Composable () -> Unit) {
+fun TalosTheme(
+    mode: ThemeMode = ThemeMode.AUTO,
+    seed: Int = DEFAULT_CLUSTER_SEED,
+    material: @Composable (ColorScheme, @Composable () -> Unit) -> Unit = { colors, content -> MaterialTheme(colorScheme = colors, content = content) },
+    content: @Composable () -> Unit,
+) {
     val dark = mode.isDark(isSystemInDarkTheme())
     val colors = remember(seed, dark, mode) {
         val base = seedColorScheme(seed, dark)
@@ -74,6 +80,6 @@ fun TalosTheme(mode: ThemeMode = ThemeMode.AUTO, seed: Int = DEFAULT_CLUSTER_SEE
         LocalStatusColors provides if (dark) DarkStatus else LightStatus,
         LocalChartColors provides if (dark) DarkChart else LightChart,
     ) {
-        MaterialTheme(colorScheme = colors, content = content)
+        material(colors, content)
     }
 }

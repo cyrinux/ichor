@@ -11,17 +11,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -63,6 +62,8 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.checkup.ageSince
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.groupedCardRows
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
@@ -139,9 +140,9 @@ fun ResourceListScreen(
     LaunchedEffect(deleted) { if (deleted != 0L) vm.refresh() }
     PollWhileStarted { vm.follow() }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(type.kind, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -195,7 +196,7 @@ private fun ColumnScope.Rows(
     PagedProgress(progress)
     IncompleteNotice(load, searching = query.isNotBlank(), onLoadMore = vm::loadMore, onLoadAll = vm::loadAll)
     if (hasWideColumns(columns)) {
-        FilterChip(selected = wide, onClick = { onWide(!wide) }, label = { Text(stringResource(R.string.kb_wide)) }, modifier = Modifier.padding(horizontal = 16.dp))
+        IchorFilterChip(selected = wide, onClick = { onWide(!wide) }, label = { Text(stringResource(R.string.kb_wide)) }, modifier = Modifier.padding(horizontal = 16.dp))
     }
     val now = remember(load) { System.currentTimeMillis() }
     PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = { vm.refresh() }, modifier = Modifier.weight(1f)) {
@@ -204,10 +205,10 @@ private fun ColumnScope.Rows(
         } else {
             val listState = rememberLazyListState()
             LoadMoreOnScroll(listState, enabled = load.hasMore && query.isBlank(), loaded = load.items.size, onLoadMore = vm::loadMore)
-            LazyColumn(Modifier.fillMaxSize(), state = listState) {
-                items(rows, key = { it.key }) { row ->
-                    ObjectRow(row, wide, showNamespace, now) { onObject(row) }
-                    HorizontalDivider()
+            // All namespaces: one card per namespace, its name as the card's title.
+            LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = CardListPadding) {
+                groupedCardRows(rows, groupOf = if (showNamespace) { r: ResourceRow -> r.namespace } else null, key = { it.key }) { row ->
+                    ObjectRow(row, wide, now) { onObject(row) }
                 }
             }
         }
@@ -215,10 +216,10 @@ private fun ColumnScope.Rows(
     DataFreshness(s, edgeToEdge = false)
 }
 
-/** An object: its name first, then namespace and age, then each column as a chip. */
+/** An object: its name and age first, then each column as a chip; its namespace is the card's title. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ObjectRow(row: ResourceRow, wide: Boolean, showNamespace: Boolean, now: Long, onClick: () -> Unit) {
+private fun ObjectRow(row: ResourceRow, wide: Boolean, now: Long, onClick: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val fields = remember(row, wide) { rowFields(row, wide) }
     Column(
@@ -229,9 +230,6 @@ private fun ObjectRow(row: ResourceRow, wide: Boolean, showNamespace: Boolean, n
             Text(row.name, style = MaterialTheme.typography.bodyLarge, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             if (row.deleting) ToneLabel(stringResource(R.string.kb_deleting), LocalStatusColors.current.warn)
             if (row.created > 0) Text(ageSince(row.created * 1000, now), style = MaterialTheme.typography.labelSmall, color = muted)
-        }
-        if (showNamespace && row.namespace.isNotEmpty()) {
-            Text(row.namespace, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = muted)
         }
         if (fields.isNotEmpty()) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

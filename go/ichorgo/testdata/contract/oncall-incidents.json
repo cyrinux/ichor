@@ -1,0 +1,50 @@
+{
+  "incidents": [
+    {
+      "acknowledgedBy": "",
+      "assignees": [
+        "Sam Sample"
+      ],
+      "createdAt": 1767323045000,
+      "id": "PDEMO01",
+      "matchedFingerprints": [
+        "a1c3e5f7a9b1c3d5"
+      ],
+      "number": 1042,
+      "service": "Demo platform",
+      "status": "triggered",
+      "title": "[FIRING:1] NodeFilesystemAlmostOutOfSpace (demo-worker-1)",
+      "urgency": "high",
+      "url": "https://demo.pagerduty.invalid/incidents/PDEMO01"
+    },
+    {
+      "acknowledgedBy": "Alex Example",
+      "assignees": [
+        "Alex Example"
+      ],
+      "createdAt": 1767323045000,
+      "id": "PDEMO02",
+      "matchedFingerprints": [
+        "b2d4f6a8c0e2f4a6"
+      ],
+      "number": 1039,
+      "service": "Demo workloads",
+      "status": "acknowledged",
+      "title": "[FIRING:1] KubePodCrashLooping (demo/worker)",
+      "urgency": "low",
+      "url": "https://demo.pagerduty.invalid/incidents/PDEMO02"
+    }
+  ],
+  "matches": {
+    "a1c3e5f7a9b1c3d5": {
+      "confidence": "exact",
+      "incidentId": "PDEMO01",
+      "status": "triggered"
+    },
+    "b2d4f6a8c0e2f4a6": {
+      "confidence": "alertname",
+      "incidentId": "PDEMO02",
+      "status": "acknowledged"
+    }
+  }
+}

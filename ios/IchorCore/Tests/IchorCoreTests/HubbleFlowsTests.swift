@@ -5,20 +5,20 @@ final class HubbleFlowsTests: XCTestCase {
     // A snapshot of StartHubbleFlows on the demo cluster (go/ichorgo/kube_hubble_demo.go), cut to
     // two flows and three drop groups.
     private let json = #"""
-    {"namespace":"kube-system","version":"v1.18.2","buffer":4095,
-     "nodes":[{"node":"demo-cp-1","pod":"cilium-ah2kd","state":"connecting","flows":0},{"node":"demo-cp-2","pod":"cilium-bi2kd","state":"connecting","flows":0},{"node":"demo-cp-3","pod":"cilium-cj2kd","state":"connecting","flows":0},{"node":"demo-worker-1","pod":"cilium-dk2kd","state":"live","flows":70},{"node":"demo-worker-2","pod":"cilium-el2kd","state":"live","flows":50}],
-     "flows":[
-      {"time":1791116075956,"node":"demo-worker-1","verdict":"FORWARDED","direction":"INGRESS","protocol":"TCP","port":5432,"flags":"SYN","type":"L3_L4","source":{"namespace":"media","pod":"immich-server-7d9f-k2m8p","workload":"immich-server-7d9f","identity":11811,"ip":"10.244.5.82"},"destination":{"namespace":"media","pod":"immich-postgres-1","workload":"immich-postgres","identity":11520,"ip":"10.244.5.61"}},{"time":1791116075090,"node":"demo-worker-1","verdict":"FORWARDED","direction":"INGRESS","protocol":"TCP","port":8080,"flags":"SYN","type":"L7","l7":"HTTP GET /api/sync → 200","source":{"namespace":"networking","pod":"traefik-8c6d-w7r2m","workload":"traefik-8c6d","identity":11294,"ip":"10.244.2.64"},"destination":{"namespace":"default","pod":"vaultwarden-0","workload":"vaultwarden","identity":11158,"ip":"10.244.7.49"}}],
-     "drops":[
-      {"source":{"namespace":"home","pod":"home-assistant-0","workload":"home-assistant","identity":11410,"ip":"10.244.4.58"},"destination":{"identity":2,"ip":"198.51.100.25","names":["smtp.example.net"],"reserved":"world"},"protocol":"TCP","port":25,"direction":"EGRESS","verdict":"DROPPED","reason":"POLICY_DENY","count":9,"firstSeen":1791116032689,"lastSeen":1791116073859,"nodes":["demo-worker-2"],"deniedBy":[{"kind":"CiliumNetworkPolicy","namespace":"home","name":"home-egress"}],"isolating":[],"sample":{"time":1791116073859,"node":"demo-worker-2","verdict":"DROPPED","reason":"POLICY_DENY","direction":"EGRESS","protocol":"TCP","port":25,"flags":"SYN","type":"L3_L4","source":{"namespace":"home","pod":"home-assistant-0","workload":"home-assistant","identity":11410,"ip":"10.244.4.58"},"destination":{"identity":2,"ip":"198.51.100.25","names":["smtp.example.net"],"reserved":"world"},"deniedBy":[{"kind":"CiliumNetworkPolicy","namespace":"home","name":"home-egress"}]}},
-      {"source":{"namespace":"media","pod":"jellyfin-5f8c-xq2wz","workload":"jellyfin-5f8c","identity":11326,"ip":"10.244.5.67"},"destination":{"namespace":"media","pod":"immich-postgres-1","workload":"immich-postgres","identity":11520,"ip":"10.244.5.61"},"protocol":"TCP","port":5432,"direction":"INGRESS","verdict":"DROPPED","reason":"POLICY_DENIED","count":10,"firstSeen":1791116033921,"lastSeen":1791116068781,"nodes":["demo-worker-1"],"deniedBy":[],"isolating":[{"kind":"NetworkPolicy","namespace":"media","name":"immich-postgres-ingress"},{"kind":"NetworkPolicy","namespace":"media","name":"allow-prometheus-scrape"}],"sample":{"time":1791116068781,"node":"demo-worker-1","verdict":"DROPPED","reason":"POLICY_DENIED","direction":"INGRESS","protocol":"TCP","port":5432,"flags":"SYN","type":"L3_L4","source":{"namespace":"media","pod":"jellyfin-5f8c-xq2wz","workload":"jellyfin-5f8c","identity":11326,"ip":"10.244.5.67"},"destination":{"namespace":"media","pod":"immich-postgres-1","workload":"immich-postgres","identity":11520,"ip":"10.244.5.61"}}},
-      {"source":{"namespace":"home","pod":"zigbee2mqtt-0","workload":"zigbee2mqtt","identity":11119,"ip":"10.244.4.49"},"destination":{"identity":2,"ip":"198.51.100.80","names":["ota.example.org"],"reserved":"world"},"protocol":"TCP","port":443,"direction":"EGRESS","verdict":"DROPPED","reason":"POLICY_DENIED","count":6,"firstSeen":1791116025871,"lastSeen":1791116065830,"nodes":["demo-worker-1"],"deniedBy":[],"isolating":[{"kind":"NetworkPolicy","namespace":"home","name":"default-deny-egress"}],"sample":{"time":1791116065830,"node":"demo-worker-1","verdict":"DROPPED","reason":"POLICY_DENIED","direction":"EGRESS","protocol":"TCP","port":443,"flags":"SYN","type":"L3_L4","source":{"namespace":"home","pod":"zigbee2mqtt-0","workload":"zigbee2mqtt","identity":11119,"ip":"10.244.4.49"},"destination":{"identity":2,"ip":"198.51.100.80","names":["ota.example.org"],"reserved":"world"}}}],"seen":120,"dropped":29,"lost":0}
-    """#
+        {"namespace":"kube-system","version":"v1.18.2","buffer":4095,
+         "nodes":[{"node":"demo-cp-1","pod":"cilium-ah2kd","state":"connecting","flows":0},{"node":"demo-cp-2","pod":"cilium-bi2kd","state":"connecting","flows":0},{"node":"demo-cp-3","pod":"cilium-cj2kd","state":"connecting","flows":0},{"node":"demo-worker-1","pod":"cilium-dk2kd","state":"live","flows":70},{"node":"demo-worker-2","pod":"cilium-el2kd","state":"live","flows":50}],
+         "flows":[
+          {"time":1791116075956,"node":"demo-worker-1","verdict":"FORWARDED","direction":"INGRESS","protocol":"TCP","port":5432,"flags":"SYN","type":"L3_L4","source":{"namespace":"media","pod":"immich-server-7d9f-k2m8p","workload":"immich-server-7d9f","identity":11811,"ip":"10.244.5.82"},"destination":{"namespace":"media","pod":"immich-postgres-1","workload":"immich-postgres","identity":11520,"ip":"10.244.5.61"}},{"time":1791116075090,"node":"demo-worker-1","verdict":"FORWARDED","direction":"INGRESS","protocol":"TCP","port":8080,"flags":"SYN","type":"L7","l7":"HTTP GET /api/sync → 200","source":{"namespace":"networking","pod":"traefik-8c6d-w7r2m","workload":"traefik-8c6d","identity":11294,"ip":"10.244.2.64"},"destination":{"namespace":"default","pod":"vaultwarden-0","workload":"vaultwarden","identity":11158,"ip":"10.244.7.49"}}],
+         "drops":[
+          {"source":{"namespace":"home","pod":"home-assistant-0","workload":"home-assistant","identity":11410,"ip":"10.244.4.58"},"destination":{"identity":2,"ip":"198.51.100.25","names":["smtp.example.net"],"reserved":"world"},"protocol":"TCP","port":25,"direction":"EGRESS","verdict":"DROPPED","reason":"POLICY_DENY","count":9,"firstSeen":1791116032689,"lastSeen":1791116073859,"nodes":["demo-worker-2"],"deniedBy":[{"kind":"CiliumNetworkPolicy","namespace":"home","name":"home-egress"}],"isolating":[],"sample":{"time":1791116073859,"node":"demo-worker-2","verdict":"DROPPED","reason":"POLICY_DENY","direction":"EGRESS","protocol":"TCP","port":25,"flags":"SYN","type":"L3_L4","source":{"namespace":"home","pod":"home-assistant-0","workload":"home-assistant","identity":11410,"ip":"10.244.4.58"},"destination":{"identity":2,"ip":"198.51.100.25","names":["smtp.example.net"],"reserved":"world"},"deniedBy":[{"kind":"CiliumNetworkPolicy","namespace":"home","name":"home-egress"}]}},
+          {"source":{"namespace":"media","pod":"jellyfin-5f8c-xq2wz","workload":"jellyfin-5f8c","identity":11326,"ip":"10.244.5.67"},"destination":{"namespace":"media","pod":"immich-postgres-1","workload":"immich-postgres","identity":11520,"ip":"10.244.5.61"},"protocol":"TCP","port":5432,"direction":"INGRESS","verdict":"DROPPED","reason":"POLICY_DENIED","count":10,"firstSeen":1791116033921,"lastSeen":1791116068781,"nodes":["demo-worker-1"],"deniedBy":[],"isolating":[{"kind":"NetworkPolicy","namespace":"media","name":"immich-postgres-ingress"},{"kind":"NetworkPolicy","namespace":"media","name":"allow-prometheus-scrape"}],"sample":{"time":1791116068781,"node":"demo-worker-1","verdict":"DROPPED","reason":"POLICY_DENIED","direction":"INGRESS","protocol":"TCP","port":5432,"flags":"SYN","type":"L3_L4","source":{"namespace":"media","pod":"jellyfin-5f8c-xq2wz","workload":"jellyfin-5f8c","identity":11326,"ip":"10.244.5.67"},"destination":{"namespace":"media","pod":"immich-postgres-1","workload":"immich-postgres","identity":11520,"ip":"10.244.5.61"}}},
+          {"source":{"namespace":"home","pod":"zigbee2mqtt-0","workload":"zigbee2mqtt","identity":11119,"ip":"10.244.4.49"},"destination":{"identity":2,"ip":"198.51.100.80","names":["ota.example.org"],"reserved":"world"},"protocol":"TCP","port":443,"direction":"EGRESS","verdict":"DROPPED","reason":"POLICY_DENIED","count":6,"firstSeen":1791116025871,"lastSeen":1791116065830,"nodes":["demo-worker-1"],"deniedBy":[],"isolating":[{"kind":"NetworkPolicy","namespace":"home","name":"default-deny-egress"}],"sample":{"time":1791116065830,"node":"demo-worker-1","verdict":"DROPPED","reason":"POLICY_DENIED","direction":"EGRESS","protocol":"TCP","port":443,"flags":"SYN","type":"L3_L4","source":{"namespace":"home","pod":"zigbee2mqtt-0","workload":"zigbee2mqtt","identity":11119,"ip":"10.244.4.49"},"destination":{"identity":2,"ip":"198.51.100.80","names":["ota.example.org"],"reserved":"world"}}}],"seen":120,"dropped":29,"lost":0}
+        """#
 
     // KubeCilium's demo answer.
     private let cilium = #"""
-    {"installed":true,"namespace":"kube-system","version":"v1.18.2","hubble":true,"buffer":4095,"agents":[{"node":"demo-cp-1","pod":"cilium-ah2kd","ready":true},{"node":"demo-cp-2","pod":"cilium-bi2kd","ready":true},{"node":"demo-cp-3","pod":"cilium-cj2kd","ready":true},{"node":"demo-worker-1","pod":"cilium-dk2kd","ready":true},{"node":"demo-worker-2","pod":"cilium-el2kd","ready":true}]}
-    """#
+        {"installed":true,"namespace":"kube-system","version":"v1.18.2","hubble":true,"buffer":4095,"agents":[{"node":"demo-cp-1","pod":"cilium-ah2kd","ready":true},{"node":"demo-cp-2","pod":"cilium-bi2kd","ready":true},{"node":"demo-cp-3","pod":"cilium-cj2kd","ready":true},{"node":"demo-worker-1","pod":"cilium-dk2kd","ready":true},{"node":"demo-worker-2","pod":"cilium-el2kd","ready":true}]}
+        """#
 
     private func decode(_ text: String) throws -> HubbleSnapshot {
         try JSONDecoder().decode(HubbleSnapshot.self, from: Data(text.utf8))
@@ -32,7 +32,8 @@ final class HubbleFlowsTests: XCTestCase {
         XCTAssertEqual(status.buffer, 4095)
         XCTAssertEqual(status.agents.count, 5)
         XCTAssertEqual(status.agents.first?.node, "demo-cp-1")
-        let absent = try JSONDecoder().decode(CiliumStatus.self, from: Data(#"{"installed":false,"hubble":false,"agents":[]}"#.utf8))
+        let absent = try JSONDecoder().decode(
+            CiliumStatus.self, from: Data(#"{"installed":false,"hubble":false,"agents":[]}"#.utf8))
         XCTAssertFalse(absent.installed)
     }
 
@@ -56,8 +57,11 @@ final class HubbleFlowsTests: XCTestCase {
     }
 
     func testAgentsInErrorComeFirst() {
-        let snap = HubbleSnapshot(nodes: [HubbleAgentState(node: "a", state: .live), HubbleAgentState(node: "b", state: .error, error: "exec refused"),
-                                          HubbleAgentState(node: "c", state: .connecting)])
+        let snap = HubbleSnapshot(nodes: [
+            HubbleAgentState(node: "a", state: .live),
+            HubbleAgentState(node: "b", state: .error, error: "exec refused"),
+            HubbleAgentState(node: "c", state: .connecting),
+        ])
         XCTAssertEqual(snap.agentsByAttention.map(\.node), ["b", "c", "a"])
     }
 
@@ -73,14 +77,16 @@ final class HubbleFlowsTests: XCTestCase {
         XCTAssertEqual(smtp.destination.label, "smtp.example.net")
         XCTAssertEqual(smtp.destination.reserved, "world")
         XCTAssertEqual(smtp.endpointSuffix, ":25/TCP")
-        XCTAssertEqual(smtp.deniedBy, [NetPolicyRef(kind: "CiliumNetworkPolicy", namespace: "home", name: "home-egress")])
+        XCTAssertEqual(
+            smtp.deniedBy, [NetPolicyRef(kind: "CiliumNetworkPolicy", namespace: "home", name: "home-egress")])
         XCTAssertEqual(smtp.hint, .removeDeny(policies: smtp.deniedBy))
 
         let postgres = drops[1]
         XCTAssertEqual(postgres.reason, .policyDenied)
         XCTAssertEqual(postgres.direction, .ingress)
         XCTAssertEqual(postgres.isolating.map(\.name), ["immich-postgres-ingress", "allow-prometheus-scrape"])
-        XCTAssertEqual(postgres.hint, .allowIngress(from: "media/jellyfin-5f8c", port: "TCP 5432", policies: postgres.isolating))
+        XCTAssertEqual(
+            postgres.hint, .allowIngress(from: "media/jellyfin-5f8c", port: "TCP 5432", policies: postgres.isolating))
         XCTAssertEqual(postgres.sample.verdict, .dropped)
 
         let ota = drops[2]
@@ -88,8 +94,9 @@ final class HubbleFlowsTests: XCTestCase {
     }
 
     func testNoHintWithoutPolicies() {
-        let group = HubbleDropGroup(source: HubblePeer(namespace: "a", pod: "p"), destination: HubblePeer(ip: "10.0.0.1"),
-                                    protocol: "UDP", port: 53, direction: "EGRESS", reason: "STALE_OR_UNROUTABLE_IP")
+        let group = HubbleDropGroup(
+            source: HubblePeer(namespace: "a", pod: "p"), destination: HubblePeer(ip: "10.0.0.1"),
+            protocol: "UDP", port: 53, direction: "EGRESS", reason: "STALE_OR_UNROUTABLE_IP")
         XCTAssertNil(group.hint)
         XCTAssertEqual(group.reason, .staleOrUnroutableIP)
         XCTAssertEqual(group.destination.label, "10.0.0.1")
@@ -140,22 +147,28 @@ final class HubbleFlowsTests: XCTestCase {
 
     // KubeCilium on a Calico cluster with Whisker (go/ichorgo/kube_calico.go).
     func testDecodesACalicoStatus() throws {
-        let status = try JSONDecoder().decode(CiliumStatus.self, from: Data(#"""
-        {"installed":true,"cni":"calico","namespace":"calico-system","version":"v3.33.0","hubble":true,
-         "agents":[{"node":"minikube","pod":"calico-node-b68qd","ready":true}],
-         "whisker":{"namespace":"calico-system","pod":"whisker-58dd87647c-zxzcq","port":8443,"tls":true}}
-        """#.utf8))
+        let status = try JSONDecoder().decode(
+            CiliumStatus.self,
+            from: Data(
+                #"""
+                {"installed":true,"cni":"calico","namespace":"calico-system","version":"v3.33.0","hubble":true,
+                 "agents":[{"node":"minikube","pod":"calico-node-b68qd","ready":true}],
+                 "whisker":{"namespace":"calico-system","pod":"whisker-58dd87647c-zxzcq","port":8443,"tls":true}}
+                """#.utf8))
         XCTAssertTrue(status.installed)
         XCTAssertTrue(status.isCalico)
         XCTAssertTrue(status.hubble)
         XCTAssertEqual(status.buffer, 0)
 
-        let snapshot = try JSONDecoder().decode(HubbleSnapshot.self, from: Data(#"""
-        {"cni":"calico","namespace":"calico-system","version":"v3.33.0","buffer":0,"nodes":[{"node":"whisker","pod":"whisker-1","state":"live","flows":15}],
-         "flows":[{"time":1791446895000,"node":"whisker","verdict":"DROPPED","reason":"POLICY_DENIED","direction":"INGRESS","protocol":"TCP","port":80,"type":"L3_L4",
-                   "source":{"namespace":"flows","workload":"curl"},"destination":{"namespace":"flows","workload":"nginx"},"isolating":[{"kind":"NetworkPolicy","namespace":"flows","name":"nginx-ingress"}],"packets":6}],
-         "drops":[],"seen":15,"dropped":6,"lost":0}
-        """#.utf8))
+        let snapshot = try JSONDecoder().decode(
+            HubbleSnapshot.self,
+            from: Data(
+                #"""
+                {"cni":"calico","namespace":"calico-system","version":"v3.33.0","buffer":0,"nodes":[{"node":"whisker","pod":"whisker-1","state":"live","flows":15}],
+                 "flows":[{"time":1791446895000,"node":"whisker","verdict":"DROPPED","reason":"POLICY_DENIED","direction":"INGRESS","protocol":"TCP","port":80,"type":"L3_L4",
+                           "source":{"namespace":"flows","workload":"curl"},"destination":{"namespace":"flows","workload":"nginx"},"isolating":[{"kind":"NetworkPolicy","namespace":"flows","name":"nginx-ingress"}],"packets":6}],
+                 "drops":[],"seen":15,"dropped":6,"lost":0}
+                """#.utf8))
         XCTAssertTrue(snapshot.isCalico)
         // A Calico peer is an aggregate without a pod: named by its workload.
         XCTAssertEqual(snapshot.flows.first?.source.label, "flows/curl")

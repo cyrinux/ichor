@@ -1,0 +1,507 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# Ollama serves local language models over an unauthenticated HTTP API (port 11434). It has
+# no CRD: it is found by its pods (the catalog's ollama image) and read by two Go readers
+# (go/ichorgo/plugin_native_ollama.go) through the API server's Service proxy, or the pod
+# proxy of the first ready pod when no Service selects the pods:
+#   - native:ollama-servers: one OllamaServer per Deployment or StatefulSet running Ollama,
+#     with its version (/api/version), its models on disk (/api/tags) and loaded (/api/ps);
+#   - native:ollama-models: one OllamaModel per model on disk, joined with the loaded ones
+#     (their footprint, VRAM share and expiry); a model deleted while loaded is an orphan.
+# Each row opens the server's workload (ref: $.source). A refused or silent proxy is the
+# server's own row, never a failed plugin.
+# RBAC: list deployments and statefulsets (apps), services and pods; get services/proxy
+# (pods/proxy for the fallback); the actions create (load, unload) and delete (delete) on it,
+# and the apps' "Pull a model…" under a server row (StartOllamaPull, plugin_ollama_pull.go) create.
+# go/ichorgo/plugin_ollama_test.go holds the readers, plugin_ollama_action_test.go the actions.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: ollama
+name: Ollama
+website: https://ollama.com
+icon: ollama
+category: data-services
+catalogId: ollama
+
+detect:
+  - pods: ollama
+
+resources:
+  server:
+    group: ichor.dev
+    version: v1alpha1
+    resource: ollamaservers
+    kind: OllamaServer
+    scope: Namespaced
+    source: native:ollama-servers
+    ref: $.source
+  model:
+    group: ichor.dev
+    version: v1alpha1
+    resource: ollamamodels
+    kind: OllamaModel
+    scope: Namespaced
+    source: native:ollama-models
+    ref: $.source
+    list: { limit: 500 }
+
+fields:
+  server:
+    replicas: $.status.replicas | default(0)
+    readyReplicas: $.status.readyReplicas | default(0)
+    reachable: $.status.reachable | default(false)
+    forbidden: $.status.forbidden | default(false)
+    error: $.status.error | default("")
+    version: $.status.version | default("")
+    gpu: $.spec.gpu | default(0)
+    loaded: $.status.loaded | default(0)
+    models: $.status.models | default(0)
+    diskBytes: $.status.diskBytes | default(0)
+    vramBytes: $.status.vramBytes | default(0)
+  model:
+    loaded: $.status.loaded | default(false)
+    orphan: $.status.orphan | default(false)
+    gpuShare: $.status.gpuShare | default(0)
+    # Loaded on a server that has a GPU, but not all of it in VRAM: slow.
+    spilled: fields.loaded && fields.gpuShare < 100 && ($.spec.serverGpu | default(0)) > 0
+    expiresAt: $.status.expiresAt | time()
+    # A negative keep_alive pins the model: its expiry is centuries away.
+    pinned: fields.loaded && fields.expiresAt - now > 31536000000
+
+# One reason per object: the first rule that holds.
+health:
+  server:
+    - { when: fields.replicas == 0, health: idle, reason: scaledToZero, message: "scaled to zero" }
+    - { when: fields.readyReplicas == 0, health: critical, reason: notReady, message: "no pod ready" }
+    - { when: fields.forbidden, health: unknown, reason: forbidden, message: "the credentials may not use the API server proxy" }
+    - { when: "!fields.reachable", health: warning, reason: unreachable, message: "pods ready but the API does not answer" }
+    - { when: fields.error != "", health: warning, reason: partial, message: "the API answered only in part" }
+  model:
+    - { when: fields.orphan, health: warning, reason: orphan, message: "deleted from disk while loaded" }
+    - { when: fields.spilled, health: warning, reason: spilled, message: "partly on CPU although the server has a GPU" }
+    - { when: "!fields.loaded", health: idle, reason: onDisk, message: "on disk, not loaded" }
+
+dataServices:
+  servers:
+    aggregate:
+      total: count(server)
+      down: count(server, health == "critical")
+      unreachable: count(server, health == "warning" || health == "unknown")
+      disk: sum(server, fields.diskBytes)
+      vram: sum(server, fields.vramBytes)
+    health: worst(server.health)
+  # A model on disk and not loaded is idle, not a reason to dim the whole tile.
+  models:
+    aggregate:
+      total: count(model, !fields.orphan)
+      loaded: count(model, fields.loaded)
+      warnings: count(model, health == "warning")
+    health: 'count(model, health == "warning") > 0 ? "warning" : "ok"'
+  summary:
+    aggregate:
+      servers: dataServices.servers.total
+      loaded: dataServices.models.loaded
+      models: dataServices.models.total
+    health: worst([dataServices.servers.health, dataServices.models.health])
+
+cards:
+  summary:
+    title: { count: dataServices.summary.servers, one: "%d Ollama server", other: "%d Ollama servers" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "not ready", value: dataServices.servers.down, tone: critical, hideWhenZero: true }
+      - { label: "not answering", value: dataServices.servers.unreachable, tone: warning, hideWhenZero: true }
+      - { label: "loaded", value: dataServices.summary.loaded, tone: ok, hideWhenZero: true }
+      - { label: "models", value: dataServices.summary.models, tone: info }
+      - { label: "VRAM", value: 'dataServices.servers.vram > 0 ? bytes(dataServices.servers.vram) : 0', tone: info, hideWhenZero: true }
+      - { label: "warnings", value: dataServices.models.warnings, tone: warning, hideWhenZero: true }
+  servers:
+    from: server
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No Ollama server found"
+    row:
+      title: $.metadata.name
+      subtitle: '$.metadata.namespace + (fields.version != "" ? " · " + fields.version : "")'
+      status:
+        tone: health
+        text: 'fields.replicas == 0 ? "scaled to zero" : (fields.readyReplicas == 0 ? "not ready" : (fields.forbidden ? "no access" : (!fields.reachable ? "not answering" : "ready")))'
+      trailing: { text: 'fields.reachable ? string(fields.loaded) + "/" + string(fields.models) : ""' }
+      detail:
+        - type: gauge
+          label: "Pods ready"
+          value: fields.readyReplicas
+          max: fields.replicas
+          tone: 'fields.replicas == 0 ? "idle" : (fields.readyReplicas == 0 ? "critical" : (fields.readyReplicas < fields.replicas ? "warning" : "ok"))'
+        - type: text
+          text: "{{ fields.error }}"
+          tone: health
+          mono: true
+        - type: keyValues
+          items:
+            - { label: "Version", value: fields.version }
+            - { label: "Service", value: 'has($.spec.service) ? $.spec.service.name + ":" + string($.spec.service.port) : ""', mono: true }
+            - { label: "GPUs", value: string(fields.gpu) }
+            - { label: "Loaded models", value: 'fields.reachable ? string(fields.loaded) : ""' }
+            - { label: "Models on disk", value: 'fields.reachable ? string(fields.models) : ""' }
+            - { label: "Disk", value: 'fields.reachable ? bytes(fields.diskBytes) : ""' }
+            - { label: "VRAM in use", value: 'fields.reachable ? bytes(fields.vramBytes) : ""' }
+  models:
+    from: model
+    sort: ['fields.loaded ? 1 : 0 desc', health desc, $.metadata.name, $.spec.server]
+    empty: "No models."
+    row:
+      title: $.metadata.name
+      subtitle: '$.spec.server + (fields.loaded ? " · " + $.status.processor + (fields.pinned ? "" : " · " + relativeTime(fields.expiresAt)) : "")'
+      status:
+        tone: health
+        text: 'fields.orphan ? "deleted, still loaded" : (fields.spilled ? "partly on CPU" : (fields.pinned ? "pinned" : (fields.loaded ? "loaded" : "on disk")))'
+      trailing: { text: bytes($.spec.size) }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Server", value: $.spec.server }
+            - { label: "Family", value: $.spec.family }
+            - { label: "Parameters", value: $.spec.parameterSize }
+            - { label: "Quantization", value: $.spec.quantization }
+            - { label: "Format", value: $.spec.format }
+            - { label: "Digest", value: $.spec.digest, mono: true }
+            - { label: "Modified", value: '($.spec.modifiedAt | default("")) != "" ? relativeTime($.spec.modifiedAt) : ""' }
+            - { label: "Processor", value: 'fields.loaded ? $.status.processor : ""' }
+            - { label: "Loaded size", value: 'fields.loaded ? bytes($.status.size) : ""' }
+            - { label: "VRAM", value: 'fields.loaded ? bytes($.status.sizeVRAM) : ""' }
+            - { label: "Unloads", value: 'fields.loaded && !fields.pinned ? relativeTime(fields.expiresAt) : ""' }
+        - type: actions
+          items: [load, unload, delete]
+
+# Each action is one call to the model's server through the API server's proxy, made by Go
+# (verb native, go/ichorgo/plugin_ollama_actions.go): load is POST /api/generate with an empty
+# prompt (keep_alive -1 when pinned), unload the same with keep_alive 0, delete DELETE
+# /api/delete. The proxy maps POST to create and DELETE to delete on services/proxy (a server
+# reached through the pod proxy needs pods/proxy: the API server decides there). An unload
+# waits for the requests in flight: the row can still read loaded on the next refresh.
+actions:
+  load:
+    label: "Load"
+    on: model
+    verb: native
+    run: native:ollama-load
+    rbac: { verbs: [create], group: "", resource: services/proxy }
+    confirm: plain
+    audit: ollama.load
+    enabledWhen: "!fields.loaded"
+    disabledReason: "already loaded"
+    params:
+      - { name: pin, label: "Keep loaded until unloaded", type: bool, default: false }
+  unload:
+    label: "Unload"
+    on: model
+    verb: native
+    run: native:ollama-unload
+    rbac: { verbs: [create], group: "", resource: services/proxy }
+    confirm: plain
+    audit: ollama.unload
+    enabledWhen: fields.loaded
+    disabledReason: "not loaded"
+  delete:
+    label: "Delete from disk"
+    on: model
+    verb: native
+    run: native:ollama-delete
+    rbac: { verbs: [delete], group: "", resource: services/proxy }
+    confirm: typedName
+    audit: ollama.delete
+    enabledWhen: "!fields.orphan"
+    disabledReason: "already deleted from disk"
+
+# Invented servers in demo-ai: ollama-gpu (one GPU) with five models on disk, two of them
+# loaded (one pinned, one spilled to CPU), and a model deleted while loaded; ollama-cpu,
+# whose pods are ready but whose API does not answer.
+samples:
+  server:
+    - apiVersion: ichor.dev/v1alpha1
+      kind: OllamaServer
+      metadata: { name: ollama-gpu, namespace: demo-ai }
+      spec: { gpu: 1, service: { name: ollama-gpu, port: 11434 } }
+      status: { replicas: 1, readyReplicas: 1, reachable: true, forbidden: false, version: 0.12.6, loaded: 3, models: 5, diskBytes: 18733923336, vramBytes: 12120000000 }
+      source: { group: apps, version: v1, resource: deployments, kind: Deployment, namespace: demo-ai, name: ollama-gpu }
+    - apiVersion: ichor.dev/v1alpha1
+      kind: OllamaServer
+      metadata: { name: ollama-cpu, namespace: demo-ai }
+      spec: { gpu: 0, service: { name: ollama-cpu, port: 11434 } }
+      status: { replicas: 1, readyReplicas: 1, reachable: false, forbidden: false, version: "", loaded: 0, models: 0, diskBytes: 0, vramBytes: 0, error: "Kubernetes API: timed out" }
+      source: { group: apps, version: v1, resource: deployments, kind: Deployment, namespace: demo-ai, name: ollama-cpu }
+  model:
+    - metadata: { name: "llama3.2:3b", namespace: demo-ai }
+      spec: { server: ollama-gpu, serverGpu: 1, size: 2019393189, digest: a80c4f17acd5, modifiedAt: now-12d, family: llama, parameterSize: 3.2B, quantization: Q4_K_M, format: gguf }
+      status: { loaded: true, orphan: false, size: 3400000000, sizeVRAM: 3400000000, expiresAt: now+3650d, gpuShare: 100, processor: 100% GPU }
+      source: { group: apps, version: v1, resource: deployments, kind: Deployment, namespace: demo-ai, name: ollama-gpu }
+    - metadata: { name: "qwen2.5:14b", namespace: demo-ai }
+      spec: { server: ollama-gpu, serverGpu: 1, size: 8988124069, digest: 7cdf5a0187d5, modifiedAt: now-30d, family: qwen2, parameterSize: 14.8B, quantization: Q4_K_M, format: gguf }
+      status: { loaded: true, orphan: false, size: 11000000000, sizeVRAM: 5720000000, expiresAt: now+4m, gpuShare: 52, processor: 48%/52% CPU/GPU }
+      source: { group: apps, version: v1, resource: deployments, kind: Deployment, namespace: demo-ai, name: ollama-gpu }
+    - metadata: { name: "nomic-embed-text:latest", namespace: demo-ai }
+      spec: { server: ollama-gpu, serverGpu: 1, size: 274302450, digest: 0a109f422b47, modifiedAt: now-45d, family: nomic-bert, parameterSize: 137M, quantization: F16, format: gguf }
+      status: { loaded: false, orphan: false }
+      source: { group: apps, version: v1, resource: deployments, kind: Deployment, namespace: demo-ai, name: ollama-gpu }
+    - metadata: { name: "gemma3:4b", namespace: demo-ai }
+      spec: { server: ollama-gpu, serverGpu: 1, size: 3338801804, digest: a2af6cc3eb7f, modifiedAt: now-6d, family: gemma3, parameterSize: 4.3B, quantization: Q4_K_M, format: gguf }
+      status: { loaded: false, orphan: false }
+      source: { group: apps, version: v1, resource: deployments, kind: Deployment, namespace: demo-ai, name: ollama-gpu }
+    - metadata: { name: "mistral:7b", namespace: demo-ai }
+      spec: { server: ollama-gpu, serverGpu: 1, size: 4113301824, digest: f974a74358d6, modifiedAt: now-60d, family: llama, parameterSize: 7.2B, quantization: Q4_0, format: gguf }
+      status: { loaded: false, orphan: false }
+      source: { group: apps, version: v1, resource: deployments, kind: Deployment, namespace: demo-ai, name: ollama-gpu }
+    - metadata: { name: "phi3:mini", namespace: demo-ai }
+      spec: { server: ollama-gpu, serverGpu: 1, size: 3000000000, digest: 4f2222927938, modifiedAt: "", family: phi3, parameterSize: 3.8B, quantization: Q4_0, format: gguf }
+      status: { loaded: true, orphan: true, size: 3000000000, sizeVRAM: 3000000000, expiresAt: now+2m, gpuShare: 100, processor: 100% GPU }
+      source: { group: apps, version: v1, resource: deployments, kind: Deployment, namespace: demo-ai, name: ollama-gpu }
+
+i18n:
+  fr:
+    "Load": "Charger"
+    "Unload": "Décharger"
+    "Delete from disk": "Supprimer du disque"
+    "Keep loaded until unloaded": "Garder chargé jusqu'au déchargement"
+    "already loaded": "déjà chargé"
+    "not loaded": "non chargé"
+    "already deleted from disk": "déjà supprimé du disque"
+    "%d Ollama server": "%d serveur Ollama"
+    "%d Ollama servers": "%d serveurs Ollama"
+    "not ready": "pas prêt"
+    "not answering": "ne répond pas"
+    "loaded": "chargés"
+    "models": "modèles"
+    "VRAM": "VRAM"
+    "warnings": "avertissements"
+    "No Ollama server found": "Aucun serveur Ollama trouvé"
+    "No models.": "Aucun modèle."
+    "scaled to zero": "réduit à zéro"
+    "no access": "pas d'accès"
+    "ready": "prêt"
+    "Pods ready": "Pods prêts"
+    "Version": "Version"
+    "Service": "Service"
+    "GPUs": "GPU"
+    "Loaded models": "Modèles chargés"
+    "Models on disk": "Modèles sur disque"
+    "Disk": "Disque"
+    "VRAM in use": "VRAM utilisée"
+    "deleted, still loaded": "supprimé, encore chargé"
+    "partly on CPU": "en partie sur CPU"
+    "pinned": "épinglé"
+    "on disk": "sur disque"
+    "Server": "Serveur"
+    "Family": "Famille"
+    "Parameters": "Paramètres"
+    "Quantization": "Quantification"
+    "Format": "Format"
+    "Digest": "Empreinte"
+    "Modified": "Modifié"
+    "Processor": "Processeur"
+    "Loaded size": "Taille chargée"
+    "Unloads": "Déchargement"
+    "no pod ready": "aucun pod prêt"
+    "the credentials may not use the API server proxy": "les identifiants ne peuvent pas utiliser le proxy du serveur d'API"
+    "pods ready but the API does not answer": "pods prêts mais l'API ne répond pas"
+    "the API answered only in part": "l'API n'a répondu qu'en partie"
+    "deleted from disk while loaded": "supprimé du disque pendant qu'il était chargé"
+    "partly on CPU although the server has a GPU": "en partie sur CPU alors que le serveur a un GPU"
+    "on disk, not loaded": "sur disque, non chargé"
+  de:
+    "Load": "Laden"
+    "Unload": "Entladen"
+    "Delete from disk": "Von der Festplatte löschen"
+    "Keep loaded until unloaded": "Geladen lassen, bis es entladen wird"
+    "already loaded": "bereits geladen"
+    "not loaded": "nicht geladen"
+    "already deleted from disk": "bereits von der Festplatte gelöscht"
+    "%d Ollama server": "%d Ollama-Server"
+    "%d Ollama servers": "%d Ollama-Server"
+    "not ready": "nicht bereit"
+    "not answering": "antwortet nicht"
+    "loaded": "geladen"
+    "models": "Modelle"
+    "VRAM": "VRAM"
+    "warnings": "Warnungen"
+    "No Ollama server found": "Kein Ollama-Server gefunden"
+    "No models.": "Keine Modelle."
+    "scaled to zero": "auf null skaliert"
+    "no access": "kein Zugriff"
+    "ready": "bereit"
+    "Pods ready": "Pods bereit"
+    "Version": "Version"
+    "Service": "Service"
+    "GPUs": "GPUs"
+    "Loaded models": "Geladene Modelle"
+    "Models on disk": "Modelle auf der Festplatte"
+    "Disk": "Festplatte"
+    "VRAM in use": "Belegter VRAM"
+    "deleted, still loaded": "gelöscht, noch geladen"
+    "partly on CPU": "teilweise auf der CPU"
+    "pinned": "angeheftet"
+    "on disk": "auf der Festplatte"
+    "Server": "Server"
+    "Family": "Familie"
+    "Parameters": "Parameter"
+    "Quantization": "Quantisierung"
+    "Format": "Format"
+    "Digest": "Digest"
+    "Modified": "Geändert"
+    "Processor": "Prozessor"
+    "Loaded size": "Geladene Größe"
+    "Unloads": "Entladen"
+    "no pod ready": "kein Pod bereit"
+    "the credentials may not use the API server proxy": "die Zugangsdaten dürfen den Proxy des API-Servers nicht nutzen"
+    "pods ready but the API does not answer": "Pods bereit, aber die API antwortet nicht"
+    "the API answered only in part": "die API hat nur teilweise geantwortet"
+    "deleted from disk while loaded": "von der Festplatte gelöscht, während es geladen war"
+    "partly on CPU although the server has a GPU": "teilweise auf der CPU, obwohl der Server eine GPU hat"
+    "on disk, not loaded": "auf der Festplatte, nicht geladen"
+  es:
+    "Load": "Cargar"
+    "Unload": "Descargar"
+    "Delete from disk": "Eliminar del disco"
+    "Keep loaded until unloaded": "Mantener cargado hasta descargarlo"
+    "already loaded": "ya cargado"
+    "not loaded": "no cargado"
+    "already deleted from disk": "ya eliminado del disco"
+    "%d Ollama server": "%d servidor Ollama"
+    "%d Ollama servers": "%d servidores Ollama"
+    "not ready": "no listo"
+    "not answering": "no responde"
+    "loaded": "cargados"
+    "models": "modelos"
+    "VRAM": "VRAM"
+    "warnings": "avisos"
+    "No Ollama server found": "No se encontró ningún servidor Ollama"
+    "No models.": "Ningún modelo."
+    "scaled to zero": "escalado a cero"
+    "no access": "sin acceso"
+    "ready": "listo"
+    "Pods ready": "Pods listos"
+    "Version": "Versión"
+    "Service": "Servicio"
+    "GPUs": "GPU"
+    "Loaded models": "Modelos cargados"
+    "Models on disk": "Modelos en disco"
+    "Disk": "Disco"
+    "VRAM in use": "VRAM en uso"
+    "deleted, still loaded": "eliminado, aún cargado"
+    "partly on CPU": "en parte en CPU"
+    "pinned": "fijado"
+    "on disk": "en disco"
+    "Server": "Servidor"
+    "Family": "Familia"
+    "Parameters": "Parámetros"
+    "Quantization": "Cuantización"
+    "Format": "Formato"
+    "Digest": "Resumen"
+    "Modified": "Modificado"
+    "Processor": "Procesador"
+    "Loaded size": "Tamaño cargado"
+    "Unloads": "Descarga"
+    "no pod ready": "ningún pod listo"
+    "the credentials may not use the API server proxy": "las credenciales no pueden usar el proxy del servidor de API"
+    "pods ready but the API does not answer": "pods listos pero la API no responde"
+    "the API answered only in part": "la API solo respondió en parte"
+    "deleted from disk while loaded": "eliminado del disco mientras estaba cargado"
+    "partly on CPU although the server has a GPU": "en parte en CPU aunque el servidor tiene una GPU"
+    "on disk, not loaded": "en disco, no cargado"
+  it:
+    "Load": "Carica"
+    "Unload": "Scarica"
+    "Delete from disk": "Elimina dal disco"
+    "Keep loaded until unloaded": "Mantieni caricato fino allo scaricamento"
+    "already loaded": "già caricato"
+    "not loaded": "non caricato"
+    "already deleted from disk": "già eliminato dal disco"
+    "%d Ollama server": "%d server Ollama"
+    "%d Ollama servers": "%d server Ollama"
+    "not ready": "non pronto"
+    "not answering": "non risponde"
+    "loaded": "caricati"
+    "models": "modelli"
+    "VRAM": "VRAM"
+    "warnings": "avvisi"
+    "No Ollama server found": "Nessun server Ollama trovato"
+    "No models.": "Nessun modello."
+    "scaled to zero": "scalato a zero"
+    "no access": "nessun accesso"
+    "ready": "pronto"
+    "Pods ready": "Pod pronti"
+    "Version": "Versione"
+    "Service": "Service"
+    "GPUs": "GPU"
+    "Loaded models": "Modelli caricati"
+    "Models on disk": "Modelli su disco"
+    "Disk": "Disco"
+    "VRAM in use": "VRAM in uso"
+    "deleted, still loaded": "eliminato, ancora caricato"
+    "partly on CPU": "in parte su CPU"
+    "pinned": "fissato"
+    "on disk": "su disco"
+    "Server": "Server"
+    "Family": "Famiglia"
+    "Parameters": "Parametri"
+    "Quantization": "Quantizzazione"
+    "Format": "Formato"
+    "Digest": "Digest"
+    "Modified": "Modificato"
+    "Processor": "Processore"
+    "Loaded size": "Dimensione caricata"
+    "Unloads": "Scaricamento"
+    "no pod ready": "nessun pod pronto"
+    "the credentials may not use the API server proxy": "le credenziali non possono usare il proxy del server API"
+    "pods ready but the API does not answer": "pod pronti ma l'API non risponde"
+    "the API answered only in part": "l'API ha risposto solo in parte"
+    "deleted from disk while loaded": "eliminato dal disco mentre era caricato"
+    "partly on CPU although the server has a GPU": "in parte su CPU anche se il server ha una GPU"
+    "on disk, not loaded": "su disco, non caricato"
+  uk:
+    "Load": "Завантажити"
+    "Unload": "Вивантажити"
+    "Delete from disk": "Видалити з диска"
+    "Keep loaded until unloaded": "Тримати завантаженою до вивантаження"
+    "already loaded": "уже завантажено"
+    "not loaded": "не завантажено"
+    "already deleted from disk": "уже видалено з диска"
+    "%d Ollama server": "%d сервер Ollama"
+    "%d Ollama servers": "%d серверів Ollama"
+    "not ready": "не готовий"
+    "not answering": "не відповідає"
+    "loaded": "завантажені"
+    "models": "моделі"
+    "VRAM": "VRAM"
+    "warnings": "попередження"
+    "No Ollama server found": "Сервер Ollama не знайдено"
+    "No models.": "Немає моделей."
+    "scaled to zero": "масштабовано до нуля"
+    "no access": "немає доступу"
+    "ready": "готовий"
+    "Pods ready": "Поди готові"
+    "Version": "Версія"
+    "Service": "Сервіс"
+    "GPUs": "GPU"
+    "Loaded models": "Завантажені моделі"
+    "Models on disk": "Моделі на диску"
+    "Disk": "Диск"
+    "VRAM in use": "Зайнята VRAM"
+    "deleted, still loaded": "видалено, ще завантажено"
+    "partly on CPU": "частково на CPU"
+    "pinned": "закріплено"
+    "on disk": "на диску"
+    "Server": "Сервер"
+    "Family": "Сімейство"
+    "Parameters": "Параметри"
+    "Quantization": "Квантування"
+    "Format": "Формат"
+    "Digest": "Дайджест"
+    "Modified": "Змінено"
+    "Processor": "Процесор"
+    "Loaded size": "Розмір у пам'яті"
+    "Unloads": "Вивантаження"
+    "no pod ready": "жоден под не готовий"
+    "the credentials may not use the API server proxy": "облікові дані не можуть використовувати проксі API-сервера"
+    "pods ready but the API does not answer": "поди готові, але API не відповідає"
+    "the API answered only in part": "API відповів лише частково"
+    "deleted from disk while loaded": "видалено з диска, поки модель була завантажена"
+    "partly on CPU although the server has a GPU": "частково на CPU, хоча сервер має GPU"
+    "on disk, not loaded": "на диску, не завантажено"

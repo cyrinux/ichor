@@ -1,0 +1,6 @@
+• Import a plugin by QR code, and your plugins travel with the backup
+• Ask for a plugin from the website, which opens the prefilled request on GitHub
+• Temporal clusters, schedules and worker rollouts on the phone, with schedule pause
+• A plugin request issue becomes a linted plugin draft pull request
+• Ask for a plugin from a public CRD link through a new issue form
+• Numaflow pipelines, vertices and buffer services on the phone, with pause and resume

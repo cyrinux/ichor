@@ -8,11 +8,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -34,14 +37,19 @@ import name.levis.ichor.ui.components.pageContent
 class SettingsActions(
     val onReimport: () -> Unit,
     val onIssueConfig: () -> Unit,
+    val onRotateCA: () -> Unit,
     val onSupportBundle: () -> Unit,
     val onActivity: () -> Unit,
+    val onDiagnostics: () -> Unit,
     val onIntegrations: () -> Unit,
     val onChangelog: () -> Unit,
     val onLicenses: () -> Unit,
     val onSupportedIntegrations: () -> Unit,
+    val onPluginIndex: () -> Unit,
     val onFunding: () -> Unit,
     val onCleared: () -> Unit,
+    /** Shows the demo tour again on the Talos demo home (adding the demo if it was removed). */
+    val onReplayTour: suspend () -> Unit,
 )
 
 /** What a settings page reads and writes: the same stores the single Settings screen used. */
@@ -58,23 +66,28 @@ fun SettingsPageScreen(page: SettingsPage, stores: SettingsStores, actions: Sett
     val config by stores.configs.config.collectAsStateWithLifecycle()
     val summary = config?.activeSummary
     val app = LocalContext.current.applicationContext as TalosApp
-    SettingsPageScaffold(page, onBack) {
+    val snackbar = remember { SnackbarHostState() }
+    SettingsPageScaffold(page, snackbar, onBack) {
         when (page) {
             SettingsPage.APPEARANCE -> AppearanceSection(stores.uiPreferences)
-            SettingsPage.SECURITY ->
+            SettingsPage.SECURITY -> {
+                KeyFallbackNotice(stores.configs, snackbar)
                 SecuritySection(stores.appLock, stores.uiPreferences, required = lockRequired(config?.summary?.contexts.orEmpty()))
+            }
             SettingsPage.PRIVACY -> PrivacySection(app)
             SettingsPage.ALERTS -> MonitoringSection(app)
             SettingsPage.AI -> AiSection(app)
+            SettingsPage.GIT_HOSTS -> GitHostsSection(app)
+            SettingsPage.PLUGINS -> PluginsSection(app.pluginRepository, stores.uiPreferences, actions.onPluginIndex)
             // The row is hidden without the feature; a stale back stack entry shows an empty page.
             SettingsPage.KUBERNETES ->
                 summary?.takeIf { it.allows(Feature.KUBECONFIG) }?.let { KubeconfigSection(stores.talos, stores.appLock, it) }
             SettingsPage.CLUSTERS ->
-                ClustersSection(stores.configs, actions.onReimport, actions.onIssueConfig, actions.onCleared)
+                ClustersSection(stores.configs, actions.onReimport, actions.onIssueConfig, actions.onRotateCA, actions.onCleared)
             SettingsPage.SUPPORT ->
-                SupportSection(summary, actions.onSupportBundle, actions.onActivity, actions.onIntegrations)
+                SupportSection(summary, actions.onSupportBundle, actions.onActivity, actions.onIntegrations, actions.onDiagnostics)
             SettingsPage.ABOUT -> {
-                AboutSection(actions.onChangelog, actions.onLicenses, actions.onSupportedIntegrations, actions.onFunding)
+                AboutSection(actions.onChangelog, actions.onLicenses, actions.onSupportedIntegrations, actions.onFunding, actions.onReplayTour)
                 UpdatesSection { app.updateManager }
             }
         }
@@ -83,14 +96,15 @@ fun SettingsPageScreen(page: SettingsPage, stores: SettingsStores, actions: Sett
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsPageScaffold(page: SettingsPage, onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    Scaffold(
+private fun SettingsPageScaffold(page: SettingsPage, snackbar: SnackbarHostState, onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(page.title)) },
                 navigationIcon = { BackButton(onBack) },
             )
         },
+        snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         Column(
             Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),

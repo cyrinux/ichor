@@ -30,10 +30,16 @@ func readFixtureNetPolicies(t *testing.T) netPolicyReport {
 		t.Fatal(err)
 	}
 
-	report, err := readNetPolicyReport(context.Background(), k)
+	op := "test-netpol-" + t.Name()
+	progress := startReadProgress(op, "", netpolSteps...)
+
+	report, err := readNetPolicyReport(withReadProgress(context.Background(), progress), k)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	progress.finish()
+	checkFinishedProgress(t, op, netpolSteps)
 
 	return report
 }

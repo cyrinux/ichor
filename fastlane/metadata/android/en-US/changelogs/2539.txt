@@ -1,0 +1,8 @@
+• Create a Compute Engine VM for a new node from the Go core
+• Create an Azure VM for a new node from the Go core
+• Draw ANSI log colours on Android
+• Draw ANSI log colours on iOS
+• Parse ANSI colours out of log lines into styled spans in the Go core
+• Create an AWS EC2 instance for a new node from the Go core
+• Turn on the watchdog timer from the machine config snippets, tried first
+• Show each node's watchdog timer on the Hardware screen, and flag nodes without one in Insights

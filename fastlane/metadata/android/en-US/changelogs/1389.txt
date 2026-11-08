@@ -1,0 +1,7 @@
+• Open a route's own summary from Web access and Services
+• Read Tailscale operator connectors, proxy groups, proxy classes and the DNS config
+• Virtual machines screen on Android and iOS for KubeVirt VMs and their actions
+• Flag a SealedSecret that failed to unseal in the cluster checkup
+• Start, stop, restart, migrate and pause a KubeVirt virtual machine
+• The checkup names Crossplane resources that cannot sync and providers that are unhealthy
+• Tailscale operator: connectors, proxy groups and their readiness on the phone

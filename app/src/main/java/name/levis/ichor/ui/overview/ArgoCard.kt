@@ -16,7 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AcUnit
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -53,7 +53,8 @@ import name.levis.ichor.ui.argocd.freezeClock
 import name.levis.ichor.ui.argocd.waveProgress
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.dataservices.color
+import name.levis.ichor.ui.components.color
+import name.levis.ichor.ui.components.label
 import name.levis.ichor.ui.dataservices.label
 
 /** Bar segments and counts, worst first. */
@@ -69,8 +70,10 @@ private const val MAX_PROBLEMS = 2
  * contexts have no inventory).
  */
 @Composable
-fun ArgoCard(state: UiState<ArgoStatus>, argoTile: InventoryApp?, downNodes: Set<String>, onOpen: () -> Unit) =
-    GitOpsCardFrame(argoTile ?: ARGO_CD_TILE, R.string.argo_card_title, state, { it.apps.size }, onOpen) { Body(it, downNodes) }
+fun ArgoCard(state: UiState<ArgoStatus>, argoTile: InventoryApp?, downNodes: Set<String>, onOpen: () -> Unit, onRetry: (() -> Unit)? = null) =
+    GitOpsCardFrame(argoTile ?: ARGO_CD_TILE, R.string.argo_card_title, state, { it.apps.size }, { s -> s.problemApps.map { it.serviceHealth } }, onOpen, onRetry) {
+        Body(it, downNodes)
+    }
 
 @Composable
 private fun Body(status: ArgoStatus, downNodes: Set<String>) {
@@ -149,7 +152,7 @@ fun SyncingLine(app: ArgoApp) {
                     " · " + stringResource(R.string.argo_syncing) + " · " + waveProgress(app),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
             LinearProgressIndicator(progress = { app.operation?.progress ?: 0f }, strokeCap = StrokeCap.Round, modifier = Modifier.fillMaxWidth().padding(top = 4.dp))

@@ -1,0 +1,11 @@
+{"items":[
+  {"metadata":{"name":"garage-2xv9p","namespace":"garage"},
+   "spec":{"clusterRef":{"name":"garage"},"zone":"zone-3","capacity":"500Gi"},
+   "status":{"phase":"Degraded","nodeId":"9c2f61a0d4e8b7c3","zone":"zone-3","connected":false,"inLayout":true,
+    "lastSeen":"2026-10-01T12:00:00Z"}},
+  {"metadata":{"name":"gw-0","namespace":"garage"},
+   "spec":{"clusterRef":{"name":"garage"},"zone":"zone-1","gateway":true},
+   "status":{"phase":"Running","nodeId":"a1b2c3d4e5f60718","zone":"zone-1","connected":true,"inLayout":false}},
+  {"metadata":{"name":"garage-4kq7z","namespace":"garage"},
+   "spec":{"clusterRef":{"name":"garage"},"zone":"zone-1","capacity":"500Gi"},
+   "status":{"phase":"Ready","nodeId":"1b7e44c9a2f03d58","zone":"zone-1","connected":true,"inLayout":true}}]}

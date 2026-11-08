@@ -20,11 +20,11 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorOutlinedCard
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTextButton
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,6 +47,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.rememberLazyListState
+import name.levis.ichor.ui.components.JumpSection
+import name.levis.ichor.ui.components.SectionJumpRail
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.CheckupKind
 import name.levis.ichor.model.CheckupReport
@@ -71,17 +75,20 @@ import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.expandable
 import name.levis.ichor.ui.factory
-import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.components.pageContent
+import name.levis.ichor.ui.share.AddToHomeButton
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.plugins.pluginLocale
 
 /** A checkup lists the cluster's pods and asks every kubelet: loaded on demand, never polled. */
 class CheckupViewModel(private val kube: KubeRepository) : LoadingViewModel<CheckupReport>() {
-    override suspend fun fetch() = kube.checkup()
+    override suspend fun fetch() = kube.checkup(pluginLocale())
 
     /** A checkup on a large cluster takes a while: its steps show while it reads. */
     override val progressReader: suspend () -> ReadProgress = { kube.readProgress(CHECKUP_PROGRESS_OP) }
@@ -114,11 +121,15 @@ fun CheckupScreen(
     onOpenRelease: (namespace: String, name: String) -> Unit,
     onOpenMonitoring: () -> Unit,
     onOpenCapacity: () -> Unit,
+    onOpenLoadBalancing: () -> Unit,
+    onOpenPolicies: () -> Unit,
+    onOpenTailscale: () -> Unit,
+    onOpenClusterLifecycle: () -> Unit,
+    onOpenPlugin: (pluginId: String) -> Unit,
     vm: CheckupViewModel = viewModel(factory = factory { CheckupViewModel(app.kubeRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val progress by vm.readProgress.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var confirmDelete by rememberSaveable { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
@@ -143,26 +154,38 @@ fun CheckupScreen(
         )
     }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.checkup_title)) },
                 navigationIcon = { BackButton(onBack) },
-                actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
+                actions = {
+                    AddToHomeButton(ShareTarget.screen(ShareTarget.CHECKUP), stringResource(R.string.checkup_title))
+                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
+                },
             )
         },
     ) { padding ->
         Loaded(state, vm::refresh, Modifier.pageContent(padding), progress = progress, stepLabel = { checkupStepLabel(it) }) { report ->
-            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring, onOpenCapacity), onDeleteLeftover = { confirmDelete = it })
+            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring, onOpenCapacity, onOpenLoadBalancing, onOpenPolicies, onOpenTailscale, onOpenClusterLifecycle, onOpenPlugin), onDeleteLeftover = { confirmDelete = it })
         }
     }
 }
 
-/** Where the checkup leads: a Helm release, the Monitoring tab of the Metrics screen, the Capacity screen. */
+/**
+ * Where the checkup leads: a Helm release, the Monitoring tab of the Metrics screen, the
+ * Capacity, Load balancing, Policies, Tailscale and Cluster lifecycle screens, and a plugin's
+ * screen (its findings).
+ */
 private class CheckupLinks(
     val onOpenRelease: (namespace: String, name: String) -> Unit,
     val onOpenMonitoring: () -> Unit,
     val onOpenCapacity: () -> Unit,
+    val onOpenLoadBalancing: () -> Unit,
+    val onOpenPolicies: () -> Unit,
+    val onOpenTailscale: () -> Unit,
+    val onOpenClusterLifecycle: () -> Unit,
+    val onOpenPlugin: (pluginId: String) -> Unit,
 )
 
 @Composable
@@ -179,18 +202,30 @@ private fun CheckupList(
         mutableStateOf(sections.filter { it.state == CheckupStatus.CRITICAL || it.state == CheckupStatus.WARNING }.map { it.id })
     }
 
-    LazyColumn(
-        Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        item(key = "verdict") { CheckupVerdict(report, sections.size) }
-        items(sections, key = { it.id }) { section ->
-            val expanded = section.id in open
-            SectionCard(section, expanded, onToggle = { open = if (expanded) open - section.id else open + section.id }) {
-                SectionBody(section, report, now, links, onDeleteLeftover)
+    // The rail: the verdict, then one dot per card (a card's title, as on the card).
+    val verdictLabel = stringResource(R.string.checkup_section_verdict)
+    val labels = sections.map { section -> sectionLook(section.id)?.let { stringResource(it.title) } ?: section.id }
+    val jumps = remember(sections, verdictLabel, labels) {
+        listOf(JumpSection("verdict", verdictLabel, 0)) + sections.mapIndexed { i, section -> JumpSection(section.id, labels[i], 1 + i) }
+    }
+    val listState = rememberLazyListState()
+
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            state = listState,
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            item(key = "verdict") { CheckupVerdict(report, sections.size) }
+            items(sections, key = { it.id }) { section ->
+                val expanded = section.id in open
+                SectionCard(section, expanded, onToggle = { open = if (expanded) open - section.id else open + section.id }) {
+                    SectionBody(section, report, now, links, onDeleteLeftover)
+                }
             }
         }
+        SectionJumpRail(jumps, listState, Modifier.align(Alignment.CenterEnd))
     }
 }
 
@@ -242,7 +277,7 @@ private fun CheckupVerdict(report: CheckupReport, sections: Int) {
 private fun SectionCard(section: CheckupSection, expanded: Boolean, onToggle: () -> Unit, content: @Composable () -> Unit) {
     val look = sectionLook(section.id)
     val status = section.state
-    OutlinedCard(Modifier.fillMaxWidth()) {
+    IchorOutlinedCard(Modifier.fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth().expandable(expanded, onToggle = onToggle).padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -272,12 +307,12 @@ private fun SectionBadges(section: CheckupSection) {
     val warnings = section.findings.count { it.level == CheckupSeverity.WARNING }
     val notes = section.findings.size - critical - warnings
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (critical > 0) TagBadge(critical.toString(), colors.bad)
-        if (warnings > 0) TagBadge(warnings.toString(), colors.warn)
-        if (notes > 0) TagBadge(notes.toString(), colors.muted)
+        if (critical > 0) Tag(critical.toString(), colors.bad)
+        if (warnings > 0) Tag(warnings.toString(), colors.warn)
+        if (notes > 0) Tag(notes.toString(), colors.muted)
         when {
             critical + warnings + notes > 0 -> Unit
-            section.state == CheckupStatus.UNKNOWN -> TagBadge("?", colors.muted)
+            section.state == CheckupStatus.UNKNOWN -> Tag("?", colors.muted)
             else -> Icon(Icons.Outlined.CheckCircle, contentDescription = stringResource(R.string.checkup_nothing_found), tint = colors.ok, modifier = Modifier.size(20.dp))
         }
     }
@@ -297,19 +332,36 @@ private fun SectionBody(
         MutedText(stringResource(R.string.checkup_nothing_in, section.checked.toString()))
     }
     section.findings.forEach { f ->
-        FindingCard(f, now, onDelete = if (f.kind == CheckupKind.NETPERF_LEFTOVER) ({ onDeleteLeftover(f.name) }) else null)
+        FindingCard(
+            f,
+            now,
+            onDelete = if (f.kind == CheckupKind.NETPERF_LEFTOVER) ({ onDeleteLeftover(f.name) }) else null,
+            onOpen = if (f.kind == CheckupKind.PLUGIN && f.plugin.isNotEmpty()) ({ links.onOpenPlugin(f.plugin) }) else null,
+        )
     }
     if (section.truncated > 0) MutedText(stringResource(R.string.checkup_truncated, section.truncated.toString()))
     when (section.id) {
         CheckupSectionId.CAPACITY -> {
-            TextButton(onClick = links.onOpenCapacity) { Text(stringResource(R.string.capacity_checkup_link)) }
+            IchorTextButton(onClick = links.onOpenCapacity) { Text(stringResource(R.string.capacity_checkup_link)) }
             NodeRequests(report.nodes)
         }
         CheckupSectionId.NODES -> NodeTaints(report.nodes)
         CheckupSectionId.STORAGE -> VolumeLevels(report.volumes)
         CheckupSectionId.HELM -> HelmReleases(report.releases, now, links.onOpenRelease)
+        CheckupSectionId.LOAD_BALANCERS -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
+            IchorTextButton(onClick = links.onOpenLoadBalancing) { Text(stringResource(R.string.lb_open)) }
+        }
         CheckupSectionId.MONITORING -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
-            TextButton(onClick = links.onOpenMonitoring) { Text(stringResource(R.string.checkup_open_monitoring)) }
+            IchorTextButton(onClick = links.onOpenMonitoring) { Text(stringResource(R.string.checkup_open_monitoring)) }
+        }
+        CheckupSectionId.POLICIES -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
+            IchorTextButton(onClick = links.onOpenPolicies) { Text(stringResource(R.string.checkup_open_policies)) }
+        }
+        CheckupSectionId.TAILSCALE -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
+            IchorTextButton(onClick = links.onOpenTailscale) { Text(stringResource(R.string.checkup_open_tailscale)) }
+        }
+        CheckupSectionId.CLUSTER_API -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
+            IchorTextButton(onClick = links.onOpenClusterLifecycle) { Text(stringResource(R.string.checkup_open_cluster_lifecycle)) }
         }
     }
 }

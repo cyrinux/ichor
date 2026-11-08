@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import name.levis.ichor.ui.design.IchorAlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import name.levis.ichor.ui.design.IchorSwitch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ConfigSnippet
 import name.levis.ichor.model.SnippetParam
+import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.model.byGroup
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.ErrorBox
@@ -49,14 +50,18 @@ fun SnippetPickerDialog(
     onRetry: () -> Unit,
     onApply: (id: String, params: Map<String, String>) -> Unit,
     onDismiss: () -> Unit,
+    /** The snippet to open on, its parameters prefilled; null for the list. */
+    prefill: SnippetPrefill? = null,
 ) {
-    var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedId by rememberSaveable { mutableStateOf(prefill?.id) }
     val list = (snippets as? UiState.Loaded)?.data.orEmpty()
     val selected = list.firstOrNull { it.id == selectedId }
-    val values = remember(selectedId) { mutableStateMapOf<String, String>() }
+    val values = remember(selectedId) {
+        mutableStateMapOf<String, String>().apply { if (prefill != null && selectedId == prefill.id) putAll(prefill.params) }
+    }
     val complete = selected != null && selected.params.all { values[it.name].orEmpty().isNotBlank() || it.type == "bool" }
 
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(selected?.let { stringResource(snippetLabel(it.id)) } ?: stringResource(R.string.machine_config_snippets)) },
         text = {
@@ -74,7 +79,7 @@ fun SnippetPickerDialog(
         },
         confirmButton = {
             if (selected != null) {
-                TextButton(
+                IchorTextButton(
                     onClick = {
                         val params = selected.params.associate { p -> p.name to (values[p.name] ?: if (p.type == "bool") "false" else "") }
                         onApply(selected.id, params)
@@ -85,9 +90,9 @@ fun SnippetPickerDialog(
         },
         dismissButton = {
             if (selected != null) {
-                TextButton(onClick = { selectedId = null }) { Text(stringResource(R.string.common_back)) }
+                IchorTextButton(onClick = { selectedId = null }) { Text(stringResource(R.string.common_back)) }
             } else {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+                IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
             }
         },
     )
@@ -106,6 +111,7 @@ private fun SnippetForm(snippet: ConfigSnippet, values: MutableMap<String, Strin
     MutedText(stringResource(snippetDescription(snippet.id)))
     if (snippet.staged) MutedText(stringResource(R.string.snippet_staged_note))
     snippet.params.forEach { param -> ParamField(param, values[param.name].orEmpty()) { values[param.name] = it } }
+    if (snippet.id == "watchdog") MutedText(stringResource(R.string.snippet_watchdog_note))
 }
 
 @Composable
@@ -113,7 +119,7 @@ private fun ParamField(param: SnippetParam, value: String, onChange: (String) ->
     if (param.type == "bool") {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(snippetParam(param.name)), modifier = Modifier.weight(1f))
-            Switch(checked = value == "true", onCheckedChange = { onChange(it.toString()) })
+            IchorSwitch(checked = value == "true", onCheckedChange = { onChange(it.toString()) })
         }
         return
     }
@@ -152,6 +158,7 @@ private fun snippetLabel(id: String): Int = when (id) {
     "apiserver_arg" -> R.string.snippet_apiserver_arg
     "node_label" -> R.string.snippet_node_label
     "registry_mirror" -> R.string.snippet_registry_mirror
+    "watchdog" -> R.string.snippet_watchdog
     else -> R.string.snippet_kubespan
 }
 
@@ -166,6 +173,7 @@ private fun snippetDescription(id: String): Int = when (id) {
     "apiserver_arg" -> R.string.snippet_apiserver_arg_desc
     "node_label" -> R.string.snippet_node_label_desc
     "registry_mirror" -> R.string.snippet_registry_mirror_desc
+    "watchdog" -> R.string.snippet_watchdog_desc
     else -> R.string.snippet_kubespan_desc
 }
 
@@ -180,5 +188,7 @@ private fun snippetParam(name: String): Int = when (name) {
     "host" -> R.string.snippet_param_host
     "endpoint" -> R.string.snippet_param_endpoint
     "enabled" -> R.string.snippet_param_enabled
+    "device" -> R.string.snippet_param_device
+    "timeout" -> R.string.snippet_param_timeout
     else -> R.string.snippet_param_value
 }

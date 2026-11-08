@@ -25,14 +25,25 @@ final class VpnOnlyTests: XCTestCase {
     }
 
     func testTunnelInterfacesMeanAVpn() {
-        XCTAssertTrue(vpnIsUp(interfaces: [PathInterface(name: "en0", isOther: false), PathInterface(name: "utun4", isOther: true)], usesOther: false))
+        XCTAssertTrue(
+            vpnIsUp(
+                interfaces: [PathInterface(name: "en0", isOther: false), PathInterface(name: "utun4", isOther: true)],
+                usesOther: false))
         XCTAssertTrue(vpnIsUp(interfaces: [PathInterface(name: "ipsec0", isOther: true)], usesOther: false))
         XCTAssertTrue(vpnIsUp(interfaces: [], usesOther: true))
     }
 
     func testPlainNetworksAreNoVpn() {
-        XCTAssertFalse(vpnIsUp(interfaces: [PathInterface(name: "en0", isOther: false), PathInterface(name: "pdp_ip0", isOther: false)], usesOther: false))
+        XCTAssertFalse(
+            vpnIsUp(
+                interfaces: [
+                    PathInterface(name: "en0", isOther: false), PathInterface(name: "pdp_ip0", isOther: false),
+                ], usesOther: false))
         // A tunnel name on a non-tunnel interface type, or another virtual interface, is not one.
-        XCTAssertFalse(vpnIsUp(interfaces: [PathInterface(name: "utun0", isOther: false), PathInterface(name: "bridge100", isOther: true)], usesOther: false))
+        XCTAssertFalse(
+            vpnIsUp(
+                interfaces: [
+                    PathInterface(name: "utun0", isOther: false), PathInterface(name: "bridge100", isOther: true),
+                ], usesOther: false))
     }
 }

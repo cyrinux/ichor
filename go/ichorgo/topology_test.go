@@ -6,6 +6,7 @@ import (
 	"net/netip"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/resources/kubespan"
 )
@@ -289,8 +290,14 @@ func TestDemoTopology(t *testing.T) {
 		t.Errorf("want one degraded link, got %d: %+v", degraded, topo.Links)
 	}
 
-	if ks := demoKubeSpan(); ks.Nodes[4].Down != 1 || ks.Nodes[0].Up != 4 {
+	if !topo.Mesh.Checked || topo.Mesh.Links != 10 || topo.Mesh.Broken != 2 || len(topo.Mesh.Pairs) != 2 {
+		t.Errorf("demo mesh = %+v", topo.Mesh)
+	}
+
+	if ks := demoKubeSpan(); ks.Nodes[4].Down != 1 || ks.Nodes[0].Up != 4 || ks.Nodes[4].Broken != 2 || ks.Nodes[4].Unknown != 1 {
 		t.Errorf("demo KubeSpan = %+v", ks.Nodes)
+	} else if p := ks.Nodes[4].Peers[0]; !p.Broken {
+		t.Errorf("the broken peers come first: %+v", ks.Nodes[4].Peers)
 	}
 }
 
@@ -321,5 +328,116 @@ func TestBuildTopologyPublicOnlyServersShareTheirSlash24(t *testing.T) {
 
 	if nodeByID(t, topo, "ts-1").Site == nodeByID(t, topo, "ts-2").Site {
 		t.Errorf("CGNAT addresses must not group: %+v", topo.Sites)
+	}
+}
+
+func TestBuildTopologyBrokenLinks(t *testing.T) {
+	now := time.Now()
+	peer := func(label string, state kubespan.PeerState, created, handshake time.Duration, endpoint bool) *kubespanPeerInput {
+		p := kubespanPeerInput{id: "pk-" + label, spec: kubespan.PeerStatusSpec{Label: label, State: state}}
+		if created > 0 {
+			p.created = now.Add(-created)
+		}
+
+		if handshake > 0 {
+			p.spec.LastHandshakeTime = now.Add(-handshake)
+		}
+
+		if endpoint {
+			p.spec.Endpoint = netip.MustParseAddrPort("203.0.113.2:51820")
+		}
+
+		return &p
+	}
+	unknown, up, down := kubespan.PeerStateUnknown, kubespan.PeerStateUp, kubespan.PeerStateDown
+
+	tests := []struct {
+		name   string
+		a, b   *kubespanPeerInput // what node-a says of node-b, node-b of node-a; nil: no report
+		bErr   error
+		broken bool
+		reason string
+	}{
+		{name: "up", a: peer("node-b", up, time.Hour, time.Minute, true), b: peer("node-a", up, time.Hour, time.Minute, true)},
+		{
+			name: "unknown, never, old", a: peer("node-b", unknown, time.Hour, 0, true), b: peer("node-a", unknown, time.Hour, 0, true),
+			broken: true, reason: kubespanReasonNever,
+		},
+		{name: "unknown, never, no endpoint", a: peer("node-b", unknown, time.Hour, 0, false), broken: true, reason: kubespanReasonNoEndpoint},
+		{name: "unknown, never, young", a: peer("node-b", unknown, time.Minute, 0, true)},
+		{name: "unknown, never, age not known", a: peer("node-b", unknown, 0, 0, true)},
+		{name: "unknown, handshake 2 min ago", a: peer("node-b", unknown, time.Hour, 2*time.Minute, true)},
+		{name: "unknown, handshake 10 min ago", a: peer("node-b", unknown, time.Hour, 10*time.Minute, true), broken: true, reason: kubespanReasonStale},
+		{
+			name: "down one side", a: peer("node-b", down, time.Hour, 10*time.Minute, true), b: peer("node-a", up, time.Hour, time.Minute, true),
+			broken: true, reason: kubespanReasonOneSide,
+		},
+		{
+			name: "unknown and dead one side", a: peer("node-b", unknown, time.Hour, 0, true), b: peer("node-a", up, time.Hour, time.Minute, true),
+			broken: true, reason: kubespanReasonOneSide,
+		},
+		{name: "down with a fresh handshake", a: peer("node-b", down, time.Hour, time.Minute, true), broken: true, reason: kubespanReasonDown},
+		{name: "the other node is unreachable", a: peer("node-b", down, time.Hour, 10*time.Minute, true), bErr: errors.New("unreachable")},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			obsA := topologyObservation{node: "10.0.0.1", hostname: "node-a"}
+			obsB := topologyObservation{node: "10.0.0.2", hostname: "node-b", err: tc.bErr}
+
+			if tc.a != nil {
+				obsA.peers = []kubespanPeerInput{*tc.a}
+			}
+
+			if tc.b != nil {
+				obsB.peers = []kubespanPeerInput{*tc.b}
+			}
+
+			topo := buildTopology(nil, []topologyObservation{obsA, obsB})
+			if len(topo.Links) != 1 {
+				t.Fatalf("links = %+v", topo.Links)
+			}
+
+			l := topo.Links[0]
+			if l.Broken != tc.broken || l.Reason != tc.reason {
+				t.Errorf("broken = %v, reason = %q", l.Broken, l.Reason)
+			}
+
+			wantBroken := 0
+			if tc.broken {
+				wantBroken = 1
+			}
+
+			if topo.Mesh.Broken != wantBroken || len(topo.Mesh.Pairs) != wantBroken || !topo.Mesh.Checked {
+				t.Errorf("mesh = %+v", topo.Mesh)
+			}
+		})
+	}
+}
+
+func TestBuildTopologyMeshWithoutKubeSpan(t *testing.T) {
+	topo := buildTopology(nil, []topologyObservation{{node: "10.0.0.1", hostname: "node-a"}})
+
+	if topo.Mesh.Checked || topo.Mesh.Broken != 0 || topo.Mesh.Pairs == nil {
+		t.Errorf("mesh = %+v", topo.Mesh)
+	}
+}
+
+func TestBuildTopologyMeshPairsWorstFirstAndCapped(t *testing.T) {
+	now := time.Now()
+	obs := topologyObservation{node: "10.0.0.1", hostname: "node-a"}
+
+	for _, label := range []string{"node-b", "node-c", "node-d", "node-e", "node-f", "node-g"} {
+		spec := kubespan.PeerStatusSpec{Label: label, State: kubespan.PeerStateDown, LastHandshakeTime: now.Add(-time.Hour)}
+		if label == "node-g" {
+			spec.LastHandshakeTime = time.Time{}
+		}
+
+		obs.peers = append(obs.peers, kubespanPeerInput{id: label, created: now.Add(-time.Hour), spec: spec})
+	}
+
+	m := buildTopology(nil, []topologyObservation{obs}).Mesh
+	if m.Broken != 6 || len(m.Pairs) != meshMaxPairs || m.Pairs[0] != "node-a ↔ node-g" {
+		t.Errorf("mesh = %+v", m)
 	}
 }

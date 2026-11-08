@@ -1,25 +1,24 @@
 package name.levis.ichor.ui.maintenance
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import name.levis.ichor.ui.components.ClusterScreenTitle
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -83,7 +82,6 @@ fun MaintenanceScreen(
     val draining = drainOnly || config?.activeIsKube == true
     // A cluster without Talos drains with its own credentials; a Talos one with its admin kubeconfig.
     val drainDenial = if (config?.activeIsKube == true) rememberKubeDenial(KubeAction.DRAIN_NODE, "") else null
-    LaunchedEffect(Unit) { if (plan == UiState.Loading) planVm.refresh() }
 
     fun start(choice: MaintenanceChoice, name: String) {
         val wasCordoned = (plan as? UiState.Loaded)?.data?.cordoned == true
@@ -119,16 +117,11 @@ fun MaintenanceScreen(
         upgrading?.running == true -> stringResource(R.string.upgrade_other_running, upgrading?.hostname.orEmpty())
         else -> null
     }
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(stringResource(if (draining) R.string.maintenance_phase_drain else R.string.maintenance_title))
-                        Text(hostname, style = MaterialTheme.typography.labelMedium)
-                    }
-                },
+            IchorTopAppBar(
+                title = { ClusterScreenTitle(stringResource(if (draining) R.string.maintenance_phase_drain else R.string.maintenance_title), hostname) },
                 navigationIcon = { BackButton(onBack) },
             )
         },

@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.workloads
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,14 +8,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -43,6 +40,7 @@ import name.levis.ichor.data.isMeteredNetwork
 import name.levis.ichor.data.workloadsKey
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.model.KubeRevision
+import name.levis.ichor.model.KubeRevisionList
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.PodSelection
 import name.levis.ichor.model.podSelection
@@ -52,13 +50,15 @@ import name.levis.ichor.model.filtered
 import name.levis.ichor.model.namespaces
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
-import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.rememberKubeActionAccess
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.rememberFirstKubeDenial
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.ui.components.emptyOrNoMatch
+import name.levis.ichor.ui.components.groupedCardRows
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
@@ -113,6 +113,7 @@ fun WorkloadsTab(
     query: String,
     onQuery: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onAutoscaling: () -> Unit = {},
     vm: WorkloadsViewModel = viewModel(factory = factory { WorkloadsViewModel(app.kubeRepository, app.gitOpsRepository) { isMeteredNetwork(app) } }),
     focusKey: String? = null,
     onFocused: () -> Unit = {},
@@ -124,7 +125,7 @@ fun WorkloadsTab(
     PollWhileStarted { vm.follow() }
     var confirm by remember { mutableStateOf<KubeWorkload?>(null) }
     var opened by remember { mutableStateOf<String?>(null) }
-    var rollback by remember { mutableStateOf<Pair<KubeWorkload, KubeRevision>?>(null) }
+    var revisionOf by remember { mutableStateOf<Pair<KubeRevision, KubeRevisionList>?>(null) }
     var podsOf by remember { mutableStateOf<PodSelection.OfWorkload?>(null) }
     val listed = (state as? UiState.Loaded)?.data?.items
     LaunchedEffect(focusKey, listed) {
@@ -136,17 +137,42 @@ fun WorkloadsTab(
     podsOf?.let { WorkloadPodsSheet(it, onDismiss = { podsOf = null }) }
 
     RestartResultToasts(vm.restarts.results)
+    val followRollout = rememberRolloutFollow()
     ActionMessageToasts(vm.actions.messages)
     RolloutStatusSheet(vm.restarts)
 
     // The live row, so the sheet follows a refresh (new replica count, new revision).
-    (state as? UiState.Loaded)?.data?.items?.firstOrNull { it.key == opened }?.let { w ->
+    val openedWorkload = (state as? UiState.Loaded)?.data?.items?.firstOrNull { it.key == opened }
+    // A revision's diff replaces the workload's sheet; closing it goes back to the sheet.
+    val shownRevision = revisionOf
+    if (openedWorkload != null && shownRevision != null) {
+        val (revision, history) = shownRevision
+        val busy by vm.actions.busy.collectAsStateWithLifecycle()
+        RevisionDiffSheet(
+            workload = openedWorkload,
+            revision = revision,
+            manual = history.manual,
+            paused = history.paused,
+            actions = vm.actions,
+            denial = rememberKubeActionAccess(openedWorkload.namespace)?.denial(KubeAction.rollback(openedWorkload.kind)),
+            busy = openedWorkload.key in busy,
+            onRollback = {
+                revisionOf = null
+                // The rollout sheet takes over once the rollback is accepted.
+                opened = null
+                vm.actions.rollback(openedWorkload, revision, history.manual)
+            },
+            onDismiss = { revisionOf = null },
+        )
+    }
+    openedWorkload?.takeIf { shownRevision == null }?.let { w ->
         WorkloadSheet(
             workload = w,
             actions = vm.actions,
             onRestart = { confirm = w },
-            onRollback = { rollback = w to it },
+            onRevision = { revision, history -> revisionOf = revision to history },
             onDismiss = { opened = null },
+            onAutoscaling = { opened = null; onAutoscaling() },
             onPods = w.podSelection?.let { selection ->
                 {
                     // One sheet at a time: the pods replace the workload's.
@@ -156,28 +182,12 @@ fun WorkloadsTab(
             },
         )
     }
-    rollback?.let { (w, revision) ->
-        ConfirmDialog(
-            title = stringResource(R.string.workloads_rollback_title, w.name, revision.revision),
-            text = stringResource(R.string.workloads_rollback_text, w.namespace, revision.images.joinToString(", ").ifEmpty { revision.replicaSet }),
-            confirm = stringResource(R.string.workloads_rollback),
-            onConfirm = {
-                rollback = null
-                // The rollout sheet takes over once the rollback is accepted.
-                opened = null
-                vm.actions.rollback(w, revision)
-            },
-            onDismiss = { rollback = null },
-            destructive = true,
-        )
-    }
-
     confirm?.let { w ->
         RestartConfirmDialog(
             workload = w,
             onConfirm = {
                 confirm = null
-                vm.restarts.restart(w)
+                vm.restarts.restart(w, followRollout)
             },
             onDismiss = { confirm = null },
         )
@@ -198,16 +208,17 @@ fun WorkloadsTab(
             } else {
                 val listState = rememberLazyListState()
                 LoadMoreOnScroll(listState, enabled = load.hasMore && query.isBlank(), loaded = load.items.size, onLoadMore = vm::loadMore)
-                LazyColumn(Modifier.fillMaxSize(), state = listState) {
-                    items(rows, key = { it.key }) { w ->
+                // All namespaces: one card per namespace, its name as the card's title.
+                LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = CardListPadding) {
+                    groupedCardRows(rows, groupOf = if (selected == null) { w: KubeWorkload -> w.namespace } else null, key = { it.key }) { w ->
                         WorkloadRow(
                             w,
-                            showNamespace = selected == null,
                             restarting = w.key in restarting,
                             onRestart = { confirm = w },
                             onOpen = { opened = w.key },
+                            autoscaled = w.autoscaler != null,
+                            autoscalerStateOk = w.autoscaler?.stateOk ?: true,
                         )
-                        HorizontalDivider()
                     }
                 }
             }
@@ -216,10 +227,18 @@ fun WorkloadsTab(
     }
 }
 
+/** A workload: tap for its sheet, swipe right to restart, long press for Restart, Scale…, Pin and Share. */
 @Composable
-private fun WorkloadRow(workload: KubeWorkload, showNamespace: Boolean, restarting: Boolean, onRestart: () -> Unit, onOpen: () -> Unit) {
+private fun WorkloadRow(workload: KubeWorkload, restarting: Boolean, onRestart: () -> Unit, onOpen: () -> Unit, autoscaled: Boolean = false, autoscalerStateOk: Boolean = true) {
+    WorkloadQuickActions(workload, restarting, onRestart = onRestart, onOpen = onOpen) {
+        WorkloadRowContent(workload, restarting, onRestart, autoscaled, autoscalerStateOk)
+    }
+}
+
+@Composable
+private fun WorkloadRowContent(workload: KubeWorkload, restarting: Boolean, onRestart: () -> Unit, autoscaled: Boolean, autoscalerStateOk: Boolean) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(Modifier.fillMaxWidth().clickable(onClick = onOpen).padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(
                 workload.name,
@@ -229,7 +248,7 @@ private fun WorkloadRow(workload: KubeWorkload, showNamespace: Boolean, restarti
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                listOfNotNull(workload.kind, workload.namespace.takeIf { showNamespace }).joinToString("  ·  "),
+                workload.kind,
                 style = MaterialTheme.typography.labelSmall,
                 color = muted,
             )
@@ -239,6 +258,13 @@ private fun WorkloadRow(workload: KubeWorkload, showNamespace: Boolean, restarti
                     style = MaterialTheme.typography.labelSmall,
                     color = workload.workloadState.color(),
                 )
+                if (autoscaled) {
+                    Text(
+                        stringResource(R.string.workloads_autoscaled_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (autoscalerStateOk) muted else MaterialTheme.colorScheme.error,
+                    )
+                }
                 if (workload.restartedAt > 0) {
                     val ago = timeAgo(workload.restartedAt)
                     Text(stringResource(R.string.workloads_restarted_ago, ago), style = MaterialTheme.typography.labelSmall, color = muted)
@@ -249,7 +275,7 @@ private fun WorkloadRow(workload: KubeWorkload, showNamespace: Boolean, restarti
             CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
         } else {
             val denied = rememberKubeDenial(KubeAction.restart(workload.kind), workload.namespace) != null
-            IconButton(onClick = onRestart, enabled = workload.canRestart && !denied) {
+            IchorIconButton(onClick = onRestart, enabled = workload.canRestart && !denied) {
                 Icon(Icons.Outlined.RestartAlt, stringResource(R.string.workloads_restart, workload.name))
             }
         }

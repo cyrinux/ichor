@@ -3,13 +3,16 @@ import XCTest
 
 final class ActivityTests: XCTestCase {
     private let entries = [
-        ActivityEntry(at: 3, cluster: "prod", namespace: "web", object: "Deployment/api", action: "scale", params: "replicas=3"),
-        ActivityEntry(at: 2, cluster: "lab", node: "10.0.0.2", action: "reboot", outcome: "failed", error: "unreachable"),
+        ActivityEntry(
+            at: 3, cluster: "prod", namespace: "web", object: "Deployment/api", action: "scale", params: "replicas=3"),
+        ActivityEntry(
+            at: 2, cluster: "lab", node: "10.0.0.2", action: "reboot", outcome: "failed", error: "unreachable"),
         ActivityEntry(at: 1, cluster: "prod", node: "10.0.0.3", action: "rollout-restart"),
     ]
 
     func testDecodeGoJSON() throws {
-        let json = #"[{"at":1,"cluster":"prod","namespace":"web","object":"Pod/api-1","action":"delete-pod","outcome":"failed","error":"forbidden","demo":true}]"#
+        let json =
+            #"[{"at":1,"cluster":"prod","namespace":"web","object":"Pod/api-1","action":"delete-pod","outcome":"failed","error":"forbidden","demo":true}]"#
         let decoded = try TalosJSON.decode([ActivityEntry].self, from: json)
         XCTAssertEqual(decoded.count, 1)
         XCTAssertEqual(decoded[0].object, "Pod/api-1")
@@ -17,6 +20,18 @@ final class ActivityTests: XCTestCase {
         XCTAssertTrue(decoded[0].demo)
         XCTAssertEqual(decoded[0].target, "web/Pod/api-1")
         XCTAssertEqual(decoded[0].params, "")
+    }
+
+    func testPartialAndUnknownOutcomes() throws {
+        let json =
+            #"[{"action":"sanitize-pods","outcome":"partial","error":"1 of 2 pods not deleted"},{"action":"x","outcome":"something-new"}]"#
+        let decoded = try TalosJSON.decode([ActivityEntry].self, from: json)
+        XCTAssertTrue(decoded[0].partial)
+        XCTAssertFalse(decoded[0].failed)
+        XCTAssertTrue(ActivityFilter(failedOnly: true).matches(decoded[0]))
+        XCTAssertTrue(decoded[1].failed)
+        XCTAssertFalse(decoded[1].partial)
+        XCTAssertFalse(entries[0].wentWrong)
     }
 
     func testActionLabel() {
@@ -27,7 +42,8 @@ final class ActivityTests: XCTestCase {
     func testFilters() {
         XCTAssertEqual(entries.filter(ActivityFilter().matches).count, 3)
         XCTAssertEqual(entries.filter(ActivityFilter(cluster: "prod").matches).map(\.at), [3, 1])
-        XCTAssertEqual(entries.filter(ActivityFilter(cluster: "prod", action: "rollout-restart").matches).map(\.at), [1])
+        XCTAssertEqual(
+            entries.filter(ActivityFilter(cluster: "prod", action: "rollout-restart").matches).map(\.at), [1])
         XCTAssertEqual(entries.filter(ActivityFilter(failedOnly: true).matches).map(\.at), [2])
     }
 

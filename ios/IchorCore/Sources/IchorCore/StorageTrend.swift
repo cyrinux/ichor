@@ -19,7 +19,8 @@ public struct HistoryForecast: Decodable, Equatable, Sendable {
     /// prefix, as the history names it); nil without one.
     public func volume(node: String, name: String) -> VolumeForecast? {
         let bare = name.hasPrefix("u-") ? String(name.dropFirst(2)) : name
-        return volumes.first { $0.node == node && $0.name == name } ?? volumes.first { $0.node == node && $0.name == bare }
+        return volumes.first { $0.node == node && $0.name == name }
+            ?? volumes.first { $0.node == node && $0.name == bare }
     }
 
     private enum CodingKeys: String, CodingKey { case volumes }
@@ -45,9 +46,11 @@ public struct VolumeForecast: Decodable, Equatable, Sendable {
     public let points: Int
     public let spanHours: Double
 
-    public init(key: String, name: String, node: String, usedPercent: Double, latestAt: Int64 = 0, slopePerDay: Double = 0,
-                daysToFull: Double? = nil, daysToCritical: Double? = nil, confidence: String = "low",
-                points: Int = 0, spanHours: Double = 0) {
+    public init(
+        key: String, name: String, node: String, usedPercent: Double, latestAt: Int64 = 0, slopePerDay: Double = 0,
+        daysToFull: Double? = nil, daysToCritical: Double? = nil, confidence: String = "low",
+        points: Int = 0, spanHours: Double = 0
+    ) {
         self.key = key
         self.name = name
         self.node = node
@@ -80,7 +83,8 @@ public struct VolumeForecast: Decodable, Equatable, Sendable {
     public var isHigh: Bool { confidence == Self.high }
 
     private enum CodingKeys: String, CodingKey {
-        case key, name, node, usedPercent, latestAt, slopePerDay, daysToFull, daysToCritical, confidence, points, spanHours
+        case key, name, node, usedPercent, latestAt, slopePerDay, daysToFull, daysToCritical, confidence, points,
+            spanHours
     }
 }
 
@@ -128,7 +132,8 @@ public enum VolumeForecastLine: Equatable, Sendable {
             // Critical only when it comes first: at a threshold of 100 % or rounded alike it says nothing more.
             var critical = forecast.daysToCritical.map(ForecastDays.init)
             if let fullDays = forecast.daysToFull, let criticalDays = forecast.daysToCritical,
-               criticalDays >= fullDays || critical == full {
+                criticalDays >= fullDays || critical == full
+            {
                 critical = nil
             }
             guard full != nil || critical != nil else { return nil }
@@ -180,7 +185,8 @@ public struct StorageTrendIssue: Equatable, Sendable {
     public let slopePerDay: Double
     public let usedPercent: Double
 
-    public init(hostname: String, name: String, critical: Bool, days: Double, slopePerDay: Double, usedPercent: Double) {
+    public init(hostname: String, name: String, critical: Bool, days: Double, slopePerDay: Double, usedPercent: Double)
+    {
         self.hostname = hostname
         self.name = name
         self.critical = critical
@@ -194,8 +200,10 @@ public struct StorageTrendIssue: Equatable, Sendable {
         let toCritical = forecast.daysToCritical ?? 0
         let toFull = forecast.daysToFull
         let critical = toFull.map { ForecastDays($0) != ForecastDays(toCritical) && toCritical < $0 } ?? true
-        self.init(hostname: hostname, name: forecast.name, critical: critical, days: critical ? toCritical : toFull ?? toCritical,
-                  slopePerDay: forecast.slopePerDay, usedPercent: forecast.usedPercent)
+        self.init(
+            hostname: hostname, name: forecast.name, critical: critical,
+            days: critical ? toCritical : toFull ?? toCritical,
+            slopePerDay: forecast.slopePerDay, usedPercent: forecast.usedPercent)
     }
 
     public init(value: String) {
@@ -212,8 +220,11 @@ public struct StorageTrendIssue: Equatable, Sendable {
     /// The stored form; names lose any "|" so the parts still split.
     public var value: String {
         let safe = { (s: String) in s.replacingOccurrences(of: "|", with: "/") }
-        return [safe(hostname), safe(name), critical ? "critical" : "full", String(days), String(slopePerDay), String(usedPercent)]
-            .joined(separator: "|")
+        return [
+            safe(hostname), safe(name), critical ? "critical" : "full", String(days), String(slopePerDay),
+            String(usedPercent),
+        ]
+        .joined(separator: "|")
     }
 
     public var when: ForecastDays { ForecastDays(days) }
@@ -255,8 +266,10 @@ public struct StorageTrendOutcome: Equatable, Sendable {
 /// projection (a weak fit, the volume gone, or already critical). A volume in a fill alert
 /// (`fillIssues`, at or above the warning threshold) opens none, and one open is dropped
 /// silently: the fill alert speaks for it. `hostnames` names the nodes by address.
-public func evaluateStorageTrends(_ forecast: HistoryForecast, open: [String: String], fillIssues: [String: String],
-                                  hostnames: [String: String]) -> StorageTrendOutcome {
+public func evaluateStorageTrends(
+    _ forecast: HistoryForecast, open: [String: String], fillIssues: [String: String],
+    hostnames: [String: String]
+) -> StorageTrendOutcome {
     var alerts: [Alert] = []
     var next: [String: String] = [:]
     for row in forecast.volumes where !row.key.isEmpty && fillIssues[row.key] == nil {
@@ -267,14 +280,17 @@ public func evaluateStorageTrends(_ forecast: HistoryForecast, open: [String: St
         let issue = StorageTrendIssue(row, hostname: host)
         next[row.key] = issue.value
         if !wasOpen {
-            alerts.append(Alert(key: storageTrendAlertKey(row.key), title: storageTrendTitle(issue), text: storageTrendText(issue),
-                                problem: true))
+            alerts.append(
+                Alert(
+                    key: storageTrendAlertKey(row.key), title: storageTrendTitle(issue), text: storageTrendText(issue),
+                    problem: true))
         }
     }
     // Resolved: past 7 days, no projection, or the volume gone.
     for key in open.keys.sorted() where next[key] == nil && fillIssues[key] == nil {
         let issue = StorageTrendIssue(value: open[key] ?? "")
-        alerts.append(Alert(key: storageTrendAlertKey(key), title: storageTrendClearedTitle(issue), text: "", problem: false))
+        alerts.append(
+            Alert(key: storageTrendAlertKey(key), title: storageTrendClearedTitle(issue), text: "", problem: false))
     }
     return StorageTrendOutcome(alerts: alerts, open: next)
 }

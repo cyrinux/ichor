@@ -2,13 +2,15 @@ import XCTest
 @testable import IchorCore
 
 final class EtcdBackupTests: XCTestCase {
-    private func member(_ node: String, leader: Bool = false, learner: Bool = false, error: String? = nil,
-                        errors: [String] = []) -> EtcdNodeStatus {
+    private func member(
+        _ node: String, leader: Bool = false, learner: Bool = false, error: String? = nil,
+        errors: [String] = []
+    ) -> EtcdNodeStatus {
         let errorList = errors.map { "\"\($0)\"" }.joined(separator: ",")
         let json = """
-        {"node":"\(node)",\(error.map { "\"error\":\"\($0)\"," } ?? "")"memberId":"\(error == nil ? "id-\(node)" : "")","isLeader":\(leader),"isLearner":\(learner),
-         "dbSize":100,"dbSizeInUse":40,"raftIndex":1,"raftTerm":1,"version":"3.7.0","errors":[\(errorList)]}
-        """
+            {"node":"\(node)",\(error.map { "\"error\":\"\($0)\"," } ?? "")"memberId":"\(error == nil ? "id-\(node)" : "")","isLeader":\(leader),"isLearner":\(learner),
+             "dbSize":100,"dbSizeInUse":40,"raftIndex":1,"raftTerm":1,"version":"3.7.0","errors":[\(errorList)]}
+            """
         return try! TalosJSON.decode(EtcdNodeStatus.self, from: json)
     }
 
@@ -24,19 +26,23 @@ final class EtcdBackupTests: XCTestCase {
     }
 
     func testDefaultMemberFallsBackToLeader() {
-        XCTAssertEqual(defaultSnapshotMember([member("down", error: "x"), member("leader", leader: true)])?.node, "leader")
+        XCTAssertEqual(
+            defaultSnapshotMember([member("down", error: "x"), member("leader", leader: true)])?.node, "leader")
         XCTAssertNil(defaultSnapshotMember([member("down", error: "x")]))
     }
 
     func testFilename() {
-        let date = Date(timeIntervalSince1970: 1_800_000_000) // 2027-01-15 08:00 UTC
+        let date = Date(timeIntervalSince1970: 1_800_000_000)  // 2027-01-15 08:00 UTC
         let utc = TimeZone(identifier: "UTC")!
-        XCTAssertEqual(etcdSnapshotFilename(context: "prod", hostname: "cp-1", date: date, timeZone: utc),
-                       "etcd-prod-cp-1-20270115-0800.snapshot")
-        XCTAssertEqual(etcdSnapshotFilename(context: "admin@home lab", hostname: "a/b", date: date, timeZone: utc),
-                       "etcd-admin-home-lab-a-b-20270115-0800.snapshot")
-        XCTAssertEqual(etcdSnapshotFilename(context: "prod", hostname: "cp-1", date: date, timeZone: utc, encrypted: true),
-                       "etcd-prod-cp-1-20270115-0800.snapshot.age")
+        XCTAssertEqual(
+            etcdSnapshotFilename(context: "prod", hostname: "cp-1", date: date, timeZone: utc),
+            "etcd-prod-cp-1-20270115-0800.snapshot")
+        XCTAssertEqual(
+            etcdSnapshotFilename(context: "admin@home lab", hostname: "a/b", date: date, timeZone: utc),
+            "etcd-admin-home-lab-a-b-20270115-0800.snapshot")
+        XCTAssertEqual(
+            etcdSnapshotFilename(context: "prod", hostname: "cp-1", date: date, timeZone: utc, encrypted: true),
+            "etcd-prod-cp-1-20270115-0800.snapshot.age")
     }
 
     func testRestoreCommands() {

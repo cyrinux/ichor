@@ -17,7 +17,8 @@ public struct ActivityEntry: Decodable, Equatable, Sendable {
     public let action: String
     /// A summary of what the action was given, secrets redacted.
     public let params: String
-    /// ok or failed.
+    /// ok, partial (some of the work could not be done, see `error`) or failed; kept as the
+    /// raw string so an outcome a newer core adds still decodes (see `failed`).
     public let outcome: String
     public let error: String
     /// Done on the demo cluster.
@@ -57,7 +58,14 @@ public struct ActivityEntry: Decodable, Equatable, Sendable {
         case at, cluster, node, namespace, object, action, params, outcome, error, demo
     }
 
-    public var failed: Bool { outcome != "ok" }
+    /// The action did only part of its work (a pod sweep where some pods could not be deleted).
+    public var partial: Bool { outcome == "partial" }
+
+    /// Anything but ok or partial, an unknown outcome included.
+    public var failed: Bool { outcome != "ok" && !partial }
+
+    /// Failed or partial: what the "Failed" filter keeps.
+    public var wentWrong: Bool { failed || partial }
 
     public var date: Date { Date(timeIntervalSince1970: TimeInterval(at) / 1000) }
 
@@ -88,7 +96,7 @@ public struct ActivityFilter: Equatable, Sendable {
     public func matches(_ entry: ActivityEntry) -> Bool {
         (cluster == nil || entry.cluster == cluster)
             && (action == nil || entry.action == action)
-            && (!failedOnly || entry.failed)
+            && (!failedOnly || entry.wentWrong)
     }
 }
 

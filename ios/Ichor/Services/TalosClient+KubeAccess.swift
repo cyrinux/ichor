@@ -15,7 +15,9 @@ extension TalosClient {
 
     /// Whether `verb` on `resource` ("resource" or "resource/subresource") of `group` may run
     /// in `namespace` ("" for every namespace or cluster-scoped), on `name` ("" for any).
-    func kubeCan(verb: String, group: String, resource: String, namespace: String, name: String = "") async throws -> KubeAccess {
+    func kubeCan(verb: String, group: String, resource: String, namespace: String, name: String = "") async throws
+        -> KubeAccess
+    {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeCan(config, context, kubeServer, verb, group, resource, namespace, name, $0)
         }

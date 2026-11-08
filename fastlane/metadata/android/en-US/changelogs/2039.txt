@@ -1,0 +1,3 @@
+• Download the model as a user-initiated data transfer job
+• Keep Data services and GitOps cards across a relaunch
+• Fetch the llama.cpp source even when its framework is cached

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Bundles the app-inventory icons from homarr-labs/dashboard-icons (Apache-2.0), plus a
-few from selfh.st/icons (CC-BY-4.0) that dashboard-icons lacks.
+few from selfh.st/icons (CC-BY-4.0) that dashboard-icons lacks, and, for the cloud-native
+projects neither has, the project's own logo on GitHub (cncf/artwork, its repository, or its
+organisation's avatar).
 
 Reads the curated catalog (go/ichorgo/appcatalog.json), checks it, then:
 
@@ -10,17 +12,20 @@ Reads the curated catalog (go/ichorgo/appcatalog.json), checks it, then:
                                                 unknown image's icon (fetched only when opted in)
 
 iOS bundles the same folder (ios/project.yml). Icons are resized to 96 px lossy WebP with
-ImageMagick (`magick`); upstream ships 512 px lossless files.
+ImageMagick (`magick`); upstream ships 512 px lossless files. SVG logos are rasterised first.
 
 Usage: scripts/sync-app-icons.py [--check]
   --check  validate the catalog and the bundled files without the network
 """
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -28,10 +33,22 @@ ROOT = Path(__file__).resolve().parent.parent
 CATALOG = ROOT / "go/ichorgo/appcatalog.json"
 SLUGS = ROOT / "go/ichorgo/appicons.txt"
 ASSETS = ROOT / "app/src/main/assets/appicons"
-CDN = "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons"
+# Raw GitHub files: jsDelivr refuses a repository over 50 MB, as both icon sets now are.
+CDN = "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main"
 # A catalog icon "sh:<ref>" comes from selfh.st/icons (CC-BY-4.0, credited in NOTICE) instead.
 SELFHST = "sh:"
-SELFHST_CDN = "https://cdn.jsdelivr.net/gh/selfhst/icons"
+SELFHST_CDN = "https://raw.githubusercontent.com/selfhst/icons/main"
+# A catalog icon "gh:<owner>/<repo>@<commit>/<path>" is a file of a GitHub repository, pinned to a
+# commit; "#viewBox=<x> <y> <w> <h>" after an SVG's path crops it (a wordmark's symbol).
+GITHUB = "gh:"
+GITHUB_CDN = "https://raw.githubusercontent.com"
+VIEWBOX = "#viewBox="
+# A catalog icon "avatar:<org>" is the GitHub organisation's avatar, for a project whose
+# repositories ship no logo of their own.
+AVATAR = "avatar:"
+# The night variant of a project logo: a dark mark on a transparent background (black on
+# black in a dark theme) gets a negated copy; any other logo reads on both backgrounds.
+NEGATE_IF_DARK = "negate-if-dark"
 SIZE = 96
 # Logos the cluster selector shows for a managed cluster (model/ClusterLogo.kt, IchorCore
 # ClusterLogo.swift), bundled with the app icons: file name -> Dashboard Icons slug. Talos,
@@ -71,19 +88,51 @@ def validate(apps: list[dict]) -> list[str]:
     return errors
 
 
-def fetch(url: str) -> bytes:
-    with urllib.request.urlopen(url, timeout=30) as response:
-        return response.read()
+def fetch(url: str, attempts: int = 4) -> bytes:
+    """A passing 403 (rate limit) or 5xx is retried with a backoff."""
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(url, timeout=30) as response:
+                return response.read()
+        except urllib.error.HTTPError as error:
+            if attempt == attempts - 1 or (error.code != 403 and error.code < 500):
+                raise
+            time.sleep(2 ** attempt)
+    raise AssertionError("unreachable")
+
+
+def download(url: str) -> bytes:
+    """Fetches url; an SVG's "#viewBox=" fragment replaces its viewBox (and drops its size)."""
+    url, _, viewbox = url.partition(VIEWBOX)
+    data = fetch(url)
+    if not viewbox:
+        return data
+    svg = data.decode()
+    head, rest = svg.split(">", 1)
+    head = re.sub(r'\s(width|height|viewBox)="[^"]*"', "", head)
+    return f'{head} viewBox="{viewbox}">{rest}'.encode()
 
 
 def resize(data: bytes, out: Path) -> None:
-    with tempfile.NamedTemporaryFile(suffix=".webp") as src:
+    svg = data.lstrip()[:5] in (b"<svg ", b"<?xml")
+    with tempfile.NamedTemporaryFile(suffix=".svg" if svg else ".img") as src:
         src.write(data)
         src.flush()
+        # An SVG is drawn large on a transparent background, then trimmed to its drawing.
+        source = ["-background", "none", "-density", "384", src.name, "-trim", "+repage"] if svg else [src.name]
         subprocess.run(
-            ["magick", src.name, "-strip", "-resize", f"{SIZE}x{SIZE}", "-quality", "85", str(out)],
+            ["magick", *source, "-strip", "-resize", f"{SIZE}x{SIZE}", "-quality", "85", str(out)],
             check=True,
         )
+
+
+def is_dark_mark(icon: Path) -> bool:
+    """Whether icon has transparency and nearly vanishes on black."""
+    def measure(*ops: str) -> str:
+        return subprocess.run(["magick", str(icon), *ops, "info:"], check=True, capture_output=True, text=True).stdout
+    on_black = ["-background", "black", "-alpha", "remove", "-colorspace", "HSB", "-channel", "B", "-separate",
+                "-format", "%[fx:maxima]"]
+    return measure("-format", "%[opaque]") == "False" and float(measure(*on_black)) < 0.25
 
 
 def homarr_urls(slug: str, meta: dict) -> tuple[str, str | None] | None:
@@ -106,6 +155,31 @@ def selfhst_urls(ref: str, index: dict) -> tuple[str, str | None] | None:
     return f"{SELFHST_CDN}/webp/{ref}.webp", night
 
 
+def github_urls(ref: str) -> tuple[str, str] | None:
+    """A pinned repository file: <owner>/<repo>@<commit>/<path>[#viewBox=...]."""
+    repo, at, path = ref.partition("@")
+    commit, slash, _ = path.partition("/")
+    if not at or not slash or repo.count("/") != 1 or not re.fullmatch(r"[0-9a-f]{40}", commit):
+        return None
+    return f"{GITHUB_CDN}/{repo}/{path}", NEGATE_IF_DARK
+
+
+def avatar_urls(org: str) -> tuple[str, str] | None:
+    if not re.fullmatch(r"[A-Za-z0-9-]+", org):
+        return None
+    return f"https://github.com/{org}.png?size=256", NEGATE_IF_DARK
+
+
+def source_urls(icon: str, meta: dict, selfhst: dict) -> tuple[str, str | None] | None:
+    if icon.startswith(SELFHST):
+        return selfhst_urls(icon.removeprefix(SELFHST), selfhst)
+    if icon.startswith(GITHUB):
+        return github_urls(icon.removeprefix(GITHUB))
+    if icon.startswith(AVATAR):
+        return avatar_urls(icon.removeprefix(AVATAR))
+    return homarr_urls(icon, meta)
+
+
 def sync(apps: list[dict]) -> list[str]:
     if not shutil.which("magick"):
         return ["ImageMagick (magick) is required"]
@@ -115,8 +189,7 @@ def sync(apps: list[dict]) -> list[str]:
     for app in apps:
         icon = icon_of(app)
         if icon:
-            ref = icon.removeprefix(SELFHST)
-            sources[app["id"]] = selfhst_urls(ref, selfhst) if icon.startswith(SELFHST) else homarr_urls(icon, meta)
+            sources[app["id"]] = source_urls(icon, meta, selfhst)
     for name, slug in CLUSTER_ICONS.items():
         sources[name] = homarr_urls(slug, meta)
     errors = [f"{app_id}: no upstream icon" for app_id, urls in sources.items() if urls is None]
@@ -125,9 +198,13 @@ def sync(apps: list[dict]) -> list[str]:
     shutil.rmtree(ASSETS, ignore_errors=True)
     ASSETS.mkdir(parents=True)
     for app_id, (day, night) in sources.items():
-        resize(fetch(day), ASSETS / f"{app_id}.webp")
-        if night:
-            resize(fetch(night), ASSETS / f"{app_id}-night.webp")
+        resize(download(day), ASSETS / f"{app_id}.webp")
+        if night == NEGATE_IF_DARK:
+            if is_dark_mark(ASSETS / f"{app_id}.webp"):
+                subprocess.run(["magick", str(ASSETS / f"{app_id}.webp"), "-channel", "RGB", "-negate",
+                                "+channel", "-quality", "85", str(ASSETS / f"{app_id}-night.webp")], check=True)
+        elif night:
+            resize(download(night), ASSETS / f"{app_id}-night.webp")
         print(f"  {app_id}", file=sys.stderr)
     SLUGS.write_text("".join(f"{s}\n" for s in sorted(meta)))
     return []

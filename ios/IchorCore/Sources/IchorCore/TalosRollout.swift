@@ -24,7 +24,8 @@ public struct RolloutRun: Equatable, Sendable {
     public let failed: Bool
     public let reached: String
 
-    public init(node: String, waiting: Bool = false, finished: Bool = false, failed: Bool = false, reached: String = "") {
+    public init(node: String, waiting: Bool = false, finished: Bool = false, failed: Bool = false, reached: String = "")
+    {
         self.node = node
         self.waiting = waiting
         self.finished = finished

@@ -73,13 +73,162 @@ type kubeActionAccess struct {
 // scale are a Deployment's, fluxReconcile a Kustomization's (its suspend follows it), and
 // each other kind has its own name.
 var kubeActionChecks = map[string][]accessNeed{
+	"longhornAttachment": {
+		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy"}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "nodes"}, true},
+	},
+	// Longhorn's API on a volume: snapshots, backups (the row's "Back up now" too) and trim.
+	"longhornSnapshot": {
+		// Named: a role may open the proxy to some services only.
+		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy", Name: lhManagerService}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
+	},
+	// A volume's engine upgrade: Longhorn's API, and what the preview reads to check its rules
+	// (the replicas tell the nodes an engine image must be deployed on).
+	"longhornEngineUpgrade": {
+		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy", Name: lhManagerService}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
+		{ssarAttributes{Verb: "list", Group: groupLonghorn, Resource: "engineimages"}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "settings"}, true},
+		{ssarAttributes{Verb: "list", Group: groupLonghorn, Resource: "replicas"}, true},
+	},
+	"longhornReplicas": {
+		{ssarAttributes{Verb: "patch", Group: groupLonghorn, Resource: "volumes"}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
+	},
+	// Scheduling and eviction: Longhorn's node objects live in its own namespace.
+	"longhornNode": {
+		{ssarAttributes{Verb: "patch", Group: groupLonghorn, Resource: "nodes"}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "nodes"}, true},
+	},
+	"longhornSalvage": {
+		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy"}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
+		{ssarAttributes{Verb: "list", Group: groupLonghorn, Resource: "replicas"}, true},
+		{ssarAttributes{Verb: "list", Group: groupLonghorn, Resource: "nodes"}, true},
+	},
+	"cnpgRestartPrimary": {
+		{ssarAttributes{Verb: "patch", Group: groupCNPG, Resource: "clusters", Subresource: "status"}, true},
+		{ssarAttributes{Verb: "get", Group: groupCNPG, Resource: "clusters"}, true},
+		{ssarAttributes{Verb: "get", Resource: "pods"}, true},
+	},
+	"cnpgHibernate": {
+		{ssarAttributes{Verb: "patch", Group: groupCNPG, Resource: "clusters"}, true},
+		{ssarAttributes{Verb: "get", Group: groupCNPG, Resource: "clusters"}, true},
+	},
+	// An HPA's min and max (one KEDA owns is refused by the core whatever the answer), and a
+	// KEDA ScaledObject's pause: apart, so a role on HPAs alone keeps its button.
+	"autoscale": {
+		{ssarAttributes{Verb: "patch", Group: "autoscaling", Resource: "horizontalpodautoscalers"}, true},
+	},
+	// An Argo Rollout's promote, abort, retry and pause: its spec, and its status subresource
+	// (promote, abort and retry write the status).
+	"argoRollout": {
+		{ssarAttributes{Verb: "patch", Group: groupArgo, Resource: "rollouts"}, true},
+		{ssarAttributes{Verb: "patch", Group: groupArgo, Resource: "rollouts", Subresource: "status"}, true},
+		{ssarAttributes{Verb: "get", Group: groupArgo, Resource: "rollouts"}, true},
+	},
+	"autoscaleKeda": {
+		{ssarAttributes{Verb: "patch", Group: groupKEDA, Resource: "scaledobjects"}, true},
+	},
+	"cnpgPromote": {
+		{ssarAttributes{Verb: "patch", Group: groupCNPG, Resource: "clusters", Subresource: "status"}, true},
+		{ssarAttributes{Verb: "get", Group: groupCNPG, Resource: "clusters"}, true},
+		{ssarAttributes{Verb: "get", Resource: "pods"}, true},
+	},
+	// kubectl cnpg destroy: the instance's PVCs, then its pod. Reading the volume's node is
+	// optional: without it the preview says the node is unknown.
+	"cnpgDestroy": {
+		{ssarAttributes{Verb: "delete", Resource: "persistentvolumeclaims"}, true},
+		{ssarAttributes{Verb: "delete", Resource: "pods"}, true},
+		{ssarAttributes{Verb: "list", Resource: "persistentvolumeclaims"}, true},
+		{ssarAttributes{Verb: "get", Group: groupCNPG, Resource: "clusters"}, true},
+	},
+	// Velero: a backup now is a Backup copied from the schedule; a deletion is a request the
+	// server carries out. SelfSubjectAccessReview cannot see Velero's own refusals (a paused
+	// schedule, a read-only storage location).
+	"veleroBackupNow": {
+		{ssarAttributes{Verb: "create", Group: groupVelero, Resource: "backups"}, true},
+		{ssarAttributes{Verb: "get", Group: groupVelero, Resource: "schedules"}, true},
+	},
+	"veleroDeleteBackup": {
+		{ssarAttributes{Verb: "create", Group: groupVelero, Resource: "deletebackuprequests"}, true},
+		{ssarAttributes{Verb: "get", Group: groupVelero, Resource: "backups"}, true},
+	},
+	// Velero: a restore is a Restore the server's restore controller carries out; reading its
+	// preview needs the backups and the storage locations. SelfSubjectAccessReview cannot see
+	// Velero's own refusals (a backup still running, an unavailable storage location).
+	"veleroRestore": {
+		{ssarAttributes{Verb: "create", Group: groupVelero, Resource: "restores"}, true},
+		{ssarAttributes{Verb: "get", Group: groupVelero, Resource: "backups"}, true},
+	},
+	// KubeVirt: start, stop, restart and migrate update the virtual machine's subresource;
+	// pause and unpause act on the instance's (named like the VM). Each also reads the
+	// virtual machine first, and a migration lists the VirtualMachineInstanceMigrations in flight,
+	// then creates the one the API server carries out. SelfSubjectAccessReview cannot see KubeVirt's own
+	// refusals (a VM already running, a runStrategy that forbids a manual restart): they are
+	// asked before the call and answered as conflicts.
+	"vmStart": {
+		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachines", Subresource: "start"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
+	},
+	"vmStop": {
+		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachines", Subresource: "stop"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
+	},
+	"vmRestart": {
+		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachines", Subresource: "restart"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
+	},
+	"vmMigrate": {
+		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachines", Subresource: "migrate"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
+		{ssarAttributes{Verb: "create", Group: groupKubeVirt, Resource: "virtualmachineinstancemigrations"}, true},
+		{ssarAttributes{Verb: "list", Group: groupKubeVirt, Resource: "virtualmachineinstancemigrations"}, true},
+	},
+	"vmPause": {
+		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachineinstances", Subresource: "pause"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
+	},
+	"vmUnpause": {
+		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachineinstances", Subresource: "unpause"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
+	},
+	// virtctl console: read the instance, then open its console WebSocket (a GET).
+	"vmConsole": {
+		{ssarAttributes{Verb: "get", Group: groupKubeVirtSub, Resource: "virtualmachineinstances", Subresource: "console"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachineinstances"}, true},
+	},
+	"createVolumeSnapshot": {
+		{ssarAttributes{Verb: "create", Group: groupSnapshot, Resource: "volumesnapshots"}, true},
+		{ssarAttributes{Verb: "get", Resource: "persistentvolumeclaims"}, true},
+		{ssarAttributes{Verb: "get", Group: "storage.k8s.io", Resource: "storageclasses"}, false},
+		{ssarAttributes{Verb: "list", Group: groupSnapshot, Resource: "volumesnapshotclasses"}, false},
+	},
 	"restartWorkload":    {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "deployments"}, true}},
 	"restartStatefulSet": {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "statefulsets"}, true}},
 	"restartDaemonSet":   {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "daemonsets"}, true}},
 	"scale":              {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "deployments", Subresource: "scale"}, true}},
 	"scaleStatefulSet":   {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "statefulsets", Subresource: "scale"}, true}},
-	"deletePod":          {{ssarAttributes{Verb: "delete", Resource: "pods"}, true}},
-	"execPod":            {{ssarAttributes{Verb: "create", Resource: "pods", Subresource: "exec"}, true}},
+	// A Deployment's rollback is restartWorkload's patch (its ReplicaSets are read by any
+	// reader of the namespace); a StatefulSet's or DaemonSet's reads its ControllerRevisions.
+	"rollbackStatefulSet": {
+		{ssarAttributes{Verb: "patch", Group: "apps", Resource: "statefulsets"}, true},
+		{ssarAttributes{Verb: "list", Group: "apps", Resource: "controllerrevisions"}, true},
+	},
+	"rollbackDaemonSet": {
+		{ssarAttributes{Verb: "patch", Group: "apps", Resource: "daemonsets"}, true},
+		{ssarAttributes{Verb: "list", Group: "apps", Resource: "controllerrevisions"}, true},
+	},
+	"pauseRollout": {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "deployments"}, true}},
+	"deletePod":    {{ssarAttributes{Verb: "delete", Resource: "pods"}, true}},
+	"execPod":      {{ssarAttributes{Verb: "create", Resource: "pods", Subresource: "exec"}, true}},
+	// k9s sanitize: list the namespace's pods for the preview, then delete the dead ones.
+	"sanitizePods": {
+		{ssarAttributes{Verb: "delete", Resource: "pods"}, true},
+		{ssarAttributes{Verb: "list", Resource: "pods"}, true},
+	},
 	// kubectl debug: add the ephemeral container, then attach to it.
 	"debugPod": {
 		{ssarAttributes{Verb: "patch", Resource: "pods", Subresource: "ephemeralcontainers"}, true},
@@ -108,6 +257,7 @@ var kubeActionChecks = map[string][]accessNeed{
 	"alertmanagerSilence": {{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy"}, true}},
 	"alertmanagerExpire":  {{ssarAttributes{Verb: "delete", Resource: "services", Subresource: "proxy"}, true}},
 	"cordonNode":          {{ssarAttributes{Verb: "patch", Resource: "nodes"}, false}},
+	"editNodeMeta":        {{ssarAttributes{Verb: "patch", Resource: "nodes"}, false}},
 	// A drain cordons, then evicts the node's pods whatever their namespace.
 	"drainNode": {
 		{ssarAttributes{Verb: "patch", Resource: "nodes"}, false},
@@ -123,10 +273,14 @@ type accessNeed struct {
 // KubeActionAccess says which of the app's Kubernetes actions the credentials may run in
 // namespace ("" for cluster-wide): {"namespace", "actions": {name: {allowed, unknown, verb,
 // group, resource, namespace, reason}}}, names restartWorkload (restartStatefulSet,
-// restartDaemonSet), scale (scaleStatefulSet), deletePod, execPod, debugPod, debugNode, suspendCronJob,
+// restartDaemonSet), scale (scaleStatefulSet), rollbackStatefulSet, rollbackDaemonSet,
+// pauseRollout, deletePod, execPod, debugPod, debugNode, suspendCronJob,
 // triggerCronJob, helmRollback, argoSync, fluxReconcile (fluxReconcileHelmRelease,
 // fluxReconcileGitRepository, fluxReconcileOCIRepository, fluxReconcileHelmRepository,
-// fluxReconcileBucket), cordonNode, drainNode. Answers are cached a few minutes.
+// fluxReconcileBucket), cordonNode, drainNode, autoscale, autoscaleKeda, cnpgPromote, cnpgDestroy, createVolumeSnapshot,
+// veleroBackupNow, veleroDeleteBackup, veleroRestore, vmStart, vmStop, vmRestart,
+// vmMigrate, vmPause, vmUnpause, vmConsole, and plugin:<id>:<action> for each action of a
+// built-in plugin (plugin_action.go). Answers are cached a few minutes.
 // kubeServer: see KubePods.
 func KubeActionAccess(configYAML, contextName, kubeServer, namespace string) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -209,18 +363,19 @@ func readWhoAmI(ctx context.Context, k *kubeClient) kubeWhoAmI {
 	return kubeWhoAmI{User: review.Status.UserInfo.Username, Groups: review.Status.UserInfo.Groups}
 }
 
-// readActionAccess asks every review of kubeActionChecks for namespace, at once.
+// readActionAccess asks every review of actionChecks for namespace, at once.
 func readActionAccess(ctx context.Context, k *kubeClient, namespace string) kubeActionAccess {
 	type answer struct {
 		name   string
 		access kubeAccess
 	}
 
-	answers := make(chan answer, len(kubeActionChecks))
+	checks := actionChecks()
+	answers := make(chan answer, len(checks))
 
 	var wg sync.WaitGroup
 
-	for name, needs := range kubeActionChecks {
+	for name, needs := range checks {
 		wg.Go(func() {
 			answers <- answer{name, needsAccess(ctx, k, namespace, needs)}
 		})
@@ -229,7 +384,7 @@ func readActionAccess(ctx context.Context, k *kubeClient, namespace string) kube
 	wg.Wait()
 	close(answers)
 
-	out := kubeActionAccess{Namespace: namespace, Actions: make(map[string]kubeAccess, len(kubeActionChecks))}
+	out := kubeActionAccess{Namespace: namespace, Actions: make(map[string]kubeAccess, len(checks))}
 	for a := range answers {
 		out.Actions[a.name] = a.access
 	}
@@ -291,8 +446,9 @@ func canDo(ctx context.Context, k *kubeClient, attrs ssarAttributes) (kubeAccess
 
 // allowAll is the demo's answer: everything offered (the demo refuses the actions itself).
 func allowAll(namespace string) kubeActionAccess {
-	out := kubeActionAccess{Namespace: namespace, Actions: make(map[string]kubeAccess, len(kubeActionChecks))}
-	for name := range kubeActionChecks {
+	checks := actionChecks()
+	out := kubeActionAccess{Namespace: namespace, Actions: make(map[string]kubeAccess, len(checks))}
+	for name := range checks {
 		out.Actions[name] = kubeAccess{Allowed: true}
 	}
 
@@ -326,6 +482,14 @@ var actionAccess = newAccessCache(accessCacheTTL)
 
 func newAccessCache(ttl time.Duration) *accessCache {
 	return &accessCache{ttl: ttl, now: time.Now, entries: map[string]accessEntry{}}
+}
+
+// clear drops every answer: the actions to check changed (a user plugin turned on or off).
+func (c *accessCache) clear() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	clear(c.entries)
 }
 
 func (c *accessCache) get(key string, fetch func() (kubeActionAccess, error)) (kubeActionAccess, error) {

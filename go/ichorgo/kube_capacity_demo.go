@@ -21,12 +21,22 @@ func demoKubeCapacity() kubeCapacity {
 		return c
 	}
 
+	// Ephemeral storage and the kubelet's disk, one filesystem for the pods and the images.
+	disk := func(c capacityNode, allocatable, requests, capacity, available float64) capacityNode {
+		c.EphemeralAllocatable, c.EphemeralRequests, c.EphemeralFree = allocatable, requests, max(0, allocatable-requests)
+		c.DiskMeasured, c.DiskCapacity, c.DiskAvailable = true, capacity, available
+		c.ImageFsCapacity, c.ImageFsAvailable = capacity, available
+
+		return c
+	}
+
 	nodes := []capacityNode{
-		node(demoCheckupNode("demo-cp-1", "control-plane", 4, 8*gi, 1.2, 3.1*gi, 14), 2.4, 4.2*gi, 0.9, 3.6*gi),
-		node(demoCheckupNode("demo-cp-2", "control-plane", 4, 8*gi, 1.1, 2.9*gi, 13), 2.2, 4.0*gi, 0.8, 3.3*gi),
-		node(demoCheckupNode("demo-cp-3", "control-plane", 4, 8*gi, 1.3, 3.4*gi, 15), 2.6, 4.6*gi, 1.0, 3.9*gi),
-		node(demoCheckupNode("demo-worker-1", "", 8, 16*gi, 7.4, 11.8*gi, 61), 12.5, 17.5*gi, 5.1, 12.9*gi),
-		node(demoCheckupNode("demo-worker-2", "", 8, 16*gi, 5.9, 14.6*gi, 48), 9.0, 15.2*gi, 3.8, 13.4*gi),
+		disk(node(demoCheckupNode("demo-cp-1", "control-plane", 4, 8*gi, 1.2, 3.1*gi, 14), 2.4, 4.2*gi, 0.9, 3.6*gi), 60*gi, 2*gi, 64*gi, 41*gi),
+		disk(node(demoCheckupNode("demo-cp-2", "control-plane", 4, 8*gi, 1.1, 2.9*gi, 13), 2.2, 4.0*gi, 0.8, 3.3*gi), 60*gi, 2*gi, 64*gi, 43*gi),
+		disk(node(demoCheckupNode("demo-cp-3", "control-plane", 4, 8*gi, 1.3, 3.4*gi, 15), 2.6, 4.6*gi, 1.0, 3.9*gi), 60*gi, 2*gi, 64*gi, 39*gi),
+		disk(node(demoCheckupNode("demo-worker-1", "", 8, 16*gi, 7.4, 11.8*gi, 61), 12.5, 17.5*gi, 5.1, 12.9*gi), 400*gi, 24*gi, 420*gi, 262*gi),
+		// The warning case: 88 % of its disk used, not yet under DiskPressure (10 % free).
+		disk(node(demoCheckupNode("demo-worker-2", "", 8, 16*gi, 5.9, 14.6*gi, 48), 9.0, 15.2*gi, 3.8, 13.4*gi), 400*gi, 36*gi, 420*gi, 50.4*gi),
 	}
 
 	workloads := []capacityWorkload{
@@ -43,7 +53,9 @@ func demoKubeCapacity() kubeCapacity {
 		{
 			Kind: "Deployment", Namespace: "demo", Name: "report-cache", Replicas: 1, PriorityClassName: "batch-low", Priority: 100,
 			CPURequest: 0.25, CPULimit: 0.5, MemoryRequest: 512 * mi, MemoryLimit: 768 * mi, QoS: qosBurstable,
-			PDBAllowed: -1, OOMKills: 3, Risk: riskOOM, CPUUsage: 0.2, MemoryUsage: 731 * mi, MoreFit: 2,
+			PDBAllowed: -1, Risk: riskDiskNear, CPUUsage: 0.2, MemoryUsage: 590 * mi, MoreFit: 2,
+			// Its cache fills the node's disk: 1.86 of its 2 GiB limit, evicted past it.
+			EphemeralRequest: 1 * gi, EphemeralLimit: 2 * gi, EphemeralUsage: 1.86 * gi,
 		},
 		{
 			Kind: "Deployment", Namespace: "demo", Name: "hello-ichor", Replicas: 3, PriorityClassName: "web-high", Priority: 10000,
@@ -53,7 +65,8 @@ func demoKubeCapacity() kubeCapacity {
 		{
 			Kind: "StatefulSet", Namespace: "demo", Name: "postgres", Replicas: 1, PriorityClassName: "web-high", Priority: 10000,
 			CPURequest: 1, CPULimit: 1, MemoryRequest: 1 * gi, MemoryLimit: 1 * gi, QoS: qosGuaranteed,
-			PDB: "postgres", PDBAllowed: 0, Risk: riskOK, CPUUsage: 0.18, MemoryUsage: 410 * mi, MoreFit: 1,
+			PDB: "postgres", PDBAllowed: 0, Risk: riskOOM, CPUUsage: 0.18, MemoryUsage: 958 * mi, MoreFit: 1,
+			EphemeralRequest: 2 * gi, EphemeralUsage: 0.6 * gi,
 		},
 		{
 			Kind: "DaemonSet", Namespace: "kube-system", Name: "kube-proxy", Replicas: 5, PriorityClassName: "system-node-critical",
@@ -70,7 +83,7 @@ func demoKubeCapacity() kubeCapacity {
 	sortWorkloads(workloads)
 
 	return kubeCapacity{
-		MetricsAvailable: true, PriorityClassesRead: true, PDBsRead: true,
+		MetricsAvailable: true, PriorityClassesRead: true, PDBsRead: true, DiskMeasured: true,
 		PriorityClasses: []capacityPriorityClass{
 			{Name: "batch-low", Value: 100, PreemptionPolicy: "Never"},
 			{Name: "web-high", Value: 10000, PreemptionPolicy: "PreemptLowerPriority"},

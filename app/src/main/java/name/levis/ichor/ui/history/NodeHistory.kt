@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +19,9 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.NodeReachability
 import name.levis.ichor.model.VolumeOutlook
+import name.levis.ichor.model.down
 import name.levis.ichor.model.formatSlope
 import name.levis.ichor.model.outlook
 import name.levis.ichor.monitor.TREND_CLOSE_DAYS
@@ -30,16 +32,17 @@ import java.util.Locale
 
 /**
  * The node's uptime strip, from the background checks' history (7 or 30 days); nothing until
- * the history has seen the node.
+ * the history has seen the node. [reachability]: a node known not to answer now gets the
+ * unchecked end of its strip in red.
  */
 @Composable
-fun NodeUptime(node: String, modifier: Modifier = Modifier) {
+fun NodeUptime(node: String, modifier: Modifier = Modifier, reachability: NodeReachability? = null) {
     var days by rememberSaveable { mutableIntStateOf(HISTORY_SHORT_DAYS) }
     val history = rememberClusterHistory(days) ?: return
     val span = history.nodes.find { it.node == node } ?: return
     Column(modifier) {
         MutedText(stringResource(R.string.history_uptime_title))
-        UptimeRow(span, history, days, onDays = { days = it })
+        UptimeRow(span, history, days, onDays = { days = it }, downNow = reachability.down)
     }
 }
 
@@ -62,7 +65,7 @@ fun VolumeFillHistory(node: String) {
     val volumes = history.volumes.filter { it.node == node && it.series.size >= 2 }
     if (volumes.isEmpty()) return
     val forecasts = rememberVolumeForecast()?.volumes.orEmpty().associateBy { it.key }
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SectionTitle(pluralStringResource(R.plurals.history_volumes_title, HISTORY_SHORT_DAYS, HISTORY_SHORT_DAYS))
             volumes.forEach { volume ->

@@ -18,10 +18,10 @@ import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -65,6 +66,7 @@ import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.FeatureMenuItem
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SMOKE_CONTAINER_ROW
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
@@ -124,12 +126,12 @@ fun PodsTab(
             SearchField(filter, { filter = it }, stringResource(R.string.node_pods_filter), Modifier.fillMaxWidth())
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.node_processes_sort), style = MaterialTheme.typography.labelMedium)
-                FilterChip(
+                IchorFilterChip(
                     selected = sort == ContainerSort.CPU,
                     onClick = { sort = ContainerSort.CPU },
                     label = { Text(stringResource(R.string.node_processes_sort_cpu)) },
                 )
-                FilterChip(
+                IchorFilterChip(
                     selected = sort == ContainerSort.MEMORY,
                     onClick = { sort = ContainerSort.MEMORY },
                     label = { Text(stringResource(R.string.node_processes_sort_memory)) },
@@ -208,6 +210,7 @@ private fun ContainerItem(
     // Tapping a container opens its log; a long press (or ⋮) its actions.
     Row(
         Modifier.fillMaxWidth()
+            .testTag(SMOKE_CONTAINER_ROW)
             .combinedClickable(
                 role = Role.Button,
                 onClickLabel = stringResource(R.string.common_open),
@@ -221,7 +224,7 @@ private fun ContainerItem(
         ContainerDetails(row, Modifier.weight(1f), muted, warn)
         if (onRestart != null) {
             Box {
-                IconButton(onClick = { menuOpen = true }) {
+                IchorIconButton(onClick = { menuOpen = true }) {
                     Icon(Icons.Outlined.MoreVert, stringResource(R.string.container_actions))
                 }
                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {

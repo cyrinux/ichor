@@ -18,9 +18,11 @@ public struct NodeSensors: Decodable, Equatable, Sendable {
     public let pci: [PCIDevice]
     public let errors: [String: String]
 
-    public init(temperatures: [TemperatureSensor] = [], fans: [FanSensor] = [], voltages: [VoltageSensor] = [],
-                thermalZones: [ThermalZone] = [], cpuFreq: [CPUFrequency] = [], throttle: ThrottleCounts? = nil,
-                throttled: Bool = false, pci: [PCIDevice] = [], errors: [String: String] = [:]) {
+    public init(
+        temperatures: [TemperatureSensor] = [], fans: [FanSensor] = [], voltages: [VoltageSensor] = [],
+        thermalZones: [ThermalZone] = [], cpuFreq: [CPUFrequency] = [], throttle: ThrottleCounts? = nil,
+        throttled: Bool = false, pci: [PCIDevice] = [], errors: [String: String] = [:]
+    ) {
         self.temperatures = temperatures
         self.fans = fans
         self.voltages = voltages
@@ -72,7 +74,9 @@ public struct TemperatureSensor: Decodable, Equatable, Sendable, Identifiable {
 
     public var id: String { "\(chip)/\(label)" }
 
-    public init(chip: String = "", label: String = "", celsius: Double = 0, critCelsius: Double = 0, maxCelsius: Double = 0) {
+    public init(
+        chip: String = "", label: String = "", celsius: Double = 0, critCelsius: Double = 0, maxCelsius: Double = 0
+    ) {
         self.chip = chip
         self.label = label
         self.celsius = celsius
@@ -167,7 +171,10 @@ public struct PCIDevice: Decodable, Equatable, Sendable, Identifiable {
     public let product: String
     public let driver: String
 
-    public init(id: String = "", class: String = "", subclass: String = "", vendor: String = "", product: String = "", driver: String = "") {
+    public init(
+        id: String = "", class: String = "", subclass: String = "", vendor: String = "", product: String = "",
+        driver: String = ""
+    ) {
         self.id = id
         self.class = `class`
         self.subclass = subclass

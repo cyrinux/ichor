@@ -4,10 +4,10 @@ import XCTest
 final class OmniTests: XCTestCase {
     func testDecodesAnOmniContext() throws {
         let json = """
-        {"current":"acme","contexts":[{"name":"acme","kind":"talos","fingerprint":"abcdefghijklmnop","clusterId":"ponmlkjihgfedcba",
-         "endpoints":["https://acme.eu-central-1.omni.example.com"],"nodes":null,"roles":[],"certNotAfter":0,
-         "omni":true,"identity":"someone@example.com","cluster":"demo","signIn":"omni"}]}
-        """
+            {"current":"acme","contexts":[{"name":"acme","kind":"talos","fingerprint":"abcdefghijklmnop","clusterId":"ponmlkjihgfedcba",
+             "endpoints":["https://acme.eu-central-1.omni.example.com"],"nodes":null,"roles":[],"certNotAfter":0,
+             "omni":true,"identity":"someone@example.com","cluster":"demo","signIn":"omni"}]}
+            """
         let ctx = try XCTUnwrap(TalosJSON.decode(ConfigSummary.self, from: json).contexts.first)
         XCTAssertTrue(ctx.omni)
         XCTAssertEqual(ctx.identity, "someone@example.com")
@@ -18,8 +18,8 @@ final class OmniTests: XCTestCase {
 
     func testCertificateContextIsNoOmni() throws {
         let json = """
-        {"current":"lab","contexts":[{"name":"lab","endpoints":["10.0.0.1"],"roles":["os:admin"],"certNotAfter":1}]}
-        """
+            {"current":"lab","contexts":[{"name":"lab","endpoints":["10.0.0.1"],"roles":["os:admin"],"certNotAfter":1}]}
+            """
         let ctx = try XCTUnwrap(TalosJSON.decode(ConfigSummary.self, from: json).contexts.first)
         XCTAssertFalse(ctx.omni)
         XCTAssertNil(ctx.identity)
@@ -41,8 +41,9 @@ final class OmniTests: XCTestCase {
             ContextSummary(name: "acme-prod", fingerprint: "o2", omni: true, authKey: "omnikey"),
             ContextSummary(name: "oidc", kind: ContextKind.kube, fingerprint: "k1"),
         ]
-        XCTAssertEqual(authStoreFingerprints(talos: contexts.filter { !$0.isKube }, kube: contexts.filter(\.isKube)),
-                       ["k1", "o1", "omnikey", "o2"])
+        XCTAssertEqual(
+            authStoreFingerprints(talos: contexts.filter { !$0.isKube }, kube: contexts.filter(\.isKube)),
+            ["k1", "o1", "omnikey", "o2"])
     }
 
     func testServiceAccountKeyIsSecret() {

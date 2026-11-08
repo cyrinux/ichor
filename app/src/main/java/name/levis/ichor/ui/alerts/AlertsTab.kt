@@ -1,6 +1,6 @@
 package name.levis.ichor.ui.alerts
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorCard
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,6 +35,8 @@ import name.levis.ichor.model.AmAlerts
 import name.levis.ichor.model.AmFilter
 import name.levis.ichor.model.AmGroup
 import name.levis.ichor.model.AmSeverity
+import name.levis.ichor.model.OnCallIncident
+import name.levis.ichor.model.OnCallIncidents
 import name.levis.ichor.model.filtered
 import name.levis.ichor.model.where
 import name.levis.ichor.ui.UiState
@@ -55,9 +59,13 @@ fun AlertsTab(
     onFilter: (AmFilter) -> Unit,
     onAlert: (AmAlert) -> Unit,
     onRefresh: () -> Unit,
+    rowCallbacks: AlertRowCallbacks,
+    onCall: OnCallIncidents? = null,
+    onCallError: String? = null,
 ) {
     Column(Modifier.fillMaxSize()) {
         FilterBar(filter, onFilter)
+        onCallError?.let { MutedText(stringResource(R.string.oncall_load_failed, it), Modifier.padding(horizontal = 16.dp)) }
         when (state) {
             UiState.Loading -> LoadingBox()
             is UiState.Failed -> ErrorBox(state.message, onRefresh)
@@ -73,7 +81,7 @@ fun AlertsTab(
                         val empty = if (state.data.total == 0) R.string.alerts_none else R.string.alerts_none_match
                         item { MutedText(stringResource(empty), Modifier.padding(vertical = 16.dp)) }
                     }
-                    items(groups, key = { it.alertname }) { group -> GroupCard(group, onAlert) }
+                    items(groups, key = { it.alertname }) { group -> GroupCard(group, onCall, rowCallbacks, onAlert) }
                 }
             }
         }
@@ -86,12 +94,12 @@ private fun FilterBar(filter: AmFilter, onFilter: (AmFilter) -> Unit) {
         SearchField(filter.query, { onFilter(filter.copy(query = it)) }, stringResource(R.string.alerts_search), Modifier.fillMaxWidth())
         // One scrolling row: the states, then the severities (none picked: all of them).
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(filter.active, { onFilter(filter.copy(active = !filter.active)) }, { Text(stringResource(R.string.alerts_state_firing)) })
-            FilterChip(filter.silenced, { onFilter(filter.copy(silenced = !filter.silenced)) }, { Text(stringResource(R.string.alerts_state_silenced)) })
-            FilterChip(filter.inhibited, { onFilter(filter.copy(inhibited = !filter.inhibited)) }, { Text(stringResource(R.string.alerts_state_inhibited)) })
+            IchorFilterChip(filter.active, { onFilter(filter.copy(active = !filter.active)) }, { Text(stringResource(R.string.alerts_state_firing)) })
+            IchorFilterChip(filter.silenced, { onFilter(filter.copy(silenced = !filter.silenced)) }, { Text(stringResource(R.string.alerts_state_silenced)) })
+            IchorFilterChip(filter.inhibited, { onFilter(filter.copy(inhibited = !filter.inhibited)) }, { Text(stringResource(R.string.alerts_state_inhibited)) })
             AmSeverity.ALL.forEach { severity ->
                 val on = severity in filter.severities
-                FilterChip(
+                IchorFilterChip(
                     selected = on,
                     onClick = { onFilter(filter.copy(severities = if (on) filter.severities - severity else filter.severities + severity)) },
                     label = { Text(severityLabel(severity)) },
@@ -104,8 +112,8 @@ private fun FilterBar(filter: AmFilter, onFilter: (AmFilter) -> Unit) {
 
 /** An alertname: its severity, how many fire of how many, then each alert. */
 @Composable
-private fun GroupCard(group: AmGroup, onAlert: (AmAlert) -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+private fun GroupCard(group: AmGroup, onCall: OnCallIncidents?, rowCallbacks: AlertRowCallbacks, onAlert: (AmAlert) -> Unit) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp)) {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 SeverityDot(group.severity)
@@ -124,16 +132,26 @@ private fun GroupCard(group: AmGroup, onAlert: (AmAlert) -> Unit) {
             }
             group.alerts.forEachIndexed { i, alert ->
                 if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                AlertRow(alert, onClick = { onAlert(alert) })
+                val incident = onCall?.incidentOf(alert.fingerprint)
+                AlertQuickActions(alert, incident, rowCallbacks, onClick = { onAlert(alert) }) {
+                    AlertRow(alert, incident)
+                }
             }
         }
     }
 }
 
+/** Tap, long press and the TalkBack actions belong to the AlertQuickActions around it. */
 @Composable
-private fun AlertRow(alert: AmAlert, onClick: () -> Unit) {
+private fun AlertRow(alert: AmAlert, incident: OnCallIncident?) {
     val muted = LocalStatusColors.current.muted
-    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp)) {
+    Row(
+        // Opaque, so the swipe's colour shows only beside the row.
+        Modifier.fillMaxWidth().background(CardDefaults.cardColors().containerColor).padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
         Text(
             alert.summary.ifEmpty { alert.where.ifEmpty { alert.alertname } },
             style = MaterialTheme.typography.bodyMedium,
@@ -147,5 +165,7 @@ private fun AlertRow(alert: AmAlert, onClick: () -> Unit) {
             stateLabel(alert).takeIf { alert.suppressed },
         )
         if (parts.isNotEmpty()) MutedText(parts.joinToString(" · "), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        incident?.let { OnCallBadge(it, Modifier.widthIn(max = 150.dp)) }
     }
 }

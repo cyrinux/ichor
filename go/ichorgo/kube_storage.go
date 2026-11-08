@@ -54,6 +54,9 @@ type storageClaim struct {
 	Terminating   bool     `json:"terminating"`
 	// ManagedBy is the data service the volume belongs to (its catalog id), "" for none.
 	ManagedBy string `json:"managedBy,omitempty"`
+	// ManagedName is the plugin's name when ManagedBy is a plugin's id (Rook Ceph), "" for a
+	// native data service: the apps open that plugin's screen.
+	ManagedName string `json:"managedName,omitempty"`
 	// Level is ok, warning (pending, terminating, filling) or critical (lost, nearly full).
 	Level string `json:"level"`
 }
@@ -221,6 +224,7 @@ func joinStorage(claims []storageClaimObject, pods []storagePodObject, volumes [
 		}
 
 		s.ManagedBy = managedByOf(c.Metadata.Labels, s.Provisioner)
+		s.ManagedName = pluginName(s.ManagedBy)
 		s.Level = storageLevel(s)
 		out = append(out, s)
 	}
@@ -255,6 +259,21 @@ func managedByOf(labels map[string]string, provisioner string) string {
 	default:
 		return ""
 	}
+}
+
+// pluginName is the name of the installed plugin id, "" for none (a native data service).
+func pluginName(id string) string {
+	if id == "" {
+		return ""
+	}
+
+	for _, c := range knownPlugins() {
+		if c.Plugin.ID == id {
+			return c.Plugin.Name
+		}
+	}
+
+	return ""
 }
 
 func storageLevel(s storageClaim) string {

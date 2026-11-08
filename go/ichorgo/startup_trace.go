@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"encoding/json"
+	"log/slog"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -9,8 +10,8 @@ import (
 
 // The startup trace says where a cold start's time goes inside the Go core: how long the
 // config parse took, whether a session was opened or reused, when the first node of the
-// overview answered and when the last did. It stays on the device (the apps forward it to
-// logcat or the unified log) and carries step names, counts and durations only: never a
+// overview answered and when the last did. It stays on the device (each step lands in the
+// diagnostics ring, see diag.go; the apps forward it to logcat or the unified log) and carries step names, counts and durations only: never a
 // context name, an endpoint or an address, which the privacy mask would not catch there.
 
 // TraceListener receives the startup trace steps as JSON
@@ -67,19 +68,23 @@ func tracedFanout(start time.Time, nodes []string, probe func(i int, node string
 	traceCounts("overview.all_nodes", start, len(nodes), int(unreachable.Load()))
 }
 
-// trace reports step, which took the time since since. Without a listener it costs a load.
+// trace reports step, which took the time since since, to the diagnostics ring and to the
+// listener, if any.
 func trace(step string, since time.Time) {
 	traceCounts(step, since, 0, 0)
 }
 
 // traceCounts is trace with a count (contexts, nodes) and how many of them did not answer.
 func traceCounts(step string, since time.Time, count, unreachable int) {
+	now := time.Now()
+
+	diag(slog.LevelInfo, "trace", "startup step", nil, "step", step, "ms", now.Sub(since).Milliseconds(),
+		"count", count, "unreachable", unreachable)
+
 	h := traceSink.Load()
 	if h == nil {
 		return
 	}
-
-	now := time.Now()
 
 	b, err := json.Marshal(traceStep{
 		Step: step, Ms: now.Sub(since).Milliseconds(), At: now.UnixMilli(),

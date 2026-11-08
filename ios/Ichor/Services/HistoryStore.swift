@@ -25,7 +25,8 @@ enum HistoryStore {
     /// that does not read at all (device locked) is left alone.
     static func ring(cluster: String) -> HistoryStoredRing {
         guard !cluster.isEmpty, let file = try? location(cluster: cluster, create: false),
-              FileManager.default.fileExists(atPath: file.path) else { return .none }
+            FileManager.default.fileExists(atPath: file.path)
+        else { return .none }
         if let plain = sealed.read(file) { return .ring(plain) }
         return (try? Data(contentsOf: file)) == nil ? .unreadable : .none
     }
@@ -54,7 +55,8 @@ enum HistoryStore {
     /// The alerts open at the end of `ring`: what a run resends for a track it could not read.
     static func openAlerts(in stored: HistoryStoredRing, now: Int64) async -> [HistoryAlertRecord] {
         guard case .ring(let data) = stored,
-              let result = try? await TalosClient.historyQuery(ring: data, since: max(0, now - 1), now: now) else { return [] }
+            let result = try? await TalosClient.historyQuery(ring: data, since: max(0, now - 1), now: now)
+        else { return [] }
         return result.openAlerts
     }
 
@@ -70,7 +72,8 @@ enum HistoryStore {
     static func forecast(cluster: String, now: Date = Date()) async -> HistoryForecast? {
         guard let data = bytes(cluster: cluster) else { return nil }
         let millis = Int64(now.timeIntervalSince1970 * 1000)
-        return try? await TalosClient.historyForecast(ring: data, now: millis, critical: BackgroundMonitor.storageThresholds.crit)
+        return try? await TalosClient.historyForecast(
+            ring: data, now: millis, critical: BackgroundMonitor.storageThresholds.crit)
     }
 
     /// What happened on `cluster` after `lastLooked`; nil without a ring.
@@ -112,7 +115,8 @@ enum HistoryStore {
         let kept = HistoryLastLooked.keep(map, clusters: clusters)
         if kept.count != map.count { storeLastLooked(kept) }
         guard let root = AppSupport.existingFolder(folder),
-              let files = try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil) else { return }
+            let files = try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
+        else { return }
         let names = Set(clusters.map(hash))
         for file in files where !names.contains(file.lastPathComponent) {
             try? FileManager.default.removeItem(at: file)

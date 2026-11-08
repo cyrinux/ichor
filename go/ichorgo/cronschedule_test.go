@@ -28,6 +28,8 @@ func TestCronNextRun(t *testing.T) {
 		// Day of month and day of week both restricted: either matches, like cron.
 		{"0 0 13 * FRI", time.Date(2026, 10, 9, 0, 0, 0, 0, time.UTC)},
 		{"5-10/2 * * * *", time.Date(2026, 10, 3, 13, 5, 0, 0, time.UTC)},
+		// A step past the range runs once, and an overflowing one does not panic.
+		{"5/9223372036854775807 * * * *", time.Date(2026, 10, 3, 13, 5, 0, 0, time.UTC)},
 		// A stepped wildcard restricts the day: odd days or Mondays (Sunday 4th is even, 5th is both).
 		{"0 0 */2 * 1", time.Date(2026, 10, 5, 0, 0, 0, 0, time.UTC)},
 		{"0 0 */2 * 0", time.Date(2026, 10, 4, 0, 0, 0, 0, time.UTC)},

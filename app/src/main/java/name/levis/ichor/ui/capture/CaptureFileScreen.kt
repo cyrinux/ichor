@@ -12,12 +12,12 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorOutlinedButton
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.TalosApp
@@ -48,7 +49,6 @@ import name.levis.ichor.model.PCAP_PAGE_SIZE
 import name.levis.ichor.model.PacketSummary
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
-import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
@@ -114,10 +114,10 @@ fun CaptureFileScreen(
     val save = rememberSaveCapture { message -> scope.launch { snackbar.showSnackbar(message.resolve(context)) } }
     val file = vm.file
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = {
                     Column {
                         Text(stringResource(R.string.captures_title))
@@ -215,11 +215,12 @@ private const val CLOCK_GAP_WARN_MS = 5L
 @Composable
 private fun LoadMore(state: PcapView, onLoad: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        state.error?.let { Text(it.asString(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        // The Load more button under the row is the retry.
+        state.error?.let { LoadFailureRow(it, onRetry = null, compact = true) }
         if (state.loading) {
             CircularProgressIndicator()
         } else {
-            OutlinedButton(onClick = onLoad) { Text(stringResource(R.string.captures_load_more, PCAP_PAGE_SIZE)) }
+            IchorOutlinedButton(onClick = onLoad) { Text(stringResource(R.string.captures_load_more, PCAP_PAGE_SIZE)) }
         }
     }
 }

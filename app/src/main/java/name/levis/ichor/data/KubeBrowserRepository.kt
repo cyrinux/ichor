@@ -1,7 +1,12 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.model.Crossplane
 import name.levis.ichor.model.KubeJobs
+import name.levis.ichor.model.KubeLoadBalancing
 import name.levis.ichor.model.KubeServices
+import name.levis.ichor.model.NetMap
+import name.levis.ichor.model.Tailscale
+import name.levis.ichor.model.ClusterLifecycle
 import name.levis.ichor.model.KubeStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -13,7 +18,10 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.model.ApiResourceList
 import name.levis.ichor.model.HelmReleaseDetail
 import name.levis.ichor.model.HelmReleaseList
+import name.levis.ichor.model.HelmRollbackOptions
+import name.levis.ichor.model.HelmRollbackOptionsPayload
 import name.levis.ichor.model.HelmRollbackPlan
+import name.levis.ichor.model.payload
 import name.levis.ichor.model.DeletePropagation
 import name.levis.ichor.model.KUBE_PAGE_SIZE
 import name.levis.ichor.model.KubeApplyResult
@@ -32,8 +40,8 @@ import name.levis.ichor.model.ResourceRow
 import name.levis.ichor.model.ResourceRowJson
 import name.levis.ichor.model.ResourceWatchRows
 import name.levis.ichor.ui.goErrorText
+import name.levis.ichorgo.HelmRollbackListener
 import name.levis.ichorgo.Ichorgo
-import name.levis.ichorgo.LogListener
 import name.levis.ichorgo.PortForwardListener
 
 /** What a port-forward reports, in order: [Ready] once listening, [ConnectionError] per failed connection, then [Done]. */
@@ -179,6 +187,44 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
         TalosJson.decodeFromString(KubeServices.serializer(), Ichorgo.kubeServices(cfg, ctx, server, namespace.orEmpty()))
     }
 
+    /** Crossplane's packages, definitions, composite resources, claims and managed resources. */
+    suspend fun crossplane(): Crossplane = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(Crossplane.serializer(), Ichorgo.kubeCrossplane(cfg, ctx, server))
+    }
+
+    /** Pauses, resumes or asks to reconcile now the Crossplane object [ref] (os:admin). Throws when refused. */
+    suspend fun crossplaneAction(ref: KubeObjectRef, action: name.levis.ichor.model.CrossplaneAction) {
+        kubeCall { cfg, ctx, server ->
+            Ichorgo.kubeCrossplaneAction(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, action.wire)
+        }
+    }
+
+    /** The Tailscale operator's connectors, proxy groups, proxy classes and DNS config, problems first. */
+    suspend fun tailscale(): Tailscale = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(Tailscale.serializer(), Ichorgo.kubeTailscale(cfg, ctx, server))
+    }
+
+    /**
+     * How traffic crosses the tailnet for the [kind] ("Service" or [TailscaleExposed.INGRESS])
+     * [namespace]/[name] the operator serves (os:admin):
+     * the network map of that one address, from its tailnet name through the proxies to the
+     * pods and nodes, or out to the tailnet target. Never cached: the map screen reads again
+     * on every pull.
+     */
+    suspend fun tailscaleNetwork(kind: String, namespace: String, name: String): NetMap = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(NetMap.serializer(), Ichorgo.kubeTailscaleNetwork(cfg, ctx, server, kind, namespace, name))
+    }
+
+    /** Cluster API's clusters, machines and machine deployments, and Sidero Metal's servers, problems first. */
+    suspend fun clusterLifecycle(): ClusterLifecycle = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(ClusterLifecycle.serializer(), Ichorgo.kubeClusterAPI(cfg, ctx, server))
+    }
+
+    /** The load balancer controllers, their pools, advertisements and BGP peers, and why a Service has no address. */
+    suspend fun loadBalancing(): KubeLoadBalancing = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeLoadBalancing.serializer(), Ichorgo.kubeLoadBalancing(cfg, ctx, server))
+    }
+
     /** The Jobs of [namespace] (null for every one), failures first. */
     suspend fun jobs(namespace: String?): KubeJobs = kubeCall { cfg, ctx, server ->
         TalosJson.decodeFromString(KubeJobs.serializer(), Ichorgo.kubeJobs(cfg, ctx, server, namespace.orEmpty()))
@@ -193,14 +239,42 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
         TalosJson.decodeFromString(HelmReleaseDetail.serializer(), Ichorgo.kubeHelmRelease(cfg, ctx, server, namespace, name))
     }
 
-    /** What rolling the release back to [revision] (0 for the previous one) would change, from dry runs. */
-    suspend fun helmRollbackPlan(namespace: String, name: String, revision: Int): HelmRollbackPlan = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(HelmRollbackPlan.serializer(), Ichorgo.kubeHelmRollbackPlan(cfg, ctx, server, namespace, name, revision.toLong()))
-    }
+    /** What rolling the release back to [revision] (0 for the previous one) with [options] would change, from dry runs. */
+    suspend fun helmRollbackPlan(namespace: String, name: String, revision: Int, options: HelmRollbackOptions): HelmRollbackPlan =
+        kubeCall { cfg, ctx, server ->
+            val json = Ichorgo.kubeHelmRollbackPlan(cfg, ctx, server, namespace, name, revision.toLong(), helmRollbackOptionsJson(options))
+            TalosJson.decodeFromString(HelmRollbackPlan.serializer(), json)
+        }
 
     /** Rolls the release back to [revision] like `helm rollback`, suspending its Flux HelmRelease first. */
-    suspend fun helmRollback(namespace: String, name: String, revision: Int) = kubeCall { cfg, ctx, server ->
-        Ichorgo.kubeHelmRollback(cfg, ctx, server, namespace, name, revision.toLong())
+    suspend fun helmRollback(namespace: String, name: String, revision: Int, options: HelmRollbackOptions) = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeHelmRollback(cfg, ctx, server, namespace, name, revision.toLong(), helmRollbackOptionsJson(options))
+    }
+
+    /**
+     * Follows the workloads of the release's deployed revision until they are ready, one failed
+     * or 5 minutes passed (reads only); returns at once. [onProgress] gets the progress JSON,
+     * [onDone] the final phase and an error, both empty once cancelled; both on a Go thread.
+     */
+    fun startHelmRollbackFollow(
+        namespace: String,
+        name: String,
+        onProgress: (String) -> Unit,
+        onDone: (String, String) -> Unit,
+    ): HelmRollbackFollowHandle {
+        val t = target()
+        val run = Ichorgo.startHelmRollbackFollow(
+            t.yaml,
+            t.context,
+            t.server,
+            namespace,
+            name,
+            object : HelmRollbackListener {
+                override fun onProgress(json: String) = onProgress(json)
+                override fun onDone(result: String, errMessage: String) = onDone(result, errMessage)
+            },
+        )
+        return HelmRollbackFollowHandle { run.cancel() }
     }
 
     /**
@@ -208,9 +282,9 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
      * last [tailLines] lines, then each new one, until the collector cancels or the container
      * stops ([StreamItem.Done]).
      */
-    fun followPodLogs(namespace: String, pod: String, container: String, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
+    fun followPodLogs(namespace: String, pod: String, container: String, tailLines: Int): Flow<StreamItem<String>> = logFollowFlow { listener ->
         val target = target()
-        val run = Ichorgo.startPodLogFollow(
+        Ichorgo.startPodLogFollow(
             target.yaml,
             target.context,
             target.server,
@@ -218,19 +292,9 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
             pod,
             container,
             tailLines.toLong(),
-            object : LogListener {
-                override fun onLine(line: String) {
-                    trySend(StreamItem.Item(line))
-                }
-
-                override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
-                    close()
-                }
-            },
+            listener,
         )
-        awaitClose { run.cancel() }
-    }.buffer(Channel.UNLIMITED)
+    }
 
     /**
      * Forwards a loopback port of the phone to [remotePort] of [pod] while collected:
@@ -274,3 +338,12 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
         return withContext(Dispatchers.IO) { block(target.yaml, target.context, target.server) }
     }
 }
+
+/** A followed rollback wait, which can stop being followed. */
+fun interface HelmRollbackFollowHandle {
+    fun cancel()
+}
+
+/** The options JSON of KubeHelmRollbackPlan / KubeHelmRollback: `{"force":…,"historyMax":…}`. */
+internal fun helmRollbackOptionsJson(options: HelmRollbackOptions): String =
+    TalosJson.encodeToString(HelmRollbackOptionsPayload.serializer(), options.payload)

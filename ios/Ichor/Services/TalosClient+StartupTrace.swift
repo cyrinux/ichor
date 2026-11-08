@@ -7,9 +7,9 @@ extension TalosClient {
     /// listener with it: none is set while off.
     static func setStartupTrace(_ enabled: Bool) {
         #if DEBUG
-        let on = true
+            let on = true
         #else
-        let on = enabled
+            let on = enabled
         #endif
         guard on != StartupTrace.isEnabled else { return }
         StartupTrace.setEnabled(on)
@@ -26,11 +26,12 @@ extension TalosClient {
     }
 }
 
-/// Forwards the Go core's trace steps to the same log (called on Go threads: no hop).
-private final class GoTraceBridge: NSObject, IchorgoTraceListenerProtocol, @unchecked Sendable {
+/// Forwards the Go core's trace steps to the unified log (called on Go threads: no hop). Not to
+/// the diagnostics log: the core writes its own steps there.
+private final class GoTraceBridge: NSObject, IchorgoTraceListenerProtocol, Sendable {
     static let shared = GoTraceBridge()
 
     func onTrace(_ json: String?) {
-        StartupTrace.mark(StartupTrace.goStep(json: json ?? ""))
+        StartupTrace.markGo(StartupTrace.goStep(json: json ?? ""))
     }
 }

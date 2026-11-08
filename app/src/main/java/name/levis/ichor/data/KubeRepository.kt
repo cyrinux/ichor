@@ -1,13 +1,13 @@
 package name.levis.ichor.data
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.model.KubeChange
 import name.levis.ichor.model.ApiHealthReport
 import name.levis.ichor.model.CheckupReport
-import name.levis.ichor.model.ReadProgress
 import name.levis.ichor.model.KubeTopNodes
 import name.levis.ichor.model.KubeCapacity
 import name.levis.ichor.model.NodeLossPlan
@@ -21,15 +21,19 @@ import name.levis.ichor.model.KubeCronJobPage
 import name.levis.ichor.model.KubeEvent
 import name.levis.ichor.model.KubeEventList
 import name.levis.ichor.model.KubeNamespaces
+import name.levis.ichor.model.KubeNodeDisk
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubePodPage
-import name.levis.ichor.model.KubeRevision
+import name.levis.ichor.model.KubeRevisionDiff
 import name.levis.ichor.model.KubeRevisionList
 import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.KubeRouteList
+import name.levis.ichor.model.KubeSanitizePreview
+import name.levis.ichor.model.KubeSanitizeResult
+import name.levis.ichor.model.PodSweepProgress
 import name.levis.ichor.model.KubeWatchEvent
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.KubeWorkloadList
@@ -47,8 +51,13 @@ import name.levis.ichor.model.RoutePod
 import name.levis.ichor.model.SELECTED_PODS_PAGE
 import name.levis.ichor.model.SupportedIntegrations
 import name.levis.ichor.model.WorkloadRef
+import name.levis.ichor.model.LogFilter
+import name.levis.ichor.model.LogTail
+import name.levis.ichor.model.WorkloadLogs
 import name.levis.ichor.model.toGoJson
+import name.levis.ichor.ui.goErrorText
 import name.levis.ichorgo.Ichorgo
+import name.levis.ichorgo.KubeSanitizeListener
 
 /**
  * The Kubernetes side of the active cluster, Talos or kubeconfig alike: workloads, pods,
@@ -160,14 +169,33 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
         Ichorgo.kubeScale(cfg, ctx, server, workload.kind, workload.namespace, workload.name, replicas.toLong())
     }
 
-    /** `kubectl rollout history deployment/NAME -n NAMESPACE`, newest first (os:admin). Never cached. */
-    suspend fun deploymentRevisions(workload: KubeWorkload): List<KubeRevision> = go.kube { cfg, ctx, server ->
-        TalosJson.decodeFromString(KubeRevisionList.serializer(), Ichorgo.kubeDeploymentRevisions(cfg, ctx, server, workload.namespace, workload.name)).revisions
+    /**
+     * `kubectl rollout history KIND/NAME -n NAMESPACE` of a Deployment, StatefulSet or
+     * DaemonSet, newest first (os:admin). Never cached.
+     */
+    suspend fun workloadRevisions(workload: KubeWorkload): KubeRevisionList = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(
+            KubeRevisionList.serializer(),
+            Ichorgo.kubeWorkloadRevisions(cfg, ctx, server, workload.kind, workload.namespace, workload.name),
+        )
     }
 
-    /** `kubectl rollout undo deployment/NAME --to-revision=N -n NAMESPACE` (os:admin). */
-    suspend fun rollbackDeployment(workload: KubeWorkload, revision: Int) = go.kube { cfg, ctx, server ->
-        Ichorgo.kubeRollbackDeployment(cfg, ctx, server, workload.namespace, workload.name, revision.toLong())
+    /** The pod template diff from what [workload] runs now to [revision]: what a rollback to it undoes. */
+    suspend fun revisionDiff(workload: KubeWorkload, revision: Int): KubeRevisionDiff = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(
+            KubeRevisionDiff.serializer(),
+            Ichorgo.kubeRevisionDiff(cfg, ctx, server, workload.kind, workload.namespace, workload.name, revision.toLong()),
+        )
+    }
+
+    /** `kubectl rollout undo KIND/NAME --to-revision=N -n NAMESPACE` (os:admin). */
+    suspend fun rollbackWorkload(workload: KubeWorkload, revision: Int) = go.kube { cfg, ctx, server ->
+        Ichorgo.kubeRollbackWorkload(cfg, ctx, server, workload.kind, workload.namespace, workload.name, revision.toLong())
+    }
+
+    /** `kubectl rollout pause|resume deployment/NAME -n NAMESPACE` (os:admin). */
+    suspend fun pauseRollout(workload: KubeWorkload, paused: Boolean) = go.kube { cfg, ctx, server ->
+        Ichorgo.kubeRolloutPause(cfg, ctx, server, workload.namespace, workload.name, paused)
     }
 
     /** CronJobs with their recent runs through the Kubernetes API (os:admin). */
@@ -194,10 +222,22 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
     /**
      * `kubectl logs POD [-c CONTAINER] [--previous] --tail=N` through the Kubernetes API
      * (os:admin): [previous] reads the container's last terminated run. [container] "" for a
-     * pod with one container.
+     * pod with one container. [filter] keeps the matching lines of the time range asked.
      */
-    suspend fun podLogs(pod: KubePod, container: String, previous: Boolean, tailLines: Int): String = go.kube { cfg, ctx, server ->
-        Ichorgo.kubePodLogs(cfg, ctx, server, pod.namespace, pod.name, container, previous, tailLines.toLong())
+    suspend fun podLogs(pod: KubePod, container: String, previous: Boolean, tailLines: Int, filter: LogFilter = LogFilter()): String = go.kube { cfg, ctx, server ->
+        Ichorgo.kubePodLogsFiltered(cfg, ctx, server, pod.namespace, pod.name, container, previous, tailLines.toLong(), filter.text, filter.regex, filter.sinceMinutes.toLong())
+    }
+
+    /** A pod log snapshot ([podLogs]) as lines without escapes and coloured entries; parsed locally, off the main thread. */
+    suspend fun parseLogText(text: String): LogTail = withContext(Dispatchers.Default) { LogParser.text(text) }
+
+    /** [text] without its ANSI escapes, to copy or share; off the main thread. */
+    suspend fun stripLogEscapes(text: String): String = withContext(Dispatchers.Default) { LogParser.strip(text) }
+
+    /** The logs of [workload]'s pods merged by time, `kubectl logs -l` through the Kubernetes API (os:admin). */
+    suspend fun workloadLogs(workload: KubeWorkload, filter: LogFilter, tailLines: Int): WorkloadLogs = go.kube { cfg, ctx, server ->
+        val json = Ichorgo.kubeWorkloadLogs(cfg, ctx, server, workload.kind, workload.namespace, workload.name, "", filter.text, filter.regex, filter.sinceMinutes.toLong(), tailLines.toLong())
+        TalosJson.decodeFromString(WorkloadLogs.serializer(), json)
     }
 
     /** The cluster's namespaces, to pick the scope of the Kubernetes lists (os:admin). */
@@ -281,10 +321,19 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
 
     /**
      * The cluster checkup (os:admin): what no other screen shows, section by section. It lists the
-     * cluster's pods and asks every kubelet for its volumes: on demand, never cached.
+     * cluster's pods and asks every kubelet for its volumes: on demand, never cached. [locale]
+     * ("" for English): the language of the plugins' findings, which Go translates.
      */
-    suspend fun checkup(): CheckupReport = go.kube { cfg, ctx, server ->
-        TalosJson.decodeFromString(CheckupReport.serializer(), Ichorgo.kubeCheckup(cfg, ctx, server))
+    suspend fun checkup(locale: String): CheckupReport = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(CheckupReport.serializer(), Ichorgo.kubeCheckup(cfg, ctx, server, locale))
+    }
+
+    /**
+     * Each node's disk from its kubelet and whether it reports DiskPressure, for the background
+     * monitor: one kubelet read per node, on demand, never cached.
+     */
+    suspend fun nodeDisk(): KubeNodeDisk = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeNodeDisk.serializer(), Ichorgo.kubeNodeDisk(cfg, ctx, server))
     }
 
     /**
@@ -295,17 +344,12 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
         TalosJson.decodeFromString(KubeCapacity.serializer(), Ichorgo.kubeCapacity(cfg, ctx, server))
     }
 
-    /** What losing the Kubernetes node [node] would cost; null: the worst node, with the others as candidates. */
-    suspend fun nodeLoss(node: String?): NodeLossPlan = go.kube { cfg, ctx, server ->
-        TalosJson.decodeFromString(NodeLossPlan.serializer(), Ichorgo.kubeCapacityNodeLoss(cfg, ctx, server, node.orEmpty()))
-    }
-
     /**
-     * How far the running read [op] on the active cluster got ("checkup": [checkup]); polled
-     * while it runs. Off the main thread: in screenshot mode the result waits for the mask.
+     * What losing the Kubernetes nodes [nodes] together would cost; empty: the worst node,
+     * with the others as candidates.
      */
-    suspend fun readProgress(op: String): ReadProgress = go.kube { cfg, ctx, _ ->
-        TalosJson.decodeFromString(ReadProgress.serializer(), Ichorgo.readProgress(cfg, ctx, op))
+    suspend fun nodeLoss(nodes: List<String>): NodeLossPlan = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(NodeLossPlan.serializer(), Ichorgo.kubeCapacityNodeLoss(cfg, ctx, server, nodes.joinToString(",")))
     }
 
     /**
@@ -326,6 +370,41 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
 
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
     suspend fun deletePod(pod: KubePod) = go.kube { cfg, ctx, server -> Ichorgo.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
+
+    /** The dead or stuck pods of [namespace] ("" every namespace) a k9s-style sanitize would delete; not cached. */
+    suspend fun sanitizePreview(namespace: String): KubeSanitizePreview = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeSanitizePreview.serializer(), Ichorgo.kubeSanitizePreview(cfg, ctx, server, namespace))
+    }
+
+    /**
+     * Starts deleting the pods [names] (newline-separated "namespace/name" from the preview) of
+     * [namespace] in the background, for [PodSweepManager]; a refusal (the demo) comes as
+     * [PodSweepEvent.Done] with its error.
+     */
+    fun startSanitize(namespace: String, names: String): PodSweepHandle {
+        val target = go.kubeTarget()
+        val events = Channel<PodSweepEvent>(Channel.UNLIMITED) // never drop the final event
+        val run = Ichorgo.startKubeSanitize(
+            target.yaml,
+            target.context,
+            target.server,
+            namespace,
+            names,
+            object : KubeSanitizeListener {
+                override fun onProgress(json: String) {
+                    runCatching { TalosJson.decodeFromString(PodSweepProgress.serializer(), json) }
+                        .onSuccess { events.trySend(PodSweepEvent.Progress(it)) }
+                }
+
+                override fun onDone(resultJSON: String, errMessage: String) {
+                    val result = runCatching { TalosJson.decodeFromString(KubeSanitizeResult.serializer(), resultJSON) }.getOrElse { KubeSanitizeResult() }
+                    events.trySend(PodSweepEvent.Done(result, errMessage.ifEmpty { null }?.let(::goErrorText)))
+                    events.close()
+                }
+            },
+        )
+        return PodSweepHandle(events, run::cancel)
+    }
 
     /** Deletes an `ichor-netperf-*` namespace a network test left behind (os:admin); the core refuses any other. */
     suspend fun deleteNetPerfNamespace(name: String) = go.kube { cfg, ctx, server -> Ichorgo.netPerfDeleteNamespace(cfg, ctx, server, name) }

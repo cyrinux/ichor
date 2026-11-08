@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,7 +32,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 @Composable
 fun SignInProgressCard(progress: SignInProgress) {
     Box(Modifier.fillMaxSize().padding(16.dp), Alignment.Center) {
-        Card(Modifier.fillMaxWidth()) {
+        IchorCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.kube_import_adding_count, progress.total.toString()), style = MaterialTheme.typography.titleMedium)
                 LinearProgressIndicator(
@@ -59,13 +59,13 @@ fun SignInFailedCard(failed: List<SignInFailure>, onDone: () -> Unit) {
     ) {
         Text(stringResource(R.string.kube_import_signin_failed), style = MaterialTheme.typography.titleMedium)
         failed.forEach { failure ->
-            Card(Modifier.fillMaxWidth()) {
+            IchorCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(failure.name, style = MaterialTheme.typography.titleSmall)
                     Text(failure.error, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
-        Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
+        IchorButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.common_ok)) }
     }
 }

@@ -3,26 +3,35 @@ package ichorgo
 import (
 	"encoding/json"
 	"strings"
+
+	"github.com/cyrinux/ichor/go/kube/netmap"
 )
 
 // demoArgoNetwork is the network view of a demo Argo CD app, built by the same code as a real
-// one from demo objects: an Ingress with TLS, an HTTPRoute behind a shared Gateway, a
-// LoadBalancer Service, a Service whose pods crash-loop, and a cordoned node.
-func demoArgoNetwork(app string) argoNetwork {
+// one from demo objects: an Ingress with TLS, an HTTPRoute and a TLSRoute behind a shared
+// Gateway, a Traefik IngressRoute, a LoadBalancer Service, a Service whose pods crash-loop,
+// and a cordoned node.
+func demoArgoNetwork(app string) netmap.Map {
 	in := argoNetInput{nodes: demoNetNodes()}
 
 	var resources []argoResourceStatus
 
 	svc := func(ns, name, typ, ip, selector, ports, lb string) {
 		resources = append(resources, argoResourceStatus{Kind: "Service", Namespace: ns, Name: name})
-		in.services = append(in.services, demoNetObject[netService](`{"metadata":{"name":"`+name+`","namespace":"`+ns+`"},
+		in.services = append(in.services, demoNetObject[netmap.Service](`{"metadata":{"name":"`+name+`","namespace":"`+ns+`"},
 		  "spec":{"type":"`+typ+`","clusterIP":"`+ip+`","selector":{"app":"`+selector+`"},"ports":[`+ports+`]},
 		  "status":{"loadBalancer":{"ingress":[`+lb+`]}}}`))
 	}
 	pod := func(ns, name, app, node, status string, ready, restarts int) {
 		p := kubePod{Namespace: ns, Name: name, Node: node, Status: status, Ready: ready, Containers: 1, Restarts: restarts}
 		p.Healthy = status == "Running" && ready == 1
-		in.pods = append(in.pods, netPod{kubePod: p, labels: map[string]string{"app": app}})
+		in.pods = append(in.pods, netmap.Pod{Pod: p, Labels: map[string]string{"app": app}})
+	}
+
+	// Published through a private-network provider: the objects of the provider and the
+	// Service, read by the same matchers as a real cluster's.
+	provider := func(ns, name string, groups map[string]string, objs externalObjects) {
+		in.addExternal(tsKindService, ns, name, json.RawMessage(`{"metadata":{"name":"`+name+`","namespace":"`+ns+`"}}`), groups, objs)
 	}
 
 	switch app {
@@ -31,6 +40,10 @@ func demoArgoNetwork(app string) argoNetwork {
 		pod("demo", "hello-ichor-7d9c5-abcde", "hello-ichor", "demo-worker-1", "Running", 1, 0)
 		pod("demo", "hello-ichor-7d9c5-fghij", "hello-ichor", "demo-worker-2", "Running", 1, 0)
 		pod("demo", "hello-ichor-7d9c5-klmno", "hello-ichor", "demo-worker-1", "Running", 1, 0)
+		provider("demo", "hello-ichor", map[string]string{groupNetBird: "v1alpha1"}, externalObjects{
+			"networkresources": {json.RawMessage(`{"metadata":{"name":"hello","namespace":"demo"},"spec":{"serviceRef":{"name":"hello-ichor"},"networkRouterRef":{"name":"edge","namespace":"demo"}},"status":{"resourceID":"res-1"}}`)},
+			"networkrouters":   {json.RawMessage(`{"metadata":{"name":"edge","namespace":"demo"},"spec":{"dnsZoneRef":{"name":"homelab.example"}}}`)},
+		})
 		resources = append(resources, argoResourceStatus{Group: "networking.k8s.io", Kind: "Ingress", Namespace: "demo", Name: "hello-ichor"})
 		in.ingresses = []ingressObject{demoNetObject[ingressObject](`{"metadata":{"name":"hello-ichor","namespace":"demo"},
 		  "spec":{"tls":[{"hosts":["hello.homelab.lan"]}],"rules":[{"host":"hello.homelab.lan","http":{"paths":[{"path":"/","pathType":"Prefix","backend":{"service":{"name":"hello-ichor"}}}]}}]},
@@ -39,14 +52,36 @@ func demoArgoNetwork(app string) argoNetwork {
 		svc("demo", "worker", "ClusterIP", "10.96.31.7", "worker", `{"name":"metrics","port":9090,"targetPort":"metrics"}`, "")
 		pod("demo", "worker-6f4b8-pqrst", "worker", "demo-worker-2", "Running", 1, 0)
 		pod("demo", "worker-6f4b8-uvwxy", "worker", "demo-worker-3", "CrashLoopBackOff", 0, 14)
+		provider("demo", "worker", map[string]string{groupTwingate: "v1beta"}, externalObjects{
+			"twingateresources": {json.RawMessage(`{"metadata":{"name":"worker","namespace":"demo"},"spec":{"id":"res-2","address":"worker.demo.svc.cluster.local","alias":"worker.homelab.example"}}`)},
+		})
 	case "grafana":
 		svc("monitoring", "grafana", "ClusterIP", "10.96.80.3", "grafana", `{"name":"http","port":80,"targetPort":3000}`, "")
 		pod("monitoring", "grafana-6d8b-9fz2t", "grafana", "demo-worker-2", "Running", 1, 0)
+		// Also on the tailnet, through a proxy of its own (the demo Tailscale screen's row).
+		in.addExternal(tsKindService, "monitoring", "grafana", json.RawMessage(`{"metadata":{"name":"grafana","namespace":"monitoring",
+		  "annotations":{"tailscale.com/expose":"true","tailscale.com/hostname":"grafana"}},"spec":{"type":"ClusterIP","ports":[{"port":80}]},
+		  "status":{"conditions":[{"type":"TailscaleProxyReady","status":"True"}]}}`), map[string]string{groupTailscale: "v1alpha1"}, nil)
 		resources = append(resources, argoResourceStatus{Group: "gateway.networking.k8s.io", Kind: "HTTPRoute", Namespace: "monitoring", Name: "grafana"})
-		in.httpRoutes = []httpRouteObject{demoNetObject[httpRouteObject](`{"metadata":{"name":"grafana","namespace":"monitoring"},
-		  "spec":{"parentRefs":[{"name":"homelab","namespace":"traefik"}],"hostnames":["grafana.homelab.lan"],"rules":[{"backendRefs":[{"name":"grafana","port":80}]}]}}`)}
+		httpRoute := demoNetObject[gatewayRouteObject](`{"metadata":{"name":"grafana","namespace":"monitoring"},
+		  "spec":{"parentRefs":[{"name":"homelab","namespace":"traefik"}],"hostnames":["grafana.homelab.lan"],"rules":[{"backendRefs":[{"name":"grafana","port":80}]}]}}`)
+		httpRoute.Kind = "HTTPRoute"
+		in.gatewayRoutes = []gatewayRouteObject{httpRoute}
+		resources = append(resources, argoResourceStatus{Group: "gateway.networking.k8s.io", Kind: "TLSRoute", Namespace: "monitoring", Name: "grafana"})
+		tlsRoute := demoNetObject[gatewayRouteObject](`{"metadata":{"name":"grafana","namespace":"monitoring"},
+		  "spec":{"parentRefs":[{"name":"homelab","namespace":"traefik","sectionName":"tls"}],"rules":[{"backendRefs":[{"name":"grafana","port":80}]}]}}`)
+		tlsRoute.Kind = "TLSRoute"
+		in.gatewayRoutes = append(in.gatewayRoutes, tlsRoute)
 		in.gateways = []gatewayObject{demoNetObject[gatewayObject](`{"metadata":{"name":"homelab","namespace":"traefik"},
-		  "spec":{"listeners":[{"name":"https","hostname":"*.homelab.lan","port":443,"protocol":"HTTPS"}]},"status":{"addresses":[{"value":"10.0.0.240"}]}}`)}
+		  "spec":{"gatewayClassName":"traefik","listeners":[{"name":"https","hostname":"*.homelab.lan","port":443,"protocol":"HTTPS"},{"name":"tls","hostname":"grafana.homelab.lan","port":8443,"protocol":"TLS"}]},"status":{"addresses":[{"value":"10.0.0.240"}]}}`)}
+		in.gatewayClasses = []gatewayClassObject{demoNetObject[gatewayClassObject](`{"metadata":{"name":"traefik"},
+		  "spec":{"controllerName":"traefik.io/gateway-controller"}}`)}
+		resources = append(resources, argoResourceStatus{Group: groupTraefik, Kind: "IngressRoute", Namespace: "monitoring", Name: "grafana"})
+		in.traefik = traefikRouteSet{
+			http: []ingressRouteObject{demoNetObject[ingressRouteObject](`{"metadata":{"name":"grafana","namespace":"monitoring"},
+			  "spec":{"entryPoints":["websecure"],"routes":[{"match":"Host(` + "`grafana.home.example`" + `)","kind":"Rule","services":[{"name":"grafana","port":80}]}],"tls":{}}}`)},
+			entries: map[string]traefikEntry{traefikWeb: {80, "10.0.0.240"}, traefikWebsecure: {443, "10.0.0.240"}},
+		}
 	case "traefik":
 		svc("traefik", "traefik", "LoadBalancer", "10.96.0.80", "traefik", `{"name":"web","port":80,"targetPort":"web"},{"name":"websecure","port":443,"targetPort":"websecure"}`, `{"ip":"10.0.0.240"}`)
 		pod("traefik", "traefik-8c6d-w7r2m", "traefik", "demo-worker-1", "Running", 1, 0)
@@ -63,8 +98,8 @@ func demoArgoNetwork(app string) argoNetwork {
 }
 
 // demoNetNodes: demo-worker-3 is cordoned and not ready, as in the rest of the demo.
-func demoNetNodes() []netNodeObject {
-	var nodes []netNodeObject
+func demoNetNodes() []netmap.NodeObject {
+	var nodes []netmap.NodeObject
 
 	for _, n := range []string{"demo-worker-1", "demo-worker-2", "demo-worker-3"} {
 		ready, cordoned := "True", "false"
@@ -72,7 +107,7 @@ func demoNetNodes() []netNodeObject {
 			ready, cordoned = "False", "true"
 		}
 
-		nodes = append(nodes, demoNetObject[netNodeObject](`{"metadata":{"name":"`+n+`"},"spec":{"unschedulable":`+cordoned+`},
+		nodes = append(nodes, demoNetObject[netmap.NodeObject](`{"metadata":{"name":"`+n+`"},"spec":{"unschedulable":`+cordoned+`},
 		  "status":{"conditions":[{"type":"Ready","status":"`+ready+`"}]}}`))
 	}
 

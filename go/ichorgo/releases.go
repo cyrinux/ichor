@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"sort"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 const (
@@ -55,7 +57,7 @@ func fetchReleases() ([]talosRelease, error) {
 
 	req.Header.Set("Accept", "application/vnd.github+json")
 
-	resp, err := newHTTPClient(httpClientOpts{followRedirects: true}).Do(req)
+	resp, err := httpx.New(httpx.Opts{FollowRedirects: true}).Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fetch Talos releases: %s", friendlyError(err))
 	}

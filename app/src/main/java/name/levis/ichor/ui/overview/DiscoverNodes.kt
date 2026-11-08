@@ -8,12 +8,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorAlertDialog
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.model.DiscoveredNode
 import name.levis.ichor.model.NodeDiscovery
 import name.levis.ichor.model.toOffer
@@ -42,7 +42,7 @@ import name.levis.ichor.ui.components.MutedText
  * Cluster members the talosconfig context does not target (cluster discovery), offered to
  * add. Best effort: discovery off, or a node not answering, offers nothing.
  */
-class NodeDiscoveryViewModel(private val talos: TalosRepository) : ViewModel() {
+class NodeDiscoveryViewModel(private val lifecycle: NodeLifecycleRepository) : ViewModel() {
     private val _offer = MutableStateFlow<List<DiscoveredNode>>(emptyList())
     val offer: StateFlow<List<DiscoveredNode>> = _offer.asStateFlow()
 
@@ -53,21 +53,24 @@ class NodeDiscoveryViewModel(private val talos: TalosRepository) : ViewModel() {
 
     suspend fun discover() {
         val discovery = try {
-            talos.discoverNodes()
+            lifecycle.discoverNodes()
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
             null
         }
         last = discovery
-        _offer.value = discovery?.toOffer(dismissed[discovery.context].orEmpty()).orEmpty()
+        _offer.value = discovery?.let { it.toOffer(setAside(it.context)) }.orEmpty()
     }
 
     fun dismiss(nodes: List<DiscoveredNode>) {
         val discovery = last ?: return
         dismissed[discovery.context] = dismissed[discovery.context].orEmpty() + nodes.map { it.address }
-        _offer.value = discovery.toOffer(dismissed[discovery.context].orEmpty())
+        _offer.value = discovery.toOffer(setAside(discovery.context))
     }
+
+    /** "Not now", and the nodes just taken out of the context: a member lingers for a while. */
+    private fun setAside(context: String) = dismissed[context].orEmpty() + lifecycle.forgottenNodes(context)
 
     fun clear() {
         last = null
@@ -78,7 +81,7 @@ class NodeDiscoveryViewModel(private val talos: TalosRepository) : ViewModel() {
 /** Tells how many cluster members the talosconfig misses; tap to pick which to add. */
 @Composable
 fun DiscoveredNodesBanner(count: Int, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    IchorCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Text(
                 pluralStringResource(R.plurals.overview_discovered_nodes, count, count),
@@ -99,7 +102,7 @@ fun AddDiscoveredNodesDialog(
     onDismiss: () -> Unit,
 ) {
     var selected by remember(nodes) { mutableStateOf(nodes.map { it.address }.toSet()) }
-    AlertDialog(
+    IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.discover_nodes_title)) },
         text = {
@@ -129,12 +132,12 @@ fun AddDiscoveredNodesDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            IchorTextButton(
                 enabled = selected.isNotEmpty(),
                 onClick = { onAdd(nodes.filter { it.address in selected }) },
             ) { Text(pluralStringResource(R.plurals.discover_nodes_add, selected.size, selected.size)) }
         },
-        dismissButton = { TextButton(onClick = onNotNow) { Text(stringResource(R.string.discover_nodes_not_now)) } },
+        dismissButton = { IchorTextButton(onClick = onNotNow) { Text(stringResource(R.string.discover_nodes_not_now)) } },
     )
 }
 

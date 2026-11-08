@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.upgrade
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import name.levis.ichor.ui.components.ClusterScreenTitle
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,25 +13,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -47,7 +48,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.K8sPlanStep
 import name.levis.ichor.model.K8sUpgradePlan
@@ -75,7 +76,7 @@ import name.levis.ichor.ui.uiStateOf
 import name.levis.ichor.ui.uiText
 
 /** The versions offered and the plan of the one picked. */
-class K8sUpgradeViewModel(private val talos: TalosRepository) : ViewModel() {
+class K8sUpgradeViewModel(private val lifecycle: NodeLifecycleRepository) : ViewModel() {
     private val _choice = MutableStateFlow<UiState<K8sVersionChoice>>(UiState.Loading)
     val choice: StateFlow<UiState<K8sVersionChoice>> = _choice.asStateFlow()
     private val _version = MutableStateFlow("")
@@ -91,7 +92,7 @@ class K8sUpgradeViewModel(private val talos: TalosRepository) : ViewModel() {
     fun loadChoice() {
         _choice.value = UiState.Loading
         viewModelScope.launch {
-            val loaded = uiStateOf { talos.k8sUpgradeVersions() }
+            val loaded = uiStateOf { lifecycle.k8sUpgradeVersions() }
             _choice.value = loaded
             // The next minor when offered, else the newest patch of the current one.
             (loaded as? UiState.Loaded)?.data?.versions?.lastOrNull()?.let(::pick)
@@ -107,7 +108,7 @@ class K8sUpgradeViewModel(private val talos: TalosRepository) : ViewModel() {
         val version = _version.value.ifEmpty { return }
         planning?.cancel()
         _plan.value = UiState.Loading
-        planning = viewModelScope.launch { _plan.value = uiStateOf { talos.k8sUpgradePlan(version) } }
+        planning = viewModelScope.launch { _plan.value = uiStateOf { lifecycle.k8sUpgradePlan(version) } }
     }
 }
 
@@ -120,7 +121,7 @@ class K8sUpgradeViewModel(private val talos: TalosRepository) : ViewModel() {
 @Composable
 fun K8sUpgradeScreen(
     onBack: () -> Unit,
-    vm: K8sUpgradeViewModel = viewModel(key = "k8s-upgrade", factory = factory { K8sUpgradeViewModel(app.talosRepository) }),
+    vm: K8sUpgradeViewModel = viewModel(key = "k8s-upgrade", factory = factory { K8sUpgradeViewModel(app.nodeLifecycleRepository) }),
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
@@ -159,16 +160,11 @@ fun K8sUpgradeScreen(
         }
     }
 
-    Scaffold(
+    IchorScaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(stringResource(R.string.k8s_upgrade_title))
-                        Text(cluster, style = MaterialTheme.typography.labelMedium)
-                    }
-                },
+            IchorTopAppBar(
+                title = { ClusterScreenTitle(stringResource(R.string.k8s_upgrade_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
         },
@@ -252,7 +248,7 @@ private fun PlanView(
                 StepGroup(stringResource(R.string.k8s_upgrade_kubelets), p.kubeletSteps)
                 if (p.deprecatedApis.isNotEmpty()) {
                     SectionTitle(stringResource(R.string.k8s_upgrade_deprecated))
-                    Card(Modifier.fillMaxWidth()) {
+                    IchorCard(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             p.deprecatedApis.forEach { d ->
                                 val critical = d.severity == "critical"
@@ -265,7 +261,7 @@ private fun PlanView(
                         }
                     }
                 }
-                Card(Modifier.fillMaxWidth()) {
+                IchorCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         SectionTitle(stringResource(R.string.upgrade_checks))
                         p.blockers.forEach { Text("✕ $it", color = colors.bad, style = MaterialTheme.typography.bodyMedium) }
@@ -282,7 +278,7 @@ private fun PlanView(
                     onChange = onDryRunFirst,
                 )
                 MutedText(stringResource(R.string.cluster_upgrade_keep_open))
-                Button(onClick = onStart, enabled = p.canStart, modifier = Modifier.fillMaxWidth()) {
+                IchorButton(onClick = onStart, enabled = p.canStart, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(if (dryRunFirst) R.string.k8s_upgrade_dry_run else R.string.k8s_upgrade_now))
                 }
             }
@@ -297,7 +293,7 @@ private fun VersionPicker(choice: K8sVersionChoice, version: String, onVersion: 
     if (choice.versions.isNotEmpty()) {
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             choice.versions.forEach { v ->
-                FilterChip(selected = v == version, onClick = { onVersion(v) }, label = { Text(v, fontFamily = FontFamily.Monospace) })
+                IchorFilterChip(selected = v == version, onClick = { onVersion(v) }, label = { Text(v, fontFamily = FontFamily.Monospace) })
             }
         }
     }
@@ -325,7 +321,7 @@ private fun StepGroup(title: String, steps: List<K8sPlanStep>) {
     if (steps.isEmpty()) return
     val colors = LocalStatusColors.current
     SectionTitle(title)
-    Card(Modifier.fillMaxWidth()) {
+    IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp)) {
             steps.groupBy { it.node }.values.forEach { nodeSteps ->
                 Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {

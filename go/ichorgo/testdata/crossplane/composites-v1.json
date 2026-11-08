@@ -1,0 +1,41 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "assets",
+        "namespace": ""
+      },
+      "spec": {
+        "compositionRef": {
+          "name": "bucket-standard"
+        },
+        "resourceRefs": [
+          {
+            "name": "assets-bucket"
+          }
+        ],
+        "claimRef": {
+          "name": "assets-claim"
+        }
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          },
+          {
+            "type": "Synced",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          }
+        ]
+      }
+    }
+  ]
+}

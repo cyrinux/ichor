@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,7 +55,7 @@ fun ConfigUnreadableScreen(reason: String, onRetry: () -> Unit, onImport: () -> 
             )
         }
         Spacer(Modifier.height(16.dp))
-        Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
-        TextButton(onClick = onImport) { Text(stringResource(R.string.config_unreadable_import)) }
+        IchorButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+        IchorTextButton(onClick = onImport) { Text(stringResource(R.string.config_unreadable_import)) }
     }
 }

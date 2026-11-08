@@ -1,6 +1,6 @@
 // Command probe exercises the ichorgo API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] [-omni-browser] [-timing] COMMAND [ARGS]
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] [-omni-browser] [-timing] [-stream] COMMAND [ARGS]
 //
 // An Omni context signs in with OMNI_SERVICE_ACCOUNT_KEY from the environment, or in the
 // browser with -omni-browser.
@@ -100,6 +100,10 @@ func main() {
 	omniBrowser := flag.Bool("omni-browser", false, "an Omni account context: confirm a new key in the browser first (a service account reads OMNI_SERVICE_ACCOUNT_KEY)")
 	dataDir := flag.String("data-dir", "", "keep what the app keeps across launches (audit log, scan reports) in this directory")
 	timing := flag.Bool("timing", false, "print the startup trace (config parse, session, first node, all nodes) to stderr")
+	stream := flag.Bool("stream", false, "overview: print each node as it answers, then the complete overview")
+	minScore := flag.Float64("min", 0, "diag-eval: fail when the mean score is under this")
+	nodes := flag.String("nodes", "", "clusterstats: sample only these nodes (comma-separated; default: every node)")
+	labels := flag.String("labels", "", "hetzner|ovh|aws|azure|gcp create on Omni: labels to sign into the join token, as a JSON object")
 	// Flags may also follow the command: `probe overview -timing -context lab`.
 	_ = flag.CommandLine.Parse(hoistFlags(flag.CommandLine, os.Args[1:])) //nolint:errcheck // ExitOnError
 
@@ -114,6 +118,11 @@ func main() {
 	if *dataDir != "" {
 		if err := setDataDir(*dataDir); err != nil {
 			fail(fmt.Errorf("data dir: %w", err))
+		}
+
+		// Keep the diagnostics ring there too, like an app with the setting on.
+		if err := ichorgo.SetDiagPersist(true); err != nil {
+			fail(fmt.Errorf("diagnostics log: %w", err))
 		}
 	}
 
@@ -133,7 +142,7 @@ func main() {
 
 	out, err := c.run(env{
 		cmd: c.name, cfg: cfg, context: *contextName, kubeServer: *kubeServer, ageRecipient: *ageRecipient,
-		configPath: *configPath, home: home, mask: *mask, maskWords: *maskWords,
+		configPath: *configPath, home: home, mask: *mask, maskWords: *maskWords, stream: *stream, nodes: *nodes, labels: *labels, minScore: *minScore,
 	})
 	if err != nil {
 		fail(err)
@@ -183,6 +192,21 @@ func (p *answerPrinter) OnAnswer(text string) {
 
 func (p *answerPrinter) OnDone(errMessage string) { p.done <- errMessage }
 
+// OnTool prints what the model asks for, on stderr: stdout stays the answer.
+func (p *answerPrinter) OnTool(name, argsJSON string) {
+	fmt.Fprintf(os.Stderr, "[tool] %s %s\n", name, argsJSON)
+}
+
+func (p *answerPrinter) OnToolDone(name string, bytes int, _, errMessage string) {
+	if errMessage != "" {
+		fmt.Fprintf(os.Stderr, "[tool] %s refused: %s\n", name, errMessage)
+
+		return
+	}
+
+	fmt.Fprintf(os.Stderr, "[tool] %s sent %d bytes\n", name, bytes)
+}
+
 // aiKey reads the provider's API key from the environment, never from the command line.
 func aiKey(provider string) string {
 	if provider == "openai" {
@@ -202,7 +226,7 @@ func diagnose(cfg, contextName, provider, model string) error {
 	}
 
 	p := &answerPrinter{done: make(chan string, 1)}
-	d.Ask(provider, aiKey(provider), model, os.Getenv("ICHOR_AI_BASE_URL"), "en", "", p)
+	d.Ask(provider, aiKey(provider), model, os.Getenv("ICHOR_AI_BASE_URL"), "en", "", true, p)
 
 	if msg := <-p.done; msg != "" {
 		return fmt.Errorf("diagnosis failed: %s", msg)
@@ -244,7 +268,7 @@ func healthExplain(e env, provider, model string) error {
 	}
 
 	p := &answerPrinter{done: make(chan string, 1)}
-	d.Ask(provider, aiKey(provider), model, os.Getenv("ICHOR_AI_BASE_URL"), "en", "", p)
+	d.Ask(provider, aiKey(provider), model, os.Getenv("ICHOR_AI_BASE_URL"), "en", "", false, p)
 
 	if msg := <-p.done; msg != "" {
 		return fmt.Errorf("health explanation failed: %s", msg)

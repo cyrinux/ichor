@@ -9,7 +9,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -82,8 +82,8 @@ internal fun IncompleteNotice(load: PagedLoad<*>, searching: Boolean, onLoadMore
         InfoNotice(stringResource(R.string.kube_paged_partial_note))
         if (capped) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = onLoadMore) { Text(stringResource(R.string.kube_paged_load_more)) }
-                TextButton(onClick = onLoadAll) { Text(stringResource(R.string.kube_paged_load_all)) }
+                IchorTextButton(onClick = onLoadMore) { Text(stringResource(R.string.kube_paged_load_more)) }
+                IchorTextButton(onClick = onLoadAll) { Text(stringResource(R.string.kube_paged_load_all)) }
             }
         }
     }

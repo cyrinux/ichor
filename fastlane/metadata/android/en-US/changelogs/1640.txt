@@ -1,0 +1,5 @@
+• Helm rollback runs the chart's pre- and post-rollback hooks in Helm's order instead of refusing, on both apps
+• Cert-manager, snapshot and backup CronJob tabs read as health rows, with schedules read as words
+• Helm rollback can wait for the workloads, replace objects and prune old revisions, on both apps
+• Cluster insights fits on one line: short tabs, the recorder as a timeline, node pickers by hostname
+• Upgrade a Longhorn volume's engine from its row, live or offline, on both apps

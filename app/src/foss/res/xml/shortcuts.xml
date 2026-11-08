@@ -16,4 +16,18 @@
             <extra android:name="name.levis.ichor.OPEN" android:value="SEARCH" />
         </intent>
     </shortcut>
+    <shortcut
+        android:shortcutId="checkup"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_checkup"
+        android:shortcutShortLabel="@string/shortcut_checkup_short"
+        android:shortcutLongLabel="@string/shortcut_checkup_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="name.levis.ichor.foss"
+            android:targetClass="name.levis.ichor.MainActivity">
+            <!-- MainActivity.EXTRA_OPEN = DeepLink.CHECKUP -->
+            <extra android:name="name.levis.ichor.OPEN" android:value="CHECKUP" />
+        </intent>
+    </shortcut>
 </shortcuts>

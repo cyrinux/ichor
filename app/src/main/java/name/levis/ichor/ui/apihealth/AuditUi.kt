@@ -12,7 +12,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
+import name.levis.ichor.ui.design.IchorOutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,8 +37,8 @@ import name.levis.ichor.model.level
 import name.levis.ichor.model.target
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.localizedDuration
-import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
 import kotlin.math.roundToInt
 
@@ -102,7 +102,7 @@ fun FindingCard(f: AuditFinding) {
         AuditSeverity.WARNING -> Icons.Outlined.WarningAmber to colors.warn
         AuditSeverity.INFO -> Icons.Outlined.Info to colors.muted
     }
-    OutlinedCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+    IchorOutlinedCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
         Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -137,8 +137,8 @@ fun ActorRow(row: AuditActorRow) {
         MutedText(stringResource(R.string.audit_actor_share, (row.share * 100).roundToInt(), row.topVerb, row.topResource), maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (row.errors > 0 || row.throttled > 0) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (row.throttled > 0) TagBadge(stringResource(R.string.audit_actor_throttled, row.throttled), colors.bad)
-                if (row.errors > 0) TagBadge(stringResource(R.string.audit_actor_errors, row.errors), colors.warn)
+                if (row.throttled > 0) Tag(stringResource(R.string.audit_actor_throttled, row.throttled), colors.bad)
+                if (row.errors > 0) Tag(stringResource(R.string.audit_actor_errors, row.errors), colors.warn)
             }
         }
     }

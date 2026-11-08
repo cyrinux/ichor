@@ -31,6 +31,8 @@ var errJoinPrivacy = errors.New("turn privacy mode off to generate a node's conf
 type joinConfigRequest struct {
 	template, role, hostname, installDisk, staticAddress string
 	edits                                                []configEdit
+	// labels are signed into Omni's join token by a cloud create (nil on plain Talos).
+	labels map[string]string
 }
 
 // joinConfigPreview is what JoinNodeConfigPreview returns: no secret in it.
@@ -154,7 +156,7 @@ func joinConfigFor(configYAML, contextName string, req joinConfigRequest) (strin
 		return buildJoinConfig(text, req)
 	}
 
-	r, err := withNodeSession(configYAML, contextName, req.template, configPreviewTimeout, func(ctx context.Context, s *session) (joinResult, error) {
+	r, err := withNodeSessionFrom(context.Background(), configYAML, contextName, req.template, configPreviewTimeout, func(ctx context.Context, s *session) (joinResult, error) {
 		text, err := machineConfigYAML(ctx, s, req.template, true)
 		if err != nil {
 			return joinResult{}, err
@@ -232,14 +234,8 @@ func buildJoinConfig(templateText string, req joinConfigRequest) (string, []stri
 		warnings = append(warnings, "the new node is a control plane: it joins etcd, and the quorum then counts one more member")
 	}
 
-	for _, edit := range req.edits {
-		if edit.Doc < 0 || edit.Doc >= len(docs) {
-			return "", nil, fmt.Errorf("no document %d in this config", edit.Doc)
-		}
-
-		if err := applyConfigEdit(docs[edit.Doc], edit); err != nil {
-			return "", nil, fmt.Errorf("%s: %w", strings.Join(edit.Path, "."), err)
-		}
+	if docs, err = applyConfigEdits(docs, req.edits); err != nil {
+		return "", nil, err
 	}
 
 	text, err := encodeConfigDocs(docs)

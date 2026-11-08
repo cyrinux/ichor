@@ -1,0 +1,751 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# Numaflow (numaflow.numaproj.io/v1alpha1) runs stream-processing pipelines: vertices (source,
+# map or reduce UDFs, sink) over an inter-step buffer service (JetStream), or a single mono
+# vertex. On the phone: is a pipeline running, paused or failed and why (status.message), are
+# its vertices' pods ready, is its buffer service up; and pause or resume a pipeline or a mono
+# vertex (spec.lifecycle.desiredPhase, the documented lever). ServingPipeline is not read (rare).
+# The account needs list and get on pipelines, vertices, monovertices and
+# interstepbufferservices; one it may not list lands in the render's errors, the others still
+# show. Pause and resume need patch on pipelines and monovertices.
+# Vertices and mono vertices have a scale subresource: no scale action yet (`plugin-lint -crd`
+# warns about it; scaling is a later step).
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: numaflow
+name: Numaflow
+website: https://numaflow.numaproj.io
+icon: numaflow
+category: workloads
+catalogId: numaflow
+
+detect:
+  - group: numaflow.numaproj.io
+    resource: pipelines
+
+resources:
+  pipeline:
+    group: numaflow.numaproj.io
+    version: v1alpha1
+    resource: pipelines
+    kind: Pipeline
+    scope: Namespaced
+  monovertex:
+    group: numaflow.numaproj.io
+    version: v1alpha1
+    resource: monovertices
+    kind: MonoVertex
+    scope: Namespaced
+  # A pipeline's steps, one per vertex: many on a big cluster, so at most 500 are read.
+  vertex:
+    group: numaflow.numaproj.io
+    version: v1alpha1
+    resource: vertices
+    kind: Vertex
+    scope: Namespaced
+    list: { limit: 500 }
+  isbsvc:
+    group: numaflow.numaproj.io
+    version: v1alpha1
+    resource: interstepbufferservices
+    kind: InterStepBufferService
+    scope: Namespaced
+
+fields:
+  pipeline:
+    # "" on a fresh object, then Running, Failed, Pausing, Paused or Deleting.
+    phase: $.status.phase | default("")
+    desiredPhase: $.spec.lifecycle.desiredPhase | default("Running")
+    message: $.status.message | default("")
+    vertexCount: $.status.vertexCount | default(0)
+    sources: $.status.sourceCount | default(0)
+    sinks: $.status.sinkCount | default(0)
+    udfs: $.status.udfCount | default(0)
+    mapUdfs: $.status.mapUDFCount | default(0)
+    reduceUdfs: $.status.reduceUDFCount | default(0)
+    isbsvcName: $.spec.interStepBufferServiceName | default("default")
+    isbsvc: join(isbsvc, $.metadata.namespace == left.metadata.namespace && $.metadata.name == (left.spec.interStepBufferServiceName | default("default")))
+    drainedOnPause: $.status.drainedOnPause | default(false)
+    updatedAt: $.status.lastUpdated | time()
+    createdAt: $.metadata.creationTimestamp | time()
+    # The pipeline's vertices (spec.pipelineName or the pipeline-name label names it), and
+    # those running.
+    vertexObjects: len(vertex[?(@.metadata.namespace == $.metadata.namespace && (@.spec.pipelineName == $.metadata.name || @.metadata.labels["numaflow.numaproj.io/pipeline-name"] == $.metadata.name))])
+    runningVertices: |
+      len(vertex[?(@.metadata.namespace == $.metadata.namespace && (@.spec.pipelineName == $.metadata.name || @.metadata.labels["numaflow.numaproj.io/pipeline-name"] == $.metadata.name)
+        && @.status.phase == "Running")])
+  monovertex:
+    # "" on a fresh object, then Running, Failed or Paused.
+    phase: $.status.phase | default("")
+    desiredPhase: $.spec.lifecycle.desiredPhase | default("Running")
+    desired: $.status.desiredReplicas | default(0)
+    current: $.status.replicas | default(0)
+    ready: $.status.readyReplicas | default(0)
+    reason: $.status.reason | default("")
+    message: $.status.message | default("")
+    lastScaledAt: $.status.lastScaledAt | time()
+    createdAt: $.metadata.creationTimestamp | time()
+  vertex:
+    phase: $.status.phase | default("")
+    pipeline: $.spec.pipelineName | default($.metadata.labels["numaflow.numaproj.io/pipeline-name"] | default(""))
+    desired: $.status.desiredReplicas | default(0)
+    current: $.status.replicas | default(0)
+    ready: $.status.readyReplicas | default(0)
+    reason: $.status.reason | default("")
+    message: $.status.message | default("")
+    createdAt: $.metadata.creationTimestamp | time()
+  isbsvc:
+    # jetstream (or redis on older releases).
+    type: $.status.type | default("")
+    # "" on a fresh object, then Pending, Running, Failed or Deleting.
+    phase: $.status.phase | default("")
+    message: $.status.message | default("")
+    jsVersion: $.spec.jetstream.version | default("")
+    jsReplicas: $.spec.jetstream.replicas | default(3)
+    createdAt: $.metadata.creationTimestamp | time()
+
+# Paused and moving pipelines first: a pipeline being paused is not unhealthy, whatever its
+# vertices' conditions say meanwhile.
+health:
+  pipeline:
+    - when: fields.phase == "Failed"
+      health: critical
+      reason: failed
+      message: "{{ fields.message }}"
+    - when: fields.phase == "Pausing" || fields.phase == "Deleting"
+      health: info
+      reason: transitioning
+      message: "{{ fields.phase }}"
+    - when: fields.phase == "Paused"
+      health: idle
+      reason: paused
+      message: "paused"
+    - when: fields.phase == ""
+      health: unknown
+      reason: notReconciled
+      message: "not reconciled yet"
+    - when: conditions.VerticesHealthy == false
+      health: warning
+      reason: verticesUnhealthy
+      message: 'vertices not healthy: {{ condition("VerticesHealthy").message }}'
+    - when: conditions.DaemonServiceHealthy == false || conditions.SideInputsManagersHealthy == false
+      health: warning
+      reason: daemonUnhealthy
+      message: "its daemon is not healthy"
+  monovertex:
+    - when: fields.phase == "Failed"
+      health: critical
+      reason: failed
+      message: "{{ fields.message }}"
+    - when: fields.phase == "Paused"
+      health: idle
+      reason: paused
+      message: "paused"
+    - when: fields.phase == ""
+      health: unknown
+      reason: notReconciled
+      message: "not reconciled yet"
+    - when: conditions.DaemonHealthy == false || conditions.Deployed == false
+      health: warning
+      reason: daemonUnhealthy
+      message: "its daemon is not healthy"
+    - when: fields.ready < fields.desired
+      health: warning
+      reason: podsNotReady
+      message: "{{ fields.ready }} of {{ fields.desired }} pods ready"
+  vertex:
+    - when: fields.phase == "Failed"
+      health: critical
+      reason: failed
+      message: "{{ fields.message }}"
+    - when: fields.phase == "Paused"
+      health: idle
+      reason: paused
+      message: "paused"
+    - when: conditions.PodsHealthy == false || conditions.Deployed == false || fields.ready < fields.desired
+      health: warning
+      reason: podsNotReady
+      message: "{{ fields.ready }} of {{ fields.desired }} pods ready"
+  isbsvc:
+    - when: fields.phase == "Failed"
+      health: critical
+      reason: isbsvcFailed
+      message: "{{ fields.message }}"
+    - when: fields.phase == "Pending" || fields.phase == "Deleting"
+      health: info
+      reason: pending
+      message: "{{ fields.phase }}"
+    - when: conditions.ChildrenResourcesHealthy == false
+      health: warning
+      reason: childrenUnhealthy
+      message: "its JetStream is not healthy"
+
+dataServices:
+  summary:
+    aggregate:
+      pipelines: count(pipeline) + count(monovertex)
+      paused: count(pipeline, fields.phase == "Paused") + count(monovertex, fields.phase == "Paused")
+      failed: count(pipeline, health == "critical") + count(monovertex, health == "critical")
+      bufferDown: count(isbsvc, health == "critical")
+    health: worst([worst(pipeline.health), worst(monovertex.health), worst(vertex.health), worst(isbsvc.health)])
+
+cards:
+  summary:
+    title: { count: dataServices.summary.pipelines, one: "%d pipeline", other: "%d pipelines" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "failed", value: dataServices.summary.failed, tone: critical, hideWhenZero: true }
+      - { label: "paused", value: dataServices.summary.paused, tone: info, hideWhenZero: true }
+      - { label: "buffer down", value: dataServices.summary.bufferDown, tone: critical, hideWhenZero: true }
+  pipelines:
+    from: pipeline
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No pipelines."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: fields.phase
+      trailing: { text: 'string(fields.runningVertices) + "/" + string(fields.vertexObjects)' }
+      detail:
+        - type: gauge
+          label: "Vertices running"
+          value: fields.runningVertices
+          max: fields.vertexObjects
+          tone: health
+        - type: keyValues
+          items:
+            - { label: "Phase", value: fields.phase }
+            - { label: "Wanted", value: fields.desiredPhase }
+            - { label: "Vertices", value: fields.vertexCount }
+            - { label: "Sources", value: fields.sources }
+            - { label: "Sinks", value: fields.sinks }
+            - { label: "UDFs", value: fields.udfs }
+            - { label: "Map UDFs", value: fields.mapUdfs }
+            - { label: "Reduce UDFs", value: fields.reduceUdfs }
+            - { label: "Buffer service", value: fields.isbsvcName, mono: true }
+            - { label: "Drained on pause", value: fields.drainedOnPause }
+            - { label: "Updated", value: fields.updatedAt | relativeTime() }
+            - { label: "Created", value: fields.createdAt | relativeTime() }
+            - { label: "Message", value: fields.message }
+        - type: relations
+          items:
+            - { label: "Buffer service", ref: fields.isbsvc }
+        - type: conditions
+        - type: actions
+          items: [pausePipeline, resumePipeline]
+  monoVertices:
+    from: monovertex
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No mono vertices."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: fields.phase
+      trailing: { text: 'string(fields.ready) + "/" + string(fields.desired)' }
+      detail:
+        - type: gauge
+          label: "Pods ready"
+          value: fields.ready
+          max: fields.desired
+          tone: health
+        - type: keyValues
+          items:
+            - { label: "Phase", value: fields.phase }
+            - { label: "Wanted", value: fields.desiredPhase }
+            - { label: "Pods", value: fields.current }
+            - { label: "Reason", value: fields.reason }
+            - { label: "Last scaled", value: fields.lastScaledAt | relativeTime() }
+            - { label: "Created", value: fields.createdAt | relativeTime() }
+            - { label: "Message", value: fields.message }
+        - type: conditions
+        - type: actions
+          items: [pauseMonoVertex, resumeMonoVertex]
+  vertices:
+    from: vertex
+    sort: [health desc, $.metadata.namespace, fields.pipeline, $.metadata.name]
+    empty: "No vertices."
+    row:
+      title: $.metadata.name
+      subtitle: 'fields.pipeline + " · " + $.metadata.namespace'
+      status:
+        tone: health
+        text: fields.phase
+      trailing: { text: 'string(fields.ready) + "/" + string(fields.desired)' }
+      detail:
+        - type: gauge
+          label: "Pods ready"
+          value: fields.ready
+          max: fields.desired
+          tone: health
+        - type: keyValues
+          items:
+            - { label: "Pipeline", value: fields.pipeline, mono: true }
+            - { label: "Phase", value: fields.phase }
+            - { label: "Pods", value: fields.current }
+            - { label: "Reason", value: fields.reason }
+            - { label: "Created", value: fields.createdAt | relativeTime() }
+            - { label: "Message", value: fields.message }
+        - type: conditions
+  bufferServices:
+    from: isbsvc
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No buffer services."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: fields.phase
+      trailing: { text: fields.type }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Type", value: fields.type }
+            - { label: "Phase", value: fields.phase }
+            - { label: "JetStream version", value: fields.jsVersion, mono: true }
+            - { label: "Replicas", value: fields.jsReplicas }
+            - { label: "Created", value: fields.createdAt | relativeTime() }
+            - { label: "Message", value: fields.message }
+        - type: conditions
+
+# Pause and resume through spec.lifecycle.desiredPhase, as `kubectl patch` would: the
+# controller drains then scales the vertices down, and back up.
+actions:
+  pausePipeline:
+    label: "Pause"
+    on: pipeline
+    verb: mergePatch
+    body: { spec: { lifecycle: { desiredPhase: Paused } } }
+    rbac: { verbs: [patch], group: numaflow.numaproj.io, resource: pipelines }
+    confirm: plain
+    audit: numaflow.pause
+    enabledWhen: fields.desiredPhase == "Running"
+    disabledReason: "already paused"
+  resumePipeline:
+    label: "Resume"
+    on: pipeline
+    verb: mergePatch
+    body: { spec: { lifecycle: { desiredPhase: Running } } }
+    rbac: { verbs: [patch], group: numaflow.numaproj.io, resource: pipelines }
+    confirm: plain
+    audit: numaflow.resume
+    enabledWhen: fields.desiredPhase == "Paused"
+    disabledReason: "already running"
+  pauseMonoVertex:
+    label: "Pause"
+    on: monovertex
+    verb: mergePatch
+    body: { spec: { lifecycle: { desiredPhase: Paused } } }
+    rbac: { verbs: [patch], group: numaflow.numaproj.io, resource: monovertices }
+    confirm: plain
+    audit: numaflow.pause
+    enabledWhen: fields.desiredPhase == "Running"
+    disabledReason: "already paused"
+  resumeMonoVertex:
+    label: "Resume"
+    on: monovertex
+    verb: mergePatch
+    body: { spec: { lifecycle: { desiredPhase: Running } } }
+    rbac: { verbs: [patch], group: numaflow.numaproj.io, resource: monovertices }
+    confirm: plain
+    audit: numaflow.resume
+    enabledWhen: fields.desiredPhase == "Paused"
+    disabledReason: "already running"
+
+findings:
+  - id: pipeline-failed
+    from: pipeline
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: pipelines
+  - id: pipeline-unhealthy
+    from: pipeline
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: pipelines
+  - id: monovertex-failed
+    from: monovertex
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: monoVertices
+  - id: monovertex-unhealthy
+    from: monovertex
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: monoVertices
+  - id: vertex-pods-not-ready
+    from: vertex
+    when: health == "warning" || health == "critical"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: vertices
+  - id: isbsvc-failed
+    from: isbsvc
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: bufferServices
+
+i18n:
+  fr:
+    '%d pipeline': '%d pipeline'
+    '%d pipelines': '%d pipelines'
+    'failed': 'en échec'
+    'paused': 'en pause'
+    'buffer down': 'tampon en panne'
+    'No pipelines.': 'Aucun pipeline.'
+    'No mono vertices.': 'Aucun mono vertex.'
+    'No vertices.': 'Aucun vertex.'
+    'No buffer services.': 'Aucun service tampon.'
+    'Vertices running': 'Vertices en marche'
+    'Pods ready': 'Pods prêts'
+    'Phase': 'Phase'
+    'Wanted': 'Voulu'
+    'Vertices': 'Vertices'
+    'Sources': 'Sources'
+    'Sinks': 'Destinations'
+    'UDFs': 'UDF'
+    'Map UDFs': 'UDF map'
+    'Reduce UDFs': 'UDF reduce'
+    'Buffer service': 'Service tampon'
+    'Drained on pause': 'Vidé à la pause'
+    'Updated': 'Mis à jour'
+    'Created': 'Créé'
+    'Message': 'Message'
+    'Pods': 'Pods'
+    'Reason': 'Raison'
+    'Last scaled': 'Dernier scaling'
+    'Pipeline': 'Pipeline'
+    'Type': 'Type'
+    'JetStream version': 'Version JetStream'
+    'Replicas': 'Réplicas'
+    'Pause': 'Mettre en pause'
+    'Resume': 'Reprendre'
+    'already paused': 'déjà en pause'
+    'already running': 'déjà en marche'
+    'not reconciled yet': 'pas encore réconcilié'
+    'its daemon is not healthy': 'son démon n''est pas sain'
+    'its JetStream is not healthy': 'son JetStream n''est pas sain'
+    '{{ fields.ready }} of {{ fields.desired }} pods ready': '{{ fields.ready }} pods prêts sur {{ fields.desired }}'
+    'vertices not healthy: {{ condition("VerticesHealthy").message }}': 'vertices pas sains : {{ condition("VerticesHealthy").message }}'
+  de:
+    '%d pipeline': '%d Pipeline'
+    '%d pipelines': '%d Pipelines'
+    'failed': 'fehlgeschlagen'
+    'paused': 'pausiert'
+    'buffer down': 'Puffer ausgefallen'
+    'No pipelines.': 'Keine Pipelines.'
+    'No mono vertices.': 'Keine Mono-Vertices.'
+    'No vertices.': 'Keine Vertices.'
+    'No buffer services.': 'Keine Pufferdienste.'
+    'Vertices running': 'Laufende Vertices'
+    'Pods ready': 'Pods bereit'
+    'Phase': 'Phase'
+    'Wanted': 'Gewünscht'
+    'Vertices': 'Vertices'
+    'Sources': 'Quellen'
+    'Sinks': 'Senken'
+    'UDFs': 'UDFs'
+    'Map UDFs': 'Map-UDFs'
+    'Reduce UDFs': 'Reduce-UDFs'
+    'Buffer service': 'Pufferdienst'
+    'Drained on pause': 'Bei Pause geleert'
+    'Updated': 'Aktualisiert'
+    'Created': 'Erstellt'
+    'Message': 'Meldung'
+    'Pods': 'Pods'
+    'Reason': 'Grund'
+    'Last scaled': 'Zuletzt skaliert'
+    'Pipeline': 'Pipeline'
+    'Type': 'Typ'
+    'JetStream version': 'JetStream-Version'
+    'Replicas': 'Replikate'
+    'Pause': 'Pausieren'
+    'Resume': 'Fortsetzen'
+    'already paused': 'bereits pausiert'
+    'already running': 'läuft bereits'
+    'not reconciled yet': 'noch nicht abgeglichen'
+    'its daemon is not healthy': 'sein Daemon ist nicht gesund'
+    'its JetStream is not healthy': 'sein JetStream ist nicht gesund'
+    '{{ fields.ready }} of {{ fields.desired }} pods ready': '{{ fields.ready }} von {{ fields.desired }} Pods bereit'
+    'vertices not healthy: {{ condition("VerticesHealthy").message }}': 'Vertices nicht gesund: {{ condition("VerticesHealthy").message }}'
+  es:
+    '%d pipeline': '%d pipeline'
+    '%d pipelines': '%d pipelines'
+    'failed': 'fallidos'
+    'paused': 'en pausa'
+    'buffer down': 'búfer caído'
+    'No pipelines.': 'No hay pipelines.'
+    'No mono vertices.': 'No hay mono vertices.'
+    'No vertices.': 'No hay vértices.'
+    'No buffer services.': 'No hay servicios de búfer.'
+    'Vertices running': 'Vértices en ejecución'
+    'Pods ready': 'Pods listos'
+    'Phase': 'Fase'
+    'Wanted': 'Deseado'
+    'Vertices': 'Vértices'
+    'Sources': 'Fuentes'
+    'Sinks': 'Destinos'
+    'UDFs': 'UDF'
+    'Map UDFs': 'UDF map'
+    'Reduce UDFs': 'UDF reduce'
+    'Buffer service': 'Servicio de búfer'
+    'Drained on pause': 'Vaciado al pausar'
+    'Updated': 'Actualizado'
+    'Created': 'Creado'
+    'Message': 'Mensaje'
+    'Pods': 'Pods'
+    'Reason': 'Motivo'
+    'Last scaled': 'Último escalado'
+    'Pipeline': 'Pipeline'
+    'Type': 'Tipo'
+    'JetStream version': 'Versión de JetStream'
+    'Replicas': 'Réplicas'
+    'Pause': 'Pausar'
+    'Resume': 'Reanudar'
+    'already paused': 'ya en pausa'
+    'already running': 'ya en ejecución'
+    'not reconciled yet': 'aún no reconciliado'
+    'its daemon is not healthy': 'su daemon no está sano'
+    'its JetStream is not healthy': 'su JetStream no está sano'
+    '{{ fields.ready }} of {{ fields.desired }} pods ready': '{{ fields.ready }} de {{ fields.desired }} pods listos'
+    'vertices not healthy: {{ condition("VerticesHealthy").message }}': 'vértices no sanos: {{ condition("VerticesHealthy").message }}'
+  it:
+    '%d pipeline': '%d pipeline'
+    '%d pipelines': '%d pipeline'
+    'failed': 'falliti'
+    'paused': 'in pausa'
+    'buffer down': 'buffer inattivo'
+    'No pipelines.': 'Nessuna pipeline.'
+    'No mono vertices.': 'Nessun mono vertex.'
+    'No vertices.': 'Nessun vertice.'
+    'No buffer services.': 'Nessun servizio buffer.'
+    'Vertices running': 'Vertici in esecuzione'
+    'Pods ready': 'Pod pronti'
+    'Phase': 'Fase'
+    'Wanted': 'Desiderato'
+    'Vertices': 'Vertici'
+    'Sources': 'Sorgenti'
+    'Sinks': 'Destinazioni'
+    'UDFs': 'UDF'
+    'Map UDFs': 'UDF map'
+    'Reduce UDFs': 'UDF reduce'
+    'Buffer service': 'Servizio buffer'
+    'Drained on pause': 'Svuotato in pausa'
+    'Updated': 'Aggiornato'
+    'Created': 'Creato'
+    'Message': 'Messaggio'
+    'Pods': 'Pod'
+    'Reason': 'Motivo'
+    'Last scaled': 'Ultimo scaling'
+    'Pipeline': 'Pipeline'
+    'Type': 'Tipo'
+    'JetStream version': 'Versione JetStream'
+    'Replicas': 'Repliche'
+    'Pause': 'Metti in pausa'
+    'Resume': 'Riprendi'
+    'already paused': 'già in pausa'
+    'already running': 'già in esecuzione'
+    'not reconciled yet': 'non ancora riconciliato'
+    'its daemon is not healthy': 'il suo daemon non è integro'
+    'its JetStream is not healthy': 'il suo JetStream non è integro'
+    '{{ fields.ready }} of {{ fields.desired }} pods ready': '{{ fields.ready }} pod pronti su {{ fields.desired }}'
+    'vertices not healthy: {{ condition("VerticesHealthy").message }}': 'vertici non integri: {{ condition("VerticesHealthy").message }}'
+  uk:
+    '%d pipeline': '%d конвеєр'
+    '%d pipelines': '%d конвеєрів'
+    'failed': 'збій'
+    'paused': 'призупинено'
+    'buffer down': 'буфер недоступний'
+    'No pipelines.': 'Немає конвеєрів.'
+    'No mono vertices.': 'Немає моновершин.'
+    'No vertices.': 'Немає вершин.'
+    'No buffer services.': 'Немає буферних сервісів.'
+    'Vertices running': 'Запущені вершини'
+    'Pods ready': 'Поди готові'
+    'Phase': 'Фаза'
+    'Wanted': 'Бажано'
+    'Vertices': 'Вершини'
+    'Sources': 'Джерела'
+    'Sinks': 'Приймачі'
+    'UDFs': 'UDF'
+    'Map UDFs': 'UDF map'
+    'Reduce UDFs': 'UDF reduce'
+    'Buffer service': 'Буферний сервіс'
+    'Drained on pause': 'Спорожнено при паузі'
+    'Updated': 'Оновлено'
+    'Created': 'Створено'
+    'Message': 'Повідомлення'
+    'Pods': 'Поди'
+    'Reason': 'Причина'
+    'Last scaled': 'Останнє масштабування'
+    'Pipeline': 'Конвеєр'
+    'Type': 'Тип'
+    'JetStream version': 'Версія JetStream'
+    'Replicas': 'Репліки'
+    'Pause': 'Призупинити'
+    'Resume': 'Відновити'
+    'already paused': 'вже призупинено'
+    'already running': 'вже запущено'
+    'not reconciled yet': 'ще не узгоджено'
+    'its daemon is not healthy': 'його демон несправний'
+    'its JetStream is not healthy': 'його JetStream несправний'
+    '{{ fields.ready }} of {{ fields.desired }} pods ready': '{{ fields.ready }} з {{ fields.desired }} подів готові'
+    'vertices not healthy: {{ condition("VerticesHealthy").message }}': 'вершини несправні: {{ condition("VerticesHealthy").message }}'
+
+# Invented names. demo-shop's orders-enrich runs (in → enrich → out) on the default buffer
+# service; nightly-rollup is paused; events' daemon is down; a new pipeline is not reconciled
+# yet. demo-lab's clickstream failed on its buffer service, sessions has an unhealthy vertex,
+# audit-trail is pausing. Mono vertices: one running, one short of pods, one failed, one
+# paused, one whose daemon is down, one new. Times are relative to the clock (now-4m).
+samples:
+  pipeline:
+    - metadata: { name: orders-enrich, namespace: demo-shop, creationTimestamp: now-3d }
+      spec:
+        interStepBufferServiceName: default
+        vertices:
+          - { name: in, source: { http: {} } }
+          - { name: enrich, udf: { container: { image: demo/enrich:1.0 } } }
+          - { name: out, sink: { log: {} } }
+        edges:
+          - { from: in, to: enrich }
+          - { from: enrich, to: out }
+      status:
+        phase: Running
+        vertexCount: 3
+        sourceCount: 1
+        sinkCount: 1
+        udfCount: 1
+        mapUDFCount: 1
+        reduceUDFCount: 0
+        lastUpdated: now-4m
+        conditions:
+          - { type: Configured, status: "True", lastTransitionTime: now-3d }
+          - { type: Deployed, status: "True", lastTransitionTime: now-3d }
+          - { type: DaemonServiceHealthy, status: "True", lastTransitionTime: now-3d }
+          - { type: SideInputsManagersHealthy, status: "True", lastTransitionTime: now-3d }
+          - { type: VerticesHealthy, status: "True", lastTransitionTime: now-1h }
+    - metadata: { name: nightly-rollup, namespace: demo-shop, creationTimestamp: now-20d }
+      spec: { lifecycle: { desiredPhase: Paused } }
+      status: { phase: Paused, vertexCount: 2, sourceCount: 1, sinkCount: 1, drainedOnPause: true, lastUpdated: now-2h }
+    - metadata: { name: events, namespace: demo-shop, creationTimestamp: now-5d }
+      status:
+        phase: Running
+        vertexCount: 2
+        lastUpdated: now-9m
+        conditions:
+          - { type: DaemonServiceHealthy, status: "False", reason: Progressing, message: daemon pod not ready, lastTransitionTime: now-9m }
+          - { type: VerticesHealthy, status: "True", lastTransitionTime: now-1d }
+    - metadata: { name: new-pipeline, namespace: demo-shop, creationTimestamp: now-1m }
+    - metadata: { name: clickstream, namespace: demo-lab, creationTimestamp: now-7d }
+      status:
+        phase: Failed
+        message: buffer service default is not ready
+        vertexCount: 3
+        lastUpdated: now-12m
+    - metadata: { name: sessions, namespace: demo-lab, creationTimestamp: now-2d }
+      status:
+        phase: Running
+        vertexCount: 2
+        lastUpdated: now-6m
+        conditions:
+          - { type: VerticesHealthy, status: "False", reason: Unhealthy, message: vertex cat has 0 ready pods, lastTransitionTime: now-6m }
+    - metadata: { name: audit-trail, namespace: demo-lab, creationTimestamp: now-30d }
+      spec: { lifecycle: { desiredPhase: Paused } }
+      status: { phase: Pausing, vertexCount: 2, lastUpdated: now-1m }
+  monovertex:
+    - metadata: { name: transformer, namespace: demo-shop, creationTimestamp: now-4d }
+      status:
+        phase: Running
+        desiredReplicas: 2
+        replicas: 2
+        readyReplicas: 2
+        lastScaledAt: now-3h
+        conditions:
+          - { type: DaemonHealthy, status: "True", lastTransitionTime: now-4d }
+          - { type: Deployed, status: "True", lastTransitionTime: now-4d }
+    - metadata: { name: fraud-score, namespace: demo-lab, creationTimestamp: now-1d }
+      status: { phase: Running, desiredReplicas: 3, replicas: 3, readyReplicas: 1, lastScaledAt: now-15m }
+    - metadata: { name: geo-lookup, namespace: demo-lab, creationTimestamp: now-6d }
+      status: { phase: Failed, reason: CrashLoopBackOff, message: container udf keeps restarting, desiredReplicas: 1, replicas: 1, readyReplicas: 0 }
+    - metadata: { name: archive, namespace: demo-shop, creationTimestamp: now-40d }
+      spec: { lifecycle: { desiredPhase: Paused } }
+      status: { phase: Paused, desiredReplicas: 0, replicas: 0, readyReplicas: 0 }
+    - metadata: { name: enricher, namespace: demo-shop, creationTimestamp: now-2d }
+      status:
+        phase: Running
+        desiredReplicas: 1
+        replicas: 1
+        readyReplicas: 1
+        conditions:
+          - { type: DaemonHealthy, status: "False", reason: Unavailable, message: daemon deployment unavailable, lastTransitionTime: now-20m }
+    - metadata: { name: fresh, namespace: demo-lab, creationTimestamp: now-1m }
+  vertex:
+    - metadata: { name: orders-enrich-in, namespace: demo-shop, labels: { numaflow.numaproj.io/pipeline-name: orders-enrich }, creationTimestamp: now-3d }
+      spec: { name: in, pipelineName: orders-enrich }
+      status:
+        phase: Running
+        desiredReplicas: 1
+        replicas: 1
+        readyReplicas: 1
+        conditions:
+          - { type: Deployed, status: "True", lastTransitionTime: now-3d }
+          - { type: PodsHealthy, status: "True", lastTransitionTime: now-3d }
+    - metadata: { name: orders-enrich-enrich, namespace: demo-shop, labels: { numaflow.numaproj.io/pipeline-name: orders-enrich }, creationTimestamp: now-3d }
+      spec: { name: enrich, pipelineName: orders-enrich }
+      status: { phase: Running, desiredReplicas: 2, replicas: 2, readyReplicas: 2 }
+    - metadata: { name: orders-enrich-out, namespace: demo-shop, labels: { numaflow.numaproj.io/pipeline-name: orders-enrich }, creationTimestamp: now-3d }
+      spec: { name: out, pipelineName: orders-enrich }
+      status: { phase: Running, desiredReplicas: 1, replicas: 1, readyReplicas: 1 }
+    - metadata: { name: nightly-rollup-in, namespace: demo-shop, labels: { numaflow.numaproj.io/pipeline-name: nightly-rollup }, creationTimestamp: now-20d }
+      spec: { name: in, pipelineName: nightly-rollup }
+      status: { phase: Paused, desiredReplicas: 0, replicas: 0, readyReplicas: 0 }
+    - metadata: { name: clickstream-in, namespace: demo-lab, labels: { numaflow.numaproj.io/pipeline-name: clickstream }, creationTimestamp: now-7d }
+      spec: { name: in, pipelineName: clickstream }
+      status: { phase: Failed, message: cannot reach buffer service default, desiredReplicas: 1, replicas: 1, readyReplicas: 0 }
+    - metadata: { name: sessions-cat, namespace: demo-lab, labels: { numaflow.numaproj.io/pipeline-name: sessions }, creationTimestamp: now-2d }
+      spec: { name: cat, pipelineName: sessions }
+      status:
+        phase: Running
+        desiredReplicas: 1
+        replicas: 1
+        readyReplicas: 0
+        reason: Unhealthy
+        message: pod sessions-cat-0 is not ready
+        conditions:
+          - { type: PodsHealthy, status: "False", reason: Unhealthy, message: 0 of 1 pods ready, lastTransitionTime: now-6m }
+  isbsvc:
+    - metadata: { name: default, namespace: demo-shop, creationTimestamp: now-30d }
+      spec: { jetstream: { version: latest, replicas: 3 } }
+      status:
+        type: jetstream
+        phase: Running
+        conditions:
+          - { type: Configured, status: "True", lastTransitionTime: now-30d }
+          - { type: Deployed, status: "True", lastTransitionTime: now-30d }
+          - { type: ChildrenResourcesHealthy, status: "True", lastTransitionTime: now-2d }
+    - metadata: { name: default, namespace: demo-lab, creationTimestamp: now-10d }
+      spec: { jetstream: { version: latest } }
+      status: { type: jetstream, phase: Failed, message: JetStream statefulset has 0 ready replicas }
+    - metadata: { name: staging, namespace: demo-shop, creationTimestamp: now-2m }
+      spec: { jetstream: { version: latest, replicas: 1 } }
+      status: { type: jetstream, phase: Pending }
+    - metadata: { name: analytics, namespace: demo-lab, creationTimestamp: now-15d }
+      spec: { jetstream: { version: latest } }
+      status:
+        type: jetstream
+        phase: Running
+        conditions:
+          - { type: ChildrenResourcesHealthy, status: "False", reason: Degraded, message: 1 of 3 JetStream pods not ready, lastTransitionTime: now-30m }

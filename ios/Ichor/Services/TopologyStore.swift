@@ -2,11 +2,12 @@ import Foundation
 import IchorCore
 
 /// The cluster maps (Go ClusterTopology) that order the overview's and the Nodes screen's
-/// nodes site by site. Android only uses a map the KubeSpan screen fetched; here the overview
-/// asks for it itself, in the background, once per cluster: the call reads four small
-/// resources per node (in parallel), cheap next to the overview, but not worth repeating on
-/// every refresh since sites rarely change. A pull to refresh asks again. Kept in memory only,
-/// keyed on the context and the screenshot mode generation, so another cluster's (or
+/// nodes site by site and tell the home summary when a KubeSpan tunnel is down. As on Android,
+/// the overview asks for one itself, in the background, after each load: a tunnel can die
+/// between two loads, and the call only reads four small resources per node (in parallel),
+/// cheap next to the overview. A map under 30 s old is not read again (see topologyIsFresh);
+/// a pull to refresh always is. Kept in memory only, keyed on the context and the screenshot
+/// mode generation, so another cluster's (or
 /// unmasked) sites never show. Each new map keeps what the one before knew of the nodes that
 /// no longer answer (mergeLastKnown): their name and site.
 @Observable
@@ -20,10 +21,10 @@ final class TopologyStore {
     /// The map loaded for key, nil when none yet.
     func topology(for key: String) -> ClusterTopology? { maps[key]?.topology }
 
-    /// Loads the map for key unless it is already there (or `force`). Best effort: a failure
+    /// Loads the map for key unless one was just read (or `force`). Best effort: a failure
     /// keeps what was there, and the nodes stay in one group without a map.
     func load(with client: TalosClient, key: String, force: Bool = false) async {
-        if !force, maps[key] != nil { return }
+        if !force, let held = maps[key], topologyIsFresh(readAt: held.at) { return }
         guard !loading.contains(key) else { return }
         loading.insert(key)
         defer { loading.remove(key) }

@@ -16,6 +16,7 @@ import name.levis.ichor.data.TalosJson
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.monitor.AlertActionRequest
+import name.levis.ichor.ui.components.RowAction
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.shareText
 import name.levis.ichorgo.Ichorgo
@@ -52,6 +53,13 @@ fun rememberShareLink(): (ShareTarget) -> Unit {
 fun ShareLinkButton(target: ShareTarget, icon: ImageVector = Icons.Outlined.Share) {
     val share = rememberShareLink()
     TooltipIconButton(icon, stringResource(R.string.share_link), onClick = { share(target) })
+}
+
+/** Share link to [target] as a row action, for a long-press menu. */
+@Composable
+fun rememberShareAction(target: ShareTarget): RowAction {
+    val share = rememberShareLink()
+    return RowAction(Icons.Outlined.Share, stringResource(R.string.share_link), onClick = { share(target) })
 }
 
 /** A menu entry sharing the link to [target]; [onClick] closes the menu. */

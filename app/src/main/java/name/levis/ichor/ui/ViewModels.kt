@@ -7,12 +7,15 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.MaskScoped
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ReadProgress
 import name.levis.ichor.model.pollReadProgress
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +29,18 @@ inline fun <reified VM : ViewModel> factory(crossinline create: CreationExtras.(
 /** A ViewModel that loads one value and supports refresh while keeping stale data visible. */
 abstract class LoadingViewModel<T> : ViewModel() {
     private val _state = MutableStateFlow<UiState<T>>(UiState.Loading)
-    val state: StateFlow<UiState<T>> = _state.asStateFlow()
+
+    /**
+     * Whether the first [fetch] starts by itself when a screen starts collecting [state]. False
+     * for a read that waits on something (a tap, a permission): the screen calls [refresh] then.
+     */
+    protected open val loadsOnOpen: Boolean = true
+
+    /** Whether [refresh] ran once: the first collection of [state] then starts nothing. */
+    private var started = false
+
+    /** Collecting it starts the first read (see [loadsOnOpen]), so no screen has to remember to. */
+    val state: StateFlow<UiState<T>> = StartingStateFlow(_state.asStateFlow()) { if (loadsOnOpen && !started) refresh() }
     private var job: Job? = null
 
     private val _settled = MutableStateFlow(0)
@@ -37,6 +51,12 @@ abstract class LoadingViewModel<T> : ViewModel() {
 
     /** Last cached value to show instantly while [fetch] runs (stale-while-revalidate). */
     protected open fun cached(): TalosRepository.Timed<T>? = null
+
+    /**
+     * What the last background check saw, shown (marked as such) when [cached] has nothing,
+     * instead of a skeleton: never kept as a result, replaced by the last known or fresh value.
+     */
+    protected open fun seed(): TalosRepository.Timed<T>? = null
 
     /**
      * Whether a failed refresh leaves the data on screen, marked with the error, instead of
@@ -65,17 +85,39 @@ abstract class LoadingViewModel<T> : ViewModel() {
     val readProgress: StateFlow<ReadProgress?> = _progress.asStateFlow()
     private var progressPoll: Job? = null
 
+    /** Follows the screenshot mode switches once something was loaded (see [forgetMasked]). */
+    private var maskWatch: Job? = null
+    private val mask = MaskScoped()
+
+    /**
+     * What was read under the previous screenshot mode setting never stays, even with the screen
+     * in the back stack: dropped when a switch starts, read again once it is over.
+     */
+    private fun forgetMasked(switching: Boolean) {
+        job?.cancel()
+        watch?.cancel()
+        progressPoll?.cancel()
+        _progress.value = null
+        partial = false
+        _state.value = UiState.Loading
+        if (!switching) refresh(reset = true)
+    }
+
     /** [reset] drops the current data first, e.g. when the data source (context) changed. */
     fun refresh(reset: Boolean = false) {
+        started = true
+        if (maskWatch == null) maskWatch = mask.watch(viewModelScope, ::forgetMasked)
         job?.cancel()
         watch?.cancel()
         partial = false
         val previous = _state.value
         _state.value = when {
             !reset && previous is UiState.Loaded -> previous.copy(refreshing = true)
-            else -> cached()?.let { UiState.Loaded(it.value, refreshing = true, fetchedAt = it.at) } ?: UiState.Loading
+            else -> cached()?.let { UiState.Loaded(it.value, refreshing = true, fetchedAt = it.at) }
+                ?: seed()?.let { UiState.Loaded(it.value, refreshing = true, fetchedAt = it.at, fromMonitor = true) }
+                ?: UiState.Loading
         }
-        if (_state.value !is UiState.Loaded) watch = watchRestores()
+        if ((_state.value as? UiState.Loaded)?.fromMonitor != false) watch = watchRestores()
         progressPoll?.cancel()
         _progress.value = null
         val reader = progressReader
@@ -119,7 +161,8 @@ abstract class LoadingViewModel<T> : ViewModel() {
      * nothing while none is on screen. A refresh in flight replaces it when it completes.
      */
     protected fun updateLoaded(transform: (T) -> T) {
-        val current = _state.value as? UiState.Loaded ?: return
+        // A seed is not the cluster's data: a live change on it would pass it off as fresh.
+        val current = (_state.value as? UiState.Loaded)?.takeUnless { it.fromMonitor } ?: return
         _state.value = current.copy(data = transform(current.data), fetchedAt = System.currentTimeMillis(), error = null)
     }
 
@@ -142,5 +185,14 @@ abstract class LoadingViewModel<T> : ViewModel() {
                 _state.value = _state.value.orRestored(restored.value to restored.at, keepsDataOnFailure)
             }
         }
+    }
+}
+
+/** [flow], which runs [start] each time it is collected (reading its value runs nothing). */
+@OptIn(ExperimentalForInheritanceCoroutinesApi::class)
+private class StartingStateFlow<T>(private val flow: StateFlow<T>, private val start: () -> Unit) : StateFlow<T> by flow {
+    override suspend fun collect(collector: FlowCollector<T>): Nothing {
+        start()
+        flow.collect(collector)
     }
 }

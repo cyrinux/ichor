@@ -107,8 +107,10 @@ public struct NetPerfResult: Codable, Equatable, Sendable {
     public let latency: NetPerfLatency?
     public let error: String
 
-    public init(path: String, test: String, throughputMbps: Double = 0, transactionRate: Double = 0,
-                latency: NetPerfLatency? = nil, error: String = "") {
+    public init(
+        path: String, test: String, throughputMbps: Double = 0, transactionRate: Double = 0,
+        latency: NetPerfLatency? = nil, error: String = ""
+    ) {
         self.path = path
         self.test = test
         self.throughputMbps = throughputMbps
@@ -146,8 +148,10 @@ public struct NetPerfReport: Codable, Equatable, Sendable {
     /// Why the test namespace could not be deleted, "" when it was.
     public let cleanup: String
 
-    public init(server: String = "", client: String = "", hostNetwork: Bool = false, seconds: Int = 0, image: String = "",
-                started: Int64 = 0, finished: Int64 = 0, results: [NetPerfResult] = [], cleanup: String = "") {
+    public init(
+        server: String = "", client: String = "", hostNetwork: Bool = false, seconds: Int = 0, image: String = "",
+        started: Int64 = 0, finished: Int64 = 0, results: [NetPerfResult] = [], cleanup: String = ""
+    ) {
         self.server = server
         self.client = client
         self.hostNetwork = hostNetwork
@@ -172,7 +176,9 @@ public struct NetPerfReport: Codable, Equatable, Sendable {
         cleanup = try c.field(.cleanup, "")
     }
 
-    private enum CodingKeys: String, CodingKey { case server, client, hostNetwork, seconds, image, started, finished, results, cleanup }
+    private enum CodingKeys: String, CodingKey {
+        case server, client, hostNetwork, seconds, image, started, finished, results, cleanup
+    }
 }
 
 public struct NetPerfProgress: Decodable, Equatable, Sendable {
@@ -187,8 +193,10 @@ public struct NetPerfProgress: Decodable, Equatable, Sendable {
     public let at: Int64
     public let results: [NetPerfResult]
 
-    public init(phase: String, path: String = "", test: String = "", step: Int = 0, steps: Int = 0, message: String = "",
-                at: Int64 = 0, results: [NetPerfResult] = []) {
+    public init(
+        phase: String, path: String = "", test: String = "", step: Int = 0, steps: Int = 0, message: String = "",
+        at: Int64 = 0, results: [NetPerfResult] = []
+    ) {
         self.phase = phase
         self.path = path
         self.test = test
@@ -221,7 +229,9 @@ public struct NetPerfSetup: Equatable, Sendable {
     public var hostNetwork: Bool
     public var seconds: Int
 
-    public init(server: String = "", client: String = "", hostNetwork: Bool = false, seconds: Int = netPerfDefaultSeconds) {
+    public init(
+        server: String = "", client: String = "", hostNetwork: Bool = false, seconds: Int = netPerfDefaultSeconds
+    ) {
         self.server = server
         self.client = client
         self.hostNetwork = hostNetwork
@@ -279,7 +289,9 @@ public let netPerfHistoryLimit = 20
 
 extension NetPerfReport {
     /// What was tested, to show a saved report like the test that made it.
-    public var setup: NetPerfSetup { NetPerfSetup(server: server, client: client, hostNetwork: hostNetwork, seconds: seconds) }
+    public var setup: NetPerfSetup {
+        NetPerfSetup(server: server, client: client, hostNetwork: hostNetwork, seconds: seconds)
+    }
 }
 
 extension Array where Element == NetPerfReport {

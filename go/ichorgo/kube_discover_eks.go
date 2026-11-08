@@ -101,6 +101,7 @@ func runEKSDiscoverSignIn(ctx context.Context, secrets map[string]string, prompt
 	}
 
 	signed.Method = authEKS
+	signed = signed.signedNow()
 
 	discoverySignIn.mu.Lock()
 	defer discoverySignIn.mu.Unlock()
@@ -486,7 +487,7 @@ func withEKSDiscoverySession(state kubeAuthState, server string) kubeAuthState {
 	}
 
 	out := state
-	out.Session, out.SessionExpires = signed.Session, signed.SessionExpires
+	out.Session, out.SessionExpires, out.SignedInAt = signed.Session, signed.SessionExpires, signed.SignedInAt
 	// The discovery's role credentials are for another role, maybe: the cluster gets its own.
 	out = out.withSession(map[string]string{"roleKey": "", "roleSecret": "", "roleToken": "", "roleExpiry": ""})
 

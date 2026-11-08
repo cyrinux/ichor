@@ -1,0 +1,151 @@
+# yaml-language-server: $schema=../../schema/plugin.schema.json
+# The kube-green example of the "Plan: CRD plugins" document (§4), as a test fixture.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: kube-green
+name: kube-green
+website: https://kube-green.dev
+icon: kube-green
+category: data-services
+catalogId: kube-green
+
+detect:
+  - group: kube-green.com
+    resource: sleepinfos
+
+resources:
+  sleepinfo:
+    group: kube-green.com
+    version: v1alpha1
+    resource: sleepinfos
+    kind: SleepInfo
+    scope: Namespaced
+    list:
+      labelSelector: ""
+      fieldSelector: ""
+      limit: 500
+    watch: false
+  stateSecret:
+    group: ""
+    version: v1
+    resource: secrets
+    kind: Secret
+    scope: Namespaced
+    list: { fieldSelector: "type=Opaque" }
+    reveal: false
+
+fields:
+  sleepinfo:
+    weekdays:  $.spec.weekdays
+    sleepAt:   $.spec.sleepAt
+    wakeUpAt:  $.spec.wakeUpAt | default("")
+    timeZone:  $.spec.timeZone | default("UTC")
+    suspendDeployments:  $.spec.suspendDeployments | default(true)
+    suspendStatefulSets: $.spec.suspendStatefulSets | default(true)
+    suspendCronJobs:     $.spec.suspendCronJobs | default(false)
+    excludeCount: len($.spec.excludeRef | default([]))
+    operation:   $.status.operation | default("")
+    asleep:      fields.operation == "SLEEP"
+    lastScheduleAt: $.status.lastScheduleTime | time()
+    nextSleepAt:  cronNext(fields.sleepAt, fields.weekdays, fields.timeZone)
+    nextWakeUpAt: 'fields.wakeUpAt == "" ? 0 : cronNext(fields.wakeUpAt, fields.weekdays, fields.timeZone)'
+    state: join(stateSecret, $.metadata.namespace == left.metadata.namespace && $.metadata.name == "sleepinfo-" + left.metadata.name)
+
+health:
+  sleepinfo:
+    - when: fields.nextSleepAt == 0
+      health: warning
+      reason: schedule-unparsable
+      message: "the sleep schedule does not parse"
+    - when: fields.asleep && fields.wakeUpAt == ""
+      health: warning
+      reason: asleep-no-wakeup
+      message: "asleep until changed by hand"
+    - when: fields.asleep
+      health: idle
+      reason: asleep
+
+dataServices:
+  summary:
+    aggregate:
+      total:    count(sleepinfo)
+      asleep:   count(sleepinfo, fields.asleep)
+      warnings: count(sleepinfo, health == "warning")
+    health: worst(sleepinfo.health)
+  byNamespace:
+    from: sleepinfo
+    groupBy: $.metadata.namespace
+    aggregate: { count: count(), asleep: count(fields.asleep) }
+
+cards:
+  summary:
+    title: { count: dataServices.summary.total, one: "%d sleep schedule", other: "%d sleep schedules" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "asleep", value: dataServices.summary.asleep, tone: info, hideWhenZero: true }
+      - { label: "warnings", value: dataServices.summary.warnings, tone: warning, hideWhenZero: true }
+  list:
+    from: sleepinfo
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No sleep schedules."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: 'fields.asleep ? "Asleep" : "Awake"'
+      trailing: { text: fields.nextWakeUpAt | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Weekdays", value: fields.weekdays }
+            - { label: "Sleep at", value: fields.sleepAt }
+            - { label: "Wake up at", value: fields.wakeUpAt | default("never") }
+            - { label: "Time zone", value: fields.timeZone }
+            - { label: "Last run", value: fields.lastScheduleAt | relativeTime() }
+        - type: badges
+          items:
+            - { label: "Deployments", on: fields.suspendDeployments }
+            - { label: "StatefulSets", on: fields.suspendStatefulSets }
+            - { label: "CronJobs", on: fields.suspendCronJobs }
+        - type: conditions
+        - type: relations
+          items:
+            - { label: "State secret", ref: fields.state }
+        - type: actions
+          items: [wakeNow]
+  namespaces:
+    from: dataServices.byNamespace
+    row:
+      title: $.key
+      trailing: { text: $.count }
+
+actions:
+  wakeNow:
+    label: "Wake up now"
+    on: sleepinfo
+    verb: mergePatch
+    body: { metadata: { annotations: { "kube-green.ichor.dev/wake": "{{ now }}" } } }
+    rbac: { verbs: [patch], group: kube-green.com, resource: sleepinfos }
+    confirm: plain
+    audit: kube-green.wakeNow
+    enabledWhen: fields.asleep
+    disabledReason: "not asleep"
+
+findings:
+  - id: asleep-no-wakeup
+    from: sleepinfo
+    when: health == "warning"
+    severity: warning
+    title: "{{ name }} sleeps with no wake-up time"
+    detail: "{{ namespace }}/{{ name }}: {{ message }}"
+    opens: list
+
+samples:
+  sleepinfo:
+    - { metadata: { name: nightly, namespace: demo-shop }, spec: { weekdays: "1-5", sleepAt: "20:00", wakeUpAt: "08:00", timeZone: Europe/Paris }, status: { operation: WAKE_UP, lastScheduleTime: "2026-10-15T06:00:00Z" } }
+    - { metadata: { name: weekend, namespace: demo-lab }, spec: { weekdays: "6,0", sleepAt: "00:00" }, status: { operation: SLEEP, lastScheduleTime: "2026-10-11T22:00:00Z" } }
+  stateSecret:
+    - { metadata: { name: sleepinfo-weekend, namespace: demo-lab }, type: Opaque }
+
+i18n:
+  fr: { "Wake up now": "Réveiller maintenant", "Asleep": "Endormi", "No sleep schedules.": "Aucun horaire de veille." }

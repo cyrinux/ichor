@@ -16,8 +16,10 @@ public struct ConfigDataCert: Decodable, Equatable, Sendable {
     /// Days left before the certificate counts as expiring soon.
     public static let warnDays: Int64 = 30
 
-    public init(subject: String = "", issuer: String = "", notBefore: Int64 = 0, notAfter: Int64 = 0,
-                dnsNames: [String] = [], count: Int = 1) {
+    public init(
+        subject: String = "", issuer: String = "", notBefore: Int64 = 0, notAfter: Int64 = 0,
+        dnsNames: [String] = [], count: Int = 1
+    ) {
         self.subject = subject
         self.issuer = issuer
         self.notBefore = notBefore
@@ -72,8 +74,10 @@ public struct ConfigDataKey: Decodable, Equatable, Identifiable, Sendable {
     public static let hintText = "text"
     public static let hintBinary = "binary"
 
-    public init(key: String, size: Int64 = 0, hint: String = ConfigDataKey.hintText, revealed: Bool = false,
-                value: String = "", base64: Bool = false, cert: ConfigDataCert? = nil) {
+    public init(
+        key: String, size: Int64 = 0, hint: String = ConfigDataKey.hintText, revealed: Bool = false,
+        value: String = "", base64: Bool = false, cert: ConfigDataCert? = nil
+    ) {
         self.key = key
         self.size = size
         self.hint = hint

@@ -15,17 +15,20 @@ import (
 // servers (local models, gateways) implement too. No output limit is set, so each model
 // uses its own.
 type openAIRequest struct {
-	Model    string        `json:"model"`
-	Stream   bool          `json:"stream"`
-	Messages []chatMessage `json:"messages"`
+	Model      string          `json:"model"`
+	Stream     bool            `json:"stream"`
+	Messages   []openAIMessage `json:"messages"`
+	Tools      []openAITool    `json:"tools,omitempty"`
+	ToolChoice string          `json:"tool_choice,omitempty"`
 }
 
 // openAIChunk is the part of a stream chunk the answer is built from.
 type openAIChunk struct {
 	Choices []struct {
 		Delta struct {
-			Content string `json:"content"`
-			Refusal string `json:"refusal"`
+			Content   string                `json:"content"`
+			Refusal   string                `json:"refusal"`
+			ToolCalls []openAIToolCallDelta `json:"tool_calls"`
 		} `json:"delta"`
 		FinishReason string `json:"finish_reason"`
 	} `json:"choices"`
@@ -56,19 +59,20 @@ func openAIHeader(req aiRequest) map[string]string {
 	return header
 }
 
-func streamOpenAI(ctx context.Context, req aiRequest, emit func(string)) error {
-	raw, err := json.Marshal(openAIRequest{
-		Model:    req.model,
-		Stream:   true,
-		Messages: append([]chatMessage{{Role: "system", Content: req.system}}, req.turns()...),
-	})
+func streamOpenAI(ctx context.Context, req aiRequest, emit func(string)) (aiTurn, error) {
+	body := openAIRequest{Model: req.model, Stream: true, Messages: openAIMessages(req), Tools: openAITools(req.tools)}
+	if req.forceAnswer {
+		body.ToolChoice = "none"
+	}
+
+	raw, err := json.Marshal(body)
 	if err != nil {
-		return err
+		return aiTurn{}, err
 	}
 
 	resp, err := aiDo(ctx, req, http.MethodPost, openAIURL(req, "chat/completions"), openAIHeader(req), raw)
 	if err != nil {
-		return err
+		return aiTurn{}, err
 	}
 
 	defer resp.Body.Close() //nolint:errcheck
@@ -76,7 +80,10 @@ func streamOpenAI(ctx context.Context, req aiRequest, emit func(string)) error {
 	var (
 		finish  string
 		refused bool
+		text    strings.Builder
 	)
+
+	calls := newOpenAICalls()
 
 	err = readSSE(resp.Body, func(data []byte) error {
 		var chunk openAIChunk
@@ -90,10 +97,17 @@ func streamOpenAI(ctx context.Context, req aiRequest, emit func(string)) error {
 
 		for _, choice := range chunk.Choices {
 			if choice.Delta.Content != "" {
+				text.WriteString(choice.Delta.Content)
 				emit(choice.Delta.Content)
 			}
 
 			refused = refused || choice.Delta.Refusal != ""
+
+			if len(req.tools) > 0 {
+				if err := calls.add(choice.Delta.ToolCalls); err != nil {
+					return err
+				}
+			}
 
 			if choice.FinishReason != "" {
 				finish = choice.FinishReason
@@ -105,16 +119,19 @@ func streamOpenAI(ctx context.Context, req aiRequest, emit func(string)) error {
 
 	switch {
 	case err != nil:
-		return streamError(ctx, req.provider, err)
+		return aiTurn{}, streamError(ctx, req.provider, err)
 	case refused || finish == "content_filter":
-		return errors.New(answerDeclined)
+		return aiTurn{}, errors.New(answerDeclined)
 	case finish == "":
-		return errors.New(answerIncomplete)
+		return aiTurn{}, errors.New(answerIncomplete)
 	case finish == "length":
 		emit(answerCutNotice)
+
+		return aiTurn{}, nil
 	}
 
-	return nil
+	// Some servers end a turn that asks for tools with "stop": the calls are what counts.
+	return calls.turn(text.String())
 }
 
 // openAIModels lists the models, newest first.

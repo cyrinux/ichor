@@ -145,7 +145,7 @@ fun LogEntryRow(row: LogRow.Entry, palette: LogPalette, zone: ZoneId, expanded: 
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Text(row.entry.text, style = monoTextStyle())
+                    AnsiLine(row.entry)
                 }
             }
         }

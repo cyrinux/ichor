@@ -60,6 +60,16 @@ class KubeAccessTest {
     }
 
     @Test
+    fun ownApiAddressIsOfferedOnlyWhereTheCallsUseIt() {
+        val linked = withKubeAccess(summary, mapOf("t1" to "k1"))
+
+        // Linked: the kubeconfig cluster's address is used; unlinked Talos and kubeconfig clusters use their own.
+        assertEquals(listOf(false, true, true, true), linked.contexts.map { it.usesOwnKubeServer })
+        // Through Omni's kube proxy: none.
+        assertFalse(ContextSummary("acme", fingerprint = "o1", omni = true, signIn = "omni").usesOwnKubeServer)
+    }
+
+    @Test
     fun unlinkedClusterKeepsItsOwnTarget() {
         val servers = mapOf("t1" to "https://talos-lb:6443")
         assertEquals(KubeTarget("talos-yaml", "prod", "https://talos-lb:6443"), kubeTarget(StoredConfig("talos-yaml", "kube-yaml", summary, "prod"), servers))

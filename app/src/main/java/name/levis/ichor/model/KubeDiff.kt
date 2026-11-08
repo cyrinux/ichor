@@ -35,6 +35,23 @@ data class FluxDiff(
     val newRevision: Boolean get() = revision.isNotEmpty() && applied.isNotEmpty() && revision != applied
 }
 
+/**
+ * The changed objects of [refs] (an Argo CD selective sync), or all of them when [refs] is
+ * empty. Core kinds may come with an empty group or "core" on either side: then kind,
+ * namespace and name decide. Cluster-scoped objects have an empty namespace on both.
+ */
+fun FluxDiff.forResources(refs: List<ArgoResourceRef>): List<KubeDiffResource> {
+    if (refs.isEmpty()) return changed
+    return changed.filter { r -> refs.any { it.matches(r) } }
+}
+
+private fun ArgoResourceRef.matches(r: KubeDiffResource): Boolean {
+    if (kind != r.kind || namespace != r.namespace || name != r.name) return false
+    val a = group.takeUnless { it == "core" }.orEmpty()
+    val b = r.group.takeUnless { it == "core" }.orEmpty()
+    return a.isEmpty() || b.isEmpty() || a == b
+}
+
 /** One object of a diff. */
 @Serializable
 data class KubeDiffResource(
@@ -50,12 +67,31 @@ data class KubeDiffResource(
     val truncated: Boolean = false,
     /** Why the API server refused the dry run, for [DiffChange.ERROR]. */
     val error: String = "",
+    /** The plain values changed in the cluster by hand, which "Keep in Git" writes to the manifest. */
+    val liveChanges: List<DiffLiveChange> = emptyList(),
 ) {
     val key: String get() = "$group/$kind/$namespace/$name"
+
+    /** What a diff's focus names it by ("kind/namespace/name"): the object page knows no group alias. */
+    val focusKey: String get() = "$kind/$namespace/$name"
 
     /** The diff's lines without its "---"/"+++" header. */
     val lines: List<DiffLine> get() = parseDiffLines(diff)
 }
+
+/**
+ * One plain value an object has live but not as its GitOps tool would apply it: [label] shown
+ * ("spec.template.spec.containers[app].image"), [wanted] and [live] as YAML writes them, [type]
+ * the live value's tag (str, int, float, bool). [path] is the core's own, sent back as is.
+ */
+@Serializable
+data class DiffLiveChange(
+    val path: List<String> = emptyList(),
+    val label: String = "",
+    val wanted: String = "",
+    val live: String = "",
+    val type: String = "",
+)
 
 /** How an object would change, in the order the screen lists them. */
 @Serializable

@@ -1,6 +1,311 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Says what Ichor's last background check saw on a cluster. None chosen: the one open in the app." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indique ce que la dernière vérification en arrière-plan d’Ichor a vu sur un cluster. Aucun choisi : celui ouvert dans l’app."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dice lo que vio la última comprobación en segundo plano de Ichor en un clúster. Si no eliges ninguno: el que está abierto en la app."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sagt, was Ichors letzte Hintergrundprüfung auf einem Cluster gesehen hat. Keiner gewählt: der in der App geöffnete."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dice cosa ha visto l’ultimo controllo in background di Ichor su un cluster. Nessuno scelto: quello aperto nell’app."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повідомляє, що побачила остання фонова перевірка Ichor у кластері. Якщо не вибрано: той, що відкритий у застосунку."
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "告知 Ichor 上次后台检查在集群上看到的情况。未选择时：使用应用中打开的集群。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor の最新のバックグラウンドチェックでクラスターがどう見えたかを伝えます。未選択の場合：アプリで開いているクラスター。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Informa o que a última verificação em segundo plano do Ichor viu em um cluster. Nenhum escolhido: o que está aberto no app." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сообщает, что увидела последняя фоновая проверка Ichor в кластере. Если ничего не выбрано — кластер, открытый в приложении." } }
+      }
+    },
+    "Open cluster" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir le cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir clúster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster öffnen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити кластер"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开集群" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターを開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir cluster" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открыть кластер" } }
+      }
+    },
+    "Opens a cluster's overview in Ichor. None chosen: the one open in the app." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre la vue d’ensemble d’un cluster dans Ichor. Aucun choisi : celui ouvert dans l’app."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre la vista general de un clúster en Ichor. Si no eliges ninguno: el que está abierto en la app."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet die Übersicht eines Clusters in Ichor. Keiner gewählt: der in der App geöffnete."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apre la panoramica di un cluster in Ichor. Nessuno scelto: quello aperto nell’app."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває огляд кластера в Ichor. Якщо не вибрано: той, що відкритий у застосунку."
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Ichor 中打开集群概览。未选择时：使用应用中打开的集群。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor でクラスターの概要を開きます。未選択の場合：アプリで開いているクラスター。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abre a visão geral de um cluster no Ichor. Nenhum escolhido: o que está aberto no app." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открывает обзор кластера в Ichor. Если ничего не выбрано — кластер, открытый в приложении." } }
+      }
+    },
+    "Run a checkup" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancer un bilan"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hacer una revisión"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check-up starten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegui un controllo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити перевірку"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "运行检查" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "チェックを実行" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Executar uma verificação" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запустить проверку" } }
+      }
+    },
+    "Opens the cluster checkup in Ichor. None chosen: the cluster open in the app." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre le bilan du cluster dans Ichor. Aucun choisi : le cluster ouvert dans l’app."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre la revisión del clúster en Ichor. Si no eliges ninguno: el clúster abierto en la app."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet den Cluster-Check-up in Ichor. Keiner gewählt: der in der App geöffnete Cluster."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apre il controllo del cluster in Ichor. Nessuno scelto: il cluster aperto nell’app."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває перевірку кластера в Ichor. Якщо не вибрано: кластер, відкритий у застосунку."
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Ichor 中打开集群检查。未选择时：使用应用中打开的集群。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor でクラスターチェックを開きます。未選択の場合：アプリで開いているクラスター。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abre a verificação do cluster no Ichor. Nenhum escolhido: o cluster aberto no app." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открывает проверку кластера в Ichor. Если ничего не выбрано — кластер, открытый в приложении." } }
+      }
+    },
+    "Opens the cluster open in Ichor." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre le cluster ouvert dans Ichor."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre el clúster abierto en Ichor."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet den in Ichor geöffneten Cluster."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apre il cluster aperto in Ichor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває кластер, відкритий в Ichor."
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开 Ichor 中当前打开的集群。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor で開いているクラスターを開きます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abre o cluster aberto no Ichor." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открывает кластер, открытый в Ichor." } }
+      }
+    },
+    "Opens the checkup of the cluster open in Ichor." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre le bilan du cluster ouvert dans Ichor."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre la revisión del clúster abierto en Ichor."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet den Check-up des in Ichor geöffneten Clusters."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apre il controllo del cluster aperto in Ichor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває перевірку кластера, відкритого в Ichor."
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开 Ichor 中当前集群的检查。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor で開いているクラスターのチェックを開きます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abre a verificação do cluster aberto no Ichor." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открывает проверку кластера, открытого в Ichor." } }
+      }
+    },
+    "Terminate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+            "stringUnit" : {
+              "state" : "translated",
+              "value" : "Beenden"
+            }
+          },
+        "es" : {
+            "stringUnit" : {
+              "state" : "translated",
+              "value" : "Detener"
+            }
+          },
+        "fr" : {
+            "stringUnit" : {
+              "state" : "translated",
+              "value" : "Arrêter"
+            }
+          },
+        "it" : {
+            "stringUnit" : {
+              "state" : "translated",
+              "value" : "Interrompi"
+            }
+          },
+        "uk" : {
+            "stringUnit" : {
+              "state" : "translated",
+              "value" : "Зупинити"
+            }
+          },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "终止" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "終了" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Encerrar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Прервать" } }
+      }
+    },
     "Stop" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -33,7 +338,11 @@
             "state" : "translated",
             "value" : "Зупинити"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "停止" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Parar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Остановить" } }
       }
     },
     "Stop following" : {
@@ -68,7 +377,11 @@
             "state" : "translated",
             "value" : "Припинити стеження"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止跟踪" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "追跡を停止" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Parar de acompanhar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Прекратить отслеживание" } }
       }
     },
     "Pause" : {
@@ -103,7 +416,11 @@
             "state" : "translated",
             "value" : "Призупинити"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂停" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "一時停止" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Pausar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Пауза" } }
       }
     },
     "Resume" : {
@@ -138,7 +455,11 @@
             "state" : "translated",
             "value" : "Продовжити"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "继续" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "再開" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Retomar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Возобновить" } }
       }
     },
     "Abort" : {
@@ -173,7 +494,11 @@
             "state" : "translated",
             "value" : "Перервати"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "中止" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "中止" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abortar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Прервать" } }
       }
     },
     "Keep" : {
@@ -208,7 +533,11 @@
             "state" : "translated",
             "value" : "Залишити"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保留" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "維持" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Manter" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сохранить" } }
       }
     },
     "Revert now" : {
@@ -243,7 +572,11 @@
             "state" : "translated",
             "value" : "Відкотити зараз"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "立即还原" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "今すぐ元に戻す" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Reverter agora" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Откатить сейчас" } }
       }
     },
     "Cluster" : {
@@ -278,7 +611,11 @@
             "state" : "translated",
             "value" : "Кластер"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスター" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cluster" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Кластер" } }
       }
     },
     "The cluster this widget shows. None chosen: the one open in the app." : {
@@ -313,7 +650,11 @@
             "state" : "translated",
             "value" : "Кластер, який показує цей віджет. Якщо не вибрано — відкритий у застосунку."
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此小组件显示的集群。未选择时：使用应用中当前打开的集群。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このウィジェットに表示するクラスター。未選択の場合：アプリで開いているクラスター。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O cluster que este widget mostra. Nenhum escolhido: o que está aberto no app." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Кластер, который показывает этот виджет. Если не выбран — кластер, открытый в приложении." } }
       }
     },
     "%lld not ready" : {
@@ -434,6 +775,207 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld не готового"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个未就绪" } } } } },
+        "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld個が未準備" } } } } },
+        "pt-BR" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld não pronto" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld não prontos" } } } } },
+        "ru" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld не готов" } }, "few" : { "stringUnit" : { "state" : "translated", "value" : "%lld не готовы" } }, "many" : { "stringUnit" : { "state" : "translated", "value" : "%lld не готовы" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld не готовы" } } } } }
+      }
+    },
+    "%lld tunnels down" : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tunnel down"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tunnels down"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tunnel coupé"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tunnels coupés"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tunnel ausgefallen"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tunnel ausgefallen"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld túnel caído"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld túneles caídos"
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tunnel caduto"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tunnel caduti"
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "トンネル %lld 本が切断"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld túnel fora do ar"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld túneis fora do ar"
+                }
+              }
+            }
+          }
+        },
+        "ru": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld туннель не работает"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld туннеля не работают"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld туннелей не работают"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld туннеля не работают"
+                }
+              }
+            }
+          }
+        },
+        "uk": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld тунель не працює"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld тунелі не працюють"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld тунелів не працюють"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld тунелю не працюють"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld 条隧道断开"
                 }
               }
             }
@@ -563,7 +1105,11 @@
               }
             }
           }
-        }
+        },
+        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个无法访问" } } } } },
+        "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld個が到達不能" } } } } },
+        "pt-BR" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld inacessível" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld inacessíveis" } } } } },
+        "ru" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld недоступен" } }, "few" : { "stringUnit" : { "state" : "translated", "value" : "%lld недоступны" } }, "many" : { "stringUnit" : { "state" : "translated", "value" : "%lld недоступны" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld недоступны" } } } } }
       }
     },
     "%lld/%lld ready" : {
@@ -598,7 +1144,11 @@
             "state" : "translated",
             "value" : "%lld/%lld готові"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld 就绪" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld準備完了" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld prontos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld готовы" } }
       }
     },
     "all ready" : {
@@ -633,7 +1183,11 @@
             "state" : "translated",
             "value" : "усі готові"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部就绪" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべて準備完了" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "todos prontos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "все готовы" } }
       }
     },
     "Cluster status" : {
@@ -668,7 +1222,11 @@
             "state" : "translated",
             "value" : "Стан кластера"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群状态" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターの状態" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Estado do cluster" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Состояние кластера" } }
       }
     },
     "etcd: %lld alarms" : {
@@ -793,7 +1351,11 @@
               }
             }
           }
-        }
+        },
+        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd：%lld 条告警" } } } } },
+        "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd：%lld件のアラーム" } } } } },
+        "pt-BR" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld alarme" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld alarmes" } } } } },
+        "ru" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld сигнал" } }, "few" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld сигнала" } }, "many" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld сигналов" } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "etcd: %lld сигнала" } } } } }
       }
     },
     "etcd: no alarms" : {
@@ -828,7 +1390,11 @@
             "state" : "translated",
             "value" : "etcd: без тривог"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "etcd：无告警" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "etcd：アラームなし" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "etcd: nenhum alarme" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "etcd: нет сигналов" } }
       }
     },
     "Nodes ready and etcd alarms from the last check." : {
@@ -863,7 +1429,11 @@
             "state" : "translated",
             "value" : "Готові вузли й сигнали тривоги etcd з останньої перевірки."
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上次检查的节点就绪情况和 etcd 告警。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最後のチェックでの準備完了のノードと etcd アラーム。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nós prontos e alarmes do etcd da última verificação." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Готовые узлы и сигналы etcd по последней проверке." } }
       }
     },
     "Open the app to set up" : {
@@ -898,7 +1468,11 @@
             "state" : "translated",
             "value" : "Відкрийте застосунок для налаштування"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开应用进行设置" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アプリを開いて設定してください" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abra o app para configurar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Откройте приложение для настройки" } }
       }
     },
     "Updated %@" : {
@@ -933,7 +1507,138 @@
             "state" : "translated",
             "value" : "Оновлено о %@"
           }
-        }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新于 %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@に更新" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualizado %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновлено %@" } }
+      }
+    },
+    "All clusters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tous les clusters" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Todos los clústeres" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle Cluster" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutti i cluster" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Усі кластери" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所有集群" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべてのクラスター" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Todos os clusters" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Все кластеры" } }
+      }
+    },
+    "Not checked: %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Non vérifiés : %lld" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin comprobar: %lld" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht geprüft: %lld" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non controllati: %lld" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не перевірено: %lld" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未检查：%lld" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未確認: %lld" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não verificados: %lld" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не проверено: %lld" } }
+      }
+    },
+    "All %lld fine" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les %lld sont sains" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Los %lld bien" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle %lld in Ordnung" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutti i %lld a posto" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Усі %lld гаразд" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部 %lld 个正常" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld 件すべて正常" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Todos os %lld ok" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Все %lld в порядке" } }
+      }
+    },
+    "%lld of %lld need attention" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld of %2$lld need attention" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld sur %2$lld à examiner" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld de %2$lld requieren atención" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld von %2$lld brauchen Aufmerksamkeit" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld su %2$lld da guardare" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld з %2$lld потребують уваги" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$lld 个中有 %1$lld 个需要关注" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$lld 件中 %1$lld 件が要確認" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld de %2$lld precisam de atenção" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld из %2$lld требуют внимания" } }
+      }
+    },
+    "need attention" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "à examiner" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "requieren atención" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "brauchen Aufmerksamkeit" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "da guardare" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "потребують уваги" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "需要关注" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "要確認" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "precisam de atenção" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "требуют внимания" } }
+      }
+    },
+    "Never checked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Jamais vérifié" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nunca comprobado" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nie geprüft" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mai controllato" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ніколи не перевірявся" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "从未检查" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未確認のまま" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nunca verificado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ни разу не проверялся" } }
+      }
+    },
+    "Oldest check %@ ago" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Plus ancienne vérification il y a %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Comprobación más antigua hace %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Älteste Prüfung vor %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Controllo più vecchio %@ fa" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Найстаріша перевірка %@ тому" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最早的检查在 %@ 前" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最も古いチェックは %@ 前" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Verificação mais antiga há %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Самая старая проверка %@ назад" } }
+      }
+    },
+    "Fleet status" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "État de la flotte" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Estado de la flota" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Flottenstatus" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Stato della flotta" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Стан флоту" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群总览" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "フリートの状態" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Estado da frota" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Состояние парка" } }
+      }
+    },
+    "How many of your clusters need attention, from the last background check." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Combien de vos clusters sont à examiner, d’après la dernière vérification en arrière-plan." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cuántos de tus clústeres requieren atención, según la última comprobación en segundo plano." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wie viele deiner Cluster Aufmerksamkeit brauchen, aus der letzten Hintergrundprüfung." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Quanti dei tuoi cluster sono da guardare, dall’ultimo controllo in background." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Скільки ваших кластерів потребують уваги, за останньою фоновою перевіркою." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "根据最近一次后台检查，需要关注的集群数量。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最後のバックグラウンドチェックで要確認のクラスターの数。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Quantos dos seus clusters precisam de atenção, segundo a última verificação em segundo plano." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сколько ваших кластеров требуют внимания, по последней фоновой проверке." } }
       }
     }
   },

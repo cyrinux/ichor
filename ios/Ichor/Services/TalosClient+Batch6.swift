@@ -69,6 +69,11 @@ extension TalosClient {
         try await Self.json { [config, context] in IchorgoClusterSensorHealth(config, context, $0) }
     }
 
+    /// The broken KubeSpan tunnels of every node's peers, for the tunnel alert (os:reader).
+    func kubeSpanMeshHealth() async throws -> KubeSpanMeshHealth {
+        try await Self.json { [config, context] in IchorgoKubeSpanMeshHealth(config, context, $0) }
+    }
+
     /// `talosctl -n NODE etcd forfeit-leadership` (os:admin); node must be the leader.
     func etcdForfeitLeadership(node: String) async throws -> EtcdForfeitResult {
         try await Self.json { [config, context] in IchorgoEtcdForfeitLeadership(config, context, node, $0) }
@@ -117,17 +122,19 @@ extension TalosClient {
         }
     }
 
-    /// What node's Talos version can do (os:reader), see AppModel.loadFeatures for the cache.
+    /// What node's Talos version can do (os:reader), see NodesStore.loadFeatures for the cache.
     func features(node: String) async throws -> NodeFeatures {
         try await Self.json { [config, context] in IchorgoNodeFeatures(config, context, node, $0) }
     }
 }
 
-private final class SupportBridge: NSObject, IchorgoSupportListenerProtocol, @unchecked Sendable {
+private final class SupportBridge: NSObject, IchorgoSupportListenerProtocol, Sendable {
     private let progress: @Sendable (SupportProgress) -> Void
     private let done: @Sendable (SupportBundleEvent) -> Void
 
-    init(progress: @escaping @Sendable (SupportProgress) -> Void, done: @escaping @Sendable (SupportBundleEvent) -> Void) {
+    init(
+        progress: @escaping @Sendable (SupportProgress) -> Void, done: @escaping @Sendable (SupportBundleEvent) -> Void
+    ) {
         self.progress = progress
         self.done = done
     }

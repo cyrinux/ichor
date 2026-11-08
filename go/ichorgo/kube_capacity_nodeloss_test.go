@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
+	"strings"
 	"testing"
 )
 
@@ -75,7 +77,7 @@ func TestSimulateNodeLossEverythingFits(t *testing.T) {
 		pods:  []checkPod{lossPod("web", "app-0", "n1", "StatefulSet/app", "", 0, 1)},
 	}
 
-	plan := simulateNodeLoss(in, "n1")
+	plan := simulateNodeLoss(in, []string{"n1"})
 
 	if len(plan.Placed) != 1 || plan.Placed[0].To != "n2" || plan.Placed[0].Workload != "StatefulSet/app" {
 		t.Errorf("placed %+v", plan.Placed)
@@ -105,7 +107,7 @@ func TestSimulateNodeLossPreemptsTheLowestPod(t *testing.T) {
 		classes: []priorityClassObject{lossClass("high", 1000, ""), lossClass("mid", 500, ""), lossClass("low", 10, "")},
 	}
 
-	plan := simulateNodeLoss(in, "n1")
+	plan := simulateNodeLoss(in, []string{"n1"})
 
 	if len(plan.Preempted) != 1 {
 		t.Fatalf("preempted %+v", plan.Preempted)
@@ -136,7 +138,7 @@ func TestSimulateNodeLossNeverTouchesSystemClasses(t *testing.T) {
 		},
 	}
 
-	plan := simulateNodeLoss(in, "n1")
+	plan := simulateNodeLoss(in, []string{"n1"})
 
 	if len(plan.Preempted) != 0 || len(plan.Suggestions) != 0 || plan.Covered {
 		t.Errorf("plan %+v", plan)
@@ -171,7 +173,7 @@ func TestSimulateNodeLossHonoursPDBs(t *testing.T) {
 				pdbs:  []pdbObject{lossPDB(t, "web", "web", "web", tc.rule)},
 			}
 
-			plan := simulateNodeLoss(in, "n1")
+			plan := simulateNodeLoss(in, []string{"n1"})
 
 			if len(plan.Suggestions) != 1 {
 				t.Fatalf("suggestions %+v", plan.Suggestions)
@@ -201,7 +203,7 @@ func TestSimulateNodeLossLeavesDaemonSetAndStaticPods(t *testing.T) {
 		},
 	}
 
-	plan := simulateNodeLoss(in, "n1")
+	plan := simulateNodeLoss(in, []string{"n1"})
 
 	if plan.DaemonSetPods != 2 || plan.PodsLost != 1 || plan.MemoryLost != 3*gib {
 		t.Errorf("lost %+v", plan)
@@ -226,7 +228,7 @@ func TestSimulateNodeLossCascadingPreemptionEnds(t *testing.T) {
 		},
 	}
 
-	plan := simulateNodeLoss(in, "n1")
+	plan := simulateNodeLoss(in, []string{"n1"})
 
 	got := podNames(plan.Preempted, func(p nodeLossPreempted) string { return p.Name + " by " + p.By + " on " + p.Node })
 	if len(got) != 2 || got[0] != "a-0 by web/top-0 on n2" || got[1] != "b-0 by web/a-0 on n3" {
@@ -248,7 +250,7 @@ func TestSimulateNodeLossWorstCase(t *testing.T) {
 		},
 	}
 
-	plan := simulateNodeLoss(in, "")
+	plan := simulateNodeLoss(in, nil)
 
 	if !plan.WorstCase || plan.Node != "n1" || len(plan.Pending) != 1 {
 		t.Errorf("plan %+v", plan)
@@ -270,7 +272,7 @@ func TestSimulateNodeLossPreemptionPolicyNever(t *testing.T) {
 		classes: []priorityClassObject{lossClass("batch", 1000, "Never")},
 	}
 
-	plan := simulateNodeLoss(in, "n1")
+	plan := simulateNodeLoss(in, []string{"n1"})
 
 	if len(plan.Preempted) != 0 {
 		t.Errorf("preempted %+v", plan.Preempted)
@@ -292,7 +294,7 @@ func TestSimulateNodeLossReprievesWhatIsNotNeeded(t *testing.T) {
 		},
 	}
 
-	plan := simulateNodeLoss(in, "n1")
+	plan := simulateNodeLoss(in, []string{"n1"})
 
 	if got := podNames(plan.Preempted, func(p nodeLossPreempted) string { return p.Name }); len(got) != 1 || got[0] != "mid-0" {
 		t.Errorf("preempted %v", got)
@@ -314,7 +316,7 @@ func TestSimulateNodeLossSpendsPDBsAcrossEvictions(t *testing.T) {
 		pdbs:  []pdbObject{pdb},
 	}
 
-	plan := simulateNodeLoss(in, "n1")
+	plan := simulateNodeLoss(in, []string{"n1"})
 
 	got := podNames(plan.Preempted, func(p nodeLossPreempted) string { return fmt.Sprintf("%s:%v", p.Name, p.PDBViolated) })
 	if len(got) != 2 || got[0] != "web-0:false" && got[0] != "web-1:false" || got[1] != "web-0:true" && got[1] != "web-1:true" {
@@ -334,7 +336,7 @@ func TestSimulateNodeLossShortfallIsWhatIsMissing(t *testing.T) {
 		pods:  []checkPod{lossPod("batch", "big-0", "n1", "StatefulSet/big", "", 0, 3), small("w-0"), small("w-1"), small("w-2"), small("w-3")},
 	}
 
-	plan := simulateNodeLoss(in, "n1")
+	plan := simulateNodeLoss(in, []string{"n1"})
 
 	// n2 has CPU to spare: only memory is short (3 GiB asked, 0.4 free), three replicas cover it.
 	if got := suggestionNames(plan); len(got) != 1 || got[0] != "StatefulSet/w→1" || !plan.Covered {
@@ -350,7 +352,7 @@ func TestSimulateNodeLossUnscheduledReplicasFreeNothing(t *testing.T) {
 		pods:  []checkPod{lossPod("batch", "big-0", "n1", "StatefulSet/big", "", 0, 3), lossPod("web", "w-0", "n2", "StatefulSet/w", "", 0, 3.5), unscheduled},
 	}
 
-	plan := simulateNodeLoss(in, "n1")
+	plan := simulateNodeLoss(in, []string{"n1"})
 
 	if len(plan.Suggestions) != 1 {
 		t.Fatalf("suggestions %+v", plan.Suggestions)
@@ -363,12 +365,12 @@ func TestSimulateNodeLossUnscheduledReplicasFreeNothing(t *testing.T) {
 }
 
 func TestKubeCapacityNodeLossReadsTheCluster(t *testing.T) {
-	in, err := readCapacityInput(context.Background(), openFakeKube(t, capacityFake(t)))
+	in, err := readCapacityInput(context.Background(), openFakeKube(t, capacityFake(t)), false)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	plan := simulateNodeLoss(in, "w1")
+	plan := simulateNodeLoss(in, []string{"w1"})
 
 	// db-0 (priority 1000) takes w2's free room first; web-a has nothing lower to evict.
 	if len(plan.Placed) != 1 || plan.Placed[0].Name != "db-0" || plan.DaemonSetPods != 1 {
@@ -392,14 +394,113 @@ func TestKubeCapacityNodeLossRefusesABadNodeName(t *testing.T) {
 	}
 }
 
+func TestKubeCapacityNodeLossRefusesBadNodeLists(t *testing.T) {
+	for _, list := range []string{"a,,b", "n1,n1", "n1,../etc", "n1,"} {
+		if _, err := KubeCapacityNodeLoss("", "", "", list); err == nil {
+			t.Errorf("no error for %q", list)
+		}
+	}
+}
+
+func TestSimulateNodeLossLosesTwoNodes(t *testing.T) {
+	in := capacityInput{
+		nodes: []checkNodeObject{lossNode(t, "n1", 4, 8, 10), lossNode(t, "n2", 4, 8, 10), lossNode(t, "n3", 4, 5, 10)},
+		pods: []checkPod{
+			lossPod("batch", "big-0", "n1", "StatefulSet/big", "", 0, 3),
+			lossPod("web", "app-0", "n2", "StatefulSet/app", "", 0, 1),
+			lossPod("web", "w-0", "n3", "StatefulSet/w", "", 0, 1),
+			lossPod("web", "w-1", "n3", "StatefulSet/w", "", 0, 1),
+		},
+	}
+
+	// Each alone fits on n3 (3 GiB free): big-0 exactly, app-0 with room to spare.
+	for _, one := range []string{"n1", "n2"} {
+		plan := simulateNodeLoss(in, []string{one})
+		if len(plan.Pending) != 0 || !plan.Covered || plan.Node != one || len(plan.Nodes) != 1 || plan.Nodes[0] != one {
+			t.Errorf("losing %s alone: %+v", one, plan)
+		}
+	}
+
+	// Together they ask 4 GiB of n3's 3: app-0 stays Pending. The first unblocked workload
+	// (big, one 3 GiB replica) covers the shortfall.
+	plan := simulateNodeLoss(in, []string{"n1", "n2"})
+
+	if plan.Node != "n1, n2" || len(plan.Nodes) != 2 || plan.WorstCase || len(plan.Candidates) != 0 {
+		t.Errorf("plan %+v", plan)
+	}
+
+	if len(plan.Placed) != 1 || plan.Placed[0].Name != "big-0" || plan.Placed[0].To != "n3" {
+		t.Errorf("placed %+v", plan.Placed)
+	}
+
+	if got := pendingNames(plan); len(got) != 1 || got[0] != "app-0" {
+		t.Errorf("pending %v", got)
+	}
+
+	if got := suggestionNames(plan); len(got) != 1 || got[0] != "StatefulSet/big→0" || !plan.Covered {
+		t.Errorf("suggestions %v covered %v", got, plan.Covered)
+	}
+}
+
+func TestSimulateNodeLossSecondLostNodePreempts(t *testing.T) {
+	in := capacityInput{
+		nodes: []checkNodeObject{lossNode(t, "n1", 4, 8, 10), lossNode(t, "n2", 4, 8, 10), lossNode(t, "n3", 4, 4, 10)},
+		pods: []checkPod{
+			lossPod("web", "v-0", "n2", "StatefulSet/v", "high", 1000, 2),
+			lossPod("web", "low-0", "n3", "StatefulSet/low", "", 0, 3),
+		},
+		classes: []priorityClassObject{lossClass("high", 1000, "")},
+	}
+
+	plan := simulateNodeLoss(in, []string{"n1", "n2"})
+
+	if len(plan.Preempted) != 1 {
+		t.Fatalf("preempted %+v", plan.Preempted)
+	}
+
+	if p := plan.Preempted[0]; p.Name != "low-0" || p.Node != "n3" || p.By != "web/v-0" {
+		t.Errorf("preempted %+v", p)
+	}
+
+	if got := pendingNames(plan); len(got) != 1 || got[0] != "low-0" {
+		t.Errorf("pending %v", got)
+	}
+}
+
+func TestSimulateNodeLossCascadeWithTwoLostNodesEnds(t *testing.T) {
+	in := capacityInput{
+		nodes: []checkNodeObject{lossNode(t, "n1", 4, 8, 10), lossNode(t, "n2", 4, 8, 10), lossNode(t, "n3", 4, 4, 10)},
+		pods: []checkPod{
+			lossPod("web", "top-0", "n1", "StatefulSet/top", "", 300, 3),
+			lossPod("web", "a-0", "n2", "StatefulSet/a", "", 200, 2),
+			lossPod("web", "b-0", "n3", "StatefulSet/b", "", 100, 2),
+		},
+	}
+
+	plan := simulateNodeLoss(in, []string{"n1", "n2"})
+
+	got := podNames(plan.Preempted, func(p nodeLossPreempted) string { return p.Name + " by " + p.By + " on " + p.Node })
+	if len(got) != 1 || got[0] != "b-0 by web/top-0 on n3" {
+		t.Errorf("preempted %v", got)
+	}
+
+	if p := pendingNames(plan); len(p) != 2 || p[0] != "a-0" || p[1] != "b-0" {
+		t.Errorf("pending %v", p)
+	}
+
+	// The identity the demo plans are held to (TestDemoKubeNodeLossAddsUp).
+	assertNodeLossCounts(t, plan)
+	assertNodeLossSuggestions(t, plan)
+}
+
 func TestDemoKubeNodeLoss(t *testing.T) {
-	worst := demoKubeNodeLoss("")
-	if !worst.WorstCase || worst.Node != "demo-worker-1" || len(worst.Candidates) != 2 {
+	worst := demoKubeNodeLoss(nil)
+	if !worst.WorstCase || worst.Node != "demo-worker-1" || len(worst.Candidates) != 2 || len(worst.Nodes) != 0 {
 		t.Errorf("worst %+v", worst)
 	}
 
-	plan := demoKubeNodeLoss("demo-worker-2")
-	if plan.WorstCase || plan.Node != "demo-worker-2" || plan.Placed[0].To != "demo-worker-1" {
+	plan := demoKubeNodeLoss([]string{"demo-worker-2"})
+	if plan.WorstCase || plan.Node != "demo-worker-2" || len(plan.Nodes) != 1 || plan.Placed[0].To != "demo-worker-1" {
 		t.Errorf("plan %+v", plan)
 	}
 
@@ -411,5 +512,144 @@ func TestDemoKubeNodeLoss(t *testing.T) {
 		if s.Priority >= systemPriority {
 			t.Errorf("system suggestion %+v", s)
 		}
+	}
+}
+
+func TestDemoKubeNodeLossBothWorkers(t *testing.T) {
+	both := demoKubeNodeLoss([]string{"demo-worker-1", "demo-worker-2"})
+	if both.WorstCase || both.Node != "demo-worker-1, demo-worker-2" || len(both.Nodes) != 2 {
+		t.Errorf("both %+v", both)
+	}
+
+	// Only the NoSchedule control planes remain: nothing is placed, everything movable is
+	// Pending, starting with the system coredns pod.
+	if len(both.Placed) != 0 || len(both.Preempted) != 0 || len(both.Pending) == 0 ||
+		both.Pending[0].Name != "coredns-7c65d-x2k9p" || both.Pending[0].PriorityClassName != "system-cluster-critical" {
+		t.Errorf("both %+v", both)
+	}
+
+	// Every scalable workload has a Pending pod: the suggester proposes none of them.
+	if len(both.Pending) != 11 || len(both.Suggestions) != 0 || both.Covered {
+		t.Errorf("suggestions %+v covered %v", both.Suggestions, both.Covered)
+	}
+
+	// The order the user picked is the order the plan names.
+	reversed := demoKubeNodeLoss([]string{"demo-worker-2", "demo-worker-1"})
+	if reversed.Node != "demo-worker-2, demo-worker-1" {
+		t.Errorf("reversed node %q", reversed.Node)
+	}
+
+	// An unknown pair falls back to the worst case.
+	unknown := demoKubeNodeLoss([]string{"demo-worker-1", "demo-cp-1"})
+	if !unknown.WorstCase || unknown.Node != "demo-worker-1" {
+		t.Errorf("unknown %+v", unknown)
+	}
+}
+
+// Every demo plan adds up as the real planner's do: each lost or preempted pod ends up placed
+// or Pending exactly once, the lost requests are the demo workloads', and no suggestion
+// names a workload with a Pending pod (nor a system class).
+func TestDemoKubeNodeLossAddsUp(t *testing.T) {
+	requests := map[string][2]float64{}
+	for _, w := range demoKubeCapacity().Workloads {
+		requests[w.Kind+"/"+w.Name] = [2]float64{w.CPURequest, w.MemoryRequest}
+	}
+
+	selections := [][]string{nil, {"demo-worker-1"}, {"demo-worker-2"}, {"demo-worker-1", "demo-worker-2"}, {"demo-worker-2", "demo-worker-1"}}
+	for _, nodes := range selections {
+		plan := demoKubeNodeLoss(nodes)
+		assertNodeLossCounts(t, plan)
+		assertNodeLossRequests(t, plan, requests)
+		assertNodeLossSuggestions(t, plan)
+	}
+}
+
+// assertNodeLossCounts: lost + preempted == placed + Pending, each pod ending once.
+func assertNodeLossCounts(t *testing.T, plan nodeLossPlan) {
+	t.Helper()
+
+	if plan.PodsLost+len(plan.Preempted) != len(plan.Placed)+len(plan.Pending) {
+		t.Errorf("%s: %d lost + %d preempted != %d placed + %d pending",
+			plan.Node, plan.PodsLost, len(plan.Preempted), len(plan.Placed), len(plan.Pending))
+	}
+
+	ended := map[string]int{}
+	for _, p := range plan.Placed {
+		ended[p.Namespace+"/"+p.Name]++
+	}
+
+	for _, p := range plan.Pending {
+		ended[p.Namespace+"/"+p.Name]++
+	}
+
+	for pod, n := range ended {
+		if n != 1 {
+			t.Errorf("%s: %s ends %d times", plan.Node, pod, n)
+		}
+	}
+
+	for _, p := range plan.Preempted {
+		if ended[p.Namespace+"/"+p.Name] != 1 {
+			t.Errorf("%s: preempted %s/%s is neither placed nor Pending", plan.Node, p.Namespace, p.Name)
+		}
+	}
+}
+
+// assertNodeLossRequests: the lost requests are those of the lost (not preempted) pods' workloads.
+func assertNodeLossRequests(t *testing.T, plan nodeLossPlan, requests map[string][2]float64) {
+	t.Helper()
+
+	preempted := map[string]bool{}
+	for _, p := range plan.Preempted {
+		preempted[p.Namespace+"/"+p.Name] = true
+	}
+
+	lost := map[string]string{}
+	for _, p := range plan.Placed {
+		lost[p.Namespace+"/"+p.Name] = p.Workload
+	}
+
+	for _, p := range plan.Pending {
+		lost[p.Namespace+"/"+p.Name] = p.Workload
+	}
+
+	var cpu, memory float64
+
+	for pod, workload := range lost {
+		if preempted[pod] {
+			continue
+		}
+
+		r, ok := requests[workload]
+		if !ok {
+			t.Errorf("%s: %s of unknown workload %s", plan.Node, pod, workload)
+		}
+
+		cpu, memory = cpu+r[0], memory+r[1]
+	}
+
+	if math.Abs(cpu-plan.CPULost) > 1e-9 || math.Abs(memory-plan.MemoryLost) > 1 {
+		t.Errorf("%s: lost %g cores %g bytes, the pods ask %g cores %g bytes", plan.Node, plan.CPULost, plan.MemoryLost, cpu, memory)
+	}
+}
+
+// assertNodeLossSuggestions: as the suggester, never a Pending pod's workload nor a system class.
+func assertNodeLossSuggestions(t *testing.T, plan nodeLossPlan) {
+	t.Helper()
+
+	blocked := map[string]bool{}
+	for _, p := range plan.Pending {
+		kind, name, _ := strings.Cut(p.Workload, "/")
+		blocked[kind+"/"+p.Namespace+"/"+name] = true
+	}
+
+	for _, s := range plan.Suggestions {
+		if blocked[s.Kind+"/"+s.Namespace+"/"+s.Name] || s.Priority >= systemPriority || strings.HasPrefix(s.PriorityClassName, "system-") {
+			t.Errorf("%s: suggestion %s/%s/%s has a Pending pod or a system class", plan.Node, s.Kind, s.Namespace, s.Name)
+		}
+	}
+
+	if len(plan.Pending) == 0 && !plan.Covered {
+		t.Errorf("%s: nothing Pending but not covered", plan.Node)
 	}
 }

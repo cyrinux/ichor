@@ -19,10 +19,10 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Upgrade
-import androidx.compose.material3.Button
+import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.ui.design.IchorOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -48,7 +48,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
  * The app at a glance: icon and name, a badge for its Ready reason and for suspended, stalled
  * or reconciling, Flux's message, where it comes from (source and URL, path or chart@version),
  * the revision applied against the one tried when they differ, its interval, the Kustomization
- * applying it, what it depends on and a release's failures.
+ * applying it, a release's drift and its failures.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -74,6 +74,7 @@ fun FluxAppHero(app: FluxApp) {
             Text(app.message, style = MaterialTheme.typography.bodySmall, color = app.state.color())
         }
         if (app.suspended) MutedText(stringResource(R.string.flux_suspended_hint))
+        if (app.driftWatched) FluxDriftLine(app)
         Column {
             app.source?.let { InfoRow(stringResource(R.string.flux_source), "${it.kind}/${it.name}", mono = true) }
             if (app.sourceURL.isNotEmpty()) InfoRow(stringResource(R.string.argo_repo), app.sourceURL, mono = true)
@@ -89,7 +90,6 @@ fun FluxAppHero(app: FluxApp) {
             if (app.targetNamespace.isNotEmpty()) InfoRow(stringResource(R.string.argo_destination), app.targetNamespace, mono = true)
             if (app.interval.isNotEmpty()) InfoRow(stringResource(R.string.flux_interval), app.interval, mono = true)
             app.owner?.let { InfoRow(stringResource(R.string.flux_applied_by), "${it.kind}/${it.namespace}/${it.name}", mono = true) }
-            if (app.dependsOn.isNotEmpty()) InfoRow(stringResource(R.string.flux_depends_on), app.dependsOn.joinToString("\n"), mono = true)
             if (app.failures > 0) InfoRow(stringResource(R.string.flux_failures), app.failures.toString(), valueColor = colors.bad)
         }
     }
@@ -102,10 +102,22 @@ fun FluxAppHero(app: FluxApp) {
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun FluxActionButtons(app: FluxApp, busy: Boolean, onDiff: (() -> Unit)? = null, onAction: (FluxAction) -> Unit) {
+fun FluxActionButtons(
+    app: FluxApp,
+    busy: Boolean,
+    onDiff: (() -> Unit)? = null,
+    onCorrectDrift: () -> Unit = {},
+    onAction: (FluxAction) -> Unit,
+) {
     // Every action patches the object; the diff only reads.
     val denial = rememberKubeDenial(KubeAction.fluxReconcile(app.kind), app.namespace)
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (app.canCorrectDrift) {
+            IchorButton(onClick = onCorrectDrift, enabled = !busy && denial == null) {
+                Icon(Icons.Outlined.Difference, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(stringResource(R.string.flux_action_correct_drift), modifier = Modifier.padding(start = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
         FluxActionRow(app, busy || denial != null, onDiff, onAction)
         KubeDenialNote(denial)
     }
@@ -115,27 +127,27 @@ fun FluxActionButtons(app: FluxApp, busy: Boolean, onDiff: (() -> Unit)? = null,
 @Composable
 private fun FluxActionRow(app: FluxApp, busy: Boolean, onDiff: (() -> Unit)?, onAction: (FluxAction) -> Unit) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Button(onClick = { onAction(FluxAction.RECONCILE) }, enabled = !busy && app.canReconcile) {
+        IchorButton(onClick = { onAction(FluxAction.RECONCILE) }, enabled = !busy && app.canReconcile) {
             ButtonContent(Icons.Outlined.Refresh, FluxAction.RECONCILE)
         }
-        OutlinedButton(onClick = { onAction(FluxAction.RECONCILE_WITH_SOURCE) }, enabled = !busy && app.canReconcile) {
+        IchorOutlinedButton(onClick = { onAction(FluxAction.RECONCILE_WITH_SOURCE) }, enabled = !busy && app.canReconcile) {
             ButtonContent(Icons.Outlined.Sync, FluxAction.RECONCILE_WITH_SOURCE)
         }
         val toggle = if (app.suspended) FluxAction.RESUME else FluxAction.SUSPEND
-        OutlinedButton(onClick = { onAction(toggle) }, enabled = !busy) {
+        IchorOutlinedButton(onClick = { onAction(toggle) }, enabled = !busy) {
             ButtonContent(if (app.suspended) Icons.Outlined.PlayArrow else Icons.Outlined.Pause, toggle)
         }
         if (app.isKustomization && onDiff != null) {
-            OutlinedButton(onClick = onDiff) {
+            IchorOutlinedButton(onClick = onDiff) {
                 Icon(Icons.Outlined.Difference, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(stringResource(R.string.flux_show_diff), modifier = Modifier.padding(start = 6.dp), maxLines = 1)
+                Text(stringResource(R.string.flux_show_diff), modifier = Modifier.padding(start = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
         if (app.isHelmRelease) {
-            OutlinedButton(onClick = { onAction(FluxAction.FORCE) }, enabled = !busy && app.canForce) {
+            IchorOutlinedButton(onClick = { onAction(FluxAction.FORCE) }, enabled = !busy && app.canForce) {
                 ButtonContent(Icons.Outlined.Upgrade, FluxAction.FORCE)
             }
-            OutlinedButton(onClick = { onAction(FluxAction.RESET) }, enabled = !busy && app.canForce) {
+            IchorOutlinedButton(onClick = { onAction(FluxAction.RESET) }, enabled = !busy && app.canForce) {
                 ButtonContent(Icons.Outlined.RestartAlt, FluxAction.RESET)
             }
         }
@@ -145,5 +157,5 @@ private fun FluxActionRow(app: FluxApp, busy: Boolean, onDiff: (() -> Unit)?, on
 @Composable
 private fun ButtonContent(icon: ImageVector, action: FluxAction) {
     Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
-    Text(stringResource(action.label), modifier = Modifier.padding(start = 6.dp), maxLines = 1)
+    Text(stringResource(action.label), modifier = Modifier.padding(start = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
 }

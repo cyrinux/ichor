@@ -1,6 +1,7 @@
 # App Store Connect: declarations and review answers
 
-Bundle `name.levis.ichor` (widget `name.levis.ichor.widget`, App Group `group.name.levis.ichor`).
+Bundle `name.levis.ichor` (widget `name.levis.ichor.widget`, share extension `name.levis.ichor.share`,
+App Group `group.name.levis.ichor`).
 This is the iOS counterpart of [PLAY_CONSOLE.md](PLAY_CONSOLE.md): what to request from Apple,
 and paste-in answers for the App Store Connect forms. The build and upload themselves are in the
 README (**iOS → App Store**): `scripts/ios-build.sh appstore`, run by `ios.yml` on `v*` tags.
@@ -14,9 +15,9 @@ README (**iOS → App Store**): `scripts/ios-build.sh appstore`, run by `ios.yml
 | `Info.plist` `NSLocalNetworkUsageDescription` | local network | nodes on the Wi-Fi network, network search, Wake-on-LAN |
 | `Info.plist` `UIBackgroundModes: fetch` + `BGTaskSchedulerPermittedIdentifiers` | background refresh | background alerts |
 | `Info.plist` `ITSAppUsesNonExemptEncryption` | encryption | see [Export compliance](#export-compliance-read-before-the-first-submission) |
-| entitlements `com.apple.security.application-groups` | App Group | the widget reads the last check |
+| entitlements `com.apple.security.application-groups` | App Group | the widget reads the last check; "Send to Ichor" leaves shared files for the app |
 | entitlements `com.apple.developer.networking.multicast` | **only with `ICHOR_IOS_MULTICAST=1`** | Wake-on-LAN broadcasts, see below |
-| `ios/Ichor/PrivacyInfo.xcprivacy`, `ios/TalosWidget/PrivacyInfo.xcprivacy` | privacy manifests | see [Privacy manifest](#privacy-manifest) |
+| `ios/Ichor/PrivacyInfo.xcprivacy`, `ios/TalosWidget/PrivacyInfo.xcprivacy`, `ios/IchorShare/PrivacyInfo.xcprivacy` | privacy manifests | see [Privacy manifest](#privacy-manifest) |
 
 The usage strings are translated in `ios/Ichor/*.lproj/InfoPlist.strings`.
 
@@ -24,8 +25,9 @@ The usage strings are translated in `ios/Ichor/*.lproj/InfoPlist.strings`.
 
 1. **Apple Developer Program** membership (paid), as an individual or an organization. The
    seller name shown on the store is the account holder's legal name.
-2. **Identifiers → App IDs**: register `name.levis.ichor` and `name.levis.ichor.widget`, both with
-   the **App Groups** capability, and the App Group `group.name.levis.ichor`, assigned to both.
+2. **Identifiers → App IDs**: register `name.levis.ichor`, `name.levis.ichor.widget` and
+   `name.levis.ichor.share`, each with the **App Groups** capability, and the App Group
+   `group.name.levis.ichor`, assigned to all three.
    Automatic signing (`scripts/ios-build.sh appstore`) creates the profiles; it cannot create
    restricted capabilities, hence this step.
 3. **Request the multicast entitlement** (next section). It is optional: without it, everything
@@ -91,6 +93,27 @@ Description, keywords and promotional text can reuse `fastlane/metadata/android/
 (full and short descriptions); keywords are limited to 100 characters, for example
 `talos,kubernetes,k8s,cluster,etcd,kubectl,sysadmin,devops,homelab,server`.
 
+### Screenshots
+
+App Store Connect requires one iPhone 6.9" set per language (1320×2868, 1290×2796 or
+1260×2736, portrait); the 6.5" set and the iPad 13" set are optional (Apple scales the 6.9" one
+down for the smaller iPhones, and the iPad pictures are a separate task). The repository holds the
+6.9" set, the seven listing screens of the offline demo in the dark appearance, in all ten languages:
+`fastlane/screenshots/ios/<language>/1_overview.png` … `7_upgrade.png`, with App Store Connect's
+language names as folders (`en-US fr-FR es-ES uk de-DE it-IT zh-Hans ja pt-BR ru`).
+
+To retake them:
+
+- on a Mac with Xcode 16 or newer: `scripts/ios-build.sh store-screenshots && scripts/ios-store-screenshots.sh`;
+- or from GitHub: Actions → **Screenshots** → *Run workflow* with **app_store** ticked, then
+  unzip the `app-store-screenshots` artifact at the root of the repository.
+
+Either way the set is written whole or not at all: a missing screen or a size outside the list
+above fails the run. Commit the folders, then upload by hand: in App Store Connect, open the
+version, pick each language in the top-right menu and drag that language's seven files into the
+**iPhone 6.9" Display** section, in their numbered order. fastlane `deliver` is not wired (no
+Deliverfile and no App Store metadata in the repository), so nothing uploads them on a release.
+
 ### Age rating
 
 Answer **None** / **No** to every content question (violence, sexuality, profanity, drugs,
@@ -111,6 +134,9 @@ time):
 - there is no backend, no analytics and no crash-reporting SDK on iOS (VisionKit and LocalAuthentication run on the device);
 - cluster data (talosconfig, logs, metrics, etcd snapshots) goes only to servers the user owns
   and configured;
+- **AI model on the phone** (provider "This phone"): the report is read on the phone and never
+  sent; downloading a model fetches a public file from Hugging Face on the user's tap, with no
+  user data;
 - **AI diagnosis**: off by default, sent only when the user taps Ask, after seeing the report,
   to a provider and API key the user entered (Anthropic, OpenAI…). The developer is not party
   to it and the provider is not the developer's partner. If App Review disagrees, answer
@@ -124,13 +150,13 @@ the privacy policy names the providers.
 
 ## Privacy manifest
 
-`PrivacyInfo.xcprivacy` (app and widget) declares no tracking, no collected data, and the
+`PrivacyInfo.xcprivacy` (app, widget and share extension) declares no tracking, no collected data, and the
 *required reason* APIs the code uses, including the linked Go core:
 
 | Category | Reason | Used by |
 |---|---|---|
 | UserDefaults | `CA92.1` own settings, `1C8F.1` App Group | settings; widget snapshot |
-| File timestamp | `C617.1` files in the app container | captures, support bundles; Go `stat` |
+| File timestamp | `C617.1` files in the app container | captures, support bundles; Go `stat`; the shared files' dates in the App Group (share extension and app) |
 | System boot time | `35F9.1` elapsed time | the Go runtime's monotonic clock |
 
 `scripts/ios-build.sh ipa` fails if a manifest is missing from the bundle. If App Store Connect

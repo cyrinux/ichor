@@ -1,0 +1,1 @@
+Любой кластер Kubernetes из kubeconfig, а также слой Talos: узлы и etcd

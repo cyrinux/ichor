@@ -1,0 +1,18 @@
+{"kind":"ServerList","apiVersion":"metal.sidero.dev/v1alpha2","metadata":{},"items":[
+{"metadata":{"name":"srv-a1"},
+ "spec":{"hostname":"rack1-u01","accepted":true,
+  "bmc":{"endpoint":"10.9.9.1","userFrom":{"secretKeyRef":{"namespace":"sidero","name":"bmc-srv-a1","key":"user"}},"pass":"bmc-pass-never-shown"},
+  "hardware":{"compute":{"totalCoreCount":16,"totalThreadCount":32,"processorCount":1,"processors":[{"manufacturer":"AMD","productName":"AMD EPYC 7313P 16-Core Processor"}]},
+   "memory":{"totalSize":"128 GB","moduleCount":2,"modules":[{"size":65536},{"size":65536}]}}},
+ "status":{"ready":true,"inUse":true,"isClean":false,"power":"on","addresses":[{"type":"InternalIP","address":"10.0.0.11"}]}},
+{"metadata":{"name":"srv-b1"},
+ "spec":{"accepted":false},
+ "status":{"power":"unknown"}},
+{"metadata":{"name":"srv-b2"},
+ "spec":{"hostname":"rack2-u02","accepted":true,
+  "hardware":{"compute":{"totalCoreCount":64,"processorCount":2,"processors":[{"productName":"Intel Xeon Gold 6338"},{"productName":"Intel Xeon Gold 6338"}]}}},
+ "status":{"ready":false,"inUse":true,"power":"off"}},
+{"metadata":{"name":"srv-c1"},
+ "spec":{"hostname":"rack3-u01","accepted":true,"hardware":{"memory":{"totalSize":"32 GB"}}},
+ "status":{"ready":false,"inUse":false,"isClean":true,"power":"on"}}
+]}

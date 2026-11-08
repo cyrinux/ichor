@@ -12,9 +12,13 @@ import (
 )
 
 const (
-	callTimeout   = 20 * time.Second
-	nodeTimeout   = 8 * time.Second
-	healthTimeout = 2 * time.Minute
+	callTimeout = 20 * time.Second
+	nodeTimeout = 8 * time.Second
+	// nodeDialTimeout bounds a streamed overview node's first call (Version, which tells it
+	// is reachable) within nodeTimeout: a node that does not answer is shown down on the home
+	// after this. ClusterOverview (monitor, widgets) keeps the full nodeTimeout.
+	nodeDialTimeout = 3 * time.Second
+	healthTimeout   = 2 * time.Minute
 	// Connections are reused across calls (live graphs poll every few seconds) and closed
 	// after this long without use.
 	sessionIdle = 2 * time.Minute
@@ -91,6 +95,23 @@ var sessions = newSessionCache(sessionIdle, openSession)
 // session whose key expired is opened again: from the store, which may hold a newer key,
 // else the open asks for a sign-in.
 func acquireSession(configYAML, contextName string) (*session, func(), error) {
+	s, release, err := acquireSigned(configYAML, contextName)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err := s.ready(context.Background()); err != nil {
+		release()
+
+		return nil, nil, err
+	}
+
+	return s, release, nil
+}
+
+// acquireSigned is acquireSession before the session learns its nodes: enough for Omni's own API,
+// which also serves a cluster with no machine yet.
+func acquireSigned(configYAML, contextName string) (*session, func(), error) {
 	s, release, err := sessions.acquire(configYAML, contextName)
 	if err != nil {
 		return nil, nil, err
@@ -105,17 +126,20 @@ func acquireSession(configYAML, contextName string) (*session, func(), error) {
 		}
 	}
 
-	if err := s.ready(context.Background()); err != nil {
-		release()
-
-		return nil, nil, err
-	}
-
 	return s, release, nil
 }
 
-// withSession runs fn with a (reused) session, bounded by timeout.
+// withSession runs a read fn with a (reused) session, bounded by timeout and ended by
+// CancelCalls (see callscope.go). A mutation uses withSessionFrom(context.Background(), …).
 func withSession[T any](configYAML, contextName string, timeout time.Duration, fn func(context.Context, *session) (T, error)) (T, error) {
+	parent := callParent(configYAML, contextName)
+	out, err := withSessionFrom(parent, configYAML, contextName, timeout, fn)
+
+	return scopedResult(parent, out, err)
+}
+
+// withSessionFrom is withSession under parent: cancelling parent (a run stopped) ends fn too.
+func withSessionFrom[T any](parent context.Context, configYAML, contextName string, timeout time.Duration, fn func(context.Context, *session) (T, error)) (T, error) {
 	s, release, err := acquireSession(configYAML, contextName)
 	if err != nil {
 		var zero T
@@ -125,7 +149,7 @@ func withSession[T any](configYAML, contextName string, timeout time.Duration, f
 
 	defer release()
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(parent, timeout)
 	defer cancel()
 
 	return fn(ctx, s)
@@ -134,7 +158,17 @@ func withSession[T any](configYAML, contextName string, timeout time.Duration, f
 // withNodeSession is withSession for a call to one node of the context: node is checked
 // against the context first, and fn gets a context targeting it.
 func withNodeSession[T any](configYAML, contextName, node string, timeout time.Duration, fn func(nodeCtx context.Context, s *session) (T, error)) (T, error) {
-	return withSession(configYAML, contextName, timeout, func(ctx context.Context, s *session) (T, error) {
+	return withSession(configYAML, contextName, timeout, onNode(node, fn))
+}
+
+// withNodeSessionFrom is withNodeSession under parent.
+func withNodeSessionFrom[T any](parent context.Context, configYAML, contextName, node string, timeout time.Duration, fn func(nodeCtx context.Context, s *session) (T, error)) (T, error) {
+	return withSessionFrom(parent, configYAML, contextName, timeout, onNode(node, fn))
+}
+
+// onNode checks node against the session's context and runs fn targeting it.
+func onNode[T any](node string, fn func(nodeCtx context.Context, s *session) (T, error)) func(context.Context, *session) (T, error) {
+	return func(ctx context.Context, s *session) (T, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			var zero T
 
@@ -142,7 +176,7 @@ func withNodeSession[T any](configYAML, contextName, node string, timeout time.D
 		}
 
 		return fn(client.WithNode(ctx, node), s)
-	})
+	}
 }
 
 // acquireNode is sessions.acquire for a call to node, which must be one of the context's

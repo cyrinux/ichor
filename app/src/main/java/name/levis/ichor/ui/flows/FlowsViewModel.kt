@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.flows
 
+import name.levis.ichor.data.MaskScoped
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -54,8 +55,22 @@ class FlowsViewModel(private val cilium: CiliumRepository, initial: HubbleFilter
         _filter.value = filter
     }
 
-    /** Follows the flows under the current filter until cancelled or the stream ends. */
-    suspend fun stream(filter: HubbleFilter) {
+    private val mask = MaskScoped()
+
+    /**
+     * Follows the flows under the current filter until cancelled or the stream ends; a
+     * screenshot mode switch drops the flows, namespaces and policies read before it.
+     */
+    suspend fun stream(filter: HubbleFilter) = mask.run(clear = ::forgetRead) { streamOnce(filter) }
+
+    private fun forgetRead() {
+        policiesJob?.cancel()
+        _policies.value = null
+        _flows.value = FlowsState()
+        _namespaces.value = listOfNotNull(_filter.value.namespace).toSet()
+    }
+
+    private suspend fun streamOnce(filter: HubbleFilter) {
         _flows.value = FlowsState(streaming = true)
         try {
             cilium.flows(filter).collect { item ->

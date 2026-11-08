@@ -16,11 +16,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.FilterList
-import androidx.compose.material3.AssistChip
+import name.levis.ichor.ui.design.IchorAssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import name.levis.ichor.ui.design.IchorFilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -90,14 +90,14 @@ private fun ScopeChips(control: KubeScopeControl, choices: List<String>) {
     val selected = control.scope.namespace
     LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         item {
-            FilterChip(
+            IchorFilterChip(
                 selected = selected == null,
                 onClick = { control.onScope(KubeScope(chosen = true)) },
                 label = { Text(stringResource(R.string.workloads_all_namespaces)) },
             )
         }
         items(choices, key = { it }) { ns ->
-            FilterChip(selected = selected == ns, onClick = { control.onScope(KubeScope(ns, chosen = true)) }, label = { Text(ns, fontFamily = FontFamily.Monospace) })
+            IchorFilterChip(selected = selected == ns, onClick = { control.onScope(KubeScope(ns, chosen = true)) }, label = { Text(ns, fontFamily = FontFamily.Monospace) })
         }
     }
 }
@@ -105,7 +105,7 @@ private fun ScopeChips(control: KubeScopeControl, choices: List<String>) {
 @Composable
 private fun ScopeSheetButton(control: KubeScopeControl, choices: List<String>) {
     var open by rememberSaveable { mutableStateOf(false) }
-    AssistChip(
+    IchorAssistChip(
         onClick = { open = true },
         label = { Text(control.scope.namespace ?: stringResource(R.string.workloads_all_namespaces), fontFamily = control.scope.namespace?.let { FontFamily.Monospace }) },
         leadingIcon = { Icon(Icons.Outlined.FilterList, contentDescription = null) },
@@ -145,7 +145,7 @@ private fun NamespaceSheet(choices: List<String>, selected: String?, onPick: (St
 
 @Composable
 private fun NamespaceItem(label: String, mono: Boolean, selected: Boolean, onClick: () -> Unit) {
-    ListItem(
+    IchorListItem(
         headlineContent = { Text(label, fontFamily = if (mono) FontFamily.Monospace else null) },
         trailingContent = { if (selected) Icon(Icons.Outlined.Check, contentDescription = null) },
         modifier = Modifier.clickable(onClick = onClick),

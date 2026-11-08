@@ -3,6 +3,7 @@ package name.levis.ichor.ui.search
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,33 +24,43 @@ import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import name.levis.ichor.ui.design.IchorIconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ListItem
+import name.levis.ichor.ui.design.IchorListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import name.levis.ichor.ui.design.IchorTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.isMeteredNetwork
+import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.RecentTarget
+import name.levis.ichor.model.RecentTargets
 import name.levis.ichor.model.Feature
+import name.levis.ichor.model.ScreenMatch
 import name.levis.ichor.model.SearchGroup
 import name.levis.ichor.model.SearchResult
 import name.levis.ichor.model.ShareTarget
@@ -69,11 +80,12 @@ import name.levis.ichor.util.timeAgo
 /**
  * Search across clusters (U3): the nodes, pods, workloads, CronJobs, Argo CD and Flux apps
  * every cluster on the phone last showed, the active cluster first. A result opens like a
- * share link, on its cluster ([onOpen]). Typing never calls a cluster; the refresh action does.
+ * share link, on its cluster ([onOpen]); a screen of the active cluster opens by its route
+ * ([onOpenRoute]). Typing never calls a cluster; the refresh action does.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit) {
+fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit, onOpenRoute: (String) -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
     val vm: SearchViewModel = viewModel(
@@ -84,19 +96,25 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     val query by vm.query.collectAsStateWithLifecycle()
     val recent by vm.recent.collectAsStateWithLifecycle()
+    val recentTargets by vm.recentTargets.collectAsStateWithLifecycle()
     val refreshing by vm.refreshing.collectAsStateWithLifecycle()
     val refreshFailed by vm.refreshFailed.collectAsStateWithLifecycle()
+    val refreshed by vm.refreshed.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val labels = rememberClusterLabels()
     val active = config?.activeSummary
     // Reading pods and workloads needs a role allowed the Kubernetes API; the demo has its own.
     val canRefresh = active?.allows(Feature.WORKLOADS) == true && !active.isDemo
+    // The active cluster's screens; the nodes as its last overview listed them.
+    val nodes = remember(active, state.snapshot) { app.kubeRepository.cached<ClusterOverview>(OVERVIEW)?.value?.nodes.orEmpty() }
+    val specs = remember(active, nodes) { active?.let { screenCatalog(it, nodes) }.orEmpty() }
+    LaunchedEffect(specs) { vm.setCatalog(screenEntries(specs, context::getString)) }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
 
-    Scaffold(
+    IchorScaffold(
         topBar = {
-            TopAppBar(
+            IchorTopAppBar(
                 title = { Text(stringResource(R.string.search_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
@@ -120,7 +138,7 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit) {
                         placeholder = { Text(stringResource(R.string.search_hint), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
                         trailingIcon = if (query.isNotEmpty()) {
-                            { IconButton(onClick = { vm.setQuery("") }) { Icon(Icons.Outlined.Close, stringResource(R.string.search_clear)) } }
+                            { IchorIconButton(onClick = { vm.setQuery("") }) { Icon(Icons.Outlined.Close, stringResource(R.string.search_clear)) } }
                         } else {
                             null
                         },
@@ -135,20 +153,41 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit) {
             if (snapshot?.othersNeedOfflineCache == true) {
                 MutedText(stringResource(R.string.search_offline_needed), modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             }
-            if (refreshFailed) {
-                MutedText(stringResource(R.string.search_refresh_failed), modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+            // Read by TalkBack when it appears, without moving the focus off the search field.
+            val status = when {
+                refreshing -> null
+                refreshFailed -> R.string.search_refresh_failed
+                refreshed -> R.string.search_refreshed
+                else -> null
+            }
+            Box(Modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
+                status?.let { MutedText(stringResource(it), modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
             }
             when {
                 snapshot == null -> Unit
-                query.isBlank() -> RecentSearches(
-                    recent = recent,
-                    nothingKnown = snapshot.isEmpty,
-                    onPick = vm::setQuery,
-                    onForget = vm::forget,
-                )
+                query.isBlank() -> {
+                    // A removed cluster's objects are not offered; the active one's show no cluster.
+                    val contexts = config?.summary?.contexts.orEmpty()
+                    val opened = RecentTargets.known(recentTargets, contexts.map { it.clusterId }.filter { it.isNotEmpty() }.toSet())
+                    when (blankBody(snapshot.isEmpty, recent, opened)) {
+                        BlankBody.NOTHING_KNOWN -> EmptyText(stringResource(R.string.search_nothing_known))
+                        BlankBody.FIRST_USE -> FirstUseState(specs, canRefresh, onOpenRoute)
+                        BlankBody.RECENTS -> RecentSearches(
+                            recent = recent,
+                            opened = opened,
+                            clusterOf = { cluster ->
+                                if (cluster == active?.clusterId) null else contexts.firstOrNull { it.clusterId == cluster }?.let(labels::of)
+                            },
+                            onPick = vm::setQuery,
+                            onForget = vm::forget,
+                            onOpen = onOpen,
+                            onForgetTarget = vm::forgetTarget,
+                        )
+                    }
+                }
                 // Typed but not yet ranked: the previous results stay until the new ones.
                 state.query.isBlank() -> Unit
-                state.results.results.isEmpty() -> EmptyText(
+                state.results.results.isEmpty() && state.screens.results.isEmpty() -> EmptyText(
                     if (snapshot.isEmpty) stringResource(R.string.search_nothing_known) else stringResource(R.string.search_empty, state.query.trim()),
                 )
                 else -> Results(
@@ -160,6 +199,12 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit) {
                         vm.remember()
                         onOpen(target)
                     },
+                    screens = state.screens.results,
+                    specs = remember(specs) { specs.associateBy { it.id } },
+                    onOpenRoute = { route ->
+                        vm.remember()
+                        onOpenRoute(route)
+                    },
                 )
             }
         }
@@ -168,16 +213,22 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (ShareTarget) -> Unit) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun RecentSearches(recent: List<String>, nothingKnown: Boolean, onPick: (String) -> Unit, onForget: (String) -> Unit) {
-    if (recent.isEmpty()) {
-        if (nothingKnown) EmptyText(stringResource(R.string.search_nothing_known))
-        return
-    }
+private fun RecentSearches(
+    recent: List<String>,
+    opened: List<RecentTarget>,
+    clusterOf: (String) -> String?,
+    onPick: (String) -> Unit,
+    onForget: (String) -> Unit,
+    onOpen: (ShareTarget) -> Unit,
+    onForgetTarget: (ShareTarget) -> Unit,
+) {
     val removeLabel = stringResource(R.string.search_recent_remove)
     LazyColumn(Modifier.fillMaxSize()) {
+        recentlyOpened(opened, clusterOf, onOpen, onForgetTarget)
+        if (recent.isEmpty()) return@LazyColumn
         item { SectionTitle(stringResource(R.string.search_recent), Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
         items(recent, key = { it }) { query ->
-            ListItem(
+            IchorListItem(
                 headlineContent = { Text(query, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 leadingContent = { Icon(Icons.Outlined.History, contentDescription = null) },
                 modifier = Modifier.combinedClickable(
@@ -197,9 +248,14 @@ private fun Results(
     total: Int,
     labelOf: (SearchGroup) -> String,
     onOpen: (ShareTarget) -> Unit,
+    screens: List<ScreenMatch>,
+    specs: Map<String, ScreenSpec>,
+    onOpenRoute: (String) -> Unit,
 ) {
     val now = remember(groups) { System.currentTimeMillis() }
+    var allScreens by remember(screens) { mutableStateOf(false) }
     LazyColumn(Modifier.fillMaxSize()) {
+        screensGroup(screens, specs, allScreens, onExpand = { allScreens = true }, onOpen = onOpenRoute)
         if (total > shown) {
             item { MutedText(stringResource(R.string.search_shown, shown, total), modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
         }
@@ -219,7 +275,7 @@ private fun Results(
 private fun ResultRow(result: SearchResult, now: Long, onOpen: (ShareTarget) -> Unit) {
     val target = result.target
     val lastSeen = if (result.isStale(now)) stringResource(R.string.search_last_seen, timeAgo(result.at, now)) else null
-    ListItem(
+    IchorListItem(
         headlineContent = { Text(result.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = {
             Column {
@@ -233,7 +289,7 @@ private fun ResultRow(result: SearchResult, now: Long, onOpen: (ShareTarget) -> 
     )
 }
 
-private fun kindIcon(kind: String): ImageVector = when (kind) {
+internal fun kindIcon(kind: String): ImageVector = when (kind) {
     "node" -> Icons.Outlined.Dns
     "pod" -> Icons.Outlined.ViewInAr
     "workload" -> Icons.Outlined.Widgets
@@ -243,7 +299,7 @@ private fun kindIcon(kind: String): ImageVector = when (kind) {
 }
 
 @Composable
-private fun kindLabel(kind: String): String = when (kind) {
+internal fun kindLabel(kind: String): String = when (kind) {
     "node" -> stringResource(R.string.search_kind_node)
     "pod" -> stringResource(R.string.search_kind_pod)
     "workload" -> stringResource(R.string.search_kind_workload)

@@ -16,6 +16,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // The cloud sign-ins that need no browser: GKE with a service account key, DigitalOcean with
@@ -31,7 +33,7 @@ const (
 
 var (
 	doAPIEndpoint  = "https://api.digitalocean.com"
-	cloudHTTP      = func() *http.Client { return newHTTPClient(httpClientOpts{timeout: oidcHTTPTimeout}) }
+	cloudHTTP      = func() *http.Client { return httpx.New(httpx.Opts{Timeout: oidcHTTPTimeout}) }
 	gcpTokenTarget = func(serviceAccountTokenURI string) string { return serviceAccountTokenURI }
 )
 
@@ -61,12 +63,16 @@ func cloudJSON(req *http.Request, out any) error {
 		var e struct {
 			Message     string `json:"message"`
 			Error       string `json:"error"`
+			Subtype     string `json:"error_subtype"`
 			Description string `json:"error_description"`
 		}
 
 		_ = json.Unmarshal(data, &e) //nolint:errcheck
 
-		return &cloudHTTPError{status: resp.StatusCode, code: e.Error, message: cmpOr(e.Description, e.Message, e.Error, http.StatusText(resp.StatusCode))}
+		return &cloudHTTPError{
+			status: resp.StatusCode, code: e.Error, subtype: e.Subtype,
+			message: cmpOr(e.Description, e.Message, e.Error, http.StatusText(resp.StatusCode)),
+		}
 	}
 
 	return json.Unmarshal(data, out)
@@ -74,8 +80,10 @@ func cloudJSON(req *http.Request, out any) error {
 
 type cloudHTTPError struct {
 	status int
-	// code is the OAuth error code ("invalid_grant"), when the answer has one.
+	// code is the OAuth error code ("invalid_grant"), when the answer has one; subtype its
+	// error_subtype (Google: invalid_rapt).
 	code    string
+	subtype string
 	message string
 }
 
@@ -119,6 +127,8 @@ type gcpServiceAccount struct {
 	PrivateKey  string `json:"private_key"`
 	KeyID       string `json:"private_key_id"`
 	TokenURI    string `json:"token_uri"`
+	// ProjectID is the project the key belongs to: Compute Engine's default (cloud_gcp.go).
+	ProjectID string `json:"project_id"`
 }
 
 func parseServiceAccount(raw string) (gcpServiceAccount, *rsa.PrivateKey, error) {
@@ -148,6 +158,11 @@ func parseServiceAccount(raw string) (gcpServiceAccount, *rsa.PrivateKey, error)
 
 	if sa.TokenURI == "" {
 		sa.TokenURI = "https://oauth2.googleapis.com/token"
+	}
+
+	// The key names where its signed assertion goes.
+	if err := checkOIDCEndpoint("token_uri", sa.TokenURI); err != nil {
+		return sa, nil, fmt.Errorf("service account key: %w", err)
 	}
 
 	return sa, rsaKey, nil

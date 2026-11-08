@@ -2,17 +2,26 @@ import Foundation
 
 /// A home screen's section that can be moved and hidden; banners and notices stay on top. Raw
 /// values are Android's enum names, so the saved form reads the same on both.
-public protocol HomeCard: RawRepresentable, CaseIterable, Sendable, Hashable, Identifiable where RawValue == String, AllCases == [Self] {
+public protocol HomeCard: RawRepresentable, CaseIterable, Sendable, Hashable, Identifiable
+where RawValue == String, AllCases == [Self] {
     /// The `@AppStorage` key the home's encoded layout is kept under.
     static var layoutStorageKey: String { get }
     /// Only shown when the cluster has what it reports on.
     var whenDetected: Bool { get }
     /// Was pinned above the sections before it could be arranged: a layout saved then keeps it first.
     var leadsWhenNew: Bool { get }
+    /// Starts hidden, also in a layout saved before it existed: shown from the editor.
+    var hiddenByDefault: Bool { get }
+}
+
+public extension HomeCard {
+    var hiddenByDefault: Bool { false }
 }
 
 /// The Talos overview's sections. Raw values are Android's `OverviewCard` names.
 public enum OverviewCard: String, HomeCard {
+    /// The screens pinned on this cluster (Pins.swift): first, and absent without pins.
+    case pinned = "PINNED"
     case talosUpdate = "TALOS_UPDATE"
     case summary = "SUMMARY"
     case apps = "APPS"
@@ -23,20 +32,29 @@ public enum OverviewCard: String, HomeCard {
     case timeDrift = "TIME_DRIFT"
     /// The Alertmanager's alerts by severity: last, so saved layouts keep their order.
     case alerts = "ALERTS"
+    /// The Kubernetes home's screens section, hidden until shown from the editor.
+    case tools = "TOOLS"
 
     public var id: String { rawValue }
     public static let layoutStorageKey = "overview.layout"
 
-    public var whenDetected: Bool { self == .dataServices || self == .argoCD || self == .flux || self == .alerts }
+    public var whenDetected: Bool {
+        self == .pinned || self == .dataServices || self == .argoCD || self == .flux || self == .alerts
+    }
 
-    public var leadsWhenNew: Bool { self == .talosUpdate }
+    public var leadsWhenNew: Bool { self == .pinned || self == .talosUpdate }
+
+    public var hiddenByDefault: Bool { self == .tools }
 }
 
-/// The sections of the Kubernetes home (a cluster added from a kubeconfig): the API server and
-/// the credentials, the nodes as Kubernetes lists them, the Kubernetes screens, and the operators
-/// found on the cluster. Raw values are Android's `KubeHomeCard` names.
+/// The sections of the Kubernetes home (a cluster added from a kubeconfig), as the Talos
+/// overview's where they can be: the objects pinned, the cluster at a glance, the apps (from the
+/// pods), the nodes as Kubernetes lists them, the Kubernetes screens, and the operators found on
+/// the cluster. Raw values are Android's `KubeHomeCard` names.
 public enum KubeHomeCard: String, HomeCard {
+    case pinned = "PINNED"
     case summary = "SUMMARY"
+    case apps = "APPS"
     case nodes = "NODES"
     case tools = "TOOLS"
     case dataServices = "DATA_SERVICES"
@@ -48,9 +66,12 @@ public enum KubeHomeCard: String, HomeCard {
     public var id: String { rawValue }
     public static let layoutStorageKey = "kubeHome.layout"
 
-    public var whenDetected: Bool { self == .dataServices || self == .argoCD || self == .flux || self == .alerts }
+    // The apps too: credentials that may not list every pod have no inventory to show.
+    public var whenDetected: Bool {
+        self == .pinned || self == .apps || self == .dataServices || self == .argoCD || self == .flux || self == .alerts
+    }
 
-    public var leadsWhenNew: Bool { false }
+    public var leadsWhenNew: Bool { self == .pinned }
 }
 
 /// A home's sections in the order chosen, and those hidden. Every section is in `order`
@@ -63,7 +84,7 @@ public struct CardLayout<Card: HomeCard>: Equatable, Sendable {
     public let order: [Card]
     public let hidden: Set<Card>
 
-    public init(order: [Card] = Card.allCases, hidden: Set<Card> = []) {
+    public init(order: [Card] = Card.allCases, hidden: Set<Card> = Set(Card.allCases.filter(\.hiddenByDefault))) {
         self.order = order
         self.hidden = hidden
     }
@@ -114,7 +135,8 @@ public struct CardLayout<Card: HomeCard>: Equatable, Sendable {
         order.map { hidden.contains($0) ? "-\($0.rawValue)" : $0.rawValue }.joined(separator: ",")
     }
 
-    /// Reads `encoded`'s form; unknown or repeated names are skipped, missing sections added.
+    /// Reads `encoded`'s form; unknown or repeated names are skipped, missing sections added
+    /// (hidden when `hiddenByDefault`).
     public static func parse(_ text: String?) -> CardLayout {
         guard let text, !text.trimmingCharacters(in: .whitespaces).isEmpty else { return CardLayout() }
         var known: [Card] = []
@@ -123,12 +145,15 @@ public struct CardLayout<Card: HomeCard>: Equatable, Sendable {
             let name = raw.trimmingCharacters(in: .whitespaces)
             let isHidden = name.hasPrefix("-")
             guard let card = Card(rawValue: isHidden ? String(name.dropFirst()) : name),
-                  !known.contains(card) else { continue }
+                !known.contains(card)
+            else { continue }
             known.append(card)
             if isHidden { hidden.insert(card) }
         }
         let missing = Card.allCases.filter { !known.contains($0) }
-        return CardLayout(order: missing.filter(\.leadsWhenNew) + known + missing.filter { !$0.leadsWhenNew }, hidden: hidden)
+        return CardLayout(
+            order: missing.filter(\.leadsWhenNew) + known + missing.filter { !$0.leadsWhenNew },
+            hidden: hidden.union(missing.filter(\.hiddenByDefault)))
     }
 }
 

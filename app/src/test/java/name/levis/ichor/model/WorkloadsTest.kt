@@ -2,6 +2,7 @@ package name.levis.ichor.model
 
 import name.levis.ichor.data.TalosJson
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -63,5 +64,33 @@ class WorkloadsTest {
     fun refEncodesAsKubeWorkloadsNamedTakesIt() {
         val ref = workloads.first { it.name == "web" }.ref
         assertEquals("""{"kind":"Deployment","namespace":"shop","name":"web"}""", TalosJson.encodeToString(WorkloadRef.serializer(), ref))
+    }
+}
+
+class WorkloadAutoscalerTest {
+    @Test
+    fun labelNamesTheAutoscalerWithItsBounds() {
+        val hpa = WorkloadAutoscaler(by = "hpa", name = "web-hpa", min = 1, max = 5, current = 3, desired = 3, state = "ok")
+        assertEquals("HPA web-hpa · 3 of 1–5", hpa.label())
+        assertTrue(hpa.stateOk)
+    }
+
+    @Test
+    fun labelNamesTheScaledObjectAndItsPause() {
+        val keda = WorkloadAutoscaler(by = "keda", name = "worker-so", min = 0, max = 10, current = 0, desired = 0, paused = true, state = "paused")
+        assertEquals("KEDA worker-so · paused at 0", keda.label())
+        assertFalse(keda.stateOk)
+    }
+
+    @Test
+    fun decodesFromTheGoCoreAndToleratesItsAbsence() {
+        val with = TalosJson.decodeFromString(
+            KubeWorkload.serializer(),
+            """{"kind":"Deployment","namespace":"shop","name":"web","autoscaler":{"by":"keda","name":"worker-so","min":0,"max":10,"current":2,"desired":2,"paused":true,"state":"paused"}}""",
+        )
+        assertEquals("KEDA worker-so · paused at 2", with.autoscaler?.label())
+
+        val without = TalosJson.decodeFromString(KubeWorkload.serializer(), """{"kind":"Deployment","namespace":"shop","name":"plain"}""")
+        assertNull(without.autoscaler)
     }
 }

@@ -1,0 +1,33 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "assets-claim",
+        "namespace": "apps"
+      },
+      "spec": {
+        "resourceRef": {
+          "name": "assets"
+        }
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          },
+          {
+            "type": "Synced",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          }
+        ]
+      }
+    }
+  ]
+}

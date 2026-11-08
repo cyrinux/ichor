@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.nav
 
+import name.levis.ichor.selectCluster
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -8,13 +9,20 @@ import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.activity.ActivityScreen
+import name.levis.ichor.ui.diagnostics.DiagnosticsScreen
+import name.levis.ichor.ui.imagescan.SavedScansScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
 import name.levis.ichor.ui.diagnosis.DiagnosisScreen
+import name.levis.ichor.ui.fleet.FleetScreen
 import name.levis.ichor.ui.funding.FundingScreen
 import name.levis.ichor.ui.integrations.IntegrationsScreen
 import name.levis.ichor.ui.kubebrowser.KubeLinks
+import name.levis.ichor.ui.runbooks.RunbookPlanScreen
+import name.levis.ichor.ui.runbooks.RunbookRunScreen
+import name.levis.ichor.ui.runbooks.RunbooksScreen
 import name.levis.ichor.ui.search.SearchScreen
 import name.levis.ichor.ui.settings.LicensesScreen
+import name.levis.ichor.ui.settings.PluginIndexScreen
 import name.levis.ichor.ui.settings.SettingsActions
 import name.levis.ichor.ui.settings.SettingsPage
 import name.levis.ichor.ui.settings.SettingsPageScreen
@@ -22,13 +30,25 @@ import name.levis.ichor.ui.settings.SettingsScreen
 import name.levis.ichor.ui.settings.SettingsStores
 import name.levis.ichor.ui.settings.SupportedIntegrationsScreen
 import name.levis.ichor.ui.support.SupportBundleScreen
+import name.levis.ichor.ui.tour.replayDemoTour
 
 /**
  * The app's own screens: settings, diagnosis, changelog, licenses, funding, support, and the
- * search across clusters, whose results [openTarget] opens like share links.
+ * search across clusters, whose results [openTarget] opens like share links, and the fleet view.
  */
 internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks, openTarget: (ShareTarget) -> Unit) {
-    composable(Routes.SEARCH) { SearchScreen(onBack = { nav.popBackStack() }, onOpen = openTarget) }
+    composable(Routes.SEARCH) {
+        // A screen of the active cluster: opened over the search, so Back returns to it.
+        SearchScreen(onBack = { nav.popBackStack() }, onOpen = openTarget, onOpenRoute = { nav.navigate(it) { launchSingleTop = true } })
+    }
+    composable(Routes.FLEET) {
+        FleetScreen(
+            onBack = { nav.popBackStack() },
+            // The cluster tapped is on screen by then: its home, with nothing over it.
+            onHome = { if (!nav.popBackStack(Routes.OVERVIEW, inclusive = false)) nav.popBackStack() },
+            onAlertsSettings = { nav.navigate(Routes.settingsPage(SettingsPage.ALERTS)) },
+        )
+    }
     composable(Routes.INSIGHTS) {
         name.levis.ichor.ui.insights.InsightsScreen(
             onBack = { nav.popBackStack() },
@@ -42,6 +62,7 @@ internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kub
     }
     composable(Routes.FUNDING) { FundingScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.SUPPORT_BUNDLE) { SupportBundleScreen(onBack = { nav.popBackStack() }) }
+    composable(Routes.DIAGNOSTICS) { DiagnosticsScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.INTEGRATIONS) { IntegrationsScreen(onBack = { nav.popBackStack() }) }
     composable(
         Routes.DIAGNOSIS,
@@ -54,7 +75,24 @@ internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kub
         )
     }
     composable(Routes.ACTIVITY, arguments = listOf(navArgument("cluster") { type = NavType.StringType; defaultValue = "" })) { entry ->
-        ActivityScreen(cluster = entry.arguments?.getString("cluster").orEmpty(), onBack = { nav.popBackStack() })
+        val cluster = entry.arguments?.getString("cluster").orEmpty()
+        ActivityScreen(cluster = cluster, onBack = { nav.popBackStack() }, onScanReports = { nav.navigate(Routes.scanReports(cluster)) })
+    }
+    composable(Routes.RUNBOOKS) {
+        RunbooksScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(Routes.runbookPlan(it)) })
+    }
+    composable(Routes.RUNBOOK_PLAN, arguments = listOf(navArgument("id") { type = NavType.StringType; defaultValue = "" })) { entry ->
+        RunbookPlanScreen(
+            id = entry.arguments?.getString("id").orEmpty(),
+            onBack = { nav.popBackStack() },
+            onRunning = { nav.navigate(Routes.RUNBOOK_RUN) { popUpTo(Routes.RUNBOOK_PLAN) { inclusive = true } } },
+        )
+    }
+    composable(Routes.RUNBOOK_RUN) {
+        RunbookRunScreen(onBack = { nav.popBackStack() }, onActivity = { nav.navigate(Routes.activity(it)) })
+    }
+    composable(Routes.SCAN_REPORTS, arguments = listOf(navArgument("cluster") { type = NavType.StringType; defaultValue = "" })) { entry ->
+        SavedScansScreen(cluster = entry.arguments?.getString("cluster").orEmpty(), onBack = { nav.popBackStack() })
     }
     composable(Routes.SETTINGS) {
         SettingsScreen(
@@ -72,20 +110,30 @@ internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kub
             onBack = { nav.popBackStack() },
         )
     }
+    composable(Routes.PLUGIN_INDEX) {
+        PluginIndexScreen(app.pluginRepository, app.uiPreferences, onBack = { nav.popBackStack() })
+    }
 }
 
 private fun settingsActions(nav: NavHostController, app: TalosApp) = SettingsActions(
     onReimport = { nav.navigate(Routes.IMPORT) },
     onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
+    onRotateCA = { nav.navigate(Routes.ROTATE_CA) },
     onSupportBundle = { nav.navigate(Routes.SUPPORT_BUNDLE) },
     onActivity = { nav.navigate(Routes.activity()) },
+    onDiagnostics = { nav.navigate(Routes.DIAGNOSTICS) },
     onIntegrations = { nav.navigate(Routes.INTEGRATIONS) },
     onChangelog = { nav.navigate(Routes.CHANGELOG) },
     onLicenses = { nav.navigate(Routes.LICENSES) },
     onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
+    onPluginIndex = { nav.navigate(Routes.PLUGIN_INDEX) },
     onFunding = { nav.navigate(Routes.FUNDING) },
     onCleared = {
         app.launchSync(runNow = true)
         nav.resetTo(Routes.IMPORT)
+    },
+    onReplayTour = {
+        replayDemoTour(app.configRepository, app.uiPreferences, app::selectCluster)
+        nav.resetTo(Routes.OVERVIEW)
     },
 )

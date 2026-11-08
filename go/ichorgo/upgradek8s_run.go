@@ -105,6 +105,7 @@ func StartK8sUpgrade(configYAML, contextName, kubeServer, toVersion string, dryR
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
+		defer holdCalls(configYAML, contextName)()
 
 		from := ""
 

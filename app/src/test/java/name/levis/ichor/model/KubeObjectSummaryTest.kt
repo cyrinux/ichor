@@ -55,4 +55,16 @@ class KubeObjectSummaryTest {
         assertEquals(CellTone.NONE, toneOf("purple"))
         assertEquals(CellTone.NONE, KubeObjectSummary().healthTone)
     }
+
+    @Test
+    fun onlyAnArgoApplicationOrAFluxKustomizationOffersItsDiff() {
+        assertTrue(ObjectOwner(via = ObjectOwner.VIA_ARGO, kind = "Application", namespace = "argocd", name = "web").hasGitOpsDiff)
+        assertTrue(ObjectOwner(via = ObjectOwner.VIA_FLUX, kind = "Kustomization", namespace = "flux-system", name = "apps").hasGitOpsDiff)
+        // Its namespace unknown, a HelmRelease, a Helm release or a plain owner: no diff to open.
+        assertFalse(ObjectOwner(via = ObjectOwner.VIA_ARGO, kind = "Application", name = "web").hasGitOpsDiff)
+        assertFalse(ObjectOwner(via = ObjectOwner.VIA_FLUX, kind = "HelmRelease", namespace = "web", name = "web").hasGitOpsDiff)
+        assertFalse(ObjectOwner(via = ObjectOwner.VIA_HELM, kind = "Release", namespace = "web", name = "web").hasGitOpsDiff)
+        assertFalse(ObjectOwner(via = ObjectOwner.VIA_OWNER, kind = "ReplicaSet", namespace = "web", name = "web-1").hasGitOpsDiff)
+        assertEquals("Deployment/web/app", KubeDiffResource(group = "apps", kind = "Deployment", namespace = "web", name = "app").focusKey)
+    }
 }
