@@ -467,14 +467,7 @@ struct GCPCreateSection: View {
         options = .loading
         options = await LoadState.from { try await client.gcpOptions(credential: credential) }
         guard case .loaded(let value, _, _)? = options else { return }
-        // The core renewed a Google account's session: seal the new one into what is stored now,
-        // under the project it belongs to (another may be picked meanwhile).
-        if !value.credential.isEmpty, !picked.isEmpty {
-            let stored = CloudProviderStore.token(provider: CloudProviderStore.gcp, project: picked)
-            if let json = GCPCredential.renewed(stored, from: value.credential) {
-                try? CloudProviderStore.save(provider: CloudProviderStore.gcp, project: picked, token: json)
-            }
-        }
+        sealRenewed(value.credential, project: picked)
         // The only network is the obvious pick, and its only subnet.
         if value.usableNetworks.count == 1 {
             networkName = value.usableNetworks[0].name
@@ -483,12 +476,28 @@ struct GCPCreateSection: View {
         }
     }
 
-    /// The guided network is ready: the options again (its flags), then its network and subnet picked.
+    /// The core renewed a Google account's session: seal the new one into what is stored now,
+    /// under the project it belongs to (another may be picked meanwhile). "" is nothing to do.
+    private func sealRenewed(_ renewed: String, project picked: String) {
+        guard !renewed.isEmpty, !picked.isEmpty else { return }
+        let stored = CloudProviderStore.token(provider: CloudProviderStore.gcp, project: picked)
+        if let json = GCPCredential.renewed(stored, from: renewed) {
+            try? CloudProviderStore.save(provider: CloudProviderStore.gcp, project: picked, token: json)
+        }
+    }
+
+    /// The guided network is ready: the session the core renewed sealed again, the options again
+    /// (its flags), then its network and subnet picked.
     private func guidedNetworkReady(_ network: GCPNetworkResult) async {
+        let picked = account
+        sealRenewed(network.credential, project: picked)
         if let client = model.client {
             let credential = self.credential
             let fresh = await LoadState.from { try await client.gcpOptions(credential: credential) }
-            if case .loaded = fresh { options = fresh }
+            if case .loaded(let value, _, _) = fresh {
+                sealRenewed(value.credential, project: picked)
+                options = fresh
+            }
         }
         if networkName == network.network {
             subnetLink = network.subnetworkLink

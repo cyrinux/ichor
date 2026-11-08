@@ -198,9 +198,17 @@ class GCPCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
         }
     }
 
-    /** The guided network (writes at Google Cloud), then the options again so its flags are listed. */
-    suspend fun prepareNetwork(spec: GCPNetworkSpec): GCPNetworkResult =
-        lifecycle.gcpNetworkPrepare(credential(_account.value), spec).also { refresh() }
+    /**
+     * The guided network (writes at Google Cloud), sealing again the Google sign-in the core
+     * renewed, then the options again so its flags are listed.
+     */
+    suspend fun prepareNetwork(spec: GCPNetworkSpec): GCPNetworkResult {
+        val account = _account.value
+        return lifecycle.gcpNetworkPrepare(credential(account), spec).also {
+            sealRenewed(account, it.credential)
+            refresh()
+        }
+    }
 
     /** The cost line of an image run. Creates nothing. */
     suspend fun estimate(arch: String, zone: String): GCPImageEstimate =

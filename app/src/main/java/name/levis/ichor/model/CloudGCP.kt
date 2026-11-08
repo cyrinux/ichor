@@ -8,8 +8,8 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-// Mirrors go/ichorgo/cloud_gcp.go, cloud_gcp_signin.go, cloud_gcp_options.go,
-// cloud_gcp_create.go and cloud_gcp_network.go.
+// Mirrors go/ichorgo/cloud_gcp.go, cloud_gcp_signin.go, cloud_gcp_options.go, cloud_gcp_create.go
+// and cloud_gcp_network.go.
 
 /**
  * A service account key or a Google account's sign-in ([googleSignIn], opaque), its project and
@@ -141,6 +141,8 @@ data class GCPNetworkResult(
     val updated: List<String> = emptyList(),
     val rules: List<GCPNetworkRule> = emptyList(),
     val warnings: List<String> = emptyList(),
+    /** A Google account's session the core renewed, to seal again; "" when nothing changed. */
+    val credential: String = "",
 )
 
 /** One source of a rule: [protocol] all or tcp, [ports] "" for every port, [source] a CIDR or "tag:<tag>". */

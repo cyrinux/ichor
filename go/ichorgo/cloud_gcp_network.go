@@ -69,6 +69,9 @@ type gcpNetworkResult struct {
 	Updated  []string         `json:"updated"`
 	Rules    []gcpNetworkRule `json:"rules"`
 	Warnings []string         `json:"warnings"`
+	// Credential is the credential JSON to seal again when the call renewed a Google account's
+	// session, as GCPOptions returns it.
+	Credential string `json:"credential,omitempty"`
 }
 
 // gcpNetworkRule is one source of an ingress rule aimed at the ichor-node tag: protocol all or
@@ -191,6 +194,7 @@ func GCPNetworkPrepare(configYAML, contextName, credJSON, specJSON string) (out 
 		defer cancel()
 
 		result, err = c.prepareNetwork(ctx, spec, awsPhoneIPv4)
+		result.Credential = c.updated()
 
 		return err
 	})

@@ -322,9 +322,11 @@ public struct GCPNetworkResult: Decodable, Equatable, Sendable {
     public let updated: [String]
     public let rules: [GCPNetworkRule]
     public let warnings: [String]
+    /// A Google account's session the core renewed, to seal again; "" when nothing changed.
+    public let credential: String
 
     private enum CodingKeys: String, CodingKey {
-        case network, networkLink, subnetwork, subnetworkLink, phoneIp, created, updated, rules, warnings
+        case network, networkLink, subnetwork, subnetworkLink, phoneIp, created, updated, rules, warnings, credential
     }
 
     public init(from decoder: Decoder) throws {
@@ -338,6 +340,7 @@ public struct GCPNetworkResult: Decodable, Equatable, Sendable {
         updated = try c.field(.updated, [])
         rules = try c.field(.rules, [])
         warnings = try c.field(.warnings, [])
+        credential = try c.field(.credential, "")
     }
 }
 

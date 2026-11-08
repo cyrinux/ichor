@@ -160,8 +160,8 @@ var cloudCommands = []command{
 		return "", errors.New("usage: azure test|options|role [RG]|price LOCATION SIZE|estimate|image|create|signin|network …")
 	}},
 	{name: "gcp", args: "test|options|role|price ZONE TYPE|estimate ARCH ZONE|image TEMPLATE ARCH ZONE SUBNET -yes|" +
-		"create TEMPLATE ROLE HOSTNAME DISK PROJECT ZONE TYPE IMAGE SUBNET -yes|network ROLE [-omni] -yes|" +
-		"signin gcloud|oauth|workforce [SECRETS_JSON]", run: func(e env) (string, error) {
+		"create TEMPLATE ROLE HOSTNAME DISK PROJECT ZONE TYPE IMAGE SUBNET -yes|signin gcloud|oauth|workforce [SECRETS_JSON]|" +
+		"network ROLE [-omni] -yes", run: func(e env) (string, error) {
 		switch flag.Arg(1) {
 		case "role":
 			return ichorgo.GCPRoleDefinition(os.Getenv("GCP_PROJECT")), nil
@@ -191,7 +191,7 @@ var cloudCommands = []command{
 			return gcpNetwork(e, credJSON)
 		}
 
-		return "", errors.New("usage: gcp test|options|role|price ZONE TYPE|estimate|image|create|network|signin …")
+		return "", errors.New("usage: gcp test|options|role|price ZONE TYPE|estimate|image|create|signin|network …")
 	}},
 }
 
