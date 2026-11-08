@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"io"
-	"math/atomic"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -106,14 +106,14 @@ func TestLoopbackStopDiagnostics(t *testing.T) {
 
 		stall := make(chan struct{})
 		handlerIn := make(chan struct{})
-		stallTaken := int32(0)
+		var stallTaken atomic.Bool
 
 		srv := &http.Server{Handler: http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
 			close(handlerIn)
 
 			select {
 			case <-stall:
-				atomic.StoreInt32(&stallTaken, 1) // the handler was released, not cut
+				stallTaken.Store(true) // the handler was released, not cut
 			case <-time.After(30 * time.Second): // the stuck handler outlives stop()
 			}
 		})}
@@ -156,7 +156,7 @@ func TestLoopbackStopDiagnostics(t *testing.T) {
 			t.Errorf("cause = %q, err = %q; want the deadline named", cause, text)
 		}
 
-		if atomic.LoadInt32(&stallTaken) != 0 {
+		if stallTaken.Load() {
 			t.Error("the deadline released the handler before Close cut it")
 		}
 	})
