@@ -39,6 +39,8 @@ type gcpOptions struct {
 	Networks     []gcpNetwork     `json:"networks"`
 	Images       []gcpImage       `json:"images"`
 	Warnings     []string         `json:"warnings"`
+	// Credential is the credential JSON to seal again when a Google sign-in changed, else "".
+	Credential string `json:"credential,omitempty"`
 }
 
 type gcpProject struct {
@@ -232,6 +234,8 @@ func GCPOptions(configYAML, contextName, credJSON string) (out string, err error
 	if err != nil {
 		return "", err
 	}
+
+	options.Credential = c.updated()
 
 	return toJSON(options)
 }

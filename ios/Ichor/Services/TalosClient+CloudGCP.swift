@@ -18,6 +18,25 @@ extension TalosClient {
         }
     }
 
+    /// The Google sign-ins this build offers, in the order shown: "native" (the build's own
+    /// Google client, when it has one), "gcloud", "oauth", "workforce".
+    static func gcpSignInChoices() async throws -> [String] {
+        try await json { IchorgoGCPSignInChoices($0) }
+    }
+
+    /// Runs the browser sign-in of `kind` as the GKE discovery does: its prompts, the end, and
+    /// `complete` for a code pasted back. `secrets`: "" for native and gcloud; the OAuth
+    /// client's fields, or the workforce login config, as field → value JSON.
+    static func gcpSignInStart(kind: String, secrets: String) -> SignInRun {
+        signInRun { IchorgoGCPSignInStart(kind, secrets, $0) }
+    }
+
+    /// Once the sign-in ended well: its credential (no project yet), the account and the
+    /// projects it sees. The run's state is forgotten.
+    static func gcpSignInCredential() async throws -> GCPSignInResult {
+        try await json { IchorgoGCPSignInCredential($0) }
+    }
+
     /// The custom role to create in `project` and grant the service account: only the calls Ichor makes.
     static func gcpRole(project: String) -> String {
         IchorgoGCPRoleDefinition(project)

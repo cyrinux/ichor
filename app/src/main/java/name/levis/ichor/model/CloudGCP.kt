@@ -3,20 +3,35 @@ package name.levis.ichor.model
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-// Mirrors go/ichorgo/cloud_gcp.go, cloud_gcp_options.go and cloud_gcp_create.go.
+// Mirrors go/ichorgo/cloud_gcp.go, cloud_gcp_signin.go, cloud_gcp_options.go and cloud_gcp_create.go.
 
-/** A service account key, its project and zone, sealed on the device; what the core gets per call. */
+/**
+ * A service account key or a Google account's sign-in ([googleSignIn], opaque), its project and
+ * zone, sealed on the device; what the core gets per call. Never re-encode a stored one from this
+ * class: edit its JSON ([gcpCredentialWith]) so a field this app does not model stays.
+ */
 @Serializable
 data class GCPCredential(
     val serviceAccountJson: String = "",
     val project: String = "",
     val zone: String = "",
-)
+    val googleSignIn: JsonObject? = null,
+    /** The signed-in Google account's email; "" for a key. */
+    val account: String = "",
+) {
+    val googleAccount: Boolean get() = googleSignIn != null
+}
 
-/** Whose key this is and what of the printed role it lacks; [checked] is false when that could not be told. */
+/**
+ * Whose key or account this is and what of the printed role it lacks; [checked] is false when that
+ * could not be told. A Google sign-in the core renewed comes back as [credential] to seal again
+ * ("" when unchanged), with [renewHint]: how to sign in again once Google ends it.
+ */
 @Serializable
 data class GCPCheck(
     val account: String = "",
@@ -24,7 +39,43 @@ data class GCPCheck(
     val canCreate: Boolean = false,
     val checked: Boolean = false,
     val missing: List<String> = emptyList(),
+    val credential: String = "",
+    val renewHint: String = "",
 )
+
+/** What a Google sign-in got: its [credential] (no project yet), the account, and the projects it sees ([more]: not all listed). */
+@Serializable
+data class GCPSignInResult(
+    val credential: String = "",
+    val account: String = "",
+    val projects: List<GCPProject> = emptyList(),
+    val more: Boolean = false,
+)
+
+/** The browser Google sign-ins (Ichorgo.gcpSignInChoices); "native" is the iOS build's own and never shown here. */
+object GCPSignInKind {
+    const val GCLOUD = "gcloud"
+    const val OAUTH = "oauth"
+    const val WORKFORCE = "workforce"
+    val browser = listOf(GCLOUD, OAUTH, WORKFORCE)
+}
+
+/** [credential] (JSON) with [fields] set, edited in place: the sign-in state it holds stays as it is. Null when it is not a JSON object. */
+fun gcpCredentialWith(credential: String, vararg fields: Pair<String, String>): String? {
+    val current = runCatching { Json.parseToJsonElement(credential).jsonObject }.getOrNull() ?: return null
+    return JsonObject(current + fields.map { (k, v) -> k to JsonPrimitive(v) }).toString()
+}
+
+/**
+ * [stored] with only the "googleSignIn" of [renewed] (a credential the core rotated) taken, so a
+ * project or zone picked meanwhile stays; null when there is nothing to seal.
+ */
+fun gcpMergeRenewed(stored: String, renewed: String): String? {
+    if (renewed.isBlank()) return null
+    val state = runCatching { Json.parseToJsonElement(renewed).jsonObject["googleSignIn"] }.getOrNull() ?: return null
+    val current = runCatching { Json.parseToJsonElement(stored).jsonObject }.getOrNull() ?: return null
+    return JsonObject(current + ("googleSignIn" to state)).toString()
+}
 
 /** What a VM can be created from in [zone] of [project]; [warnings] are the core's, shown as they are. */
 @Serializable
@@ -37,6 +88,8 @@ data class GCPOptions(
     val networks: List<GCPNetwork> = emptyList(),
     val images: List<GCPImage> = emptyList(),
     val warnings: List<String> = emptyList(),
+    /** A Google sign-in the core renewed, to seal again; "" when unchanged. */
+    val credential: String = "",
 )
 
 @Serializable

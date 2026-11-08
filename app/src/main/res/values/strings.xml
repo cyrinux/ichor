@@ -6426,7 +6426,16 @@
     <string name="gcp_title">Create the VM at Google Cloud</string>
     <string name="gcp_howto">1. Pick a member to copy, then the new node\'s host name and install disk.\n2. Add a service account key that has the role Ichor prints, with the Compute Engine API enabled in its project.\n3. Pick a zone, a machine type, the Talos image the project holds (register one as the Talos guide says until Ichor makes it), a network and its subnet.\n4. Create it: Ichor shows the price first and follows it until the node joins. The phone must reach port 50000 of the VM.</string>
     <string name="gcp_howto_omni">1. Add a service account key that has the role Ichor prints, with the Compute Engine API enabled in its project.\n2. Name the VM, then pick a zone, a machine type, the Talos image the project holds, a network and its subnet.\n3. Create it: Ichor shows the price first, then follows it until the machine appears in Omni. Allocate it to the cluster.</string>
-    <string name="gcp_add_key">Add a service account key</string>
+    <string name="gcp_add_account">Add an account</string>
+    <string name="gcp_signin_option_key">Paste a key</string>
+    <string name="gcp_signin_option_google">Sign in with Google</string>
+    <string name="gcp_signin_warning">The sign-in stays sealed on this device and is not in backups. It can do what your account may on every project, not only the role Ichor prints: prefer a key with only that role when you have one.</string>
+    <string name="gcp_signin_signed_in">Signed in with Google as %1$s</string>
+    <string name="gcp_signin_project">Project the calls are billed to</string>
+    <string name="gcp_signin_more">Not every project is listed: enter the ID of another one.</string>
+    <string name="gcp_signin_project_id">Project ID</string>
+    <string name="gcp_signin_use_project">Use this project</string>
+    <string name="gcp_signin_other_project">Pick another project</string>
     <string name="gcp_remove">Remove this key</string>
     <string name="gcp_key_warning">A service account key does not expire and can do what its roles allow. It stays sealed on this device and is not in backups: prefer a key with only the role Ichor prints.</string>
     <string name="gcp_role_hint">Create this custom role in the project and grant it to the service account: only the calls Ichor makes. Enable the Compute Engine API; Cloud Resource Manager lets Test check the role, and Cloud Billing shows the price.</string>

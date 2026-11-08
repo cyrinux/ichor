@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -49,6 +50,7 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.design.IchorAlertDialog
 import name.levis.ichor.ui.design.IchorButton
+import name.levis.ichor.ui.design.IchorFilterChip
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import name.levis.ichor.ui.design.IchorTextButton
 import name.levis.ichor.ui.kubeauth.openInBrowser
@@ -61,13 +63,16 @@ private const val MAX_KEY_FILE_BYTES = 64 * 1024
 
 /**
  * The service account key (pasted, masked, or read from a file: only its email and project are
- * shown), the custom role to give it, a test, then sealed under its project id.
+ * shown) or a Google-account sign-in, the custom role to give it, a test, then sealed under its
+ * project id.
  */
 @Composable
-internal fun GCPKeyDialog(vm: GCPCreateViewModel, onDismiss: () -> Unit) {
+internal fun GCPAccountDialog(vm: GCPCreateViewModel, onDismiss: () -> Unit) {
     val colors = LocalStatusColors.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var googleAccount by remember { mutableStateOf(false) }
+    var accountReady by remember { mutableStateOf<Pair<String, GCPCheck>?>(null) }
     var key by remember { mutableStateOf("") }
     var check by remember { mutableStateOf<UiState<GCPCheck>?>(null) }
     var saveFailed by remember { mutableStateOf(false) }
@@ -99,14 +104,31 @@ internal fun GCPKeyDialog(vm: GCPCreateViewModel, onDismiss: () -> Unit) {
 
     IchorAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.gcp_add_key)) },
+        title = { Text(stringResource(R.string.gcp_add_account)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.gcp_key_warning), color = colors.warn, style = MaterialTheme.typography.bodySmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(false to R.string.gcp_signin_option_key, true to R.string.gcp_signin_option_google).forEach { (google, label) ->
+                        IchorFilterChip(
+                            selected = googleAccount == google,
+                            onClick = {
+                                googleAccount = google
+                                accountReady = null
+                            },
+                            label = { Text(stringResource(label)) },
+                        )
+                    }
+                }
                 MutedText(stringResource(R.string.gcp_role_hint))
                 IchorOutlinedButton(onClick = { scope.launch { copyToClipboard(context, roleTitle, vm.role(identity?.projectId.orEmpty())) } }) {
                     Text(roleTitle)
                 }
+                if (googleAccount) {
+                    GoogleAccountSide(vm) { credential, check -> accountReady = if (credential != null && check != null) credential to check else null }
+                    if (saveFailed) NotSaved()
+                    return@Column
+                }
+                Text(stringResource(R.string.gcp_key_warning), color = colors.warn, style = MaterialTheme.typography.bodySmall)
                 // Masked: the pasted text holds the private key, and is never shown back.
                 OutlinedTextField(
                     value = key,
@@ -140,29 +162,38 @@ internal fun GCPKeyDialog(vm: GCPCreateViewModel, onDismiss: () -> Unit) {
                         ErrorBox(state.message, ::runTest)
                         GCPActivationLink(state.message)
                     }
-                    is UiState.Loaded -> CheckResult(state.data)
+                    is UiState.Loaded -> GCPCheckResult(state.data)
                 }
-                if (saveFailed) Text(stringResource(R.string.hetzner_token_not_saved), color = colors.bad, style = MaterialTheme.typography.bodySmall)
+                if (saveFailed) NotSaved()
             }
         },
         confirmButton = {
+            // What the test passed: the key, or the sign-in (renewed by the core when it says so).
+            val ready = if (googleAccount) accountReady else tested?.let { credential() to it }
+            val readyCheck = ready?.second
             IchorButton(
                 onClick = {
-                    val account = tested?.project.orEmpty()
+                    val (json, passed) = ready ?: return@IchorButton
                     scope.launch {
-                        if (vm.save(account, credential())) onDismiss() else saveFailed = true
+                        if (vm.save(passed.project, json)) onDismiss() else saveFailed = true
                     }
                 },
-                enabled = tested != null && tested.project.isNotBlank() && (tested.canCreate || !tested.checked),
+                enabled = readyCheck != null && readyCheck.project.isNotBlank() && (readyCheck.canCreate || !readyCheck.checked),
             ) { Text(stringResource(R.string.hetzner_save)) }
         },
         dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
+/** The store could not seal the key or sign-in. */
+@Composable
+private fun NotSaved() {
+    Text(stringResource(R.string.hetzner_token_not_saved), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
+}
+
 /** What Test said: may create, may not (with the permissions to grant), or could not tell. */
 @Composable
-private fun CheckResult(data: GCPCheck) {
+internal fun GCPCheckResult(data: GCPCheck) {
     val colors = LocalStatusColors.current
     val missing = data.missing.joinToString(", ")
     Text(

@@ -310,7 +310,7 @@ func TestGCPErrorsCarryNoSecret(t *testing.T) {
 	}
 
 	refusal := &gcpError{action: "compute.instances.create", reason: gcpReasonForbidden, status: http.StatusForbidden}
-	if refusal.Error() != "Google Cloud refused compute.instances.create: grant the printed role to the service account" {
+	if refusal.Error() != "Google Cloud refused compute.instances.create: grant the printed role to the service account (or the signed-in account)" {
 		t.Errorf("refusal = %q", refusal.Error())
 	}
 
