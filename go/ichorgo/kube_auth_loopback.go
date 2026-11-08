@@ -95,7 +95,7 @@ func stopLoopback(srv *http.Server, ln net.Listener) func() {
 		err := srv.Shutdown(ctx)
 
 		_ = srv.Close() //nolint:errcheck
-		_ = ln.Close()  //nolint:errcheck
+		_ = ln.Close() //nolint:errcheck
 
 		// A stuck handler is closed at once after the deadline, so Shutdown can still return
 		// nothing here: a stop that took the whole budget without a clean early return was
