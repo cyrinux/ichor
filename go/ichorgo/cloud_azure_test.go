@@ -303,7 +303,7 @@ func TestAzureErrorsCarryNoSecret(t *testing.T) {
 	}
 
 	refusal := &azureError{action: "Microsoft.Compute/virtualMachines/write", code: azureCodeAuthorizationFailed, status: http.StatusForbidden}
-	if !strings.Contains(refusal.Error(), "Azure refused Microsoft.Compute/virtualMachines/write: give the service principal the printed role") {
+	if !strings.Contains(refusal.Error(), "Azure refused Microsoft.Compute/virtualMachines/write: give the service principal (or the signed-in account) the printed role") {
 		t.Errorf("refusal = %q", refusal.Error())
 	}
 }

@@ -53,6 +53,7 @@ type fakeARM struct {
 	slowDelete        bool // an accepted delete never finishes
 	onRunning         func()
 	helper            *fakeAzureHelper // the image run's side, nil for a VM create
+	user              *fakeAzureUser   // the Microsoft-account side, nil for a service principal
 
 	tokenForms   []url.Values
 	unauthorized int
@@ -112,10 +113,21 @@ func (f *fakeARM) handle(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case strings.HasSuffix(path, "/v2.0/.well-known/openid-configuration"):
 		tenant := strings.Split(path, "/")[1]
-		armJSON(w, http.StatusOK, map[string]string{"issuer": f.url + "/" + tenant + "/v2.0", "token_endpoint": f.url + "/" + tenant + "/oauth2/v2.0/token"})
+		armJSON(w, http.StatusOK, map[string]string{
+			"issuer": f.url + "/" + tenant + "/v2.0", "token_endpoint": f.url + "/" + tenant + "/oauth2/v2.0/token",
+			"device_authorization_endpoint": f.url + "/" + tenant + "/oauth2/v2.0/devicecode",
+		})
+
+		return
+	case strings.HasSuffix(path, "/oauth2/v2.0/devicecode") && f.user != nil:
+		f.user.deviceCode(f, w, r)
 
 		return
 	case strings.HasSuffix(path, "/oauth2/v2.0/token"):
+		if f.user != nil && f.user.handlesToken(f, w, r) {
+			return
+		}
+
 		f.token(w, r)
 
 		return

@@ -125,7 +125,11 @@ var cloudCommands = []command{
 		return "", errors.New("usage: aws test|options|policy|price TYPE|estimate|image|create|signin|network …")
 	}},
 	{name: "azure", args: "test|options|role [RG]|price LOCATION SIZE|estimate ARCH LOCATION|image TEMPLATE ARCH RG LOCATION SUBNET_ID NSG_ID|- -yes|" +
-		"create TEMPLATE ROLE HOSTNAME DISK RG LOCATION SIZE IMAGE_ID SUBNET_ID NSG_ID|- -yes", run: func(e env) (string, error) {
+		"create TEMPLATE ROLE HOSTNAME DISK RG LOCATION SIZE IMAGE_ID SUBNET_ID NSG_ID|- -yes|signin [TENANT [SUBSCRIPTION_ID]]", run: func(e env) (string, error) {
+		if flag.Arg(1) == "signin" {
+			return azureSignIn()
+		}
+
 		credJSON, err := json.Marshal(map[string]string{
 			"tenantId": os.Getenv("AZURE_TENANT_ID"), "clientId": os.Getenv("AZURE_CLIENT_ID"), "clientSecret": os.Getenv("AZURE_CLIENT_SECRET"),
 			"subscriptionId": os.Getenv("AZURE_SUBSCRIPTION_ID"), "location": os.Getenv("AZURE_LOCATION"),
@@ -151,7 +155,7 @@ var cloudCommands = []command{
 			return azureCreate(e, string(credJSON))
 		}
 
-		return "", errors.New("usage: azure test|options|role [RG]|price LOCATION SIZE|estimate|image|create …")
+		return "", errors.New("usage: azure test|options|role [RG]|price LOCATION SIZE|estimate|image|create|signin …")
 	}},
 	{name: "gcp", args: "test|options|role|price ZONE TYPE|estimate ARCH ZONE|image TEMPLATE ARCH ZONE SUBNET -yes|" +
 		"create TEMPLATE ROLE HOSTNAME DISK PROJECT ZONE TYPE IMAGE SUBNET -yes", run: func(e env) (string, error) {
@@ -412,6 +416,65 @@ func awsSignIn() (string, error) {
 	}
 
 	return "signed in as " + chosen.Arn + " (account " + chosen.Account + ")", nil
+}
+
+// azureSignIn runs the Microsoft-account sign-in of the VM create: the code and link, the wait
+// for the browser, the subscriptions; with SUBSCRIPTION_ID, the credential bound to it is tested.
+// The credential JSON (the refresh token) is never printed, and nothing is written.
+func azureSignIn() (string, error) {
+	if flag.NArg() > 4 {
+		return "", errors.New("usage: azure signin [TENANT [SUBSCRIPTION_ID]]")
+	}
+
+	cred, err := json.Marshal(map[string]string{"tenantId": flag.Arg(2), "clientId": os.Getenv("AZURE_CLIENT_ID")})
+	if err != nil {
+		return "", err
+	}
+
+	var start struct {
+		VerificationURI string `json:"verificationUri"`
+		UserCode        string `json:"userCode"`
+		Credential      string `json:"credential"`
+	}
+
+	if err := probeJSON(ichorgo.AzureSignInStart(string(cred)))(&start); err != nil {
+		return "", err
+	}
+
+	fmt.Fprintf(os.Stderr, "open %s and enter the code %s\n", start.VerificationURI, start.UserCode)
+
+	var finish struct {
+		Credential    string          `json:"credential"`
+		Account       string          `json:"account"`
+		Subscriptions json.RawMessage `json:"subscriptions"`
+	}
+
+	if err := probeJSON(ichorgo.AzureSignInFinish(start.Credential))(&finish); err != nil {
+		return "", err
+	}
+
+	if flag.Arg(3) == "" {
+		return "signed in as " + finish.Account + ": " + string(finish.Subscriptions), nil
+	}
+
+	var chosen struct {
+		Credential string `json:"credential"`
+	}
+
+	if err := probeJSON(ichorgo.AzureSignInChoose(finish.Credential, flag.Arg(3)))(&chosen); err != nil {
+		return "", err
+	}
+
+	var test map[string]any
+	if err := probeJSON(ichorgo.AzureTest(chosen.Credential))(&test); err != nil {
+		return "", err
+	}
+
+	delete(test, "credential")
+
+	out, err := json.Marshal(test)
+
+	return string(out), err
 }
 
 // probeJSON decodes a facade result, or passes its error on.

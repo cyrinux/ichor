@@ -88,7 +88,7 @@ type azureError struct {
 func (e *azureError) Error() string {
 	switch e.code {
 	case azureCodeAuthorizationFailed, "LinkedAuthorizationFailed":
-		return "Azure refused " + e.action + ": give the service principal the printed role on the resource group"
+		return "Azure refused " + e.action + ": give the service principal (or the signed-in account) the printed role on the resource group"
 	case "InvalidAuthenticationToken", "ExpiredAuthenticationToken", "AuthenticationFailed":
 		return "Azure: the token expired: sign in again"
 	case azureCodeBadPrincipal:
@@ -117,10 +117,13 @@ type azureClient struct {
 	resourceGroup, location string
 	token                   string
 	expiry                  time.Time
+	// user is the Microsoft-account sign-in (cloud_azure_signin.go), nil for a service principal.
+	user *azureUser
 }
 
 // azureCredential is credJSON: {"tenantId","clientId","clientSecret","subscriptionId",
-// "environment"}, plus the optional "resourceGroup" and "location".
+// "environment"}, plus the optional "resourceGroup" and "location"; a Microsoft-account sign-in
+// has "kind":"user" and a refresh token instead of the secret.
 type azureCredential struct {
 	TenantID       string `json:"tenantId"`
 	ClientID       string `json:"clientId"`
@@ -129,6 +132,7 @@ type azureCredential struct {
 	Environment    string `json:"environment"`
 	ResourceGroup  string `json:"resourceGroup"`
 	Location       string `json:"location"`
+	azureUserCredential
 }
 
 func parseAzureCredential(credJSON string) (azureCredential, error) {
@@ -152,6 +156,10 @@ func newAzureClient(credJSON string) (*azureClient, error) {
 	c, err := parseAzureCredential(credJSON)
 	if err != nil {
 		return nil, err
+	}
+
+	if c.isUser() {
+		return newAzureUserClient(c)
 	}
 
 	tenant, clientID, subscription := strings.TrimSpace(c.TenantID), strings.TrimSpace(c.ClientID), strings.TrimSpace(c.SubscriptionID)
@@ -185,7 +193,12 @@ func (c *azureClient) scope() string { return "https://" + azureARMHosts[c.envir
 func (c *azureClient) scrub(message string) string {
 	message = azureObjectPattern.ReplaceAllString(message, "client …")
 
-	for _, secret := range []string{c.clientSecret, c.token} {
+	secrets := []string{c.clientSecret, c.token}
+	if c.user != nil {
+		secrets = append(secrets, c.user.cred.RefreshToken)
+	}
+
+	for _, secret := range secrets {
 		if secret != "" {
 			message = strings.ReplaceAll(message, secret, "…")
 		}
@@ -205,6 +218,10 @@ func (c *azureClient) scrub(message string) string {
 func (c *azureClient) mint(ctx context.Context) error {
 	if c.token != "" && time.Until(c.expiry) > tokenRefreshMargin {
 		return nil
+	}
+
+	if c.user != nil {
+		return c.mintUser(ctx)
 	}
 
 	o := &oidcMethod{method: authAzure, issuer: c.authority, clientID: c.clientID, clientSecret: c.clientSecret, tls: azureTLS()}
@@ -605,10 +622,14 @@ type azureTestResult struct {
 	SubscriptionName string `json:"subscriptionName"`
 	CanCreate        bool   `json:"canCreate"`
 	Checked          bool   `json:"checked"`
+	// Account is the signed-in Microsoft account, "" for a service principal.
+	Account string `json:"account,omitempty"`
+	// Credential is the credential JSON to seal again when the call rotated its refresh token.
+	Credential string `json:"credential,omitempty"`
 }
 
 // AzureTest checks a service principal. JSON: {"tenant","subscription","subscriptionName",
-// "canCreate","checked"}: a token for ARM, the subscription (refused when disabled), then the
+// "canCreate","checked","account","credential"}: a token for ARM, the subscription (refused when disabled), then the
 // principal's permissions on credJSON's "resourceGroup" (else the subscription) matched against
 // the writes a run makes; checked false when the listing cannot be read or is empty. Azure has
 // no dry run: this reads only, and creates nothing.
@@ -636,13 +657,15 @@ func AzureTest(credJSON string) (out string, err error) {
 		return "", fmt.Errorf("the subscription %s is %s: Azure creates nothing in it", sub.DisplayName, strings.ToLower(sub.State))
 	}
 
-	result := azureTestResult{Tenant: c.tenant, Subscription: c.subscription, SubscriptionName: sub.DisplayName}
+	result := azureTestResult{Tenant: c.tenant, Subscription: c.subscription, SubscriptionName: sub.DisplayName, Account: c.account()}
 
 	perms, err := c.permissions(ctx, c.resourceGroup)
 	if err == nil && len(perms) > 0 {
 		result.Checked = true
 		result.CanCreate = missingAction(perms, azureCreateActions(false)) == ""
 	}
+
+	result.Credential = c.updated()
 
 	return toJSON(result)
 }
