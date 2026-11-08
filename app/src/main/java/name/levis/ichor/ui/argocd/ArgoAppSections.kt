@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.argocd
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,11 +35,24 @@ import name.levis.ichor.model.shortRevision
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
 
-/** A pod that is not ready next to the app: name, status, node, and a warning when Talos says the node is down. */
+/**
+ * A pod that is not ready next to the app: name, status, node, and a warning when Talos says the
+ * node is down. [onOpen] (null: no tap) opens the pod's logs and actions; [trailing] ends the row.
+ */
 @Composable
-fun UnhealthyPodRow(pod: KubePod, nodeDown: Boolean) {
+fun UnhealthyPodRow(
+    pod: KubePod,
+    nodeDown: Boolean,
+    onOpen: (() -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+) {
     val colors = LocalStatusColors.current
-    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    val tap = if (onOpen == null) {
+        Modifier
+    } else {
+        Modifier.clickable(onClickLabel = stringResource(R.string.pod_open), role = Role.Button, onClick = onOpen)
+    }
+    Row(Modifier.fillMaxWidth().then(tap).padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(8.dp).background(if (pod.transitional) colors.warn else colors.bad, CircleShape))
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
             Text(pod.name, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -56,6 +71,7 @@ fun UnhealthyPodRow(pod: KubePod, nodeDown: Boolean) {
                 modifier = Modifier.padding(start = 4.dp),
             )
         }
+        trailing?.invoke()
     }
 }
 

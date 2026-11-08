@@ -205,10 +205,12 @@ private struct AWSIdentityCenterSections: View {
                 "Signs in as aws sso login does: nothing long-lived is stored. The permission set of the role needs the actions of the policy above."
             )
             .font(.footnote).foregroundStyle(.secondary)
+            // On this row, always shown: a List gives a Section's modifiers to each of its rows,
+            // so the form rows leaving for the code screen would cancel the sign-in just started.
+            // The sheet closed or switched to keys: the wait for the browser ends.
+            .onDisappear { cancel() }
             stepRows
         }
-        // The sheet closed or switched to keys: the wait for the browser ends.
-        .onDisappear { cancel() }
     }
 
     @ViewBuilder private var stepRows: some View {

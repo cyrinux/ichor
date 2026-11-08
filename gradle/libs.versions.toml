@@ -1,5 +1,5 @@
 [versions]
-agp = "9.5.0"
+agp = "9.5.1"
 kotlin = "2.4.21"
 composeBom = "2026.09.00"
 # Ahead of the BOM for the Material 3 Expressive APIs; back to the BOM once one carries 1.5.0.
@@ -25,7 +25,7 @@ aboutLibraries = "15.3.0"
 billing = "9.1.0"
 appUpdate = "2.1.0"
 playServicesAuth = "22.0.0"
-yubikit = "3.2.1"
+yubikit = "3.3.0"
 slf4j = "2.0.20"
 # Wear OS: the watch app (:wear) and the phone's Data Layer sync (Play build only).
 playServicesWearable = "20.0.1"

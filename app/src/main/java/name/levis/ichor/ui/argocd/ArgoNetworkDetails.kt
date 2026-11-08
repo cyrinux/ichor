@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Computer
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.OpenInBrowser
+import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -49,12 +50,14 @@ data class ArgoNetActions(
     val onNode: ((NodeOverview, Int) -> Unit)? = null,
     /** Asks to delete the pod; null while a deletion runs or for anything but a pod. */
     val onDeletePod: (() -> Unit)? = null,
+    /** Opens a pod (namespace, name) where its logs and actions are; null where nothing can. */
+    val onOpenPod: ((String, String) -> Unit)? = null,
 )
 
 /**
  * The tapped box under the graph: kind, namespace/name, health and detail, with what can be
- * done from here: a host opens in the browser, a pod leads to its node's containers (and their
- * logs) or is deleted, a node opens its detail screen.
+ * done from here: a host opens in the browser, a pod opens its logs and actions, leads to its
+ * node's containers or is deleted, a node opens its detail screen.
  */
 @Composable
 fun ArgoNetDetails(node: NetMapNode, podNode: String?, actions: ArgoNetActions, onClose: () -> Unit, modifier: Modifier = Modifier) {
@@ -104,6 +107,10 @@ private fun DetailActions(node: NetMapNode, actions: ArgoNetActions) {
     FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (node.kind == NetMapNode.HOST && node.url.isNotEmpty()) {
             Action(Icons.Outlined.OpenInBrowser, stringResource(R.string.argo_net_open)) { runCatching { uri.openUri(node.url) } }
+        }
+        val openPod = actions.onOpenPod
+        if (node.kind == NetMapNode.POD && openPod != null) {
+            Action(Icons.Outlined.Widgets, stringResource(R.string.pod_open)) { openPod(node.namespace, node.name) }
         }
         if (node.kind == NetMapNode.POD && target != null && onNode != null) {
             Action(Icons.AutoMirrored.Outlined.ListAlt, stringResource(R.string.argo_net_pod_containers, target.hostname)) { onNode(target, NODE_PODS_TAB) }

@@ -115,7 +115,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
     ) { entry ->
         val addr = entry.arguments?.getString("addr").orEmpty()
         val host = entry.arguments?.getString("host") ?: addr
-        CompositionLocalProvider(LocalKubeLinks provides kubeLinks) {
+        CompositionLocalProvider(LocalKubeLinks provides kubeLinks, LocalOpenPod provides nav::openPod) {
             NodeTabsScreen(
                 node = addr,
                 hostname = host,

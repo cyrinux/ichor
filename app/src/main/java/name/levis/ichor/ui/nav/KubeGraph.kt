@@ -18,11 +18,9 @@ import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.PromLink
-import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.shareTarget
 import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.ui.workloads.PodPullLinks
-import name.levis.ichor.model.kubeFocus
 import name.levis.ichor.ui.alerts.AlertObjectLinks
 import name.levis.ichor.ui.alerts.AlertsScreen
 import name.levis.ichor.ui.apihealth.ApiHealthScreen
@@ -156,7 +154,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             args?.getString("name").orEmpty(),
         )
         RecordOpened(app, focus.shareTarget(), focus.name, focus.namespace)
-        CompositionLocalProvider(LocalKubeLinks provides kubeLinks) {
+        CompositionLocalProvider(LocalKubeLinks provides kubeLinks, LocalOpenPod provides nav::openPod) {
             name.levis.ichor.ui.workloads.KubernetesScreen(
                 focus = focus,
                 onBack = { nav.popBackStack() },
@@ -297,7 +295,7 @@ private const val REGISTRY_MIRROR_SNIPPET = "registry_mirror"
  * kubeconfig, which has no node screen).
  */
 private fun alertLinks(nav: NavHostController, app: TalosApp) = AlertObjectLinks(
-    onPod = { ns, pod -> ShareTarget.pod(ns, pod).kubeFocus?.let { nav.navigate(Routes.workloads(it)) } },
+    onPod = nav::openPod,
     onNamespace = { ns -> nav.navigate(Routes.workloads(KubeFocus(0, namespace = ns))) },
     onNode = { name ->
         if (app.configRepository.config.value?.activeIsKube == true) {

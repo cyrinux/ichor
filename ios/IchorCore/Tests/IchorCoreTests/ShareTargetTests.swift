@@ -66,6 +66,12 @@ final class ShareTargetTests: XCTestCase {
         XCTAssertNil(ShareTarget.argoApp(namespace: "argocd", name: "guestbook").kubeFocus)
     }
 
+    func testPodFocusScopesToTheNamespaceAndMatchesThePodLink() {
+        let focus = KubeFocus.pod(namespace: "shop", name: "cart-7d9f-x2k")
+        XCTAssertEqual(focus, KubeFocus(tab: .pods, id: "shop/cart-7d9f-x2k", namespace: "shop", name: "cart-7d9f-x2k"))
+        XCTAssertEqual(focus, ShareTarget.pod(namespace: "shop", name: "cart-7d9f-x2k").kubeFocus)
+    }
+
     func testDataTargetNamesItsTabByCatalogID() throws {
         let json = String(decoding: try JSONEncoder().encode(ShareTarget.data(.cnpg)), as: UTF8.self)
         XCTAssertTrue(json.contains(#""kind":"cloudnative-pg""#))

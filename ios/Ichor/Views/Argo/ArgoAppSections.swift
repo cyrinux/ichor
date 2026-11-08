@@ -329,7 +329,8 @@ struct ArgoOperationSection: View {
     }
 }
 
-/// Pods of the app's namespace that are not ready, those on a node that is down first.
+/// Pods of the app's namespace that are not ready, those on a node that is down first; each
+/// opens its logs and actions.
 struct ArgoPodsSection: View {
     let pods: [KubePod]
     let downNodes: Set<String>
@@ -337,33 +338,39 @@ struct ArgoPodsSection: View {
     var body: some View {
         Section("Pods not ready") {
             ForEach(pods.sorted { downNodes.contains($0.node) && !downNodes.contains($1.node) }) { pod in
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 8) {
-                        Circle().fill(pod.transitional ? attentionColor : .red).frame(width: 8, height: 8)
-                            .accessibilityHidden(true)
-                        Text(verbatim: pod.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
-                    }
-                    Text(
-                        verbatim: [
-                            pod.status, String(localized: "\(pod.ready)/\(pod.containers) ready"),
-                            pod.restarts > 0 ? String(localized: "\(pod.restarts) restarts") : nil,
-                        ]
-                        .compactMap { $0 }.joined(separator: " · ")
-                    )
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    if !pod.node.isEmpty {
-                        Text(
-                            downNodes.contains(pod.node)
-                                ? String(localized: "\(pod.node) is not ready") : String(localized: "on \(pod.node)")
-                        )
-                        .font(.caption)
-                        .foregroundStyle(downNodes.contains(pod.node) ? Color.red : Color.secondary)
-                    }
+                PodLink(pod: pod) {
+                    row(pod)
                 }
-                .accessibilityElement(children: .combine)
             }
         }
+    }
+
+    private func row(_ pod: KubePod) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 8) {
+                Circle().fill(pod.transitional ? attentionColor : .red).frame(width: 8, height: 8)
+                    .accessibilityHidden(true)
+                Text(verbatim: pod.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
+            }
+            Text(
+                verbatim: [
+                    pod.status, String(localized: "\(pod.ready)/\(pod.containers) ready"),
+                    pod.restarts > 0 ? String(localized: "\(pod.restarts) restarts") : nil,
+                ]
+                .compactMap { $0 }.joined(separator: " · ")
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            if !pod.node.isEmpty {
+                Text(
+                    downNodes.contains(pod.node)
+                        ? String(localized: "\(pod.node) is not ready") : String(localized: "on \(pod.node)")
+                )
+                .font(.caption)
+                .foregroundStyle(downNodes.contains(pod.node) ? Color.red : Color.secondary)
+            }
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 

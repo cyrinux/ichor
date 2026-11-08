@@ -232,10 +232,12 @@ private struct AzureMicrosoftAccountSections: View {
                 "Signs in as az login --use-device-code does, with Azure CLI's public client unless you enter your own. Assign the role above to your account or one of its groups on the resource group."
             )
             .font(.footnote).foregroundStyle(.secondary)
+            // On this row, always shown: a List gives a Section's modifiers to each of its rows,
+            // so the form rows leaving for the code screen would cancel the sign-in just started.
+            // The sheet closed or switched to a principal: the wait for the browser ends.
+            .onDisappear { cancel() }
             stepRows
         }
-        // The sheet closed or switched to a principal: the wait for the browser ends.
-        .onDisappear { cancel() }
     }
 
     @ViewBuilder private var stepRows: some View {

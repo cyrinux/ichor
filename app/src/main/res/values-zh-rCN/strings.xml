@@ -2844,6 +2844,7 @@
     <string name="argo_net_open">在浏览器中打开</string>
     <string name="argo_net_pod_containers">%1$s 上的容器</string>
     <string name="argo_net_open_node">打开节点</string>
+    <string name="pod_open">打开 Pod</string>
     <string name="argo_net_pod_delete_text">它将在宽限期后从 %1$s 中移除；如有控制器，控制器会启动一个新的。</string>
     <string name="argo_net_runs_on">运行于 %1$s</string>
     <string name="argo_net_managed">由此应用管理</string>

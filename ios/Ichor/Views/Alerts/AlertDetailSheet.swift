@@ -142,7 +142,7 @@ struct AlertDetailSheet: View {
                 if canOpenKube && !namespace.isEmpty && !pod.isEmpty {
                     let podID = "\(namespace)/\(pod)"
                     Button {
-                        open(.kubernetes(KubeFocus(tab: .pods, id: podID, namespace: namespace, name: pod)))
+                        open(.pod(namespace: namespace, name: pod))
                     } label: {
                         Label(String(localized: "Pod \(podID)"), systemImage: "cube")
                     }

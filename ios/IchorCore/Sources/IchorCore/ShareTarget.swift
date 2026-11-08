@@ -191,7 +191,7 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         switch target {
         case .workloads: KubeFocus(tab: KubeFocus.Tab(rawValue: tab) ?? .workloads)
         case .workload: KubeFocus(tab: .workloads, id: "\(kind)/\(namespace)/\(name)", namespace: namespace, name: name)
-        case .pod: KubeFocus(tab: .pods, id: "\(namespace)/\(name)", namespace: namespace, name: name)
+        case .pod: KubeFocus.pod(namespace: namespace, name: name)
         case .cronJob: KubeFocus(tab: .cronJobs, id: "\(namespace)/\(name)", namespace: namespace, name: name)
         default: nil
         }
@@ -225,6 +225,12 @@ public struct KubeFocus: Hashable, Sendable {
         self.id = id
         self.namespace = namespace
         self.name = name
+    }
+
+    /// The Pods tab on pod `name` of `namespace`: the list scoped to the namespace, searched for
+    /// the name, its logs open (where any screen that names a pod leads).
+    public static func pod(namespace: String, name: String) -> KubeFocus {
+        KubeFocus(tab: .pods, id: "\(namespace)/\(name)", namespace: namespace, name: name)
     }
 }
 

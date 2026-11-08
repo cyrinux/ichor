@@ -6,13 +6,13 @@ require (
 	filippo.io/age v1.3.2
 	github.com/ProtonMail/gopenpgp/v3 v3.5.2
 	github.com/SherClockHolmes/webpush-go v1.4.0
-	github.com/cosi-project/runtime v1.16.4
+	github.com/cosi-project/runtime v1.17.0
 	github.com/fluxcd/pkg/envsubst v1.9.0
-	github.com/gopacket/gopacket v1.7.4
+	github.com/gopacket/gopacket v1.7.5
 	github.com/siderolabs/crypto v0.6.5
 	github.com/siderolabs/go-api-signature v0.3.13
 	github.com/siderolabs/talos/pkg/machinery v1.14.4
-	go.yaml.in/yaml/v4 v4.0.0-rc.6
+	go.yaml.in/yaml/v4 v4.0.0-rc.9
 	golang.org/x/crypto v0.58.0
 	golang.org/x/net v0.62.0
 	google.golang.org/grpc v1.85.0

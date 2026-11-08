@@ -3111,6 +3111,7 @@
     <string name="argo_net_open">Открыть в браузере</string>
     <string name="argo_net_pod_containers">Контейнеры на %1$s</string>
     <string name="argo_net_open_node">Открыть узел</string>
+    <string name="pod_open">Открыть под</string>
     <string name="argo_net_pod_delete_text">Он будет удалён из %1$s по истечении периода корректного завершения; его контроллер, если он есть, запустит новый.</string>
     <string name="argo_net_runs_on">Работает на %1$s</string>
     <string name="argo_net_managed">Управляется этим приложением</string>

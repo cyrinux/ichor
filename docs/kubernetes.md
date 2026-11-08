@@ -90,6 +90,11 @@ the reason in the menu, and TalkBack lists every action on the row. A Kubernetes
 to Cordon (or Uncordon) and long-presses to that, Drain…, Taints and labels… and, with the setting
 on, the debug shell; a tap does what it did.
 
+A pod named on another screen (an Argo CD or Flux app, the network map, …) opens here with its
+log sheet: the Pods tab, scoped to its namespace and searched for its name, with the actions
+above one tap away. On Android a Flux app's pod row opens the pod; its node stays one tap away
+on the row's trailing button.
+
 When kube-green has the namespace asleep, a workload sheet says so on the row (with its wake-up
 time) and warns before scaling a workload or resuming a CronJob, since kube-green restores the
 replicas it saved at the next wake-up and re-suspends the CronJob at the next sleep; a cluster
