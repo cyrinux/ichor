@@ -40,7 +40,7 @@ func (f *fakeListener) Accept() (net.Conn, error) {
 
 func (f *fakeListener) Close() error { return f.closeErr }
 
-func (f *fakeListener) Addr() net.Addr { return &net.TCPAddr{IP: net.IPv4loopback1, Port: 1} }
+func (f *fakeListener) Addr() net.Addr { return &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 1} }
 
 // TestLoopbackStopDiagnostics is CYR-597: when the graceful close does not work, the ring
 // must tell the three causes apart - Shutdown returned an error, the deadline ran out, or

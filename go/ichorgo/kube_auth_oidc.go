@@ -604,7 +604,6 @@ func (m *oidcMethod) finish(state kubeAuthState, t oidcTokens, nonce string) (ku
 	return m.session(state, t, bearer, expiry, claims), nil
 }
 
-
 type oidcDeviceAnswer struct {
 	DeviceCode              string `json:"device_code"`
 	UserCode                string `json:"user_code"`
