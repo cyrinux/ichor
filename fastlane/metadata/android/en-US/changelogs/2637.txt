@@ -1,0 +1,8 @@
+• Match NetBird, Twingate, ngrok and Cloudflare Tunnel Services
+• The guided AWS network on Android and iOS, and its docs
+• A guided default network for an AWS node, opened to nothing but the phone (Go core)
+• A network map per exposed address for Tailscale
+• The sign-in loopback server lets its answer finish before it closes
+• List the network-map providers in Settings and pass their tests
+• Gofmt the guided network result
+• Word the map's root-cause banner from the enum's raw value
