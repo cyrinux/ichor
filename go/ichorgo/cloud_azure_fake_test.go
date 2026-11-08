@@ -264,7 +264,7 @@ func (f *fakeARM) static(r *http.Request) (any, bool) {
 		return map[string]any{"id": id, "name": name, "location": location, "properties": props}
 	}
 	nsg := func(id, name, location, source string) map[string]any {
-		rule := map[string]any{"properties": map[string]any{
+		rule := map[string]any{"name": "talos-api", "properties": map[string]any{
 			"direction": "Inbound", "access": "Allow", "sourceAddressPrefix": source, "destinationPortRanges": []string{"50000-50001", "6443"},
 		}}
 

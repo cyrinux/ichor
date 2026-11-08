@@ -93,6 +93,9 @@ type azureSecurityGroup struct {
 	Name          string `json:"name"`
 	ResourceGroup string `json:"resourceGroup"`
 	WideOpen      bool   `json:"wideOpen"`
+	// WideOpenRule names the rule that opens the Talos API to the world and its source
+	// ("allow-talos from *"), "" when none does.
+	WideOpenRule string `json:"wideOpenRule,omitempty"`
 }
 
 type azureImage struct {
@@ -181,6 +184,7 @@ type azureAPISecurityGroup struct {
 	Location   string `json:"location"`
 	Properties struct {
 		SecurityRules []struct {
+			Name       string `json:"name"`
 			Properties struct {
 				Direction             string   `json:"direction"`
 				Access                string   `json:"access"`
@@ -194,7 +198,11 @@ type azureAPISecurityGroup struct {
 }
 
 // wideOpen: an inbound Allow rule from anywhere reaches the Talos API port.
-func (g azureAPISecurityGroup) wideOpen() bool {
+func (g azureAPISecurityGroup) wideOpen() bool { return g.wideOpenRule() != "" }
+
+// wideOpenRule is the first inbound Allow rule from anywhere that reaches the Talos API port, as
+// "name from source", "" when there is none.
+func (g azureAPISecurityGroup) wideOpenRule() string {
 	for _, r := range g.Properties.SecurityRules {
 		p := r.Properties
 		if !strings.EqualFold(p.Direction, "Inbound") || !strings.EqualFold(p.Access, "Allow") {
@@ -202,15 +210,15 @@ func (g azureAPISecurityGroup) wideOpen() bool {
 		}
 
 		sources := append([]string{p.SourceAddressPrefix}, p.SourceAddressPrefixes...)
-		anywhere := slices.ContainsFunc(sources, func(s string) bool { return s == "*" || strings.EqualFold(s, "Internet") || s == "0.0.0.0/0" })
+		i := slices.IndexFunc(sources, func(s string) bool { return s == "*" || strings.EqualFold(s, "Internet") || s == "0.0.0.0/0" })
 
 		ports := append([]string{p.DestinationPortRange}, p.DestinationPortRanges...)
-		if anywhere && slices.ContainsFunc(ports, func(r string) bool { return azurePortIn(r, azureTalosAPIPort) }) {
-			return true
+		if i >= 0 && slices.ContainsFunc(ports, func(r string) bool { return azurePortIn(r, azureTalosAPIPort) }) {
+			return cmp.Or(r.Name, "a rule") + " from " + sources[i]
 		}
 	}
 
-	return false
+	return ""
 }
 
 // azurePortIn: a port range ("*", "50000", "50000-50001") holds port.
@@ -304,7 +312,7 @@ func azureResourceGroupOf(id string) string {
 // "subscriptions":[{"id","name"}],"locations":[{"name","displayName"}],"resourceGroups":
 // [{"name","location"}],"sizes":[{"name","vcpus","memoryGB","arch","generations"}],"networks":
 // [{"id","name","resourceGroup","location","subnets":[{"id","name","cidr","nsgId","natGateway"}]}],
-// "securityGroups":[{"id","name","resourceGroup","wideOpen"}],"images":[{"id","name",
+// "securityGroups":[{"id","name","resourceGroup","wideOpen","wideOpenRule"}],"images":[{"id","name",
 // "resourceGroup","source","arch","generation","talosVersion","schematic"}],"warnings",
 // "credential"}.
 func AzureOptions(configYAML, contextName, credJSON string) (out string, err error) {
@@ -497,7 +505,8 @@ func (c *azureClient) securityGroups(ctx context.Context, location string, warni
 
 	for _, g := range all {
 		if azureSameLocation(g.Location, location) {
-			out = append(out, azureSecurityGroup{ID: g.ID, Name: g.Name, ResourceGroup: azureResourceGroupOf(g.ID), WideOpen: g.wideOpen()})
+			rule := g.wideOpenRule()
+			out = append(out, azureSecurityGroup{ID: g.ID, Name: g.Name, ResourceGroup: azureResourceGroupOf(g.ID), WideOpen: rule != "", WideOpenRule: rule})
 		}
 	}
 
