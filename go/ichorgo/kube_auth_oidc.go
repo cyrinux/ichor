@@ -591,6 +591,16 @@ func callbackAnswer(cb string) (url.Values, error) {
 // serveLoopback listens on the first free m.listen address and hands each answer with a
 // state to codes; it returns the redirect URI and how to stop.
 func (m *oidcMethod) serveLoopback(ctx context.Context, codes chan<- url.Values) (string, func(), error) {
+	return m.serveLoopbackTo(ctx, codes, "")
+}
+
+// serveLoopbackTo is serveLoopback with a donePage an app-side test can check: what the
+// browser is left with once its redirect is answered (empty: signInDonePage).
+func (m *oidcMethod) serveLoopbackTo(ctx context.Context, codes chan<- url.Values, donePage string) (string, func(), error) {
+	if donePage == "" {
+		donePage = signInDonePage
+	}
+
 	ln, err := listenFirst(ctx, m.listen)
 	if err != nil {
 		return "", nil, err
@@ -606,7 +616,7 @@ func (m *oidcMethod) serveLoopback(ctx context.Context, codes chan<- url.Values)
 		}
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_, _ = io.WriteString(w, signInDonePage)
+		_, _ = io.WriteString(w, donePage)
 
 		select {
 		case codes <- r.URL.Query():
@@ -616,10 +626,7 @@ func (m *oidcMethod) serveLoopback(ctx context.Context, codes chan<- url.Values)
 
 	go func() { _ = srv.Serve(ln) }() //nolint:errcheck
 
-	stop := func() {
-		_ = srv.Close() //nolint:errcheck
-		_ = ln.Close()  //nolint:errcheck
-	}
+	stop := stopLoopback(srv, ln)
 
 	return "http://" + net.JoinHostPort(m.redirectHost, port), stop, nil
 }
@@ -639,6 +646,23 @@ func (m *oidcMethod) finish(state kubeAuthState, t oidcTokens, nonce string) (ku
 	}
 
 	return m.session(state, t, bearer, expiry, claims), nil
+}
+
+// stopLoopback closes a loopback server so that the response being written when the sign-in
+// is received is fully flushed first: Shutdown waits for active handlers to finish their
+// answer, Close would cut the connection and leave the browser with an EOF on a sign-in that
+// worked. A handler stuck on anything else is given a second, then closed at once.
+func stopLoopback(srv *http.Server, ln net.Listener) func() {
+	return func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		if err := srv.Shutdown(ctx); err != nil {
+			_ = srv.Close() //nolint:errcheck
+		}
+
+		_ = ln.Close() //nolint:errcheck
+	}
 }
 
 // listenFirst listens on the first free address of addrs (kubelogin tries them in order).
