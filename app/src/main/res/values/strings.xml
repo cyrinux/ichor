@@ -6356,7 +6356,15 @@
     <string name="azure_title">Create the VM at Azure</string>
     <string name="azure_howto">1. Pick a member to copy, then the new node\'s host name and install disk.\n2. Add a service principal that has the role Ichor prints on the resource group.\n3. Upload the Talos image to the subscription once, from a computer (making it from the phone comes next).\n4. Pick a resource group, the image, a VM size, a subnet and a network security group, then create it: Ichor shows the price first and follows it until the node joins. The phone must reach port 50000 of the VM.</string>
     <string name="azure_howto_omni">1. Add a service principal that has the role Ichor prints on the resource group.\n2. Upload the Talos image for Omni to the subscription once, from a computer (making it from the phone comes next).\n3. Name the VM, then pick a resource group, the image, a VM size, a subnet and a network security group.\n4. Create it: Ichor shows the price first, then follows it until the machine appears in Omni. Allocate it to the cluster.</string>
-    <string name="azure_add_principal">Add an Azure service principal</string>
+    <string name="azure_add_account">Add an Azure account</string>
+    <string name="azure_signin_option_principal">Service principal</string>
+    <string name="azure_signin_option_account">Microsoft account</string>
+    <string name="azure_signin_hint">Signs in as az login --use-device-code does, with Azure CLI\'s public client unless you enter your own. Assign the role above to your account or one of its groups on the resource group.</string>
+    <string name="azure_signin_tenant">Tenant id or domain (empty: any work or school account)</string>
+    <string name="azure_signin_client_id">Client id of a public app registration (empty: Azure CLI\'s)</string>
+    <string name="azure_signin_choose_subscription">Subscription</string>
+    <string name="azure_signin_signed_in">Signed in with a Microsoft account as %1$s</string>
+    <string name="azure_signin_session_note">The sign-in stays sealed on this device and is not in backups. It lasts while you use it (90 days of inactivity by default, set by your administrator); sign in again after it ends.</string>
     <string name="azure_remove">Remove this principal</string>
     <string name="azure_warning">A client secret expires on the date set when it was made and can do what its role allows. It stays sealed on this device and is not in backups.</string>
     <string name="azure_role_hint">Create this custom role (az role definition create) and assign it to the principal on the resource group: only the calls Ichor makes.</string>

@@ -6209,7 +6209,15 @@
     <string name="azure_title">在 Azure 创建虚拟机</string>
     <string name="azure_howto">1. 选择要复制的成员,然后选择新节点的主机名和安装磁盘。\n2. 添加一个在资源组上拥有 Ichor 所显示角色的服务主体。\n3. 从电脑将 Talos 镜像上传到订阅一次(从手机制作将在下一步提供)。\n4. 选择资源组、镜像、VM 大小、子网和网络安全组,然后创建:Ichor 会先显示价格,并跟踪到节点加入。手机必须能访问该 VM 的 50000 端口。</string>
     <string name="azure_howto_omni">1. 添加一个在资源组上拥有 Ichor 所显示角色的服务主体。\n2. 从电脑将用于 Omni 的 Talos 镜像上传到订阅一次(从手机制作将在下一步提供)。\n3. 为 VM 命名,然后选择资源组、镜像、VM 大小、子网和网络安全组。\n4. 创建:Ichor 会先显示价格,然后跟踪到机器出现在 Omni 中。将其分配给集群。</string>
-    <string name="azure_add_principal">添加 Azure 服务主体</string>
+    <string name="azure_add_account">添加 Azure 帐户</string>
+    <string name="azure_signin_option_principal">服务主体</string>
+    <string name="azure_signin_option_account">Microsoft 帐户</string>
+    <string name="azure_signin_hint">与 az login --use-device-code 相同的方式登录，除非你输入自己的客户端，否则使用 Azure CLI 的公共客户端。请在资源组上将上面的角色分配给你的帐户或其所在的组。</string>
+    <string name="azure_signin_tenant">租户 ID 或域名（留空：任意工作或学校帐户）</string>
+    <string name="azure_signin_client_id">公共应用注册的客户端 ID（留空：使用 Azure CLI 的）</string>
+    <string name="azure_signin_choose_subscription">订阅</string>
+    <string name="azure_signin_signed_in">已使用 Microsoft 帐户 %1$s 登录</string>
+    <string name="azure_signin_session_note">登录信息加密保存在此设备上，不包含在备份中。只要你在使用就会一直有效（默认 90 天不活动后失效，由管理员设置）；失效后请重新登录。</string>
     <string name="azure_remove">移除此主体</string>
     <string name="azure_warning">客户端密码会在创建时设定的日期过期,可以执行其角色允许的操作。它密封保存在此设备上,不包含在备份中。</string>
     <string name="azure_role_hint">创建此自定义角色(az role definition create),并在资源组上将其分配给该主体:仅包含 Ichor 发出的调用。</string>

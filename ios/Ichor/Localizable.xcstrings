@@ -1,6 +1,118 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Service principal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dienstprinzipal" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Entidad de servicio" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Principal de service" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Entità servizio" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サービス プリンシパル" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Entidade de serviço" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Субъект-служба" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Субʼєкт служби" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务主体" } }
+      }
+    },
+    "Microsoft account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Microsoft-Konto" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cuenta de Microsoft" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Compte Microsoft" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Account Microsoft" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Microsoft アカウント" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Conta Microsoft" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Учётная запись Microsoft" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Обліковий запис Microsoft" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Microsoft 帐户" } }
+      }
+    },
+    "Add an Azure account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Azure-Konto hinzufügen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir una cuenta de Azure" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter un compte Azure" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi un account Azure" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Azure アカウントを追加" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Adicionar uma conta do Azure" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавить учётную запись Azure" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додати обліковий запис Azure" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加 Azure 帐户" } }
+      }
+    },
+    "Signs in as az login --use-device-code does, with Azure CLI's public client unless you enter your own. Assign the role above to your account or one of its groups on the resource group." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Meldet sich wie az login --use-device-code an, mit dem öffentlichen Client der Azure CLI, sofern du keinen eigenen eingibst. Weise die obige Rolle deinem Konto oder einer seiner Gruppen in der Ressourcengruppe zu." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Inicia sesión como az login --use-device-code, con el cliente público de Azure CLI salvo que introduzcas el tuyo. Asigna el rol de arriba a tu cuenta o a uno de sus grupos en el grupo de recursos." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Connexion comme le fait az login --use-device-code, avec le client public d'Azure CLI sauf si vous saisissez le vôtre. Attribuez le rôle ci-dessus à votre compte ou à l'un de ses groupes sur le groupe de ressources." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Accede come az login --use-device-code, con il client pubblico di Azure CLI a meno che tu non inserisca il tuo. Assegna il ruolo sopra al tuo account o a uno dei suoi gruppi nel gruppo di risorse." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "az login --use-device-code と同じ方法でサインインします。独自のクライアントを入力しない場合は Azure CLI のパブリック クライアントを使います。上のロールをリソース グループ上であなたのアカウントまたはそのグループに割り当ててください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Entra como o az login --use-device-code, com o cliente público da Azure CLI, a menos que você informe o seu. Atribua a função acima à sua conta ou a um dos grupos dela no grupo de recursos." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вход как в az login --use-device-code, с публичным клиентом Azure CLI, если вы не укажете свой. Назначьте роль выше своей учётной записи или одной из её групп в группе ресурсов." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вхід як в az login --use-device-code, з публічним клієнтом Azure CLI, якщо ви не вкажете свій. Призначте роль вище своєму обліковому запису або одній з його груп у групі ресурсів." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "与 az login --use-device-code 相同的方式登录，除非你输入自己的客户端，否则使用 Azure CLI 的公共客户端。请在资源组上将上面的角色分配给你的帐户或其所在的组。" } }
+      }
+    },
+    "Signed in with a Microsoft account as %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mit Microsoft-Konto angemeldet als %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sesión iniciada con una cuenta de Microsoft como %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Connecté avec un compte Microsoft en tant que %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Accesso con account Microsoft come %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Microsoft アカウント %@ でサインイン済み" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Conectado com uma conta Microsoft como %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вход выполнен с учётной записью Microsoft %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вхід виконано з обліковим записом Microsoft %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已使用 Microsoft 帐户 %@ 登录" } }
+      }
+    },
+    "The sign-in stays sealed on this device and is not in backups. It lasts while you use it (90 days of inactivity by default, set by your administrator); sign in again after it ends." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Anmeldung bleibt versiegelt auf diesem Gerät und ist nicht in Backups. Sie gilt, solange du sie nutzt (standardmäßig 90 Tage Inaktivität, von deinem Administrator festgelegt); melde dich danach erneut an." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El inicio de sesión queda sellado en este dispositivo y no está en las copias de seguridad. Dura mientras lo uses (90 días de inactividad por defecto, fijados por tu administrador); vuelve a iniciar sesión cuando termine." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La connexion reste scellée sur cet appareil et n'est pas dans les sauvegardes. Elle dure tant que vous l'utilisez (90 jours d'inactivité par défaut, fixés par votre administrateur) ; reconnectez-vous ensuite." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'accesso resta sigillato su questo dispositivo e non è nei backup. Dura finché lo usi (90 giorni di inattività per impostazione predefinita, fissati dall'amministratore); poi accedi di nuovo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サインインはこのデバイスに封印され、バックアップには含まれません。使っている間は有効です (既定では非アクティブ 90 日、管理者が設定)。期限が切れたら再度サインインしてください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O login fica selado neste dispositivo e não entra nos backups. Ele dura enquanto você o usa (90 dias de inatividade por padrão, definidos pelo seu administrador); entre de novo quando ele terminar." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вход хранится в зашифрованном виде на этом устройстве и не попадает в резервные копии. Он действует, пока вы им пользуетесь (по умолчанию 90 дней бездействия, задаёт администратор); затем войдите снова." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вхід зберігається зашифрованим на цьому пристрої й не потрапляє до резервних копій. Він діє, поки ви ним користуєтеся (типово 90 днів бездіяльності, задає адміністратор); потім увійдіть знову." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "登录信息加密保存在此设备上，不包含在备份中。只要你在使用就会一直有效（默认 90 天不活动后失效，由管理员设置）；失效后请重新登录。" } }
+      }
+    },
+    "Tenant id or domain (empty: any work or school account)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mandanten-ID oder Domäne (leer: jedes Geschäfts- oder Schulkonto)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "ID o dominio del inquilino (vacío: cualquier cuenta profesional o educativa)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "ID ou domaine du locataire (vide : tout compte professionnel ou scolaire)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "ID o dominio del tenant (vuoto: qualsiasi account aziendale o dell'istituto)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "テナント ID またはドメイン (空欄: 任意の職場または学校アカウント)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "ID ou domínio do locatário (vazio: qualquer conta corporativa ou de estudante)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ID или домен клиента (пусто: любая рабочая или учебная учётная запись)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "ID або домен клієнта (порожньо: будь-який робочий або навчальний обліковий запис)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "租户 ID 或域名（留空：任意工作或学校帐户）" } }
+      }
+    },
+    "Client id of a public app registration (empty: Azure CLI's)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Client-ID einer öffentlichen App-Registrierung (leer: die der Azure CLI)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "ID de cliente de un registro de aplicación pública (vacío: el de Azure CLI)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "ID client d'une inscription d'application publique (vide : celui d'Azure CLI)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "ID client di una registrazione app pubblica (vuoto: quello di Azure CLI)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "パブリック アプリ登録のクライアント ID (空欄: Azure CLI のもの)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "ID do cliente de um registro de aplicativo público (vazio: o da Azure CLI)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ID клиента публичной регистрации приложения (пусто: клиент Azure CLI)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "ID клієнта публічної реєстрації застосунку (порожньо: клієнт Azure CLI)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "公共应用注册的客户端 ID（留空：使用 Azure CLI 的）" } }
+      }
+    },
     "Use a network Ichor sets up (recommended)" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1842,20 +1954,6 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "1. Добавьте субъект-службу с ролью, которую выводит Ichor, на группе ресурсов.\n2. Один раз загрузите образ Talos для Omni в подписку с компьютера (создание с телефона появится следующим шагом).\n3. Назовите ВМ, затем выберите группу ресурсов, образ, размер ВМ, подсеть и группу безопасности сети.\n4. Создайте её: Ichor сначала показывает цену, затем следит за ней, пока машина не появится в Omni. Выделите её кластеру." } },
         "uk" : { "stringUnit" : { "state" : "translated", "value" : "1. Додайте субʼєкт-службу з роллю, яку виводить Ichor, на групі ресурсів.\n2. Один раз завантажте образ Talos для Omni у підписку з компʼютера (створення з телефона буде наступним кроком).\n3. Назвіть ВМ, потім виберіть групу ресурсів, образ, розмір ВМ, підмережу та групу безпеки мережі.\n4. Створіть її: Ichor спершу показує ціну, потім стежить за нею, доки машина не зʼявиться в Omni. Виділіть її кластеру." } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 添加一个在资源组上拥有 Ichor 所显示角色的服务主体。\n2. 从电脑将用于 Omni 的 Talos 镜像上传到订阅一次(从手机制作将在下一步提供)。\n3. 为 VM 命名,然后选择资源组、镜像、VM 大小、子网和网络安全组。\n4. 创建:Ichor 会先显示价格,然后跟踪到机器出现在 Omni 中。将其分配给集群。" } }
-      }
-    },
-    "Add an Azure service principal" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Azure-Service-Principal hinzufügen" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir una entidad de servicio de Azure" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter un principal de service Azure" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi un'entità servizio di Azure" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Azure サービスプリンシパルを追加" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Adicionar uma entidade de serviço da Azure" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавить субъект-службу Azure" } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додати субʼєкт-службу Azure" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加 Azure 服务主体" } }
       }
     },
     "Remove this principal" : {

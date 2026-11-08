@@ -84,7 +84,7 @@ type azureUser struct {
 
 // newAzureUserClient is newAzureClient for a signed-in Microsoft account.
 func newAzureUserClient(c azureCredential) (*azureClient, error) {
-	tenant, clientID, subscription := strings.TrimSpace(c.TenantID), cmp.Or(strings.TrimSpace(c.ClientID), azureCLIClientID), strings.TrimSpace(c.SubscriptionID)
+	tenant, clientID, subscription := strings.ToLower(strings.TrimSpace(c.TenantID)), cmp.Or(strings.TrimSpace(c.ClientID), azureCLIClientID), strings.TrimSpace(c.SubscriptionID)
 
 	switch {
 	case c.RefreshToken == "":
@@ -178,7 +178,7 @@ func azureSignInRefusal(t oidcTokens) error {
 	switch d := t.Description; {
 	case strings.Contains(d, "AADSTS50059") || strings.Contains(d, "AADSTS90002"):
 		return errors.New("this tenant is unknown to Azure: enter the tenant id (a personal Microsoft account needs the tenant of its subscription)")
-	case strings.Contains(d, "AADSTS7000218") || strings.Contains(d, "AADSTS70002"):
+	case strings.Contains(d, "AADSTS7000218") || strings.Contains(d, "AADSTS70002:"):
 		return errors.New("the client id was refused: the app registration must allow public client flows")
 	case strings.Contains(d, "AADSTS53003") || strings.Contains(d, "AADSTS50105"):
 		return errors.New("the tenant blocks this client: enter the client id of an app registration it allows")
@@ -233,7 +233,7 @@ func AzureSignInStart(credJSON string) (out string, err error) {
 	}
 
 	c = azureCredential{
-		TenantID: cmp.Or(strings.TrimSpace(c.TenantID), azureAnyWorkTenant), ClientID: cmp.Or(strings.TrimSpace(c.ClientID), azureCLIClientID),
+		TenantID: cmp.Or(strings.ToLower(strings.TrimSpace(c.TenantID)), azureAnyWorkTenant), ClientID: cmp.Or(strings.TrimSpace(c.ClientID), azureCLIClientID),
 		Environment: c.Environment, azureUserCredential: azureUserCredential{Kind: azureKindUser},
 	}
 
@@ -378,7 +378,8 @@ func azureDeviceFinish(ctx context.Context, c azureCredential) (oidcTokens, erro
 }
 
 // azureUserSubscriptions lists the enabled subscriptions the account sees, with the access token
-// the sign-in just got (its tenant's: a subscription of another tenant is reached on Choose).
+// the sign-in just got. That token is the sign-in tenant's, so a subscription the account reaches
+// only as a guest of another tenant is listed when that tenant is entered at the start.
 func azureUserSubscriptions(ctx context.Context, cred azureCredential, token string) ([]azureSubscriptionChoice, error) {
 	c := &azureClient{
 		environment: cred.Environment, arm: strings.TrimSuffix(azureARMEndpoint(cred.Environment), "/"), token: token,
@@ -404,10 +405,12 @@ func azureUserSubscriptions(ctx context.Context, cred azureCredential, token str
 	}
 
 	if len(out) == 0 {
-		return nil, errors.New("this Microsoft account sees no enabled Azure subscription")
+		return nil, errors.New("this Microsoft account sees no enabled Azure subscription in this tenant: enter the tenant id of the subscription")
 	}
 
-	slices.SortFunc(out, func(a, b azureSubscriptionChoice) int { return cmp.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name)) })
+	slices.SortFunc(out, func(a, b azureSubscriptionChoice) int {
+		return cmp.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name))
+	})
 
 	return out, nil
 }

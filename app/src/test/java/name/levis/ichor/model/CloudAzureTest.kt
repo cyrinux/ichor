@@ -177,4 +177,37 @@ class CloudAzureTest {
         assertEquals(JoinPhase.snapshotRun, ImageRunKind.HETZNER_SNAPSHOT.phases)
         assertEquals(JoinPhase.awsImageRun, ImageRunKind.AWS_AMI.phases)
     }
+
+    // An invented Microsoft-account sign-in, as the core returns it (refresh token included).
+    private val signedIn = """
+        {"tenantId":"00000000-0000-0000-0000-000000000001","clientId":"04b07795-8ddb-461a-bbee-02f9e1bf7b46",
+         "subscriptionId":"00000000-0000-0000-0000-000000000000","kind":"user","refreshToken":"r","account":"someone@example.org"}
+    """.trimIndent()
+
+    @Test
+    fun aMicrosoftAccountSignInIsReadWithoutItsToken() {
+        val credential = TalosJson.decodeFromString(AzureCredential.serializer(), signedIn)
+        assertTrue(credential.microsoftAccount)
+        assertEquals("someone@example.org", credential.account)
+        assertFalse(AzureCredential(tenantId = "t", clientId = "c", clientSecret = "s", subscriptionId = "x").microsoftAccount)
+    }
+
+    @Test
+    fun theSignInStepsDecode() {
+        val start = TalosJson.decodeFromString(
+            AzureSignInStart.serializer(),
+            """{"verificationUri":"https://microsoft.com/devicelogin","userCode":"SAMPLE123","expiresIn":900,"credential":"{}"}""",
+        )
+        assertTrue(start.prompt.isDevice)
+        assertEquals("https://microsoft.com/devicelogin", start.prompt.url)
+        assertEquals("SAMPLE123", start.prompt.userCode)
+        val finish = TalosJson.decodeFromString(
+            AzureSignInFinish.serializer(),
+            """{"credential":"{}","account":"someone@example.org","subscriptions":[{"id":"00000000-0000-0000-0000-000000000000","name":"","tenantId":"t"}]}""",
+        )
+        assertEquals("00000000-0000-0000-0000-000000000000", finish.subscriptions.single().label)
+        val check = TalosJson.decodeFromString(AzureCheck.serializer(), """{"subscription":"x","account":"someone@example.org","credential":"{}"}""")
+        assertEquals("{}", check.credential)
+        assertEquals("", TalosJson.decodeFromString(AzureOptions.serializer(), "{}").credential)
+    }
 }

@@ -4,7 +4,9 @@ import Foundation
 
 /// A service principal (az ad sp create-for-rbac's output plus the subscription), sealed on the
 /// device; what the core gets per call. `resourceGroup` scopes Test's permission check and
-/// `location` the options listed; both follow the person's picks.
+/// `location` the options listed; both follow the person's picks. A Microsoft-account sign-in has
+/// `kind` "user" and no secret: its refresh token stays in the JSON the core returns, which the app
+/// seals as it is and never re-encodes from this type (it would drop it; see `edited(_:…)`).
 public struct AzureCredential: Codable, Equatable, Sendable {
     public let tenantId: String
     public let clientId: String
@@ -14,6 +16,8 @@ public struct AzureCredential: Codable, Equatable, Sendable {
     public let environment: String
     public let resourceGroup: String
     public let location: String
+    public var kind = ""
+    public var account = ""
 
     public init(
         tenantId: String, clientId: String, clientSecret: String, subscriptionId: String, environment: String = "",
@@ -30,6 +34,7 @@ public struct AzureCredential: Codable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case tenantId, clientId, clientSecret, subscriptionId, environment, resourceGroup, location
+        case kind, account
     }
 
     public init(from decoder: Decoder) throws {
@@ -41,6 +46,41 @@ public struct AzureCredential: Codable, Equatable, Sendable {
         environment = try c.field(.environment, "")
         resourceGroup = try c.field(.resourceGroup, "")
         location = try c.field(.location, "")
+        kind = try c.field(.kind, "")
+        account = try c.field(.account, "")
+    }
+
+    /// A Microsoft-account sign-in, not a service principal.
+    public var microsoftAccount: Bool { kind == "user" }
+
+    /// `json` with another resource group (when given) and location, every other field (a
+    /// sign-in's refresh token) kept; nil when it is not a JSON object.
+    public static func edited(_ json: String, resourceGroup: String? = nil, location: String) -> String? {
+        guard var object = (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [String: Any] else {
+            return nil
+        }
+        if let resourceGroup { object["resourceGroup"] = resourceGroup }
+        object["location"] = location
+        guard let data = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]) else { return nil }
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    /// `stored` with the refresh token of `updated` (a call's renewed credential), every other
+    /// field of `stored` kept: a resource group or location picked while the call ran stays. nil
+    /// when either is not a JSON object or `updated` has no token.
+    public static func renewed(_ stored: String, from updated: String) -> String? {
+        guard var current = jsonObject(stored), let token = jsonObject(updated)?["refreshToken"] as? String,
+            !token.isEmpty
+        else { return nil }
+        current["refreshToken"] = token
+        guard let data = try? JSONSerialization.data(withJSONObject: current, options: [.sortedKeys]) else {
+            return nil
+        }
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    private static func jsonObject(_ json: String) -> [String: Any]? {
+        (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [String: Any]
     }
 
     /// The same principal for another resource group and location.
@@ -51,15 +91,21 @@ public struct AzureCredential: Codable, Equatable, Sendable {
     }
 }
 
-/// Whose principal this is and whether it may create VMs; `checked` is false when that could not be told.
+/// Whose principal or account this is and whether it may create VMs; `checked` is false when that
+/// could not be told. `account` is the signed-in Microsoft account, "" for a principal; `credential`
+/// is the credential JSON to seal again when the core rotated its refresh token.
 public struct AzureCheck: Decodable, Equatable, Sendable {
     public let tenant: String
     public let subscription: String
     public let subscriptionName: String
     public let canCreate: Bool
     public let checked: Bool
+    public let account: String
+    public let credential: String
 
-    private enum CodingKeys: String, CodingKey { case tenant, subscription, subscriptionName, canCreate, checked }
+    private enum CodingKeys: String, CodingKey {
+        case tenant, subscription, subscriptionName, canCreate, checked, account, credential
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -68,6 +114,8 @@ public struct AzureCheck: Decodable, Equatable, Sendable {
         subscriptionName = try c.field(.subscriptionName, "")
         canCreate = try c.field(.canCreate, false)
         checked = try c.field(.checked, false)
+        account = try c.field(.account, "")
+        credential = try c.field(.credential, "")
     }
 }
 
@@ -83,10 +131,12 @@ public struct AzureOptions: Decodable, Equatable, Sendable {
     public let securityGroups: [AzureSecurityGroup]
     public let images: [AzureImage]
     public let warnings: [String]
+    /// The credential JSON to seal again when the call rotated its refresh token, else "".
+    public let credential: String
 
     private enum CodingKeys: String, CodingKey {
         case subscription, location, subscriptions, locations, resourceGroups, sizes, networks, securityGroups, images
-        case warnings
+        case warnings, credential
     }
 
     // Go encodes empty (nil) slices as null.
@@ -102,6 +152,7 @@ public struct AzureOptions: Decodable, Equatable, Sendable {
         securityGroups = try c.field(.securityGroups, [])
         images = try c.field(.images, [])
         warnings = try c.field(.warnings, [])
+        credential = try c.field(.credential, "")
     }
 
     /// The VM sizes that boot `image` (its architecture and Hyper-V generation), in the core's order.
@@ -431,5 +482,73 @@ public enum AzureDisk {
             return nil
         }
         return value
+    }
+}
+
+/// AzureSignInStart: the code to enter at `verificationUri`, and the credential for the next step.
+public struct AzureSignInStart: Decodable, Equatable, Sendable {
+    public let verificationUri: String
+    public let userCode: String
+    public let expiresIn: Int
+    public let credential: String
+
+    private enum CodingKeys: String, CodingKey { case verificationUri, userCode, expiresIn, credential }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        verificationUri = try c.field(.verificationUri, "")
+        userCode = try c.field(.userCode, "")
+        expiresIn = try c.field(.expiresIn, 0)
+        credential = try c.field(.credential, "")
+    }
+}
+
+/// One subscription the signed-in account sees.
+public struct AzureSubscriptionChoice: Decodable, Equatable, Hashable, Sendable {
+    public let id: String
+    public let name: String
+    public let tenantId: String
+
+    private enum CodingKeys: String, CodingKey { case id, name, tenantId }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.field(.id, "")
+        name = try c.field(.name, "")
+        tenantId = try c.field(.tenantId, "")
+    }
+
+    public var label: String { name.isEmpty ? id : name }
+}
+
+/// AzureSignInFinish: who signed in, and the subscriptions to pick from.
+public struct AzureSignInFinish: Decodable, Equatable, Sendable {
+    public let credential: String
+    public let account: String
+    public let subscriptions: [AzureSubscriptionChoice]
+
+    private enum CodingKeys: String, CodingKey { case credential, account, subscriptions }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        credential = try c.field(.credential, "")
+        account = try c.field(.account, "")
+        subscriptions = try c.field(.subscriptions, [])
+    }
+}
+
+/// AzureSignInChoose: the credential bound to the picked subscription.
+public struct AzureSignInChoice: Decodable, Equatable, Sendable {
+    public let credential: String
+    public let account: String
+    public let subscriptionName: String
+
+    private enum CodingKeys: String, CodingKey { case credential, account, subscriptionName }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        credential = try c.field(.credential, "")
+        account = try c.field(.account, "")
+        subscriptionName = try c.field(.subscriptionName, "")
     }
 }

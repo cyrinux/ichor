@@ -6339,7 +6339,15 @@
     <string name="azure_title">Die VM bei Azure erstellen</string>
     <string name="azure_howto">1. Wähle ein Mitglied als Vorlage, dann Hostnamen und Installationsdisk des neuen Nodes.\n2. Füge einen Service Principal hinzu, der die von Ichor ausgegebene Rolle auf der Ressourcengruppe hat.\n3. Lade das Talos-Image einmal von einem Computer in das Abonnement hoch (es vom Telefon aus zu erstellen kommt als Nächstes).\n4. Wähle eine Ressourcengruppe, das Image, eine VM-Größe, ein Subnetz und eine Netzwerksicherheitsgruppe und erstelle sie: Ichor zeigt zuerst den Preis und verfolgt sie, bis der Node beitritt. Das Telefon muss Port 50000 der VM erreichen.</string>
     <string name="azure_howto_omni">1. Füge einen Service Principal hinzu, der die von Ichor ausgegebene Rolle auf der Ressourcengruppe hat.\n2. Lade das Talos-Image für Omni einmal von einem Computer in das Abonnement hoch (es vom Telefon aus zu erstellen kommt als Nächstes).\n3. Benenne die VM, dann wähle eine Ressourcengruppe, das Image, eine VM-Größe, ein Subnetz und eine Netzwerksicherheitsgruppe.\n4. Erstelle sie: Ichor zeigt zuerst den Preis und verfolgt sie dann, bis die Maschine in Omni erscheint. Weise sie dem Cluster zu.</string>
-    <string name="azure_add_principal">Azure-Service-Principal hinzufügen</string>
+    <string name="azure_add_account">Azure-Konto hinzufügen</string>
+    <string name="azure_signin_option_principal">Dienstprinzipal</string>
+    <string name="azure_signin_option_account">Microsoft-Konto</string>
+    <string name="azure_signin_hint">Meldet sich wie az login --use-device-code an, mit dem öffentlichen Client der Azure CLI, sofern Sie keinen eigenen eingeben. Weisen Sie die obige Rolle Ihrem Konto oder einer seiner Gruppen in der Ressourcengruppe zu.</string>
+    <string name="azure_signin_tenant">Mandanten-ID oder Domäne (leer: jedes Geschäfts- oder Schulkonto)</string>
+    <string name="azure_signin_client_id">Client-ID einer öffentlichen App-Registrierung (leer: die der Azure CLI)</string>
+    <string name="azure_signin_choose_subscription">Abonnement</string>
+    <string name="azure_signin_signed_in">Mit Microsoft-Konto angemeldet als %1$s</string>
+    <string name="azure_signin_session_note">Die Anmeldung bleibt versiegelt auf diesem Gerät und ist nicht in Backups. Sie gilt, solange Sie sie nutzen (standardmäßig 90 Tage Inaktivität, von Ihrem Administrator festgelegt); melden Sie sich danach erneut an.</string>
     <string name="azure_remove">Diesen Principal entfernen</string>
     <string name="azure_warning">Ein Client-Geheimnis läuft an dem bei seiner Erstellung gesetzten Datum ab und kann, was seine Rolle erlaubt. Es bleibt versiegelt auf diesem Gerät und ist nicht in Backups.</string>
     <string name="azure_role_hint">Erstelle diese benutzerdefinierte Rolle (az role definition create) und weise sie dem Principal auf der Ressourcengruppe zu: nur die Aufrufe, die Ichor macht.</string>

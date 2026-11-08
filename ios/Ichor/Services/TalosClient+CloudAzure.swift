@@ -18,6 +18,25 @@ extension TalosClient {
         }
     }
 
+    /// Starts a Microsoft-account sign-in: the device code to enter.
+    static func azureSignInStart(request: String) async throws -> AzureSignInStart {
+        try await json { IchorgoAzureSignInStart(request, $0) }
+    }
+
+    /// Waits for the code to be entered (minutes; ended by `azureSignInCancel`), then lists the subscriptions.
+    static func azureSignInFinish(credential: String) async throws -> AzureSignInFinish {
+        try await json { IchorgoAzureSignInFinish(credential, $0) }
+    }
+
+    static func azureSignInCancel() {
+        IchorgoAzureSignInCancel()
+    }
+
+    /// The credential bound to one subscription of the list.
+    static func azureSignInChoose(credential: String, subscription: String) async throws -> AzureSignInChoice {
+        try await json { IchorgoAzureSignInChoose(credential, subscription, $0) }
+    }
+
     /// The custom role to give the principal on `resourceGroup`: only the calls Ichor makes.
     static func azureRole(subscription: String, resourceGroup: String) -> String {
         IchorgoAzureRoleDefinition(subscription, resourceGroup)

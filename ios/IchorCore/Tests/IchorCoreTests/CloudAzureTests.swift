@@ -216,4 +216,48 @@ final class CloudAzureTests: XCTestCase {
         XCTAssertEqual(ami.imageKind, .awsAMI)
         XCTAssertEqual(ami.phases, JoinPhase.awsImageRun)
     }
+
+    // An invented Microsoft-account sign-in, as the core returns it (refresh token included).
+    private let signedIn = """
+        {"tenantId":"00000000-0000-0000-0000-000000000001","clientId":"04b07795-8ddb-461a-bbee-02f9e1bf7b46",
+         "subscriptionId":"00000000-0000-0000-0000-000000000000","kind":"user",
+         "refreshToken":"r","account":"someone@example.org"}
+        """
+
+    func testAMicrosoftAccountSignInIsReadAndEditedWithItsToken() throws {
+        let credential = try JSONDecoder().decode(AzureCredential.self, from: Data(signedIn.utf8))
+        XCTAssertTrue(credential.microsoftAccount)
+        XCTAssertEqual(credential.account, "someone@example.org")
+        let principal = AzureCredential(tenantId: "t", clientId: "c", clientSecret: "s", subscriptionId: "x")
+        XCTAssertFalse(principal.microsoftAccount)
+
+        let edited = try XCTUnwrap(AzureCredential.edited(signedIn, resourceGroup: "talos", location: "westeurope"))
+        let object = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(edited.utf8)) as? [String: Any])
+        XCTAssertEqual(object["refreshToken"] as? String, "r")
+        XCTAssertEqual(object["resourceGroup"] as? String, "talos")
+        XCTAssertEqual(object["location"] as? String, "westeurope")
+        XCTAssertNil(AzureCredential.edited("not json", location: "westeurope"))
+
+        // A renewal keeps what was picked meanwhile and takes only the new token.
+        let renewed = try XCTUnwrap(AzureCredential.renewed(edited, from: #"{"refreshToken":"r2","location":"old"}"#))
+        let merged = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(renewed.utf8)) as? [String: Any])
+        XCTAssertEqual(merged["refreshToken"] as? String, "r2")
+        XCTAssertEqual(merged["location"] as? String, "westeurope")
+        XCTAssertNil(AzureCredential.renewed(edited, from: "{}"))
+    }
+
+    private func decode<T: Decodable>(_ type: T.Type, _ json: String) throws -> T {
+        try JSONDecoder().decode(type, from: Data(json.utf8))
+    }
+
+    func testTheSignInStepsDecode() throws {
+        let start = try decode(AzureSignInStart.self, #"{"userCode":"SAMPLE123","expiresIn":900,"credential":"{}"}"#)
+        XCTAssertEqual(start.userCode, "SAMPLE123")
+        let finish = try decode(
+            AzureSignInFinish.self, #"{"credential":"{}","account":"a","subscriptions":[{"id":"sub-1","name":""}]}"#)
+        XCTAssertEqual(finish.subscriptions.first?.label, "sub-1")
+        let check = try decode(AzureCheck.self, #"{"subscription":"x","account":"a","credential":"{}"}"#)
+        XCTAssertEqual(check.credential, "{}")
+        XCTAssertEqual(try decode(AzureOptions.self, "{}").credential, "")
+    }
 }

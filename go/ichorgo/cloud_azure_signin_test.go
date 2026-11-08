@@ -261,6 +261,17 @@ func TestAzureSignInRefusals(t *testing.T) {
 		})
 	}
 
+	// A code that only starts like AADSTS70002 is not the public-client refusal; pending keeps polling.
+	for _, d := range []string{"AADSTS700025: Client is public.", "AADSTS70016: pending"} {
+		if err := azureSignInRefusal(oidcTokens{Error: "invalid_request", Description: d}); err != nil {
+			t.Errorf("%s: %v", d, err)
+		}
+	}
+
+	if !azureTenantPattern.MatchString(strings.ToLower("Example.OnMicrosoft.com")) {
+		t.Error("a domain tenant refused")
+	}
+
 	for _, bad := range []string{`{"tenantId":"not a tenant"}`, `{"clientId":"not-a-guid"}`} {
 		if _, err := AzureSignInStart(bad); err == nil {
 			t.Errorf("%s accepted", bad)

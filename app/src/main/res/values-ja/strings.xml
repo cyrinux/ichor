@@ -6209,7 +6209,15 @@
     <string name="azure_title">Azure で VM を作成</string>
     <string name="azure_howto">1. コピーするメンバーを選び、新しいノードのホスト名とインストールディスクを選びます。\n2. Ichor が表示するロールをリソースグループに持つサービスプリンシパルを追加します。\n3. Talos イメージをコンピューターからサブスクリプションに一度アップロードします(電話からの作成は次の段階で対応します)。\n4. リソースグループ、イメージ、VM サイズ、サブネット、ネットワークセキュリティグループを選んで作成します。Ichor は先に価格を表示し、ノードが参加するまで追跡します。電話から VM のポート 50000 に到達できる必要があります。</string>
     <string name="azure_howto_omni">1. Ichor が表示するロールをリソースグループに持つサービスプリンシパルを追加します。\n2. Omni 用の Talos イメージをコンピューターからサブスクリプションに一度アップロードします(電話からの作成は次の段階で対応します)。\n3. VM に名前を付け、リソースグループ、イメージ、VM サイズ、サブネット、ネットワークセキュリティグループを選びます。\n4. 作成します。Ichor は先に価格を表示し、マシンが Omni に現れるまで追跡します。クラスターに割り当ててください。</string>
-    <string name="azure_add_principal">Azure サービスプリンシパルを追加</string>
+    <string name="azure_add_account">Azure アカウントを追加</string>
+    <string name="azure_signin_option_principal">サービス プリンシパル</string>
+    <string name="azure_signin_option_account">Microsoft アカウント</string>
+    <string name="azure_signin_hint">az login --use-device-code と同じ方法でサインインします。独自のクライアントを入力しない場合は Azure CLI のパブリック クライアントを使います。上のロールをリソース グループ上であなたのアカウントまたはそのグループに割り当ててください。</string>
+    <string name="azure_signin_tenant">テナント ID またはドメイン (空欄: 任意の職場または学校アカウント)</string>
+    <string name="azure_signin_client_id">パブリック アプリ登録のクライアント ID (空欄: Azure CLI のもの)</string>
+    <string name="azure_signin_choose_subscription">サブスクリプション</string>
+    <string name="azure_signin_signed_in">Microsoft アカウント %1$s でサインイン済み</string>
+    <string name="azure_signin_session_note">サインインはこのデバイスに封印され、バックアップには含まれません。使っている間は有効です (既定では非アクティブ 90 日、管理者が設定)。期限が切れたら再度サインインしてください。</string>
     <string name="azure_remove">このプリンシパルを削除</string>
     <string name="azure_warning">クライアントシークレットは作成時に設定した日付に期限切れになり、ロールが許すことを実行できます。このデバイスに封印され、バックアップには含まれません。</string>
     <string name="azure_role_hint">このカスタムロールを作成し(az role definition create)、リソースグループでプリンシパルに割り当ててください。Ichor が行う呼び出しだけです。</string>
