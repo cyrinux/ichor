@@ -12,6 +12,9 @@ struct NetPoliciesView: View {
     @State private var namespace: String?
     @State private var query = ""
     @State private var selected: NetPolicy?
+    /// The pod a policy's sheet asked for: pushed once the sheet is closed.
+    @State private var pendingPod: KubeFocus?
+    @State private var openPod: KubeFocus?
 
     var body: some View {
         LoadStateView(state: state, retry: load, progress: progress, stepLabel: Self.stepLabel) { report in
@@ -62,7 +65,15 @@ struct NetPoliciesView: View {
         .searchable(text: $query, prompt: Text("Name, selector or namespace"))
         .navigationTitle("Network policies")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $selected) { NetPolicyDetailSheet(policy: $0) }
+        .modifier(policySheet)
+    }
+
+    /// The policy's sheet, and the pod one of its rows asked for, pushed once the sheet is closed.
+    /// Kept out of `body`: the type checker gives up on it otherwise.
+    private var policySheet: PodSheet<NetPolicy, NetPolicyDetailSheet> {
+        PodSheet(selected: $selected, pendingPod: $pendingPod, openPod: $openPod) { policy, open in
+            NetPolicyDetailSheet(policy: policy, openPod: model.allows(.workloads) ? open : nil)
+        }
     }
 
     private func load() async {

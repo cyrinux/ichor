@@ -58,6 +58,9 @@ struct LiveFlowsView: View {
     @State private var tab = Tab.drops
     @State private var follower = HubbleFollower()
     @State private var selected: HubbleDropGroup?
+    /// The pod a drop's sheet asked for: pushed once the sheet is closed.
+    @State private var pendingPod: KubeFocus?
+    @State private var openPod: KubeFocus?
 
     init(cilium: CiliumStatus, filter: HubbleFilter = HubbleFilter()) {
         self.cilium = cilium
@@ -104,7 +107,15 @@ struct LiveFlowsView: View {
         }
         .navigationTitle("Live flows")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $selected) { DropGroupSheet(group: $0) }
+        .modifier(dropSheet)
+    }
+
+    /// The drop's sheet, and the pod it asked for (a peer's, a policy's), pushed once the sheets
+    /// are closed. Kept out of `body`: the type checker gives up on it otherwise.
+    private var dropSheet: PodSheet<HubbleDropGroup, DropGroupSheet> {
+        PodSheet(selected: $selected, pendingPod: $pendingPod, openPod: $openPod) { group, open in
+            DropGroupSheet(group: group, openPod: model.allows(.workloads) ? open : nil)
+        }
     }
 
     private var tabBar: some View {

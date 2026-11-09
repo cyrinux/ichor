@@ -48,6 +48,10 @@ import name.levis.ichor.model.byPackage
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.nav.LocalOpenPod
+import name.levis.ichor.ui.nav.SheetPodLinks
+import name.levis.ichor.ui.workloads.PodLinkText
+import name.levis.ichor.ui.workloads.podRef
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatDateTime
 
@@ -65,34 +69,37 @@ fun ImageScanReportSheet(report: ImageScanReport, onExport: (ImageScanFormat) ->
     val hasNew = report.newSummary.total > 0
     val filter = VulnFilter(fixableOnly, VulnSeverity.entries.filterNot { it.name in hidden }.toSet(), newOnly && hasNew)
     var open by rememberSaveable { mutableStateOf<String?>(null) }
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        LazyColumn(
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            item { Header(report, onExport) }
-            item { SeverityPills(report.summary) }
-            item { NewFindingsLine(report.newSummary, report.hasPrevious) }
-            item {
-                Filters(filter, hasNew) {
-                    fixableOnly = it.fixableOnly
-                    newOnly = it.newOnly
-                    hidden = VulnSeverity.entries.filterNot { s -> s in it.severities }.map { s -> s.name }
+    // A pod tapped closes the report before its logs open.
+    SheetPodLinks(onDismiss) {
+        ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+            LazyColumn(
+                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                item { Header(report, onExport) }
+                item { SeverityPills(report.summary) }
+                item { NewFindingsLine(report.newSummary, report.hasPrevious) }
+                item {
+                    Filters(filter, hasNew) {
+                        fixableOnly = it.fixableOnly
+                        newOnly = it.newOnly
+                        hidden = VulnSeverity.entries.filterNot { s -> s in it.severities }.map { s -> s.name }
+                    }
                 }
-            }
-            report.images.forEachIndexed { i, image ->
-                item(key = "image/$i") { ImageHeader(image) }
-                if (image.error.isNotEmpty()) return@forEachIndexed
-                val groups = image.byPackage(filter)
-                when {
-                    image.vulnerabilities.isEmpty() -> item(key = "none/$i") { MutedText(stringResource(R.string.imagescan_none_found)) }
-                    groups.isEmpty() -> item(key = "hidden/$i") { MutedText(stringResource(R.string.imagescan_none_shown)) }
-                }
-                groups.forEach { (pkg, vulns) ->
-                    item(key = "pkg/$i/$pkg") { PackageHeader(vulns.first()) }
-                    items(vulns, key = { "vuln/$i/$pkg/${it.id}/${it.target}" }) { v ->
-                        val key = "$i/$pkg/${v.id}/${v.target}"
-                        VulnRow(v, expanded = open == key) { open = if (open == key) null else key }
+                report.images.forEachIndexed { i, image ->
+                    item(key = "image/$i") { ImageHeader(image) }
+                    if (image.error.isNotEmpty()) return@forEachIndexed
+                    val groups = image.byPackage(filter)
+                    when {
+                        image.vulnerabilities.isEmpty() -> item(key = "none/$i") { MutedText(stringResource(R.string.imagescan_none_found)) }
+                        groups.isEmpty() -> item(key = "hidden/$i") { MutedText(stringResource(R.string.imagescan_none_shown)) }
+                    }
+                    groups.forEach { (pkg, vulns) ->
+                        item(key = "pkg/$i/$pkg") { PackageHeader(vulns.first()) }
+                        items(vulns, key = { "vuln/$i/$pkg/${it.id}/${it.target}" }) { v ->
+                            val key = "$i/$pkg/${v.id}/${v.target}"
+                            VulnRow(v, expanded = open == key) { open = if (open == key) null else key }
+                        }
                     }
                 }
             }
@@ -160,9 +167,7 @@ private fun ImageHeader(image: ScannedImage) {
         if (image.previousScannedAt > 0) {
             MutedText(stringResource(R.string.imagescan_previous_scan, formatDateTime(image.previousScannedAt)))
         }
-        if (image.pods.isNotEmpty()) {
-            MutedText(stringResource(R.string.imagescan_pods, image.pods.joinToString(", ")), maxLines = 2, overflow = TextOverflow.Ellipsis)
-        }
+        if (image.pods.isNotEmpty()) ImagePods(image.pods)
         if (image.error.isNotEmpty()) {
             Text(coreErrorText(image.error), style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.bad)
             return@Column
@@ -171,6 +176,30 @@ private fun ImageHeader(image: ScannedImage) {
         if (image.new.total > 0) NewFindingsLine(image.new, hasPrevious = true)
         if (image.summary.os > 0 && image.os.isNotEmpty()) {
             MutedText(stringResource(R.string.imagescan_base_hint, image.summary.os.toString(), image.os))
+        }
+    }
+}
+
+/**
+ * "Pods:" and the pods running the image ("namespace/pod"), each opening its logs and actions; a
+ * value that is not one stays plain text, and so does the line where no pod can be opened.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ImagePods(pods: List<String>) {
+    if (LocalOpenPod.current == null) {
+        MutedText(stringResource(R.string.imagescan_pods, pods.joinToString(", ")), maxLines = 2, overflow = TextOverflow.Ellipsis)
+        return
+    }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+        MutedText(stringResource(R.string.imagescan_pods, "").trimEnd())
+        pods.forEach { pod ->
+            val ref = podRef(pod)
+            if (ref == null) {
+                MutedText(pod, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            } else {
+                PodLinkText(ref.first, ref.second, Modifier.padding(vertical = 2.dp), style = MaterialTheme.typography.labelMedium, label = pod)
+            }
         }
     }
 }

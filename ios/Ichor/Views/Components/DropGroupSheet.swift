@@ -6,6 +6,9 @@ import IchorCore
 /// the pod in default-deny (each opens its rules), what to change, and a sample flow to copy.
 struct DropGroupSheet: View {
     let group: HubbleDropGroup
+    /// Opens a peer's (or an opened policy's) pod: the presenter closes the sheets, then pushes
+    /// the route (a push from inside a sheet is dropped). Nil: the pods are plain text.
+    var openPod: ((Route) -> Void)?
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -20,8 +23,8 @@ struct DropGroupSheet: View {
         NavigationStack {
             List {
                 Section { header }
-                Section("Source") { HubblePeerDetails(peer: group.source) }
-                Section("Destination") { HubblePeerDetails(peer: group.destination) }
+                Section("Source") { HubblePeerDetails(peer: group.source, openPod: openPod) }
+                Section("Destination") { HubblePeerDetails(peer: group.destination, openPod: openPod) }
                 if !group.deniedBy.isEmpty {
                     policySection(
                         group.deniedBy, title: Text("Denied by"),
@@ -56,7 +59,7 @@ struct DropGroupSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
             }
-            .sheet(item: $opened) { NetPolicyDetailSheet(policy: $0) }
+            .sheet(item: $opened) { NetPolicyDetailSheet(policy: $0, openPod: openPod) }
             .messageAlert($message)
             .sensoryFeedback(.success, trigger: copied)
         }
@@ -137,13 +140,24 @@ struct DropGroupSheet: View {
     }
 }
 
-/// What a flow says about one side: namespace, pod, workload, IP, DNS names, identity.
+/// What a flow says about one side: namespace, pod (which opens it when its namespace is known),
+/// workload, IP, DNS names, identity.
 private struct HubblePeerDetails: View {
     let peer: HubblePeer
+    let openPod: ((Route) -> Void)?
 
     var body: some View {
         row("Namespace", peer.namespace)
-        row("Pod", peer.pod)
+        if let openPod, !peer.namespace.isEmpty, !peer.pod.isEmpty {
+            // No text selection here: the row is a button.
+            PodLink(namespace: peer.namespace, name: peer.pod, open: openPod) {
+                LabeledContent("Pod") {
+                    Text(verbatim: peer.pod).font(.callout.monospaced()).multilineTextAlignment(.trailing)
+                }
+            }
+        } else {
+            row("Pod", peer.pod)
+        }
         row("Workload", peer.workload)
         row("IP address", peer.ip)
         row("DNS names", peer.names.joined(separator: ", "))

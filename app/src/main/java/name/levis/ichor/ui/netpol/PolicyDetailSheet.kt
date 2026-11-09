@@ -23,10 +23,16 @@ import name.levis.ichor.model.NetRule
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.nav.SheetPodLinks
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.workloads.PodLinkText
+import name.levis.ichor.ui.workloads.podRef
 import name.levis.ichor.util.timeAgo
 
-/** One policy: who it applies to, the pods it selects now, then what each direction lets through. */
+/**
+ * One policy: who it applies to, the pods it selects now (each opens its logs and actions, the
+ * sheet closed first), then what each direction lets through.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PolicyDetailSheet(policy: NetPolicy, onDismiss: () -> Unit) {
@@ -64,13 +70,26 @@ fun PolicyDetailSheet(policy: NetPolicy, onDismiss: () -> Unit) {
             if (!policy.nodes) {
                 SectionTitle(stringResource(R.string.netpol_selected_pods) + " (${policy.podCount})")
                 if (policy.pods.isEmpty()) MutedText(stringResource(R.string.netpol_no_pods))
-                policy.pods.forEach { Text(it, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace) }
+                // "namespace/name" (a cluster-wide policy selects pods of several): each opens its logs
+                // and actions, the sheet closed first; "and N more" stays text.
+                SheetPodLinks(onDismiss) { policy.pods.forEach { PolicyPod(it) } }
                 if (policy.podCount > policy.pods.size) MutedText(stringResource(R.string.netpol_more_pods, policy.podCount - policy.pods.size))
             }
 
             Direction(stringResource(R.string.netpol_ingress), policy.ingress, policy.ingressRules, ingress = true, policy = policy)
             Direction(stringResource(R.string.netpol_egress), policy.egress, policy.egressRules, ingress = false, policy = policy)
         }
+    }
+}
+
+/** A selected pod ("namespace/name"), a link to it; plain text when the value is not one. */
+@Composable
+private fun PolicyPod(value: String) {
+    val ref = podRef(value)
+    if (ref == null) {
+        Text(value, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+    } else {
+        PodLinkText(ref.first, ref.second, Modifier.padding(vertical = 2.dp), label = value)
     }
 }
 

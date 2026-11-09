@@ -77,12 +77,13 @@ func demoScannedImages(at int64) []scannedImage {
 	web := scannedImage{
 		Image: "docker.io/library/nginx:1.25.3", Ref: "docker.io/library/nginx@sha256:4c0fdaa8b6341bfdeca5f18f7837462c80cff90527ee35ef185571e1c327beac",
 		Digest: "sha256:4c0fdaa8b6341bfdeca5f18f7837462c80cff90527ee35ef185571e1c327beac", OS: "debian 12.4",
-		Pods: []string{"demo/web-7d9c6b5f4-x2k8q", "demo/web-7d9c6b5f4-p9lmn"}, ScannedAt: at,
+		// Pods of the demo cluster (demoPods), so that a pod tapped in the report opens.
+		Pods: []string{"demo/hello-ichor-7d9c5-abcde", "demo/hello-ichor-7d9c5-fghij"}, ScannedAt: at,
 	}
 	api := scannedImage{
 		Image: "ghcr.io/example/api:2.4.1", Ref: "ghcr.io/example/api@sha256:9a3b1c2d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9",
 		Digest: "sha256:9a3b1c2d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9", OS: "alpine 3.20.3",
-		Pods: []string{"demo/api-0"}, ScannedAt: at,
+		Pods: []string{"demo/worker-6f4b8-pqrst"}, ScannedAt: at,
 	}
 
 	os := func(id, pkg, installed, fixed, severity, title string, score float64) imageVuln {

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -56,7 +57,9 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.copyToClipboard
+import name.levis.ichor.ui.nav.SheetPodLinks
 import name.levis.ichor.ui.netpol.PolicyDetailSheet
+import name.levis.ichor.ui.workloads.PodLinkText
 import java.text.DateFormat
 import name.levis.ichor.util.formatDateTime
 
@@ -71,57 +74,60 @@ fun DropDetailSheet(group: DropGroup, vm: FlowsViewModel, onDismiss: () -> Unit)
     val policies by vm.policies.collectAsStateWithLifecycle()
     var opening by remember { mutableStateOf<PolicyRef?>(null) }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).navigationBarsPadding().padding(bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Text("${group.source.label} → ${group.destination.label}", style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Tag(
-                    stringResource(if (group.verdict == HUBBLE_AUDIT) R.string.flows_would_drop else R.string.flows_verdict_dropped),
-                    verdictColor(group.verdict),
-                )
-                directionText(group.direction)?.let { Tag(it, MaterialTheme.colorScheme.outline) }
-                Text(stringResource(R.string.flows_count, group.count), style = MaterialTheme.typography.labelLarge)
-            }
-            if (group.reason.isNotEmpty()) Text(reasonText(group.reason), style = MaterialTheme.typography.bodyMedium)
-            InfoRow(stringResource(R.string.flows_port), portLabel(group.protocol, group.port).ifEmpty { stringResource(R.string.netpol_any_port) }, mono = true)
-            InfoRow(stringResource(R.string.flows_first_seen), formatTime(group.firstSeen))
-            InfoRow(stringResource(R.string.flows_last_seen_label), formatTime(group.lastSeen))
-            if (group.nodes.isNotEmpty()) InfoRow(stringResource(R.string.flows_nodes), group.nodes.joinToString(", "), mono = true)
+    // A pod tapped (a peer's, a policy's) closes the sheets before its logs open.
+    SheetPodLinks(onDismiss) {
+        ModalBottomSheet(onDismissRequest = onDismiss) {
+            Column(
+                Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).navigationBarsPadding().padding(bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text("${group.source.label} → ${group.destination.label}", style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Tag(
+                        stringResource(if (group.verdict == HUBBLE_AUDIT) R.string.flows_would_drop else R.string.flows_verdict_dropped),
+                        verdictColor(group.verdict),
+                    )
+                    directionText(group.direction)?.let { Tag(it, MaterialTheme.colorScheme.outline) }
+                    Text(stringResource(R.string.flows_count, group.count), style = MaterialTheme.typography.labelLarge)
+                }
+                if (group.reason.isNotEmpty()) Text(reasonText(group.reason), style = MaterialTheme.typography.bodyMedium)
+                InfoRow(stringResource(R.string.flows_port), portLabel(group.protocol, group.port).ifEmpty { stringResource(R.string.netpol_any_port) }, mono = true)
+                InfoRow(stringResource(R.string.flows_first_seen), formatTime(group.firstSeen))
+                InfoRow(stringResource(R.string.flows_last_seen_label), formatTime(group.lastSeen))
+                if (group.nodes.isNotEmpty()) InfoRow(stringResource(R.string.flows_nodes), group.nodes.joinToString(", "), mono = true)
 
-            SectionTitle(stringResource(R.string.flows_source))
-            PeerDetails(group.source)
-            SectionTitle(stringResource(R.string.flows_destination))
-            PeerDetails(group.destination)
+                SectionTitle(stringResource(R.string.flows_source))
+                PeerDetails(group.source)
+                SectionTitle(stringResource(R.string.flows_destination))
+                PeerDetails(group.destination)
 
-            Policies(stringResource(R.string.flows_denied_by), group.deniedBy) { opening = it }
-            Policies(stringResource(R.string.flows_isolated_by), group.isolating) { opening = it }
-            when (val p = policies) {
-                UiState.Loading -> if (opening != null) CircularProgressIndicator(Modifier.padding(8.dp).size(20.dp), strokeWidth = 2.dp)
-                is UiState.Failed -> if (opening != null) InlineError(p.message.asString())
-                else -> {}
-            }
-            Hint(group)
+                Policies(stringResource(R.string.flows_denied_by), group.deniedBy) { opening = it }
+                Policies(stringResource(R.string.flows_isolated_by), group.isolating) { opening = it }
+                when (val p = policies) {
+                    UiState.Loading -> if (opening != null) CircularProgressIndicator(Modifier.padding(8.dp).size(20.dp), strokeWidth = 2.dp)
+                    is UiState.Failed -> if (opening != null) InlineError(p.message.asString())
+                    else -> {}
+                }
+                Hint(group)
 
-            IchorOutlinedButton(onClick = { copyFlow(context, group.sample) }, modifier = Modifier.padding(top = 8.dp)) {
-                Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(stringResource(R.string.flows_copy_json), modifier = Modifier.padding(start = 8.dp))
+                IchorOutlinedButton(onClick = { copyFlow(context, group.sample) }, modifier = Modifier.padding(top = 8.dp)) {
+                    Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text(stringResource(R.string.flows_copy_json), modifier = Modifier.padding(start = 8.dp))
+                }
             }
         }
-    }
 
-    opening?.let { ref ->
-        LaunchedEffect(ref) { vm.loadPolicies() }
-        val report = (policies as? UiState.Loaded)?.data ?: return@let
-        val policy = report.find(ref)
-        if (policy != null) {
-            PolicyDetailSheet(policy, onDismiss = { opening = null })
-        } else {
-            LaunchedEffect(ref) {
-                Toast.makeText(context, context.getString(R.string.flows_policy_gone, ref.label), Toast.LENGTH_SHORT).show()
-                opening = null
+        opening?.let { ref ->
+            LaunchedEffect(ref) { vm.loadPolicies() }
+            val report = (policies as? UiState.Loaded)?.data ?: return@let
+            val policy = report.find(ref)
+            if (policy != null) {
+                PolicyDetailSheet(policy, onDismiss = { opening = null })
+            } else {
+                LaunchedEffect(ref) {
+                    Toast.makeText(context, context.getString(R.string.flows_policy_gone, ref.label), Toast.LENGTH_SHORT).show()
+                    opening = null
+                }
             }
         }
     }
@@ -130,12 +136,30 @@ fun DropDetailSheet(group: DropGroup, vm: FlowsViewModel, onDismiss: () -> Unit)
 @Composable
 private fun PeerDetails(peer: HubblePeer) {
     if (peer.namespace.isNotEmpty()) InfoRow(stringResource(R.string.netpol_namespace), peer.namespace, mono = true)
-    if (peer.pod.isNotEmpty()) InfoRow(stringResource(R.string.flows_peer_pod), peer.pod, mono = true)
+    if (peer.pod.isNotEmpty()) PeerPodRow(peer)
     if (peer.workload.isNotEmpty()) InfoRow(stringResource(R.string.flows_peer_workload), peer.workload, mono = true)
     if (peer.reserved.isNotEmpty()) InfoRow(stringResource(R.string.flows_peer_entity), peer.reserved, mono = true)
     if (peer.ip.isNotEmpty()) InfoRow(stringResource(R.string.flows_peer_ip), peer.ip, mono = true)
     if (peer.names.isNotEmpty()) InfoRow(stringResource(R.string.flows_peer_names), peer.names.joinToString(", "), mono = true)
     if (peer.identity > 0) InfoRow(stringResource(R.string.flows_peer_identity), peer.identity.toString(), mono = true)
+}
+
+/** "Pod" and the peer's pod, which opens its logs and actions when its namespace is known. */
+@Composable
+private fun PeerPodRow(peer: HubblePeer) {
+    if (peer.namespace.isEmpty()) {
+        InfoRow(stringResource(R.string.flows_peer_pod), peer.pod, mono = true)
+        return
+    }
+    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
+        Text(
+            stringResource(R.string.flows_peer_pod),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(0.4f),
+        )
+        PodLinkText(peer.namespace, peer.pod, Modifier.weight(0.6f), style = MaterialTheme.typography.bodyMedium)
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)

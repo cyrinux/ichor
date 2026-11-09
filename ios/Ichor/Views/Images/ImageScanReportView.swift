@@ -10,6 +10,9 @@ struct ImageScanReportView: View {
     /// The core's own report ("" for the operator's, encoded again for the export).
     let reportJSON: String
     let appName: String
+    /// Opens a pod running an image: the presenter closes its sheet, then pushes the route. Nil:
+    /// the pods are plain text.
+    var openPod: ((Route) -> Void)?
 
     @State private var fixableOnly = true
     @State private var newOnly = false
@@ -50,7 +53,7 @@ struct ImageScanReportView: View {
                 }
             }
             ForEach(Array(report.images.enumerated()), id: \.offset) { _, image in
-                ImageSection(image: image, filter: filter)
+                ImageSection(image: image, filter: filter, openPod: openPod)
             }
         }
         .themedBackground()
@@ -88,9 +91,11 @@ struct ImageScanReportView: View {
 }
 
 /// One image: its name, OS and digest, pods, then its counts and findings, or why it was not scanned.
+/// With `openPod`, each pod ("namespace/pod") is a row that opens its logs and actions.
 private struct ImageSection: View {
     let image: ScannedImage
     let filter: VulnFilter
+    let openPod: ((Route) -> Void)?
 
     var body: some View {
         Section {
@@ -102,7 +107,11 @@ private struct ImageSection: View {
                 Text("Previous scan \(dateTimeText(image.previousScannedAt))").font(.caption).foregroundStyle(
                     .secondary)
             }
-            if !image.pods.isEmpty {
+            if let openPod {
+                ForEach(image.pods, id: \.self) { pod in
+                    ImagePodRow(value: pod, open: openPod)
+                }
+            } else if !image.pods.isEmpty {
                 Text("Pods: \(image.pods.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary)
                     .lineLimit(2)
             }
@@ -130,6 +139,27 @@ private struct ImageSection: View {
             }
         } header: {
             Text(verbatim: image.image.isEmpty ? image.ref : image.image).font(.footnote.monospaced()).textCase(nil)
+        }
+    }
+}
+
+/// "Pod" and a pod running the image ("namespace/pod"), which opens it; plain when the value is
+/// not one.
+private struct ImagePodRow: View {
+    let value: String
+    let open: (Route) -> Void
+
+    var body: some View {
+        let line = LabeledContent("Pod") {
+            Text(verbatim: value).font(.caption.monospaced()).lineLimit(1).truncationMode(.middle)
+        }
+        .font(.caption)
+        if let ref = PodRef(path: value) {
+            PodLink(namespace: ref.namespace, name: ref.name, open: open) {
+                line
+            }
+        } else {
+            line
         }
     }
 }

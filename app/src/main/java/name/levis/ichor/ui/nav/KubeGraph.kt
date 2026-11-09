@@ -184,7 +184,9 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
         }
     }
     composable(Routes.KUBE_EVENTS) { KubeEventsScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
-    composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
+    composable(Routes.NETWORK_POLICIES) {
+        CompositionLocalProvider(LocalOpenPod provides nav::openPod) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
+    }
     composable(Routes.POLICIES) { PoliciesScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
     composable(Routes.AUTOSCALING) { AutoscalingScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
     composable(Routes.VIRTUAL_MACHINES) {
@@ -238,11 +240,13 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             navArgument("pod") { type = NavType.StringType; defaultValue = "" },
         ),
     ) { entry ->
-        FlowsScreen(
-            onBack = { nav.popBackStack() },
-            namespace = entry.arguments?.getString("ns")?.ifEmpty { null },
-            pod = entry.arguments?.getString("pod")?.ifEmpty { null },
-        )
+        CompositionLocalProvider(LocalOpenPod provides nav::openPod) {
+            FlowsScreen(
+                onBack = { nav.popBackStack() },
+                namespace = entry.arguments?.getString("ns")?.ifEmpty { null },
+                pod = entry.arguments?.getString("pod")?.ifEmpty { null },
+            )
+        }
     }
     composable(
         Routes.DATA_SERVICES,
