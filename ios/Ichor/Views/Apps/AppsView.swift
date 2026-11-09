@@ -117,10 +117,10 @@ struct AppsView: View {
         ) { app in
             AppDetailSheet(
                 app: app, hostnames: hostnamesStale ? [:] : hostnames, argoCD: argoCDShown,
-                openPod: model.allows(.workloads) ? openPodFromSheet : nil)
+                openPod: sheetOpensPods)
         }
-        .navigationDestination(item: $openPod) {
-            KubernetesView(focus: $0).recordsOpened($0.shareTarget, label: $0.name, detail: $0.namespace)
+        .navigationDestination(item: $openPod) { focus in
+            KubernetesView(focus: focus).recordsOpened(focus.shareTarget, label: focus.name, detail: focus.namespace)
         }
         // Screenshot mode toggled: nothing loaded before (names, logos) stays on screen.
         .onChange(of: model.dataGeneration) {
@@ -195,6 +195,12 @@ struct AppsView: View {
 
     private var loadedInventory: ClusterInventory? {
         if case .loaded(let inventory, _, _) = state { inventory } else { nil }
+    }
+
+    /// What an app sheet's pod row does: open the pod, for a role allowed to open workloads.
+    private var sheetOpensPods: ((Route) -> Void)? {
+        guard model.allows(.workloads) else { return nil }
+        return { route in openPodFromSheet(route) }
     }
 
     /// A pod row of the app sheet: the sheet closes, then its dismissal pushes the pod.
