@@ -1,0 +1,6 @@
+• Tap a pod on the Argo CD, Flux and network-map screens to open its logs and actions
+• A guided Google Cloud network for a new node, opened to nothing but the nodes and the phone
+• Sign in to Google Cloud with a Google account to create a node from the phone
+• Sign in to Google Cloud with a Google account in the Go core
+• Make an Azure network for the new node from the phone
+• Make an Azure network for a new node from the Go core
