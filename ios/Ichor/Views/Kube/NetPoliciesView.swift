@@ -65,23 +65,15 @@ struct NetPoliciesView: View {
         .searchable(text: $query, prompt: Text("Name, selector or namespace"))
         .navigationTitle("Network policies")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(
-            item: $selected,
-            onDismiss: {
-                openPod = pendingPod
-                pendingPod = nil
-            }
-        ) {
-            NetPolicyDetailSheet(policy: $0, openPod: model.allows(.workloads) ? openPodFromSheet : nil)
-        }
-        .podDestination($openPod)
+        .modifier(policySheet)
     }
 
-    /// A selected pod of the policy's sheet: the sheet closes, then its dismissal pushes the pod.
-    private func openPodFromSheet(_ route: Route) {
-        guard case .kubernetes(let focus) = route else { return }
-        pendingPod = focus
-        selected = nil
+    /// The policy's sheet, and the pod one of its rows asked for, pushed once the sheet is closed.
+    /// Kept out of `body`: the type checker gives up on it otherwise.
+    private var policySheet: PodSheet<NetPolicy, NetPolicyDetailSheet> {
+        PodSheet(selected: $selected, pendingPod: $pendingPod, openPod: $openPod) { policy, open in
+            NetPolicyDetailSheet(policy: policy, openPod: model.allows(.workloads) ? open : nil)
+        }
     }
 
     private func load() async {

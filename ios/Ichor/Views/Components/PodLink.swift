@@ -51,6 +51,36 @@ struct PodLink<Label: View>: View {
     }
 }
 
+/// A sheet over `selected` whose pod links close it first: the pod is kept in `pendingPod`, then
+/// the sheet's dismissal moves it to `openPod`, which `podDestination` pushes. A push from inside
+/// a sheet is dropped.
+struct PodSheet<Item: Identifiable, Sheet: View>: ViewModifier {
+    @Binding var selected: Item?
+    @Binding var pendingPod: KubeFocus?
+    @Binding var openPod: KubeFocus?
+    /// The sheet for an item, given the closure its pod links call.
+    let sheet: (Item, @escaping (Route) -> Void) -> Sheet
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(item: $selected, onDismiss: dismissed) { item in
+                sheet(item, open)
+            }
+            .podDestination($openPod)
+    }
+
+    private func open(_ route: Route) {
+        guard case .kubernetes(let focus) = route else { return }
+        pendingPod = focus
+        selected = nil
+    }
+
+    private func dismissed() {
+        openPod = pendingPod
+        pendingPod = nil
+    }
+}
+
 extension View {
     /// Pushes the Kubernetes screen focused on the pod a sheet asked for, set once the sheet is
     /// closed (in its `onDismiss`): a push from inside a sheet is dropped.

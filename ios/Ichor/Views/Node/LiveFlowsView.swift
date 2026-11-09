@@ -107,24 +107,15 @@ struct LiveFlowsView: View {
         }
         .navigationTitle("Live flows")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(
-            item: $selected,
-            onDismiss: {
-                openPod = pendingPod
-                pendingPod = nil
-            }
-        ) {
-            DropGroupSheet(group: $0, openPod: model.allows(.workloads) ? openPodFromSheet : nil)
-        }
-        .podDestination($openPod)
+        .modifier(dropSheet)
     }
 
-    /// A pod of the drop's sheet (a peer's, a policy's): the sheets close, then their dismissal
-    /// pushes the pod.
-    private func openPodFromSheet(_ route: Route) {
-        guard case .kubernetes(let focus) = route else { return }
-        pendingPod = focus
-        selected = nil
+    /// The drop's sheet, and the pod it asked for (a peer's, a policy's), pushed once the sheets
+    /// are closed. Kept out of `body`: the type checker gives up on it otherwise.
+    private var dropSheet: PodSheet<HubbleDropGroup, DropGroupSheet> {
+        PodSheet(selected: $selected, pendingPod: $pendingPod, openPod: $openPod) { group, open in
+            DropGroupSheet(group: group, openPod: model.allows(.workloads) ? open : nil)
+        }
     }
 
     private var tabBar: some View {
