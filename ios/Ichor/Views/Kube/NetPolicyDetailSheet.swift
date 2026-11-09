@@ -5,6 +5,9 @@ import IchorCore
 /// whether it isolates them and each rule, with its peers as chips, its ports and L7 filters.
 struct NetPolicyDetailSheet: View {
     let policy: NetPolicy
+    /// Opens a selected pod's logs and actions: the presenter closes the sheet, then pushes the
+    /// route (a push from inside a sheet is dropped). Nil: the pods are plain text.
+    var openPod: ((Route) -> Void)?
 
     @Environment(\.dismiss) private var dismiss
 
@@ -74,8 +77,16 @@ struct NetPolicyDetailSheet: View {
             if policy.pods.isEmpty {
                 Text("No pod matches it now.").note()
             }
+            // "namespace/name": a cluster-wide policy selects pods of several namespaces.
             ForEach(policy.pods, id: \.self) { pod in
-                Text(verbatim: pod).font(.caption.monospaced()).lineLimit(1).truncationMode(.middle)
+                let line = Text(verbatim: pod).font(.caption.monospaced()).lineLimit(1).truncationMode(.middle)
+                if let openPod, let ref = PodRef(path: pod) {
+                    PodLink(namespace: ref.namespace, name: ref.name, open: openPod) {
+                        line
+                    }
+                } else {
+                    line
+                }
             }
             if policy.podCount > policy.pods.count {
                 Text("and \(policy.podCount - policy.pods.count) more").font(.caption).foregroundStyle(.secondary)

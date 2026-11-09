@@ -9,14 +9,17 @@ struct AppScanSection: View {
     let target: ImageScanTarget
     /// Why what to scan could not be read (a workload's images), shown first.
     let targetError: String?
+    /// Opens a pod of the report: the sheet presenting it closes first. Nil: plain pod names.
+    let openPod: ((Route) -> Void)?
 
-    init(app: InventoryApp) {
-        self.init(target: ImageScanTarget(app: app))
+    init(app: InventoryApp, openPod: ((Route) -> Void)? = nil) {
+        self.init(target: ImageScanTarget(app: app), openPod: openPod)
     }
 
-    init(target: ImageScanTarget, targetError: String? = nil) {
+    init(target: ImageScanTarget, targetError: String? = nil, openPod: ((Route) -> Void)? = nil) {
         self.target = target
         self.targetError = targetError
+        self.openPod = openPod
     }
 
     @Environment(AppModel.self) private var model
@@ -65,7 +68,8 @@ struct AppScanSection: View {
                             .statusWarn)
                     }
                     NavigationLink {
-                        ImageScanReportView(report: current, reportJSON: scan.reportJSON, appName: target.name)
+                        ImageScanReportView(
+                            report: current, reportJSON: scan.reportJSON, appName: target.name, openPod: openPod)
                     } label: {
                         Label("View", systemImage: "doc.text.magnifyingglass")
                     }
@@ -81,7 +85,7 @@ struct AppScanSection: View {
                     SeverityChips(summary: report.summary)
                     Text(verbatim: reportSourceText(report)).font(.caption).foregroundStyle(.secondary)
                     NavigationLink {
-                        ImageScanReportView(report: report, reportJSON: "", appName: target.name)
+                        ImageScanReportView(report: report, reportJSON: "", appName: target.name, openPod: openPod)
                     } label: {
                         Label("Open report", systemImage: "doc.text.magnifyingglass")
                     }

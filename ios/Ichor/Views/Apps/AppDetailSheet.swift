@@ -39,7 +39,7 @@ struct AppDetailSheet: View {
                     if app.id == fluxCatalogID { AppFluxSection() }
                     AppRoutesSection(app: app)
                     AppWorkloadsSection(app: app)
-                    if !app.pods.isEmpty { AppScanSection(app: app) }
+                    if !app.pods.isEmpty { AppScanSection(app: app, openPod: openPod) }
                 }
                 if !app.images.isEmpty {
                     Section("Images") {

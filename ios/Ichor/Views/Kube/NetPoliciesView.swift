@@ -12,6 +12,9 @@ struct NetPoliciesView: View {
     @State private var namespace: String?
     @State private var query = ""
     @State private var selected: NetPolicy?
+    /// The pod a policy's sheet asked for: pushed once the sheet is closed.
+    @State private var pendingPod: KubeFocus?
+    @State private var openPod: KubeFocus?
 
     var body: some View {
         LoadStateView(state: state, retry: load, progress: progress, stepLabel: Self.stepLabel) { report in
@@ -62,7 +65,23 @@ struct NetPoliciesView: View {
         .searchable(text: $query, prompt: Text("Name, selector or namespace"))
         .navigationTitle("Network policies")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $selected) { NetPolicyDetailSheet(policy: $0) }
+        .sheet(
+            item: $selected,
+            onDismiss: {
+                openPod = pendingPod
+                pendingPod = nil
+            }
+        ) {
+            NetPolicyDetailSheet(policy: $0, openPod: model.allows(.workloads) ? openPodFromSheet : nil)
+        }
+        .podDestination($openPod)
+    }
+
+    /// A selected pod of the policy's sheet: the sheet closes, then its dismissal pushes the pod.
+    private func openPodFromSheet(_ route: Route) {
+        guard case .kubernetes(let focus) = route else { return }
+        pendingPod = focus
+        selected = nil
     }
 
     private func load() async {

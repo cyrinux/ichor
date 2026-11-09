@@ -50,3 +50,13 @@ struct PodLink<Label: View>: View {
         }
     }
 }
+
+extension View {
+    /// Pushes the Kubernetes screen focused on the pod a sheet asked for, set once the sheet is
+    /// closed (in its `onDismiss`): a push from inside a sheet is dropped.
+    func podDestination(_ focus: Binding<KubeFocus?>) -> some View {
+        navigationDestination(item: focus) {
+            KubernetesView(focus: $0).recordsOpened($0.shareTarget, label: $0.name, detail: $0.namespace)
+        }
+    }
+}
