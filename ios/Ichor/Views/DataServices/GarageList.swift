@@ -414,6 +414,15 @@ private struct InstanceSection: View {
                     LabeledContent("Metadata sync queue", value: instance.tableSyncQueue.formatted())
                 }
                 LabeledContent("Pods", value: String(localized: "\(instance.podsReady)/\(instance.pods) ready"))
+                // The pod Garage's CLI ran in: opens its logs and actions.
+                if !instance.pod.isEmpty {
+                    PodLink(namespace: instance.namespace, name: instance.pod) {
+                        LabeledContent("Pod") {
+                            Text(verbatim: instance.pod).font(.callout.monospaced()).lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                    }
+                }
                 if !instance.version.isEmpty { LabeledContent("Version", value: instance.version) }
             } label: {
                 Text("Details")

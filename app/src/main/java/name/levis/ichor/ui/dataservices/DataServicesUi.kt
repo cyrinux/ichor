@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.dataservices
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
@@ -54,6 +56,7 @@ import name.levis.ichor.ui.apps.AppIconTile
 import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.color
 import name.levis.ichor.ui.components.label
+import name.levis.ichor.ui.nav.LocalOpenPod
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
 
@@ -205,17 +208,30 @@ fun podRoleLabel(role: String): String? = when (role) {
     else -> role
 }
 
-/** One pod under its cluster's row: a dot for readiness, then "name · role · where". */
+/**
+ * One pod under its cluster's row: a dot for readiness, then "name · role · where". Given its
+ * [namespace], a tap opens the pod's logs and actions ([LocalOpenPod]).
+ */
 @Composable
-fun DataPodLine(name: String, ready: Boolean, node: String, phase: String, role: String = "", indent: Dp = 22.dp) {
-    Row(Modifier.padding(start = indent, top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+fun DataPodLine(name: String, ready: Boolean, node: String, phase: String, role: String = "", indent: Dp = 22.dp, namespace: String = "") {
+    val open = LocalOpenPod.current?.takeIf { namespace.isNotEmpty() }
+    val tap = if (open == null) {
+        Modifier
+    } else {
+        Modifier.clickable(onClickLabel = stringResource(R.string.pod_open), role = Role.Button) { open(namespace, name) }
+    }
+    Row(Modifier.fillMaxWidth().then(tap).padding(start = indent, top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
         HealthDot(if (ready) ServiceHealth.OK else ServiceHealth.CRITICAL, Modifier.size(8.dp))
         Spacer(Modifier.size(8.dp))
         Text(
             listOfNotNull(name, podRoleLabel(role), podWhere(node, phase)).filter { it.isNotEmpty() }.joinToString(" · "),
             style = MaterialTheme.typography.labelSmall,
             fontFamily = FontFamily.Monospace,
-            color = if (ready) MaterialTheme.colorScheme.onSurface else LocalStatusColors.current.bad,
+            color = when {
+                !ready -> LocalStatusColors.current.bad
+                open != null -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurface
+            },
         )
     }
 }

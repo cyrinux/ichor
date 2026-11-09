@@ -24,6 +24,9 @@ struct AppsView: View {
     @State private var showSystem = false
     @State private var showUnrecognised = false
     @State private var selected: InventoryApp?
+    /// The pod an app sheet asked for: pushed once the sheet is closed.
+    @State private var pendingPod: KubeFocus?
+    @State private var openPod: KubeFocus?
     @State private var reportShown = false
     /// The app a row of the images report asked for: its sheet opens once the report's closed.
     @State private var reportApp: String?
@@ -105,8 +108,19 @@ struct AppsView: View {
                 }
             }
         }
-        .sheet(item: $selected) { app in
-            AppDetailSheet(app: app, hostnames: hostnamesStale ? [:] : hostnames, argoCD: argoCDShown)
+        .sheet(
+            item: $selected,
+            onDismiss: {
+                openPod = pendingPod
+                pendingPod = nil
+            }
+        ) { app in
+            AppDetailSheet(
+                app: app, hostnames: hostnamesStale ? [:] : hostnames, argoCD: argoCDShown,
+                openPod: sheetOpensPods)
+        }
+        .navigationDestination(item: $openPod) { focus in
+            KubernetesView(focus: focus).recordsOpened(focus.shareTarget, label: focus.name, detail: focus.namespace)
         }
         // Screenshot mode toggled: nothing loaded before (names, logos) stays on screen.
         .onChange(of: model.dataGeneration) {
@@ -181,6 +195,19 @@ struct AppsView: View {
 
     private var loadedInventory: ClusterInventory? {
         if case .loaded(let inventory, _, _) = state { inventory } else { nil }
+    }
+
+    /// What an app sheet's pod row does: open the pod, for a role allowed to open workloads.
+    private var sheetOpensPods: ((Route) -> Void)? {
+        guard model.allows(.workloads) else { return nil }
+        return { route in openPodFromSheet(route) }
+    }
+
+    /// A pod row of the app sheet: the sheet closes, then its dismissal pushes the pod.
+    private func openPodFromSheet(_ route: Route) {
+        guard case .kubernetes(let focus) = route else { return }
+        pendingPod = focus
+        selected = nil
     }
 
     /// The app a report row named, once the report sheet is gone (one sheet at a time).

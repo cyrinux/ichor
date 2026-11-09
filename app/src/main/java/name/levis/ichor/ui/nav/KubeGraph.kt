@@ -121,21 +121,23 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
         Routes.APPS,
         arguments = listOf(navArgument("attention") { type = NavType.BoolType; defaultValue = false }),
     ) { entry ->
-        AppsScreen(
-            attention = entry.arguments?.getBoolean("attention") == true,
-            onBack = { nav.popBackStack() },
-            // A pod's node, on its Pods tab; without Talos, the Kubernetes nodes on that one (they need the home below).
-            onNode = { addr, host, _ ->
-                if (app.configRepository.config.value?.activeIsKube != true) nav.navigate(Routes.nodeTabs(addr, host, tab = 4))
-                else if (runCatching { nav.getBackStackEntry(Routes.OVERVIEW) }.isSuccess) nav.navigate(Routes.kubeNodes(null, query = host))
-            },
-            onArgoCD = { nav.navigate(Routes.ARGO_CD) },
-            onArgoApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
-            onFlux = { nav.navigate(Routes.FLUX) },
-            onObject = kubeLinks.onObject,
-            onScanReports = { cluster -> nav.navigate(Routes.scanReports(cluster)) },
-            onNodeImages = { addr, host -> nav.navigate(Routes.images(addr, host)) },
-        )
+        CompositionLocalProvider(LocalOpenPod provides nav::openPod) {
+            AppsScreen(
+                attention = entry.arguments?.getBoolean("attention") == true,
+                onBack = { nav.popBackStack() },
+                // A pod's node, on its Pods tab; without Talos, the Kubernetes nodes on that one (they need the home below).
+                onNode = { addr, host, _ ->
+                    if (app.configRepository.config.value?.activeIsKube != true) nav.navigate(Routes.nodeTabs(addr, host, tab = 4))
+                    else if (runCatching { nav.getBackStackEntry(Routes.OVERVIEW) }.isSuccess) nav.navigate(Routes.kubeNodes(null, query = host))
+                },
+                onArgoCD = { nav.navigate(Routes.ARGO_CD) },
+                onArgoApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
+                onFlux = { nav.navigate(Routes.FLUX) },
+                onObject = kubeLinks.onObject,
+                onScanReports = { cluster -> nav.navigate(Routes.scanReports(cluster)) },
+                onNodeImages = { addr, host -> nav.navigate(Routes.images(addr, host)) },
+            )
+        }
     }
     composable(
         Routes.WORKLOADS,
@@ -251,22 +253,24 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
     ) { entry ->
         val arg = entry.arguments?.getString("kind").orEmpty()
         val kind = DataServiceKind.entries.firstOrNull { it.name == arg }
-        name.levis.ichor.ui.dataservices.DataServicesScreen(
-            initial = kind,
-            initialPlugin = arg.takeIf { it.startsWith(Routes.DATA_SERVICES_PLUGIN_PREFIX) }?.removePrefix(Routes.DATA_SERVICES_PLUGIN_PREFIX),
-            solo = entry.arguments?.getBoolean("solo") == true && kind != null,
-            onBack = { nav.popBackStack() },
-            onObject = kubeLinks.onObject,
-            onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
-            onRequestIntegration = { nav.navigate(Routes.INTEGRATIONS) },
-            // The nodes lists share the home's data: they open only with the home below.
-            onNodes = {
-                if (runCatching { nav.getBackStackEntry(Routes.OVERVIEW) }.isSuccess) {
-                    val kube = app.configRepository.config.value?.activeIsKube == true
-                    nav.navigate(if (kube) Routes.kubeNodes(NodeFilter.NOT_READY) else Routes.nodes(NodeFilter.NOT_READY))
-                }
-            },
-        )
+        CompositionLocalProvider(LocalOpenPod provides nav::openPod) {
+            name.levis.ichor.ui.dataservices.DataServicesScreen(
+                initial = kind,
+                initialPlugin = arg.takeIf { it.startsWith(Routes.DATA_SERVICES_PLUGIN_PREFIX) }?.removePrefix(Routes.DATA_SERVICES_PLUGIN_PREFIX),
+                solo = entry.arguments?.getBoolean("solo") == true && kind != null,
+                onBack = { nav.popBackStack() },
+                onObject = kubeLinks.onObject,
+                onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
+                onRequestIntegration = { nav.navigate(Routes.INTEGRATIONS) },
+                // The nodes lists share the home's data: they open only with the home below.
+                onNodes = {
+                    if (runCatching { nav.getBackStackEntry(Routes.OVERVIEW) }.isSuccess) {
+                        val kube = app.configRepository.config.value?.activeIsKube == true
+                        nav.navigate(if (kube) Routes.kubeNodes(NodeFilter.NOT_READY) else Routes.nodes(NodeFilter.NOT_READY))
+                    }
+                },
+            )
+        }
     }
 }
 
