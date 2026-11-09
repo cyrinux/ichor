@@ -10,6 +10,9 @@ struct AppDetailSheet: View {
     let hostnames: [String: String]
     /// The inventory shows Argo CD: the Applications deploying the app are shown.
     var argoCD = false
+    /// Opens a pod's logs and actions: the presenter closes the sheet, then pushes the route (a
+    /// push from inside a sheet is dropped). Nil: pods are plain rows.
+    var openPod: ((Route) -> Void)?
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -46,7 +49,16 @@ struct AppDetailSheet: View {
                 }
                 if !app.pods.isEmpty {
                     Section("Pods") {
-                        ForEach(app.pods) { PodLine(pod: $0, hostname: hostnames[$0.node] ?? $0.node) }
+                        ForEach(app.pods) { pod in
+                            let line = PodLine(pod: pod, hostname: hostnames[pod.node] ?? pod.node)
+                            if let openPod {
+                                PodLink(namespace: pod.namespace, name: pod.pod, open: openPod) {
+                                    line
+                                }
+                            } else {
+                                line
+                            }
+                        }
                     }
                 }
             }

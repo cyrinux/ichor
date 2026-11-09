@@ -90,10 +90,12 @@ the reason in the menu, and TalkBack lists every action on the row. A Kubernetes
 to Cordon (or Uncordon) and long-presses to that, Drain…, Taints and labels… and, with the setting
 on, the debug shell; a tap does what it did.
 
-A pod named on another screen (an Argo CD or Flux app, the network map, …) opens here with its
-log sheet: the Pods tab, scoped to its namespace and searched for its name, with the actions
-above one tap away. On Android a Flux app's pod row opens the pod; its node stays one tap away
-on the row's trailing button.
+A pod named on another screen (an Argo CD or Flux app, the network map, the Apps sheet,
+CloudNativePG and Garage instances, a volume's pods, …) opens here with its log sheet: the Pods
+tab, scoped to its namespace and searched for its name, with the actions above one tap away. On
+Android a Flux app's pod row and an Apps sheet's pod row open the pod; the node stays one tap
+away on the row's trailing button. The Android object screen of a pod (resource browser) has
+Logs in its bar too, opening the same log sheet, for a role that may read the pod's log.
 
 When kube-green has the namespace asleep, a workload sheet says so on the row (with its wake-up
 time) and warns before scaling a workload or resuming a CronJob, since kube-green restores the

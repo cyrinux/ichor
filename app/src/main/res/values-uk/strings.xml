@@ -2444,6 +2444,7 @@
     <string name="garage_resync_errors">Блоки з помилками ресинхронізації</string>
     <string name="garage_table_queue">Черга синхронізації метаданих</string>
     <string name="garage_pods">Поди</string>
+    <string name="garage_pod">Под</string>
     <string name="garage_version">Версія</string>
     <string name="garage_nodes">Вузли</string>
     <string name="garage_node_down">не працює</string>
@@ -4917,7 +4918,6 @@
     <string name="storage_kube_no_match">Жоден PVC не відповідає.</string>
     <string name="storage_kube_partial">Ці облікові дані не можуть читати томи, класи або вузли: деяких відомостей бракує.</string>
     <string name="storage_kube_not_measured">заповненість не виміряно</string>
-    <string name="storage_kube_pods">Використовують: %1$s</string>
     <string name="storage_kube_open">Відкрити в %1$s</string>
     <string name="kube_services_title">Сервіси</string>
     <string name="kube_services_search">Шукати сервіси, адреси або маршрути</string>

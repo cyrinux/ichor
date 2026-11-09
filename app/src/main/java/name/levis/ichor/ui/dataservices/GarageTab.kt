@@ -51,6 +51,7 @@ import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.InfoRow
+import name.levis.ichor.ui.workloads.PodLinkText
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MeterRow
 import name.levis.ichor.ui.components.ResourceRow
@@ -181,6 +182,7 @@ private fun InstanceCard(
                 if (inst.resyncErrors >= 0) InfoRow(stringResource(R.string.garage_resync_errors), count(inst.resyncErrors))
                 if (inst.tableSyncQueue >= 0) InfoRow(stringResource(R.string.garage_table_queue), count(inst.tableSyncQueue))
                 InfoRow(stringResource(R.string.garage_pods), stringResource(R.string.pods_ready_count, inst.podsReady, inst.pods))
+                if (inst.pod.isNotEmpty()) GaragePodRow(inst)
                 if (inst.version.isNotEmpty()) InfoRow(stringResource(R.string.garage_version), inst.version, mono = true)
             }
         }
@@ -353,5 +355,19 @@ private fun NodeMenu(node: GarageNode, tuning: Boolean, onTranquility: ((Long) -
                 })
             }
         }
+    }
+}
+
+/** The pod Garage's CLI ran in, opening its logs and actions. */
+@Composable
+private fun GaragePodRow(inst: GarageInstance) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            stringResource(R.string.garage_pod),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(0.4f),
+        )
+        PodLinkText(inst.namespace, inst.pod, Modifier.weight(0.6f), style = MaterialTheme.typography.bodyMedium)
     }
 }

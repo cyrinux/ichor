@@ -3,6 +3,8 @@ package name.levis.ichor.ui.kubebrowser
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -47,6 +49,7 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.UsageBar
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.workloads.PodLinkText
 import name.levis.ichor.util.formatBytes
 
 /** The claims of a namespace (null for every one), with their volume, pods and fill. */
@@ -188,9 +191,7 @@ private fun ClaimRow(
         }
         val details = listOf(c.storageClass, c.volume, c.accessModes.joinToString(",")).filter { it.isNotEmpty() }
         if (details.isNotEmpty()) MutedText(details.joinToString("  ·  "), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (c.pods.isNotEmpty()) {
-            MutedText(stringResource(R.string.storage_kube_pods, c.pods.joinToString(", ")), maxLines = 2, overflow = TextOverflow.Ellipsis)
-        }
+        if (c.pods.isNotEmpty()) ClaimPods(c)
         c.managedKind?.let { kind ->
             IchorAssistChip(onClick = { onDataService(kind) }, label = { Text(stringResource(R.string.storage_kube_open, kind.title)) })
         }
@@ -201,5 +202,15 @@ private fun ClaimRow(
             IchorAssistChip(onClick = onSnapshot, enabled = denial == null, label = { Text(stringResource(R.string.snapshot_create)) })
             denial?.let { name.levis.ichor.ui.components.KubeDenialNote(it) }
         }
+    }
+}
+
+/** "Used by" and the claim's pods, each opening its logs and actions. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ClaimPods(c: StorageClaim) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+        MutedText(stringResource(R.string.kb_data_used_by))
+        c.pods.forEach { pod -> PodLinkText(c.namespace, pod, Modifier.padding(vertical = 2.dp), style = MaterialTheme.typography.labelMedium) }
     }
 }

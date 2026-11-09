@@ -118,9 +118,10 @@ fun groupedMenu(menu: List<KubernetesAction>): List<Pair<KubernetesActionGroup, 
 
 /**
  * What a Kubernetes object's app bar offers (the resource browser's object screen). Delete
- * comes last: in the menu, away from a stray tap.
+ * comes last: in the menu, away from a stray tap. A saved bar is read by name, so a new action
+ * can sit anywhere here (it joins a saved bar at the end of its menu).
  */
-enum class KubeObjectAction { EDIT, REFRESH, COPY, SHARE, PORT_FORWARD, SCALE, DELETE;
+enum class KubeObjectAction { EDIT, REFRESH, COPY, SHARE, LOGS, PORT_FORWARD, SCALE, DELETE;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 3)

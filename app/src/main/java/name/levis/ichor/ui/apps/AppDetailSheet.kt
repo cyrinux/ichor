@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -26,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
@@ -52,6 +55,8 @@ import name.levis.ichor.ui.imagescan.appScanSection
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.nav.LocalOpenPod
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 
@@ -61,8 +66,9 @@ import name.levis.ichor.util.formatBytes
  * the Argo CD Applications deploying it ([argo], null without Argo CD), Flux's summary on the
  * Flux tile ([flux], null elsewhere), its images' vulnerabilities ([scan], null when the role
  * cannot reach the Kubernetes API), its images and its
- * pods. [nodes] names the node addresses; tapping a pod opens its node's pods ([onPodNode]
- * with the node address).
+ * pods. [nodes] names the node addresses; tapping a pod closes the sheet and opens the pod's
+ * logs and actions ([LocalOpenPod]), its trailing button its node's pods ([onPodNode] with the
+ * node address). Where no screen opens a pod, the row opens the node.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,6 +84,13 @@ fun AppDetailSheet(
     onObject: (KubeObjectRef) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    // A push from an open sheet would be hidden behind it: the sheet closes first.
+    val openPod = LocalOpenPod.current?.let { open ->
+        { ns: String, name: String ->
+            onDismiss()
+            open(ns, name)
+        }
+    }
     ModalBottomSheet(onDismissRequest = onDismiss) {
         LazyColumn(
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
@@ -100,7 +113,12 @@ fun AppDetailSheet(
             if (app.pods.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.apps_detail_pods)) }
                 items(app.pods, key = { "${it.namespace}/${it.pod}/${it.node}" }) { pod ->
-                    PodRow(pod, nodes[pod.node]?.hostname ?: pod.node) { onPodNode(pod.node) }
+                    PodRow(
+                        pod,
+                        nodes[pod.node]?.hostname ?: pod.node,
+                        onOpen = openPod?.let { open -> { open(pod.namespace, pod.pod) } },
+                        onNode = { onPodNode(pod.node) },
+                    )
                 }
             }
         }
@@ -194,21 +212,29 @@ private fun ImageRow(image: InventoryImage, drifting: Boolean) {
     }
 }
 
-/** Status dot, pod name, then "node · containers · memory". */
+/**
+ * Status dot, pod name, then "node · containers · memory". A tap opens the pod ([onOpen]) and the
+ * trailing button its node ([onNode]); without [onOpen], a tap opens the node.
+ */
 @Composable
-private fun PodRow(pod: InventoryPod, host: String, onClick: () -> Unit) {
+private fun PodRow(pod: InventoryPod, host: String, onOpen: (() -> Unit)?, onNode: () -> Unit) {
     val colors = LocalStatusColors.current
     val (dot, state) = when (pod.state) {
         PodState.RUNNING -> colors.ok to stringResource(R.string.pod_state_running)
         PodState.STARTING -> colors.warn to stringResource(R.string.pod_state_starting)
         PodState.STOPPED -> colors.bad to stringResource(R.string.pod_state_stopped)
     }
+    val tap = if (onOpen == null) {
+        Modifier.clickable(onClickLabel = stringResource(R.string.argo_net_open_node), role = Role.Button, onClick = onNode)
+    } else {
+        Modifier.clickable(onClickLabel = stringResource(R.string.pod_open), role = Role.Button, onClick = onOpen)
+    }
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 6.dp),
+        Modifier.fillMaxWidth().then(tap).padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(8.dp).background(dot, CircleShape).semantics { contentDescription = state })
-        Column(Modifier.padding(start = 12.dp)) {
+        Column(Modifier.weight(1f).padding(start = 12.dp)) {
             Text(pod.pod, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             MutedText(
                 listOfNotNull(
@@ -219,6 +245,9 @@ private fun PodRow(pod: InventoryPod, host: String, onClick: () -> Unit) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+        }
+        if (onOpen != null && pod.node.isNotEmpty()) {
+            TooltipIconButton(Icons.Outlined.Dns, stringResource(R.string.argo_net_open_node), onClick = onNode)
         }
     }
 }

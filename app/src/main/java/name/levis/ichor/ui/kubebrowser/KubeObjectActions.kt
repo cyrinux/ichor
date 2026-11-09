@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.kubebrowser
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
@@ -19,6 +20,7 @@ private fun kubeObjectActionIcon(action: KubeObjectAction): ImageVector = when (
     KubeObjectAction.REFRESH -> Icons.Outlined.Refresh
     KubeObjectAction.COPY -> Icons.Outlined.ContentCopy
     KubeObjectAction.SHARE -> Icons.Outlined.Share
+    KubeObjectAction.LOGS -> Icons.AutoMirrored.Outlined.Article
     KubeObjectAction.PORT_FORWARD -> Icons.Outlined.SettingsEthernet
     KubeObjectAction.SCALE -> Icons.Outlined.UnfoldMore
     KubeObjectAction.DELETE -> Icons.Outlined.Delete
@@ -32,6 +34,7 @@ val kubeObjectActionLook = ActionLook<KubeObjectAction>(::kubeObjectActionIcon) 
             KubeObjectAction.REFRESH -> R.string.common_refresh
             KubeObjectAction.COPY -> R.string.kb_copy
             KubeObjectAction.SHARE -> R.string.kb_share
+            KubeObjectAction.LOGS -> R.string.row_logs
             KubeObjectAction.PORT_FORWARD -> R.string.kb_forward_title
             KubeObjectAction.SCALE -> R.string.workloads_scale
             KubeObjectAction.DELETE -> R.string.kb_delete

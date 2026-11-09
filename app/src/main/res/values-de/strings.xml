@@ -2300,6 +2300,7 @@
     <string name="garage_resync_errors">Blöcke mit Resync-Fehlern</string>
     <string name="garage_table_queue">Metadaten-Sync-Warteschlange</string>
     <string name="garage_pods">Pods</string>
+    <string name="garage_pod">Pod</string>
     <string name="garage_version">Version</string>
     <string name="garage_nodes">Knoten</string>
     <string name="garage_node_down">ausgefallen</string>
@@ -4683,7 +4684,6 @@
     <string name="storage_kube_no_match">Kein PVC passt.</string>
     <string name="storage_kube_partial">Diese Zugangsdaten dürfen Volumes, Klassen oder Nodes nicht lesen: einige Angaben fehlen.</string>
     <string name="storage_kube_not_measured">Füllstand nicht gemessen</string>
-    <string name="storage_kube_pods">Verwendet von %1$s</string>
     <string name="storage_kube_open">In %1$s öffnen</string>
     <string name="kube_services_title">Services</string>
     <string name="kube_services_search">Services, Adressen oder Routen suchen</string>

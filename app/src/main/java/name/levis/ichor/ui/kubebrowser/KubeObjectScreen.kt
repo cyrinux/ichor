@@ -50,6 +50,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.model.KubeObjectAction
 import name.levis.ichor.model.KubeObjectBar
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubePermission
 import name.levis.ichor.model.ObjectOwner
 import name.levis.ichor.model.hasConfigData
@@ -75,6 +76,7 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SkeletonStyle
 import name.levis.ichor.ui.components.ToggleRow
 import name.levis.ichor.ui.components.rememberKubeCanDenial
+import name.levis.ichor.ui.workloads.PodLogSheet
 import name.levis.ichor.ui.components.shareText
 import name.levis.ichor.ui.diff.DiffLines
 import name.levis.ichor.ui.factory
@@ -84,9 +86,10 @@ import name.levis.ichor.ui.factory
  * through [onOwner] or [onHelmRelease], events, metadata), then its YAML, with copy and share,
  * a Secret's values behind the app lock, and, when the kind can be updated, an editor whose
  * change is reviewed as a diff (the API server's dry run) before it is saved. A pod also opens
- * a port-forward ([onPortForward]). Delete confirms with what the deletion would touch, then
- * leaves ([onDeleted]). Its top bar is arranged like the overview's: the actions shown as icons
- * or kept in its menu are the user's choice.
+ * its log sheet (for a role that may read its log) and a port-forward ([onPortForward]). Delete
+ * confirms with what the deletion would touch, then leaves ([onDeleted]). Its top bar is
+ * arranged like the overview's: the actions shown as icons or kept in its menu are the user's
+ * choice.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -205,6 +208,11 @@ fun KubeObjectScreen(
         }
     }
 
+    // A pod's log sheet, the one its Pods tab row opens; offered to a role that may read its log.
+    val logsDenial = if (ref.isPod) rememberKubeCanDenial("get", "", "pods/log", ref.namespace, ref.name) else null
+    var logsOpen by rememberSaveable { mutableStateOf(false) }
+    if (logsOpen) PodLogSheet(KubePod(ref.namespace, ref.name), onDismiss = { logsOpen = false })
+
     val bar by app.uiPreferences.kubeObjectBar.collectAsStateWithLifecycle()
     var customizing by rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = customizing) { customizing = false }
@@ -258,6 +266,7 @@ fun KubeObjectScreen(
                             revealed,
                             bar,
                             onPortForward,
+                            onLogs = if (ref.isPod && logsDenial == null) ({ logsOpen = true }) else null,
                             deleteRefusal = deleteDenial?.denialText()?.asString(),
                             scaleRefusal = scaleDenial?.denialText()?.asString(),
                             onEdit = vm::startEdit,
@@ -355,6 +364,7 @@ private fun ViewActions(
     revealed: Boolean,
     bar: KubeObjectBar,
     onPortForward: (() -> Unit)?,
+    onLogs: (() -> Unit)?,
     deleteRefusal: String?,
     scaleRefusal: String?,
     onEdit: () -> Unit,
@@ -373,6 +383,7 @@ private fun ViewActions(
                 KubeObjectAction.REFRESH -> onRefresh()
                 KubeObjectAction.COPY -> copyWithToast(context, ref.name, yaml.orEmpty(), sensitive = ref.isSecret && revealed)
                 KubeObjectAction.SHARE -> shareText(context, yaml.orEmpty(), context.getString(R.string.kb_share))
+                KubeObjectAction.LOGS -> onLogs?.invoke()
                 KubeObjectAction.PORT_FORWARD -> onPortForward?.invoke()
                 KubeObjectAction.SCALE -> onScale()
                 KubeObjectAction.DELETE -> onDelete()
@@ -383,13 +394,14 @@ private fun ViewActions(
         offered = { action ->
             when (action) {
                 KubeObjectAction.EDIT -> ref.editable
+                KubeObjectAction.LOGS -> onLogs != null
                 KubeObjectAction.PORT_FORWARD -> onPortForward != null && ref.isPod
                 KubeObjectAction.SCALE -> ref.scalable
                 else -> true
             }
         },
         // Nothing to copy, share or edit before the YAML is read.
-        enabled = { action -> action == KubeObjectAction.REFRESH || action == KubeObjectAction.PORT_FORWARD || action == KubeObjectAction.SCALE || yaml != null },
+        enabled = { action -> action in ALWAYS_ENABLED || yaml != null },
         refusal = { action ->
             when (action) {
                 KubeObjectAction.DELETE -> deleteRefusal
@@ -399,6 +411,9 @@ private fun ViewActions(
         },
     )
 }
+
+/** The actions that need no YAML read: they act on the object itself, not on its text. */
+private val ALWAYS_ENABLED = setOf(KubeObjectAction.REFRESH, KubeObjectAction.LOGS, KubeObjectAction.PORT_FORWARD, KubeObjectAction.SCALE)
 
 /** The switch showing a Secret's values, and the warning while they are shown. */
 @Composable

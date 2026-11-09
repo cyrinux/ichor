@@ -2307,6 +2307,7 @@
     <string name="garage_resync_errors">Blocks failing to resync</string>
     <string name="garage_table_queue">Metadata sync queue</string>
     <string name="garage_pods">Pods</string>
+    <string name="garage_pod">Pod</string>
     <string name="garage_version">Version</string>
     <string name="garage_nodes">Nodes</string>
     <string name="garage_node_down">down</string>
@@ -4694,7 +4695,6 @@
     <string name="storage_kube_no_match">No PVC matches.</string>
     <string name="storage_kube_partial">These credentials may not read volumes, classes or nodes: some details are missing.</string>
     <string name="storage_kube_not_measured">fill not measured</string>
-    <string name="storage_kube_pods">Used by %1$s</string>
     <string name="storage_kube_open">Open in %1$s</string>
     <string name="kube_services_title">Services</string>
     <string name="kube_services_search">Search services, addresses or routes</string>

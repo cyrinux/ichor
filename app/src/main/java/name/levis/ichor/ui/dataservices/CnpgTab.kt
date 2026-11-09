@@ -173,7 +173,7 @@ private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit, pr
         }
         if (c.instancePods.isNotEmpty() || c.missingInstances.isNotEmpty()) {
             Text(stringResource(R.string.cnpg_instances), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-            c.instancePods.forEach { DataPodLine(it.name, it.ready, it.node, it.phase, it.role, indent = 8.dp) }
+            c.instancePods.forEach { DataPodLine(it.name, it.ready, it.node, it.phase, it.role, indent = 8.dp, namespace = c.namespace) }
             val noPod = stringResource(R.string.cnpg_instance_no_pod)
             c.missingInstances.forEach { DataPodLine(it, ready = false, node = "", phase = noPod, indent = 8.dp) }
         }

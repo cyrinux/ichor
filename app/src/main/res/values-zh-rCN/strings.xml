@@ -2230,6 +2230,7 @@
     <string name="garage_resync_errors">重新同步失败的块</string>
     <string name="garage_table_queue">元数据同步队列</string>
     <string name="garage_pods">Pod</string>
+    <string name="garage_pod">Pod</string>
     <string name="garage_version">版本</string>
     <string name="garage_nodes">节点</string>
     <string name="garage_node_down">宕机</string>
@@ -4570,7 +4571,6 @@
     <string name="storage_kube_no_match">没有匹配的 PVC。</string>
     <string name="storage_kube_partial">这些凭据可能无法读取卷、存储类或节点：部分详情缺失。</string>
     <string name="storage_kube_not_measured">未测量用量</string>
-    <string name="storage_kube_pods">使用者：%1$s</string>
     <string name="storage_kube_open">在 %1$s 中打开</string>
     <string name="kube_services_title">服务</string>
     <string name="kube_services_search">搜索 Service、地址或路由</string>

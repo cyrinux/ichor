@@ -222,21 +222,22 @@ private struct ClusterRow: View {
                 value: switching ? "\(cluster.currentPrimary) → \(cluster.targetPrimary)" : cluster.currentPrimary)
         }
         if !cluster.instancePods.isEmpty || !cluster.missingInstances.isEmpty {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Instances").font(.caption).foregroundStyle(.secondary)
-                ForEach(cluster.instancePods) { pod in
+            Text("Instances").font(.caption).foregroundStyle(.secondary)
+            // A row per instance: its pod opens its logs and actions; a missing one has no pod.
+            ForEach(cluster.instancePods) { pod in
+                PodLink(namespace: cluster.namespace, name: pod.name) {
                     HStack(spacing: 6) {
                         HealthDot(health: pod.ready ? .ok : .critical, size: 8)
                         Text(verbatim: pod.line).font(.caption.monospaced()).foregroundStyle(
                             pod.ready ? .primary : Color.red)
                     }
                 }
-                ForEach(cluster.missingInstances, id: \.self) { name in
-                    HStack(spacing: 6) {
-                        HealthDot(health: .critical, size: 8)
-                        Text(verbatim: "\(name) · \(String(localized: "no pod"))").font(.caption.monospaced())
-                            .foregroundStyle(Color.red)
-                    }
+            }
+            ForEach(cluster.missingInstances, id: \.self) { name in
+                HStack(spacing: 6) {
+                    HealthDot(health: .critical, size: 8)
+                    Text(verbatim: "\(name) · \(String(localized: "no pod"))").font(.caption.monospaced())
+                        .foregroundStyle(Color.red)
                 }
             }
         }

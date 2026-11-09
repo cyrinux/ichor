@@ -1,8 +1,11 @@
 package name.levis.ichor.ui.kubebrowser
 
+import name.levis.ichor.ui.nav.LocalOpenPod
 import name.levis.ichor.ui.nav.Routes
+import name.levis.ichor.ui.nav.openPod
 import android.net.Uri
 import android.os.Bundle
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NamedNavArgument
@@ -113,12 +116,14 @@ object KubeBrowserRoutes {
             )
         }
         composable(STORAGE) {
-            StorageScreen(
-                onBack = { nav.popBackStack() },
-                onClaim = links.onObject,
-                onDataService = { nav.navigate(Routes.dataServices(it)) },
-                onPlugin = { nav.navigate(plugin(it)) },
-            )
+            CompositionLocalProvider(LocalOpenPod provides nav::openPod) {
+                StorageScreen(
+                    onBack = { nav.popBackStack() },
+                    onClaim = links.onObject,
+                    onDataService = { nav.navigate(Routes.dataServices(it)) },
+                    onPlugin = { nav.navigate(plugin(it)) },
+                )
+            }
         }
         composable(SERVICES) {
             ServicesScreen(onBack = { nav.popBackStack() }, onObject = links.onObject, onLoadBalancing = { nav.navigate(LOAD_BALANCING) })

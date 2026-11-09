@@ -2230,6 +2230,7 @@
     <string name="garage_resync_errors">再同期に失敗しているブロック</string>
     <string name="garage_table_queue">メタデータ同期キュー</string>
     <string name="garage_pods">Pod</string>
+    <string name="garage_pod">Pod</string>
     <string name="garage_version">バージョン</string>
     <string name="garage_nodes">ノード</string>
     <string name="garage_node_down">ダウン</string>
@@ -4570,7 +4571,6 @@
     <string name="storage_kube_no_match">一致する PVC はありません。</string>
     <string name="storage_kube_partial">この認証情報ではボリューム、クラス、ノードを読み取れない可能性があり、一部の詳細が欠けています。</string>
     <string name="storage_kube_not_measured">使用量は未計測</string>
-    <string name="storage_kube_pods">使用元：%1$s</string>
     <string name="storage_kube_open">%1$s で開く</string>
     <string name="kube_services_title">サービス</string>
     <string name="kube_services_search">Service、アドレス、ルートを検索</string>

@@ -50,6 +50,12 @@ struct KubeStorageView: View {
                 } label: {
                     StorageClaimRow(claim: claim, showNamespace: showNamespace)
                 }
+                // Each pod using the claim opens its logs and actions.
+                ForEach(claim.pods, id: \.self) { pod in
+                    PodLink(namespace: claim.namespace, name: pod) {
+                        Label(String(localized: "Used by \(pod)"), systemImage: "cube").font(.footnote)
+                    }
+                }
                 if let kind = claim.managedKind {
                     NavigationLink(value: Route.dataServices(hints: "", downNodes: [], kind: kind)) {
                         Label(
@@ -115,7 +121,7 @@ struct KubeStorageView: View {
 }
 
 /// A claim: name and phase (coloured by level), fill bar or "fill not measured", class,
-/// volume and access modes, the pods using it.
+/// volume and access modes (the pods using it are rows of their own, below).
 private struct StorageClaimRow: View {
     let claim: StorageClaim
     let showNamespace: Bool
@@ -149,10 +155,6 @@ private struct StorageClaimRow: View {
             }
             if !details.isEmpty {
                 Text(verbatim: details.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-            }
-            if !claim.pods.isEmpty {
-                Text("Used by \(claim.pods.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary)
-                    .lineLimit(2)
             }
         }
         .accessibilityElement(children: .combine)
