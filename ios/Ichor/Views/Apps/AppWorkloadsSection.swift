@@ -19,7 +19,7 @@ struct AppWorkloadsSection: View {
     @State private var following: KubeWorkload?
 
     var body: some View {
-        Section("Workloads") {
+        Section {
             switch state {
             case .loading:
                 Text("Finding its workloads…").note()
@@ -46,13 +46,16 @@ struct AppWorkloadsSection: View {
                     }
                 }
             }
+        } header: {
+            Text("Workloads")
+                // On the header, always shown: a List gives a Section's modifiers to each of its rows.
+                .task(id: app) {
+                    found = nil
+                    state = .loading
+                    await load()
+                }
         }
         .loadsKubeActionAccess(namespace: accessNamespace)
-        .task(id: app) {
-            found = nil
-            state = .loading
-            await load()
-        }
         .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
         .sheet(item: $following) { workload in RolloutStatusSheet(workload: workload) { await load() } }
         .messageAlert($resultMessage)

@@ -164,6 +164,7 @@ build_inside() {
     python3 "$ROOT/scripts/check-file-length.py"
     python3 "$ROOT/scripts/check-contract.py"
     python3 "$ROOT/scripts/check-panics.py"
+    python3 "$ROOT/scripts/check-section-lifecycle.py"
     python3 "$ROOT/scripts/check-play-listing.py"
     python3 "$ROOT/scripts/site-i18n.py" --check
     python3 "$ROOT/scripts/local-models.py" --check

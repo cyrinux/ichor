@@ -20,7 +20,7 @@ struct UpdateBotSection: View {
     private var demo: Bool { model.activeSummary?.demo == true }
 
     var body: some View {
-        Section("Dependency updates") {
+        Section {
             switch state {
             case .loading:
                 HStack(spacing: 8) {
@@ -44,8 +44,11 @@ struct UpdateBotSection: View {
                     Text(verbatim: checked.config.notes.first ?? "").font(.footnote).foregroundStyle(.secondary)
                 }
             }
+        } header: {
+            Text("Dependency updates")
+                // On the header, always shown: a List gives a Section's modifiers to each of its rows.
+                .task(id: repo) { await load() }
         }
-        .task(id: repo) { await load() }
         .sheet(isPresented: $reviewing) {
             if case .loaded(let checked, _, _) = state {
                 UpdateBotDraftView(source: checked.source, config: checked.config)

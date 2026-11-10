@@ -40,6 +40,10 @@ an issue first so we can agree on the approach before you spend time on it.
 - No `panic(` in Go outside tests (`scripts/check-panics.py`): return an error. `onPanic` is
   the last net, not the first; the few exceptions (init-time embedded files, re-panics) are
   listed with a reason in the script.
+- No `.task`, `.onAppear`, `.onDisappear` or `.onChange` on a view whose `body` is a `Section`
+  (`scripts/check-section-lifecycle.py`): in a `List` or `Form` SwiftUI gives a Section's
+  modifiers to each of its rows, so they run once per row and again as rows come and go. Put
+  them on a row that is always shown, or on the header.
 - `ios/Ichor/Views` is organised by feature folder, each mirroring Android `ui/` packages (the
   table is in `ios/Ichor/Views/README.md`): a new screen goes in the folder of its Android twin,
   a view several folders use goes in `Components/`.

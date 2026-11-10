@@ -44,7 +44,7 @@ struct AppScanSection: View {
     }
 
     var body: some View {
-        Section("Vulnerabilities") {
+        Section {
             if let scan, scan.running {
                 ScanProgressLines(scan: scan) { job.stop() }
             } else {
@@ -120,20 +120,23 @@ struct AppScanSection: View {
                     Label("All scan reports", systemImage: "tray.full")
                 }
             }
-        }
-        .task(id: savedKey) {
-            let history = (try? await TalosClient.imageScanHistory(cluster: model.activeContext)) ?? []
-            saved = history.last(of: target.id)
-        }
-        .task(id: target) {
-            operatorState = .loading
-            guard let client = model.client else { return }
-            let pods = target.pods
-            guard !pods.isEmpty else {
-                operatorState = .loaded(OperatorReports(), at: Date())
-                return
-            }
-            operatorState = await .from { try await client.imageScanOperatorReports(pods: pods) }
+        } header: {
+            Text("Vulnerabilities")
+                // On the header, always shown: a List gives a Section's modifiers to each of its rows.
+                .task(id: savedKey) {
+                    let history = (try? await TalosClient.imageScanHistory(cluster: model.activeContext)) ?? []
+                    saved = history.last(of: target.id)
+                }
+                .task(id: target) {
+                    operatorState = .loading
+                    guard let client = model.client else { return }
+                    let pods = target.pods
+                    guard !pods.isEmpty else {
+                        operatorState = .loaded(OperatorReports(), at: Date())
+                        return
+                    }
+                    operatorState = await .from { try await client.imageScanOperatorReports(pods: pods) }
+                }
         }
     }
 }

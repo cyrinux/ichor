@@ -24,6 +24,8 @@ struct JoinConfigSection: View {
                 "The new node gets the config of a member of the same role, with its own host name, install disk and address. The member is only read."
             )
             .font(.footnote).foregroundStyle(.secondary)
+            // On this row, always shown: a List gives a Section's modifiers to each of its rows.
+            .task { await loadMembers() }
             switch members {
             case .loading:
                 ProgressView().frame(maxWidth: .infinity)
@@ -36,7 +38,6 @@ struct JoinConfigSection: View {
         } header: {
             Text("2. Machine config from an existing node: role, host name and install disk")
         }
-        .task { await loadMembers() }
         if let template {
             fields(template)
         }

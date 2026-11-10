@@ -28,6 +28,10 @@ struct PrivacySection: View {
             }
             // No second flip while the names switch (SettingsStore.maskTransition).
             .disabled(settings.maskTransition)
+            // On this row, always shown: a List gives a Section's modifiers to each of its rows.
+            .onAppear { words = settings.privacyWords }
+            .onChange(of: editingWords) { _, editing in if !editing { commit() } }
+            .onDisappear(perform: commit)
             if settings.privacyMask {
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("Also hide these words", text: $words)
@@ -62,9 +66,6 @@ struct PrivacySection: View {
         } header: {
             Text("Privacy")
         }
-        .onAppear { words = settings.privacyWords }
-        .onChange(of: editingWords) { _, editing in if !editing { commit() } }
-        .onDisappear(perform: commit)
     }
 
     private func commit() {
