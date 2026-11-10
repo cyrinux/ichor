@@ -40,7 +40,7 @@ Las comprobaciones en segundo plano te avisan cuando un nodo cae o el certificad
 <b>Diagnóstico con IA opcional</b>
 Desactivado por defecto e invisible hasta que lo actives. Genera un informe del estado del clúster y te lo muestra; solo al tocar Preguntar se envía a Anthropic (Claude), a OpenAI o a tu propio servidor compatible, con tu propia clave de API. Los nombres de los nodos, las direcciones y el dominio se anonimizan por defecto. Sin clave de API, puedes pasar el informe a una aplicación de asistente desde el menú de compartir.
 
-Libre y de código abierto (Apache-2.0): https://github.com/cyrinux/ichor
+Código abierto (Apache-2.0). Gratis en GitHub: https://github.com/cyrinux/ichor
 
 Disponible en español, inglés, francés, alemán, italiano y ucraniano.
 

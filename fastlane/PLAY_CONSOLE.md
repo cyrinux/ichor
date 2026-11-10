@@ -36,8 +36,9 @@ characters per language.
 
 ## One-time setup
 
-1. **Create the app** in the Play Console (App name `Ichor for Kubernetes & Talos`, App, Free) and fill in
-   the forms below.
+1. **Create the app** in the Play Console (App name `Ichor for Kubernetes & Talos`, App, Paid — the
+   open-source builds stay free; the Play price is how Play users fund the project) and fill in the
+   forms below.
 2. **Play App Signing: choose "Use existing app signing key"** and upload the release key
    (Play's PEPK tool encrypts it). Play installs and GitHub/Obtainium installs then share one
    signature, so a user can move between them without uninstalling. With a Play-generated
@@ -59,9 +60,14 @@ characters per language.
 6. **Reviewer access:** the app does nothing without a talosconfig, and reviewers reject apps
    they cannot get into. See **App access** below.
 
-## Feature funding (in-app products)
+## Paid download and feature funding (in-app products)
 
-Users back the features they want next with Play in-app purchases. There is no server: the
+The Play build is a **paid download** (Store settings → Free or paid): the price is how Play
+users fund the project, while the open-source builds from the repository and GitHub releases
+stay free. `docs/terms.html` describes both; the Play build's own support card is compiled
+out (see **The Play build** above), so the download price is the funding channel there.
+
+On top of the download price, users back the features they want next with Play in-app purchases. There is no server: the
 list comes from `docs/roadmap.json` on the website, and what each feature raised comes from
 the Play Console reports.
 
@@ -109,7 +115,7 @@ for the other locales.
 | Field | Value |
 |---|---|
 | App or game | App |
-| Free or paid | Free |
+| Free or paid | Paid — the price is the Play funding model; the open-source builds are free. The ToS (see **Terms of service** below) describes both |
 | Category | Tools |
 | Tags | Developer tools, Monitoring, Network tools (pick the closest offered) |
 | Contact email | required, shown publicly: use a project address rather than a personal one |
@@ -125,6 +131,13 @@ layouts: **Policy → App content**). The Console's search bar also finds it: ty
 
 `https://cyrinux.github.io/ichor/privacy.html` (from `docs/privacy.html`, published
 with the GitHub Pages site).
+
+### Terms of service
+
+`https://cyrinux.github.io/ichor/terms.html` (from `docs/terms.html`, published with the
+GitHub Pages site, translated into the nine site languages). Play requires the app-level
+declaration to match what the store listing claims: it explains the free open-source builds
+with donations and the paid Play download with in-app tips and feature funding.
 
 ### Ads
 
