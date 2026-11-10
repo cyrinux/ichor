@@ -8,6 +8,7 @@ import (
 	"net"
 	"slices"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -40,6 +41,8 @@ type newClusterRecorder struct {
 	talosconfig chan string
 	kubeconfig  chan string
 	done        chan [2]string
+	ended       chan struct{} // closed once OnDone ran: the run's goroutine is past its last read
+	endOnce     sync.Once
 }
 
 func newNewClusterRecorder() *newClusterRecorder {
@@ -48,6 +51,7 @@ func newNewClusterRecorder() *newClusterRecorder {
 		talosconfig: make(chan string, 4),
 		kubeconfig:  make(chan string, 4),
 		done:        make(chan [2]string, 1),
+		ended:       make(chan struct{}),
 	}
 }
 
@@ -63,6 +67,25 @@ func (r *newClusterRecorder) OnKubeconfig(yaml string)  { r.kubeconfig <- yaml }
 
 func (r *newClusterRecorder) OnDone(nodeAddress, errMessage string) {
 	r.done <- [2]string{nodeAddress, errMessage}
+
+	r.endOnce.Do(func() { close(r.ended) })
+}
+
+// stopRunAtCleanup cancels the run and waits for it to end when the test returns (even
+// by a Fatal), so the run's goroutine never reads package state a cleanup registered
+// before this one (shortNewClusterWaits' restore) is writing back.
+func stopRunAtCleanup(t *testing.T, run *NewClusterRun, rec *newClusterRecorder) {
+	t.Helper()
+
+	t.Cleanup(func() {
+		run.Cancel()
+
+		select {
+		case <-rec.ended:
+		case <-time.After(30 * time.Second):
+			t.Error("the run did not stop after its cancel")
+		}
+	})
 }
 
 // wait returns the run's end and every event before it.
@@ -821,7 +844,7 @@ func TestStartNewClusterAudited(t *testing.T) {
 	serveKubeconfigAfterBootstrap(t, f, serveCAPort)
 
 	rec := newNewClusterRecorder()
-	StartNewCluster(draft.DraftID, endpoint, draft.Talosconfig, rec)
+	stopRunAtCleanup(t, StartNewCluster(draft.DraftID, endpoint, draft.Talosconfig, rec), rec)
 
 	_, errMessage, _ := rec.wait(t)
 	if errMessage != "" {

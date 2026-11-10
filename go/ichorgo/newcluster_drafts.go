@@ -135,6 +135,9 @@ func newClusterConfigs(req newClusterRequest, bundle *secrets.Bundle) (full, red
 		generate.WithSecretsBundle(bundle),
 		generate.WithInstallDisk(req.installDisk),
 		generate.WithInstallImage(req.installImage),
+		// The talosconfig names the node it was made for: without an endpoint list the
+		// stored config has no endpoints and no client can open it.
+		generate.WithEndpointList([]string{req.host}),
 		generate.WithAllowSchedulingOnControlPlanes(true),
 		generate.WithVersionContract(machineryconfig.TalosVersionCurrent),
 	)
