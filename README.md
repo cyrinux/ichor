@@ -51,7 +51,7 @@ tour** shows it again.
   the pull request that bumps them (or select several and propose them as one pull request).
 - **Operators:** Longhorn, CloudNativePG, Garage, Rook Ceph, Velero, cert-manager, External
   Secrets, Sealed Secrets, ExternalDNS, Ollama (servers, models on disk and loaded; load, unload or delete a model, pull a new one with its progress, or make a server the AI diagnosis's model through a port-forward), Crossplane,
-  Tailscale, ngrok (agent and cloud endpoints, their domains), Twingate (connectors, resources, accesses), Cluster API, Kyverno, Gatekeeper, KubeVirt, CAST AI and more, each with its findings in the cluster checkup, and
+  Tailscale, ngrok (agent and cloud endpoints, their domains), Twingate (connectors, resources, accesses), NetBird (routers, resources, egresses), Cluster API, Kyverno, Gatekeeper, KubeVirt, CAST AI and more, each with its findings in the cluster checkup, and
   [plugins](docs/plugins.md) for any CRD of your own, imported from a file, a QR code or a
   catalog with their digest verified.
 - **Troubleshooting:** cluster checkup, configuration drift, incident recorder, node pressure,
