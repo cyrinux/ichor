@@ -24,7 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 STRINGS = ROOT / "docs-i18n"
-PAGES = ["index.html", "features.html", "privacy.html"]
+PAGES = ["index.html", "features.html", "privacy.html", "terms.html"]
 LANGUAGES = ["fr", "es", "uk", "de", "it", "zh-Hans", "ja", "pt-BR", "ru"]
 SITE = "https://cyrinux.github.io/ichor/"
 
