@@ -228,9 +228,11 @@ type newCluster struct {
 	adminCert *x509Pair
 	applied   bool // the config may be on the node: Cancel cannot undo anything any more
 
-	// dialAddress, when set (the tests), is where the fake's API answers: same host as
-	// address, its own port. Production dials address itself.
-	dialAddress string
+	// dialAddress and clusterAddress, when set (the tests), are where the fake's
+	// maintenance API and installed cluster API answer: the endpoint host stays the
+	// address the console shows. Production dials address itself.
+	dialAddress    string
+	clusterAddress string
 
 	// interval is how often the node is asked; timeout bounds the whole run. The tests
 	// replace both (they also replace upgradePollInterval, which the runs share).
@@ -420,12 +422,14 @@ func (c *newCluster) apply(ctx context.Context) error {
 
 	c.emit(newClusterPhaseApplying, "sending the config to "+c.req.address)
 
-	// From here the config may be on the node, even when the answer never comes back.
-	c.applied = true
-
 	deadline := time.Now().Add(newClusterApplyWait)
 
 	for {
+		// From the accepted attempt on, the config may be on the node even when the
+		// answer never comes back; the flag goes on before the call, so a lost answer
+		// (an Unavailable the retry loop takes for a node still booting) stays honest.
+		c.applied = true
+
 		_, err = m.ApplyConfiguration(ctx, &machineapi.ApplyConfigurationRequest{
 			Data: []byte(full), Mode: machineapi.ApplyConfigurationRequest_AUTO,
 		})
@@ -608,7 +612,7 @@ func (c *newCluster) dialCluster() (*client.Client, error) {
 
 	// The cluster API answers where the maintenance API did (only the fake gives the two
 	// different ports).
-	cfg, err := talosconfigFor(c.req.clusterName, c.req.host, c.bundle.Certs.OS.Crt, c.adminCert, c.dialAddress)
+	cfg, err := talosconfigFor(c.req.clusterName, c.req.host, c.bundle.Certs.OS.Crt, c.adminCert, c.clusterAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -653,7 +657,7 @@ func talosconfigFor(clusterName, host string, caPEM []byte, admin *x509Pair, dia
 // handOver issues the admin certificate once and gives the app the talosconfig and
 // kubeconfig.
 func (c *newCluster) handOver(ctx context.Context, cl *client.Client) error {
-	cfg, err := talosconfigFor(c.req.clusterName, c.req.host, c.bundle.Certs.OS.Crt, c.adminCert, c.dialAddress)
+	cfg, err := talosconfigFor(c.req.clusterName, c.req.host, c.bundle.Certs.OS.Crt, c.adminCert, c.clusterAddress)
 	if err != nil {
 		return err
 	}
@@ -937,9 +941,10 @@ func newClusterForTest(address, clusterName, kubernetesVersion, installDisk, hos
 
 // newClusterAt is StartNewCluster's test twin: the console address the user typed, and the
 // endpoint the fake node's API actually answers on (production dials both at the address).
-func newClusterAt(address, dialAddress, clusterName, kubernetesVersion, installDisk, hostname, endpoint string, listener NewClusterListener, timeout time.Duration) *NewClusterRun {
+func newClusterAt(address, dialAddress, clusterAddress, clusterName, kubernetesVersion, installDisk, hostname, endpoint string, listener NewClusterListener, timeout time.Duration) *NewClusterRun {
 	c := &newCluster{
-		address: address, dialAddress: dialAddress, clusterName: clusterName, kubernetesVersion: kubernetesVersion,
+		address: address, dialAddress: dialAddress, clusterAddress: clusterAddress,
+		clusterName: clusterName, kubernetesVersion: kubernetesVersion,
 		installDisk: installDisk, hostname: hostname, endpoint: endpoint, listener: listener,
 		interval: joinPollInterval,
 	}

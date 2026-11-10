@@ -12,6 +12,7 @@ import (
 
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
+	"github.com/cosi-project/runtime/pkg/resource"
 	"github.com/siderolabs/talos/pkg/machinery/resources/runtime"
 )
 
@@ -130,15 +131,16 @@ func installThenBoot(t *testing.T, f *fakeTalos, node string) {
 	}
 }
 
-// startNewClusterTest bootstraps the node at endpoint: the console address is its host,
-// the maintenance (and installed) API is dialed at endpoint's own host and port.
+// startNewClusterTest bootstraps the fake node served at endpoint: the console shows its
+// host, the maintenance API answers at maintenanceEndpoint and the installed cluster API
+// at clusterEndpoint (the fake's two ports; production dials the address itself).
 func startNewClusterTest(endpoint string, listener NewClusterListener, timeout time.Duration) *NewClusterRun {
 	host, _, err := net.SplitHostPort(endpoint)
 	if err != nil {
 		panic(err)
 	}
 
-	return newClusterAt(host, endpoint, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "", listener, timeout)
+	return newClusterAt(host, endpoint, endpoint, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "", listener, timeout)
 }
 
 // shortNewClusterWaits keeps the run's bounded waits inside the test's timeout: the
@@ -387,11 +389,16 @@ func TestStartNewClusterNeverComesBack(t *testing.T) {
 func installedWithoutClusterNode(t *testing.T) (*fakeTalos, string) {
 	t.Helper()
 
-	f, address := maintenanceOnlyNode(t)
+	f, endpoint := maintenanceOnlyNode(t)
+
+	// The maintenance and the installed API answer under the same host the run dials;
+	// both report a machine status (installed), so the run wipes first.
 	f.setStage("", runtime.MachineStageRunning, true)
+	f.setStage(endpoint, runtime.MachineStageRunning, true)
+	f.setVersion(endpoint, "v1.14.4")
 
 	f.mu.Lock()
-	f.kubeconfigs = map[string][]byte{address: []byte("apiVersion: v1\nkind: Config\n")}
+	f.kubeconfigs = map[string][]byte{endpoint: []byte("apiVersion: v1\nkind: Config\n")}
 	f.mu.Unlock()
 
 	f.onApply = func(string) {
@@ -401,17 +408,16 @@ func installedWithoutClusterNode(t *testing.T) (*fakeTalos, string) {
 
 		go func() {
 			time.Sleep(newClusterStep)
-			f.setVersion(address, "v1.14.4")
-			f.setStage(address, runtime.MachineStageRunning, true)
+			f.setStage(endpoint, runtime.MachineStageRunning, true)
 		}()
 	}
 
-	return f, address
+	return f, endpoint
 }
 
 // dropMachineStatus removes ""'s machine status once the reset was seen: the node is back
 // in maintenance mode.
-func dropMachineStatus(t *testing.T, f *fakeTalos) {
+func dropMachineStatus(t *testing.T, f *fakeTalos, dropFrom string) {
 	t.Helper()
 
 	deadline := time.Now().Add(10 * time.Second)
@@ -425,12 +431,10 @@ func dropMachineStatus(t *testing.T, f *fakeTalos) {
 			f.mu.Lock()
 			defer f.mu.Unlock()
 
-			for i, r := range f.resources[""] {
-				if r.Metadata().Type() == "runtime.MachineStatus" {
-					f.resources[""] = append(f.resources[""][:i], f.resources[""][i+1:]...)
-
-					return
-				}
+			for _, node := range []string{"", dropFrom} {
+				f.resources[node] = slices.DeleteFunc(f.resources[node], func(r resource.Resource) bool {
+					return r.Metadata().Type() == "runtime.MachineStatus"
+				})
 			}
 
 			return
@@ -503,7 +507,7 @@ func TestStartNewClusterWipesInstalledClusterlessNode(t *testing.T) {
 	f, address := installedWithoutClusterNode(t)
 
 	// The reset takes the node down and it returns in maintenance mode.
-	go dropMachineStatus(t, f)
+	go dropMachineStatus(t, f, address)
 
 	rec := newNewClusterRecorder()
 	startNewClusterTest(address, rec, time.Minute)
@@ -540,7 +544,7 @@ func TestStartNewClusterPrivacyRefused(t *testing.T) {
 	t.Cleanup(func() { SetPrivacyMask(false, "") })
 
 	rec := newNewClusterRecorder()
-	startNewClusterTest(newClusterNode, rec, time.Minute)
+	newClusterForTest(newClusterNode, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "", rec, time.Minute)
 
 	_, errMessage, _ := rec.wait(t)
 	if !strings.Contains(errMessage, "privacy mode") {
