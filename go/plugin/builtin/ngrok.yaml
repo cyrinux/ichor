@@ -1,0 +1,985 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# The ngrok operator puts a Service on a public or internal ngrok URL (ngrok.k8s.ngrok.com):
+# an AgentEndpoint is an agent in the cluster forwarding its URL to upstream.url, a
+# CloudEndpoint lives on ngrok's edge with a traffic policy. Each shows its URL, where it
+# forwards to and its conditions, problems first. Ready is the operator's summary: when it
+# is False its reason names the cause (the EndpointCreated / CloudEndpointCreated failure, a
+# TrafficPolicyApplied error, or the Domain's own Ready reason, there is no DomainReady
+# condition). The Domains are read from both groups: ngrok.com/v1 (operator 0.23 and later)
+# and the deprecated ingress.k8s.ngrok.com/v1alpha1 (0.22 and earlier), whose objects read
+# SupersededByV1 once migrated. The KubernetesOperator row is the operator's own
+# registration with ngrok. Condition types and reasons from the operator's sources
+# (internal/controller/agent, internal/controller/ngrok, internal/domain, read 2026-11-10).
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: ngrok
+name: ngrok
+website: https://ngrok.com/docs/k8s/crds
+icon: ngrok
+category: networking
+catalogId: ngrok
+
+detect:
+  - group: ngrok.k8s.ngrok.com
+
+resources:
+  agentEndpoint:
+    group: ngrok.k8s.ngrok.com
+    version: v1alpha1
+    resource: agentendpoints
+    kind: AgentEndpoint
+    scope: Namespaced
+  cloudEndpoint:
+    group: ngrok.k8s.ngrok.com
+    version: v1alpha1
+    resource: cloudendpoints
+    kind: CloudEndpoint
+    scope: Namespaced
+  # Optional: an operator before 0.23 does not serve ngrok.com, one after the migration may no
+  # longer serve ingress.k8s.ngrok.com; the endpoints show either way.
+  domain:
+    group: ngrok.com
+    version: v1
+    resource: domains
+    kind: Domain
+    scope: Namespaced
+    optional: true
+  legacyDomain:
+    group: ingress.k8s.ngrok.com
+    version: v1alpha1
+    resource: domains
+    kind: Domain
+    scope: Namespaced
+    optional: true
+  operator:
+    group: ngrok.k8s.ngrok.com
+    version: v1alpha1
+    resource: kubernetesoperators
+    kind: KubernetesOperator
+    scope: Namespaced
+    optional: true
+  # The Service an agent endpoint forwards to, when its upstream URL names one: names only.
+  service:
+    group: ""
+    version: v1
+    resource: services
+    kind: Service
+    scope: Namespaced
+    list: { metadataOnly: true, limit: 2000 }
+    optional: true
+
+fields:
+  agentEndpoint:
+    # The URL asked for: a domain, an origin, a bare scheme (a random ngrok URL) or "".
+    url: $.spec.url | default("")
+    # The URL ngrok gave: the one asked for, or the generated one.
+    assignedURL: $.status.assignedURL | default("")
+    address: 'fields.assignedURL != "" ? fields.assignedURL : fields.url'
+    upstream: $.spec.upstream.url | default("")
+    protocol: $.spec.upstream.protocol | default("http1")
+    # public, internal or kubernetes (one today).
+    bindings: $.spec.bindings | default([])
+    # "inline", "none" or the NgrokTrafficPolicy's name.
+    trafficPolicy: $.status.trafficPolicy | default("")
+    ready: conditions.Ready
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+    createdStatus: condition("EndpointCreated").status | default("")
+    createdReason: condition("EndpointCreated").reason | default("")
+    createdMessage: condition("EndpointCreated").message | default("")
+    policyStatus: condition("TrafficPolicyApplied").status | default("")
+    policyMessage: condition("TrafficPolicyApplied").message | default("")
+    # The upstream's host: "http://shop.demo-shop:8080/x" → shop.demo-shop. A cluster host is
+    # <service>, <service>.<namespace> or <service>.<namespace>.svc[.cluster.local]; a bare
+    # port, localhost or an outside domain links nothing (the join finds no Service).
+    upstreamHostPort: '"://" in fields.upstream ? split(fields.upstream, "://")[1] : fields.upstream'
+    upstreamHost: split(split(fields.upstreamHostPort, "/")[0], ":")[0] | lower()
+    upstreamParts: split(fields.upstreamHost, ".")
+    clusterHost: >-
+      fields.upstreamHost != "localhost"
+      && !matches(fields.upstreamHost, "^[0-9.]*$")
+      && matches(fields.upstreamHost, "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)?(\\.svc(\\.cluster\\.local)?)?$")
+    upstreamService: >-
+      fields.clusterHost
+      ? join(service, $.metadata.name == fields.upstreamParts[0]
+        && $.metadata.namespace == (len(fields.upstreamParts) > 1 ? fields.upstreamParts[1] : left.metadata.namespace))
+      : null
+    domainRef: >-
+      coalesce(
+        join(domain, $.metadata.name == left.status.domainRef.name && $.metadata.namespace == (left.status.domainRef.namespace | default(left.metadata.namespace))),
+        join(legacyDomain, $.metadata.name == left.status.domainRef.name && $.metadata.namespace == (left.status.domainRef.namespace | default(left.metadata.namespace))))
+  cloudEndpoint:
+    url: $.spec.url | default("")
+    assignedURL: $.status.assignedURL | default("")
+    address: 'fields.assignedURL != "" ? fields.assignedURL : fields.url'
+    id: $.status.id | default("")
+    bindings: $.spec.bindings | default([])
+    trafficPolicy: '$.spec.trafficPolicy.targetRef.name | default(has($.spec.trafficPolicy.inline) ? "inline" : "")'
+    pooling: $.spec.poolingEnabled | default(false)
+    ready: conditions.Ready
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+    createdStatus: condition("CloudEndpointCreated").status | default("")
+    createdReason: condition("CloudEndpointCreated").reason | default("")
+    createdMessage: condition("CloudEndpointCreated").message | default("")
+    policyStatus: condition("TrafficPolicyApplied").status | default("")
+    policyMessage: condition("TrafficPolicyApplied").message | default("")
+    domainRef: >-
+      coalesce(
+        join(domain, $.metadata.name == left.status.domainRef.name && $.metadata.namespace == (left.status.domainRef.namespace | default(left.metadata.namespace))),
+        join(legacyDomain, $.metadata.name == left.status.domainRef.name && $.metadata.namespace == (left.status.domainRef.namespace | default(left.metadata.namespace))))
+  domain:
+    domain: $.status.domain | default($.spec.domain) | default("")
+    id: $.status.id | default("")
+    reclaimPolicy: $.spec.reclaimPolicy | default("Delete")
+    # The CNAME a custom domain's DNS must point at, and the one the ACME challenge needs.
+    cnameTarget: $.status.cnameTarget | default("")
+    acmeTarget: $.status.acmeChallengeCNAMETarget | default("")
+    wildcard: $.status.coveredByWildcardDomain.domain | default("")
+    ready: conditions.Ready
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+  legacyDomain:
+    domain: $.status.domain | default($.spec.domain) | default("")
+    id: $.status.id | default("")
+    reclaimPolicy: $.spec.reclaimPolicy | default("Delete")
+    cnameTarget: $.status.cnameTarget | default("")
+    acmeTarget: $.status.acmeChallengeCNAMETarget | default("")
+    wildcard: $.status.coveredByWildcardDomain.domain | default("")
+    ready: conditions.Ready
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+  operator:
+    id: $.status.id | default("")
+    region: $.spec.region | default("global")
+    features: $.status.enabledFeatures | default($.spec.enabledFeatures) | default([])
+    endpointSelectors: $.spec.binding.endpointSelectors | default([])
+    ingressEndpoint: $.spec.binding.ingressEndpoint | default("")
+    drained: $.status.drain.drainedResources | default(0)
+    drainTotal: $.status.drain.totalResources | default(0)
+    ready: conditions.Ready
+    draining: conditions.Draining
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+
+# First match wins. Ready's reason is the operator's own diagnosis; the Domain reasons it can
+# carry are split into errors (critical) and the wait for a certificate (info).
+health:
+  agentEndpoint:
+    - when: fields.createdStatus == "False"
+      health: critical
+      reason: notCreated
+      message: "not created: {{ fields.createdReason }}: {{ fields.createdMessage }}"
+    - when: fields.ready == false && fields.readyReason in ["DomainNotReady", "DomainInvalid", "ProvisioningError", "DomainCreationFailed", "DNSError", "DanglingDNSRecord", "ProtectedDomain"]
+      health: critical
+      reason: domainNotReady
+      message: "domain not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: fields.policyStatus == "False"
+      health: warning
+      reason: trafficPolicy
+      message: "traffic policy not applied: {{ fields.policyMessage }}"
+    - when: fields.ready == false && fields.readyReason in ["Pending", "Unknown", "WaitingForCertificate", "CertificateProvisioning", "DomainCreated"]
+      health: info
+      reason: provisioning
+      message: "provisioning: {{ fields.readyMessage }}"
+    - when: fields.ready == false
+      health: warning
+      reason: notReady
+      message: "not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: "!has(fields.ready)"
+      health: info
+      reason: waiting
+      message: "waiting for the operator"
+  cloudEndpoint:
+    - when: fields.createdStatus == "False"
+      health: critical
+      reason: notCreated
+      message: "not created: {{ fields.createdReason }}: {{ fields.createdMessage }}"
+    - when: fields.ready == false && fields.readyReason in ["DomainNotReady", "DomainInvalid", "ProvisioningError", "DomainCreationFailed", "DNSError", "DanglingDNSRecord", "ProtectedDomain"]
+      health: critical
+      reason: domainNotReady
+      message: "domain not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: fields.policyStatus == "False"
+      health: warning
+      reason: trafficPolicy
+      message: "traffic policy not applied: {{ fields.policyMessage }}"
+    - when: fields.ready == false && fields.readyReason in ["Pending", "Unknown", "WaitingForCertificate", "CertificateProvisioning", "DomainCreated"]
+      health: info
+      reason: provisioning
+      message: "provisioning: {{ fields.readyMessage }}"
+    - when: fields.ready == false
+      health: warning
+      reason: notReady
+      message: "not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: "!has(fields.ready)"
+      health: info
+      reason: waiting
+      message: "waiting for the operator"
+  domain:
+    - when: fields.ready == false && fields.readyReason in ["DomainInvalid", "ProvisioningError", "DomainCreationFailed", "DNSError", "DanglingDNSRecord", "ProtectedDomain"]
+      health: critical
+      reason: domainError
+      message: "{{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: fields.ready == false && fields.readyReason == "ACMEChallengeRequired"
+      health: warning
+      reason: dnsRecordNeeded
+      message: "DNS record needed: {{ fields.readyMessage }}"
+    - when: fields.ready == false
+      health: info
+      reason: provisioning
+      message: "provisioning: {{ fields.readyMessage }}"
+    - when: "!has(fields.ready)"
+      health: info
+      reason: waiting
+      message: "waiting for the operator"
+  legacyDomain:
+    - when: fields.readyReason == "SupersededByV1"
+      health: idle
+      reason: superseded
+      message: "replaced by its ngrok.com/v1 Domain"
+    - when: fields.ready == false && fields.readyReason in ["DomainInvalid", "ProvisioningError", "DomainCreationFailed", "DNSError", "DanglingDNSRecord", "ProtectedDomain"]
+      health: critical
+      reason: domainError
+      message: "{{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: fields.ready == false && fields.readyReason == "ACMEChallengeRequired"
+      health: warning
+      reason: dnsRecordNeeded
+      message: "DNS record needed: {{ fields.readyMessage }}"
+    - when: fields.ready == false
+      health: info
+      reason: provisioning
+      message: "provisioning: {{ fields.readyMessage }}"
+    - when: "!has(fields.ready)"
+      health: info
+      reason: waiting
+      message: "waiting for the operator"
+  operator:
+    - when: fields.ready == false && fields.readyReason in ["RegistrationFailed", "ConfigurationFailed"]
+      health: critical
+      reason: notRegistered
+      message: "not registered with ngrok: {{ fields.readyMessage }}"
+    - when: fields.draining == true
+      health: info
+      reason: draining
+      message: "draining: {{ fields.drained }} of {{ fields.drainTotal }} resources"
+    - when: fields.ready == false
+      health: warning
+      reason: notReady
+      message: "not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: "!has(fields.ready)"
+      health: info
+      reason: waiting
+      message: "waiting for the operator"
+
+dataServices:
+  summary:
+    aggregate:
+      endpoints: count(agentEndpoint) + count(cloudEndpoint)
+      failing: 'count(agentEndpoint, health == "critical") + count(cloudEndpoint, health == "critical")'
+      notReady: 'count(agentEndpoint, health == "warning") + count(cloudEndpoint, health == "warning")'
+      domainProblems: >-
+        count(domain, health == "critical" || health == "warning")
+        + count(legacyDomain, health == "critical" || health == "warning")
+    health: >-
+      worst([worst(agentEndpoint.health), worst(cloudEndpoint.health), worst(domain.health),
+        worst(legacyDomain.health), worst(operator.health)])
+
+cards:
+  summary:
+    title: { count: dataServices.summary.endpoints, one: "%d ngrok endpoint", other: "%d ngrok endpoints" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "failing", value: dataServices.summary.failing, tone: critical, hideWhenZero: true }
+      - { label: "not ready", value: dataServices.summary.notReady, tone: warning, hideWhenZero: true }
+      - { label: "domain problems", value: dataServices.summary.domainProblems, tone: warning, hideWhenZero: true }
+  agentEndpoints:
+    from: agentEndpoint
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No agent endpoints."
+    row:
+      title: 'fields.address != "" ? fields.address : $.metadata.name'
+      subtitle: '$.metadata.namespace + "/" + $.metadata.name + " → " + fields.upstream'
+      status:
+        tone: health
+        text: 'fields.ready == true ? "Ready" : (fields.readyReason != "" ? fields.readyReason : "Waiting")'
+      trailing: { text: $.metadata.creationTimestamp | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "URL", value: fields.url, mono: true }
+            - { label: "Assigned URL", value: fields.assignedURL, mono: true }
+            - { label: "Upstream", value: fields.upstream, mono: true }
+            - { label: "Protocol", value: fields.protocol }
+            - { label: "Traffic policy", value: fields.trafficPolicy }
+            - { label: "Message", value: fields.readyMessage }
+        - type: badges
+          items:
+            - { label: "public", on: '"public" in fields.bindings' }
+            - { label: "internal", on: '"internal" in fields.bindings' }
+            - { label: "kubernetes", on: '"kubernetes" in fields.bindings' }
+        - type: conditions
+        - type: relations
+          items:
+            - { label: "Upstream Service", ref: fields.upstreamService }
+            - { label: "Domain", ref: fields.domainRef }
+  cloudEndpoints:
+    from: cloudEndpoint
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No cloud endpoints."
+    row:
+      title: 'fields.address != "" ? fields.address : $.metadata.name'
+      subtitle: '$.metadata.namespace + "/" + $.metadata.name'
+      status:
+        tone: health
+        text: 'fields.ready == true ? "Ready" : (fields.readyReason != "" ? fields.readyReason : "Waiting")'
+      trailing: { text: $.metadata.creationTimestamp | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "URL", value: fields.url, mono: true }
+            - { label: "ID", value: fields.id, mono: true }
+            - { label: "Traffic policy", value: fields.trafficPolicy }
+            - { label: "Bindings", value: fields.bindings }
+            - { label: "Pooling", value: fields.pooling }
+            - { label: "Message", value: fields.readyMessage }
+        - type: conditions
+        - type: relations
+          items:
+            - { label: "Domain", ref: fields.domainRef }
+  domains:
+    from: domain
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No domains."
+    row:
+      title: 'fields.domain != "" ? fields.domain : $.metadata.name'
+      subtitle: '$.metadata.namespace + "/" + $.metadata.name'
+      status:
+        tone: health
+        text: 'fields.ready == true ? "Ready" : (fields.readyReason != "" ? fields.readyReason : "Waiting")'
+      trailing: { text: $.metadata.creationTimestamp | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "ID", value: fields.id, mono: true }
+            - { label: "CNAME target", value: fields.cnameTarget, mono: true }
+            - { label: "ACME challenge target", value: fields.acmeTarget, mono: true }
+            - { label: "Wildcard", value: fields.wildcard, mono: true }
+            - { label: "Reclaim policy", value: fields.reclaimPolicy }
+            - { label: "Message", value: fields.readyMessage }
+        - type: conditions
+  legacyDomains:
+    from: legacyDomain
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No ingress.k8s.ngrok.com domains."
+    row:
+      title: 'fields.domain != "" ? fields.domain : $.metadata.name'
+      subtitle: '$.metadata.namespace + "/" + $.metadata.name + " (ingress.k8s.ngrok.com)"'
+      status:
+        tone: health
+        text: 'fields.ready == true ? "Ready" : (fields.readyReason != "" ? fields.readyReason : "Waiting")'
+      trailing: { text: $.metadata.creationTimestamp | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "ID", value: fields.id, mono: true }
+            - { label: "CNAME target", value: fields.cnameTarget, mono: true }
+            - { label: "ACME challenge target", value: fields.acmeTarget, mono: true }
+            - { label: "Wildcard", value: fields.wildcard, mono: true }
+            - { label: "Reclaim policy", value: fields.reclaimPolicy }
+            - { label: "Message", value: fields.readyMessage }
+        - type: conditions
+  operators:
+    from: operator
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No operator registration."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: 'fields.ready == true ? "Registered" : (fields.readyReason != "" ? fields.readyReason : "Waiting")'
+      trailing: { text: $.metadata.creationTimestamp | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "ID", value: fields.id, mono: true }
+            - { label: "Region", value: fields.region }
+            - { label: "Features", value: fields.features }
+            - { label: "Endpoint selectors", value: fields.endpointSelectors, mono: true }
+            - { label: "Ingress endpoint", value: fields.ingressEndpoint, mono: true }
+            - { label: "Drained", value: 'fields.drainTotal > 0 ? string(fields.drained) + " / " + string(fields.drainTotal) : ""' }
+            - { label: "Message", value: fields.readyMessage }
+        - type: conditions
+
+findings:
+  - id: agent-endpoint-down
+    from: agentEndpoint
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: agentEndpoints
+  - id: agent-endpoint-not-ready
+    from: agentEndpoint
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: agentEndpoints
+  - id: cloud-endpoint-down
+    from: cloudEndpoint
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: cloudEndpoints
+  - id: cloud-endpoint-not-ready
+    from: cloudEndpoint
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: cloudEndpoints
+  - id: domain-error
+    from: domain
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: domains
+  - id: domain-dns-record
+    from: domain
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: domains
+  - id: legacy-domain-error
+    from: legacyDomain
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: legacyDomains
+  - id: legacy-domain-dns-record
+    from: legacyDomain
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: legacyDomains
+  - id: operator-not-registered
+    from: operator
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: operators
+  - id: operator-not-ready
+    from: operator
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: operators
+
+i18n:
+  fr:
+    "not created: {{ fields.createdReason }}: {{ fields.createdMessage }}": "non créé
+      : {{ fields.createdReason }} : {{ fields.createdMessage }}"
+    "domain not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}": "domaine
+      pas prêt : {{ fields.readyReason }} : {{ fields.readyMessage }}"
+    "traffic policy not applied: {{ fields.policyMessage }}": "politique de trafic
+      non appliquée : {{ fields.policyMessage }}"
+    "provisioning: {{ fields.readyMessage }}": "en cours de création : {{ fields.readyMessage
+      }}"
+    "not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}": "pas prêt :
+      {{ fields.readyReason }} : {{ fields.readyMessage }}"
+    "waiting for the operator": "en attente de l'opérateur"
+    "DNS record needed: {{ fields.readyMessage }}": "enregistrement DNS requis : {{
+      fields.readyMessage }}"
+    "replaced by its ngrok.com/v1 Domain": "remplacé par son Domain ngrok.com/v1"
+    "not registered with ngrok: {{ fields.readyMessage }}": "non enregistré auprès
+      de ngrok : {{ fields.readyMessage }}"
+    "draining: {{ fields.drained }} of {{ fields.drainTotal }} resources": "vidage
+      : {{ fields.drained }} ressources sur {{ fields.drainTotal }}"
+    "%d ngrok endpoint": "%d endpoint ngrok"
+    "%d ngrok endpoints": "%d endpoints ngrok"
+    "failing": "en échec"
+    "not ready": "pas prêts"
+    "domain problems": "problèmes de domaine"
+    "No agent endpoints.": "Aucun endpoint d'agent."
+    "Ready": "Prêt"
+    "Waiting": "En attente"
+    "URL": "URL"
+    "Assigned URL": "URL attribuée"
+    "Upstream": "Amont"
+    "Protocol": "Protocole"
+    "Traffic policy": "Politique de trafic"
+    "Message": "Message"
+    "public": "public"
+    "internal": "internal"
+    "kubernetes": "kubernetes"
+    "Upstream Service": "Service amont"
+    "Domain": "Domaine"
+    "No cloud endpoints.": "Aucun endpoint cloud."
+    "ID": "ID"
+    "Bindings": "Liaisons"
+    "Pooling": "Mutualisation"
+    "No domains.": "Aucun domaine."
+    "CNAME target": "Cible CNAME"
+    "ACME challenge target": "Cible du défi ACME"
+    "Wildcard": "Joker"
+    "Reclaim policy": "Politique de récupération"
+    "No ingress.k8s.ngrok.com domains.": "Aucun domaine ingress.k8s.ngrok.com."
+    "No operator registration.": "Aucun enregistrement d'opérateur."
+    "Registered": "Enregistré"
+    "Region": "Région"
+    "Features": "Fonctions"
+    "Endpoint selectors": "Sélecteurs d'endpoints"
+    "Ingress endpoint": "Endpoint d'entrée"
+    "Drained": "Vidé"
+  de:
+    "not created: {{ fields.createdReason }}: {{ fields.createdMessage }}": "nicht
+      erstellt: {{ fields.createdReason }}: {{ fields.createdMessage }}"
+    "domain not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}": "Domain
+      nicht bereit: {{ fields.readyReason }}: {{ fields.readyMessage }}"
+    "traffic policy not applied: {{ fields.policyMessage }}": "Traffic Policy nicht
+      angewendet: {{ fields.policyMessage }}"
+    "provisioning: {{ fields.readyMessage }}": "wird bereitgestellt: {{ fields.readyMessage
+      }}"
+    "not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}": "nicht bereit:
+      {{ fields.readyReason }}: {{ fields.readyMessage }}"
+    "waiting for the operator": "wartet auf den Operator"
+    "DNS record needed: {{ fields.readyMessage }}": "DNS-Eintrag nötig: {{ fields.readyMessage
+      }}"
+    "replaced by its ngrok.com/v1 Domain": "durch seine ngrok.com/v1-Domain ersetzt"
+    "not registered with ngrok: {{ fields.readyMessage }}": "nicht bei ngrok registriert:
+      {{ fields.readyMessage }}"
+    "draining: {{ fields.drained }} of {{ fields.drainTotal }} resources": "wird geleert:
+      {{ fields.drained }} von {{ fields.drainTotal }} Ressourcen"
+    "%d ngrok endpoint": "%d ngrok-Endpoint"
+    "%d ngrok endpoints": "%d ngrok-Endpoints"
+    "failing": "fehlerhaft"
+    "not ready": "nicht bereit"
+    "domain problems": "Domain-Probleme"
+    "No agent endpoints.": "Keine Agent-Endpoints."
+    "Ready": "Bereit"
+    "Waiting": "Wartet"
+    "URL": "URL"
+    "Assigned URL": "Zugewiesene URL"
+    "Upstream": "Upstream"
+    "Protocol": "Protokoll"
+    "Traffic policy": "Traffic Policy"
+    "Message": "Meldung"
+    "public": "public"
+    "internal": "internal"
+    "kubernetes": "kubernetes"
+    "Upstream Service": "Upstream-Service"
+    "Domain": "Domain"
+    "No cloud endpoints.": "Keine Cloud-Endpoints."
+    "ID": "ID"
+    "Bindings": "Bindungen"
+    "Pooling": "Pooling"
+    "No domains.": "Keine Domains."
+    "CNAME target": "CNAME-Ziel"
+    "ACME challenge target": "ACME-Challenge-Ziel"
+    "Wildcard": "Wildcard"
+    "Reclaim policy": "Reclaim Policy"
+    "No ingress.k8s.ngrok.com domains.": "Keine ingress.k8s.ngrok.com-Domains."
+    "No operator registration.": "Keine Operator-Registrierung."
+    "Registered": "Registriert"
+    "Region": "Region"
+    "Features": "Funktionen"
+    "Endpoint selectors": "Endpoint-Selektoren"
+    "Ingress endpoint": "Ingress-Endpoint"
+    "Drained": "Geleert"
+  es:
+    "not created: {{ fields.createdReason }}: {{ fields.createdMessage }}": "no creado:
+      {{ fields.createdReason }}: {{ fields.createdMessage }}"
+    "domain not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}": "dominio
+      no listo: {{ fields.readyReason }}: {{ fields.readyMessage }}"
+    "traffic policy not applied: {{ fields.policyMessage }}": "política de tráfico
+      no aplicada: {{ fields.policyMessage }}"
+    "provisioning: {{ fields.readyMessage }}": "aprovisionando: {{ fields.readyMessage
+      }}"
+    "not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}": "no listo: {{
+      fields.readyReason }}: {{ fields.readyMessage }}"
+    "waiting for the operator": "esperando al operador"
+    "DNS record needed: {{ fields.readyMessage }}": "falta un registro DNS: {{ fields.readyMessage
+      }}"
+    "replaced by its ngrok.com/v1 Domain": "sustituido por su Domain ngrok.com/v1"
+    "not registered with ngrok: {{ fields.readyMessage }}": "no registrado en ngrok:
+      {{ fields.readyMessage }}"
+    "draining: {{ fields.drained }} of {{ fields.drainTotal }} resources": "vaciando:
+      {{ fields.drained }} de {{ fields.drainTotal }} recursos"
+    "%d ngrok endpoint": "%d endpoint de ngrok"
+    "%d ngrok endpoints": "%d endpoints de ngrok"
+    "failing": "con fallos"
+    "not ready": "no listos"
+    "domain problems": "problemas de dominio"
+    "No agent endpoints.": "Ningún endpoint de agente."
+    "Ready": "Listo"
+    "Waiting": "En espera"
+    "URL": "URL"
+    "Assigned URL": "URL asignada"
+    "Upstream": "Upstream"
+    "Protocol": "Protocolo"
+    "Traffic policy": "Política de tráfico"
+    "Message": "Mensaje"
+    "public": "public"
+    "internal": "internal"
+    "kubernetes": "kubernetes"
+    "Upstream Service": "Service de upstream"
+    "Domain": "Dominio"
+    "No cloud endpoints.": "Ningún endpoint en la nube."
+    "ID": "ID"
+    "Bindings": "Vínculos"
+    "Pooling": "Agrupación"
+    "No domains.": "Ningún dominio."
+    "CNAME target": "Destino CNAME"
+    "ACME challenge target": "Destino del desafío ACME"
+    "Wildcard": "Comodín"
+    "Reclaim policy": "Política de recuperación"
+    "No ingress.k8s.ngrok.com domains.": "Ningún dominio ingress.k8s.ngrok.com."
+    "No operator registration.": "Ningún registro de operador."
+    "Registered": "Registrado"
+    "Region": "Región"
+    "Features": "Funciones"
+    "Endpoint selectors": "Selectores de endpoints"
+    "Ingress endpoint": "Endpoint de entrada"
+    "Drained": "Vaciado"
+  it:
+    "not created: {{ fields.createdReason }}: {{ fields.createdMessage }}": "non creato:
+      {{ fields.createdReason }}: {{ fields.createdMessage }}"
+    "domain not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}": "dominio
+      non pronto: {{ fields.readyReason }}: {{ fields.readyMessage }}"
+    "traffic policy not applied: {{ fields.policyMessage }}": "policy di traffico
+      non applicata: {{ fields.policyMessage }}"
+    "provisioning: {{ fields.readyMessage }}": "in preparazione: {{ fields.readyMessage
+      }}"
+    "not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}": "non pronto:
+      {{ fields.readyReason }}: {{ fields.readyMessage }}"
+    "waiting for the operator": "in attesa dell'operatore"
+    "DNS record needed: {{ fields.readyMessage }}": "serve un record DNS: {{ fields.readyMessage
+      }}"
+    "replaced by its ngrok.com/v1 Domain": "sostituito dal suo Domain ngrok.com/v1"
+    "not registered with ngrok: {{ fields.readyMessage }}": "non registrato su ngrok:
+      {{ fields.readyMessage }}"
+    "draining: {{ fields.drained }} of {{ fields.drainTotal }} resources": "svuotamento:
+      {{ fields.drained }} di {{ fields.drainTotal }} risorse"
+    "%d ngrok endpoint": "%d endpoint ngrok"
+    "%d ngrok endpoints": "%d endpoint ngrok"
+    "failing": "in errore"
+    "not ready": "non pronti"
+    "domain problems": "problemi di dominio"
+    "No agent endpoints.": "Nessun endpoint agente."
+    "Ready": "Pronto"
+    "Waiting": "In attesa"
+    "URL": "URL"
+    "Assigned URL": "URL assegnato"
+    "Upstream": "Upstream"
+    "Protocol": "Protocollo"
+    "Traffic policy": "Policy di traffico"
+    "Message": "Messaggio"
+    "public": "public"
+    "internal": "internal"
+    "kubernetes": "kubernetes"
+    "Upstream Service": "Service upstream"
+    "Domain": "Dominio"
+    "No cloud endpoints.": "Nessun endpoint cloud."
+    "ID": "ID"
+    "Bindings": "Binding"
+    "Pooling": "Pooling"
+    "No domains.": "Nessun dominio."
+    "CNAME target": "Destinazione CNAME"
+    "ACME challenge target": "Destinazione della sfida ACME"
+    "Wildcard": "Wildcard"
+    "Reclaim policy": "Policy di recupero"
+    "No ingress.k8s.ngrok.com domains.": "Nessun dominio ingress.k8s.ngrok.com."
+    "No operator registration.": "Nessuna registrazione dell'operatore."
+    "Registered": "Registrato"
+    "Region": "Regione"
+    "Features": "Funzioni"
+    "Endpoint selectors": "Selettori di endpoint"
+    "Ingress endpoint": "Endpoint di ingresso"
+    "Drained": "Svuotati"
+  uk:
+    "not created: {{ fields.createdReason }}: {{ fields.createdMessage }}": "не створено:
+      {{ fields.createdReason }}: {{ fields.createdMessage }}"
+    "domain not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}": "домен
+      не готовий: {{ fields.readyReason }}: {{ fields.readyMessage }}"
+    "traffic policy not applied: {{ fields.policyMessage }}": "політику трафіку не
+      застосовано: {{ fields.policyMessage }}"
+    "provisioning: {{ fields.readyMessage }}": "створюється: {{ fields.readyMessage
+      }}"
+    "not ready: {{ fields.readyReason }}: {{ fields.readyMessage }}": "не готовий:
+      {{ fields.readyReason }}: {{ fields.readyMessage }}"
+    "waiting for the operator": "очікує на оператор"
+    "DNS record needed: {{ fields.readyMessage }}": "потрібен запис DNS: {{ fields.readyMessage
+      }}"
+    "replaced by its ngrok.com/v1 Domain": "замінено його Domain ngrok.com/v1"
+    "not registered with ngrok: {{ fields.readyMessage }}": "не зареєстровано в ngrok:
+      {{ fields.readyMessage }}"
+    "draining: {{ fields.drained }} of {{ fields.drainTotal }} resources": "очищення:
+      {{ fields.drained }} з {{ fields.drainTotal }} ресурсів"
+    "%d ngrok endpoint": "%d ендпоінт ngrok"
+    "%d ngrok endpoints": "%d ендпоінтів ngrok"
+    "failing": "зі збоями"
+    "not ready": "не готових"
+    "domain problems": "проблем із доменами"
+    "No agent endpoints.": "Немає ендпоінтів агента."
+    "Ready": "Готовий"
+    "Waiting": "Очікує"
+    "URL": "URL"
+    "Assigned URL": "Призначений URL"
+    "Upstream": "Upstream"
+    "Protocol": "Протокол"
+    "Traffic policy": "Політика трафіку"
+    "Message": "Повідомлення"
+    "public": "public"
+    "internal": "internal"
+    "kubernetes": "kubernetes"
+    "Upstream Service": "Upstream Service"
+    "Domain": "Домен"
+    "No cloud endpoints.": "Немає хмарних ендпоінтів."
+    "ID": "ID"
+    "Bindings": "Прив'язки"
+    "Pooling": "Пулінг"
+    "No domains.": "Немає доменів."
+    "CNAME target": "Ціль CNAME"
+    "ACME challenge target": "Ціль виклику ACME"
+    "Wildcard": "Wildcard"
+    "Reclaim policy": "Політика повернення"
+    "No ingress.k8s.ngrok.com domains.": "Немає доменів ingress.k8s.ngrok.com."
+    "No operator registration.": "Немає реєстрації оператора."
+    "Registered": "Зареєстровано"
+    "Region": "Регіон"
+    "Features": "Функції"
+    "Endpoint selectors": "Селектори ендпоінтів"
+    "Ingress endpoint": "Вхідний ендпоінт"
+    "Drained": "Очищено"
+# Invented names and hosts (example.ngrok.app, example.com, demo IDs). demo-shop's storefront
+# is up behind its Domain; demo-lab's api-preview cannot reach its upstream (critical, linked
+# to its Service), checkout's domain is invalid, docs' traffic policy is missing, metrics is
+# still being created, reports waits on an ACME record, and queue has no status yet.
+samples:
+  agentEndpoint:
+    - metadata: { name: storefront, namespace: demo-shop, creationTimestamp: now-12d }
+      spec:
+        url: https://shop-demo.example.ngrok.app
+        upstream: { url: "http://storefront.demo-shop:8080" }
+        bindings: [public]
+      status:
+        assignedURL: https://shop-demo.example.ngrok.app
+        trafficPolicy: none
+        domainRef: { name: shop-demo-example-ngrok-app, namespace: demo-shop }
+        conditions:
+          - { type: Ready, status: "True", reason: EndpointActive, message: "AgentEndpoint is active and ready", lastTransitionTime: now-12d }
+          - { type: EndpointCreated, status: "True", reason: EndpointCreated, message: "Endpoint created", lastTransitionTime: now-12d }
+    - metadata: { name: api-preview, namespace: demo-lab, creationTimestamp: now-2h }
+      spec:
+        url: https://api-preview.example.ngrok.app
+        upstream: { url: "http://api-preview:9000", protocol: http2 }
+        bindings: [public]
+      status:
+        domainRef: { name: api-preview-example-ngrok-app }
+        conditions:
+          - { type: Ready, status: "False", reason: UpstreamError, message: "dial tcp 10.96.14.2:9000: connect: connection refused", lastTransitionTime: now-2h }
+          - { type: EndpointCreated, status: "False", reason: UpstreamError, message: "dial tcp 10.96.14.2:9000: connect: connection refused", lastTransitionTime: now-2h }
+    - metadata: { name: checkout, namespace: demo-shop, creationTimestamp: now-1d }
+      spec:
+        url: https://checkout.example.com
+        upstream: { url: "http://checkout.demo-shop.svc.cluster.local:8080" }
+        bindings: [public]
+      status:
+        domainRef: { name: checkout-example-com, namespace: demo-shop }
+        conditions:
+          - { type: Ready, status: "False", reason: DomainInvalid, message: "the domain checkout.example.com is not a valid hostname for this account", lastTransitionTime: now-1d }
+    - metadata: { name: docs, namespace: demo-lab, creationTimestamp: now-3d }
+      spec:
+        url: https://docs-demo.example.ngrok.app
+        upstream: { url: "http://docs.demo-lab:80" }
+        bindings: [public]
+        trafficPolicy: { targetRef: { name: docs-auth } }
+      status:
+        trafficPolicy: docs-auth
+        conditions:
+          - { type: Ready, status: "False", reason: TrafficPolicyNotFound, message: "NgrokTrafficPolicy demo-lab/docs-auth not found", lastTransitionTime: now-3h }
+          - { type: TrafficPolicyApplied, status: "False", reason: TrafficPolicyError, message: "NgrokTrafficPolicy demo-lab/docs-auth not found", lastTransitionTime: now-3h }
+    - metadata: { name: metrics, namespace: demo-lab, creationTimestamp: now-30s }
+      spec:
+        url: https://metrics.demo.internal
+        upstream: { url: "9090" }
+        bindings: [internal]
+      status:
+        conditions:
+          - { type: Ready, status: "False", reason: Pending, message: "Waiting for endpoint creation", lastTransitionTime: now-30s }
+    - metadata: { name: reports, namespace: demo-shop, creationTimestamp: now-40m }
+      spec:
+        url: https://reports.example.com
+        upstream: { url: "http://reports:8080" }
+        bindings: [public]
+      status:
+        conditions:
+          - { type: Ready, status: "False", reason: ACMEChallengeRequired, message: "add the CNAME _acme-challenge.reports.example.com to complete the challenge", lastTransitionTime: now-40m }
+          - { type: EndpointCreated, status: "True", reason: EndpointCreated, message: "Endpoint created", lastTransitionTime: now-40m }
+    - metadata: { name: queue, namespace: demo-lab, creationTimestamp: now-5s }
+      spec:
+        url: tcp://
+        upstream: { url: "tcp://queue.demo-lab:5672" }
+  cloudEndpoint:
+    - metadata: { name: shop-edge, namespace: demo-shop, creationTimestamp: now-12d }
+      spec:
+        url: https://shop-edge.example.ngrok.app
+        bindings: [public]
+        poolingEnabled: true
+        trafficPolicy: { targetRef: { name: edge-routes } }
+      status:
+        id: ep_2demoShopEdge0000000000000
+        domainRef: { name: shop-edge-example-ngrok-app, namespace: demo-shop }
+        conditions:
+          - { type: Ready, status: "True", reason: CloudEndpointActive, message: "CloudEndpoint is active and ready", lastTransitionTime: now-12d }
+          - { type: CloudEndpointCreated, status: "True", reason: CloudEndpointCreated, message: "CloudEndpoint created", lastTransitionTime: now-12d }
+    - metadata: { name: lab-edge, namespace: demo-lab, creationTimestamp: now-1h }
+      spec:
+        url: https://lab-edge.example.ngrok.app
+        trafficPolicy: { inline: { on_http_request: [] } }
+      status:
+        conditions:
+          - { type: Ready, status: "False", reason: CloudEndpointCreationFailed, message: "the account has reached its endpoint limit", lastTransitionTime: now-1h }
+          - { type: CloudEndpointCreated, status: "False", reason: CloudEndpointCreationFailed, message: "the account has reached its endpoint limit", lastTransitionTime: now-1h }
+    - metadata: { name: beta-edge, namespace: demo-lab, creationTimestamp: now-6h }
+      spec:
+        url: https://beta.example.com
+      status:
+        domainRef: { name: beta-example-com, namespace: demo-lab }
+        conditions:
+          - { type: Ready, status: "False", reason: DomainInvalid, message: "the domain beta.example.com is not a valid hostname for this account", lastTransitionTime: now-6h }
+    - metadata: { name: auth-edge, namespace: demo-shop, creationTimestamp: now-2d }
+      spec:
+        url: https://auth-edge.example.ngrok.app
+        trafficPolicy: { targetRef: { name: sso } }
+      status:
+        conditions:
+          - { type: Ready, status: "False", reason: TrafficPolicyError, message: "invalid traffic policy: unknown action \"oauth2\"", lastTransitionTime: now-2d }
+          - { type: TrafficPolicyApplied, status: "False", reason: TrafficPolicyError, message: "invalid traffic policy: unknown action \"oauth2\"", lastTransitionTime: now-2d }
+    - metadata: { name: status-edge, namespace: demo-shop, creationTimestamp: now-1m }
+      spec:
+        url: https://status-demo.example.ngrok.app
+      status:
+        conditions:
+          - { type: Ready, status: "False", reason: Pending, message: "Waiting for CloudEndpoint to be ready", lastTransitionTime: now-1m }
+    - metadata: { name: blog-edge, namespace: demo-shop, creationTimestamp: now-20m }
+      spec:
+        url: https://blog.example.com
+      status:
+        conditions:
+          - { type: Ready, status: "False", reason: ACMEChallengeRequired, message: "add the CNAME _acme-challenge.blog.example.com to complete the challenge", lastTransitionTime: now-20m }
+    - metadata: { name: new-edge, namespace: demo-lab, creationTimestamp: now-5s }
+      spec:
+        url: https://new-edge.example.ngrok.app
+  domain:
+    - metadata: { name: shop-demo-example-ngrok-app, namespace: demo-shop, creationTimestamp: now-12d }
+      spec: { domain: shop-demo.example.ngrok.app, reclaimPolicy: Delete }
+      status:
+        id: rd_2demoShopDomain00000000000
+        domain: shop-demo.example.ngrok.app
+        conditions:
+          - { type: Ready, status: "True", reason: DomainActive, message: "Domain is ready", lastTransitionTime: now-12d }
+    - metadata: { name: checkout-example-com, namespace: demo-shop, creationTimestamp: now-1d }
+      spec: { domain: checkout.example.com, reclaimPolicy: Retain }
+      status:
+        domain: checkout.example.com
+        conditions:
+          - { type: Ready, status: "False", reason: DomainInvalid, message: "the domain checkout.example.com is not a valid hostname for this account", lastTransitionTime: now-1d }
+    - metadata: { name: reports-example-com, namespace: demo-shop, creationTimestamp: now-40m }
+      spec: { domain: reports.example.com }
+      status:
+        id: rd_2demoReportsDomain000000000
+        domain: reports.example.com
+        cnameTarget: 3demo.cname.example.ngrok-dns.com
+        acmeChallengeCNAMETarget: 3demo.acme.example.ngrok-dns.com
+        conditions:
+          - { type: Ready, status: "False", reason: ACMEChallengeRequired, message: "add the CNAME _acme-challenge.reports.example.com to complete the challenge", lastTransitionTime: now-40m }
+    - metadata: { name: api-example-com, namespace: demo-lab, creationTimestamp: now-5m }
+      spec: { domain: api.example.com }
+      status:
+        domain: api.example.com
+        coveredByWildcardDomain: { domain: "*.example.com" }
+        conditions:
+          - { type: Ready, status: "False", reason: WaitingForCertificate, message: "waiting for the certificate to be issued", lastTransitionTime: now-5m }
+    - metadata: { name: fresh-example-com, namespace: demo-lab, creationTimestamp: now-5s }
+      spec: { domain: fresh.example.com }
+  legacyDomain:
+    - metadata: { name: shop-demo-example-ngrok-app, namespace: demo-shop, creationTimestamp: now-90d }
+      spec: { domain: shop-demo.example.ngrok.app }
+      status:
+        domain: shop-demo.example.ngrok.app
+        conditions:
+          - { type: Ready, status: "False", reason: SupersededByV1, message: "superseded by the ngrok.com/v1 Domain", lastTransitionTime: now-12d }
+    - metadata: { name: api-preview-example-ngrok-app, namespace: demo-lab, creationTimestamp: now-30d }
+      spec: { domain: api-preview.example.ngrok.app }
+      status:
+        id: rd_2demoPreviewDomain0000000000
+        domain: api-preview.example.ngrok.app
+        conditions:
+          - { type: Ready, status: "True", reason: DomainActive, message: "Domain is ready", lastTransitionTime: now-30d }
+    - metadata: { name: beta-example-com, namespace: demo-lab, creationTimestamp: now-6h }
+      spec: { domain: beta.example.com }
+      status:
+        domain: beta.example.com
+        conditions:
+          - { type: Ready, status: "False", reason: DomainInvalid, message: "the domain beta.example.com is not a valid hostname for this account", lastTransitionTime: now-6h }
+    - metadata: { name: blog-example-com, namespace: demo-shop, creationTimestamp: now-20m }
+      spec: { domain: blog.example.com }
+      status:
+        domain: blog.example.com
+        acmeChallengeCNAMETarget: 4demo.acme.example.ngrok-dns.com
+        conditions:
+          - { type: Ready, status: "False", reason: ACMEChallengeRequired, message: "add the CNAME _acme-challenge.blog.example.com to complete the challenge", lastTransitionTime: now-20m }
+    - metadata: { name: status-demo-example-ngrok-app, namespace: demo-shop, creationTimestamp: now-1m }
+      spec: { domain: status-demo.example.ngrok.app }
+      status:
+        domain: status-demo.example.ngrok.app
+        conditions:
+          - { type: Ready, status: "False", reason: CertificateProvisioning, message: "provisioning the certificate", lastTransitionTime: now-1m }
+    - metadata: { name: new-edge-example-ngrok-app, namespace: demo-lab, creationTimestamp: now-5s }
+      spec: { domain: new-edge.example.ngrok.app }
+  operator:
+    - metadata: { name: ngrok-operator, namespace: demo-ngrok, creationTimestamp: now-90d }
+      spec:
+        region: global
+        enabledFeatures: [ingress, gateway, bindings]
+        binding: { endpointSelectors: ["true"], ingressEndpoint: "kubernetes-binding-ingress.example.ngrok.app:443" }
+      status:
+        id: k8sop_2demoOperator000000000
+        enabledFeatures: [ingress, gateway, bindings]
+        conditions:
+          - { type: Ready, status: "True", reason: Registered, message: "registered with ngrok", lastTransitionTime: now-90d }
+          - { type: Registered, status: "True", reason: Registered, message: "registered with ngrok", lastTransitionTime: now-90d }
+    - metadata: { name: ngrok-operator, namespace: demo-lab, creationTimestamp: now-10m }
+      spec: { enabledFeatures: [ingress] }
+      status:
+        conditions:
+          - { type: Ready, status: "False", reason: RegistrationFailed, message: "the API key is not valid", lastTransitionTime: now-10m }
+          - { type: Registered, status: "False", reason: RegistrationFailed, message: "the API key is not valid", lastTransitionTime: now-10m }
+    - metadata: { name: ngrok-operator, namespace: demo-old, creationTimestamp: now-200d }
+      spec: { enabledFeatures: [ingress] }
+      status:
+        id: k8sop_2demoOldOperator0000000
+        drain: { drainedResources: 7, totalResources: 12 }
+        conditions:
+          - { type: Ready, status: "False", reason: Draining, message: "draining the operator's resources", lastTransitionTime: now-3m }
+          - { type: Draining, status: "True", reason: DrainInProgress, message: "7 of 12 resources drained", lastTransitionTime: now-3m }
+    - metadata: { name: ngrok-operator, namespace: demo-preview, creationTimestamp: now-1h }
+      spec: { enabledFeatures: [ingress] }
+      status:
+        conditions:
+          - { type: Ready, status: "False", reason: Pending, message: "waiting for the API", lastTransitionTime: now-1h }
+    - metadata: { name: ngrok-operator, namespace: demo-new, creationTimestamp: now-5s }
+      spec: { enabledFeatures: [ingress] }
+  service:
+    - metadata: { name: storefront, namespace: demo-shop }
+    - metadata: { name: api-preview, namespace: demo-lab }
+    - metadata: { name: checkout, namespace: demo-shop }
+    - metadata: { name: docs, namespace: demo-lab }
