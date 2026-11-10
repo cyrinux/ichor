@@ -88,7 +88,8 @@ func newClusterPhasesOf(events []newClusterProgress) []string {
 
 // maintenanceOnlyNode is a fake node in maintenance mode: its API answers unauthenticated
 // (the fake never asks for a client certificate) under the "" node target, it has no
-// machine status, and nothing is installed.
+// machine status, and nothing is installed. The address is the endpoint without brackets
+// (the IPv6 case) and port: what a console would show, mapped to loopback by serve.
 func maintenanceOnlyNode(t *testing.T) (*fakeTalos, string) {
 	t.Helper()
 
@@ -97,7 +98,17 @@ func maintenanceOnlyNode(t *testing.T) (*fakeTalos, string) {
 
 	endpoint, _ := f.serve(t)
 
-	return f, endpoint
+	return f, loopbackHost(endpoint)
+}
+
+// loopbackHost is a startTLSServer endpoint without its port: the address the user types.
+func loopbackHost(endpoint string) string {
+	host, _, err := net.SplitHostPort(endpoint)
+	if err != nil {
+		panic(err)
+	}
+
+	return strings.Trim(host, "[]")
 }
 
 // installThenBoot makes f behave like a node bootstrapped from maintenance mode: the real
@@ -128,8 +139,8 @@ func installThenBoot(t *testing.T, f *fakeTalos, node string) {
 	}
 }
 
-func startNewClusterTest(listener NewClusterListener, timeout time.Duration) *NewClusterRun {
-	return newClusterForTest(newClusterNode, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "", listener, timeout)
+func startNewClusterTest(address string, listener NewClusterListener, timeout time.Duration) *NewClusterRun {
+	return newClusterForTest(address, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "", listener, timeout)
 }
 
 // shortNewClusterWaits keeps the run's bounded waits inside the test's timeout: the
@@ -147,21 +158,21 @@ func shortNewClusterWaits(t *testing.T) {
 }
 
 func TestStartNewClusterHappyPath(t *testing.T) {
-	f, _ := maintenanceOnlyNode(t)
-	installThenBoot(t, f, newClusterNode)
+	f, address := maintenanceOnlyNode(t)
+	installThenBoot(t, f, address)
 
 	// installThenBoot lets the fake record the config bytes the node was sent.
 
 	rec := newNewClusterRecorder()
-	startNewClusterTest(rec, time.Minute)
+	startNewClusterTest(address, rec, time.Minute)
 
 	node, errMessage, events := rec.wait(t)
 	if errMessage != "" {
 		t.Fatalf("bootstrap failed: %s (events %+v)", errMessage, events)
 	}
 
-	if node != newClusterNode {
-		t.Errorf("node = %q, want %s", node, newClusterNode)
+	if node != address {
+		t.Errorf("node = %q, want %s", node, address)
 	}
 
 	want := []string{newClusterPhaseGenerating, newClusterPhaseApplying, newClusterPhaseApplying,
@@ -186,7 +197,7 @@ func TestStartNewClusterHappyPath(t *testing.T) {
 		t.Errorf("bootstraps = %+v, want one", bootstraps)
 	}
 
-	if !slices.Contains(kubeconfigs, "Kubeconfig "+newClusterNode) {
+	if !slices.Contains(kubeconfigs, "Kubeconfig "+address) {
 		t.Errorf("the kubeconfig was never asked of the new control plane: %v", kubeconfigs)
 	}
 
@@ -198,8 +209,8 @@ func TestStartNewClusterHappyPath(t *testing.T) {
 	}
 
 	ctx := cfg.Contexts[cfg.Context]
-	if cfg.Context != newClusterName || len(ctx.Endpoints) != 1 || ctx.Endpoints[0] != newClusterNode {
-		t.Errorf("talosconfig context = %q endpoints %v, want %s at %s", cfg.Context, ctx.Endpoints, newClusterName, newClusterNode)
+	if cfg.Context != newClusterName || len(ctx.Endpoints) != 1 || ctx.Endpoints[0] != address {
+		t.Errorf("talosconfig context = %q endpoints %v, want %s at %s", cfg.Context, ctx.Endpoints, newClusterName, address)
 	}
 
 	for _, part := range []string{ctx.CA, ctx.Crt, ctx.Key} {
@@ -283,8 +294,7 @@ func TestStartNewClusterNothingThere(t *testing.T) {
 	rec := newNewClusterRecorder()
 
 	// A port nobody listens on: nothing answered, nothing was changed.
-	addr := freeLocalAddr(t)
-	startClusterAt(addr, rec, time.Minute)
+	startNewClusterTest(freeLocalAddr(t), rec, time.Minute)
 
 	_, errMessage, _ := rec.wait(t)
 	if !strings.Contains(errMessage, "does not answer") || !strings.Contains(errMessage, "ISO") {
@@ -306,14 +316,14 @@ func freeLocalAddr(t *testing.T) string {
 	return addr
 }
 
-func startClusterAt(address string, listener NewClusterListener, timeout time.Duration) *NewClusterRun {
-	return newClusterForTest(address, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "", listener, timeout)
-}
+
 
 // A node booted from the ISO whose maintenance API is still coming up: the apply retries.
 func TestStartNewClusterApplyRetriesWhileNodeBoots(t *testing.T) {
-	f, _ := maintenanceOnlyNode(t)
-	installThenBoot(t, f, newClusterNode)
+	f, address := maintenanceOnlyNode(t)
+	installThenBoot(t, f, address)
+
+	shortNewClusterWaits(t)
 
 	// The node is briefly unreachable: every call without a node target (its maintenance
 	// API) waits, then the hold is released.
@@ -332,7 +342,7 @@ func TestStartNewClusterApplyRetriesWhileNodeBoots(t *testing.T) {
 	}()
 
 	rec := newNewClusterRecorder()
-	startNewClusterTest(rec, time.Minute)
+	startNewClusterTest(address, rec, time.Minute)
 
 	_, errMessage, _ := rec.wait(t)
 	if errMessage != "" {
@@ -345,20 +355,27 @@ func TestStartNewClusterApplyRetriesWhileNodeBoots(t *testing.T) {
 func TestStartNewClusterNeverComesBack(t *testing.T) {
 	shortNewClusterWaits(t)
 
-	f, _ := maintenanceOnlyNode(t)
+	f, address := maintenanceOnlyNode(t)
 
+	// The node answers as installed and serves a kubeconfig, but never becomes ready.
 	f.mu.Lock()
-	f.kubeconfigs = map[string][]byte{newClusterNode: []byte("apiVersion: v1\nkind: Config\n")}
+	f.kubeconfigs = map[string][]byte{address: []byte("apiVersion: v1\nkind: Config\n")}
 	f.mu.Unlock()
 
 	f.onApply = func(string) {
 		f.mu.Lock()
 		delete(f.versions, "")
 		f.mu.Unlock()
+
+		go func() {
+			time.Sleep(newClusterStep)
+			f.setVersion(address, "v1.14.4")
+			f.setStage(address, runtime.MachineStageInstalling, false)
+		}()
 	}
 
 	rec := newNewClusterRecorder()
-	startNewClusterTest(rec, 3*time.Second)
+	startNewClusterTest(address, rec, 20*time.Second)
 
 	_, errMessage, _ := rec.wait(t)
 	if !strings.Contains(errMessage, "cannot be undone") || !strings.Contains(errMessage, "start the bootstrap again") {
@@ -371,11 +388,11 @@ func TestStartNewClusterNeverComesBack(t *testing.T) {
 func installedWithoutClusterNode(t *testing.T) (*fakeTalos, string) {
 	t.Helper()
 
-	f, endpoint := maintenanceOnlyNode(t)
+	f, address := maintenanceOnlyNode(t)
 	f.setStage("", runtime.MachineStageRunning, true)
 
 	f.mu.Lock()
-	f.kubeconfigs = map[string][]byte{newClusterNode: []byte("apiVersion: v1\nkind: Config\n")}
+	f.kubeconfigs = map[string][]byte{address: []byte("apiVersion: v1\nkind: Config\n")}
 	f.mu.Unlock()
 
 	f.onApply = func(string) {
@@ -385,12 +402,12 @@ func installedWithoutClusterNode(t *testing.T) (*fakeTalos, string) {
 
 		go func() {
 			time.Sleep(newClusterStep)
-			f.setVersion(newClusterNode, "v1.14.4")
-			f.setStage(newClusterNode, runtime.MachineStageRunning, true)
+			f.setVersion(address, "v1.14.4")
+			f.setStage(address, runtime.MachineStageRunning, true)
 		}()
 	}
 
-	return f, endpoint
+	return f, address
 }
 
 // dropMachineStatus removes ""'s machine status once the reset was seen: the node is back
@@ -428,7 +445,9 @@ func dropMachineStatus(t *testing.T, f *fakeTalos) {
 
 // Cancel before the config goes out: nothing changed on the node.
 func TestStartNewClusterCancelBeforeApply(t *testing.T) {
-	f, _ := maintenanceOnlyNode(t)
+	shortNewClusterWaits(t)
+
+	f, address := maintenanceOnlyNode(t)
 
 	// The maintenance API never answers (Version holds), so the run is still pre-apply.
 	hold := make(chan struct{})
@@ -446,7 +465,7 @@ func TestStartNewClusterCancelBeforeApply(t *testing.T) {
 	})
 
 	rec := newNewClusterRecorder()
-	run := startNewClusterTest(rec, time.Minute)
+	run := startNewClusterTest(address, rec, time.Minute)
 
 	// Wait until the run reached the maintenance API, then cancel.
 	deadline := time.Now().Add(10 * time.Second)
@@ -462,7 +481,7 @@ func TestStartNewClusterCancelBeforeApply(t *testing.T) {
 	run.Cancel()
 
 	node, errMessage, _ := rec.wait(t)
-	if node != newClusterNode || !strings.Contains(errMessage, "stopped before the config was sent") {
+	if node != address || !strings.Contains(errMessage, "stopped before the config was sent") {
 		t.Errorf("got %q, %q; want a clean stop before the apply", node, errMessage)
 	}
 
@@ -478,26 +497,23 @@ func TestStartNewClusterCancelBeforeApply(t *testing.T) {
 // A node that already carries a clusterless Talos install answers the maintenance reset
 // and is wiped before the config goes out.
 func TestStartNewClusterWipesInstalledClusterlessNode(t *testing.T) {
-	f, _ := maintenanceOnlyNode(t)
+	shortNewClusterWaits(t)
 
-	// An installed Talos without a cluster: it reports a machine status over the
-	// certificate-free API.
-	f.setStage("", runtime.MachineStageRunning, true)
-	installThenBoot(t, f, newClusterNode)
+	f, address := installedWithoutClusterNode(t)
 
 	// The reset takes the node down and it returns in maintenance mode.
 	go dropMachineStatus(t, f)
 
 	rec := newNewClusterRecorder()
-	startNewClusterTest(rec, time.Minute)
+	startNewClusterTest(address, rec, time.Minute)
 
 	node, errMessage, events := rec.wait(t)
 	if errMessage != "" {
 		t.Fatalf("wipe bootstrap failed: %s (events %+v)", errMessage, events)
 	}
 
-	if node != newClusterNode {
-		t.Errorf("node = %q", node)
+	if node != address {
+		t.Errorf("node = %q, want %s", node, address)
 	}
 
 	f.mu.Lock()
@@ -523,7 +539,7 @@ func TestStartNewClusterPrivacyRefused(t *testing.T) {
 	t.Cleanup(func() { SetPrivacyMask(false, "") })
 
 	rec := newNewClusterRecorder()
-	startNewClusterTest(rec, time.Minute)
+	startNewClusterTest(newClusterNode, rec, time.Minute)
 
 	_, errMessage, _ := rec.wait(t)
 	if !strings.Contains(errMessage, "privacy mode") {
@@ -588,9 +604,10 @@ func TestParseNewClusterRequestDefaults(t *testing.T) {
 // StartNewCluster records the run in the activity log without the config.
 func TestStartNewClusterAudited(t *testing.T) {
 	withDataDir(t)
+	shortNewClusterWaits(t)
 
-	f, _ := maintenanceOnlyNode(t)
-	installThenBoot(t, f, newClusterNode)
+	f, address := maintenanceOnlyNode(t)
+	installThenBoot(t, f, address)
 
 	rec := newNewClusterRecorder()
 	StartNewCluster(newClusterNode, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "", rec)
@@ -606,12 +623,12 @@ func TestStartNewClusterAudited(t *testing.T) {
 	}
 
 	e := entries[0]
-	if e.Outcome != auditOK || e.Node != newClusterNode {
+	if e.Outcome != auditOK || e.Node != address {
 		t.Errorf("entry = %+v", e)
 	}
 
 	if !strings.Contains(e.Params, "hostname=cp-1") || !strings.Contains(e.Params, "k8s=1.34.1") ||
-		!strings.Contains(e.Params, "disk=/dev/sda") || !strings.Contains(e.Params, "endpoint=https://"+newClusterNode+":6443") {
+		!strings.Contains(e.Params, "disk=/dev/sda") || !strings.Contains(e.Params, "endpoint=https://"+address+":6443") {
 		t.Errorf("params = %q", e.Params)
 	}
 

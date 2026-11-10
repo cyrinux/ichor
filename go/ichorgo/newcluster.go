@@ -69,9 +69,9 @@ const (
 var (
 	// The three bounded waits as variables: the tests shorten them the way the other runs
 	// shorten upgradePollInterval; the constants above are the shipped values.
-	newClusterApplyWait = newClusterApplyFor
-	newClusterGraceWait = newClusterInstallGrace
-	newClusterReadyWait = newClusterReadyFor
+	newClusterApplyWait  = newClusterApplyFor
+	newClusterGraceWait  = newClusterInstallGrace
+	newClusterReadyWait  = newClusterReadyFor
 
 	errNewClusterPrivacy = errors.New("turn privacy mode off to bootstrap a cluster: its secrets are generated here and carried to the node in the config")
 	// errInstalledNoMaintenance: the address runs a Talos that asks for a client
@@ -772,7 +772,7 @@ func parseNewClusterRequest(address, clusterName, kubernetesVersion, installDisk
 		return newClusterRequest{}, fmt.Errorf("the address must be the IP (or host) the node's console shows, host or host:port, not %q", address)
 	}
 
-	req.host = endpointHost(req.address)
+	req.host = reqAddressHost(req.address)
 
 	if req.clusterName == "" {
 		return newClusterRequest{}, errors.New("the cluster needs a name")
@@ -801,6 +801,16 @@ func parseNewClusterRequest(address, clusterName, kubernetesVersion, installDisk
 	}
 
 	return req, nil
+}
+
+// reqAddressHost is the address without its port; unbracketed, so "https://host:6443"
+// carries no IPv6 brackets (endpointHost would leave them).
+func reqAddressHost(address string) string {
+	if h, _, err := net.SplitHostPort(address); err == nil {
+		return strings.Trim(h, "[]")
+	}
+
+	return strings.Trim(address, "[]")
 }
 
 // checkClusterEndpoint accepts the API server address the user picks: an https URL with a
