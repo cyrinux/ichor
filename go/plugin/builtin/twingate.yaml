@@ -1,0 +1,638 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# The Twingate operator (twingate.com/v1beta, Python on kopf) declares Twingate objects from
+# Kubernetes: a TwingateConnector runs a relay in the cluster, a TwingateResource is an address
+# reachable through Twingate (generated as <service>-resource from a Service annotated
+# resource.twingate.com: "true", which then owns it), a TwingateResourceAccess lets a principal
+# or a TwingateGroup reach a resource. The CRDs leave status free-form; what the operator
+# writes, read from its sources (app/handlers/*.py, 2026-11-10):
+# * spec.id once the object exists in Twingate (the printer column ID);
+# * status.<handler name> = each handler's result {ts, success, twingate_id…}; a handler
+#   that fails without raising writes success: false and error (an update called before the
+#   object has an id, a GraphQL mutation refused for an access). A raised error retries and
+#   leaves no status key: "not created after 5 minutes" is the only sign of it (a heuristic);
+# * status.resourceId and status.principalId on an access once the grant landed.
+# Gateway and CertificateAuthority (newer, for the Kubernetes-type resources) are not listed.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: twingate
+name: Twingate
+website: https://github.com/Twingate/kubernetes-operator/wiki/Getting-Started
+icon: twingate
+category: networking
+catalogId: twingate
+
+detect:
+  - group: twingate.com
+
+resources:
+  connector:
+    group: twingate.com
+    version: v1beta
+    resource: twingateconnectors
+    kind: TwingateConnector
+    scope: Namespaced
+  resource:
+    group: twingate.com
+    version: v1beta
+    resource: twingateresources
+    kind: TwingateResource
+    scope: Namespaced
+  access:
+    group: twingate.com
+    version: v1beta
+    resource: twingateresourceaccesses
+    kind: TwingateResourceAccess
+    scope: Namespaced
+  # An access's group: only for its link.
+  group:
+    group: twingate.com
+    version: v1beta
+    resource: twingategroups
+    kind: TwingateGroup
+    scope: Namespaced
+    optional: true
+  # The Service a generated resource comes from: names only.
+  service:
+    group: ""
+    version: v1
+    resource: services
+    kind: Service
+    scope: Namespaced
+    list: { metadataOnly: true, limit: 2000 }
+    optional: true
+
+fields:
+  connector:
+    twingateID: $.spec.id | default("")
+    displayName: $.spec.name | default("")
+    remoteNetwork: $.spec.remoteNetworkId | default("")
+    logLevel: $.spec.logLevel | default(3)
+    image: >-
+      has($.spec.image.repository)
+      ? $.spec.image.repository + ":" + ($.spec.image.tag | default("latest"))
+      : (has($.spec.imagePolicy) ? ($.spec.imagePolicy.provider | default("")) + " " + ($.spec.imagePolicy.version | default("")) : "")
+    # The first handler result with success: false (kopf keeps one per handler).
+    error: '$.status[?(@.success == false)].error | first() | default("")'
+    failed: '$.status[?(@.success == false)] | first() | has()'
+    ageMs: age($.metadata.creationTimestamp)
+  resource:
+    twingateID: $.spec.id | default("")
+    displayName: $.spec.name | default($.metadata.name)
+    address: $.spec.address | default("")
+    alias: $.spec.alias | default("")
+    type: $.spec.type | default("Network")
+    browserShortcut: $.spec.isBrowserShortcutEnabled | default(false)
+    visible: $.spec.isVisible | default(true)
+    tcp: $.spec.protocols.tcp.policy | default("ALLOW_ALL")
+    udp: $.spec.protocols.udp.policy | default("ALLOW_ALL")
+    icmp: $.spec.protocols.allowIcmp | default(true)
+    # Generated from an annotated Service: the operator adopts it (an owner reference).
+    ownerService: '$.metadata.ownerReferences[?(@.kind == "Service")].name | first() | default("")'
+    generated: fields.ownerService != ""
+    serviceRef: >-
+      fields.generated
+      ? join(service, $.metadata.namespace == left.metadata.namespace && $.metadata.name == fields.ownerService)
+      : null
+    error: '$.status[?(@.success == false)].error | first() | default("")'
+    failed: '$.status[?(@.success == false)] | first() | has()'
+    ageMs: age($.metadata.creationTimestamp)
+  access:
+    resourceName: $.spec.resourceRef.name | default("")
+    resourceNamespace: $.spec.resourceRef.namespace | default($.metadata.namespace)
+    principal: >-
+      has($.spec.principalId) ? $.spec.principalId
+      : (has($.spec.groupRef.name) ? "group " + $.spec.groupRef.name
+      : (has($.spec.principalExternalRef.name) ? lower($.spec.principalExternalRef.type | default("")) + " " + $.spec.principalExternalRef.name : ""))
+    expiresAt: $.spec.expiresAt | time()
+    expired: fields.expiresAt != 0 && fields.expiresAt < now
+    resourceRef: join(resource, $.metadata.namespace == fields.resourceNamespace && $.metadata.name == fields.resourceName)
+    resourceMissing: '!has(fields.resourceRef)'
+    resourcePending: 'has(fields.resourceRef) && (fields.resourceRef.spec.id | default("")) == ""'
+    groupRef: >-
+      has($.spec.groupRef.name)
+      ? join(group, $.metadata.name == left.spec.groupRef.name && $.metadata.namespace == (left.spec.groupRef.namespace | default(left.metadata.namespace)))
+      : null
+    resourceID: $.status.resourceId | default($.status.twingate_resource_access_change.resource_id) | default("")
+    principalID: $.status.principalId | default($.status.twingate_resource_access_change.principal_id) | default("")
+    granted: $.status.twingate_resource_access_change.success | default(false)
+    error: '$.status[?(@.success == false)].error | first() | default("")'
+    failed: '$.status[?(@.success == false)] | first() | has()'
+    ageMs: age($.metadata.creationTimestamp)
+
+# First match wins. "Not created" is a heuristic (see the header); the rest is what the
+# operator writes.
+health:
+  connector:
+    - when: fields.failed
+      health: critical
+      reason: failed
+      message: "failed: {{ fields.error }}"
+    - when: fields.twingateID == "" && fields.ageMs > 300000
+      health: warning
+      reason: notCreated
+      message: "not created in Twingate after 5 minutes"
+    - when: fields.twingateID == ""
+      health: info
+      reason: creating
+      message: "being created in Twingate"
+  resource:
+    - when: fields.failed
+      health: critical
+      reason: failed
+      message: "failed: {{ fields.error }}"
+    - when: fields.twingateID == "" && fields.ageMs > 300000
+      health: warning
+      reason: notCreated
+      message: "not created in Twingate after 5 minutes"
+    - when: fields.twingateID == ""
+      health: info
+      reason: creating
+      message: "being created in Twingate"
+  access:
+    - when: fields.failed
+      health: critical
+      reason: failed
+      message: "failed: {{ fields.error }}"
+    - when: fields.resourceMissing
+      health: warning
+      reason: resourceMissing
+      message: "its resource {{ fields.resourceNamespace }}/{{ fields.resourceName }} does not exist"
+    - when: fields.expired
+      health: info
+      reason: expired
+      message: "expired"
+    - when: fields.resourcePending
+      health: info
+      reason: resourcePending
+      message: "waiting for its resource to be created in Twingate"
+    - when: fields.resourceID == "" && fields.ageMs > 300000
+      health: warning
+      reason: notGranted
+      message: "not granted after 5 minutes"
+    - when: fields.resourceID == ""
+      health: info
+      reason: granting
+      message: "being granted"
+
+dataServices:
+  summary:
+    aggregate:
+      connectors: count(connector)
+      resources: count(resource)
+      generated: count(resource, fields.generated)
+      accesses: count(access)
+      errors: 'count(connector, health == "critical") + count(resource, health == "critical") + count(access, health == "critical")'
+      warnings: 'count(connector, health == "warning") + count(resource, health == "warning") + count(access, health == "warning")'
+    health: worst([worst(connector.health), worst(resource.health), worst(access.health)])
+
+cards:
+  summary:
+    title: { count: dataServices.summary.resources, one: "%d Twingate resource", other: "%d Twingate resources" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "connectors", value: dataServices.summary.connectors, tone: info }
+      - { label: "from Services", value: dataServices.summary.generated, tone: info, hideWhenZero: true }
+      - { label: "accesses", value: dataServices.summary.accesses, tone: info, hideWhenZero: true }
+      - { label: "errors", value: dataServices.summary.errors, tone: critical, hideWhenZero: true }
+      - { label: "warnings", value: dataServices.summary.warnings, tone: warning, hideWhenZero: true }
+  resources:
+    from: resource
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No Twingate resources."
+    row:
+      title: fields.displayName
+      subtitle: '$.metadata.namespace + " · " + (fields.alias != "" ? fields.alias : fields.address)'
+      status:
+        tone: health
+        text: 'fields.generated ? "From Service" : fields.type'
+      trailing: { text: $.metadata.creationTimestamp | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Address", value: fields.address, mono: true }
+            - { label: "Alias", value: fields.alias, mono: true }
+            - { label: "Type", value: fields.type }
+            - { label: "Twingate ID", value: fields.twingateID, mono: true }
+            - { label: "TCP", value: fields.tcp }
+            - { label: "UDP", value: fields.udp }
+            - { label: "ICMP", value: fields.icmp }
+            - { label: "Browser shortcut", value: fields.browserShortcut }
+            - { label: "Visible", value: fields.visible }
+        - type: relations
+          items:
+            - { label: "Service", ref: fields.serviceRef }
+  connectors:
+    from: connector
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No Twingate connectors."
+    row:
+      title: '$.metadata.name'
+      subtitle: '$.metadata.namespace + (fields.displayName != "" ? " · " + fields.displayName : "")'
+      status:
+        tone: health
+        text: 'fields.twingateID != "" ? "Created" : "Pending"'
+      trailing: { text: $.metadata.creationTimestamp | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Twingate ID", value: fields.twingateID, mono: true }
+            - { label: "Remote network", value: fields.remoteNetwork, mono: true }
+            - { label: "Image", value: fields.image, mono: true }
+            - { label: "Log level", value: fields.logLevel }
+  accesses:
+    from: access
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No Twingate accesses."
+    row:
+      title: $.metadata.name
+      subtitle: '$.metadata.namespace + " · " + fields.principal + " → " + fields.resourceName'
+      status:
+        tone: health
+        text: 'fields.expired ? "Expired" : (fields.resourceID != "" ? "Granted" : "Pending")'
+      trailing: { text: 'fields.expiresAt != 0 ? relativeTime(fields.expiresAt) : ""' }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Principal", value: fields.principal, mono: true }
+            - { label: "Resource", value: 'fields.resourceNamespace + "/" + fields.resourceName', mono: true }
+            - { label: "Resource ID", value: fields.resourceID, mono: true }
+            - { label: "Principal ID", value: fields.principalID, mono: true }
+            - { label: "Granted", value: fields.granted }
+            - { label: "Expires", value: 'fields.expiresAt != 0 ? relativeTime(fields.expiresAt) : ""' }
+        - type: relations
+          items:
+            - { label: "Resource", ref: fields.resourceRef }
+            - { label: "Group", ref: fields.groupRef }
+
+findings:
+  - id: connector-failed
+    from: connector
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: connectors
+  - id: connector-not-created
+    from: connector
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: connectors
+  - id: resource-failed
+    from: resource
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: resources
+  - id: resource-not-created
+    from: resource
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: resources
+  - id: access-failed
+    from: access
+    when: health == "critical"
+    severity: critical
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: accesses
+  - id: access-problem
+    from: access
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: accesses
+
+i18n:
+  fr:
+    "failed: {{ fields.error }}": "échec : {{ fields.error }}"
+    "not created in Twingate after 5 minutes": "pas créé dans Twingate après 5 minutes"
+    "being created in Twingate": "en cours de création dans Twingate"
+    "its resource {{ fields.resourceNamespace }}/{{ fields.resourceName }} does not exist": "sa
+      ressource {{ fields.resourceNamespace }}/{{ fields.resourceName }} n'existe
+      pas"
+    "expired": "expiré"
+    "waiting for its resource to be created in Twingate": "attend que sa ressource
+      soit créée dans Twingate"
+    "not granted after 5 minutes": "pas accordé après 5 minutes"
+    "being granted": "en cours d'attribution"
+    "%d Twingate resource": "%d ressource Twingate"
+    "%d Twingate resources": "%d ressources Twingate"
+    "connectors": "connecteurs"
+    "from Services": "depuis des Services"
+    "accesses": "accès"
+    "errors": "erreurs"
+    "warnings": "avertissements"
+    "No Twingate resources.": "Aucune ressource Twingate."
+    "From Service": "Depuis un Service"
+    "Address": "Adresse"
+    "Alias": "Alias"
+    "Type": "Type"
+    "Twingate ID": "ID Twingate"
+    "TCP": "TCP"
+    "UDP": "UDP"
+    "ICMP": "ICMP"
+    "Browser shortcut": "Raccourci navigateur"
+    "Visible": "Visible"
+    "Service": "Service"
+    "No Twingate connectors.": "Aucun connecteur Twingate."
+    "Created": "Créé"
+    "Pending": "En attente"
+    "Remote network": "Réseau distant"
+    "Image": "Image"
+    "Log level": "Niveau de journal"
+    "No Twingate accesses.": "Aucun accès Twingate."
+    "Expired": "Expiré"
+    "Granted": "Accordé"
+    "Principal": "Principal"
+    "Resource": "Ressource"
+    "Resource ID": "ID de ressource"
+    "Principal ID": "ID du principal"
+    "Expires": "Expire"
+    "Group": "Groupe"
+  de:
+    "failed: {{ fields.error }}": "fehlgeschlagen: {{ fields.error }}"
+    "not created in Twingate after 5 minutes": "nach 5 Minuten nicht in Twingate erstellt"
+    "being created in Twingate": "wird in Twingate erstellt"
+    "its resource {{ fields.resourceNamespace }}/{{ fields.resourceName }} does not exist": "seine
+      Ressource {{ fields.resourceNamespace }}/{{ fields.resourceName }} existiert
+      nicht"
+    "expired": "abgelaufen"
+    "waiting for its resource to be created in Twingate": "wartet, bis seine Ressource
+      in Twingate erstellt ist"
+    "not granted after 5 minutes": "nach 5 Minuten nicht gewährt"
+    "being granted": "wird gewährt"
+    "%d Twingate resource": "%d Twingate-Ressource"
+    "%d Twingate resources": "%d Twingate-Ressourcen"
+    "connectors": "Connectors"
+    "from Services": "aus Services"
+    "accesses": "Zugriffe"
+    "errors": "Fehler"
+    "warnings": "Warnungen"
+    "No Twingate resources.": "Keine Twingate-Ressourcen."
+    "From Service": "Aus Service"
+    "Address": "Adresse"
+    "Alias": "Alias"
+    "Type": "Typ"
+    "Twingate ID": "Twingate-ID"
+    "TCP": "TCP"
+    "UDP": "UDP"
+    "ICMP": "ICMP"
+    "Browser shortcut": "Browser-Verknüpfung"
+    "Visible": "Sichtbar"
+    "Service": "Service"
+    "No Twingate connectors.": "Keine Twingate-Connectors."
+    "Created": "Erstellt"
+    "Pending": "Ausstehend"
+    "Remote network": "Remote-Netzwerk"
+    "Image": "Image"
+    "Log level": "Log-Level"
+    "No Twingate accesses.": "Keine Twingate-Zugriffe."
+    "Expired": "Abgelaufen"
+    "Granted": "Gewährt"
+    "Principal": "Principal"
+    "Resource": "Ressource"
+    "Resource ID": "Ressourcen-ID"
+    "Principal ID": "Principal-ID"
+    "Expires": "Läuft ab"
+    "Group": "Gruppe"
+  es:
+    "failed: {{ fields.error }}": "fallido: {{ fields.error }}"
+    "not created in Twingate after 5 minutes": "no creado en Twingate tras 5 minutos"
+    "being created in Twingate": "creándose en Twingate"
+    "its resource {{ fields.resourceNamespace }}/{{ fields.resourceName }} does not exist": "su
+      recurso {{ fields.resourceNamespace }}/{{ fields.resourceName }} no existe"
+    "expired": "caducado"
+    "waiting for its resource to be created in Twingate": "esperando a que su recurso
+      se cree en Twingate"
+    "not granted after 5 minutes": "no concedido tras 5 minutos"
+    "being granted": "concediéndose"
+    "%d Twingate resource": "%d recurso de Twingate"
+    "%d Twingate resources": "%d recursos de Twingate"
+    "connectors": "conectores"
+    "from Services": "desde Services"
+    "accesses": "accesos"
+    "errors": "errores"
+    "warnings": "avisos"
+    "No Twingate resources.": "Ningún recurso de Twingate."
+    "From Service": "Desde un Service"
+    "Address": "Dirección"
+    "Alias": "Alias"
+    "Type": "Tipo"
+    "Twingate ID": "ID de Twingate"
+    "TCP": "TCP"
+    "UDP": "UDP"
+    "ICMP": "ICMP"
+    "Browser shortcut": "Acceso directo del navegador"
+    "Visible": "Visible"
+    "Service": "Servicio"
+    "No Twingate connectors.": "Ningún conector de Twingate."
+    "Created": "Creado"
+    "Pending": "Pendiente"
+    "Remote network": "Red remota"
+    "Image": "Imagen"
+    "Log level": "Nivel de registro"
+    "No Twingate accesses.": "Ningún acceso de Twingate."
+    "Expired": "Caducado"
+    "Granted": "Concedido"
+    "Principal": "Principal"
+    "Resource": "Recurso"
+    "Resource ID": "ID del recurso"
+    "Principal ID": "ID del principal"
+    "Expires": "Caduca"
+    "Group": "Grupo"
+  it:
+    "failed: {{ fields.error }}": "non riuscito: {{ fields.error }}"
+    "not created in Twingate after 5 minutes": "non creato in Twingate dopo 5 minuti"
+    "being created in Twingate": "in creazione su Twingate"
+    "its resource {{ fields.resourceNamespace }}/{{ fields.resourceName }} does not exist": "la
+      sua risorsa {{ fields.resourceNamespace }}/{{ fields.resourceName }} non esiste"
+    "expired": "scaduto"
+    "waiting for its resource to be created in Twingate": "in attesa che la sua risorsa
+      sia creata su Twingate"
+    "not granted after 5 minutes": "non concesso dopo 5 minuti"
+    "being granted": "in concessione"
+    "%d Twingate resource": "%d risorsa Twingate"
+    "%d Twingate resources": "%d risorse Twingate"
+    "connectors": "connettori"
+    "from Services": "da Service"
+    "accesses": "accessi"
+    "errors": "errori"
+    "warnings": "avvisi"
+    "No Twingate resources.": "Nessuna risorsa Twingate."
+    "From Service": "Da un Service"
+    "Address": "Indirizzo"
+    "Alias": "Alias"
+    "Type": "Tipo"
+    "Twingate ID": "ID Twingate"
+    "TCP": "TCP"
+    "UDP": "UDP"
+    "ICMP": "ICMP"
+    "Browser shortcut": "Scorciatoia del browser"
+    "Visible": "Visibile"
+    "Service": "Service"
+    "No Twingate connectors.": "Nessun connettore Twingate."
+    "Created": "Creato"
+    "Pending": "In attesa"
+    "Remote network": "Rete remota"
+    "Image": "Immagine"
+    "Log level": "Livello di log"
+    "No Twingate accesses.": "Nessun accesso Twingate."
+    "Expired": "Scaduto"
+    "Granted": "Concesso"
+    "Principal": "Principal"
+    "Resource": "Risorsa"
+    "Resource ID": "ID risorsa"
+    "Principal ID": "ID principal"
+    "Expires": "Scade"
+    "Group": "Gruppo"
+  uk:
+    "failed: {{ fields.error }}": "помилка: {{ fields.error }}"
+    "not created in Twingate after 5 minutes": "не створено в Twingate за 5 хвилин"
+    "being created in Twingate": "створюється в Twingate"
+    "its resource {{ fields.resourceNamespace }}/{{ fields.resourceName }} does not exist": "його
+      ресурс {{ fields.resourceNamespace }}/{{ fields.resourceName }} не існує"
+    "expired": "термін минув"
+    "waiting for its resource to be created in Twingate": "очікує створення свого
+      ресурсу в Twingate"
+    "not granted after 5 minutes": "не надано за 5 хвилин"
+    "being granted": "надається"
+    "%d Twingate resource": "%d ресурс Twingate"
+    "%d Twingate resources": "%d ресурсів Twingate"
+    "connectors": "конектори"
+    "from Services": "із Service"
+    "accesses": "доступи"
+    "errors": "помилки"
+    "warnings": "попередження"
+    "No Twingate resources.": "Немає ресурсів Twingate."
+    "From Service": "Із Service"
+    "Address": "Адреса"
+    "Alias": "Псевдонім"
+    "Type": "Тип"
+    "Twingate ID": "ID Twingate"
+    "TCP": "TCP"
+    "UDP": "UDP"
+    "ICMP": "ICMP"
+    "Browser shortcut": "Ярлик у браузері"
+    "Visible": "Видимий"
+    "Service": "Сервіс"
+    "No Twingate connectors.": "Немає конекторів Twingate."
+    "Created": "Створено"
+    "Pending": "Очікує"
+    "Remote network": "Віддалена мережа"
+    "Image": "Образ"
+    "Log level": "Рівень журналу"
+    "No Twingate accesses.": "Немає доступів Twingate."
+    "Expired": "Термін минув"
+    "Granted": "Надано"
+    "Principal": "Принципал"
+    "Resource": "Ресурс"
+    "Resource ID": "ID ресурсу"
+    "Principal ID": "ID принципала"
+    "Expires": "Спливає"
+    "Group": "Група"
+# Invented names and IDs (base64-looking Twingate IDs are made up). demo-shop's storefront is
+# generated from its Service; demo-lab's lab-db has waited for its id for an hour; an access
+# names a resource that does not exist.
+samples:
+  connector:
+    - metadata: { name: relay-a, namespace: demo-shop, creationTimestamp: now-30d }
+      spec:
+        id: Q29ubmVjdG9yOmRlbW8tYQ==
+        name: demo-relay-a
+        image: { repository: twingate/connector, tag: "1" }
+      status:
+        twingate_connector_create: { success: true, twingate_id: Q29ubmVjdG9yOmRlbW8tYQ==, ts: "2026-10-11T08:00:00" }
+    - metadata: { name: relay-b, namespace: demo-lab, creationTimestamp: now-2d }
+      spec:
+        imagePolicy: { provider: dockerhub, version: "^1.0.0" }
+      status:
+        twingate_connector_update: { success: false, error: "Update called before Connector has an ID", ts: "2026-11-08T09:00:00" }
+    - metadata: { name: relay-c, namespace: demo-lab, creationTimestamp: now-2h }
+      spec: { logLevel: 7 }
+    - metadata: { name: relay-d, namespace: demo-lab, creationTimestamp: now-1m }
+      spec: {}
+  resource:
+    - metadata:
+        name: storefront-resource
+        namespace: demo-shop
+        creationTimestamp: now-20d
+        ownerReferences: [{ apiVersion: v1, kind: Service, name: storefront, uid: 00000000-0000-0000-0000-000000000001 }]
+      spec:
+        id: UmVzb3VyY2U6ZGVtby1zaG9w
+        name: storefront-resource
+        address: storefront.demo-shop.svc.cluster.local
+        protocols: { allowIcmp: false, tcp: { policy: RESTRICTED, ports: [{ start: 443, end: 443 }] }, udp: { policy: DENY_ALL } }
+      status:
+        twingate_resource_create: { success: true, twingate_id: UmVzb3VyY2U6ZGVtby1zaG9w, ts: "2026-10-21T08:00:00" }
+    - metadata: { name: grafana, namespace: demo-shop, creationTimestamp: now-10d }
+      spec:
+        id: UmVzb3VyY2U6ZGVtby1ncmFm
+        name: Grafana
+        address: 10.20.0.15
+        alias: grafana.demo.internal
+        isBrowserShortcutEnabled: true
+    - metadata: { name: lab-db, namespace: demo-lab, creationTimestamp: now-1h }
+      spec:
+        name: lab-db
+        address: db.demo-lab.svc.cluster.local
+    - metadata: { name: lab-wiki, namespace: demo-lab, creationTimestamp: now-3d }
+      spec:
+        name: lab-wiki
+        address: wiki.demo-lab.svc.cluster.local
+      status:
+        twingate_resource_update: { success: false, error: "Resource ID is missing in the spec", ts: "2026-11-09T07:00:00" }
+    - metadata: { name: lab-api, namespace: demo-lab, creationTimestamp: now-30s }
+      spec:
+        name: lab-api
+        address: api.demo-lab.svc.cluster.local
+        type: WebApp
+  access:
+    - metadata: { name: storefront-devs, namespace: demo-shop, creationTimestamp: now-20d }
+      spec:
+        resourceRef: { name: storefront-resource }
+        groupRef: { name: developers }
+      status:
+        resourceId: UmVzb3VyY2U6ZGVtby1zaG9w
+        principalId: R3JvdXA6ZGVtby1kZXZz
+        twingate_resource_access_change: { success: true, resource_id: UmVzb3VyY2U6ZGVtby1zaG9w, principal_id: R3JvdXA6ZGVtby1kZXZz }
+    - metadata: { name: old-api-oncall, namespace: demo-lab, creationTimestamp: now-6h }
+      spec:
+        resourceRef: { name: old-api }
+        principalExternalRef: { type: group, name: oncall }
+    - metadata: { name: grafana-contractor, namespace: demo-shop, creationTimestamp: now-40d }
+      spec:
+        resourceRef: { name: grafana }
+        principalId: VXNlcjpkZW1vLWM=
+        expiresAt: "2026-10-01T00:00:00Z"
+      status:
+        resourceId: UmVzb3VyY2U6ZGVtby1ncmFm
+        principalId: VXNlcjpkZW1vLWM=
+        twingate_resource_access_change: { success: true, resource_id: UmVzb3VyY2U6ZGVtby1ncmFm, principal_id: VXNlcjpkZW1vLWM= }
+    - metadata: { name: grafana-admins, namespace: demo-shop, creationTimestamp: now-1d }
+      spec:
+        resourceRef: { name: grafana }
+        principalExternalRef: { type: group, name: admins }
+      status:
+        twingate_resource_access_change: { success: false, error: "Group not found: admins", ts: "2026-11-09T07:00:00" }
+    - metadata: { name: lab-db-devs, namespace: demo-lab, creationTimestamp: now-1h }
+      spec:
+        resourceRef: { name: lab-db }
+        groupRef: { name: developers, namespace: demo-shop }
+    - metadata: { name: grafana-viewers, namespace: demo-shop, creationTimestamp: now-2h }
+      spec:
+        resourceRef: { name: grafana }
+        principalExternalRef: { type: group, name: viewers }
+    - metadata: { name: grafana-ops, namespace: demo-shop, creationTimestamp: now-1m }
+      spec:
+        resourceRef: { name: grafana }
+        principalExternalRef: { type: group, name: ops }
+  group:
+    - metadata: { name: developers, namespace: demo-shop }
+      spec: { id: R3JvdXA6ZGVtby1kZXZz, name: Developers }
+  service:
+    - metadata: { name: storefront, namespace: demo-shop }
