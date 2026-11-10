@@ -593,7 +593,9 @@ func (c *newCluster) dialCluster() (*client.Client, error) {
 		return nil, errors.New("the cluster's admin certificate was never issued")
 	}
 
-	cfg, err := talosconfigFor(c.req.clusterName, c.req.host, c.bundle.Certs.OS.Crt, c.adminCert)
+	// The cluster API answers where the maintenance API did (only the fake gives the two
+	// different ports).
+	cfg, err := talosconfigFor(c.req.clusterName, c.req.host, c.bundle.Certs.OS.Crt, c.adminCert, c.dialAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -608,9 +610,17 @@ func (c *newCluster) dialCluster() (*client.Client, error) {
 
 // talosconfigFor is the single-context talosconfig of the new cluster as a client config
 // (base64 certificates, as talosctl writes them).
-func talosconfigFor(clusterName, host string, caPEM []byte, admin *x509Pair) (*clientconfig.Config, error) {
+func talosconfigFor(clusterName, host string, caPEM []byte, admin *x509Pair, dialPort ...string) (*clientconfig.Config, error) {
 	if len(caPEM) == 0 || admin == nil || len(admin.Crt) == 0 || len(admin.Key) == 0 {
 		return nil, errors.New("the generated client configuration is incomplete")
+	}
+
+	// dialPort is the fake's port: endpoints and nodes keep it, the host stays bare.
+	target := host
+	if len(dialPort) > 0 && dialPort[0] != "" {
+		if _, port, err := net.SplitHostPort(dialPort[0]); err == nil {
+			target = net.JoinHostPort(host, port)
+		}
 	}
 
 	enc := base64.StdEncoding.EncodeToString
@@ -618,8 +628,8 @@ func talosconfigFor(clusterName, host string, caPEM []byte, admin *x509Pair) (*c
 	return &clientconfig.Config{
 		Context: clusterName,
 		Contexts: map[string]*clientconfig.Context{clusterName: {
-			Endpoints: []string{host},
-			Nodes:     []string{host},
+			Endpoints: []string{target},
+			Nodes:     []string{target},
 			CA:        enc(caPEM),
 			Crt:       enc(admin.Crt),
 			Key:       enc(admin.Key),
@@ -630,7 +640,7 @@ func talosconfigFor(clusterName, host string, caPEM []byte, admin *x509Pair) (*c
 // handOver issues the admin certificate once and gives the app the talosconfig and
 // kubeconfig.
 func (c *newCluster) handOver(ctx context.Context, cl *client.Client) error {
-	cfg, err := talosconfigFor(c.req.clusterName, c.req.host, c.bundle.Certs.OS.Crt, c.adminCert)
+	cfg, err := talosconfigFor(c.req.clusterName, c.req.host, c.bundle.Certs.OS.Crt, c.adminCert, c.dialAddress)
 	if err != nil {
 		return err
 	}
@@ -907,6 +917,18 @@ func newClusterForTest(address, clusterName, kubernetesVersion, installDisk, hos
 		address: address, clusterName: clusterName, kubernetesVersion: kubernetesVersion,
 		installDisk: installDisk, hostname: hostname, endpoint: endpoint,
 		listener: maskedNewClusterListener{listener}, interval: joinPollInterval,
+	}
+
+	return c.start(timeout)
+}
+
+// newClusterAt is StartNewCluster's test twin: the console address the user typed, and the
+// endpoint the fake node's API actually answers on (production dials both at the address).
+func newClusterAt(address, dialAddress, clusterName, kubernetesVersion, installDisk, hostname, endpoint string, listener NewClusterListener, timeout time.Duration) *NewClusterRun {
+	c := &newCluster{
+		address: address, dialAddress: dialAddress, clusterName: clusterName, kubernetesVersion: kubernetesVersion,
+		installDisk: installDisk, hostname: hostname, endpoint: endpoint, listener: listener,
+		interval: joinPollInterval,
 	}
 
 	return c.start(timeout)

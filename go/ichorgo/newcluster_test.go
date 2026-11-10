@@ -88,27 +88,18 @@ func newClusterPhasesOf(events []newClusterProgress) []string {
 
 // maintenanceOnlyNode is a fake node in maintenance mode: its API answers unauthenticated
 // (the fake never asks for a client certificate) under the "" node target, it has no
-// machine status, and nothing is installed. The address is the endpoint without brackets
-// (the IPv6 case) and port: what a console would show, mapped to loopback by serve.
+// machine status, and nothing is installed. The returned address is the loopback IP the
+// fake listens on (the run dials the maintenance API on the default port, so the fake's
+// random port is put back by maintenanceDial): what a console shows.
 func maintenanceOnlyNode(t *testing.T) (*fakeTalos, string) {
 	t.Helper()
 
 	f := newFakeTalos()
 	f.setVersion("", "v1.14.4")
 
-	endpoint, _ := f.serve(t)
+	f.serveEndpoint, _ = f.serve(t)
 
-	return f, loopbackHost(endpoint)
-}
-
-// loopbackHost is a startTLSServer endpoint without its port: the address the user types.
-func loopbackHost(endpoint string) string {
-	host, _, err := net.SplitHostPort(endpoint)
-	if err != nil {
-		panic(err)
-	}
-
-	return strings.Trim(host, "[]")
+	return f, f.serveEndpoint
 }
 
 // installThenBoot makes f behave like a node bootstrapped from maintenance mode: the real
@@ -139,8 +130,15 @@ func installThenBoot(t *testing.T, f *fakeTalos, node string) {
 	}
 }
 
-func startNewClusterTest(address string, listener NewClusterListener, timeout time.Duration) *NewClusterRun {
-	return newClusterForTest(address, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "", listener, timeout)
+// startNewClusterTest bootstraps the node at endpoint: the console address is its host,
+// the maintenance (and installed) API is dialed at endpoint's own host and port.
+func startNewClusterTest(endpoint string, listener NewClusterListener, timeout time.Duration) *NewClusterRun {
+	host, _, err := net.SplitHostPort(endpoint)
+	if err != nil {
+		panic(err)
+	}
+
+	return newClusterAt(host, endpoint, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "", listener, timeout)
 }
 
 // shortNewClusterWaits keeps the run's bounded waits inside the test's timeout: the
@@ -171,8 +169,8 @@ func TestStartNewClusterHappyPath(t *testing.T) {
 		t.Fatalf("bootstrap failed: %s (events %+v)", errMessage, events)
 	}
 
-	if node != address {
-		t.Errorf("node = %q, want %s", node, address)
+	if wantHost, _, _ := net.SplitHostPort(address); node != wantHost {
+		t.Errorf("node = %q, want %s", node, wantHost)
 	}
 
 	want := []string{newClusterPhaseGenerating, newClusterPhaseApplying, newClusterPhaseApplying,
@@ -209,8 +207,9 @@ func TestStartNewClusterHappyPath(t *testing.T) {
 	}
 
 	ctx := cfg.Contexts[cfg.Context]
-	if cfg.Context != newClusterName || len(ctx.Endpoints) != 1 || ctx.Endpoints[0] != address {
-		t.Errorf("talosconfig context = %q endpoints %v, want %s at %s", cfg.Context, ctx.Endpoints, newClusterName, address)
+	wantHost, _, _ := net.SplitHostPort(address)
+	if cfg.Context != newClusterName || len(ctx.Endpoints) != 1 || ctx.Endpoints[0] != wantHost {
+		t.Errorf("talosconfig context = %q endpoints %v, want %s at %s", cfg.Context, ctx.Endpoints, newClusterName, wantHost)
 	}
 
 	for _, part := range []string{ctx.CA, ctx.Crt, ctx.Key} {
@@ -467,7 +466,8 @@ func TestStartNewClusterCancelBeforeApply(t *testing.T) {
 	rec := newNewClusterRecorder()
 	run := startNewClusterTest(address, rec, time.Minute)
 
-	// Wait until the run reached the maintenance API, then cancel.
+	// Wait until the run reached the maintenance API, then cancel: its first call is
+	// waiting in the held Get.
 	deadline := time.Now().Add(10 * time.Second)
 
 	for {
@@ -481,7 +481,8 @@ func TestStartNewClusterCancelBeforeApply(t *testing.T) {
 	run.Cancel()
 
 	node, errMessage, _ := rec.wait(t)
-	if node != address || !strings.Contains(errMessage, "stopped before the config was sent") {
+	wantHost, _, _ := net.SplitHostPort(address)
+	if node != wantHost || !strings.Contains(errMessage, "stopped before the config was sent") {
 		t.Errorf("got %q, %q; want a clean stop before the apply", node, errMessage)
 	}
 
@@ -512,8 +513,8 @@ func TestStartNewClusterWipesInstalledClusterlessNode(t *testing.T) {
 		t.Fatalf("wipe bootstrap failed: %s (events %+v)", errMessage, events)
 	}
 
-	if node != address {
-		t.Errorf("node = %q, want %s", node, address)
+	if wantHost, _, _ := net.SplitHostPort(address); node != wantHost {
+		t.Errorf("node = %q, want %s", node, wantHost)
 	}
 
 	f.mu.Lock()
