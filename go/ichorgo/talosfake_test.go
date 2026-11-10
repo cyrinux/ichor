@@ -2,10 +2,18 @@ package ichorgo
 
 import (
 	"context"
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"errors"
 	"fmt"
-	"io"
-	"maps"
+	"math/big"
+	"net"
 	"slices"
 	"strings"
 	"sync"
@@ -14,22 +22,21 @@ import (
 
 	cosiv1alpha1 "github.com/cosi-project/runtime/api/v1alpha1"
 	"github.com/cosi-project/runtime/pkg/resource"
-	"github.com/cosi-project/runtime/pkg/resource/protobuf"
 	clusterapi "github.com/siderolabs/talos/pkg/machinery/api/cluster"
 	"github.com/siderolabs/talos/pkg/machinery/api/common"
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
 	timeapi "github.com/siderolabs/talos/pkg/machinery/api/time"
 	"github.com/siderolabs/talos/pkg/machinery/config/configloader"
+	"github.com/siderolabs/talos/pkg/machinery/config/generate/secrets"
 	"github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/siderolabs/talos/pkg/machinery/resources/config"
 	"github.com/siderolabs/talos/pkg/machinery/resources/network"
 	"github.com/siderolabs/talos/pkg/machinery/resources/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // fakeTalos is the Talos API of a few nodes behind one endpoint: like apid, it routes each
@@ -76,8 +83,10 @@ type fakeTalos struct {
 	// cpuFreq is a node's CPUFreqStats answer (a node without an entry: Unimplemented).
 	cpuFreq map[string][]*machineapi.CPUFreqStats
 	// applies are the ApplyConfiguration requests received, in order; a real (not dry run)
-	// one replaces the node's machine config, then onApply runs.
+	// one replaces the node's machine config, then onApply runs. applied receives the
+	// config bytes of each real apply (tests that care about what the node was sent).
 	applies []fakeConfigApply
+	applied chan string
 	onApply func(node string)
 	// etcdDown are the nodes whose etcd does not answer (EtcdStatus: Unavailable) until a
 	// recovery bootstraps it.
@@ -95,8 +104,25 @@ type fakeTalos struct {
 	// versionHold holds a node's Version answer until the channel is closed (or the call
 	// gives up): a slow node.
 	versionHold map[string]chan struct{}
+	// kubeconfigs are a node's Kubeconfig answers (a node without one: Unavailable), each
+	// sent as one common.Data chunk, gzip+tar wrapped the way Talos sends it.
+	kubeconfigs map[string][]byte
+	// bootstrapErrs are nodes whose Bootstrap answers an error (a node that was never
+	// bootstrapped keeps its etcd down, as Talos does).
+	bootstrapErrs map[string]error
 	// events answers MachineService.Events for the nodes it targets (nil: Unimplemented).
 	events func(nodes []string, req *machineapi.EventsRequest, stream grpc.ServerStreamingServer[machineapi.Event]) error
+	// nodeStays answers whether a target with a version still answers at all: a run that
+	// reboots the whole machine takes its maintenance API with it, so the test can close
+	// that target while the installed one (its own node target) comes up.
+	nodeStays func(node string) bool
+	// getHold and applyHold hold a node target's state Get / every ApplyConfiguration
+	// answer before the fake records anything: a run cancelled while held leaves the
+	// fake untouched.
+	getHold   map[string]chan struct{}
+	applyHold chan struct{}
+	// trace (when set) hears every recorded call, for tests that wait on the fake's state.
+	trace func(method, node string)
 }
 
 type fakeConfigApply struct {
@@ -129,6 +155,8 @@ func (f *fakeTalos) addNode(t *testing.T, node, version string, typ machine.Type
 
 // put adds or replaces resources of node.
 func (f *fakeTalos) put(node string, rs ...resource.Resource) {
+	node = nodeKey(node)
+
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -141,6 +169,8 @@ func (f *fakeTalos) put(node string, rs ...resource.Resource) {
 }
 
 func (f *fakeTalos) setStage(node string, stage runtime.MachineStage, ready bool) {
+	node = nodeKey(node)
+
 	ms := runtime.NewMachineStatus()
 	ms.TypedSpec().Stage = stage
 	ms.TypedSpec().Status.Ready = ready
@@ -148,6 +178,8 @@ func (f *fakeTalos) setStage(node string, stage runtime.MachineStage, ready bool
 }
 
 func (f *fakeTalos) setVersion(node, version string) {
+	node = nodeKey(node)
+
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -180,12 +212,22 @@ func (f *fakeTalos) enter(ctx context.Context, method string) (string, error) {
 		node = v[0]
 	}
 
+	node = nodeKey(node)
+
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	f.calls = append(f.calls, method+" "+node)
 
+	if f.trace != nil {
+		f.trace(method, node)
+	}
+
 	if _, up := f.versions[node]; !up {
+		return node, status.Errorf(codes.Unavailable, "connection to %s refused", node)
+	}
+
+	if f.nodeStays != nil && !f.nodeStays(node) {
 		return node, status.Errorf(codes.Unavailable, "connection to %s refused", node)
 	}
 
@@ -207,24 +249,61 @@ func (f *fakeTalos) called(prefix string) []string {
 	return out
 }
 
-// waitVersion blocks while the node ctx targets is held (see versionHold). A call that gives up
-// first fails, as a node that never answered: answering raced the client's own deadline.
-func (f *fakeTalos) waitVersion(ctx context.Context) error {
-	md, _ := metadata.FromIncomingContext(ctx)
-
-	f.mu.Lock()
-	hold, held := f.versionHold[strings.Join(md.Get("node"), ",")]
-	f.mu.Unlock()
-
-	if !held {
-		return nil
+// waitVersion blocks while the node ctx targets is held (see versionHold).
+// waitHold waits for a test's release of a held answer, if any.
+func (f *fakeTalos) waitHold(ctx context.Context, hold chan struct{}) {
+	if hold == nil {
+		return
 	}
 
 	select {
 	case <-hold:
-		return nil
 	case <-ctx.Done():
-		return status.FromContextError(ctx.Err()).Err()
+	}
+}
+
+// holdFor returns the held-answer channel of a call's node target, read from metadata.
+func (f *fakeTalos) holdFor(ctx context.Context, holds map[string]chan struct{}) chan struct{} {
+	if holds == nil {
+		return nil
+	}
+
+	md, _ := metadata.FromIncomingContext(ctx)
+
+	node := ""
+	if v := md.Get("node"); len(v) > 0 {
+		node = v[0]
+	}
+
+	node = nodeKey(node)
+
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	if hold, ok := holds[node]; ok || node != "" {
+		return hold
+	}
+
+	// A call naming no node (the maintenance way) still meets a held answer when the
+	// test holds the fake's only target: the hold is per fake, not per dial path.
+	for _, hold := range holds {
+		return hold
+	}
+
+	return nil
+}
+
+func (f *fakeTalos) waitVersion(ctx context.Context) {
+	// The hold is keyed by node, but a call that names none (the maintenance way) still
+	// meets a held answer when the test holds the fake's target (see holdFor).
+	hold := f.holdFor(ctx, f.versionHold)
+	if hold == nil {
+		return
+	}
+
+	select {
+	case <-hold:
+	case <-ctx.Done():
 	}
 }
 
@@ -243,813 +322,185 @@ func (f *fakeTalos) start(t *testing.T, nodes ...string) string {
 		endpoint, caB64, list.String())
 }
 
+// registerFakeTalos registers every service f serves on a gRPC server.
+func registerFakeTalos(s *grpc.Server, f *fakeTalos) {
+	machineapi.RegisterMachineServiceServer(s, fakeTalosMachine{f: f})
+	machineapi.RegisterImageServiceServer(s, fakeTalosImage{f: f})
+	machineapi.RegisterLifecycleServiceServer(s, fakeTalosLifecycle{f: f})
+	machineapi.RegisterDebugServiceServer(s, fakeTalosDebug{f: f})
+	clusterapi.RegisterClusterServiceServer(s, fakeTalosCluster{f: f})
+	cosiv1alpha1.RegisterStateServer(s, fakeTalosState{f: f})
+	timeapi.RegisterTimeServiceServer(s, fakeTalosTime{f: f})
+}
+
+// serveCAPort is the loopback port the fake's cluster API (apid) listens on: production
+// dials the node at Talos's own API port (50000), so the fake serves the installed
+// cluster exactly there and the run reaches it without a test-only port.
+const serveCAPort = "127.0.0.1:50000"
+
+// serveCA serves f as the installed cluster's apid would: TLS on the node's own address
+// with a certificate that node's secrets issued (its CA is the cluster's OS CA, and the
+// run dials it with the admin certificate of the same secrets). apid's certificate
+// carries the endpoint as an IP SAN: a real cluster's certificate carries its LAN IPs.
+func (f *fakeTalos) serveCA(t *testing.T, bundle *secrets.Bundle) (endpoint, caPEM string) {
+	t.Helper()
+
+	crt, key, ca := clusterAPICert(t, bundle)
+
+	leaf, err := tls.X509KeyPair(crt, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	lis, err := net.Listen("tcp", serveCAPort)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	server := grpc.NewServer(grpc.Creds(credentials.NewTLS(&tls.Config{
+		Certificates: []tls.Certificate{leaf}, MinVersion: tls.VersionTLS12,
+	})))
+	registerFakeTalos(server, f)
+
+	go server.Serve(lis) //nolint:errcheck
+
+	t.Cleanup(server.Stop)
+
+	return lis.Addr().String(), string(ca)
+}
+
+// clusterAPICert issues the leaf certificate apid serves: a certificate signed by the
+// cluster's OS CA (so the run, which dials with the same CA, verifies it) and carrying
+// 127.0.0.1 as an IP SAN (the node's own address, as a real cluster carries its LAN IPs).
+func clusterAPICert(t *testing.T, bundle *secrets.Bundle) (crtPEM, keyPEM, caPEM []byte) {
+	t.Helper()
+
+	caBlock, _ := pem.Decode(bundle.Certs.OS.Crt)
+	if caBlock == nil {
+		t.Fatal("the OS CA certificate is not PEM")
+	}
+
+	ca, err := x509.ParseCertificate(caBlock.Bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	caKey, err := parseCAKey(bundle.Certs.OS.Key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	leafKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tmpl := &x509.Certificate{
+		SerialNumber: big.NewInt(2),
+		Subject:      pkix.Name{CommonName: "talos"},
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(time.Hour),
+		IPAddresses:  []net.IP{net.ParseIP("127.0.0.1")},
+		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+	}
+
+	der, err := x509.CreateCertificate(rand.Reader, tmpl, ca, &leafKey.PublicKey, caKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	keyDER, err := x509.MarshalECPrivateKey(leafKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}),
+		pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: keyDER}),
+		bundle.Certs.OS.Crt
+}
+
+// parseCAKey decodes the OS CA's private key, whose PEM block type depends on the key
+// algorithm Talos generated it with (v1.x uses PKCS8).
+func parseCAKey(keyPEM []byte) (crypto.Signer, error) {
+	block, _ := pem.Decode(keyPEM)
+	if block == nil {
+		return nil, errors.New("no PEM block in the OS CA key")
+	}
+
+	var key any
+
+	var err error
+
+	switch block.Type {
+	case "RSA PRIVATE KEY":
+		key, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+	case "EC PRIVATE KEY":
+		key, err = x509.ParseECPrivateKey(block.Bytes)
+	default:
+		key, err = x509.ParsePKCS8PrivateKey(block.Bytes)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	signer, ok := key.(crypto.Signer)
+	if !ok {
+		return nil, fmt.Errorf("the OS CA key of type %T cannot sign", key)
+	}
+
+	return signer, nil
+}
+
+// nodeKey names a node the way the fake keys its state: by host, without any port. The
+// run addresses a node by its bare address ("127.0.0.1"), while tests often speak of the
+// endpoint the fake listens on ("127.0.0.1:50001"): both name the same machine.
+func nodeKey(node string) string {
+	if host, _, err := net.SplitHostPort(node); err == nil {
+		return host
+	}
+
+	return node
+}
+
 // serve serves f over TLS on loopback, without client authentication (like a node in
 // maintenance mode), and returns its endpoint and CA.
 func (f *fakeTalos) serve(t *testing.T) (endpoint, caB64 string) {
 	t.Helper()
 
-	return startTLSServer(t, func(s *grpc.Server) {
-		machineapi.RegisterMachineServiceServer(s, fakeTalosMachine{f: f})
-		machineapi.RegisterImageServiceServer(s, fakeTalosImage{f: f})
-		machineapi.RegisterLifecycleServiceServer(s, fakeTalosLifecycle{f: f})
-		machineapi.RegisterDebugServiceServer(s, fakeTalosDebug{f: f})
-		clusterapi.RegisterClusterServiceServer(s, fakeTalosCluster{f: f})
-		cosiv1alpha1.RegisterStateServer(s, fakeTalosState{f: f})
-		timeapi.RegisterTimeServiceServer(s, fakeTalosTime{f: f})
-	})
+	return startTLSServer(t, func(s *grpc.Server) { registerFakeTalos(s, f) })
 }
 
-type fakeTalosMachine struct {
-	machineapi.UnimplementedMachineServiceServer
+// serveTwo serves the same fake over two endpoints: the maintenance API's (TLS with its
+// own throwaway certificate, never verified, like Talos's maintenance API) and the
+// installed cluster API's (TLS with a CA, like apid). The fake routes by node target, so
+// a test can take the machine down entirely while it installs.
+func (f *fakeTalos) serveTwo(t *testing.T) (maintenance, cluster, caB64 string) {
+	t.Helper()
 
-	f *fakeTalos
+	maintenance, _ = startTLSServer(t, func(s *grpc.Server) { registerFakeTalos(s, f) })
+
+	cluster, caB64 = f.serve(t)
+
+	return maintenance, cluster, caB64
 }
 
-func (m fakeTalosMachine) Version(ctx context.Context, _ *emptypb.Empty) (*machineapi.VersionResponse, error) {
-	if err := m.f.waitVersion(ctx); err != nil {
-		return nil, err
-	}
+// downAddr returns a loopback address nothing listens on: a refused port, the way an API
+// whose machine is rebooting answers.
+func downAddr(t *testing.T) string {
+	t.Helper()
 
-	node, err := m.f.enter(ctx, "Version")
+	lis, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		return nil, err
+		t.Fatal(err)
 	}
 
-	m.f.mu.Lock()
-	tag := m.f.versions[node]
-	m.f.mu.Unlock()
+	addr := lis.Addr().String()
 
-	return &machineapi.VersionResponse{Messages: []*machineapi.Version{{
-		Version:  &machineapi.VersionInfo{Tag: tag, Sha: "abc123", Arch: "amd64", Os: "linux", GoVersion: "go1.25"},
-		Platform: &machineapi.PlatformInfo{Name: "metal", Mode: "metal"},
-	}}}, nil
-}
-
-func (m fakeTalosMachine) Upgrade(ctx context.Context, req *machineapi.UpgradeRequest) (*machineapi.UpgradeResponse, error) {
-	node, err := m.f.enter(ctx, "Upgrade")
-	if err != nil {
-		return nil, err
-	}
-
-	if m.f.upgrade == nil {
-		return nil, status.Error(codes.Unimplemented, "unknown method Upgrade for service machine.MachineService")
-	}
-
-	if err := m.f.upgrade(node, req); err != nil {
-		return nil, err
-	}
-
-	return &machineapi.UpgradeResponse{Messages: []*machineapi.Upgrade{{Ack: "upgrade started"}}}, nil
-}
-
-func (m fakeTalosMachine) Reboot(ctx context.Context, _ *machineapi.RebootRequest) (*machineapi.RebootResponse, error) {
-	if _, err := m.f.enter(ctx, "Reboot"); err != nil {
-		return nil, err
-	}
-
-	if m.f.rebootErr != nil {
-		return nil, m.f.rebootErr
-	}
-
-	return &machineapi.RebootResponse{Messages: []*machineapi.Reboot{{}}}, nil
-}
-
-func (m fakeTalosMachine) ImagePull(ctx context.Context, req *machineapi.ImagePullRequest) (*machineapi.ImagePullResponse, error) {
-	if m.f.imagePull == nil {
-		return nil, status.Error(codes.Unimplemented, "unknown method ImagePull")
-	}
-
-	node, err := m.f.enter(ctx, "ImagePull")
-	if err != nil {
-		return nil, err
-	}
-
-	if err := m.f.imagePull(node, req); err != nil {
-		return nil, err
-	}
-
-	return &machineapi.ImagePullResponse{Messages: []*machineapi.ImagePull{{}}}, nil
-}
-
-func (m fakeTalosMachine) Restart(ctx context.Context, req *machineapi.RestartRequest) (*machineapi.RestartResponse, error) {
-	if _, err := m.f.enter(ctx, "Restart"); err != nil {
-		return nil, err
-	}
-
-	m.f.mu.Lock()
-	m.f.restarts = append(m.f.restarts, req)
-	m.f.mu.Unlock()
-
-	return &machineapi.RestartResponse{Messages: []*machineapi.Restart{{}}}, nil
-}
-
-// MetaWrite sets the node's MetaKey resource, as Talos does.
-func (m fakeTalosMachine) MetaWrite(ctx context.Context, req *machineapi.MetaWriteRequest) (*machineapi.MetaWriteResponse, error) {
-	node, err := m.f.enter(ctx, "MetaWrite")
-	if err != nil {
-		return nil, err
-	}
-
-	k := runtime.NewMetaKey(runtime.NamespaceName, runtime.MetaKeyTagToID(uint8(req.GetKey())))
-	k.TypedSpec().Value = string(req.GetValue())
-	m.f.put(node, k)
-
-	return &machineapi.MetaWriteResponse{Messages: []*machineapi.MetaWrite{{}}}, nil
-}
-
-// MetaDelete removes the node's MetaKey resource.
-func (m fakeTalosMachine) MetaDelete(ctx context.Context, req *machineapi.MetaDeleteRequest) (*machineapi.MetaDeleteResponse, error) {
-	node, err := m.f.enter(ctx, "MetaDelete")
-	if err != nil {
-		return nil, err
-	}
-
-	id := runtime.MetaKeyTagToID(uint8(req.GetKey()))
-
-	m.f.mu.Lock()
-	m.f.resources[node] = slices.DeleteFunc(m.f.resources[node], func(r resource.Resource) bool {
-		return r.Metadata().Type() == runtime.MetaKeyType && r.Metadata().ID() == id
-	})
-	m.f.mu.Unlock()
-
-	return &machineapi.MetaDeleteResponse{Messages: []*machineapi.MetaDelete{{}}}, nil
-}
-
-func (m fakeTalosMachine) Reset(ctx context.Context, req *machineapi.ResetRequest) (*machineapi.ResetResponse, error) {
-	if _, err := m.f.enter(ctx, "Reset"); err != nil {
-		return nil, err
-	}
-
-	m.f.mu.Lock()
-	m.f.resets = append(m.f.resets, req)
-	m.f.mu.Unlock()
-
-	return &machineapi.ResetResponse{Messages: []*machineapi.Reset{{ActorId: "reset-1"}}}, nil
-}
-
-// fakeTalosTime answers `talosctl time` with the node's clockOffsets entry.
-type fakeTalosTime struct {
-	timeapi.UnimplementedTimeServiceServer
-
-	f *fakeTalos
-}
-
-func (t fakeTalosTime) Time(ctx context.Context, _ *emptypb.Empty) (*timeapi.TimeResponse, error) {
-	node, err := t.f.enter(ctx, "Time")
-	if err != nil {
-		return nil, err
-	}
-
-	t.f.mu.Lock()
-	offset, ok := t.f.clockOffsets[node]
-	t.f.mu.Unlock()
-
-	if !ok {
-		return nil, status.Error(codes.Unimplemented, "no time")
-	}
-
-	local := time.Unix(1700000000, 0)
-
-	return &timeapi.TimeResponse{Messages: []*timeapi.Time{{
-		Server:     "time.example.test",
-		Localtime:  timestamppb.New(local),
-		Remotetime: timestamppb.New(local.Add(time.Duration(offset) * time.Millisecond)),
-	}}}, nil
-}
-
-func (m fakeTalosMachine) PacketCapture(_ *machineapi.PacketCaptureRequest, stream grpc.ServerStreamingServer[common.Data]) error {
-	node, err := m.f.enter(stream.Context(), "PacketCapture")
-	if err != nil {
-		return err
-	}
-
-	m.f.mu.Lock()
-	data, hold := m.f.pcaps[node], m.f.pcapHold[node]
-	m.f.mu.Unlock()
-
-	if err := stream.Send(&common.Data{Bytes: data}); err != nil {
-		return err
-	}
-
-	if hold {
-		<-stream.Context().Done()
-	}
-
-	return nil
-}
-
-func (m fakeTalosMachine) EtcdSnapshot(_ *machineapi.EtcdSnapshotRequest, stream grpc.ServerStreamingServer[common.Data]) error {
-	if _, err := m.f.enter(stream.Context(), "EtcdSnapshot"); err != nil {
-		return err
-	}
-
-	return m.f.snapshot(stream)
-}
-
-func (m fakeTalosMachine) EtcdAlarmDisarm(ctx context.Context, _ *emptypb.Empty) (*machineapi.EtcdAlarmDisarmResponse, error) {
-	if _, err := m.f.enter(ctx, "EtcdAlarmDisarm"); err != nil {
-		return nil, err
-	}
-
-	if m.f.disarmErr != nil {
-		return nil, m.f.disarmErr
-	}
-
-	m.f.mu.Lock()
-	m.f.alarms = nil
-	m.f.mu.Unlock()
-
-	return &machineapi.EtcdAlarmDisarmResponse{Messages: []*machineapi.EtcdAlarmDisarm{{}}}, nil
-}
-
-func (m fakeTalosMachine) EtcdAlarmList(ctx context.Context, _ *emptypb.Empty) (*machineapi.EtcdAlarmListResponse, error) {
-	if _, err := m.f.enter(ctx, "EtcdAlarmList"); err != nil {
-		return nil, err
-	}
-
-	m.f.mu.Lock()
-	defer m.f.mu.Unlock()
-
-	return &machineapi.EtcdAlarmListResponse{Messages: []*machineapi.EtcdAlarm{{MemberAlarms: m.f.alarms}}}, nil
-}
-
-func (m fakeTalosMachine) EtcdDefragment(ctx context.Context, _ *emptypb.Empty) (*machineapi.EtcdDefragmentResponse, error) {
-	node, err := m.f.enter(ctx, "EtcdDefragment")
-	if err != nil {
-		return nil, err
-	}
-
-	if err := m.f.defragErr[node]; err != nil {
-		return nil, err
-	}
-
-	return &machineapi.EtcdDefragmentResponse{Messages: []*machineapi.EtcdDefragment{{}}}, nil
-}
-
-func (m fakeTalosMachine) EtcdStatus(ctx context.Context, _ *emptypb.Empty) (*machineapi.EtcdStatusResponse, error) {
-	node, err := m.f.enter(ctx, "EtcdStatus")
-	if err != nil {
-		return nil, err
-	}
-
-	m.f.mu.Lock()
-	defer m.f.mu.Unlock()
-
-	if m.f.etcdDown[node] {
-		return nil, status.Errorf(codes.Unavailable, "etcd is not running on %s", node)
-	}
-
-	id, leader := uint64(1), uint64(1)
-	if m.f.members != nil {
-		id, leader = m.f.members[node], m.f.leader
-	}
-
-	return &machineapi.EtcdStatusResponse{Messages: []*machineapi.EtcdStatus{{
-		MemberStatus: &machineapi.EtcdMemberStatus{MemberId: id, Leader: leader, DbSize: 4 << 20, Errors: m.f.etcdErrors[node]},
-	}}}, nil
-}
-
-// EtcdRecover keeps the uploaded database of the node.
-func (m fakeTalosMachine) EtcdRecover(stream grpc.ClientStreamingServer[common.Data, machineapi.EtcdRecoverResponse]) error {
-	node, err := m.f.enter(stream.Context(), "EtcdRecover")
-	if err != nil {
-		return err
-	}
-
-	var data []byte
-
-	for {
-		msg, err := stream.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-
-		if err != nil {
-			return err
-		}
-
-		data = append(data, msg.GetBytes()...)
-	}
-
-	m.f.mu.Lock()
-	if m.f.recovered == nil {
-		m.f.recovered = map[string][]byte{}
-	}
-
-	m.f.recovered[node] = data
-	m.f.mu.Unlock()
-
-	return stream.SendAndClose(&machineapi.EtcdRecoverResponse{Messages: []*machineapi.EtcdRecover{{}}})
-}
-
-// Bootstrap starts etcd on the node again.
-func (m fakeTalosMachine) Bootstrap(ctx context.Context, req *machineapi.BootstrapRequest) (*machineapi.BootstrapResponse, error) {
-	node, err := m.f.enter(ctx, "Bootstrap")
-	if err != nil {
-		return nil, err
-	}
-
-	m.f.mu.Lock()
-	defer m.f.mu.Unlock()
-
-	m.f.bootstraps = append(m.f.bootstraps, req)
-	delete(m.f.etcdDown, node)
-
-	return &machineapi.BootstrapResponse{Messages: []*machineapi.Bootstrap{{}}}, nil
-}
-
-func (m fakeTalosMachine) EtcdMemberList(ctx context.Context, _ *machineapi.EtcdMemberListRequest) (*machineapi.EtcdMemberListResponse, error) {
-	node, err := m.f.enter(ctx, "EtcdMemberList")
-	if err != nil {
-		return nil, err
-	}
-
-	m.f.mu.Lock()
-	defer m.f.mu.Unlock()
-
-	members := m.f.members
-	if members == nil {
-		members = map[string]uint64{node: 1}
-	}
-
-	var out []*machineapi.EtcdMember
-	for n, id := range members {
-		out = append(out, &machineapi.EtcdMember{
-			Id: id, Hostname: "host-" + strings.ReplaceAll(n, ".", "-"),
-			PeerUrls: []string{"https://" + n + ":2380"}, ClientUrls: []string{"https://" + n + ":2379"},
-		})
-	}
-
-	slices.SortFunc(out, func(a, b *machineapi.EtcdMember) int { return int(a.GetId()) - int(b.GetId()) })
-
-	return &machineapi.EtcdMemberListResponse{Messages: []*machineapi.EtcdMembers{{Members: out}}}, nil
-}
-
-func (m fakeTalosMachine) EtcdRemoveMemberByID(ctx context.Context, req *machineapi.EtcdRemoveMemberByIDRequest) (*machineapi.EtcdRemoveMemberByIDResponse, error) {
-	if _, err := m.f.enter(ctx, fmt.Sprintf("EtcdRemoveMemberByID %x", req.GetMemberId())); err != nil {
-		return nil, err
-	}
-
-	return &machineapi.EtcdRemoveMemberByIDResponse{Messages: []*machineapi.EtcdRemoveMemberByID{{}}}, nil
-}
-
-func (m fakeTalosMachine) EtcdForfeitLeadership(ctx context.Context, _ *machineapi.EtcdForfeitLeadershipRequest) (*machineapi.EtcdForfeitLeadershipResponse, error) {
-	if _, err := m.f.enter(ctx, "EtcdForfeitLeadership"); err != nil {
-		return nil, err
-	}
-
-	return &machineapi.EtcdForfeitLeadershipResponse{Messages: []*machineapi.EtcdForfeitLeadership{{Member: "host-new-leader"}}}, nil
-}
-
-func (m fakeTalosMachine) ServiceList(ctx context.Context, _ *emptypb.Empty) (*machineapi.ServiceListResponse, error) {
-	if _, err := m.f.enter(ctx, "ServiceList"); err != nil {
-		return nil, err
-	}
-
-	return &machineapi.ServiceListResponse{Messages: []*machineapi.ServiceList{{Services: []*machineapi.ServiceInfo{
-		{Id: "apid", State: "Running", Health: &machineapi.ServiceHealth{Healthy: true}},
-		{Id: "kubelet", State: "Running", Health: &machineapi.ServiceHealth{Healthy: false, LastMessage: "probe failed"}},
-	}}}}, nil
-}
-
-func (m fakeTalosMachine) Logs(req *machineapi.LogsRequest, stream grpc.ServerStreamingServer[common.Data]) error {
-	if _, err := m.f.enter(stream.Context(), "Logs"); err != nil {
-		return err
-	}
-
-	if req.GetId() == m.f.failLogs {
-		return status.Error(codes.NotFound, "log not found")
-	}
-
-	return stream.Send(&common.Data{Bytes: []byte("log line of " + req.GetId() + "\n")})
-}
-
-func (m fakeTalosMachine) Dmesg(_ *machineapi.DmesgRequest, stream grpc.ServerStreamingServer[common.Data]) error {
-	if _, err := m.f.enter(stream.Context(), "Dmesg"); err != nil {
-		return err
-	}
-
-	return stream.Send(&common.Data{Bytes: []byte("[    0.000000] Linux version 6.12\n")})
-}
-
-func (m fakeTalosMachine) Containers(ctx context.Context, req *machineapi.ContainersRequest) (*machineapi.ContainersResponse, error) {
-	if _, err := m.f.enter(ctx, "Containers"); err != nil {
-		return nil, err
-	}
-
-	if req.GetNamespace() == "system" {
-		if req.GetDriver() != common.ContainerDriver_CONTAINERD {
-			return nil, status.Error(codes.InvalidArgument, "system containers are listed through containerd")
-		}
-
-		return &machineapi.ContainersResponse{Messages: []*machineapi.Container{{Containers: []*machineapi.ContainerInfo{
-			{Id: "trustd", PodId: "trustd", Name: "trustd", Image: "talos/trustd", Status: "RUNNING", Pid: 104},
-			{Id: "apid", PodId: "apid", Image: "talos/apid", Status: "RUNNING", Pid: 102},
-		}}}}, nil
-	}
-
-	return &machineapi.ContainersResponse{Messages: []*machineapi.Container{{Containers: []*machineapi.ContainerInfo{
-		{Id: "c1", PodId: "kube-system/kube-apiserver-cp", Name: "kube-apiserver", Image: "registry.k8s.io/kube-apiserver:v1.34.0", Status: "CONTAINER_RUNNING"},
-		{Id: "c2", PodId: "default/web-1", Name: "web", Image: "nginx:1.27", Status: "CONTAINER_RUNNING"},
-		{Id: "kube-system/kube-apiserver-cp", PodId: "kube-system/kube-apiserver-cp", Image: "registry.k8s.io/pause:3.10"},
-	}}}}, nil
-}
-
-func (m fakeTalosMachine) Mounts(ctx context.Context, _ *emptypb.Empty) (*machineapi.MountsResponse, error) {
-	node, err := m.f.enter(ctx, "Mounts")
-	if err != nil {
-		return nil, err
-	}
-
-	m.f.mu.Lock()
-	stats, scripted := m.f.mounts[node]
-	m.f.mu.Unlock()
-
-	if scripted {
-		return &machineapi.MountsResponse{Messages: []*machineapi.Mounts{{Stats: stats}}}, nil
-	}
-
-	return &machineapi.MountsResponse{Messages: []*machineapi.Mounts{{Stats: []*machineapi.MountStat{
-		{Filesystem: "/dev/sda6", Size: 100 << 30, Available: 60 << 30, MountedOn: "/var"},
-	}}}}, nil
-}
-
-func (m fakeTalosMachine) Processes(ctx context.Context, _ *emptypb.Empty) (*machineapi.ProcessesResponse, error) {
-	if _, err := m.f.enter(ctx, "Processes"); err != nil {
-		return nil, err
-	}
-
-	return &machineapi.ProcessesResponse{Messages: []*machineapi.Process{{Processes: []*machineapi.ProcessInfo{
-		{Pid: 1, State: "S", Threads: 3, Command: "machined", Args: "/sbin/init"},
-	}}}}, nil
-}
-
-// DiskUsage walks a fixed tree below the requested path: one directory holding one file.
-func (m fakeTalosMachine) DiskUsage(req *machineapi.DiskUsageRequest, stream grpc.ServerStreamingServer[machineapi.DiskUsageInfo]) error {
-	if _, err := m.f.enter(stream.Context(), "DiskUsage"); err != nil {
-		return err
-	}
-
-	root := req.GetPaths()[0]
-
-	for _, e := range []*machineapi.DiskUsageInfo{
-		{Name: root, Size: 3000},
-		{Name: root + "/logs", Size: 2000},
-		{Name: root + "/logs/app.log", Size: 2000},
-		{Name: root + "/config", Size: 1000},
-	} {
-		if err := stream.Send(e); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (m fakeTalosMachine) List(req *machineapi.ListRequest, stream grpc.ServerStreamingServer[machineapi.FileInfo]) error {
-	node, err := m.f.enter(stream.Context(), "List")
-	if err != nil {
-		return err
-	}
-
-	m.f.mu.Lock()
-	tree, scripted := m.f.files[node]
-	m.f.mu.Unlock()
-
-	if !scripted {
-		return stream.Send(&machineapi.FileInfo{Name: req.GetRoot() + "/logs", IsDir: true})
-	}
-
-	children := fakeChildren(tree, req.GetRoot())
-	if children == nil {
-		return status.Errorf(codes.Unknown, "lstat %s: no such file or directory", req.GetRoot())
-	}
-
-	// Like Talos, the root comes first as ".", then its direct children (no recursion).
-	if err := stream.Send(&machineapi.FileInfo{Name: req.GetRoot(), RelativeName: ".", IsDir: true}); err != nil {
-		return err
-	}
-
-	for _, name := range slices.Sorted(maps.Keys(children)) {
-		if err := stream.Send(&machineapi.FileInfo{Name: req.GetRoot() + "/" + name, RelativeName: name, IsDir: children[name]}); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-type fakeTalosDebug struct {
-	machineapi.UnimplementedDebugServiceServer
-
-	f *fakeTalos
-}
-
-// ContainerRun reads the spec, then sends debugRun's output in two pieces and its exit code.
-func (d fakeTalosDebug) ContainerRun(stream grpc.BidiStreamingServer[machineapi.DebugContainerRunRequest, machineapi.DebugContainerRunResponse]) error {
-	node, err := d.f.enter(stream.Context(), "ContainerRun")
-	if err != nil {
-		return err
-	}
-
-	if d.f.debugRun == nil {
-		return status.Error(codes.Unimplemented, "no debug containers")
-	}
-
-	req, err := stream.Recv()
-	if err != nil {
-		return err
-	}
-
-	output, code := d.f.debugRun(node, req.GetSpec())
-	half := len(output) / 2
-
-	for _, part := range []string{output[:half], output[half:]} {
-		resp := &machineapi.DebugContainerRunResponse{Resp: &machineapi.DebugContainerRunResponse_StdoutData{StdoutData: []byte(part)}}
-		if err := stream.Send(resp); err != nil {
-			return err
-		}
-	}
-
-	return stream.Send(&machineapi.DebugContainerRunResponse{Resp: &machineapi.DebugContainerRunResponse_ExitCode{ExitCode: code}})
-}
-
-// fakeChildren are the entries directly below dir in tree (name -> is a directory), nil
-// when dir does not exist.
-func fakeChildren(tree map[string]string, dir string) map[string]bool {
-	var out map[string]bool
-
-	for p := range tree {
-		rest, ok := strings.CutPrefix(p, dir+"/")
-		if !ok {
-			continue
-		}
-
-		if out == nil {
-			out = map[string]bool{}
-		}
-
-		name, _, isDir := strings.Cut(rest, "/")
-		out[name] = out[name] || isDir
-	}
-
-	return out
-}
-
-func (m fakeTalosMachine) Read(req *machineapi.ReadRequest, stream grpc.ServerStreamingServer[common.Data]) error {
-	node, err := m.f.enter(stream.Context(), "Read")
-	if err != nil {
-		return err
-	}
-
-	m.f.mu.Lock()
-	content, ok := m.f.files[node][req.GetPath()]
-	m.f.mu.Unlock()
-
-	if !ok {
-		return status.Errorf(codes.Unknown, "open %s: no such file or directory", req.GetPath())
-	}
-
-	return stream.Send(&common.Data{Bytes: []byte(content)})
-}
-
-// Copy sends the node's files entry as is: a test stores there the tar.gz Talos would send.
-func (m fakeTalosMachine) Copy(req *machineapi.CopyRequest, stream grpc.ServerStreamingServer[common.Data]) error {
-	node, err := m.f.enter(stream.Context(), "Copy")
-	if err != nil {
-		return err
-	}
-
-	m.f.mu.Lock()
-	content, ok := m.f.files[node][req.GetRootPath()]
-	m.f.mu.Unlock()
-
-	if !ok {
-		return status.Errorf(codes.Unknown, "lstat %s: no such file or directory", req.GetRootPath())
-	}
-
-	return stream.Send(&common.Data{Bytes: []byte(content)})
-}
-
-// Events hands the stream to the events script with the nodes it targets ("nodes"
-// metadata, as client.WithNodes sends, else "node").
-func (m fakeTalosMachine) Events(req *machineapi.EventsRequest, stream grpc.ServerStreamingServer[machineapi.Event]) error {
-	md, _ := metadata.FromIncomingContext(stream.Context())
-
-	nodes := md.Get("nodes")
-	if len(nodes) == 0 {
-		nodes = md.Get("node")
-	}
-
-	m.f.mu.Lock()
-	m.f.calls = append(m.f.calls, "Events "+strings.Join(nodes, ","))
-	script := m.f.events
-	m.f.mu.Unlock()
-
-	if script == nil {
-		return status.Error(codes.Unimplemented, "unknown method Events for service machine.MachineService")
-	}
-
-	return script(nodes, req, stream)
-}
-
-func (m fakeTalosMachine) ApplyConfiguration(ctx context.Context, req *machineapi.ApplyConfigurationRequest) (*machineapi.ApplyConfigurationResponse, error) {
-	node, err := m.f.enter(ctx, "ApplyConfiguration")
-	if err != nil {
-		return nil, err
-	}
-
-	provider, err := configloader.NewFromBytes(req.GetData())
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid config: %v", err)
-	}
-
-	m.f.mu.Lock()
-	m.f.applies = append(m.f.applies, fakeConfigApply{node: node, dryRun: req.GetDryRun(), mode: req.GetMode()})
-	onApply := m.f.onApply
-	m.f.mu.Unlock()
-
-	if !req.GetDryRun() {
-		m.f.put(node, config.NewMachineConfigWithID(provider, config.ActiveID))
-
-		if onApply != nil {
-			onApply(node)
-		}
-	}
-
-	return &machineapi.ApplyConfigurationResponse{Messages: []*machineapi.ApplyConfiguration{{Mode: machineapi.ApplyConfigurationRequest_NO_REBOOT}}}, nil
-}
-
-func (m fakeTalosMachine) CPUFreqStats(ctx context.Context, _ *emptypb.Empty) (*machineapi.CPUFreqStatsResponse, error) {
-	node, err := m.f.enter(ctx, "CPUFreqStats")
-	if err != nil {
-		return nil, err
-	}
-
-	m.f.mu.Lock()
-	stats, ok := m.f.cpuFreq[node]
-	m.f.mu.Unlock()
-
-	if !ok {
-		return nil, status.Error(codes.Unimplemented, "unknown method CPUFreqStats for service machine.MachineService")
-	}
-
-	return &machineapi.CPUFreqStatsResponse{Messages: []*machineapi.CPUsFreqStats{{CpuFreqStats: stats}}}, nil
-}
-
-type fakeTalosImage struct {
-	machineapi.UnimplementedImageServiceServer
-
-	f *fakeTalos
-}
-
-func (i fakeTalosImage) Pull(_ *machineapi.ImageServicePullRequest, stream grpc.ServerStreamingServer[machineapi.ImageServicePullResponse]) error {
-	if _, err := i.f.enter(stream.Context(), "Pull"); err != nil {
-		return err
-	}
-
-	if i.f.pull != nil {
-		return i.f.pull(stream)
-	}
-
-	return stream.Send(&machineapi.ImageServicePullResponse{})
-}
-
-// List is the ImageService listing (MachineService.ImageList stays Unimplemented, like a
-// Talos without the deprecated API).
-// The system namespace holds systemImages.
-func (i fakeTalosImage) List(req *machineapi.ImageServiceListRequest, stream grpc.ServerStreamingServer[machineapi.ImageServiceListResponse]) error {
-	if _, err := i.f.enter(stream.Context(), "ImageList"); err != nil {
-		return err
-	}
-
-	if req.GetContainerd().GetNamespace() == common.ContainerdNamespace_NS_SYSTEM {
-		i.f.mu.Lock()
-		images := slices.Clone(i.f.systemImages)
-		i.f.mu.Unlock()
-
-		for _, img := range images {
-			if err := stream.Send(img); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
-
-	return stream.Send(&machineapi.ImageServiceListResponse{Name: "registry.k8s.io/pause:3.10", Digest: "sha256:abc", Size: 320 << 10})
-}
-
-type fakeTalosLifecycle struct {
-	machineapi.UnimplementedLifecycleServiceServer
-
-	f *fakeTalos
-}
-
-func (l fakeTalosLifecycle) Upgrade(_ *machineapi.LifecycleServiceUpgradeRequest, stream grpc.ServerStreamingServer[machineapi.LifecycleServiceUpgradeResponse]) error {
-	if _, err := l.f.enter(stream.Context(), "LifecycleUpgrade"); err != nil {
-		return err
-	}
-
-	return l.f.lifecycleUpgrade(stream)
-}
-
-// installProgress is one LifecycleService.Upgrade answer: a message, or the exit code.
-func installProgress(msg string, code int32, final bool) *machineapi.LifecycleServiceUpgradeResponse {
-	p := &machineapi.LifecycleServiceInstallProgress{}
-	if final {
-		p.Response = &machineapi.LifecycleServiceInstallProgress_ExitCode{ExitCode: code}
-	} else {
-		p.Response = &machineapi.LifecycleServiceInstallProgress_Message{Message: msg}
-	}
-
-	return &machineapi.LifecycleServiceUpgradeResponse{Progress: p}
-}
-
-type fakeTalosCluster struct {
-	clusterapi.UnimplementedClusterServiceServer
-
-	f *fakeTalos
-}
-
-func (c fakeTalosCluster) HealthCheck(req *clusterapi.HealthCheckRequest, stream grpc.ServerStreamingServer[clusterapi.HealthCheckProgress]) error {
-	node, err := c.f.enter(stream.Context(), "HealthCheck")
-	if err != nil {
-		return err
-	}
-
-	c.f.mu.Lock()
-	c.f.healthInfos = append(c.f.healthInfos, req.GetClusterInfo())
-	c.f.mu.Unlock()
-
-	return c.f.health(node, stream)
-}
-
-type fakeTalosState struct {
-	cosiv1alpha1.UnimplementedStateServer
-
-	f *fakeTalos
-}
-
-func (s fakeTalosState) find(node, typ, id string) []resource.Resource {
-	s.f.mu.Lock()
-	defer s.f.mu.Unlock()
-
-	var out []resource.Resource
-
-	for _, r := range s.f.resources[node] {
-		if r.Metadata().Type() == typ && (id == "" || r.Metadata().ID() == id) {
-			out = append(out, r)
-		}
-	}
-
-	return out
-}
-
-func marshalResource(r resource.Resource) (*cosiv1alpha1.Resource, error) {
-	p, err := protobuf.FromResource(r)
-	if err != nil {
-		return nil, err
-	}
-
-	return p.Marshal()
-}
-
-func (s fakeTalosState) Get(ctx context.Context, req *cosiv1alpha1.GetRequest) (*cosiv1alpha1.GetResponse, error) {
-	node, err := s.f.enter(ctx, "Get "+req.GetType())
-	if err != nil {
-		return nil, err
-	}
-
-	found := s.find(node, req.GetType(), req.GetId())
-	if len(found) == 0 {
-		return nil, status.Errorf(codes.NotFound, "resource %s/%s not found", req.GetType(), req.GetId())
-	}
-
-	res, err := marshalResource(found[0])
-	if err != nil {
-		return nil, err
-	}
-
-	return &cosiv1alpha1.GetResponse{Resource: res}, nil
-}
-
-func (s fakeTalosState) List(req *cosiv1alpha1.ListRequest, stream grpc.ServerStreamingServer[cosiv1alpha1.ListResponse]) error {
-	node, err := s.f.enter(stream.Context(), "List "+req.GetType())
-	if err != nil {
-		return err
-	}
-
-	for _, r := range s.find(node, req.GetType(), "") {
-		res, err := marshalResource(r)
-		if err != nil {
-			return err
-		}
-
-		if err := stream.Send(&cosiv1alpha1.ListResponse{Resource: res}); err != nil {
-			return err
-		}
+	if err := lis.Close(); err != nil { //nolint:errcheck // the point: nothing listens
+		t.Fatal(err)
 	}
 
-	return nil
+	return addr
 }

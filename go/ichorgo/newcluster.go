@@ -268,7 +268,7 @@ type newCluster struct {
 	// certificate is issued once and kept for the same reason: dialCluster needs it too.
 	bundle    *secrets.Bundle
 	adminCert *x509Pair
-	applied bool // the config may be on the node: Cancel cannot undo anything any more
+	applied   bool // the config may be on the node: Cancel cannot undo anything any more
 
 	// draft carries a prepared cluster (NewClusterPrepare): its bundle and the exact
 	// control-plane config are reused as-is, and storedYAML is the talosconfig the app

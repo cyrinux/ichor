@@ -11,12 +11,12 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/grpc"
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
+	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 	machineryconfig "github.com/siderolabs/talos/pkg/machinery/config"
 	"github.com/siderolabs/talos/pkg/machinery/config/generate/secrets"
-	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 	"github.com/siderolabs/talos/pkg/machinery/resources/runtime"
+	"google.golang.org/grpc"
 )
 
 const (

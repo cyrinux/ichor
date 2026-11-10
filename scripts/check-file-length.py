@@ -29,7 +29,6 @@ SKIPPED_DIRS = {"build", "DerivedData"}
 
 # Path (relative to ROOT) → the length it may not exceed.
 KNOWN = {
-    "go/ichorgo/talosfake_test.go": 1055,
     "go/ichorgo/imagescan_test.go": 989,
 }
 
