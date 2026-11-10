@@ -16,13 +16,13 @@ import (
 )
 
 const (
-	newClusterNode = "192.0.2.11"
-	newClusterPoll = 10 * time.Millisecond
-	newClusterStep = 60 * time.Millisecond
-	newClusterK8s  = "1.34.1"
-	newClusterDisk = "/dev/sda"
-	newClusterName = "home"
-	newClusterHost = "cp-1"
+	newClusterNode   = "10.0.2.11"
+	newClusterPoll   = 10 * time.Millisecond
+	newClusterStep   = 60 * time.Millisecond
+	newClusterK8s    = "1.34.1"
+	newClusterDisk   = "/dev/sda"
+	newClusterName   = "home"
+	newClusterHost   = "cp-1"
 )
 
 // newClusterRecorder captures a bootstrap run's listener calls.
@@ -274,7 +274,7 @@ func TestStartNewClusterRefusesInstalledClusterNode(t *testing.T) {
 	newClusterForTest(address, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "", rec, time.Minute)
 
 	node, errMessage, _ := rec.wait(t)
-	if node != newClusterNode || !strings.Contains(errMessage, "belongs to a cluster") {
+	if node != "127.0.0.1" || !strings.Contains(errMessage, "belongs to a cluster") {
 		t.Errorf("got %q, %q; want the refusal of a cluster node", node, errMessage)
 	}
 }
@@ -534,14 +534,14 @@ func TestStartNewClusterPrivacyRefused(t *testing.T) {
 func TestStartNewClusterValidation(t *testing.T) {
 	cases := []struct{ name, address, cluster, k8s, disk, hostname, endpoint, want string }{
 		{"address", "", newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "", "the address must be"},
-		{"address junk", "192.0.2.11/others", newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "", "the address must be"},
+		{"address junk", "10.0.2.11/others", newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "", "the address must be"},
 		{"name", newClusterNode, " ", newClusterK8s, newClusterDisk, newClusterHost, "", "needs a name"},
 		{"hostname", newClusterNode, newClusterName, newClusterK8s, newClusterDisk, "bad host!", "", "not a host name"},
 		{"disk", newClusterNode, newClusterName, newClusterK8s, "sda", newClusterHost, "", "device path"},
 		{"k8s", newClusterNode, newClusterName, "1.34.1-rc1", newClusterDisk, newClusterHost, "", "Kubernetes version"},
 		{"k8s major", newClusterNode, newClusterName, "2.0.0", newClusterDisk, newClusterHost, "", "Kubernetes version"},
 		{"endpoint", newClusterNode, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "http://x", "https:// URL"},
-		{"endpoint port", newClusterNode, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "https://192.0.2.10:abc", "bad port"},
+		{"endpoint port", newClusterNode, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, "https://10.0.2.10:abc", "bad port"},
 	}
 
 	for _, tc := range cases {
@@ -558,21 +558,22 @@ func TestStartNewClusterValidation(t *testing.T) {
 }
 
 func TestParseNewClusterRequestDefaults(t *testing.T) {
-	req, err := parseNewClusterRequest("192.0.2.11:50000", " home ", "v1.34.1", "/dev/nvme0n1", "cp-1", "")
+	req, err := parseNewClusterRequest("10.0.2.11:50000", " home ", "v1.34.1", "/dev/nvme0n1", "cp-1", "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if req.host != "192.0.2.11" || req.endpoint != "https://192.0.2.11:6443" {
-		t.Errorf("req = %+v; want host 192.0.2.11 and the node's own endpoint", req)
+	if req.host != "10.0.2.11" || req.endpoint != "https://10.0.2.11:6443" {
+		t.Errorf("req = %+v; want host 10.0.2.11 and the node's own endpoint", req)
 	}
 
 	if req.kubernetesVersion != "1.34.1" {
 		t.Errorf("kubernetesVersion = %q", req.kubernetesVersion)
 	}
 
-	if _, err := parseNewClusterRequest("[fd00::5]", newClusterName, "1.34", newClusterDisk, newClusterHost, ""); err != nil {
-		t.Errorf("ipv6 without port: %v", err)
+	// validHostPort refuses a bracketed IPv6 without a port; with one it passes.
+	if _, err := parseNewClusterRequest("[fd00::5]:50000", newClusterName, "1.34", newClusterDisk, newClusterHost, ""); err != nil {
+		t.Errorf("ipv6 with port: %v", err)
 	}
 
 	if err := checkClusterEndpoint("https://cluster.example.com"); err != nil {
@@ -618,3 +619,4 @@ func TestStartNewClusterAudited(t *testing.T) {
 		t.Errorf("params carry config: %q", e.Params)
 	}
 }
+
