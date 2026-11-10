@@ -1,0 +1,846 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# The NetBird operator (netbird.io) puts cluster Services on a NetBird network. The current API
+# is v1alpha1: a NetworkRouter runs the routing peers, a NetworkResource publishes a Service
+# through a router (with a DNS record in the router's zone), a NetworkEgress routes to an
+# outside host, Groups and SetupKeys mirror their NetBird objects. The legacy v1 API
+# (NBRoutingPeer, NBResource) is deprecated upstream and still served during the migration:
+# both are read, each optional, so a cluster serving one version reads the other as empty.
+# They are separate objects (a migration creates the v1alpha1 ones), so both lists show.
+# Every v1alpha1 kind sets one condition, Ready, with the reason Reconciled (True), Dependency
+# (False: a referenced Service or NetworkRouter is missing or not ready) or Progressing (False:
+# "N of M routing peers ready"); v1 sets Ready with internalError or APIError when False. A
+# v1alpha1 controller error today only requeues, so the "other reason" rule is a guard; the
+# samples give it an APIError reason.
+# Read from api/v1alpha1/condition_types.go and internal/controller/*.go (main, 2026-11-10).
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: netbird
+name: NetBird
+website: https://docs.netbird.io/manage/integrations/kubernetes/routing-peer
+icon: netbird
+category: networking
+catalogId: netbird
+
+detect:
+  - group: netbird.io
+
+resources:
+  router:
+    group: netbird.io
+    version: v1alpha1
+    resource: networkrouters
+    kind: NetworkRouter
+    scope: Namespaced
+    optional: true
+  resource:
+    group: netbird.io
+    version: v1alpha1
+    resource: networkresources
+    kind: NetworkResource
+    scope: Namespaced
+    optional: true
+  egress:
+    group: netbird.io
+    version: v1alpha1
+    resource: networkegresses
+    kind: NetworkEgress
+    scope: Namespaced
+    optional: true
+  group:
+    group: netbird.io
+    version: v1alpha1
+    resource: groups
+    kind: Group
+    scope: Namespaced
+    optional: true
+  # The spec names the key and its groups; the key itself is never in the object.
+  setupKey:
+    group: netbird.io
+    version: v1alpha1
+    resource: setupkeys
+    kind: SetupKey
+    scope: Namespaced
+    optional: true
+  nbRouter:
+    group: netbird.io
+    version: v1
+    resource: nbroutingpeers
+    kind: NBRoutingPeer
+    scope: Namespaced
+    optional: true
+  nbResource:
+    group: netbird.io
+    version: v1
+    resource: nbresources
+    kind: NBResource
+    scope: Namespaced
+    optional: true
+  # The Service a NetworkResource publishes: names only.
+  service:
+    group: ""
+    version: v1
+    resource: services
+    kind: Service
+    scope: Namespaced
+    list: { metadataOnly: true, limit: 2000 }
+    optional: true
+
+fields:
+  router:
+    dnsZone: $.spec.dnsZoneRef.name | default("")
+    replicas: $.spec.workloadOverride.replicas | default(3)
+    logLevel: $.spec.logLevel | default("info")
+    routingPeerID: $.status.routingPeerID | default("")
+    networkID: $.status.networkID | default("")
+    # The status starts at observedGeneration -1: nothing reconciled yet.
+    observed: $.status.observedGeneration | default(-1) == $.metadata.generation
+    ready: conditions.Ready
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+  resource:
+    service: $.spec.serviceRef.name | default("")
+    routerName: $.spec.networkRouterRef.name | default("")
+    routerNamespace: $.spec.networkRouterRef.namespace | default($.metadata.namespace)
+    groups: len($.spec.groups)
+    resourceID: $.status.resourceID | default("")
+    networkID: $.status.networkID | default("")
+    dnsRecordID: $.status.dnsRecordID | default("")
+    routerRef: join(router, $.metadata.namespace == fields.routerNamespace && $.metadata.name == fields.routerName)
+    serviceRef: join(service, $.metadata.namespace == left.metadata.namespace && $.metadata.name == fields.service)
+    observed: $.status.observedGeneration | default(-1) == $.metadata.generation
+    ready: conditions.Ready
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+  egress:
+    target: $.spec.target.fqdn.hostname | default($.spec.target.ip.address) | default("")
+    ports: join($.spec.ports[*].port, ", ")
+    routerName: $.spec.networkRouterRef.name | default("")
+    routerNamespace: $.spec.networkRouterRef.namespace | default($.metadata.namespace)
+    routerRef: join(router, $.metadata.namespace == fields.routerNamespace && $.metadata.name == fields.routerName)
+    observed: $.status.observedGeneration | default(-1) == $.metadata.generation
+    ready: conditions.Ready
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+  group:
+    groupName: $.spec.name | default($.metadata.name)
+    groupID: $.status.groupID | default("")
+    observed: $.status.observedGeneration | default(-1) == $.metadata.generation
+    ready: conditions.Ready
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+  setupKey:
+    keyName: $.spec.name | default($.metadata.name)
+    ephemeral: $.spec.ephemeral | default(false)
+    duration: $.spec.duration | default("")
+    autoGroups: len($.spec.autoGroups)
+    setupKeyID: $.status.setupKeyID | default("")
+    observed: $.status.observedGeneration | default(-1) == $.metadata.generation
+    ready: conditions.Ready
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+  nbRouter:
+    replicas: $.spec.replicas | default(3)
+    routerID: $.status.routerID | default("")
+    networkID: $.status.networkID | default("")
+    ready: conditions.Ready
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+  nbResource:
+    address: $.spec.address | default("")
+    networkID: $.spec.networkID | default("")
+    tcpPorts: join($.spec.tcpPorts, ", ")
+    udpPorts: join($.spec.udpPorts, ", ")
+    resourceID: $.status.networkResourceID | default("")
+    ready: conditions.Ready
+    readyReason: condition("Ready").reason | default("")
+    readyMessage: condition("Ready").message | default("")
+
+# First match wins. A Dependency is waiting on another object (warning), Progressing is the
+# routing peers coming up (info); any other False reason is an error of the operator (critical).
+health:
+  router:
+    - when: fields.ready == false && !(fields.readyReason in ["Dependency", "Progressing"])
+      health: critical
+      reason: failed
+      message: "{{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: fields.ready == false && fields.readyReason == "Dependency"
+      health: warning
+      reason: dependency
+      message: "{{ fields.readyMessage }}"
+    - when: fields.ready == false && fields.readyReason == "Progressing"
+      health: info
+      reason: progressing
+      message: "{{ fields.readyMessage }}"
+    - when: "!fields.observed"
+      health: info
+      reason: notReconciled
+      message: "not reconciled yet"
+    - when: fields.routingPeerID == ""
+      health: warning
+      reason: noRoutingPeer
+      message: "no routing peer yet"
+  resource:
+    - when: fields.ready == false && !(fields.readyReason in ["Dependency", "Progressing"])
+      health: critical
+      reason: failed
+      message: "{{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: fields.routerName != "" && !has(fields.routerRef)
+      health: warning
+      reason: routerMissing
+      message: "its router {{ fields.routerNamespace }}/{{ fields.routerName }} does not exist"
+    - when: fields.ready == false
+      health: warning
+      reason: dependency
+      message: "{{ fields.readyMessage }}"
+    - when: "!fields.observed"
+      health: info
+      reason: notReconciled
+      message: "not reconciled yet"
+    - when: fields.resourceID == ""
+      health: warning
+      reason: notPublished
+      message: "not published yet"
+  egress:
+    - when: fields.ready == false && !(fields.readyReason in ["Dependency", "Progressing"])
+      health: critical
+      reason: failed
+      message: "{{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: fields.routerName != "" && !has(fields.routerRef)
+      health: warning
+      reason: routerMissing
+      message: "its router {{ fields.routerNamespace }}/{{ fields.routerName }} does not exist"
+    - when: fields.ready == false
+      health: warning
+      reason: dependency
+      message: "{{ fields.readyMessage }}"
+    - when: "!fields.observed"
+      health: info
+      reason: notReconciled
+      message: "not reconciled yet"
+  group:
+    - when: fields.ready == false
+      health: critical
+      reason: failed
+      message: "{{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: "!fields.observed"
+      health: info
+      reason: notReconciled
+      message: "not reconciled yet"
+  setupKey:
+    - when: fields.ready == false
+      health: critical
+      reason: failed
+      message: "{{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: "!fields.observed"
+      health: info
+      reason: notReconciled
+      message: "not reconciled yet"
+  nbRouter:
+    - when: fields.ready == false
+      health: critical
+      reason: failed
+      message: "{{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: "!has(fields.ready)"
+      health: info
+      reason: notReconciled
+      message: "not reconciled yet"
+  nbResource:
+    - when: fields.ready == false
+      health: critical
+      reason: failed
+      message: "{{ fields.readyReason }}: {{ fields.readyMessage }}"
+    - when: "!has(fields.ready)"
+      health: info
+      reason: notReconciled
+      message: "not reconciled yet"
+    - when: fields.resourceID == ""
+      health: warning
+      reason: notPublished
+      message: "not published yet"
+
+dataServices:
+  summary:
+    aggregate:
+      resources: count(resource) + count(nbResource)
+      routers: count(router) + count(nbRouter)
+      routersDown: 'count(router, health == "critical" || health == "warning") + count(nbRouter, health == "critical")'
+      unpublished: 'count(resource, health == "critical" || health == "warning") + count(nbResource, health == "critical" || health == "warning")'
+      egresses: count(egress)
+    health: >-
+      worst([worst(router.health), worst(resource.health), worst(egress.health), worst(group.health),
+        worst(setupKey.health), worst(nbRouter.health), worst(nbResource.health)])
+
+cards:
+  summary:
+    title: { count: dataServices.summary.resources, one: "%d NetBird resource", other: "%d NetBird resources" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "routers", value: dataServices.summary.routers, tone: info }
+      - { label: "egresses", value: dataServices.summary.egresses, tone: info, hideWhenZero: true }
+      - { label: "routers down", value: dataServices.summary.routersDown, tone: critical, hideWhenZero: true }
+      - { label: "resource problems", value: dataServices.summary.unpublished, tone: warning, hideWhenZero: true }
+  resources:
+    from: resource
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No network resources."
+    row:
+      title: $.metadata.name
+      subtitle: '$.metadata.namespace + " · " + fields.service + " → " + fields.routerName'
+      status:
+        tone: health
+        text: 'fields.ready == true ? "Ready" : (fields.readyReason != "" ? fields.readyReason : "Pending")'
+      trailing: { text: $.metadata.creationTimestamp | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Service", value: fields.service, mono: true }
+            - { label: "Router", value: 'fields.routerNamespace + "/" + fields.routerName', mono: true }
+            - { label: "Groups", value: fields.groups }
+            - { label: "Resource ID", value: fields.resourceID, mono: true }
+            - { label: "Network ID", value: fields.networkID, mono: true }
+            - { label: "DNS record ID", value: fields.dnsRecordID, mono: true }
+        - type: conditions
+        - type: relations
+          items:
+            - { label: "Service", ref: fields.serviceRef }
+            - { label: "Router", ref: fields.routerRef }
+  routers:
+    from: router
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No network routers."
+    row:
+      title: $.metadata.name
+      subtitle: '$.metadata.namespace + (fields.dnsZone != "" ? " · " + fields.dnsZone : "")'
+      status:
+        tone: health
+        text: 'fields.ready == true ? "Ready" : (fields.readyReason != "" ? fields.readyReason : "Pending")'
+      trailing: { text: $.metadata.creationTimestamp | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "DNS zone", value: fields.dnsZone, mono: true }
+            - { label: "Replicas", value: fields.replicas }
+            - { label: "Log level", value: fields.logLevel }
+            - { label: "Routing peer ID", value: fields.routingPeerID, mono: true }
+            - { label: "Network ID", value: fields.networkID, mono: true }
+        - type: conditions
+  egresses:
+    from: egress
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No network egresses."
+    row:
+      title: $.metadata.name
+      subtitle: '$.metadata.namespace + " · " + fields.target + (fields.ports != "" ? ":" + fields.ports : "")'
+      status:
+        tone: health
+        text: 'fields.ready == true ? "Ready" : (fields.readyReason != "" ? fields.readyReason : "Pending")'
+      trailing: { text: $.metadata.creationTimestamp | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Target", value: fields.target, mono: true }
+            - { label: "Ports", value: fields.ports, mono: true }
+            - { label: "Router", value: 'fields.routerNamespace + "/" + fields.routerName', mono: true }
+        - type: conditions
+        - type: relations
+          items:
+            - { label: "Router", ref: fields.routerRef }
+  groups:
+    from: group
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No NetBird groups."
+    row:
+      title: fields.groupName
+      subtitle: '$.metadata.namespace + "/" + $.metadata.name'
+      status:
+        tone: health
+        text: 'fields.ready == true ? "Ready" : (fields.readyReason != "" ? fields.readyReason : "Pending")'
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Group ID", value: fields.groupID, mono: true }
+        - type: conditions
+  setupKeys:
+    from: setupKey
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No setup keys."
+    row:
+      title: fields.keyName
+      subtitle: '$.metadata.namespace + "/" + $.metadata.name'
+      status:
+        tone: health
+        text: 'fields.ready == true ? "Ready" : (fields.readyReason != "" ? fields.readyReason : "Pending")'
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Setup key ID", value: fields.setupKeyID, mono: true }
+            - { label: "Ephemeral", value: fields.ephemeral }
+            - { label: "Valid for", value: fields.duration }
+            - { label: "Auto groups", value: fields.autoGroups }
+        - type: conditions
+  legacyRouters:
+    from: nbRouter
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No NBRoutingPeers (legacy v1)."
+    row:
+      title: $.metadata.name
+      subtitle: '$.metadata.namespace + " · NBRoutingPeer (v1)"'
+      status:
+        tone: health
+        text: 'fields.ready == true ? "Ready" : (fields.readyReason != "" ? fields.readyReason : "Pending")'
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Replicas", value: fields.replicas }
+            - { label: "Router ID", value: fields.routerID, mono: true }
+            - { label: "Network ID", value: fields.networkID, mono: true }
+        - type: conditions
+  legacyResources:
+    from: nbResource
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No NBResources (legacy v1)."
+    row:
+      title: $.metadata.name
+      subtitle: '$.metadata.namespace + " · " + fields.address'
+      status:
+        tone: health
+        text: 'fields.ready == true ? "Ready" : (fields.readyReason != "" ? fields.readyReason : "Pending")'
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Address", value: fields.address, mono: true }
+            - { label: "TCP ports", value: fields.tcpPorts, mono: true }
+            - { label: "UDP ports", value: fields.udpPorts, mono: true }
+            - { label: "Resource ID", value: fields.resourceID, mono: true }
+            - { label: "Network ID", value: fields.networkID, mono: true }
+        - type: conditions
+
+findings:
+  - { id: router-failed, from: router, when: 'health == "critical"', severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: routers }
+  - { id: router-problem, from: router, when: 'health == "warning"', severity: warning, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: routers }
+  - { id: resource-failed, from: resource, when: 'health == "critical"', severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: resources }
+  - { id: resource-problem, from: resource, when: 'health == "warning"', severity: warning, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: resources }
+  - { id: egress-failed, from: egress, when: 'health == "critical"', severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: egresses }
+  - { id: egress-problem, from: egress, when: 'health == "warning"', severity: warning, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: egresses }
+  - { id: group-failed, from: group, when: 'health == "critical"', severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: groups }
+  - { id: setup-key-failed, from: setupKey, when: 'health == "critical"', severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: setupKeys }
+  - { id: legacy-router-failed, from: nbRouter, when: 'health == "critical"', severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: legacyRouters }
+  - { id: legacy-resource-failed, from: nbResource, when: 'health == "critical"', severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: legacyResources }
+  - { id: legacy-resource-problem, from: nbResource, when: 'health == "warning"', severity: warning, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: legacyResources }
+
+i18n:
+  fr:
+    "not reconciled yet": "pas encore réconcilié"
+    "no routing peer yet": "pas encore de pair de routage"
+    "its router {{ fields.routerNamespace }}/{{ fields.routerName }} does not exist": "son
+      routeur {{ fields.routerNamespace }}/{{ fields.routerName }} n'existe pas"
+    "not published yet": "pas encore publié"
+    "%d NetBird resource": "%d ressource NetBird"
+    "%d NetBird resources": "%d ressources NetBird"
+    "routers": "routeurs"
+    "egresses": "sorties"
+    "routers down": "routeurs en panne"
+    "resource problems": "ressources en erreur"
+    "No network resources.": "Aucune ressource réseau."
+    "Ready": "Prêt"
+    "Pending": "En attente"
+    "Service": "Service"
+    "Router": "Routeur"
+    "Groups": "Groupes"
+    "Resource ID": "ID de ressource"
+    "Network ID": "ID du réseau"
+    "DNS record ID": "ID de l'enregistrement DNS"
+    "No network routers.": "Aucun routeur réseau."
+    "DNS zone": "Zone DNS"
+    "Replicas": "Réplicas"
+    "Log level": "Niveau de journal"
+    "Routing peer ID": "ID du pair de routage"
+    "No network egresses.": "Aucune sortie réseau."
+    "Target": "Cible"
+    "Ports": "Ports"
+    "No NetBird groups.": "Aucun groupe NetBird."
+    "Group ID": "ID du groupe"
+    "No setup keys.": "Aucune clé d'installation."
+    "Setup key ID": "ID de la clé d'installation"
+    "Ephemeral": "Éphémère"
+    "Valid for": "Valable"
+    "Auto groups": "Groupes automatiques"
+    "No NBRoutingPeers (legacy v1).": "Aucun NBRoutingPeer (ancienne v1)."
+    "Router ID": "ID du routeur"
+    "No NBResources (legacy v1).": "Aucune NBResource (ancienne v1)."
+    "Address": "Adresse"
+    "TCP ports": "Ports TCP"
+    "UDP ports": "Ports UDP"
+  de:
+    "not reconciled yet": "noch nicht abgeglichen"
+    "no routing peer yet": "noch kein Routing-Peer"
+    "its router {{ fields.routerNamespace }}/{{ fields.routerName }} does not exist": "sein
+      Router {{ fields.routerNamespace }}/{{ fields.routerName }} existiert nicht"
+    "not published yet": "noch nicht veröffentlicht"
+    "%d NetBird resource": "%d NetBird-Ressource"
+    "%d NetBird resources": "%d NetBird-Ressourcen"
+    "routers": "Router"
+    "egresses": "Egresses"
+    "routers down": "Router ausgefallen"
+    "resource problems": "Ressourcen mit Problemen"
+    "No network resources.": "Keine Netzwerkressourcen."
+    "Ready": "Bereit"
+    "Pending": "Ausstehend"
+    "Service": "Service"
+    "Router": "Router"
+    "Groups": "Gruppen"
+    "Resource ID": "Ressourcen-ID"
+    "Network ID": "Netzwerk-ID"
+    "DNS record ID": "DNS-Eintrags-ID"
+    "No network routers.": "Keine Netzwerkrouter."
+    "DNS zone": "DNS-Zone"
+    "Replicas": "Replikate"
+    "Log level": "Log-Level"
+    "Routing peer ID": "Routing-Peer-ID"
+    "No network egresses.": "Keine Netzwerk-Egresses."
+    "Target": "Ziel"
+    "Ports": "Ports"
+    "No NetBird groups.": "Keine NetBird-Gruppen."
+    "Group ID": "Gruppen-ID"
+    "No setup keys.": "Keine Setup-Keys."
+    "Setup key ID": "Setup-Key-ID"
+    "Ephemeral": "Kurzlebig"
+    "Valid for": "Gültig für"
+    "Auto groups": "Automatische Gruppen"
+    "No NBRoutingPeers (legacy v1).": "Keine NBRoutingPeers (altes v1)."
+    "Router ID": "Router-ID"
+    "No NBResources (legacy v1).": "Keine NBResources (altes v1)."
+    "Address": "Adresse"
+    "TCP ports": "TCP-Ports"
+    "UDP ports": "UDP-Ports"
+  es:
+    "not reconciled yet": "aún no reconciliado"
+    "no routing peer yet": "todavía sin peer de enrutamiento"
+    "its router {{ fields.routerNamespace }}/{{ fields.routerName }} does not exist": "su
+      router {{ fields.routerNamespace }}/{{ fields.routerName }} no existe"
+    "not published yet": "aún no publicado"
+    "%d NetBird resource": "%d recurso de NetBird"
+    "%d NetBird resources": "%d recursos de NetBird"
+    "routers": "routers"
+    "egresses": "salidas"
+    "routers down": "routers caídos"
+    "resource problems": "recursos con problemas"
+    "No network resources.": "Ningún recurso de red."
+    "Ready": "Listo"
+    "Pending": "Pendiente"
+    "Service": "Servicio"
+    "Router": "Router"
+    "Groups": "Grupos"
+    "Resource ID": "ID del recurso"
+    "Network ID": "ID de red"
+    "DNS record ID": "ID del registro DNS"
+    "No network routers.": "Ningún router de red."
+    "DNS zone": "Zona DNS"
+    "Replicas": "Réplicas"
+    "Log level": "Nivel de registro"
+    "Routing peer ID": "ID del peer de enrutamiento"
+    "No network egresses.": "Ninguna salida de red."
+    "Target": "Destino"
+    "Ports": "Puertos"
+    "No NetBird groups.": "Ningún grupo de NetBird."
+    "Group ID": "ID del grupo"
+    "No setup keys.": "Ninguna clave de configuración."
+    "Setup key ID": "ID de la clave de configuración"
+    "Ephemeral": "Efímero"
+    "Valid for": "Válida durante"
+    "Auto groups": "Grupos automáticos"
+    "No NBRoutingPeers (legacy v1).": "Ningún NBRoutingPeer (v1 antigua)."
+    "Router ID": "ID del router"
+    "No NBResources (legacy v1).": "Ningún NBResource (v1 antigua)."
+    "Address": "Dirección"
+    "TCP ports": "Puertos TCP"
+    "UDP ports": "Puertos UDP"
+  it:
+    "not reconciled yet": "non ancora riconciliato"
+    "no routing peer yet": "ancora nessun peer di routing"
+    "its router {{ fields.routerNamespace }}/{{ fields.routerName }} does not exist": "il
+      suo router {{ fields.routerNamespace }}/{{ fields.routerName }} non esiste"
+    "not published yet": "non ancora pubblicato"
+    "%d NetBird resource": "%d risorsa NetBird"
+    "%d NetBird resources": "%d risorse NetBird"
+    "routers": "router"
+    "egresses": "uscite"
+    "routers down": "router non funzionanti"
+    "resource problems": "risorse con problemi"
+    "No network resources.": "Nessuna risorsa di rete."
+    "Ready": "Pronto"
+    "Pending": "In attesa"
+    "Service": "Service"
+    "Router": "Router"
+    "Groups": "Gruppi"
+    "Resource ID": "ID risorsa"
+    "Network ID": "ID rete"
+    "DNS record ID": "ID record DNS"
+    "No network routers.": "Nessun router di rete."
+    "DNS zone": "Zona DNS"
+    "Replicas": "Repliche"
+    "Log level": "Livello di log"
+    "Routing peer ID": "ID peer di routing"
+    "No network egresses.": "Nessuna uscita di rete."
+    "Target": "Destinazione"
+    "Ports": "Porte"
+    "No NetBird groups.": "Nessun gruppo NetBird."
+    "Group ID": "ID gruppo"
+    "No setup keys.": "Nessuna chiave di configurazione."
+    "Setup key ID": "ID chiave di configurazione"
+    "Ephemeral": "Effimero"
+    "Valid for": "Valida per"
+    "Auto groups": "Gruppi automatici"
+    "No NBRoutingPeers (legacy v1).": "Nessun NBRoutingPeer (vecchia v1)."
+    "Router ID": "ID router"
+    "No NBResources (legacy v1).": "Nessuna NBResource (vecchia v1)."
+    "Address": "Indirizzo"
+    "TCP ports": "Porte TCP"
+    "UDP ports": "Porte UDP"
+  uk:
+    "not reconciled yet": "ще не узгоджено"
+    "no routing peer yet": "ще немає пира маршрутизації"
+    "its router {{ fields.routerNamespace }}/{{ fields.routerName }} does not exist": "його
+      маршрутизатор {{ fields.routerNamespace }}/{{ fields.routerName }} не існує"
+    "not published yet": "ще не опубліковано"
+    "%d NetBird resource": "%d ресурс NetBird"
+    "%d NetBird resources": "%d ресурсів NetBird"
+    "routers": "маршрутизатори"
+    "egresses": "виходи"
+    "routers down": "маршрутизаторів не працює"
+    "resource problems": "ресурсів із проблемами"
+    "No network resources.": "Немає мережевих ресурсів."
+    "Ready": "Готово"
+    "Pending": "Очікує"
+    "Service": "Сервіс"
+    "Router": "Маршрутизатор"
+    "Groups": "Групи"
+    "Resource ID": "ID ресурсу"
+    "Network ID": "ID мережі"
+    "DNS record ID": "ID запису DNS"
+    "No network routers.": "Немає мережевих маршрутизаторів."
+    "DNS zone": "Зона DNS"
+    "Replicas": "Репліки"
+    "Log level": "Рівень журналу"
+    "Routing peer ID": "ID пира маршрутизації"
+    "No network egresses.": "Немає мережевих виходів."
+    "Target": "Ціль"
+    "Ports": "Порти"
+    "No NetBird groups.": "Немає груп NetBird."
+    "Group ID": "ID групи"
+    "No setup keys.": "Немає ключів налаштування."
+    "Setup key ID": "ID ключа налаштування"
+    "Ephemeral": "Тимчасовий"
+    "Valid for": "Дійсний"
+    "Auto groups": "Автоматичні групи"
+    "No NBRoutingPeers (legacy v1).": "Немає NBRoutingPeer (стара v1)."
+    "Router ID": "ID маршрутизатора"
+    "No NBResources (legacy v1).": "Немає NBResource (стара v1)."
+    "Address": "Адреса"
+    "TCP ports": "Порти TCP"
+    "UDP ports": "Порти UDP"
+# Invented names and IDs (*.demo-lab.example). demo-shop's router and its storefront are up;
+# demo-lab's router waits for its peers, its wiki names a router that does not exist, the
+# api resource's Service is gone, and an egress reaches files.demo-lab.example.
+samples:
+  router:
+    - metadata: { name: shop-router, namespace: demo-shop, generation: 2, creationTimestamp: now-30d }
+      spec: { dnsZoneRef: { name: shop.demo-lab.example } }
+      status:
+        observedGeneration: 2
+        routingPeerID: d1demopeer0shop00000
+        networkID: d1demonet00shop00000
+        conditions:
+          - { type: Ready, status: "True", reason: Reconciled, message: "", lastTransitionTime: now-30d }
+    - metadata: { name: lab-router, namespace: demo-lab, generation: 1, creationTimestamp: now-10m }
+      spec: { dnsZoneRef: { name: lab.demo-lab.example }, workloadOverride: { replicas: 2 } }
+      status:
+        observedGeneration: 1
+        networkID: d1demonet00lab000000
+        conditions:
+          - { type: Ready, status: "False", reason: Progressing, message: "0 of 2 routing peers ready", lastTransitionTime: now-10m }
+    - metadata: { name: edge-router, namespace: demo-lab, generation: 3, creationTimestamp: now-2d }
+      spec: { dnsZoneRef: { name: edge.demo-lab.example } }
+      status:
+        observedGeneration: 3
+        conditions:
+          - { type: Ready, status: "False", reason: APIError, message: "management API: 403 permission denied", lastTransitionTime: now-1h }
+    - metadata: { name: dmz-router, namespace: demo-lab, generation: 1, creationTimestamp: now-3h }
+      spec: { dnsZoneRef: { name: dmz.demo-lab.example } }
+      status:
+        observedGeneration: 1
+        conditions:
+          - { type: Ready, status: "False", reason: Dependency, message: "Referenced DNS zone cannot be found.", lastTransitionTime: now-3h }
+    - metadata: { name: new-router, namespace: demo-lab, generation: 1, creationTimestamp: now-5s }
+      spec: { dnsZoneRef: { name: new.demo-lab.example } }
+    - metadata: { name: quiet-router, namespace: demo-shop, generation: 1, creationTimestamp: now-1d }
+      spec: { dnsZoneRef: { name: quiet.demo-lab.example } }
+      status:
+        observedGeneration: 1
+        conditions:
+          - { type: Ready, status: "True", reason: Reconciled, message: "", lastTransitionTime: now-1d }
+  resource:
+    - metadata: { name: storefront, namespace: demo-shop, generation: 1, creationTimestamp: now-29d }
+      spec:
+        serviceRef: { name: storefront }
+        networkRouterRef: { name: shop-router }
+        groups: [{ localRef: { name: developers } }, { id: d1demogroup0ops0000 }]
+      status:
+        observedGeneration: 1
+        resourceID: d1demores00store0000
+        networkID: d1demonet00shop00000
+        dnsZoneID: d1demozone0shop00000
+        dnsRecordID: d1demorec00store0000
+        conditions:
+          - { type: Ready, status: "True", reason: Reconciled, message: "", lastTransitionTime: now-29d }
+    - metadata: { name: wiki, namespace: demo-lab, generation: 1, creationTimestamp: now-2h }
+      spec:
+        serviceRef: { name: wiki }
+        networkRouterRef: { name: old-router }
+      status:
+        observedGeneration: 1
+        conditions:
+          - { type: Ready, status: "False", reason: Dependency, message: "Referenced NetworkRouter cannot be found.", lastTransitionTime: now-2h }
+    - metadata: { name: api, namespace: demo-lab, generation: 1, creationTimestamp: now-1d }
+      spec:
+        serviceRef: { name: api }
+        networkRouterRef: { name: lab-router }
+      status:
+        observedGeneration: 1
+        conditions:
+          - { type: Ready, status: "False", reason: Dependency, message: "Referenced Service cannot be found.", lastTransitionTime: now-1d }
+    - metadata: { name: grafana, namespace: demo-shop, generation: 1, creationTimestamp: now-3d }
+      spec:
+        serviceRef: { name: grafana }
+        networkRouterRef: { name: shop-router }
+      status:
+        observedGeneration: 1
+        conditions:
+          - { type: Ready, status: "False", reason: APIError, message: "management API: resource name already in use", lastTransitionTime: now-3d }
+    - metadata: { name: metrics, namespace: demo-shop, generation: 2, creationTimestamp: now-20s }
+      spec:
+        serviceRef: { name: metrics }
+        networkRouterRef: { name: shop-router }
+      status:
+        observedGeneration: 1
+    - metadata: { name: docs, namespace: demo-shop, generation: 1, creationTimestamp: now-6h }
+      spec:
+        serviceRef: { name: docs }
+        networkRouterRef: { name: shop-router }
+      status:
+        observedGeneration: 1
+        conditions:
+          - { type: Ready, status: "True", reason: Reconciled, message: "", lastTransitionTime: now-6h }
+  egress:
+    - metadata: { name: files, namespace: demo-lab, generation: 1, creationTimestamp: now-5d }
+      spec:
+        networkRouterRef: { name: lab-router }
+        target: { fqdn: { hostname: files.demo-lab.example } }
+        ports: [{ name: https, port: 443 }]
+      status:
+        observedGeneration: 1
+        conditions:
+          - { type: Ready, status: "True", reason: Reconciled, message: "", lastTransitionTime: now-5d }
+    - metadata: { name: backup-target, namespace: demo-shop, generation: 1, creationTimestamp: now-4h }
+      spec:
+        networkRouterRef: { name: gone-router }
+        target: { ip: { address: 192.0.2.40 } }
+        ports: [{ port: 22 }]
+      status:
+        observedGeneration: 1
+        conditions:
+          - { type: Ready, status: "False", reason: Dependency, message: "Referenced NetworkRouter cannot be found.", lastTransitionTime: now-4h }
+    - metadata: { name: mirror, namespace: demo-lab, generation: 1, creationTimestamp: now-2h }
+      spec:
+        networkRouterRef: { name: dmz-router }
+        target: { fqdn: { hostname: mirror.demo-lab.example } }
+        ports: [{ port: 80 }]
+      status:
+        observedGeneration: 1
+        conditions:
+          - { type: Ready, status: "False", reason: Dependency, message: "Referenced NetworkRouter is not ready.", lastTransitionTime: now-2h }
+    - metadata: { name: registry, namespace: demo-lab, generation: 1, creationTimestamp: now-1d }
+      spec:
+        networkRouterRef: { name: lab-router }
+        target: { fqdn: { hostname: registry.demo-lab.example } }
+        ports: [{ port: 443 }]
+      status:
+        observedGeneration: 1
+        conditions:
+          - { type: Ready, status: "False", reason: APIError, message: "management API: timeout", lastTransitionTime: now-1d }
+    - metadata: { name: fresh, namespace: demo-lab, generation: 1, creationTimestamp: now-5s }
+      spec:
+        networkRouterRef: { name: lab-router }
+        target: { ip: { address: 192.0.2.41 } }
+        ports: [{ port: 443 }]
+  group:
+    - metadata: { name: developers, namespace: demo-shop, generation: 1 }
+      spec: { name: Developers }
+      status:
+        observedGeneration: 1
+        groupID: d1demogroup0dev0000
+        conditions:
+          - { type: Ready, status: "True", reason: Reconciled, message: "", lastTransitionTime: now-30d }
+    - metadata: { name: contractors, namespace: demo-lab, generation: 1 }
+      spec: { name: Contractors }
+      status:
+        observedGeneration: 1
+        conditions:
+          - { type: Ready, status: "False", reason: APIError, message: "management API: group limit reached", lastTransitionTime: now-1h }
+    - metadata: { name: interns, namespace: demo-lab, generation: 1 }
+      spec: { name: Interns }
+  setupKey:
+    - metadata: { name: shop-peers, namespace: demo-shop, generation: 1 }
+      spec: { name: shop-peers, ephemeral: true, allowExtraDnsLabels: false, duration: 720h0m0s, autoGroups: [{ localRef: { name: developers } }] }
+      status:
+        observedGeneration: 1
+        setupKeyID: d1demokey00shop00000
+        conditions:
+          - { type: Ready, status: "True", reason: Reconciled, message: "", lastTransitionTime: now-30d }
+    - metadata: { name: lab-peers, namespace: demo-lab, generation: 1 }
+      spec: { name: lab-peers, ephemeral: false, allowExtraDnsLabels: false }
+      status:
+        observedGeneration: 1
+        conditions:
+          - { type: Ready, status: "False", reason: APIError, message: "management API: 401 unauthorized", lastTransitionTime: now-2h }
+    - metadata: { name: new-peers, namespace: demo-lab, generation: 1 }
+      spec: { name: new-peers, ephemeral: true, allowExtraDnsLabels: false }
+  nbRouter:
+    - metadata: { name: router, namespace: demo-legacy, creationTimestamp: now-200d }
+      spec: { replicas: 2 }
+      status:
+        routerID: d1demorouterlegacy00
+        networkID: d1demonetlegacy00000
+        setupKeyID: d1demokeylegacy00000
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-200d }
+    - metadata: { name: router, namespace: demo-legacy-lab, creationTimestamp: now-100d }
+      spec: {}
+      status:
+        conditions:
+          - { type: Ready, status: "False", reason: APIError, message: "error creating network router: 403 permission denied", lastTransitionTime: now-1h }
+    - metadata: { name: router, namespace: demo-legacy-new, creationTimestamp: now-5s }
+      spec: {}
+  nbResource:
+    - metadata: { name: storefront, namespace: demo-legacy, creationTimestamp: now-200d }
+      spec: { name: storefront, networkID: d1demonetlegacy00000, address: storefront.demo-legacy.svc.cluster.local, groups: [developers], tcpPorts: [80, 443] }
+      status:
+        networkResourceID: d1demoreslegacy00000
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-200d }
+    - metadata: { name: queue, namespace: demo-legacy, creationTimestamp: now-100d }
+      spec: { name: queue, networkID: d1demonetlegacy00000, address: queue.demo-legacy.svc.cluster.local, groups: [developers], udpPorts: [5353] }
+      status:
+        conditions:
+          - { type: Ready, status: "False", reason: APIError, message: "error creating network resource: 400 invalid address", lastTransitionTime: now-1h }
+    - metadata: { name: cache, namespace: demo-legacy, creationTimestamp: now-1h }
+      spec: { name: cache, networkID: d1demonetlegacy00000, address: cache.demo-legacy.svc.cluster.local, groups: [developers], tcpPorts: [6379] }
+      status:
+        conditions:
+          - { type: Ready, status: "True", lastTransitionTime: now-1h }
+    - metadata: { name: fresh, namespace: demo-legacy, creationTimestamp: now-5s }
+      spec: { name: fresh, networkID: d1demonetlegacy00000, address: fresh.demo-legacy.svc.cluster.local, groups: [developers] }
+  service:
+    - metadata: { name: storefront, namespace: demo-shop }
+    - metadata: { name: wiki, namespace: demo-lab }
+    - metadata: { name: grafana, namespace: demo-shop }
+    - metadata: { name: docs, namespace: demo-shop }

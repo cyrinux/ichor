@@ -57,7 +57,7 @@
 {"id":"powerdns","name":"PowerDNS","cat":"networking","match":["pdns","pdns-auth","pdns-recursor","dnsdist"],"prefixes":["powerdns/","docker.io/powerdns/"]},
 {"id":"gluetun","name":"Gluetun","cat":"networking"},
 {"id":"tor","name":"Tor","cat":"networking"},
-{"id":"netbird","name":"NetBird","cat":"networking","prefixes":["netbirdio/","docker.io/netbirdio/"]},
+{"id":"netbird","name":"NetBird","cat":"networking","prefixes":["netbirdio/","docker.io/netbirdio/","ghcr.io/netbirdio/"]},
 {"id":"twingate","name":"Twingate","cat":"networking","prefixes":["twingate/","docker.io/twingate/","ghcr.io/twingate/"]},
 {"id":"ngrok","name":"ngrok","cat":"networking","prefixes":["ngrok/","docker.io/ngrok/"]},
 {"id":"headplane","name":"Headplane","cat":"networking"},
