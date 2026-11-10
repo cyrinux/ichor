@@ -5,7 +5,6 @@ package ichorgo
 // what the user typed. The reaching and following half lives in newcluster_follow.go.
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -20,17 +19,15 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
+// generatedClusterConfig makes the node's control-plane config from the run's bundle (the
+// legacy path: a prepared draft carries its config already).
 func generatedClusterConfig(req newClusterRequest, bundle *secrets.Bundle) (string, error) {
-	opts := []generate.Option{
+	in, err := generate.NewInput(req.clusterName, req.endpoint, req.kubernetesVersion,
+		generate.WithSecretsBundle(bundle),
 		generate.WithEndpointList([]string{req.host}),
 		generate.WithInstallDisk(req.installDisk),
 		generate.WithAdditionalSubjectAltNames([]string{req.host}),
-	}
-	if bundle != nil {
-		opts = append(opts, generate.WithSecretsBundle(bundle))
-	}
-
-	in, err := generate.NewInput(req.clusterName, req.endpoint, req.kubernetesVersion, opts...)
+	)
 	if err != nil {
 		return "", fmt.Errorf("prepare the config: %w", err)
 	}
@@ -91,36 +88,6 @@ func patchClusterConfig(raw string, req newClusterRequest) (string, error) {
 	deleteYAMLKey(hostname, []string{"auto"})
 
 	return encodeConfigDocs(docs)
-}
-
-// newClusterNeedsWipe: is the address an installed Talos whose API answers without a
-// client certificate (a fresh install without a cluster, which the run can reset)?
-func newClusterNeedsWipe(ctx context.Context, address string) (bool, error) {
-	installed, err := asksClientCert(ctx, address)
-	if err != nil {
-		if dialRefused(err) {
-			// Nothing there (yet): a node still booting the ISO is not a wipe.
-			return false, nil
-		}
-
-		return false, errors.New(friendlyError(err))
-	}
-
-	if installed {
-		return false, errInstalledNoMaintenance
-	}
-
-	dialCtx, cancel := context.WithTimeout(ctx, nodeTimeout)
-	defer cancel()
-
-	m, err := maintenanceClient(dialCtx, address)
-	if err != nil {
-		return false, nil
-	}
-
-	defer m.Close() //nolint:errcheck
-
-	return nodeAnswersAsInstalled(dialCtx, m), nil
 }
 
 // parseNewClusterRequest validates what a bootstrap was asked for.
