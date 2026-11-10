@@ -97,9 +97,9 @@ func maintenanceOnlyNode(t *testing.T) (*fakeTalos, string) {
 	f := newFakeTalos()
 	f.setVersion("", "v1.14.4")
 
-	f.serveEndpoint, _ = f.serve(t)
+	endpoint, _ := f.serve(t)
 
-	return f, f.serveEndpoint
+	return f, endpoint
 }
 
 // installThenBoot makes f behave like a node bootstrapped from maintenance mode: the real

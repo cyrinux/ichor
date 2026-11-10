@@ -228,10 +228,23 @@ type newCluster struct {
 	adminCert *x509Pair
 	applied   bool // the config may be on the node: Cancel cannot undo anything any more
 
+	// dialAddress, when set (the tests), is where the fake's API answers: same host as
+	// address, its own port. Production dials address itself.
+	dialAddress string
+
 	// interval is how often the node is asked; timeout bounds the whole run. The tests
 	// replace both (they also replace upgradePollInterval, which the runs share).
 	interval time.Duration
 	timeout  time.Duration
+}
+
+// dial is where the node's API answers: the address as typed, or the test fake's endpoint.
+func (c *newCluster) dial() string {
+	if c.dialAddress != "" {
+		return c.dialAddress
+	}
+
+	return c.req.address
 }
 
 // x509Pair is a PEM certificate and its key (the run's os:admin client certificate).
@@ -370,7 +383,7 @@ func (c *newCluster) ensureBundle() error {
 func (c *newCluster) apply(ctx context.Context) error {
 	c.emit(newClusterPhaseApplying, "reaching "+c.req.address+" over the maintenance API")
 
-	installed, err := asksClientCert(ctx, c.req.address)
+	installed, err := asksClientCert(ctx, c.dial())
 	if err != nil {
 		if dialRefused(err) {
 			return fmt.Errorf("%s does not answer: boot the node from the Talos ISO (its console must show maintenance mode) and start again", c.req.address)
@@ -392,7 +405,7 @@ func (c *newCluster) apply(ctx context.Context) error {
 		return err
 	}
 
-	m, err := maintenanceClient(ctx, c.req.address)
+	m, err := maintenanceClient(ctx, c.dial())
 	if err != nil {
 		return err
 	}
@@ -501,7 +514,7 @@ func nodeAnswered(ctx context.Context, m *client.Client) bool {
 // until Talos reports itself ready: the maintenance API answers until the install starts,
 // then nothing does until the installed Talos serves its API again.
 func (c *newCluster) follow(ctx context.Context) error {
-	m, err := maintenanceClient(ctx, c.req.address)
+	m, err := maintenanceClient(ctx, c.dial())
 	if err != nil {
 		return err
 	}
@@ -570,7 +583,7 @@ func (c *newCluster) reportedReady(ctx context.Context) bool {
 	nodeCtx, cancel := context.WithTimeout(ctx, nodeTimeout)
 	defer cancel()
 
-	m, err := maintenanceClient(nodeCtx, c.req.address)
+	m, err := maintenanceClient(nodeCtx, c.dial())
 	if err != nil {
 		return false
 	}
