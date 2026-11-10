@@ -188,51 +188,6 @@ type newClusterProgress struct {
 	Address string `json:"address,omitempty"`
 }
 
-// StartNewCluster bootstraps a fresh single-node cluster on the node at address: it
-// generates the cluster's secrets and the node's control-plane config (cluster name,
-// Kubernetes version, install disk, hostname; endpoint defaults to the node's own address
-// as https://host:6443), sends them over the insecure maintenance API, follows the node
-// through its install and reboot until Talos reports itself ready, bootstraps etcd, then
-// hands over an os:admin talosconfig (valid 30 days) and the admin kubeconfig through the
-// listener. A node that turns out to be a fresh Talos install answers the maintenance
-// reset and is wiped first; a node of another cluster (it asks for a client certificate)
-// is refused. Bounded by 20 minutes; Cancel only stops following. Refused in privacy mode
-// (the config carries the secrets). Recorded in the activity log as cluster-bootstrap
-// (hostname, Kubernetes version, disk, endpoint; never the config).
-// startNewClusterLegacy bootstraps from explicit parts (the tests' twin and the older
-// call shape): it makes the secrets itself. Production goes through NewClusterPrepare then
-// StartNewCluster(draftId, ...).
-func startNewClusterLegacy(address, clusterName, kubernetesVersion, installDisk, hostname, endpoint string, listener NewClusterListener) *NewClusterRun {
-	listener = maskedNewClusterListener{listener}
-
-	c := &newCluster{
-		address: strings.TrimSpace(address), clusterName: clusterName, kubernetesVersion: kubernetesVersion,
-		installDisk: installDisk, hostname: hostname, endpoint: endpoint, listener: listener,
-		interval: upgradePollInterval, timeout: newClusterTimeout,
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), newClusterTimeout)
-	run := &NewClusterRun{cancel: cancel}
-
-	go func() {
-		defer cancel()
-		defer onPanic(func(msg string) { listener.OnDone("", msg) })
-		defer holdCalls("", "")()
-
-		var err error
-
-		if privacy.isEnabled() {
-			err = errNewClusterPrivacy
-		} else {
-			err = recordedRun("", "", c.auditAction, func() error { return c.run(ctx) })
-		}
-
-		listener.OnDone(c.node, errText(err))
-	}()
-
-	return run
-}
-
 // startRun opens the run's scope-bound goroutine: the run records itself in the activity
 // log (recordedRun, so a panic is recorded too) and holds its cluster's scope for the
 // duration. The audit and call-scope guards see the wiring here, in the run's own start.

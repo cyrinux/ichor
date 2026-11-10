@@ -107,9 +107,6 @@ type fakeTalos struct {
 	// kubeconfigs are a node's Kubeconfig answers (a node without one: Unavailable), each
 	// sent as one common.Data chunk, gzip+tar wrapped the way Talos sends it.
 	kubeconfigs map[string][]byte
-	// bootstrapErrs are nodes whose Bootstrap answers an error (a node that was never
-	// bootstrapped keeps its etcd down, as Talos does).
-	bootstrapErrs map[string]error
 	// events answers MachineService.Events for the nodes it targets (nil: Unimplemented).
 	events func(nodes []string, req *machineapi.EventsRequest, stream grpc.ServerStreamingServer[machineapi.Event]) error
 	// nodeStays answers whether a target with a version still answers at all: a run that
@@ -470,37 +467,4 @@ func (f *fakeTalos) serve(t *testing.T) (endpoint, caB64 string) {
 	t.Helper()
 
 	return startTLSServer(t, func(s *grpc.Server) { registerFakeTalos(s, f) })
-}
-
-// serveTwo serves the same fake over two endpoints: the maintenance API's (TLS with its
-// own throwaway certificate, never verified, like Talos's maintenance API) and the
-// installed cluster API's (TLS with a CA, like apid). The fake routes by node target, so
-// a test can take the machine down entirely while it installs.
-func (f *fakeTalos) serveTwo(t *testing.T) (maintenance, cluster, caB64 string) {
-	t.Helper()
-
-	maintenance, _ = startTLSServer(t, func(s *grpc.Server) { registerFakeTalos(s, f) })
-
-	cluster, caB64 = f.serve(t)
-
-	return maintenance, cluster, caB64
-}
-
-// downAddr returns a loopback address nothing listens on: a refused port, the way an API
-// whose machine is rebooting answers.
-func downAddr(t *testing.T) string {
-	t.Helper()
-
-	lis, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	addr := lis.Addr().String()
-
-	if err := lis.Close(); err != nil { //nolint:errcheck // the point: nothing listens
-		t.Fatal(err)
-	}
-
-	return addr
 }

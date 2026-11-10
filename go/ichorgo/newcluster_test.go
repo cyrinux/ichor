@@ -241,18 +241,6 @@ func downUntil(f *fakeTalos, hold chan struct{}) {
 	}()
 }
 
-// holdVersion keeps a node's Version answer waiting (the call records first, then holds)
-// until the test closes hold: a node that answers slowly.
-func holdVersion(f *fakeTalos, node string, hold chan struct{}) {
-	f.mu.Lock()
-	if f.versionHold == nil {
-		f.versionHold = map[string]chan struct{}{}
-	}
-
-	f.versionHold[node] = hold
-	f.mu.Unlock()
-}
-
 func release(hold chan struct{}) {
 	select {
 	case <-hold:
