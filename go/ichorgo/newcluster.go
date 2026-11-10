@@ -481,6 +481,9 @@ func (c *newCluster) wipe(ctx context.Context, m *client.Client) error {
 			return err
 		}
 
+		// The fake takes the whole node (its maintenance API included) while it
+		// reboots; a real node keeps answering throughout. Either way the wipe is
+		// done when the API answers again with no machine status.
 		if nodeAnswered(ctx, m) && !nodeAnswersAsInstalled(ctx, m) {
 			return nil
 		}
@@ -941,9 +944,9 @@ func newClusterForTest(address, clusterName, kubernetesVersion, installDisk, hos
 
 // newClusterAt is StartNewCluster's test twin: the console address the user typed, and the
 // endpoint the fake node's API actually answers on (production dials both at the address).
-func newClusterAt(address, dialAddress, clusterAddress, clusterName, kubernetesVersion, installDisk, hostname, endpoint string, listener NewClusterListener, timeout time.Duration) *NewClusterRun {
+func newClusterAt(address, installTarget, clusterAddress, clusterName, kubernetesVersion, installDisk, hostname, endpoint string, listener NewClusterListener, timeout time.Duration) *NewClusterRun {
 	c := &newCluster{
-		address: address, dialAddress: dialAddress, clusterAddress: clusterAddress,
+		address: address, dialAddress: installTarget, clusterAddress: clusterAddress,
 		clusterName: clusterName, kubernetesVersion: kubernetesVersion,
 		installDisk: installDisk, hostname: hostname, endpoint: endpoint, listener: listener,
 		interval: joinPollInterval,
