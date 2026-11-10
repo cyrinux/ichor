@@ -40,7 +40,7 @@ Des vérifications en arrière-plan vous préviennent quand un nœud tombe ou qu
 <b>Diagnostic IA optionnel</b>
 Désactivé par défaut et invisible tant que vous ne l'activez pas. Il construit un rapport sur l'état du cluster et vous le montre ; il n'est envoyé à Anthropic (Claude), à OpenAI ou à votre propre serveur compatible que lorsque vous touchez Demander, avec votre propre clé d'API. Noms de nœuds, adresses et domaine sont anonymisés par défaut. Sans clé d'API, vous pouvez confier le rapport à une app d'assistant via le menu de partage.
 
-Libre et open source (Apache-2.0) : https://github.com/cyrinux/ichor
+Open source (Apache-2.0). Gratuit sur GitHub : https://github.com/cyrinux/ichor
 
 Disponible en français, anglais, allemand, espagnol, italien et ukrainien.
 

@@ -42,7 +42,7 @@ Background checks notify you when a node goes down or the phone's certificate is
 <b>Optional AI diagnosis</b>
 Off by default, and hidden until you turn it on. It builds a report of the cluster state and shows it to you; only when you tap Ask is it sent to Anthropic (Claude), OpenAI or your own compatible server, with your own API key. Node names, addresses and the domain are anonymized by default. Without an API key, you can hand the report to an assistant app through the share sheet.
 
-Free and open source (Apache-2.0): https://github.com/cyrinux/ichor
+Open source (Apache-2.0). Free on GitHub: https://github.com/cyrinux/ichor
 
 Available in English, French, German, Spanish, Italian, Ukrainian, Simplified Chinese, Japanese, Brazilian Portuguese and Russian.
 

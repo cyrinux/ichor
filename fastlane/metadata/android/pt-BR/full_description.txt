@@ -42,7 +42,7 @@ Verificações em segundo plano avisam quando um nó cai ou o certificado do cel
 <b>Diagnóstico por IA opcional</b>
 Desativado e oculto até você ativá-lo. Ele monta um relatório do cluster e o mostra a você; só ao tocar em Perguntar ele é enviado à Anthropic (Claude), à OpenAI ou ao seu próprio servidor compatível, com sua própria chave de API. Nomes de nós, endereços e o domínio são anonimizados por padrão. Sem chave de API, compartilhe o relatório com um app de assistente.
 
-Gratuito e de código aberto (Apache-2.0): https://github.com/cyrinux/ichor
+Código aberto (Apache-2.0). Grátis no GitHub: https://github.com/cyrinux/ichor
 
 Disponível em inglês, francês, alemão, espanhol, italiano, ucraniano, chinês simplificado, japonês, português do Brasil e russo.
 

@@ -10,8 +10,10 @@ collapsed, in docs-i18n/<lang>.json ({"English": "translation"}); a missing one 
 in English.
 
     scripts/site-i18n.py          write docs/<lang>/*.html, warn about missing strings
-    scripts/site-i18n.py --sync   add missing strings (as null) to every docs-i18n file,
-                                  drop the ones the pages no longer use
+    scripts/site-i18n.py --sync [lang=translations.json ...]
+                                  add missing strings (as null) to every docs-i18n file,
+                                  drop the ones the pages no longer use, and fill any null
+                                  from the JSON file given for that language
     scripts/site-i18n.py --check  fail on a missing, empty or unused translation, or on a
                                   screenshot a page names (data-shot) with a file missing
 """
@@ -183,6 +185,16 @@ def main() -> int:
     if mode not in ("build", "--sync", "--check"):
         print(__doc__, file=sys.stderr)
         return 2
+    provided: dict[str, dict[str, str]] = {}
+    for arg in sys.argv[2:]:
+        if mode != "--sync" or "=" not in arg:
+            print(__doc__, file=sys.stderr)
+            return 2
+        lang, _, name = arg.partition("=")
+        if lang not in LANGUAGES:
+            print(f"unknown language {lang!r}", file=sys.stderr)
+            return 2
+        provided[lang] = json.loads(Path(name).read_text())
     sources = {page: (DOCS / page).read_text() for page in PAGES}
     spans = {page: extract(text) for page, text in sources.items()}
     keys = list(dict.fromkeys(normalize(s[3]) for page in PAGES for s in spans[page]))
@@ -191,7 +203,8 @@ def main() -> int:
     for lang in LANGUAGES:
         table = load(lang)
         if mode == "--sync":
-            synced = {key: table.get(key) for key in keys}
+            given = provided.get(lang, {})
+            synced = {key: table.get(key) or given.get(key) for key in keys}
             STRINGS.mkdir(exist_ok=True)
             (STRINGS / f"{lang}.json").write_text(
                 json.dumps(synced, ensure_ascii=False, indent=2) + "\n")

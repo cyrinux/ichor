@@ -42,7 +42,7 @@ Ichor 可通过 kubeconfig 打开任意 Kubernetes 集群：EKS、GKE、AKS、Di
 <b>可选的 AI 诊断</b>
 默认关闭，开启前不会显示。它会生成一份集群状态报告并先展示给你；只有在你点按“提问”时，才会使用你自己的 API 密钥发送给 Anthropic（Claude）、OpenAI 或你自己的兼容服务器。默认情况下，节点名称、地址和域名会被匿名化。没有 API 密钥时，也可以通过分享菜单把报告交给助手类应用。
 
-免费开源（Apache-2.0）：https://github.com/cyrinux/ichor
+开源（Apache-2.0）。在 GitHub 上免费：https://github.com/cyrinux/ichor
 
 支持英语、法语、德语、西班牙语、意大利语、乌克兰语和简体中文。
 

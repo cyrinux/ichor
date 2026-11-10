@@ -40,7 +40,7 @@ Hintergrundprüfungen melden, wenn ein Node ausfällt oder das Zertifikat des Te
 <b>Optionale KI-Diagnose</b>
 Standardmäßig aus und unsichtbar, bis Sie sie einschalten. Sie erstellt einen Bericht über den Clusterzustand und zeigt ihn Ihnen; erst wenn Sie auf Fragen tippen, wird er an Anthropic (Claude), OpenAI oder Ihren eigenen kompatiblen Server gesendet, mit Ihrem eigenen API-Schlüssel. Node-Namen, Adressen und Domain werden standardmäßig anonymisiert. Ohne API-Schlüssel können Sie den Bericht über das Teilen-Menü an eine Assistenten-App übergeben.
 
-Frei und quelloffen (Apache-2.0): https://github.com/cyrinux/ichor
+Quelloffen (Apache-2.0). Kostenlos auf GitHub: https://github.com/cyrinux/ichor
 
 Verfügbar auf Deutsch, Englisch, Französisch, Spanisch, Italienisch und Ukrainisch.
 

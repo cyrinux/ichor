@@ -40,7 +40,7 @@ I controlli in background ti avvisano quando un nodo cade o il certificato del t
 <b>Diagnosi IA opzionale</b>
 Disattivata per impostazione predefinita e invisibile finché non la attivi. Crea un rapporto sullo stato del cluster e te lo mostra; solo quando tocchi Chiedi viene inviato ad Anthropic (Claude), a OpenAI o al tuo server compatibile, con la tua chiave API. Nomi dei nodi, indirizzi e dominio sono anonimizzati per impostazione predefinita. Senza chiave API, puoi passare il rapporto a un'app assistente dal menu di condivisione.
 
-Libero e open source (Apache-2.0): https://github.com/cyrinux/ichor
+Open source (Apache-2.0). Gratis su GitHub: https://github.com/cyrinux/ichor
 
 Disponibile in italiano, inglese, francese, tedesco, spagnolo e ucraino.
 
