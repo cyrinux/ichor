@@ -274,6 +274,8 @@ func parseNewClusterSpec(spec newClusterSpec) (newClusterRequest, error) {
 // errDemoUnavailable. Audited as new-cluster-bootstrap (never the config). Bounded by
 // newClusterTimeout; Cancel after the apply only stops following.
 func StartNewCluster(draftID, address, storedYAML string, listener JoinListener) *NewClusterRun {
+	listener = maskedJoinListener{listener}
+
 	entry, err := takeNewClusterDraft(draftID)
 	if err != nil {
 		// No draft: nothing can be sent. Report it the way a run would, so the apps have
@@ -296,7 +298,7 @@ func StartNewCluster(draftID, address, storedYAML string, listener JoinListener)
 	c := &newCluster{
 		address: req.address, clusterName: req.clusterName, kubernetesVersion: req.kubernetesVersion,
 		installDisk: req.installDisk, hostname: req.hostname, endpoint: req.endpoint,
-		listener: maskedNewClusterListener{newClusterJoinListener{maskedJoinListener{listener}}},
+		listener: maskedNewClusterListener{newClusterJoinListener{listener}},
 		draft:    entry, storedYAML: storedYAML,
 		interval: upgradePollInterval, timeout: newClusterTimeout,
 	}

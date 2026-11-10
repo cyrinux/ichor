@@ -104,19 +104,29 @@ func newClusterPhasesOf(events []newClusterProgress) []string {
 func maintenanceNodePair(t *testing.T) (*fakeTalos, string, string) {
 	t.Helper()
 
-	f := newFakeTalos()
-	f.setVersion("", "v1.14.4")
-
 	// The cluster API (apid) serves TLS under the cluster's own CA, and the run dials
 	// it with the admin certificate those secrets issue: both come from the bundle the
 	// test run shares with the run itself.
-	bundle := sharedNewClusterBundle(t)
-	cluster, _ := f.serveCA(t, bundle)
-	maintenance, _ := startTLSServer(t, func(grpcServer *grpc.Server) {
+	f, maintenance := maintenanceNodeWith(t, sharedNewClusterBundle(t))
+
+	return f, maintenance, serveCAPort
+}
+
+// maintenanceNodeWith is maintenanceNodePair for a run that brings its own secrets (a
+// prepared draft): apid serves under bundle, the maintenance API answers beside it.
+func maintenanceNodeWith(t *testing.T, bundle *secrets.Bundle) (f *fakeTalos, maintenance string) {
+	t.Helper()
+
+	f = newFakeTalos()
+	f.setVersion("", "v1.14.4")
+
+	f.serveCA(t, bundle)
+
+	maintenance, _ = startTLSServer(t, func(grpcServer *grpc.Server) {
 		registerFakeTalos(grpcServer, f)
 	})
 
-	return f, maintenance, cluster
+	return f, maintenance
 }
 
 // sharedNewClusterBundle makes the one bundle the package's runs share (the run's
@@ -773,14 +783,15 @@ func TestStartNewClusterAudited(t *testing.T) {
 	withDataDir(t)
 	shortNewClusterWaits(t)
 
-	// The audited run is the production entry: it dials the node for both the maintenance
-	// API and apid (the fake's cluster API answers at Talos's own API port, see serveCA).
-	f, endpoint, _ := maintenanceNodePair(t)
-	installThenBoot(t, f, serveCAPort, serveCAPort)
-	serveKubeconfigAfterBootstrap(t, f, serveCAPort)
+	// The production entry polls at upgradePollInterval (5s): shorten it, as the upgrade
+	// tests do, so the run follows the fake's reboot within the test's waits.
+	interval := upgradePollInterval
+	upgradePollInterval = newClusterPoll
+
+	t.Cleanup(func() { upgradePollInterval = interval })
 
 	spec, err := toJSON(newClusterSpec{
-		Name: clusterNameSpec(), Endpoint: nodeKey(endpoint), KubernetesVersion: newClusterK8s,
+		Name: clusterNameSpec(), Endpoint: "127.0.0.1", KubernetesVersion: newClusterK8s,
 		TalosVersion: "v1.14.4", InstallDisk: newClusterDisk,
 	})
 	if err != nil {
@@ -796,6 +807,18 @@ func TestStartNewClusterAudited(t *testing.T) {
 	if err := fromJSON(prepared, &draft); err != nil {
 		t.Fatal(err)
 	}
+
+	// The audited run is the production entry: it dials the node for both the maintenance
+	// API and apid (the fake's cluster API answers at Talos's own API port, see serveCA).
+	// The draft made its own secrets, and the talosconfig it hands the run is signed by
+	// them: apid must serve under that bundle, not the tests' shared one.
+	newClusterDraftsMu.Lock()
+	bundle := newClusterDrafts[draft.DraftID].bundle
+	newClusterDraftsMu.Unlock()
+
+	f, endpoint := maintenanceNodeWith(t, bundle)
+	installThenBoot(t, f, serveCAPort, serveCAPort)
+	serveKubeconfigAfterBootstrap(t, f, serveCAPort)
 
 	rec := newNewClusterRecorder()
 	StartNewCluster(draft.DraftID, endpoint, draft.Talosconfig, rec)
