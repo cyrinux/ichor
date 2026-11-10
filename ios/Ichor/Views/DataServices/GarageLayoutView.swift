@@ -492,9 +492,10 @@ private struct HistorySection: View {
                     Text("History")
                     if layout.stuck { Tag(String(localized: "stuck"), color: .statusBad) }
                 }
+                // On this row, always shown: a List gives a Section's modifiers to each of its rows.
+                .onAppear { if layout.stuck { open = true } }
             }
         }
-        .onAppear { if layout.stuck { open = true } }
     }
 
     private func statusLabel(_ status: GarageLayoutStatus) -> String {

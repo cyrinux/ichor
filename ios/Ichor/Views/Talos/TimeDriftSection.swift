@@ -54,12 +54,13 @@ struct TimeDriftSection: View {
             }
         } header: {
             SectionHeader(title: String(localized: "Clock drift"), pill: headerTrailing)
+                // On the header, always shown: a List gives a Section's modifiers to each of its rows.
+                .task(id: refreshID) { await load() }
         } footer: {
             Text(
                 "Offset of each node's clock from its NTP server. Drift breaks etcd and certificate checks: warning from 500 ms, critical from 5 s."
             )
         }
-        .task(id: refreshID) { await load() }
         .alert(shownError.map { title($0) } ?? "", isPresented: $shownError.isPresent()) {
             Button("OK") { shownError = nil }
         } message: {

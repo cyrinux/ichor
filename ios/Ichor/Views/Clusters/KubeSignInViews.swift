@@ -95,9 +95,10 @@ struct KubeSignInSection: View {
             }
         } header: {
             Text("Sign-in")
+                // On the header, always shown: a List gives a Section's modifiers to each of its rows.
+                .task(id: "\(target.id)#\(model.dataGeneration)") { await load() }
         }
         .sheet(item: $signingIn) { KubeSignInSheet(target: $0) }
-        .task(id: "\(target.id)#\(model.dataGeneration)") { await load() }
     }
 
     private func load() async {

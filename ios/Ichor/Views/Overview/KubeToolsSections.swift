@@ -26,6 +26,8 @@ struct KubeToolsSections: View {
             NavigationLink(value: Route.workloads) {
                 toolLabel(KubeHomeAction.workloads)
             }
+            // On this row, always shown: a List gives a Section's modifiers to each of its rows.
+            .task(id: refreshID) { await onRefresh?() }
             NavigationLink {
                 KubeJobsView()
             } label: {
@@ -62,7 +64,6 @@ struct KubeToolsSections: View {
         } header: {
             Text("Workloads")
         }
-        .task(id: refreshID) { await onRefresh?() }
         Section {
             NavigationLink {
                 KubeServicesView()

@@ -8,13 +8,14 @@ struct LiveStatsSection: View {
     var body: some View {
         Section {
             Toggle("Live cluster usage", isOn: $enabled)
+                // On this row, always shown: a List gives a Section's modifiers to each of its rows.
+                .onChange(of: enabled) { _, on in
+                    if !on { ClusterLiveStore.shared.clear() }
+                }
         } footer: {
             Text(
                 "Refresh CPU and memory on the overview every few seconds while it is open. Turn off to save mobile data and battery."
             )
-        }
-        .onChange(of: enabled) { _, on in
-            if !on { ClusterLiveStore.shared.clear() }
         }
     }
 }

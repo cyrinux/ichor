@@ -18,7 +18,7 @@ struct SystemImagesSection: View {
     private var busyElsewhere: Bool { job.busy(otherThan: model.activeContext, appID: scanID) }
 
     var body: some View {
-        Section("System images") {
+        Section {
             switch state {
             case .loading:
                 Text("Reading the node's system images…").note()
@@ -30,10 +30,13 @@ struct SystemImagesSection: View {
                     scanControls(images)
                 }
             }
-        }
-        .task(id: node) {
-            guard let client = model.client else { return }
-            state = await .from { try await client.systemImages(node: node) }
+        } header: {
+            Text("System images")
+                // On the header, always shown: a List gives a Section's modifiers to each of its rows.
+                .task(id: node) {
+                    guard let client = model.client else { return }
+                    state = await .from { try await client.systemImages(node: node) }
+                }
         }
     }
 

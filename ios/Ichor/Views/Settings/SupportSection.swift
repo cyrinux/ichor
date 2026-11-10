@@ -95,8 +95,9 @@ struct SupportSection: View {
             .onChange(of: diagPersist) { _, on in TalosClient.setDiagPersist(on) }
         } header: {
             Text("Support")
+                // On the header, always shown: a List gives a Section's modifiers to each of its rows.
+                .task { dataStoreProblem = TalosClient.dataStoreStatus()?.problem }
         }
         .safariSheet($browsing)
-        .task { dataStoreProblem = TalosClient.dataStoreStatus()?.problem }
     }
 }

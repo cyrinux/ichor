@@ -22,6 +22,13 @@ struct OmniLabelsSection: View {
                 "Signed into the join token: the machine appears in Omni with them, and a machine class can pick it by them."
             )
             .font(.footnote).foregroundStyle(.secondary)
+            // On this row, always shown: a List gives a Section's modifiers to each of its rows.
+            .onChange(of: role) { apply() }
+            .task {
+                // Only a hint next to the field: the section works without it.
+                let sets = try? await model.client?.omniMachineSets()
+                classLabels = Array(Set(sets?.machineSets.flatMap(\.matchLabels) ?? [])).sorted()
+            }
             Picker("Role", selection: $role) {
                 Text("Worker").tag("worker")
                 Text("Control plane").tag("controlplane")
@@ -37,12 +44,6 @@ struct OmniLabelsSection: View {
             Button("Apply the labels") { apply() }
         } header: {
             Text("The new machine's labels")
-        }
-        .onChange(of: role) { apply() }
-        .task {
-            // Only a hint next to the field: the section works without it.
-            let sets = try? await model.client?.omniMachineSets()
-            classLabels = Array(Set(sets?.machineSets.flatMap(\.matchLabels) ?? [])).sorted()
         }
     }
 

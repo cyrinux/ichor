@@ -48,6 +48,13 @@ struct BackupSection: View {
                     }
                     document = nil  // don't keep the sealed credentials around
                 }
+                // On this row, always shown: a List gives a Section's modifiers to each of its rows,
+                // which would start one backup per row.
+                .onChange(of: requested) { _, now in
+                    guard now else { return }
+                    requested = false
+                    Task { await startBackup() }
+                }
             RestoreBackupButton(confirmFirst: true) {
                 message = String(localized: "Backup restored.")
             } onError: {
@@ -62,11 +69,6 @@ struct BackupSection: View {
             Text(
                 "Save your clusters and settings to a file encrypted with a passphrase, to restore them on a new phone (iOS or Android). Without the passphrase the file cannot be opened."
             )
-        }
-        .onChange(of: requested) { _, now in
-            guard now else { return }
-            requested = false
-            Task { await startBackup() }
         }
         // The exporter opens once the sheet is gone: one modal cannot present over another.
         .sheet(isPresented: $askingPassphrase, onDismiss: { exporting = document != nil }) {
