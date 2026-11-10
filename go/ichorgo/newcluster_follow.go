@@ -194,16 +194,51 @@ func nodeAnsweredTo(ctx context.Context, address string) bool {
 	return nodeAnswered(nodeCtx, m)
 }
 
-// dialCluster opens the cluster with the run's own os:admin certificate: the phone is the
-// first client of a cluster it just created.
-func (c *newCluster) dialCluster() (*client.Client, error) {
+// clusterConfig is the client configuration the run follows and bootstraps the cluster
+// with: the talosconfig the app stored (a draft run) or the run's own os:admin certificate
+// (the legacy path, where the run made the secrets itself).
+func (c *newCluster) clusterConfig() (*clientconfig.Config, error) {
+	if c.draft != nil && c.storedYAML != "" {
+		cfg, err := clientconfig.FromBytes([]byte(c.storedYAML))
+		if err != nil {
+			return nil, fmt.Errorf("read the stored talosconfig: %s", friendlyError(err))
+		}
+
+		// The tests give the fake a different port for the installed cluster API: point
+		// the stored config at it, the way the legacy path's talosconfigFor does. In
+		// production clusterAddress is empty and the config is used as stored.
+		if c.clusterAddress != "" {
+			for _, ctx := range cfg.Contexts {
+				if port := dialPortOf(c.clusterAddress); port != "" {
+					ctx.Endpoints = []string{net.JoinHostPort(c.req.host, port)}
+					ctx.Nodes = []string{net.JoinHostPort(c.req.host, port)}
+				}
+			}
+		}
+
+		return cfg, nil
+	}
+
 	if c.bundle == nil || c.adminCert == nil {
 		return nil, errors.New("the cluster's admin certificate was never issued")
 	}
 
-	// The cluster API answers where the maintenance API did (only the fake gives the two
-	// different ports).
-	cfg, err := talosconfigFor(c.req.clusterName, c.req.host, c.bundle.Certs.OS.Crt, c.adminCert, c.clusterAddress)
+	return talosconfigFor(c.req.clusterName, c.req.host, c.bundle.Certs.OS.Crt, c.adminCert, c.clusterAddress)
+}
+
+// dialPortOf is the port of a host:port endpoint, "" when there is none.
+func dialPortOf(hostPort string) string {
+	if _, port, err := net.SplitHostPort(hostPort); err == nil {
+		return port
+	}
+
+	return ""
+}
+
+// dialCluster opens the cluster with the run's own os:admin certificate: the phone is the
+// first client of a cluster it just created.
+func (c *newCluster) dialCluster() (*client.Client, error) {
+	cfg, err := c.clusterConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -272,14 +307,19 @@ func (c *newCluster) kubeconfig(ctx context.Context, cl *client.Client) ([]byte,
 // handOver issues the admin certificate once and gives the app the talosconfig and
 // kubeconfig.
 func (c *newCluster) handOver(ctx context.Context, cl *client.Client) error {
-	cfg, err := talosconfigFor(c.req.clusterName, c.req.host, c.bundle.Certs.OS.Crt, c.adminCert, c.clusterAddress)
-	if err != nil {
-		return err
-	}
+	// The app stored the talosconfig before this run: hand back exactly that copy, so what
+	// it holds and what it was given never differ. The legacy path (no draft) builds it
+	// from the run's own admin certificate instead.
+	yaml := []byte(c.storedYAML)
+	if c.draft == nil {
+		cfg, err := c.clusterConfig()
+		if err != nil {
+			return err
+		}
 
-	yaml, err := cfg.Bytes()
-	if err != nil {
-		return fmt.Errorf("encode talosconfig: %w", err)
+		if yaml, err = cfg.Bytes(); err != nil {
+			return fmt.Errorf("encode talosconfig: %w", err)
+		}
 	}
 
 	kubeconfig, err := c.kubeconfig(ctx, cl)

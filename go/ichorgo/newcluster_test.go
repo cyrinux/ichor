@@ -791,10 +791,26 @@ func TestStartNewClusterAudited(t *testing.T) {
 	installThenBoot(t, f, serveCAPort, serveCAPort)
 	serveKubeconfigAfterBootstrap(t, f, serveCAPort)
 
-	api := "https://" + nodeKey(endpoint) + ":6443"
+	spec, err := toJSON(newClusterSpec{
+		Name: clusterNameSpec(), Endpoint: nodeKey(endpoint), KubernetesVersion: newClusterK8s,
+		TalosVersion: "v1.14.4", InstallDisk: newClusterDisk,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	prepared, err := NewClusterPrepare(spec)
+	if err != nil {
+		t.Fatalf("prepare: %v", err)
+	}
+
+	var draft newClusterDraft
+	if err := fromJSON(prepared, &draft); err != nil {
+		t.Fatal(err)
+	}
 
 	rec := newNewClusterRecorder()
-	StartNewCluster(endpoint, newClusterName, newClusterK8s, newClusterDisk, newClusterHost, api, rec)
+	StartNewCluster(draft.DraftID, endpoint, draft.Talosconfig, rec)
 
 	_, errMessage, _ := rec.wait(t)
 	if errMessage != "" {
@@ -811,8 +827,8 @@ func TestStartNewClusterAudited(t *testing.T) {
 		t.Errorf("entry = %+v", e)
 	}
 
-	if !strings.Contains(e.Params, "hostname=cp-1") || !strings.Contains(e.Params, "k8s=1.34.1") ||
-		!strings.Contains(e.Params, "disk=/dev/sda") || !strings.Contains(e.Params, "endpoint="+api) {
+	if !strings.Contains(e.Params, "hostname="+clusterNameSpec()) || !strings.Contains(e.Params, "k8s="+newClusterK8s) ||
+		!strings.Contains(e.Params, "disk="+newClusterDisk) {
 		t.Errorf("params = %q", e.Params)
 	}
 
@@ -820,6 +836,9 @@ func TestStartNewClusterAudited(t *testing.T) {
 		t.Errorf("params carry config: %q", e.Params)
 	}
 }
+
+// clusterNameSpec is the cluster name the audited test uses.
+func clusterNameSpec() string { return "home-lab" }
 
 // TestNewClusterDebugDump: temporary diagnostic, not a test of behavior: it runs the
 // happy path once and dumps every call the fake saw and when.

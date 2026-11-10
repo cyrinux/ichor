@@ -84,6 +84,7 @@ type newClusterRequest struct {
 	clusterName       string
 	kubernetesVersion string // x.y[.z], no leading v
 	installDisk       string
+	installImage      string // the Image Factory installer reference, when chosen
 	hostname          string
 	endpoint          string // https://host:6443: the API server the cluster and kubeconfig point at
 }
@@ -198,7 +199,10 @@ type newClusterProgress struct {
 // is refused. Bounded by 20 minutes; Cancel only stops following. Refused in privacy mode
 // (the config carries the secrets). Recorded in the activity log as cluster-bootstrap
 // (hostname, Kubernetes version, disk, endpoint; never the config).
-func StartNewCluster(address, clusterName, kubernetesVersion, installDisk, hostname, endpoint string, listener NewClusterListener) *NewClusterRun {
+// startNewClusterLegacy bootstraps from explicit parts (the tests' twin and the older
+// call shape): it makes the secrets itself. Production goes through NewClusterPrepare then
+// StartNewCluster(draftId, ...).
+func startNewClusterLegacy(address, clusterName, kubernetesVersion, installDisk, hostname, endpoint string, listener NewClusterListener) *NewClusterRun {
 	listener = maskedNewClusterListener{listener}
 
 	c := &newCluster{
@@ -266,6 +270,13 @@ type newCluster struct {
 	adminCert *x509Pair
 	applied bool // the config may be on the node: Cancel cannot undo anything any more
 
+	// draft carries a prepared cluster (NewClusterPrepare): its bundle and the exact
+	// control-plane config are reused as-is, and storedYAML is the talosconfig the app
+	// stored before this run, used to follow the node. Empty on the legacy path, where the
+	// run makes the secrets itself (the tests' StartNewCluster twin).
+	draft      *newClusterDraftEntry
+	storedYAML string
+
 	// dialAddress and clusterAddress, when set (the tests), are where the fake's
 	// maintenance API and installed cluster API answer: the endpoint host stays the
 	// address the console shows. Production dials address itself.
@@ -313,7 +324,7 @@ func (c *newCluster) emit(phase, message string) {
 }
 
 func (c *newCluster) run(ctx context.Context) error {
-	req, err := parseNewClusterRequest(c.address, c.clusterName, c.kubernetesVersion, c.installDisk, c.hostname, c.endpoint)
+	req, err := c.request()
 	if err != nil {
 		return err
 	}
@@ -325,14 +336,18 @@ func (c *newCluster) run(ctx context.Context) error {
 		c.interval = upgradePollInterval
 	}
 
+	// The user already confirmed the machine's address in the prepares step (or the
+	// address was validated for the draft): keep the local-network rule.
 	if err := checkMaintenanceAddress(ctx, req.address); err != nil {
 		return err
 	}
 
-	c.emit(newClusterPhaseGenerating, "this phone is making "+req.clusterName+"'s CAs, tokens and keys")
+	if c.draft == nil {
+		c.emit(newClusterPhaseGenerating, "this phone is making "+req.clusterName+"'s CAs, tokens and keys")
 
-	if err := c.ensureBundle(); err != nil {
-		return err
+		if err := c.ensureBundle(); err != nil {
+			return err
+		}
 	}
 
 	if err := c.apply(ctx); err != nil {
@@ -365,6 +380,16 @@ func (c *newCluster) run(ctx context.Context) error {
 	return nil
 }
 
+// request is the run's validated request: the draft's own for a prepared run (the address
+// comes from the start call), the parts parsed for the legacy twin.
+func (c *newCluster) request() (newClusterRequest, error) {
+	if c.draft != nil {
+		return c.draft.req, nil
+	}
+
+	return parseNewClusterRequest(c.address, c.clusterName, c.kubernetesVersion, c.installDisk, c.hostname, c.endpoint)
+}
+
 // ended turns the run's context ending into what to say about it.
 func (c *newCluster) ended(err error) error {
 	if err == nil {
@@ -391,6 +416,10 @@ var newClusterSecretsCache *secrets.Bundle
 // one, else a fresh one. Making a bundle costs real entropy and seconds; the test twins
 // share one.
 func (c *newCluster) bundleFor() (*secrets.Bundle, error) {
+	if c.draft != nil {
+		return c.draft.bundle, nil
+	}
+
 	if c.bundle != nil {
 		return c.bundle, nil
 	}
@@ -469,14 +498,22 @@ func (c *newCluster) apply(ctx context.Context) error {
 	}
 
 	// The config is what takes the most time to have: the secrets and the node's
-	// config are made while the node is reached, so the apply goes out at once.
-	if err := c.ensureBundle(); err != nil {
-		return err
-	}
+	// config are made while the node is reached, so the apply goes out at once. A prepared
+	// draft already holds the exact config made by NewClusterPrepare: reuse it byte for
+	// byte, so what the app previewed is what the node is sent.
+	full := ""
+	if c.draft != nil {
+		full = c.draft.full
+	} else {
+		if err := c.ensureBundle(); err != nil {
+			return err
+		}
 
-	full, err := generatedClusterConfig(c.req, c.bundle)
-	if err != nil {
-		return err
+		var err error
+
+		if full, err = generatedClusterConfig(c.req, c.bundle); err != nil {
+			return err
+		}
 	}
 
 	c.emit(newClusterPhaseApplying, "sending the config to "+c.req.address)
