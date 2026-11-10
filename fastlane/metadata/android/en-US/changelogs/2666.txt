@@ -1,0 +1,4 @@
+• Tap a pod in the image scan, a network policy or a dropped flow to open its logs and actions (#922)
+• Ichor-relay, an in-cluster relay that pushes Alertmanager alerts to paired phones (#394)
+• Tap a pod on the Apps, CloudNativePG, Garage and storage screens to open its logs and actions
+• Give the iOS Apps screen's pod hand-off a typed property the compiler can check
