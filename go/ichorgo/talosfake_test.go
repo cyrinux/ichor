@@ -1,6 +1,9 @@
 package ichorgo
 
 import (
+	"archive/tar"
+	"bytes"
+	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
@@ -76,8 +79,10 @@ type fakeTalos struct {
 	// cpuFreq is a node's CPUFreqStats answer (a node without an entry: Unimplemented).
 	cpuFreq map[string][]*machineapi.CPUFreqStats
 	// applies are the ApplyConfiguration requests received, in order; a real (not dry run)
-	// one replaces the node's machine config, then onApply runs.
+	// one replaces the node's machine config, then onApply runs. applied receives the
+	// config bytes of each real apply (tests that care about what the node was sent).
 	applies []fakeConfigApply
+	applied chan string
 	onApply func(node string)
 	// etcdDown are the nodes whose etcd does not answer (EtcdStatus: Unavailable) until a
 	// recovery bootstraps it.
@@ -95,6 +100,12 @@ type fakeTalos struct {
 	// versionHold holds a node's Version answer until the channel is closed (or the call
 	// gives up): a slow node.
 	versionHold map[string]chan struct{}
+	// kubeconfigs are a node's Kubeconfig answers (a node without one: Unavailable), each
+	// sent as one common.Data chunk, gzip+tar wrapped the way Talos sends it.
+	kubeconfigs map[string][]byte
+	// bootstrapErrs are nodes whose Bootstrap answers an error (a node that was never
+	// bootstrapped keeps its etcd down, as Talos does).
+	bootstrapErrs map[string]error
 	// events answers MachineService.Events for the nodes it targets (nil: Unimplemented).
 	events func(nodes []string, req *machineapi.EventsRequest, stream grpc.ServerStreamingServer[machineapi.Event]) error
 }
@@ -558,6 +569,45 @@ func (m fakeTalosMachine) Bootstrap(ctx context.Context, req *machineapi.Bootstr
 	return &machineapi.BootstrapResponse{Messages: []*machineapi.Bootstrap{{}}}, nil
 }
 
+// Kubeconfig streams the node's admin kubeconfig, gzip+tar wrapped as Talos does (the
+// client unwraps it): the bytes come from fake.kubeconfigs.
+func (m fakeTalosMachine) Kubeconfig(_ *emptypb.Empty, stream grpc.ServerStreamingServer[common.Data]) error {
+	node, err := m.f.enter(stream.Context(), "Kubeconfig")
+	if err != nil {
+		return err
+	}
+
+	m.f.mu.Lock()
+	kube, ok := m.f.kubeconfigs[node]
+	m.f.mu.Unlock()
+
+	if !ok {
+		return status.Error(codes.Unavailable, "the Kubernetes API server is not up on "+node)
+	}
+
+	var buf bytes.Buffer
+
+	zw := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(zw)
+	if err := tw.WriteHeader(&tar.Header{Name: "kubeconfig", Mode: 0o600, Size: int64(len(kube))}); err != nil {
+		return err
+	}
+
+	if _, err := tw.Write(kube); err != nil {
+		return err
+	}
+
+	if err := tw.Close(); err != nil {
+		return err
+	}
+
+	if err := zw.Close(); err != nil {
+		return err
+	}
+
+	return stream.Send(&common.Data{Bytes: buf.Bytes()})
+}
+
 func (m fakeTalosMachine) EtcdMemberList(ctx context.Context, _ *machineapi.EtcdMemberListRequest) (*machineapi.EtcdMemberListResponse, error) {
 	node, err := m.f.enter(ctx, "EtcdMemberList")
 	if err != nil {
@@ -867,9 +917,17 @@ func (m fakeTalosMachine) ApplyConfiguration(ctx context.Context, req *machineap
 	m.f.mu.Lock()
 	m.f.applies = append(m.f.applies, fakeConfigApply{node: node, dryRun: req.GetDryRun(), mode: req.GetMode()})
 	onApply := m.f.onApply
+	applied := m.f.applied
 	m.f.mu.Unlock()
 
 	if !req.GetDryRun() {
+		if applied != nil {
+			select {
+			case applied <- string(req.GetData()):
+			default:
+			}
+		}
+
 		m.f.put(node, config.NewMachineConfigWithID(provider, config.ActiveID))
 
 		if onApply != nil {
