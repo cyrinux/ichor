@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosi-project/runtime/pkg/resource"
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 	"github.com/siderolabs/talos/pkg/machinery/resources/runtime"
@@ -163,19 +162,21 @@ func installThenBoot(t *testing.T, f *fakeTalos, node string) {
 // maintenance API is still coming up (or rebooting), where every call is refused.
 func downUntil(f *fakeTalos, hold chan struct{}) {
 	f.mu.Lock()
-	saved := slices.Clone(f.versions[""])
+	saved, up := f.versions[""]
 	delete(f.versions, "")
 	f.mu.Unlock()
 
 	go func() {
 		<-hold
 
+		if !up {
+			return
+		}
+
 		f.mu.Lock()
 		defer f.mu.Unlock()
 
-		if saved != nil {
-			f.versions[""] = saved[0]
-		}
+		f.versions[""] = saved
 	}()
 }
 
