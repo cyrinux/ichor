@@ -5,11 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"regexp"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube"
 )
 
 // restartedAtAnnotation is what `kubectl rollout restart` sets on the pod template: any
@@ -343,9 +344,8 @@ func workloadState(w kubeWorkload, f rolloutFacts) string {
 	}
 }
 
-// kubeNamePattern is a DNS-1123 subdomain: what Kubernetes accepts for namespaces and
-// object names. Checking it keeps "..", "/" and the like out of API paths.
-var kubeNamePattern = regexp.MustCompile(`^[a-z0-9]([-a-z0-9.]{0,251}[a-z0-9])?$`)
+// kubeNamePattern: see kube.NamePattern.
+var kubeNamePattern = kube.NamePattern
 
 func validateKubeName(what, namespace, name string) error {
 	if namespace == "" || name == "" {

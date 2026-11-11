@@ -1,4 +1,4 @@
-package ichorgo
+package argocd
 
 import (
 	"context"
@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/cyrinux/ichor/go/kube"
 )
 
 // Freezes: one-shot deny sync windows on an AppProject, so a hotfix made by hand is not
@@ -32,10 +34,10 @@ const (
 
 var argoFreezeActions = []string{argoFreezeActionFreeze, argoFreezeActionExtend, argoFreezeActionUnfreeze, argoFreezeActionClearExpired}
 
-// argoFreezeOptions are the choices of the freeze sheet. Exactly one of Applications and
+// FreezeOptions are the choices of the freeze sheet. Exactly one of Applications and
 // Namespaces is set; ["*"] in Applications freezes the whole project. Window is the
 // argoWindow.id to extend or unfreeze; FromGit confirms removing a window Ichor did not create.
-type argoFreezeOptions struct {
+type FreezeOptions struct {
 	Applications []string `json:"applications"`
 	Namespaces   []string `json:"namespaces"`
 	Minutes      int      `json:"minutes"`
@@ -46,79 +48,53 @@ type argoFreezeOptions struct {
 }
 
 var (
-	errArgoWindowGone = &kubeAPIError{Code: 404, Reason: "NotFound", Message: "that sync window is no longer there: it ended or was removed"}
-	errArgoFromGit    = &kubeAPIError{Code: 409, Reason: "FromGit", Message: "this sync window was not created by Ichor: remove it in Git too, or Argo CD may put it back"}
-	errArgoNotIchor   = &kubeAPIError{Code: 409, Reason: "FromGit", Message: "only freezes created by Ichor can be extended"}
-	errArgoSameFreeze = &kubeAPIError{Code: 409, Reason: "Duplicate", Message: "an identical freeze already exists on this project"}
+	errArgoWindowGone = &kube.APIError{Code: 404, Reason: "NotFound", Message: "that sync window is no longer there: it ended or was removed"}
+	errArgoFromGit    = &kube.APIError{Code: 409, Reason: "FromGit", Message: "this sync window was not created by Ichor: remove it in Git too, or Argo CD may put it back"}
+	errArgoNotIchor   = &kube.APIError{Code: 409, Reason: "FromGit", Message: "only freezes created by Ichor can be extended"}
+	errArgoSameFreeze = &kube.APIError{Code: 409, Reason: "Duplicate", Message: "an identical freeze already exists on this project"}
 	// errArgoFreezesAnnotation: writing would lose the record of Ichor's freezes.
-	errArgoFreezesAnnotation = &kubeAPIError{Code: 409, Reason: "Unreadable", Message: "the project's " + argoFreezesAnnotation + " annotation is unreadable: fix or remove it first"}
+	errArgoFreezesAnnotation = &kube.APIError{Code: 409, Reason: "Unreadable", Message: "the project's " + FreezesAnnotation + " annotation is unreadable: fix or remove it first"}
 )
 
-// KubeArgoFreeze changes the sync windows of the Argo CD AppProject namespace/project
-// (os:admin): freeze (a deny window from now for minutes, on applications or namespaces),
-// extend (an Ichor freeze by minutes), unfreeze (remove a window; one Ichor did not create
-// needs fromGit) or clearExpired (drop Ichor's ended freezes, which every change also does).
-// optionsJSON holds argoFreezeOptions. kubeServer: see KubePods.
-func KubeArgoFreeze(configYAML, contextName, kubeServer, namespace, project, action, optionsJSON string) (err error) {
-	defer maskErr(&err)
+// IsFreezeAction tells an action Freeze runs.
+func IsFreezeAction(action string) bool { return slices.Contains(argoFreezeActions, action) }
 
-	contextName = unmaskContext(configYAML, contextName)
-	namespace, project = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(project))
-
-	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "argo-" + action, Namespace: namespace, Object: "AppProject/" + project})
-
-	if !slices.Contains(argoFreezeActions, action) {
-		return fmt.Errorf("unsupported Argo CD freeze action %q", action)
-	}
-
-	if err := validateKubeName("project", namespace, project); err != nil {
-		return err
-	}
-
-	var opts argoFreezeOptions
+// ParseFreezeOptions reads the optionsJSON of a freeze; "" is none.
+func ParseFreezeOptions(optionsJSON string) (FreezeOptions, error) {
+	var opts FreezeOptions
 	if strings.TrimSpace(optionsJSON) != "" {
 		if err := json.Unmarshal([]byte(optionsJSON), &opts); err != nil {
-			return fmt.Errorf("bad freeze options: %w", err)
+			return opts, fmt.Errorf("bad freeze options: %w", err)
 		}
 	}
 
-	for i, s := range opts.Applications {
-		opts.Applications[i] = privacy.reveal(strings.TrimSpace(s))
-	}
-
-	for i, s := range opts.Namespaces {
-		opts.Namespaces[i] = privacy.revealNamespace(strings.TrimSpace(s))
-	}
-
-	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
-		return argoFreezeAction(ctx, k, namespace, project, action, opts, time.Now())
-	})
+	return opts, nil
 }
 
-func argoFreezeAction(ctx context.Context, k *kubeClient, namespace, project, action string, opts argoFreezeOptions, now time.Time) error {
-	groups, err := readAPIGroups(ctx, k)
+func Freeze(ctx context.Context, k kube.Client, namespace, project, action string, opts FreezeOptions, now time.Time) error {
+	groups, err := kube.APIGroups(ctx, k)
 	if err != nil {
 		return err
 	}
 
-	version, ok := groups[groupArgo]
+	version, ok := groups[Group]
 	if !ok {
-		return &kubeAPIError{Code: 404, Reason: "NotFound", Message: "Argo CD is not installed"}
+		return &kube.APIError{Code: 404, Reason: "NotFound", Message: "Argo CD is not installed"}
 	}
 
-	base := "/apis/" + groupArgo + "/" + version
+	base := "/apis/" + Group + "/" + version
 	path := base + "/namespaces/" + url.PathEscape(namespace) + "/appprojects/" + url.PathEscape(project)
 
-	resp, data, err := k.send(ctx, http.MethodGet, path, "application/json", "", nil, nil)
+	resp, data, err := k.Send(ctx, http.MethodGet, path, "application/json", "", nil, nil)
 	if err != nil {
 		return err
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return kubeStatusError(resp.StatusCode, data)
+		return kube.StatusError(resp.StatusCode, data)
 	}
 
-	var p argoProjectObject
+	var p ProjectObject
 	if err := json.Unmarshal(data, &p); err != nil {
 		return fmt.Errorf("decode Kubernetes API answer: %w", err)
 	}
@@ -129,8 +105,8 @@ func argoFreezeAction(ctx context.Context, k *kubeClient, namespace, project, ac
 	}
 
 	if action == argoFreezeActionFreeze {
-		var apps kubeList[argoObject]
-		if err := getList(ctx, k, base+"/applications", &apps); err != nil {
+		var apps kube.List[Object]
+		if err := kube.GetList(ctx, k, base+"/applications", &apps); err != nil {
 			return err
 		}
 
@@ -144,38 +120,38 @@ func argoFreezeAction(ctx context.Context, k *kubeClient, namespace, project, ac
 		return err
 	}
 
-	return k.patch(ctx, path, "application/merge-patch+json", patch, nil)
+	return k.Patch(ctx, path, "application/merge-patch+json", patch, nil)
 }
 
 // argoFreezeScopeMatches refuses a freeze naming an app or a namespace no app of the project
 // has: Argo CD would accept a window that freezes nothing (a typo, a name still masked).
-func argoFreezeScopeMatches(opts argoFreezeOptions, project string, apps []argoObject) error {
-	check := func(what string, names []string, of func(argoObject) string) error {
+func argoFreezeScopeMatches(opts FreezeOptions, project string, apps []Object) error {
+	check := func(what string, names []string, of func(Object) string) error {
 		for _, name := range names {
 			if name == "*" {
 				continue
 			}
 
-			if !slices.ContainsFunc(apps, func(a argoObject) bool { return a.Spec.Project == project && of(a) == name }) {
-				return &kubeAPIError{Code: 404, Reason: "NotFound", Message: fmt.Sprintf("no app of project %s %s %s", project, what, name)}
+			if !slices.ContainsFunc(apps, func(a Object) bool { return a.Spec.Project == project && of(a) == name }) {
+				return &kube.APIError{Code: 404, Reason: "NotFound", Message: fmt.Sprintf("no app of project %s %s %s", project, what, name)}
 			}
 		}
 
 		return nil
 	}
 
-	if err := check("is named", opts.Applications, func(a argoObject) string { return a.Metadata.Name }); err != nil {
+	if err := check("is named", opts.Applications, func(a Object) string { return a.Metadata.Name }); err != nil {
 		return err
 	}
 
-	return check("deploys to namespace", opts.Namespaces, func(a argoObject) string { return a.Spec.Destination.Namespace })
+	return check("deploys to namespace", opts.Namespaces, func(a Object) string { return a.Spec.Destination.Namespace })
 }
 
 // argoFreezePatch is the merge patch for action on project p (nil when nothing changes), or
 // why it is refused. It rewrites the whole window list (a merge patch replaces lists), keeping
 // the other windows verbatim, and carries the resourceVersion read so a concurrent change
 // makes it fail instead of being lost.
-func argoFreezePatch(p argoProjectObject, action string, opts argoFreezeOptions, now time.Time) (map[string]any, error) {
+func argoFreezePatch(p ProjectObject, action string, opts FreezeOptions, now time.Time) (map[string]any, error) {
 	entries, err := argoWindowEntries(p, now)
 	if err != nil {
 		return nil, err
@@ -183,7 +159,7 @@ func argoFreezePatch(p argoProjectObject, action string, opts argoFreezeOptions,
 
 	target := -1
 	if action == argoFreezeActionExtend || action == argoFreezeActionUnfreeze {
-		target = slices.IndexFunc(entries, func(e argoWindowEntry) bool { return e.id == opts.Window })
+		target = slices.IndexFunc(entries, func(e WindowEntry) bool { return e.id == opts.Window })
 		if target < 0 {
 			return nil, errArgoWindowGone
 		}
@@ -191,12 +167,12 @@ func argoFreezePatch(p argoProjectObject, action string, opts argoFreezeOptions,
 
 	switch action {
 	case argoFreezeActionFreeze:
-		e, err := newArgoFreeze(opts, now)
+		e, err := NewFreeze(opts, now)
 		if err != nil {
 			return nil, err
 		}
 
-		if slices.ContainsFunc(entries, func(x argoWindowEntry) bool { return x.id == e.id }) {
+		if slices.ContainsFunc(entries, func(x WindowEntry) bool { return x.id == e.id }) {
 			return nil, nil // the same freeze, asked twice within the minute
 		}
 
@@ -207,7 +183,7 @@ func argoFreezePatch(p argoProjectObject, action string, opts argoFreezeOptions,
 			return nil, err
 		}
 
-		if slices.ContainsFunc(entries, func(x argoWindowEntry) bool { return x.id == e.id }) {
+		if slices.ContainsFunc(entries, func(x WindowEntry) bool { return x.id == e.id }) {
 			return nil, errArgoSameFreeze
 		}
 
@@ -220,15 +196,15 @@ func argoFreezePatch(p argoProjectObject, action string, opts argoFreezeOptions,
 		entries = slices.Delete(entries, target, target+1)
 	}
 
-	kept := slices.DeleteFunc(slices.Clone(entries), func(e argoWindowEntry) bool { return e.expired })
+	kept := slices.DeleteFunc(slices.Clone(entries), func(e WindowEntry) bool { return e.expired })
 	if action == argoFreezeActionClearExpired && len(kept) == len(entries) {
 		return nil, nil
 	}
 
-	return argoWindowsPatch(p, kept), nil
+	return WindowsPatch(p, kept), nil
 }
 
-func argoWindowsPatch(p argoProjectObject, entries []argoWindowEntry) map[string]any {
+func WindowsPatch(p ProjectObject, entries []WindowEntry) map[string]any {
 	var (
 		windows []json.RawMessage
 		records []argoFreezeRecord
@@ -255,17 +231,17 @@ func argoWindowsPatch(p argoProjectObject, entries []argoWindowEntry) map[string
 	return map[string]any{
 		"metadata": map[string]any{
 			"resourceVersion": p.Metadata.ResourceVersion,
-			"annotations":     map[string]any{argoFreezesAnnotation: annotation},
+			"annotations":     map[string]any{FreezesAnnotation: annotation},
 		},
 		"spec": map[string]any{"syncWindows": list},
 	}
 }
 
-// newArgoFreeze is a deny window from the current minute for opts.Minutes (rounded up to
+// NewFreeze is a deny window from the current minute for opts.Minutes (rounded up to
 // the next minute so the freeze lasts at least that long).
-func newArgoFreeze(opts argoFreezeOptions, now time.Time) (argoWindowEntry, error) {
+func NewFreeze(opts FreezeOptions, now time.Time) (WindowEntry, error) {
 	if err := validateArgoFreeze(opts); err != nil {
-		return argoWindowEntry{}, err
+		return WindowEntry{}, err
 	}
 
 	start := now.UTC().Truncate(time.Minute)
@@ -277,7 +253,7 @@ func newArgoFreeze(opts argoFreezeOptions, now time.Time) (argoWindowEntry, erro
 
 	end := start.Add(time.Duration(minutes) * time.Minute)
 
-	w := argoWindowObject{
+	w := WindowObject{
 		Kind:         "deny",
 		Schedule:     fmt.Sprintf("%d %d %d %d *", start.Minute(), start.Hour(), start.Day(), int(start.Month())),
 		Duration:     fmt.Sprintf("%dm", minutes),
@@ -288,21 +264,21 @@ func newArgoFreeze(opts argoFreezeOptions, now time.Time) (argoWindowEntry, erro
 	}
 
 	raw, _ := json.Marshal(w)
-	id := argoWindowID(raw)
+	id := WindowID(raw)
 
-	return argoWindowEntry{raw: raw, window: w, id: id, record: &argoFreezeRecord{
+	return WindowEntry{raw: raw, window: w, id: id, record: &argoFreezeRecord{
 		Window: id, Reason: strings.TrimSpace(opts.Reason),
 		CreatedAt: now.UTC().Format(time.RFC3339), ExpiresAt: end.Format(time.RFC3339),
 	}}, nil
 }
 
-func validateArgoFreeze(opts argoFreezeOptions) error {
+func validateArgoFreeze(opts FreezeOptions) error {
 	if (len(opts.Applications) == 0) == (len(opts.Namespaces) == 0) {
 		return fmt.Errorf("freeze either applications or namespaces")
 	}
 
 	for _, s := range append(slices.Clone(opts.Applications), opts.Namespaces...) {
-		if s != "*" && !kubeNamePattern.MatchString(s) {
+		if s != "*" && !kube.NamePattern.MatchString(s) {
 			return fmt.Errorf("invalid Kubernetes name %q", s)
 		}
 	}
@@ -331,7 +307,7 @@ func validateArgoFreezeMinutes(minutes int) error {
 }
 
 // extendArgoFreeze lengthens an Ichor freeze still running by minutes, up to 7 days from now.
-func extendArgoFreeze(e argoWindowEntry, minutes int, now time.Time) (argoWindowEntry, error) {
+func extendArgoFreeze(e WindowEntry, minutes int, now time.Time) (WindowEntry, error) {
 	switch {
 	case e.record == nil:
 		return e, errArgoNotIchor
@@ -361,7 +337,7 @@ func extendArgoFreeze(e argoWindowEntry, minutes int, now time.Time) (argoWindow
 	e.window.Duration = fmt.Sprintf("%dm", int(d.Minutes())+minutes)
 	raw["duration"] = e.window.Duration
 	e.raw, _ = json.Marshal(raw)
-	e.id = argoWindowID(e.raw)
+	e.id = WindowID(e.raw)
 
 	record := *e.record
 	record.Window, record.ExpiresAt = e.id, end.UTC().Format(time.RFC3339)

@@ -12,6 +12,9 @@ var (
 	GroupPattern    = regexp.MustCompile(`^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$`)
 	VersionPattern  = regexp.MustCompile(`^v[0-9]+((alpha|beta)[0-9]+)?$`)
 	ResourcePattern = regexp.MustCompile(`^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$`)
+	// NamePattern is a DNS-1123 subdomain: what Kubernetes accepts for namespaces and object
+	// names. Checking it keeps "..", "/" and the like out of API paths.
+	NamePattern = regexp.MustCompile(`^[a-z0-9]([-a-z0-9.]{0,251}[a-z0-9])?$`)
 )
 
 // Resource names a resource of the API: "" Group for the core one.
