@@ -100,6 +100,8 @@ the Play Console reports.
 | App icon | `images/icon.png` (512×512) |
 | Feature graphic | `images/featureGraphic.png` (1024×500) |
 | Phone screenshots | `<locale>/images/phoneScreenshots/` (7 per locale, 1080×2082 PNG) |
+| 7" tablet screenshots | `en-US/images/sevenInchScreenshots/` (7, portrait, from the `Nexus 7 2013` emulator profile, 600 dp wide) |
+| 10" tablet screenshots | `en-US/images/tenInchScreenshots/` (7, landscape, from the `pixel_tablet` emulator profile, 1280 dp wide) |
 | Default language | English (United States), en-US |
 | Translations | fr-FR, es-ES, uk, de-DE, it-IT, zh-CN, ru-RU, pt-BR, ja-JP |
 
@@ -108,7 +110,11 @@ featuring and recommendations. Their `N_` prefix sets the order `fastlane supply
 them in. To retake every locale: `just store-screenshots` on an emulator, or the Screenshots
 workflow with its `store` input and its `store-screenshots` artifact, then
 `scripts/play-assets.sh`. The icon and feature graphic exist in en-US only, and Play uses them
-for the other locales.
+for the other locales. The tablet sets are en-US only too, so the tablet layouts (two-column
+overview, rail, nodes and apps beside their list) show in the listing. To retake them: the
+Screenshots workflow with its `tablets` input, then unzip the `tablet-screenshots-7in` and
+`tablet-screenshots-10in` artifacts at the root; or locally `just store-screenshots --size 7in`
+(or `10in`) on a tablet emulator of that profile. Each set is written whole or not at all.
 
 ## Store settings
 

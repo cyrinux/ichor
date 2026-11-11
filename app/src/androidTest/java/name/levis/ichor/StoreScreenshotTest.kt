@@ -8,6 +8,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import name.levis.ichor.i18n.AppLocale
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
@@ -17,7 +18,8 @@ import java.util.Locale
 /**
  * The Play listing's screens in every language, from the offline demo (scripts/store-screenshots.sh,
  * the store job of workflow screenshots.yml). Ten walks take half an hour: it runs only with the
- * instrumentation argument `screenshots=true`, and ui-smoke.sh leaves the class out too.
+ * instrumentation argument `screenshots=true`, and ui-smoke.sh leaves the class out too. The argument
+ * `languages` (AppLocale tags, comma-separated) narrows the walk: the tablet sets are en-US only.
  */
 @RunWith(AndroidJUnit4::class)
 class StoreScreenshotTest {
@@ -35,7 +37,11 @@ class StoreScreenshotTest {
     fun captureEveryLanguage() {
         assumeTrue(InstrumentationRegistry.getArguments().getString("screenshots") == "true")
         assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-        AppLocale.languages.forEach { language ->
+        val only = InstrumentationRegistry.getArguments().getString("languages")
+            ?.split(',')?.map(String::trim)?.filter(String::isNotEmpty)?.toSet()
+        val languages = AppLocale.languages.filter { only == null || it.tag in only }
+        assertTrue("no language matches $only", languages.isNotEmpty())
+        languages.forEach { language ->
             val folder = requireNotNull(PLAY_FOLDERS[language.tag]) { "no Play folder for ${language.tag}" }
             AppLocale.apply(app, language.tag)
             val walk = DemoWalk(compose, "$DIR/$folder")
