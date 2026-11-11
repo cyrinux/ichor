@@ -207,26 +207,24 @@ func (f *fakeTalos) called(prefix string) []string {
 	return out
 }
 
-// waitVersion blocks while the node ctx targets is held (see versionHold).
-func (f *fakeTalos) waitVersion(ctx context.Context) {
+// waitVersion blocks while the node ctx targets is held (see versionHold). A call that gives up
+// first fails, as a node that never answered: answering raced the client's own deadline.
+func (f *fakeTalos) waitVersion(ctx context.Context) error {
 	md, _ := metadata.FromIncomingContext(ctx)
 
-	v := md.Get("node")
-	if len(v) == 0 {
-		return
-	}
-
 	f.mu.Lock()
-	hold := f.versionHold[v[0]]
+	hold, held := f.versionHold[strings.Join(md.Get("node"), ",")]
 	f.mu.Unlock()
 
-	if hold == nil {
-		return
+	if !held {
+		return nil
 	}
 
 	select {
 	case <-hold:
+		return nil
 	case <-ctx.Done():
+		return status.FromContextError(ctx.Err()).Err()
 	}
 }
 
@@ -268,7 +266,9 @@ type fakeTalosMachine struct {
 }
 
 func (m fakeTalosMachine) Version(ctx context.Context, _ *emptypb.Empty) (*machineapi.VersionResponse, error) {
-	m.f.waitVersion(ctx)
+	if err := m.f.waitVersion(ctx); err != nil {
+		return nil, err
+	}
 
 	node, err := m.f.enter(ctx, "Version")
 	if err != nil {
