@@ -1,0 +1,4 @@
+• NetBird plugin, routers, resources and egresses, shown only when the operator is installed
+• Twingate plugin, connectors, resources and accesses, shown only when the operator is installed
+• Ngrok plugin, agent and cloud endpoints with their domains, shown only when the operator is installed
+• IOS sections load once instead of once per row, and the check refuses the pattern
