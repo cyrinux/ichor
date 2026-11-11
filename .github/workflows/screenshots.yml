@@ -8,7 +8,10 @@ name: Screenshots
 # simulator and come back as `screenshots-ios`: unzip it at the root too and commit
 # docs/screenshots/ios/. Run with the `store` input it takes the Play listing's pictures in all ten
 # languages instead (half an hour of emulator, so never on a pull request): the `store-screenshots`
-# artifact, unzipped the same way, then scripts/play-assets.sh. Run with the `app_store` input it
+# artifact, unzipped the same way, then scripts/play-assets.sh. Run with the `tablets` input it
+# takes the Play listing's 7" and 10" tablet sets in en-US on two tablet emulators: the
+# `tablet-screenshots-7in` and `tablet-screenshots-10in` artifacts, unzipped at the root, fill
+# sevenInchScreenshots/ and tenInchScreenshots/. Run with the `app_store` input it
 # takes the App Store's iPhone pictures in all ten languages on a 6.9" simulator
 # (ios/IchorUITests/StoreScreenshotTests.swift, scripts/ios-store-screenshots.sh): the
 # `app-store-screenshots` artifact, unzipped at the root, fills fastlane/screenshots/ios/, uploaded
@@ -24,6 +27,10 @@ on:
         description: The App Store's iPhone pictures in all ten languages, not the website's
         type: boolean
         default: false
+      tablets:
+        description: The Play listing's 7" and 10" tablet pictures in en-US, not the website's
+        type: boolean
+        default: false
   pull_request:
     paths:
       - app/src/androidTest/java/name/levis/ichor/DemoScreenshots.kt
@@ -31,6 +38,7 @@ on:
       - scripts/ci-screenshots.sh
       - scripts/screenshot.sh
       - scripts/screenshot-lib.sh
+      - scripts/store-screenshots.sh
       - .github/workflows/screenshots.yml
       - ios/IchorUITests/**
       - ios/Ichor/App/UITestLaunch.swift
@@ -47,7 +55,7 @@ concurrency:
 jobs:
   capture:
     name: Capture the demo (emulator)
-    if: ${{ !inputs.store && !inputs.app_store }}
+    if: ${{ !inputs.store && !inputs.app_store && !inputs.tablets }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -145,9 +153,69 @@ jobs:
             ${{ runner.temp }}/emulator.log
           if-no-files-found: ignore
 
+  store-tablets:
+    name: Capture the Play listing on a ${{ matrix.size }} tablet (emulator)
+    if: ${{ inputs.tablets }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 1200x1920, 600 dp wide: the smallest window that rotates and shows the tablet layout.
+          - size: 7in
+            device: Nexus 7 2013
+          # 2560x1600, landscape by nature, 1280 dp wide: the rail and the side-by-side screens.
+          - size: 10in
+            device: pixel_tablet
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/android-toolchain
+
+      - name: Build the app and its instrumentation tests
+        env:
+          ICHOR_SKIP_TESTS: "1"
+          ICHOR_LOCAL_MODEL: "0"
+        run: ./build.sh smoke
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # The plain AOSP image, as the phone jobs: aosp_atd's screencaps are black.
+      - name: Capture the screenshots on an emulator
+        env:
+          EMULATOR_DEVICE: ${{ matrix.device }}
+          EMULATOR_TARGET: default
+          SIZE: ${{ matrix.size }}
+        run: nix shell nixpkgs#imagemagick --command scripts/ci-emulator.sh scripts/store-screenshots.sh --size "$SIZE" --out "$RUNNER_TEMP/shots"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: tablet-screenshots-${{ matrix.size }}
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: tablet-screenshots-${{ matrix.size }}-report
+          path: |
+            app/build/reports/store-screenshots.txt
+            app/build/reports/store-screenshots/
+            ${{ runner.temp }}/emulator.log
+          if-no-files-found: ignore
+
   capture-ios:
     name: Capture the demo (simulator)
-    if: ${{ !inputs.store && !inputs.app_store }}
+    if: ${{ !inputs.store && !inputs.app_store && !inputs.tablets }}
     runs-on: macos-26
     timeout-minutes: 60
     steps:

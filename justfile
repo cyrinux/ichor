@@ -372,7 +372,8 @@ ios-build:
 screenshot name:
     scripts/screenshot.sh {{name}}
 
-# The Play listing's screenshots in all ten languages, on a running emulator (./build.sh smoke first)
+# The Play listing's screenshots on a running emulator (./build.sh smoke first): all ten languages,
+# or `--size 7in` / `--size 10in` on a tablet emulator for the en-US tablet sets
 store-screenshots *args:
     scripts/store-screenshots.sh {{args}}
 

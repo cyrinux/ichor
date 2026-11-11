@@ -1,16 +1,24 @@
 #!/usr/bin/env bash
-# The Play listing's phone screenshots in all ten languages, from the offline demo, on a running
-# emulator of API 33 or newer (`./build.sh smoke && just store-screenshots`, or the store job of
-# workflow screenshots.yml). Runs androidTest StoreScreenshotTest in the dark theme and crops its
-# raw screencaps. Nothing is written unless every picture of every language passes Play's limits:
-# release.yml uploads whatever the folders hold, so a partial set must never land.
+# The Play listing's screenshots from the offline demo, on a running emulator of API 33 or newer
+# (`./build.sh smoke && just store-screenshots`, or the store and store-tablets jobs of workflow
+# screenshots.yml). Runs androidTest StoreScreenshotTest in the dark theme and crops its raw
+# screencaps. Nothing is written unless every picture passes Play's limits: release.yml uploads
+# whatever the folders hold, so a partial set must never land.
 #
-#   scripts/store-screenshots.sh [--force] [--out DIR]
+#   scripts/store-screenshots.sh [--size phone|7in|10in] [--force] [--out DIR]
+#
+# --size says which set the running emulator takes (phone by default):
+#   phone  all ten languages, a phone (the workflow's pixel_4)
+#   7in    en-US only, a 7" tablet in portrait (the workflow's "Nexus 7 2013", 600 dp wide)
+#   10in   en-US only, a 10" tablet in landscape (the workflow's pixel_tablet, 1280 dp wide)
+# The emulator is not checked against the size: start the right one.
 #
 # Writes under DIR (the repository by default):
 #   fastlane/metadata/android/LOCALE/images/phoneScreenshots/N_NAME.png  (N sets the Play order)
-#   docs/screenshots/NAME.webp                                           (from en-US, 540 px wide)
-# In the repository it refuses a dirty fastlane/metadata unless --force. Afterwards run
+#   fastlane/metadata/android/en-US/images/sevenInchScreenshots/N_NAME.png  (--size 7in)
+#   fastlane/metadata/android/en-US/images/tenInchScreenshots/N_NAME.png    (--size 10in)
+#   docs/screenshots/NAME.webp                                  (phone only, from en-US, 540 px wide)
+# In the repository it refuses a dirty fastlane/metadata unless --force. After a phone run, run
 # scripts/play-assets.sh: the feature graphic shows the new overview.
 set -euo pipefail
 
@@ -26,14 +34,24 @@ MAX_SIDE=3840
 
 out="$ROOT"
 force=0
+size=phone
 while (($#)); do
   case "$1" in
     --force) force=1 ;;
     --out) out="${2:?--out needs a directory}"; shift ;;
-    *) echo "usage: $0 [--force] [--out DIR]" >&2; exit 2 ;;
+    --size) size="${2:?--size needs phone, 7in or 10in}"; shift ;;
+    *) echo "usage: $0 [--size phone|7in|10in] [--force] [--out DIR]" >&2; exit 2 ;;
   esac
   shift
 done
+
+# The set's folder under images/, and the languages it is taken in (AppLocale tags; empty = all).
+case "$size" in
+  phone) set_folder=phoneScreenshots; only="" ;;
+  7in) set_folder=sevenInchScreenshots; only=en; LOCALES=(en-US) ;;
+  10in) set_folder=tenInchScreenshots; only=en; LOCALES=(en-US) ;;
+  *) echo "--size must be phone, 7in or 10in, not $size" >&2; exit 2 ;;
+esac
 
 command -v magick >/dev/null || { echo "ImageMagick (magick) is required" >&2; exit 1; }
 if [[ "$out" == "$ROOT" && "$force" == 0 && -n "$(git -C "$ROOT" status --porcelain -- fastlane/metadata)" ]]; then
@@ -50,7 +68,8 @@ trap 'rm -rf "$work"' EXIT
 
 adb shell cmd uimode night yes
 adb shell rm -rf "$DEVICE_DIR"
-adb shell am instrument -w -r -e screenshots true -e class name.levis.ichor.StoreScreenshotTest "$runner" | tee "$report"
+adb shell am instrument -w -r -e screenshots true ${only:+-e languages "$only"} \
+  -e class name.levis.ichor.StoreScreenshotTest "$runner" | tee "$report"
 grep -q '^INSTRUMENTATION_CODE: -1' "$report" && grep -q '^OK (' "$report" || {
   # What the test captured, a failure.png among them, for the job's failure artifact.
   mkdir -p "$ROOT/app/build/reports/store-screenshots"
@@ -73,7 +92,7 @@ refusal() {
 }
 
 for locale in "${LOCALES[@]}"; do
-  folder="$work/fastlane/metadata/android/$locale/images/phoneScreenshots"
+  folder="$work/fastlane/metadata/android/$locale/images/$set_folder"
   mkdir -p "$folder"
   for i in "${!SHOTS[@]}"; do
     name="${SHOTS[$i]}"
@@ -87,12 +106,16 @@ for locale in "${LOCALES[@]}"; do
   echo "$locale"
 done
 
-mkdir -p "$work/docs/screenshots"
-for i in "${!SHOTS[@]}"; do
-  name="${SHOTS[$i]}"
-  magick "$work/fastlane/metadata/android/en-US/images/phoneScreenshots/$((i + 1))_$name.png" \
-    -resize 540x -quality 82 "$work/docs/screenshots/$name.webp"
-done
+# The website shows the phone set only.
+if [[ "$size" == phone ]]; then
+  mkdir -p "$work/docs/screenshots"
+  for i in "${!SHOTS[@]}"; do
+    name="${SHOTS[$i]}"
+    magick "$work/fastlane/metadata/android/en-US/images/phoneScreenshots/$((i + 1))_$name.png" \
+      -resize 540x -quality 82 "$work/docs/screenshots/$name.webp"
+  done
+fi
 
 mkdir -p "$out"
-cp -r "$work/fastlane" "$work/docs" "$out/"
+cp -r "$work/fastlane" "$out/"
+[[ ! -d "$work/docs" ]] || cp -r "$work/docs" "$out/"

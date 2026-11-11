@@ -114,6 +114,16 @@ version, pick each language in the top-right menu and drag that language's seven
 **iPhone 6.9" Display** section, in their numbered order. fastlane `deliver` is not wired (no
 Deliverfile and no App Store metadata in the repository), so nothing uploads them on a release.
 
+The iPad 13" set (2064×2752 portrait or 2752×2064 landscape, or 2048×2732 / 2732×2048) is taken
+by hand for now, in en-US: in Simulator, an **iPad Pro 13-inch** in landscape, dark appearance,
+open the app's demo (the **Try demo** button on the first screen), skip the tour and take the
+same seven screens as the iPhone set with File → Save Screen (overview with the sidebar; a node's
+services, logs, events and graphs beside the node list; the capture; the cluster upgrade). Name
+them `1_overview.png` … `7_upgrade.png` like the iPhone set and keep them in
+`fastlane/screenshots/ios-ipad/en-US/` if committed; the demo holds sample names only, but turn on
+Screenshot mode in Settings anyway. Upload them into the **iPad 13" Display** section;
+App Store Connect shows the iPhone set to iPad users when it is missing.
+
 ### Age rating
 
 Answer **None** / **No** to every content question (violence, sexuality, profanity, drugs,
