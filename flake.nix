@@ -45,8 +45,20 @@
 
       shellFor = system:
         let pkgs = import nixpkgs { inherit system; config = nixpkgsConfig; };
+            # Go 1.27.4 fixes GO-2026-6859 (net/http), which govulncheck reports as reachable;
+            # nixos-unstable is still on 1.27.3 (NixOS/nixpkgs#586269). Bump the source until it
+            # lands; once nixpkgs has 1.27.4 or newer this keeps its own Go and does nothing.
+            go = if pkgs.lib.versionOlder pkgs.go_1_27.version "1.27.4"
+              then pkgs.go_1_27.overrideAttrs (finalAttrs: _: {
+                version = "1.27.4";
+                src = pkgs.fetchurl {
+                  url = "https://go.dev/dl/go${finalAttrs.version}.src.tar.gz";
+                  hash = "sha256-c8+4VxrsDAEXdofbhxY9Rqog6XeWcncokaoXZU2aYJk=";
+                };
+              })
+              else pkgs.go_1_27;
         in pkgs.mkShell {
-          packages = [ pkgs.jdk17 pkgs.gradle_9 pkgs.go_1_27 (pkgs.go-tools.override { buildGoModule = pkgs.buildGo127Module; }) ] # go-tools: staticcheck, built with the same Go
+          packages = [ pkgs.jdk17 pkgs.gradle_9 go (pkgs.go-tools.override { buildGoModule = pkgs.buildGo127Module; }) ] # go-tools: staticcheck, built with the same Go
             # govulncheck scans with the `go` on PATH (go_1_27, whose standard library it checks).
             ++ [ pkgs.govulncheck ]
             # The on-device model engine (llama.cpp, built by build.sh with the NDK).
