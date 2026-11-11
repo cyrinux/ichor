@@ -67,6 +67,30 @@ final class ContractTests: XCTestCase {
             XCTAssertEqual($0.plugins.first?.installed, true)
             XCTAssertEqual($0.plugins.first?.iconApp.icon, "kube-green")
         },
+        "flux-diff": ContractTests.row(FluxDiff.self) {
+            XCTAssertEqual($0.resources.first?.change, .changed)
+            XCTAssertEqual($0.resources.first?.liveChanges.first?.live, "3")
+        },
+        "argocd-diff": ContractTests.row(FluxDiff.self) {
+            XCTAssertEqual($0.kind, "Application")
+            XCTAssertEqual($0.resources.first?.liveChanges.first?.label, "spec.replicas")
+        },
+        "helm-releases": ContractTests.row(HelmReleaseList.self) {
+            XCTAssertEqual($0.releases.first?.name, "cert-manager")
+            XCTAssertEqual($0.releases.first?.appVersion, "v1.18.2")
+        },
+        "helm-release": ContractTests.row(HelmReleaseDetail.self) {
+            XCTAssertEqual($0.summary.name, "ingress-nginx")
+            XCTAssertEqual($0.history.first?.description, "Upgrade complete")
+        },
+        // The sheet names the release by its Secrets' namespace; where its objects go shows on each change.
+        "helm-rollback-plan": ContractTests.row(HelmRollbackPlan.self, ignored: ["releaseNamespace"]) {
+            XCTAssertEqual($0.fluxOwner, "flux-system/ingress-nginx")
+            XCTAssertTrue($0.force && !$0.canRun)
+        },
+        "helm-rollback-progress": ContractTests.row(HelmRollbackFollowProgress.self) {
+            XCTAssertEqual($0.phase, "Running"); XCTAssertEqual($0.total, 2)
+        },
     ]
 
     /// go/ichorgo/testdata/contract, from where `swift test` (ios/IchorCore) or test-linux.sh

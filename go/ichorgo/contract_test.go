@@ -60,6 +60,13 @@ var contractFixtures = []struct {
 
 		return u
 	}},
+	// The GitOps diffs and the Helm reads (contract_gitops_test.go).
+	{"flux-diff", contractFluxDiff},
+	{"argocd-diff", contractArgoDiff},
+	{"helm-releases", func() any { return demoHelmReleases() }},
+	{"helm-release", contractHelmRelease},
+	{"helm-rollback-plan", contractHelmRollbackPlan},
+	{"helm-rollback-progress", contractHelmRollbackProgress},
 	{"update-proposal-plan", contractUpdatePlan},
 	{"diag-entries", contractDiagEntries},
 	// A coloured logfmt line: clean fields and its spans.

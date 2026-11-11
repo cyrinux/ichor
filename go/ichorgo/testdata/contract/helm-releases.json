@@ -1,0 +1,24 @@
+{
+  "releases": [
+    {
+      "appVersion": "v1.18.2",
+      "chart": "cert-manager",
+      "chartVersion": "v1.18.2",
+      "name": "cert-manager",
+      "namespace": "cert-manager",
+      "revision": 4,
+      "status": "deployed",
+      "updated": 1767323045
+    },
+    {
+      "appVersion": "1.13.0",
+      "chart": "ingress-nginx",
+      "chartVersion": "4.13.0",
+      "name": "ingress-nginx",
+      "namespace": "ingress-nginx",
+      "revision": 7,
+      "status": "deployed",
+      "updated": 1767323045
+    }
+  ]
+}

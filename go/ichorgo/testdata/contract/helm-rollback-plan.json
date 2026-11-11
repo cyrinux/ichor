@@ -1,0 +1,59 @@
+{
+  "blockers": [
+    "the pre-rollback hook Job ingress-nginx-migrate was refused"
+  ],
+  "changes": [
+    {
+      "action": "replace",
+      "error": "configmaps \"ingress-nginx\" is forbidden",
+      "kind": "ConfigMap",
+      "name": "ingress-nginx",
+      "namespace": "ingress-nginx"
+    },
+    {
+      "action": "replace",
+      "error": "",
+      "kind": "Deployment",
+      "name": "ingress-nginx",
+      "namespace": "ingress-nginx"
+    },
+    {
+      "action": "delete",
+      "error": "",
+      "kind": "ServiceMonitor",
+      "name": "ingress-nginx",
+      "namespace": "ingress-nginx"
+    }
+  ],
+  "fluxOwner": "flux-system/ingress-nginx",
+  "force": true,
+  "from": 7,
+  "fromAppVersion": "1.13.0",
+  "fromChart": "ingress-nginx-4.13.0",
+  "historyMax": 2,
+  "hooks": [
+    {
+      "deletePolicies": [
+        "before-hook-creation",
+        "hook-succeeded"
+      ],
+      "error": "jobs.batch \"ingress-nginx-migrate\" is forbidden",
+      "event": "pre-rollback",
+      "kind": "Job",
+      "name": "ingress-nginx-migrate",
+      "weight": -5
+    }
+  ],
+  "name": "ingress-nginx",
+  "namespace": "ingress-nginx",
+  "prune": [
+    5,
+    6
+  ],
+  "releaseNamespace": "ingress-nginx",
+  "to": 6,
+  "toAppVersion": "1.13.0",
+  "toChart": "ingress-nginx-4.13.0",
+  "unchanged": 6,
+  "workloads": 2
+}

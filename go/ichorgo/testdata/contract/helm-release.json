@@ -1,0 +1,32 @@
+{
+  "appVersion": "1.13.0",
+  "chart": "ingress-nginx",
+  "chartVersion": "4.13.0",
+  "description": "Upgrade complete",
+  "history": [
+    {
+      "description": "Upgrade complete",
+      "revision": 7,
+      "status": "deployed",
+      "updated": 1767323045
+    },
+    {
+      "revision": 6,
+      "status": "superseded",
+      "updated": 1767323045
+    },
+    {
+      "revision": 5,
+      "status": "superseded",
+      "updated": 1767323045
+    }
+  ],
+  "manifest": "# Demo cluster: no real manifest.\n",
+  "name": "ingress-nginx",
+  "namespace": "ingress-nginx",
+  "notes": "The ingress controller is listening on port 80 and 443.",
+  "revision": 7,
+  "status": "deployed",
+  "updated": 1767323045,
+  "values": "replicaCount: 2\n"
+}

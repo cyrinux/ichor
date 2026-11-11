@@ -1,0 +1,28 @@
+{
+  "at": 1767323045000,
+  "done": 1,
+  "phase": "Running",
+  "total": 2,
+  "workloads": [
+    {
+      "desired": 2,
+      "done": true,
+      "failed": false,
+      "kind": "Deployment",
+      "manual": false,
+      "name": "ingress-nginx",
+      "namespace": "ingress-nginx",
+      "ready": 2
+    },
+    {
+      "desired": 1,
+      "done": false,
+      "failed": false,
+      "kind": "StatefulSet",
+      "manual": false,
+      "name": "ingress-nginx-cache",
+      "namespace": "ingress-nginx",
+      "ready": 0
+    }
+  ]
+}

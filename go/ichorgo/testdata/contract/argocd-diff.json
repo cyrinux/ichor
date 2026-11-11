@@ -1,0 +1,57 @@
+{
+  "applied": "91c0a7e6d5b4c3a29180f7e6d5c4b3a291807f6e",
+  "kind": "Application",
+  "name": "web",
+  "namespace": "argocd",
+  "resources": [
+    {
+      "change": "changed",
+      "diff": "--- live\n+++ wanted\n@@ -38,9 +38,11 @@\n     spec:\n       containers:\n-      - image: ghcr.io/example/web:1.8.2\n+      - envFrom:\n+        - configMapRef:\n+            name: web-settings\n+        image: ghcr.io/example/web:1.9.0\n         imagePullPolicy: IfNotPresent\n         name: web\n         ports:\n",
+      "error": "",
+      "group": "apps",
+      "kind": "Deployment",
+      "liveChanges": [
+        {
+          "label": "spec.replicas",
+          "live": "3",
+          "path": [
+            "spec",
+            "replicas"
+          ],
+          "type": "int",
+          "wanted": "2"
+        }
+      ],
+      "name": "web",
+      "namespace": "demo",
+      "truncated": false,
+      "version": "v1"
+    },
+    {
+      "change": "created",
+      "diff": "--- live\n+++ wanted\n@@ -0,0 +1,10 @@\n+apiVersion: v1\n+data:\n+  CACHE_TTL: \"300\"\n+  LOG_LEVEL: info\n+kind: ConfigMap\n+metadata:\n+  labels:\n+    app.kubernetes.io/instance: web\n+  name: web-settings\n+  namespace: demo\n",
+      "error": "",
+      "group": "",
+      "kind": "ConfigMap",
+      "name": "web-settings",
+      "namespace": "demo",
+      "truncated": false,
+      "version": "v1"
+    },
+    {
+      "change": "deleted",
+      "diff": "--- live\n+++ wanted\n@@ -1,13 +0,0 @@\n-apiVersion: v1\n-kind: Service\n-metadata:\n-  labels:\n-    app.kubernetes.io/instance: web\n-  name: web-legacy\n-  namespace: demo\n-spec:\n-  ports:\n-  - port: 80\n-    protocol: TCP\n-    targetPort: 8080\n-  selector:\n-    app: web\n",
+      "error": "",
+      "group": "",
+      "kind": "Service",
+      "name": "web-legacy",
+      "namespace": "demo",
+      "truncated": false,
+      "version": "v1"
+    }
+  ],
+  "revision": "4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d",
+  "warnings": [
+    "Secret values are not compared: Argo CD hides them when it renders. Only their keys and metadata are."
+  ]
+}
