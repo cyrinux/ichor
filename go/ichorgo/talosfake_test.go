@@ -207,22 +207,16 @@ func (f *fakeTalos) called(prefix string) []string {
 	return out
 }
 
-// waitVersion blocks while the node ctx targets is held (see versionHold). A call that gives
-// up first fails, as a node that never answered: answering it would race the client's own
-// deadline, which the server's (from grpc-timeout) matches to the millisecond on loopback.
+// waitVersion blocks while the node ctx targets is held (see versionHold). A call that gives up
+// first fails, as a node that never answered: answering raced the client's own deadline.
 func (f *fakeTalos) waitVersion(ctx context.Context) error {
 	md, _ := metadata.FromIncomingContext(ctx)
 
-	v := md.Get("node")
-	if len(v) == 0 {
-		return nil
-	}
-
 	f.mu.Lock()
-	hold := f.versionHold[v[0]]
+	hold, held := f.versionHold[strings.Join(md.Get("node"), ",")]
 	f.mu.Unlock()
 
-	if hold == nil {
+	if !held {
 		return nil
 	}
 
