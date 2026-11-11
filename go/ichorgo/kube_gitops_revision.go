@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -18,6 +19,9 @@ const (
 	revisionToolArgo = "argocd"
 	revisionToolFlux = "flux"
 )
+
+// gitCommitSHA is a full or abbreviated Git object name.
+var gitCommitSHA = regexp.MustCompile(`^[0-9a-f]{7,64}$`)
 
 var errRevisionSHA = errors.New("no commit given")
 

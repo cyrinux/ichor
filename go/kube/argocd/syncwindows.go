@@ -1,4 +1,4 @@
-package ichorgo
+package argocd
 
 import (
 	"crypto/sha256"
@@ -8,17 +8,20 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/cronexpr"
+	"github.com/cyrinux/ichor/go/kube"
 )
 
 // AppProject sync windows, evaluated the way the application controller does: a window is
 // active from each run of its cron schedule for its duration; an active deny window stops
 // automated syncs (self-heal included) of the apps it matches, and manual ones unless
 // manualSync. Ichor's freezes are one-shot deny windows (see kube_argocd_freeze.go) recorded
-// in the argoFreezesAnnotation.
+// in the FreezesAnnotation.
 
-// argoFreezesAnnotation lists the project's windows Ichor created: [{window, reason,
-// createdAt, expiresAt}], window being the argoWindowID of the window.
-const argoFreezesAnnotation = "ichor.levis.name/freezes"
+// FreezesAnnotation lists the project's windows Ichor created: [{window, reason,
+// createdAt, expiresAt}], window being the WindowID of the window.
+const FreezesAnnotation = "ichor.levis.name/freezes"
 
 type argoWindow struct {
 	ID           string   `json:"id"`
@@ -56,7 +59,7 @@ type argoFreeze struct {
 	Windows    []string `json:"windows"`
 }
 
-type argoWindowObject struct {
+type WindowObject struct {
 	Kind         string   `json:"kind"`
 	Schedule     string   `json:"schedule"`
 	Duration     string   `json:"duration"`
@@ -75,19 +78,27 @@ type argoFreezeRecord struct {
 	ExpiresAt string `json:"expiresAt"`
 }
 
-// argoWindowEntry is one window of a project as read, with its raw JSON (kept verbatim on
+// WindowEntry is one window of a project as read, with its raw JSON (kept verbatim on
 // writes: newer fields such as description survive) and its Ichor record.
-type argoWindowEntry struct {
+type WindowEntry struct {
 	raw     json.RawMessage
-	window  argoWindowObject
+	window  WindowObject
 	id      string
 	record  *argoFreezeRecord
 	expired bool
 }
 
-// argoWindowID identifies a window by its whole content, fields Ichor does not know
+// NewWindowEntry is the window w as its project stores it (raw), not an Ichor freeze.
+func NewWindowEntry(raw json.RawMessage, w WindowObject) WindowEntry {
+	return WindowEntry{raw: raw, window: w, id: WindowID(raw)}
+}
+
+// Raw is the window as its project stores it.
+func (e WindowEntry) Raw() json.RawMessage { return e.raw }
+
+// WindowID identifies a window by its whole content, fields Ichor does not know
 // included (windows have no name): its JSON with the keys sorted.
-func argoWindowID(raw json.RawMessage) string {
+func WindowID(raw json.RawMessage) string {
 	var v any
 	if json.Unmarshal(raw, &v) == nil {
 		raw, _ = json.Marshal(v)
@@ -100,20 +111,20 @@ func argoWindowID(raw json.RawMessage) string {
 
 // argoWindowEntries reads the project's windows; err when the Ichor annotation is unreadable
 // (the windows then all look foreign).
-func argoWindowEntries(p argoProjectObject, now time.Time) (_ []argoWindowEntry, err error) {
+func argoWindowEntries(p ProjectObject, now time.Time) (_ []WindowEntry, err error) {
 	var records []argoFreezeRecord
-	if a := p.Metadata.Annotations[argoFreezesAnnotation]; a != "" {
+	if a := p.Metadata.Annotations[FreezesAnnotation]; a != "" {
 		if json.Unmarshal([]byte(a), &records) != nil {
 			err = errArgoFreezesAnnotation
 		}
 	}
 
-	out := make([]argoWindowEntry, 0, len(p.Spec.SyncWindows))
+	out := make([]WindowEntry, 0, len(p.Spec.SyncWindows))
 
 	for _, raw := range p.Spec.SyncWindows {
-		e := argoWindowEntry{raw: raw}
+		e := WindowEntry{raw: raw}
 		_ = json.Unmarshal(raw, &e.window)
-		e.id = argoWindowID(raw)
+		e.id = WindowID(raw)
 
 		if i := slices.IndexFunc(records, func(r argoFreezeRecord) bool { return r.Window == e.id }); i >= 0 {
 			r := records[i]
@@ -135,8 +146,8 @@ func parseTime(s string) time.Time {
 
 // argoWindowTimes is the current occurrence of w when it is active, else the next one (zero
 // when it never runs again), or why the window cannot be read.
-func argoWindowTimes(w argoWindowObject, now time.Time) (active bool, start, end time.Time, err error) {
-	sched, err := parseCronSchedule(w.Schedule)
+func argoWindowTimes(w WindowObject, now time.Time) (active bool, start, end time.Time, err error) {
+	sched, err := cronexpr.Parse(w.Schedule)
 	if err != nil {
 		return false, start, end, err
 	}
@@ -156,7 +167,7 @@ func argoWindowTimes(w argoWindowObject, now time.Time) (active bool, start, end
 	t := now.In(loc)
 
 	// The first run after now-d: before now it is the current occurrence, else the next one.
-	start = sched.next(t.Add(-d))
+	start = sched.Next(t.Add(-d))
 	if start.IsZero() {
 		return false, start, start, nil
 	}
@@ -166,7 +177,7 @@ func argoWindowTimes(w argoWindowObject, now time.Time) (active bool, start, end
 
 // argoWindowMatches: an app is in a window when one of its selectors matches (all of the
 // non-empty ones with andOperator), as the controller's SyncWindows.Matches.
-func argoWindowMatches(w argoWindowObject, a argoApp) bool {
+func argoWindowMatches(w WindowObject, a App) bool {
 	var clusters []string // Argo CD skips an empty server or name, not an empty namespace
 	for _, c := range []string{a.Destination.Server, a.Destination.Name} {
 		if c != "" {
@@ -264,9 +275,9 @@ func argoGlobRegexp(pattern string) string {
 	return b.String()
 }
 
-// mapArgoProjects maps the projects with their windows, and marks the apps an active deny
+// MapProjects maps the projects with their windows, and marks the apps an active deny
 // window freezes.
-func mapArgoProjects(projects []argoProjectObject, apps []argoApp, now time.Time) []argoProject {
+func MapProjects(projects []ProjectObject, apps []App, now time.Time) []argoProject {
 	out := make([]argoProject, 0, len(projects))
 
 	for _, p := range projects {
@@ -308,7 +319,7 @@ func mapArgoProjects(projects []argoProjectObject, apps []argoApp, now time.Time
 	return out
 }
 
-func mapArgoWindow(e argoWindowEntry, now time.Time) argoWindow {
+func mapArgoWindow(e WindowEntry, now time.Time) argoWindow {
 	w := argoWindow{
 		ID: e.id, Kind: e.window.Kind, Schedule: e.window.Schedule, Duration: e.window.Duration, TimeZone: e.window.TimeZone,
 		Applications: orEmpty(e.window.Applications), Namespaces: orEmpty(e.window.Namespaces), Clusters: orEmpty(e.window.Clusters),
@@ -327,7 +338,7 @@ func mapArgoWindow(e argoWindowEntry, now time.Time) argoWindow {
 
 	if r := e.record; r != nil {
 		w.Ichor = &argoFreezeInfo{
-			Reason: r.Reason, CreatedAt: unixMilli(r.CreatedAt), ExpiresAt: unixMilli(r.ExpiresAt), Expired: e.expired,
+			Reason: r.Reason, CreatedAt: kube.UnixMilli(r.CreatedAt), ExpiresAt: kube.UnixMilli(r.ExpiresAt), Expired: e.expired,
 		}
 	}
 
@@ -349,19 +360,19 @@ func addArgoFreeze(f *argoFreeze, project string, w argoWindow) *argoFreeze {
 
 // argoProjectManager is the Argo CD app that applies the project from Git (its tracking
 // annotation or instance label), nil when none is listed.
-func argoProjectManager(p argoProjectObject, apps []argoApp) *argoApp {
-	ref := p.Metadata.Annotations[argoTrackingID]
+func argoProjectManager(p ProjectObject, apps []App) *App {
+	ref := p.Metadata.Annotations[TrackingID]
 	if ref != "" {
 		ref, _, _ = strings.Cut(ref, ":")
 	} else {
-		ref = p.Metadata.Labels[argoInstanceLabel]
+		ref = p.Metadata.Labels[InstanceLabel]
 	}
 
 	if ref == "" {
 		return nil
 	}
 
-	for _, key := range argoAppKeys(ref, p.Metadata.Namespace) {
+	for _, key := range AppKeys(ref, p.Metadata.Namespace) {
 		for i := range apps {
 			if apps[i].Namespace+"/"+apps[i].Name == key {
 				return &apps[i]

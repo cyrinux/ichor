@@ -1,4 +1,4 @@
-package ichorgo
+package argocd
 
 import (
 	"cmp"
@@ -7,11 +7,12 @@ import (
 	"strings"
 
 	"github.com/cyrinux/ichor/go/gitforge"
+	"github.com/cyrinux/ichor/go/kube"
 )
 
 // The fields of argoproj.io/v1alpha1 objects the app reads.
 
-type argoObject struct {
+type Object struct {
 	Metadata struct {
 		Name            string            `json:"name"`
 		Namespace       string            `json:"namespace"`
@@ -26,7 +27,7 @@ type argoObject struct {
 	Spec      argoSpec        `json:"spec"`
 	Operation json.RawMessage `json:"operation"` // a requested operation not picked up yet
 	Status    struct {
-		Resources []argoResourceStatus `json:"resources"`
+		Resources []ResourceStatus `json:"resources"`
 		Sync      struct {
 			Status    string   `json:"status"`
 			Revision  string   `json:"revision"`
@@ -34,7 +35,7 @@ type argoObject struct {
 		} `json:"sync"`
 		Health         argoHealth          `json:"health"`
 		History        []argoHistoryObject `json:"history"`
-		Conditions     []argoCondition     `json:"conditions"`
+		Conditions     []Condition         `json:"conditions"`
 		ReconciledAt   string              `json:"reconciledAt"`
 		OperationState *argoOperationState `json:"operationState"`
 		Summary        struct {
@@ -45,10 +46,10 @@ type argoObject struct {
 }
 
 type argoSpec struct {
-	Project     string             `json:"project"`
-	Source      *argoSourceObject  `json:"source"`
-	Sources     []argoSourceObject `json:"sources"`
-	Destination argoDest           `json:"destination"`
+	Project     string         `json:"project"`
+	Source      *SourceObject  `json:"source"`
+	Sources     []SourceObject `json:"sources"`
+	Destination Dest           `json:"destination"`
 	// IgnoreDifferences are the fields Argo CD leaves out of its comparison.
 	IgnoreDifferences []argoIgnoreDifference `json:"ignoreDifferences"`
 	SyncPolicy        *struct {
@@ -73,7 +74,7 @@ type argoIgnoreDifference struct {
 	ManagedFieldsManagers []string `json:"managedFieldsManagers"`
 }
 
-type argoSourceObject struct {
+type SourceObject struct {
 	RepoURL        string `json:"repoURL"`
 	Path           string `json:"path"`
 	Chart          string `json:"chart"`
@@ -91,7 +92,7 @@ type argoHealth struct {
 	Message string `json:"message"`
 }
 
-type argoResourceStatus struct {
+type ResourceStatus struct {
 	Group           string      `json:"group"`
 	Version         string      `json:"version"`
 	Kind            string      `json:"kind"`
@@ -150,7 +151,7 @@ type argoAppSetObject struct {
 	} `json:"status"`
 }
 
-type argoProjectObject struct {
+type ProjectObject struct {
 	Metadata struct {
 		Name            string            `json:"name"`
 		Namespace       string            `json:"namespace"`
@@ -167,30 +168,30 @@ type argoProjectObject struct {
 // Conditions that mean the app cannot be synced or compared as it stands.
 var argoErrorConditions = []string{"ComparisonError", "InvalidSpecError", "SyncError", "UnknownError"}
 
-func mapArgoApp(o argoObject, apps map[string]bool) argoApp {
+func MapApp(o Object, apps map[string]bool) App {
 	st := &o.Status
-	a := argoApp{
+	a := App{
 		Namespace: o.Metadata.Namespace, Name: o.Metadata.Name, Project: o.Spec.Project,
 		Owner:  argoOwnerOf(o, apps),
 		Health: cmp.Or(st.Health.Status, "Unknown"), HealthMessage: st.Health.Message,
 		Sync: cmp.Or(st.Sync.Status, "Unknown"), Revision: st.Sync.Revision,
 		Refreshing:  o.Metadata.Annotations[argoRefreshAnnotation],
-		Sources:     []argoSrc{},
+		Sources:     []Source{},
 		Destination: o.Spec.Destination,
 		SyncOptions: []string{},
-		Conditions:  []argoCondition{},
+		Conditions:  []Condition{},
 		Images:      orEmpty(st.Summary.Images), ExternalURLs: orEmpty(st.Summary.ExternalURLs),
-		UnhealthyPods: []kubePod{},
-		ReconciledAt:  unixMilli(st.ReconciledAt),
+		UnhealthyPods: []kube.Pod{},
+		ReconciledAt:  kube.UnixMilli(st.ReconciledAt),
 	}
 
 	if a.Revision == "" && len(st.Sync.Revisions) > 0 {
 		a.Revision = st.Sync.Revisions[0]
 	}
 
-	sources := argoSourcesOf(o.Spec)
+	sources := SourcesOf(o.Spec)
 	for _, s := range sources {
-		a.Sources = append(a.Sources, argoSrc{Repo: s.RepoURL, RepoURL: gitforge.RepoWebURL(s.RepoURL), Path: s.Path, Chart: s.Chart, TargetRevision: s.TargetRevision})
+		a.Sources = append(a.Sources, Source{Repo: s.RepoURL, RepoURL: gitforge.RepoWebURL(s.RepoURL), Path: s.Path, Chart: s.Chart, TargetRevision: s.TargetRevision})
 	}
 
 	a.RevisionURL = argoRevisionURL(sources, st.Sync.Revisions, a.Revision)
@@ -198,12 +199,12 @@ func mapArgoApp(o argoObject, apps map[string]bool) argoApp {
 	if p := o.Spec.SyncPolicy; p != nil {
 		a.SyncOptions = orEmpty(p.SyncOptions)
 		if auto := p.Automated; auto != nil {
-			a.AutoSync = argoAuto{Enabled: auto.Enabled == nil || *auto.Enabled, Prune: auto.Prune, SelfHeal: auto.SelfHeal}
+			a.AutoSync = AutoSync{Enabled: auto.Enabled == nil || *auto.Enabled, Prune: auto.Prune, SelfHeal: auto.SelfHeal}
 		}
 	}
 
 	for _, c := range st.Conditions {
-		a.Conditions = append(a.Conditions, argoCondition{Type: c.Type, Message: c.Message})
+		a.Conditions = append(a.Conditions, Condition{Type: c.Type, Message: c.Message})
 	}
 
 	results := argoSyncResults(st.OperationState)
@@ -214,11 +215,6 @@ func mapArgoApp(o argoObject, apps map[string]bool) argoApp {
 	}
 
 	a.History = argoHistoryOf(st.History)
-	if custom, ok := customIcon(o.Metadata.Annotations, o.Metadata.Labels); ok {
-		a.Icon, a.RemoteIcon, a.IconURL = custom.icon, custom.remote, custom.url
-	} else {
-		a.Icon, a.RemoteIcon = argoIcon(a)
-	}
 	a.Level = argoLevel(a)
 
 	return a
@@ -235,41 +231,41 @@ func orEmpty[T any](s []T) []T {
 // argoOwnerOf finds who writes the app's spec: an ApplicationSet (owner reference), or a
 // parent app that manages it as one of its resources (tracking annotation or instance label
 // naming another Application). Changing an owned app's spec is reverted by its owner.
-func argoOwnerOf(o argoObject, apps map[string]bool) *argoOwner {
+func argoOwnerOf(o Object, apps map[string]bool) *Owner {
 	for _, ref := range o.Metadata.OwnerReferences {
 		if ref.Kind == "ApplicationSet" {
-			return &argoOwner{Kind: ref.Kind, Name: ref.Name}
+			return &Owner{Kind: ref.Kind, Name: ref.Name}
 		}
 	}
 
 	self := o.Metadata.Namespace + "/" + o.Metadata.Name
 
 	parent := ""
-	if id := o.Metadata.Annotations[argoTrackingID]; id != "" {
+	if id := o.Metadata.Annotations[TrackingID]; id != "" {
 		// "<app>:<group>/<kind>:<namespace>/<name>"; <app> is "<namespace>_<name>" for apps
 		// outside the control-plane namespace.
 		parent, _, _ = strings.Cut(id, ":")
 	} else {
-		parent = o.Metadata.Labels[argoInstanceLabel]
+		parent = o.Metadata.Labels[InstanceLabel]
 	}
 
 	if parent == "" {
 		return nil
 	}
 
-	for _, key := range argoAppKeys(parent, o.Metadata.Namespace) {
+	for _, key := range AppKeys(parent, o.Metadata.Namespace) {
 		if key != self && apps[key] {
 			_, name, _ := strings.Cut(key, "/")
 
-			return &argoOwner{Kind: "Application", Name: name}
+			return &Owner{Kind: "Application", Name: name}
 		}
 	}
 
 	return nil
 }
 
-// argoAppKeys are the namespace/name keys an app reference may stand for.
-func argoAppKeys(ref, namespace string) []string {
+// AppKeys are the namespace/name keys an app reference may stand for.
+func AppKeys(ref, namespace string) []string {
 	if ns, name, ok := strings.Cut(ref, "_"); ok {
 		return []string{ns + "/" + name, namespace + "/" + ref}
 	}
@@ -297,11 +293,11 @@ func argoSyncResults(op *argoOperationState) map[argoKey]argoResultEntry {
 	return out
 }
 
-func argoResources(list []argoResourceStatus, results map[argoKey]argoResultEntry) []argoResource {
-	out := make([]argoResource, 0, len(list))
+func argoResources(list []ResourceStatus, results map[argoKey]argoResultEntry) []Resource {
+	out := make([]Resource, 0, len(list))
 
 	for _, r := range list {
-		res := argoResource{
+		res := Resource{
 			Group: r.Group, Kind: r.Kind, Namespace: r.Namespace, Name: r.Name, Sync: r.Status,
 			Wave: r.SyncWave, Hook: r.Hook, Prune: r.RequiresPruning,
 			SyncResult: results[argoKey{r.Group, r.Kind, r.Namespace, r.Name}].status,
@@ -314,7 +310,7 @@ func argoResources(list []argoResourceStatus, results map[argoKey]argoResultEntr
 		out = append(out, res)
 	}
 
-	slices.SortStableFunc(out, func(a, b argoResource) int { return a.Wave - b.Wave })
+	slices.SortStableFunc(out, func(a, b Resource) int { return a.Wave - b.Wave })
 
 	return out
 }
@@ -323,15 +319,15 @@ func argoResources(list []argoResourceStatus, results map[argoKey]argoResultEntr
 // for a selective sync) the operation already synced or pruned, or that were in sync and left
 // alone, plus its hooks once they ran; the current wave is the lowest one with a resource
 // still to sync.
-func argoOp(op *argoOperationState, resources []argoResource, results map[argoKey]argoResultEntry) *argoOperation {
+func argoOp(op *argoOperationState, resources []Resource, results map[argoKey]argoResultEntry) *Operation {
 	if op == nil {
 		return nil
 	}
 
-	out := &argoOperation{
+	out := &Operation{
 		Phase: op.Phase, Message: op.Message, RetryCount: op.RetryCount,
-		StartedAt: unixMilli(op.StartedAt), FinishedAt: unixMilli(op.FinishedAt),
-		InitiatedBy: op.Operation.InitiatedBy.Username, Waves: []int{}, Failed: []argoResult{},
+		StartedAt: kube.UnixMilli(op.StartedAt), FinishedAt: kube.UnixMilli(op.FinishedAt),
+		InitiatedBy: op.Operation.InitiatedBy.Username, Waves: []int{}, Failed: []Result{},
 	}
 
 	if op.Operation.InitiatedBy.Automated {
@@ -388,7 +384,7 @@ func argoOp(op *argoOperationState, resources []argoResource, results map[argoKe
 		}
 
 		if r.Status == "SyncFailed" || entry.hookPhase == "Failed" || entry.hookPhase == "Error" {
-			out.Failed = append(out.Failed, argoResult{Kind: r.Kind, Namespace: r.Namespace, Name: r.Name, Message: r.Message})
+			out.Failed = append(out.Failed, Result{Kind: r.Kind, Namespace: r.Namespace, Name: r.Name, Message: r.Message})
 		}
 	}
 
@@ -441,12 +437,12 @@ type argoSyncResultResource struct {
 	HookPhase string `json:"hookPhase"`
 }
 
-func argoHistoryOf(list []argoHistoryObject) []argoHistory {
-	out := []argoHistory{}
+func argoHistoryOf(list []argoHistoryObject) []History {
+	out := []History{}
 
 	for i := len(list) - 1; i >= 0 && len(out) < argoHistoryMax; i-- {
 		h := list[i]
-		e := argoHistory{ID: h.ID, Revision: h.Revision, DeployedAt: unixMilli(h.DeployedAt), InitiatedBy: h.InitiatedBy.Username}
+		e := History{ID: h.ID, Revision: h.Revision, DeployedAt: kube.UnixMilli(h.DeployedAt), InitiatedBy: h.InitiatedBy.Username}
 
 		if e.Revision == "" && len(h.Revisions) > 0 {
 			e.Revision = h.Revisions[0]
@@ -471,13 +467,13 @@ func argoHistoryOf(list []argoHistoryObject) []argoHistory {
 
 // argoHistorySources are the sources a deployment used: the single one, or the list of a
 // multi-source app (paired by position with its revisions).
-func argoHistorySources(h argoHistoryObject) []argoSourceObject {
-	var single argoSourceObject
+func argoHistorySources(h argoHistoryObject) []SourceObject {
+	var single SourceObject
 	if len(h.Source) > 0 && json.Unmarshal(h.Source, &single) == nil && single.RepoURL != "" {
-		return []argoSourceObject{single}
+		return []SourceObject{single}
 	}
 
-	var list []argoSourceObject
+	var list []SourceObject
 	if len(h.Sources) > 0 && json.Unmarshal(h.Sources, &list) == nil {
 		return list
 	}
@@ -485,49 +481,20 @@ func argoHistorySources(h argoHistoryObject) []argoSourceObject {
 	return nil
 }
 
-// argoIcon names the app's icon from the catalog: by its Helm chart, its name, then the
-// images it runs.
-func argoIcon(a argoApp) (icon, remote string) {
-	catalog := loadAppCatalog()
-
-	candidates := make([]identification, 0, len(a.Sources)+len(a.Images)+1)
-	for _, s := range a.Sources {
-		if s.Chart != "" {
-			candidates = append(candidates, catalog.byWord(s.Chart))
-		}
-	}
-
-	candidates = append(candidates, catalog.byWord(a.Name))
-	for _, img := range a.Images {
-		candidates = append(candidates, catalog.identify(parseImageRef(img)))
-	}
-
-	for _, id := range candidates {
-		switch {
-		case id.app != nil && id.app.hasIcon():
-			return id.app.ID, ""
-		case id.slug != "":
-			return "", id.slug
-		}
-	}
-
-	return "", ""
-}
-
 // argoLevel: critical when the app is broken or its last sync failed, warning while it
 // drifts or rolls out, idle when suspended.
-func argoLevel(a argoApp) string {
+func argoLevel(a App) string {
 	failed := a.Operation != nil && (a.Operation.Phase == "Failed" || a.Operation.Phase == "Error")
-	errored := slices.ContainsFunc(a.Conditions, func(c argoCondition) bool { return slices.Contains(argoErrorConditions, c.Type) })
+	errored := slices.ContainsFunc(a.Conditions, func(c Condition) bool { return slices.Contains(argoErrorConditions, c.Type) })
 
 	switch {
 	case a.Health == "Degraded" || a.Health == "Missing" || failed || errored:
-		return healthCritical
+		return kube.HealthCritical
 	case a.Sync != "Synced" || a.Health == "Progressing" || a.Health == "Unknown":
-		return healthWarning
+		return kube.HealthWarning
 	case a.Health == "Suspended":
-		return healthIdle
+		return kube.HealthIdle
 	default:
-		return healthOK
+		return kube.HealthOK
 	}
 }

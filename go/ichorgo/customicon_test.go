@@ -63,20 +63,25 @@ func TestMapArgoAppCustomIcon(t *testing.T) {
 	o := argoObjectByName(t, "web")
 	o.Metadata.Annotations = map[string]string{customIconKey: "https://example.org/web.png"}
 
-	a := mapArgoApp(o, map[string]bool{})
-	if a.Icon != "" || a.RemoteIcon != "" || a.IconURL != "https://example.org/web.png" {
-		t.Fatalf("icon = %q, remote = %q, url = %q", a.Icon, a.RemoteIcon, a.IconURL)
+	icon, remote, url := argoObjectIcon(o)
+	if icon != "" || remote != "" || url != "https://example.org/web.png" {
+		t.Fatalf("icon = %q, remote = %q, url = %q", icon, remote, url)
 	}
 }
 
 func TestMapArgoAppInvalidCustomIconKeepsCatalog(t *testing.T) {
-	plain := mapArgoApp(argoObjectByName(t, "cilium"), map[string]bool{})
+	plainIcon, plainRemote, _ := argoObjectIcon(argoObjectByName(t, "cilium"))
 
 	o := argoObjectByName(t, "cilium")
 	o.Metadata.Annotations = map[string]string{customIconKey: "data:text/html;base64," + strings.Repeat("A", 8)}
 
-	a := mapArgoApp(o, map[string]bool{})
-	if a.Icon != plain.Icon || a.RemoteIcon != plain.RemoteIcon || a.IconURL != "" {
-		t.Fatalf("icon = %q, remote = %q, url = %q; want the catalog's %q", a.Icon, a.RemoteIcon, a.IconURL, plain.Icon)
+	icon, remote, url := argoObjectIcon(o)
+	if plainIcon == "" || icon != plainIcon || remote != plainRemote || url != "" {
+		t.Fatalf("icon = %q, remote = %q, url = %q; want the catalog's %q", icon, remote, url, plainIcon)
 	}
+}
+
+// argoObjectIcon is the icon KubeArgoCD gives the app of o.
+func argoObjectIcon(o argoObject) (icon, remote, url string) {
+	return argoAppIcon(mapArgoApp(o, map[string]bool{}), o.Metadata.Annotations, o.Metadata.Labels)
 }

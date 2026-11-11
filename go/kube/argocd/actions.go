@@ -1,4 +1,4 @@
-package ichorgo
+package argocd
 
 import (
 	"context"
@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube"
 )
 
 // Actions on an Argo CD Application, each one merge patch on the object, as `argocd --core`
@@ -18,8 +20,8 @@ import (
 const (
 	argoActionRefresh     = "refresh"
 	argoActionHardRefresh = "hardRefresh"
-	argoActionSync        = "sync"
-	argoActionTerminate   = "terminate"
+	ActionSync            = "sync"
+	ActionTerminate       = "terminate"
 	argoActionAutoSyncOn  = "autoSyncOn"
 	argoActionAutoSyncOff = "autoSyncOff"
 	argoActionRollback    = "rollback"
@@ -30,10 +32,10 @@ const (
 	argoInitiatorName    = "ichor"
 )
 
-var argoActions = []string{argoActionRefresh, argoActionHardRefresh, argoActionSync, argoActionTerminate, argoActionAutoSyncOn, argoActionAutoSyncOff, argoActionRollback}
+var argoActions = []string{argoActionRefresh, argoActionHardRefresh, ActionSync, ActionTerminate, argoActionAutoSyncOn, argoActionAutoSyncOff, argoActionRollback}
 
-// argoSyncOptions are the choices of the sync sheet (and the rollback target).
-type argoSyncOptions struct {
+// SyncOptions are the choices of the sync sheet (and the rollback target).
+type SyncOptions struct {
 	Prune              bool              `json:"prune"`
 	DryRun             bool              `json:"dryRun"`
 	Force              bool              `json:"force"`
@@ -52,73 +54,48 @@ type argoResourceRef struct {
 }
 
 var (
-	errArgoBusy     = &kubeAPIError{Code: 409, Reason: "Busy", Message: "a sync is already running: wait for it or terminate it"}
-	errArgoNotBusy  = &kubeAPIError{Code: 409, Reason: "Idle", Message: "no sync is running"}
-	errArgoAutoSync = &kubeAPIError{Code: 409, Reason: "AutoSync", Message: "pause auto-sync first, or Argo CD syncs straight back to the latest revision"}
-	errArgoHistory  = &kubeAPIError{Code: 404, Reason: "NotFound", Message: "that deployment is no longer in the app's history"}
+	errArgoBusy     = &kube.APIError{Code: 409, Reason: "Busy", Message: "a sync is already running: wait for it or terminate it"}
+	errArgoNotBusy  = &kube.APIError{Code: 409, Reason: "Idle", Message: "no sync is running"}
+	errArgoAutoSync = &kube.APIError{Code: 409, Reason: "AutoSync", Message: "pause auto-sync first, or Argo CD syncs straight back to the latest revision"}
+	errArgoHistory  = &kube.APIError{Code: 404, Reason: "NotFound", Message: "that deployment is no longer in the app's history"}
 )
 
-// KubeArgoAction runs an action on the Argo CD Application namespace/name (os:admin):
-// refresh, hardRefresh, sync, terminate, autoSyncOn, autoSyncOff or rollback. optionsJSON
-// holds the sync options (prune, dryRun, force, applyOutOfSyncOnly, serverSideApply, replace,
-// resources) and, for a rollback, historyId; "" for none. Spec changes (auto-sync, rollback)
-// are refused on an app an ApplicationSet or a parent app owns: the owner would revert them.
-// kubeServer: see KubePods.
-func KubeArgoAction(configYAML, contextName, kubeServer, namespace, name, action, optionsJSON string) (err error) {
-	defer maskErr(&err)
+// IsAction tells an action Act runs.
+func IsAction(action string) bool { return slices.Contains(argoActions, action) }
 
-	contextName = unmaskContext(configYAML, contextName)
-	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
-
-	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "argo-" + action, Namespace: namespace, Object: "Application/" + name, Params: strings.TrimSpace(optionsJSON)})
-
-	if !slices.Contains(argoActions, action) {
-		return fmt.Errorf("unsupported Argo CD action %q", action)
-	}
-
-	if err := validateKubeName("application", namespace, name); err != nil {
-		return err
-	}
-
-	var opts argoSyncOptions
+// ParseSyncOptions reads the optionsJSON of an action; "" is none.
+func ParseSyncOptions(optionsJSON string) (SyncOptions, error) {
+	var opts SyncOptions
 	if strings.TrimSpace(optionsJSON) != "" {
 		if err := json.Unmarshal([]byte(optionsJSON), &opts); err != nil {
-			return fmt.Errorf("bad sync options: %w", err)
+			return opts, fmt.Errorf("bad sync options: %w", err)
 		}
 	}
 
-	return runArgoAction(kubeTarget{configYAML, contextName, kubeServer}, namespace, name, action, opts)
+	return opts, nil
 }
 
-// runArgoAction is KubeArgoAction once its arguments are unmasked and checked: refused in
-// the demo, one patch otherwise. ArgoSyncRun.Terminate goes through it too.
-func runArgoAction(target kubeTarget, namespace, name, action string, opts argoSyncOptions) error {
-	return kubeMutate(target, func(ctx context.Context, k *kubeClient) error {
-		return argoAction(ctx, k, namespace, name, action, opts, time.Now())
-	})
-}
-
-func argoAction(ctx context.Context, k *kubeClient, namespace, name, action string, opts argoSyncOptions, now time.Time) error {
-	groups, err := readAPIGroups(ctx, k)
+func Act(ctx context.Context, k kube.Client, namespace, name, action string, opts SyncOptions, now time.Time) error {
+	groups, err := kube.APIGroups(ctx, k)
 	if err != nil {
 		return err
 	}
 
-	version, ok := groups[groupArgo]
+	version, ok := groups[Group]
 	if !ok {
-		return &kubeAPIError{Code: 404, Reason: "NotFound", Message: "Argo CD is not installed"}
+		return &kube.APIError{Code: 404, Reason: "NotFound", Message: "Argo CD is not installed"}
 	}
 
-	path := "/apis/" + groupArgo + "/" + version + "/namespaces/" + url.PathEscape(namespace) + "/applications/" + url.PathEscape(name)
+	path := "/apis/" + Group + "/" + version + "/namespaces/" + url.PathEscape(namespace) + "/applications/" + url.PathEscape(name)
 
-	var app argoObject
-	if err := k.get(ctx, path, &app); err != nil {
+	var app Object
+	if err := k.Get(ctx, path, &app); err != nil {
 		return err
 	}
 
-	base := "/apis/" + groupArgo + "/" + version
+	base := "/apis/" + Group + "/" + version
 
-	var owner *argoOwner
+	var owner *Owner
 	if action == argoActionAutoSyncOn || action == argoActionAutoSyncOff || action == argoActionRollback {
 		if owner, err = argoActionOwner(ctx, k, base, app); err != nil {
 			return err
@@ -138,12 +115,12 @@ func argoAction(ctx context.Context, k *kubeClient, namespace, name, action stri
 
 	meta["resourceVersion"] = app.Metadata.ResourceVersion
 
-	return k.patch(ctx, path, "application/merge-patch+json", patch, nil)
+	return k.Patch(ctx, path, "application/merge-patch+json", patch, nil)
 }
 
 // argoPatch is the merge patch for action on app, or why it is refused.
 // owner is who writes the app's spec (nil: nobody); spec changes are refused when set.
-func argoPatch(app argoObject, owner *argoOwner, action string, opts argoSyncOptions, now time.Time) (map[string]any, error) {
+func argoPatch(app Object, owner *Owner, action string, opts SyncOptions, now time.Time) (map[string]any, error) {
 	switch action {
 	case argoActionRefresh, argoActionHardRefresh:
 		mode := "normal"
@@ -152,13 +129,13 @@ func argoPatch(app argoObject, owner *argoOwner, action string, opts argoSyncOpt
 		}
 
 		return map[string]any{"metadata": map[string]any{"annotations": map[string]any{argoRefreshAnnotation: mode}}}, nil
-	case argoActionTerminate:
+	case ActionTerminate:
 		if !argoRunning(app) {
 			return nil, errArgoNotBusy
 		}
 
 		return map[string]any{"status": map[string]any{"operationState": map[string]any{"phase": "Terminating"}}}, nil
-	case argoActionSync:
+	case ActionSync:
 		if argoBusy(app) {
 			return nil, errArgoBusy
 		}
@@ -171,47 +148,47 @@ func argoPatch(app argoObject, owner *argoOwner, action string, opts argoSyncOpt
 	}
 }
 
-func argoRunning(app argoObject) bool {
+func argoRunning(app Object) bool {
 	op := app.Status.OperationState
 
 	return op != nil && (op.Phase == "Running" || op.Phase == "Terminating")
 }
 
 // argoBusy: an operation runs, or one was requested and not picked up yet.
-func argoBusy(app argoObject) bool {
+func argoBusy(app Object) bool {
 	return argoRunning(app) || (len(app.Operation) > 0 && string(app.Operation) != "null")
 }
 
-func argoOwnedError(owner *argoOwner) error {
+func argoOwnedError(owner *Owner) error {
 	if owner == nil {
 		return nil
 	}
 
-	return &kubeAPIError{Code: 409, Reason: "Owned", Message: fmt.Sprintf("managed by %s %s: change it in Git, it would be reverted", owner.Kind, owner.Name)}
+	return &kube.APIError{Code: 409, Reason: "Owned", Message: fmt.Sprintf("managed by %s %s: change it in Git, it would be reverted", owner.Kind, owner.Name)}
 }
 
 // argoActionOwner finds who writes app's spec, like the listing does: a parent named by its
 // tracking only counts when that Application exists.
-func argoActionOwner(ctx context.Context, k *kubeClient, base string, app argoObject) (*argoOwner, error) {
-	ref := app.Metadata.Annotations[argoTrackingID]
+func argoActionOwner(ctx context.Context, k kube.Client, base string, app Object) (*Owner, error) {
+	ref := app.Metadata.Annotations[TrackingID]
 	if ref != "" {
 		ref, _, _ = strings.Cut(ref, ":")
 	} else {
-		ref = app.Metadata.Labels[argoInstanceLabel]
+		ref = app.Metadata.Labels[InstanceLabel]
 	}
 
 	existing := map[string]bool{}
 
 	if ref != "" {
-		for _, key := range argoAppKeys(ref, app.Metadata.Namespace) {
+		for _, key := range AppKeys(ref, app.Metadata.Namespace) {
 			ns, name, _ := strings.Cut(key, "/")
 
 			var parent struct{}
 
-			switch err := k.get(ctx, base+"/namespaces/"+url.PathEscape(ns)+"/applications/"+url.PathEscape(name), &parent); {
+			switch err := k.Get(ctx, base+"/namespaces/"+url.PathEscape(ns)+"/applications/"+url.PathEscape(name), &parent); {
 			case err == nil:
 				existing[key] = true
-			case !isNotFound(err):
+			case !kube.IsNotFound(err):
 				return nil, err
 			}
 		}
@@ -220,7 +197,7 @@ func argoActionOwner(ctx context.Context, k *kubeClient, base string, app argoOb
 	return argoOwnerOf(app, existing), nil
 }
 
-func argoAutoSyncPatch(app argoObject, owner *argoOwner, on bool) (map[string]any, error) {
+func argoAutoSyncPatch(app Object, owner *Owner, on bool) (map[string]any, error) {
 	if err := argoOwnedError(owner); err != nil {
 		return nil, err
 	}
@@ -252,7 +229,7 @@ func argoAutoSyncPatch(app argoObject, owner *argoOwner, on bool) (map[string]an
 	}, nil
 }
 
-func argoRollbackPatch(app argoObject, owner *argoOwner, opts argoSyncOptions, now time.Time) (map[string]any, error) {
+func argoRollbackPatch(app Object, owner *Owner, opts SyncOptions, now time.Time) (map[string]any, error) {
 	if err := argoOwnedError(owner); err != nil {
 		return nil, err
 	}
@@ -278,14 +255,14 @@ func argoRollbackPatch(app argoObject, owner *argoOwner, opts argoSyncOptions, n
 
 // argoSyncOperation is the operation the controller runs: the app's target revision(s), or a
 // history entry's for a rollback, with the app's own sync options plus the chosen ones.
-func argoSyncOperation(app argoObject, opts argoSyncOptions, to *argoHistoryObject, now time.Time) map[string]any {
+func argoSyncOperation(app Object, opts SyncOptions, to *argoHistoryObject, now time.Time) map[string]any {
 	sync := map[string]any{
 		"prune":        opts.Prune,
 		"dryRun":       opts.DryRun,
 		"syncStrategy": map[string]any{"hook": map[string]any{"force": opts.Force}},
 	}
 
-	sources := argoSourcesOf(app.Spec)
+	sources := SourcesOf(app.Spec)
 
 	switch {
 	case to != nil && len(to.Revisions) > 0:

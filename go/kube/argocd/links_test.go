@@ -1,4 +1,4 @@
-package ichorgo
+package argocd
 
 import (
 	"encoding/json"
@@ -54,21 +54,21 @@ func TestArgoCommitURL(t *testing.T) {
 func TestArgoRevisionURLPairsSources(t *testing.T) {
 	const sha1, sha2 = "1111111aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "2222222bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 
-	chart := argoSourceObject{RepoURL: "https://charts.example.com", Chart: "app", TargetRevision: "1.2.3"}
-	git := argoSourceObject{RepoURL: "git@github.com:org/values.git", Path: "values", TargetRevision: "main"}
+	chart := SourceObject{RepoURL: "https://charts.example.com", Chart: "app", TargetRevision: "1.2.3"}
+	git := SourceObject{RepoURL: "git@github.com:org/values.git", Path: "values", TargetRevision: "main"}
 
 	// Multi-source: the chart's "revision" is its version; the Git source pairs by position.
-	if got := argoRevisionURL([]argoSourceObject{chart, git}, []string{"1.2.3", sha2}, ""); got != "https://github.com/org/values/commit/"+sha2 {
+	if got := argoRevisionURL([]SourceObject{chart, git}, []string{"1.2.3", sha2}, ""); got != "https://github.com/org/values/commit/"+sha2 {
 		t.Fatalf("multi-source: %q", got)
 	}
 
 	// Single source.
-	if got := argoRevisionURL([]argoSourceObject{git}, nil, sha1); got != "https://github.com/org/values/commit/"+sha1 {
+	if got := argoRevisionURL([]SourceObject{git}, nil, sha1); got != "https://github.com/org/values/commit/"+sha1 {
 		t.Fatalf("single source: %q", got)
 	}
 
 	// A chart-only app has no commit to link.
-	if got := argoRevisionURL([]argoSourceObject{chart}, nil, "1.2.3"); got != "" {
+	if got := argoRevisionURL([]SourceObject{chart}, nil, "1.2.3"); got != "" {
 		t.Fatalf("chart only: %q", got)
 	}
 }
@@ -76,7 +76,7 @@ func TestArgoRevisionURLPairsSources(t *testing.T) {
 func TestMapArgoAppLinks(t *testing.T) {
 	const sha, old = "4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d", "91c0a7e6d5b4c3a29180f7e6d5c4b3a291807f6e"
 
-	var o argoObject
+	var o Object
 	if err := json.Unmarshal([]byte(`{
 		"metadata":{"name":"web","namespace":"argocd"},
 		"spec":{"source":{"repoURL":"git@github.com:org/gitops.git","path":"apps/web","targetRevision":"main"},"destination":{"namespace":"web"}},
@@ -88,7 +88,7 @@ func TestMapArgoAppLinks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	a := mapArgoApp(o, map[string]bool{})
+	a := MapApp(o, map[string]bool{})
 
 	if a.RevisionURL != "https://github.com/org/gitops/commit/"+sha {
 		t.Fatalf("revision url %q", a.RevisionURL)

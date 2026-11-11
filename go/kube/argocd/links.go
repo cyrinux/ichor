@@ -1,4 +1,4 @@
-package ichorgo
+package argocd
 
 import (
 	"regexp"
@@ -45,7 +45,7 @@ func argoCommitURL(repo, revision string) string {
 // argoRevisionURL links the commit revisions name, paired by position with sources, as
 // Argo CD pairs status.sync.revisions with spec.sources. A single revision pairs with the
 // first Git (non-chart) source. "" when no source is a browsable Git repository.
-func argoRevisionURL(sources []argoSourceObject, revisions []string, revision string) string {
+func argoRevisionURL(sources []SourceObject, revisions []string, revision string) string {
 	if len(revisions) > 0 {
 		for i, r := range revisions {
 			if i < len(sources) && sources[i].Chart == "" {

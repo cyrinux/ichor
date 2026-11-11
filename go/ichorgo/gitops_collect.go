@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube/argocd"
 )
 
 // GitOps (Argo CD and Flux) in the AI diagnosis and the support bundle: the apps that are not
@@ -25,8 +27,8 @@ const (
 
 // gitopsState is what the cluster's GitOps tools said, nil sections when not installed.
 type gitopsState struct {
-	Argo *argoStatus `json:"argocd,omitempty"`
-	Flux *fluxStatus `json:"flux,omitempty"`
+	Argo *argocd.Status `json:"argocd,omitempty"`
+	Flux *fluxStatus    `json:"flux,omitempty"`
 	// Note says why nothing could be read ("" when it was).
 	Note string `json:"note,omitempty"`
 	// ArgoError / FluxError: that tool could not be read while the other was.
@@ -66,7 +68,7 @@ func collectGitOps(ctx context.Context, target kubeTarget, roles []string) *gito
 func readGitOps(ctx context.Context, k *kubeClient) (gitopsState, error) {
 	var (
 		out          gitopsState
-		argo         argoStatus
+		argo         argocd.Status
 		flux         fluxStatus
 		argoE, fluxE error
 		wg           sync.WaitGroup

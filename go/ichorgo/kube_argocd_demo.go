@@ -3,6 +3,8 @@ package ichorgo
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube/argocd"
 )
 
 // demoArgoCD is the Argo CD of the built-in demo cluster, in every state the app shows: a sync
@@ -197,7 +199,7 @@ func demoArgoProjects(now time.Time) []argoProjectObject {
 		}
 
 		for _, e := range entries {
-			p.Spec.SyncWindows = append(p.Spec.SyncWindows, e.raw)
+			p.Spec.SyncWindows = append(p.Spec.SyncWindows, e.Raw())
 		}
 
 		return p
@@ -208,7 +210,7 @@ func demoArgoProjects(now time.Time) []argoProjectObject {
 			freeze(argoFreezeOptions{Namespaces: []string{"demo"}, Minutes: 60, ManualSync: true, Reason: "hotfix: worker memory limit"}, 22*time.Minute),
 			freeze(argoFreezeOptions{Applications: []string{"nightly-reports"}, Minutes: 30, ManualSync: true}, 4*time.Hour),
 		),
-		project("infra", "Cluster infrastructure", argoWindowEntry{raw: raw, window: nightly, id: argoWindowID(raw)}),
+		project("infra", "Cluster infrastructure", argocd.NewWindowEntry(raw, nightly)),
 	}
 }
 

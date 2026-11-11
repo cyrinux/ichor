@@ -1,185 +1,61 @@
 package ichorgo
 
 import (
-	"cmp"
 	"context"
-	"slices"
+	"fmt"
 	"strings"
-	"sync"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube/argocd"
 )
 
 // Argo CD is read and driven through its custom resources (argoproj.io Applications), with
-// the admin kubeconfig Talos issues, the way `argocd --core` works: no Argo CD token and no
-// access to argocd-server needed.
+// the admin kubeconfig Talos issues, the way `argocd --core` works: the logic is in
+// go/kube/argocd. Here are the exported entry points, what comes from the rest of the facade
+// (a pod's status, the controller's image, the icon catalog, the sign-in error, the privacy
+// mask, the audit log) and the names the other kube_* files call.
 
 const (
-	groupArgo = "argoproj.io"
-	// argoRefreshAnnotation asks the application controller to compare the app with Git again
-	// ("normal") or to regenerate its manifests too ("hard"); the controller removes it.
-	argoRefreshAnnotation = "argocd.argoproj.io/refresh"
-	argoTrackingID        = "argocd.argoproj.io/tracking-id"
-	argoInstanceLabel     = "app.kubernetes.io/instance"
-	// argoHistoryMax caps the deployments kept per app on the wire, newest first.
-	argoHistoryMax = 10
+	groupArgo             = argocd.Group
+	argoTrackingID        = argocd.TrackingID
+	argoInstanceLabel     = argocd.InstanceLabel
+	argoFreezesAnnotation = argocd.FreezesAnnotation
+	argoActionSync        = argocd.ActionSync
+	argoActionTerminate   = argocd.ActionTerminate
 )
 
-type argoStatus struct {
-	Installed bool   `json:"installed"`
-	Version   string `json:"version"` // the application controller's image tag, "" when unknown
-	// AppSetsError is set when listing the ApplicationSets failed; the apps still show.
-	AppSetsError string        `json:"appSetsError"`
-	Apps         []argoApp     `json:"apps"`
-	AppSets      []argoAppSet  `json:"appSets"`
-	Projects     []argoProject `json:"projects"`
-}
+type (
+	argoStatus          = argocd.Status
+	argoApp             = argocd.App
+	argoAppSet          = argocd.AppSet
+	argoAppSetCondition = argocd.AppSetCondition
+	argoOwner           = argocd.Owner
+	argoSrc             = argocd.Source
+	argoDest            = argocd.Dest
+	argoAuto            = argocd.AutoSync
+	argoOperation       = argocd.Operation
+	argoResult          = argocd.Result
+	argoCondition       = argocd.Condition
+	argoResource        = argocd.Resource
+	argoHistory         = argocd.History
+	argoObject          = argocd.Object
+	argoResourceStatus  = argocd.ResourceStatus
+	argoProjectObject   = argocd.ProjectObject
+	argoWindowObject    = argocd.WindowObject
+	argoWindowEntry     = argocd.WindowEntry
+	argoSyncOptions     = argocd.SyncOptions
+	argoFreezeOptions   = argocd.FreezeOptions
+)
 
-type argoApp struct {
-	Namespace string     `json:"namespace"`
-	Name      string     `json:"name"`
-	Project   string     `json:"project"`
-	Owner     *argoOwner `json:"owner"` // the ApplicationSet or parent app that writes its spec
-	// Level sums health, sync and the last operation up for sorting and colouring:
-	// critical|warning|ok|idle (suspended).
-	Level      string `json:"level"`
-	Icon       string `json:"icon,omitempty"`
-	RemoteIcon string `json:"remoteIcon,omitempty"`
-	// IconURL is the https URL or data: URI the app names in its ichor.levis.name/icon annotation.
-	IconURL       string `json:"iconUrl,omitempty"`
-	Health        string `json:"health"` // Healthy|Progressing|Degraded|Suspended|Missing|Unknown
-	HealthMessage string `json:"healthMessage"`
-	Sync          string `json:"sync"` // Synced|OutOfSync|Unknown
-	Revision      string `json:"revision"`
-	// RevisionURL is the commit page of Revision on its forge, "" when it cannot be linked.
-	RevisionURL string    `json:"revisionUrl"`
-	Refreshing  string    `json:"refreshing"` // the pending refresh annotation: normal|hard|""
-	Sources     []argoSrc `json:"sources"`
-	Destination argoDest  `json:"destination"`
-	AutoSync    argoAuto  `json:"autoSync"`
-	SyncOptions []string  `json:"syncOptions"`
-	// Operation is the running or last sync; nil when none ran since the app was created.
-	Operation     *argoOperation  `json:"operation"`
-	Conditions    []argoCondition `json:"conditions"`
-	Resources     []argoResource  `json:"resources"`
-	History       []argoHistory   `json:"history"`
-	Images        []string        `json:"images"`
-	ExternalURLs  []string        `json:"externalURLs"`
-	UnhealthyPods []kubePod       `json:"unhealthyPods"` // pods of its namespace not ready
-	ReconciledAt  int64           `json:"reconciledAt"`
-	// Freeze is set while an active deny sync window of its project stops its automated syncs.
-	Freeze *argoFreeze `json:"freeze"`
-}
-
-type argoOwner struct {
-	Kind string `json:"kind"` // ApplicationSet|Application
-	Name string `json:"name"`
-}
-
-type argoSrc struct {
-	Repo string `json:"repo"`
-	// RepoURL is the browsable https page of Repo, "" for an OCI registry or a local path.
-	RepoURL        string `json:"repoUrl"`
-	Path           string `json:"path"`
-	Chart          string `json:"chart"`
-	TargetRevision string `json:"targetRevision"`
-}
-
-type argoDest struct {
-	Server    string `json:"server"`
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-}
-
-type argoAuto struct {
-	Enabled  bool `json:"enabled"`
-	Prune    bool `json:"prune"`
-	SelfHeal bool `json:"selfHeal"`
-}
-
-type argoOperation struct {
-	Phase       string `json:"phase"` // Running|Terminating|Succeeded|Failed|Error
-	Message     string `json:"message"`
-	StartedAt   int64  `json:"startedAt"`
-	FinishedAt  int64  `json:"finishedAt"`
-	InitiatedBy string `json:"initiatedBy"` // a user name, or "automated"
-	Revision    string `json:"revision"`
-	RevisionURL string `json:"revisionUrl"` // the commit page of Revision, "" when not linkable
-	RetryCount  int    `json:"retryCount"`
-	DryRun      bool   `json:"dryRun"`
-	Done        int    `json:"done"`  // resources synced so far
-	Total       int    `json:"total"` // resources of the app, hooks included once run
-	// Wave is the lowest sync wave with resources not synced yet; Waves every wave of the app.
-	Wave   int          `json:"wave"`
-	Waves  []int        `json:"waves"`
-	Failed []argoResult `json:"failed"`
-}
-
-type argoResult struct {
-	Kind      string `json:"kind"`
-	Namespace string `json:"namespace"`
-	Name      string `json:"name"`
-	Message   string `json:"message"`
-}
-
-type argoCondition struct {
-	Type    string `json:"type"`
-	Message string `json:"message"`
-}
-
-type argoResource struct {
-	Group     string `json:"group"`
-	Kind      string `json:"kind"`
-	Namespace string `json:"namespace"`
-	Name      string `json:"name"`
-	Sync      string `json:"sync"`
-	// Health is empty for kinds without a health check, and on Argo CD 3 by default, which
-	// keeps per-resource health out of the Application.
-	Health        string `json:"health"`
-	HealthMessage string `json:"healthMessage"`
-	Wave          int    `json:"wave"`
-	Hook          bool   `json:"hook"`
-	Prune         bool   `json:"prune"` // would be deleted by a sync with prune
-	// SyncResult is the last operation's word on it: Synced|SyncFailed|Pruned|PruneSkipped|"".
-	SyncResult string `json:"syncResult"`
-}
-
-type argoHistory struct {
-	ID       int64  `json:"id"`
-	Revision string `json:"revision"`
-	// URL is the commit page of Revision, "" for a chart version or an unknown repository.
-	URL            string `json:"url"`
-	TargetRevision string `json:"targetRevision"`
-	Chart          string `json:"chart"`
-	DeployedAt     int64  `json:"deployedAt"`
-	InitiatedBy    string `json:"initiatedBy"`
-}
-
-type argoAppSet struct {
-	Namespace  string                `json:"namespace"`
-	Name       string                `json:"name"`
-	Level      string                `json:"level"` // worst level of its apps, critical on an error condition
-	Apps       int                   `json:"apps"`
-	Conditions []argoAppSetCondition `json:"conditions"`
-}
-
-type argoAppSetCondition struct {
-	Type    string `json:"type"`
-	Status  string `json:"status"`
-	Message string `json:"message"`
-}
-
-type argoProject struct {
-	Namespace   string       `json:"namespace"`
-	Name        string       `json:"name"`
-	Description string       `json:"description"`
-	SyncWindows int          `json:"syncWindows"`
-	Windows     []argoWindow `json:"windows"`
-	// ManagedBy is the Argo CD app that applies the project from Git, "" when none;
-	// ManagedServerSide when it does with server-side apply, where a freeze added live was not
-	// checked to survive its syncs.
-	ManagedBy         string `json:"managedBy"`
-	ManagedServerSide bool   `json:"managedServerSide"`
-}
+var (
+	argoSourcesOf    = argocd.SourcesOf
+	argoAppKeys      = argocd.AppKeys
+	argoWindowsPatch = argocd.WindowsPatch
+	newArgoFreeze    = argocd.NewFreeze
+	mapArgoCD        = argocd.Map
+	mapArgoApp       = argocd.MapApp
+	mapArgoProjects  = argocd.MapProjects
+)
 
 // KubeArgoCD lists the Argo CD Applications of every namespace (os:admin), with their sync and
 // health, the running operation and its sync-wave progress, the resources, the deployment
@@ -195,70 +71,34 @@ func KubeArgoCD(configYAML, contextName, kubeServer string) (out string, err err
 }
 
 func readArgoCD(ctx context.Context, k *kubeClient) (argoStatus, error) {
-	groups, err := readAPIGroups(ctx, k)
+	out, err := argocd.Read(ctx, argoEnv(k))
 	if err != nil {
 		return argoStatus{}, err
 	}
-
-	notInstalled := argoStatus{Apps: []argoApp{}, AppSets: []argoAppSet{}, Projects: []argoProject{}}
-
-	version, ok := groups[groupArgo]
-	if !ok {
-		return notInstalled, nil
-	}
-
-	base := "/apis/" + groupArgo + "/" + version
-
-	var (
-		apps     kubeList[argoObject]
-		sets     kubeList[argoAppSetObject]
-		projects kubeList[argoProjectObject]
-		ctrl     []dsPod
-		errs     = make([]error, 3)
-		wg       sync.WaitGroup
-	)
-
-	wg.Go(func() { errs[0] = getList(ctx, k, base+"/applications", &apps) })
-	wg.Go(func() { errs[1] = getList(ctx, k, base+"/applicationsets", &sets) })
-	wg.Go(func() { errs[2] = getList(ctx, k, base+"/appprojects", &projects) })
-	wg.Go(func() { ctrl, _ = listDSPods(ctx, k, "app.kubernetes.io/name=argocd-application-controller") })
-	wg.Wait()
-
-	switch {
-	case isNotFound(errs[0]):
-		// argoproj.io is also Argo Rollouts' and Argo Workflows' group: no Applications, no Argo CD.
-		return notInstalled, nil
-	case errs[0] != nil:
-		return argoStatus{}, errs[0]
-	}
-
-	out := mapArgoCD(apps.Items, sets.Items, projects.Items, time.Now())
-	out.Version = argoVersion(ctrl)
 
 	// So a namespace picked from the masked listing (a freeze) maps back to the real one.
 	namespaces := namespacesOf(out.Apps, func(a argoApp) string { return a.Destination.Namespace })
 	namespaces = append(namespaces, namespacesOf(out.Apps, func(a argoApp) string { return a.Namespace })...)
 	privacy.learnNamespaces(namespaces)
 
-	if errs[1] != nil && !isNotFound(errs[1]) {
-		out.AppSetsError = sectionError(errs[1])
-	}
-
-	var troubled []string
-
-	for _, a := range out.Apps {
-		if argoNeedsPods(a) {
-			troubled = append(troubled, a.Destination.Namespace)
-		}
-	}
-
-	if len(troubled) > 0 {
-		if pods, err := unhealthyPods(ctx, k, troubled); err == nil {
-			attachUnhealthyPods(out.Apps, pods)
-		}
-	}
-
 	return out, nil
+}
+
+// argoEnv is what go/kube/argocd needs of k and of the rest of the facade.
+func argoEnv(k *kubeClient) argocd.Env {
+	return argocd.Env{
+		Client: k.api(),
+		Error:  kubeError,
+		Version: func(ctx context.Context) string {
+			pods, _ := listDSPods(ctx, k, "app.kubernetes.io/name=argocd-application-controller")
+
+			return argoVersion(pods)
+		},
+		UnhealthyPods: func(ctx context.Context, namespaces []string) ([]kubePod, error) {
+			return unhealthyPods(ctx, k, namespaces)
+		},
+		Icon: argoAppIcon,
+	}
 }
 
 // argoVersion is the tag of the application controller's image ("v3.4.5").
@@ -274,100 +114,119 @@ func argoVersion(pods []dsPod) string {
 	return ""
 }
 
-// argoNeedsPods tells an app whose unhealthy pods are shown: critical or progressing.
-func argoNeedsPods(a argoApp) bool { return a.Level == healthCritical || a.Health == "Progressing" }
-
-// attachUnhealthyPods gives each critical or progressing app the pods of its destination
-// namespace that are not healthy: an app's own pods carry no Argo CD marker by default, so
-// the namespace is the link (and usually one app owns one namespace).
-func attachUnhealthyPods(apps []argoApp, pods []kubePod) {
-	byNamespace := map[string][]kubePod{}
-
-	for _, p := range pods {
-		if !p.Healthy {
-			byNamespace[p.Namespace] = append(byNamespace[p.Namespace], p)
-		}
+// argoAppIcon is the icon the app names in its annotations or labels, else the catalog's.
+func argoAppIcon(a argoApp, annotations, labels map[string]string) (icon, remote, url string) {
+	if custom, ok := customIcon(annotations, labels); ok {
+		return custom.icon, custom.remote, custom.url
 	}
 
-	for i := range apps {
-		a := &apps[i]
-		if !argoNeedsPods(*a) {
-			continue
-		}
+	icon, remote = argoIcon(a)
 
-		if pods := byNamespace[a.Destination.Namespace]; len(pods) > 0 {
-			a.UnhealthyPods = pods
-		}
-	}
+	return icon, remote, ""
 }
 
-func mapArgoCD(objects []argoObject, sets []argoAppSetObject, projects []argoProjectObject, now time.Time) argoStatus {
-	out := argoStatus{Installed: true, Apps: make([]argoApp, 0, len(objects)), AppSets: []argoAppSet{}, Projects: []argoProject{}}
+// argoIcon names the app's icon from the catalog: by its Helm chart, its name, then the
+// images it runs.
+func argoIcon(a argoApp) (icon, remote string) {
+	catalog := loadAppCatalog()
 
-	names := map[string]bool{}
-	for _, o := range objects {
-		names[o.Metadata.Namespace+"/"+o.Metadata.Name] = true
+	candidates := make([]identification, 0, len(a.Sources)+len(a.Images)+1)
+	for _, s := range a.Sources {
+		if s.Chart != "" {
+			candidates = append(candidates, catalog.byWord(s.Chart))
+		}
 	}
 
-	for _, o := range objects {
-		out.Apps = append(out.Apps, mapArgoApp(o, names))
+	candidates = append(candidates, catalog.byWord(a.Name))
+	for _, img := range a.Images {
+		candidates = append(candidates, catalog.identify(parseImageRef(img)))
 	}
 
-	slices.SortFunc(out.Apps, func(a, b argoApp) int {
-		return cmp.Or(healthRank(a.Level)-healthRank(b.Level), strings.Compare(a.Name, b.Name), strings.Compare(a.Namespace, b.Namespace))
+	for _, id := range candidates {
+		switch {
+		case id.app != nil && id.app.hasIcon():
+			return id.app.ID, ""
+		case id.slug != "":
+			return "", id.slug
+		}
+	}
+
+	return "", ""
+}
+
+// KubeArgoAction runs an action on the Argo CD Application namespace/name (os:admin):
+// refresh, hardRefresh, sync, terminate, autoSyncOn, autoSyncOff or rollback. optionsJSON
+// holds the sync options (prune, dryRun, force, applyOutOfSyncOnly, serverSideApply, replace,
+// resources) and, for a rollback, historyId; "" for none. Spec changes (auto-sync, rollback)
+// are refused on an app an ApplicationSet or a parent app owns: the owner would revert them.
+// kubeServer: see KubePods.
+func KubeArgoAction(configYAML, contextName, kubeServer, namespace, name, action, optionsJSON string) (err error) {
+	defer maskErr(&err)
+
+	contextName = unmaskContext(configYAML, contextName)
+	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
+
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "argo-" + action, Namespace: namespace, Object: "Application/" + name, Params: strings.TrimSpace(optionsJSON)})
+
+	if !argocd.IsAction(action) {
+		return fmt.Errorf("unsupported Argo CD action %q", action)
+	}
+
+	if err := validateKubeName("application", namespace, name); err != nil {
+		return err
+	}
+
+	opts, err := argocd.ParseSyncOptions(optionsJSON)
+	if err != nil {
+		return err
+	}
+
+	return runArgoAction(kubeTarget{configYAML, contextName, kubeServer}, namespace, name, action, opts)
+}
+
+// runArgoAction is KubeArgoAction once its arguments are unmasked and checked: refused in
+// the demo, one patch otherwise. ArgoSyncRun.Terminate goes through it too.
+func runArgoAction(target kubeTarget, namespace, name, action string, opts argoSyncOptions) error {
+	return kubeMutate(target, func(ctx context.Context, k *kubeClient) error {
+		return argocd.Act(ctx, k.api(), namespace, name, action, opts, time.Now())
 	})
+}
 
-	for _, s := range sets {
-		out.AppSets = append(out.AppSets, mapArgoAppSet(s, out.Apps))
+// KubeArgoFreeze changes the sync windows of the Argo CD AppProject namespace/project
+// (os:admin): freeze (a deny window from now for minutes, on applications or namespaces),
+// extend (an Ichor freeze by minutes), unfreeze (remove a window; one Ichor did not create
+// needs fromGit) or clearExpired (drop Ichor's ended freezes, which every change also does).
+// optionsJSON holds argocd.FreezeOptions. kubeServer: see KubePods.
+func KubeArgoFreeze(configYAML, contextName, kubeServer, namespace, project, action, optionsJSON string) (err error) {
+	defer maskErr(&err)
+
+	contextName = unmaskContext(configYAML, contextName)
+	namespace, project = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(project))
+
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "argo-" + action, Namespace: namespace, Object: "AppProject/" + project})
+
+	if !argocd.IsFreezeAction(action) {
+		return fmt.Errorf("unsupported Argo CD freeze action %q", action)
 	}
 
-	slices.SortFunc(out.AppSets, func(a, b argoAppSet) int {
-		return cmp.Or(healthRank(a.Level)-healthRank(b.Level), strings.Compare(a.Name, b.Name))
+	if err := validateKubeName("project", namespace, project); err != nil {
+		return err
+	}
+
+	opts, err := argocd.ParseFreezeOptions(optionsJSON)
+	if err != nil {
+		return err
+	}
+
+	for i, s := range opts.Applications {
+		opts.Applications[i] = privacy.reveal(strings.TrimSpace(s))
+	}
+
+	for i, s := range opts.Namespaces {
+		opts.Namespaces[i] = privacy.revealNamespace(strings.TrimSpace(s))
+	}
+
+	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
+		return argocd.Freeze(ctx, k.api(), namespace, project, action, opts, time.Now())
 	})
-
-	out.Projects = mapArgoProjects(projects, out.Apps, now)
-
-	return out
-}
-
-func mapArgoAppSet(s argoAppSetObject, apps []argoApp) argoAppSet {
-	set := argoAppSet{Namespace: s.Metadata.Namespace, Name: s.Metadata.Name, Level: healthIdle, Conditions: []argoAppSetCondition{}}
-
-	for _, a := range apps {
-		if a.Owner == nil || a.Owner.Kind != "ApplicationSet" || a.Owner.Name != set.Name || a.Namespace != set.Namespace {
-			continue
-		}
-
-		set.Apps++
-		if healthRank(a.Level) < healthRank(set.Level) {
-			set.Level = a.Level
-		}
-	}
-
-	for _, c := range s.Status.Conditions {
-		set.Conditions = append(set.Conditions, argoAppSetCondition{Type: c.Type, Status: c.Status, Message: c.Message})
-
-		if c.Type == "ErrorOccurred" && c.Status == "True" {
-			set.Level = healthCritical
-		}
-	}
-
-	if set.Apps == 0 && set.Level == healthIdle && len(set.Conditions) > 0 {
-		set.Level = healthOK
-	}
-
-	return set
-}
-
-// argoSourcesOf lists the app's sources (spec.sources, or the single spec.source).
-func argoSourcesOf(spec argoSpec) []argoSourceObject {
-	if len(spec.Sources) > 0 {
-		return spec.Sources
-	}
-
-	if spec.Source != nil {
-		return []argoSourceObject{*spec.Source}
-	}
-
-	return nil
 }

@@ -87,7 +87,9 @@ worked example: its tests answer from the fake API in `go/kube/kubetest` and do 
 facade, whose functions come down to demo check, funnel, a call to `helm`, mask and audit, JSON.
 `go/kube/flux` is the second example, on the object diff in `go/kube/kubediff`; Helm reaches Flux
 directly now (`flux.Suspend` before a rollback), so a domain that has moved needs no round trip
-through the facade. One domain moves per pull request; see `go/kube/helm/doc.go`.
+through the facade. `go/kube/argocd` is the third (its network map stays in the facade, which
+reads every networking domain's routes). One domain moves per pull request; see
+`go/kube/helm/doc.go`.
 
 Every synchronous read funnel (`withKube`, `withSession`, `withNodeSession`) derives from the
 cluster's `callParent`, and the apps call `CancelCalls` when they switch cluster. Mutations
