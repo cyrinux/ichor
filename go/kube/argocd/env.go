@@ -2,6 +2,7 @@ package argocd
 
 import (
 	"context"
+	"io"
 
 	"github.com/cyrinux/ichor/go/kube"
 )
@@ -21,6 +22,8 @@ type Env struct {
 	// Icon names an app's icon from the annotations and labels of its Application (a custom
 	// icon), else from the catalog by its charts, name and images; nil leaves none.
 	Icon func(a App, annotations, labels map[string]string) (icon, remote, url string)
+	// Dial opens a stream to a pod's port (a port-forward), for Diff to reach Argo CD's Redis.
+	Dial func(ctx context.Context, namespace, pod string, port int) (io.ReadWriteCloser, error)
 }
 
 func (e Env) version(ctx context.Context) string {

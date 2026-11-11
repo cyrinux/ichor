@@ -1,4 +1,4 @@
-package ichorgo
+package argocd
 
 import (
 	"bufio"
@@ -7,6 +7,7 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 // A Redis client just big enough to read Argo CD's cache through a port-forward: RESP2
@@ -199,4 +200,18 @@ func respGlobEscape(s string) string {
 	}
 
 	return out.String()
+}
+
+// an ellipsis. Invalid UTF-8 (a remote body, a raw packet field) is repaired first.
+func clipUTF8(s string, limit int) string {
+	s = strings.ToValidUTF8(s, "\uFFFD")
+	if len(s) <= limit {
+		return s
+	}
+
+	for limit > 0 && !utf8.RuneStart(s[limit]) {
+		limit--
+	}
+
+	return s[:limit] + "…"
 }

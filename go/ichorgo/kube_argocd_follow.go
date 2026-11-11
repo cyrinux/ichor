@@ -3,44 +3,28 @@ package ichorgo
 import (
 	"context"
 	"fmt"
-	"net/url"
-	"slices"
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube"
+	"github.com/cyrinux/ichor/go/kube/argocd"
 )
 
-// Following an Argo CD sync started from the phone: the Application is read every few
-// seconds, as the app detail reads it (its operation, sync waves and per-resource results),
-// until the operation ends. Only the operation the phone started counts: one that started
-// before the follow (the last sync, or one a webhook ran) is ignored, so a follow that
-// starts before the controller picked the sync up waits for the new one.
+// Following an Argo CD sync started from the phone: the logic is in go/kube/argocd (Follow);
+// here are the listener the apps implement, the run handle, the dedup of what they hear and
+// the demo sync.
 
-// Results of a followed sync (ArgoSyncListener.OnDone): the operation's final phase, or
-// argoSyncTerminated when it ended after a Terminate from the run.
 const (
-	argoSyncSucceeded  = "Succeeded"
-	argoSyncFailed     = "Failed"
-	argoSyncError      = "Error"
-	argoSyncTerminated = "Terminated"
-	argoSyncPending    = "Pending" // the sync was requested, the controller has not started it
-	argoSyncRunning    = "Running"
+	argoSyncSucceeded = argocd.SyncSucceeded
+	argoSyncPending   = argocd.SyncPending
+	argoSyncRunning   = argocd.SyncRunning
 )
 
-var (
-	// argoFollowInterval is the pause between two reads of the followed app.
-	argoFollowInterval = 3 * time.Second
-	// argoFollowGrace is how many reads a follow waits for the sync it was started for to
-	// show up before it reports whatever operation finished last.
-	argoFollowGrace = 10
-	// argoFollowSkew is how much older than the follow's start (the phone's clock against
-	// the cluster's, second-rounded) an operation's start may be and still be the phone's.
-	argoFollowSkew = 5 * time.Second
-	// argoDemoStep is the pause between two steps of the demo sync.
-	argoDemoStep = 1500 * time.Millisecond
-)
+type argoSyncProgress = argocd.SyncProgress
 
-var errArgoSyncNotStarted = &kubeAPIError{Code: 409, Reason: "NotStarted", Message: "Argo CD has not started the sync"}
+// argoDemoStep is the pause between two steps of the demo sync.
+var argoDemoStep = 1500 * time.Millisecond
 
 // ArgoSyncListener follows an Argo CD sync (implemented in Kotlin/Swift).
 type ArgoSyncListener interface {
@@ -82,18 +66,8 @@ func (r *ArgoSyncRun) Terminate() (err error) {
 	return runArgoAction(r.target, r.namespace, r.name, argoActionTerminate, argoSyncOptions{})
 }
 
-type argoSyncProgress struct {
-	Phase   string `json:"phase"`
-	Message string `json:"message"`
-	Wave    int    `json:"wave"`
-	Waves   int    `json:"waves"`
-	Done    int    `json:"done"`
-	Total   int    `json:"total"`
-	At      int64  `json:"at"`
-}
-
-// same: p and o differ only by their time.
-func (p argoSyncProgress) same(o argoSyncProgress) bool {
+// sameArgoProgress: p and o differ only by their time.
+func sameArgoProgress(p, o argoSyncProgress) bool {
 	p.At = o.At
 
 	return p == o
@@ -114,7 +88,7 @@ func StartArgoSyncFollow(configYAML, contextName, kubeServer, namespace, name st
 	var last *argoSyncProgress
 
 	emit := func(p argoSyncProgress) {
-		if last != nil && last.same(p) {
+		if last != nil && sameArgoProgress(*last, p) {
 			return
 		}
 
@@ -154,114 +128,17 @@ func StartArgoSyncFollow(configYAML, contextName, kubeServer, namespace, name st
 	return run
 }
 
-// argoFollow is the state of a follow between two reads.
-type argoFollow struct {
-	since time.Time
-	reads int
-	// stale is the start of the operation found finished while a new one was requested:
-	// the last sync, not the phone's.
-	stale int64
-}
-
-// mine tells whether op is the operation the phone started.
-func (f *argoFollow) mine(op *argoOperation) bool {
-	return op != nil && op.StartedAt != f.stale && op.StartedAt >= f.since.Add(-argoFollowSkew).UnixMilli()
-}
-
-// followArgoSync reads the app every argoFollowInterval until the phone's operation ends;
-// it returns the result for OnDone.
+// followArgoSync follows run's app with a fresh client per read, as pollFollow does.
 func followArgoSync(ctx context.Context, run *ArgoSyncRun, since time.Time, emit func(argoSyncProgress)) (string, error) {
-	f := &argoFollow{since: since}
+	with := func(ctx context.Context, fn func(context.Context, kube.Client) error) error {
+		_, err := withKubeContext(ctx, run.target, func(ctx context.Context, k *kubeClient) (struct{}, error) {
+			return struct{}{}, fn(ctx, k.api())
+		})
 
-	var result string
-
-	err := pollFollow(ctx, run.target, argoFollowInterval, func(ctx context.Context, k *kubeClient) (bool, error) {
-		app, pending, err := readArgoApp(ctx, k, run.namespace, run.name)
-		if err != nil {
-			return false, err
-		}
-
-		var done bool
-
-		result, done, err = f.step(app.Operation, pending, run.terminated.Load(), emit)
-
-		return done, err
-	})
-
-	return result, err
-}
-
-// step takes one read of the app: its operation op, and pending when a sync was requested
-// and not picked up yet. It returns the result once done.
-func (f *argoFollow) step(op *argoOperation, pending, terminated bool, emit func(argoSyncProgress)) (string, bool, error) {
-	f.reads++
-
-	if pending && op != nil && op.Phase != argoSyncRunning && op.Phase != "Terminating" {
-		f.stale = op.StartedAt
+		return err
 	}
 
-	if !f.mine(op) {
-		if f.reads <= argoFollowGrace {
-			emit(argoSyncProgress{Phase: argoSyncPending})
-
-			return "", false, nil
-		}
-
-		// The sync never showed: report what finished last, if anything did.
-		if op == nil || pending {
-			return "", true, errArgoSyncNotStarted
-		}
-	}
-
-	p := argoSyncProgressOf(op)
-	running := op.Phase == argoSyncRunning || op.Phase == "Terminating"
-
-	if !running && terminated && p.Phase == argoSyncFailed {
-		p.Phase = argoSyncTerminated
-	}
-
-	emit(p)
-
-	if running {
-		return "", false, nil
-	}
-
-	return p.Phase, true, nil
-}
-
-func argoSyncProgressOf(op *argoOperation) argoSyncProgress {
-	p := argoSyncProgress{Phase: op.Phase, Message: op.Message, Waves: len(op.Waves), Done: op.Done, Total: op.Total}
-
-	if i := slices.Index(op.Waves, op.Wave); i >= 0 {
-		p.Wave = i + 1
-	}
-
-	if strings.Contains(strings.ToLower(op.Message), "terminated") && op.Phase == argoSyncFailed {
-		p.Phase = argoSyncTerminated
-	}
-
-	return p
-}
-
-// readArgoApp reads one Application as the listing maps it, and whether a sync was
-// requested that the controller has not started yet.
-func readArgoApp(ctx context.Context, k *kubeClient, namespace, name string) (argoApp, bool, error) {
-	groups, err := readAPIGroups(ctx, k)
-	if err != nil {
-		return argoApp{}, false, err
-	}
-
-	version, ok := groups[groupArgo]
-	if !ok {
-		return argoApp{}, false, &kubeAPIError{Code: 404, Reason: "NotFound", Message: "Argo CD is not installed"}
-	}
-
-	var o argoObject
-	if err := k.get(ctx, "/apis/"+groupArgo+"/"+version+"/namespaces/"+url.PathEscape(namespace)+"/applications/"+url.PathEscape(name), &o); err != nil {
-		return argoApp{}, false, err
-	}
-
-	return mapArgoApp(o, nil), len(o.Operation) > 0 && string(o.Operation) != "null", nil
+	return argocd.Follow(ctx, with, followFatal, run.namespace, run.name, since, run.terminated.Load, emit)
 }
 
 // demoArgoSync is the demo's sync: four waves of three resources each, then Succeeded.

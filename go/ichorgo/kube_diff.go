@@ -46,8 +46,6 @@ func diffObjects(r *kubeDiffResource, live, wanted map[string]any, masker *kubeD
 	kubediff.Objects(r, live, wanted, masker)
 }
 
-func diffRenderRaw(obj map[string]any) string { return kubediff.RenderRaw(obj) }
-
 func unifiedDiff(a, b, fromName, toName string) string {
 	return kubediff.Unified(a, b, fromName, toName)
 }
