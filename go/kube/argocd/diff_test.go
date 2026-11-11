@@ -1,4 +1,4 @@
-package ichorgo
+package argocd
 
 import (
 	"bufio"
@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/kube/kubetest"
 )
 
 const (
@@ -21,10 +23,10 @@ const (
 )
 
 // argoDiffAPI is a cluster with an Application "web" in argocd, a Redis pod and its password.
-func argoDiffAPI(t *testing.T) *fakeKubeAPI {
+func argoDiffAPI(t *testing.T) *kubetest.FakeAPI {
 	t.Helper()
 
-	return newFakeKubeAPI(t, map[string]string{
+	return kubetest.New(t, map[string]string{
 		"GET /apis": `{"groups":[{"name":"argoproj.io","preferredVersion":{"version":"v1alpha1"}}]}`,
 		"GET " + argoDiffApp: `{"metadata":{"name":"web","namespace":"argocd"},
 			"spec":{"source":{"repoURL":"https://github.com/org/gitops.git","path":"apps/web","targetRevision":"main"},
@@ -135,8 +137,8 @@ func (f *fakeRedis) serve(conn net.Conn) {
 	}
 }
 
-// dialer gives diffArgoApp a stream to the fake, checking the pod it asked for.
-func (f *fakeRedis) dialer(t *testing.T, wantNamespace, wantPod string) podDialer {
+// dialer gives Diff a stream to the fake, checking the pod it asked for.
+func (f *fakeRedis) dialer(t *testing.T, wantNamespace, wantPod string) func(context.Context, string, string, int) (io.ReadWriteCloser, error) {
 	return func(_ context.Context, namespace, pod string, port int) (io.ReadWriteCloser, error) {
 		if namespace != wantNamespace || pod != wantPod || port != argoRedisPort {
 			t.Errorf("dialed %s/%s:%d", namespace, pod, port)
@@ -169,10 +171,7 @@ func gzipJSON(t *testing.T, v any) []byte {
 func TestDiffArgoApp(t *testing.T) {
 	f := argoDiffAPI(t)
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := f.KubeClient(t)
 
 	redis := &fakeRedis{password: "s3cret", keys: map[string][]byte{
 		"app|managed-resources|web|1.8.3":       gzipJSON(t, argoCachedState()),
@@ -180,7 +179,7 @@ func TestDiffArgoApp(t *testing.T) {
 		"app|resources-tree|web|1.8.3":          []byte("{}"),
 	}}
 
-	d, err := diffArgoApp(context.Background(), k, redis.dialer(t, "argocd", "argocd-redis-5c7f"), "argocd", "web")
+	d, err := Diff(context.Background(), Env{Client: k, Dial: redis.dialer(t, "argocd", "argocd-redis-5c7f")}, "argocd", "web")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -237,45 +236,42 @@ func TestDiffArgoApp(t *testing.T) {
 func TestDiffArgoAppErrors(t *testing.T) {
 	f := argoDiffAPI(t)
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	k := f.KubeClient(t)
 
 	// Not compared yet: no key.
 	empty := &fakeRedis{password: "s3cret", keys: map[string][]byte{}}
-	if _, err := diffArgoApp(context.Background(), k, empty.dialer(t, "argocd", "argocd-redis-5c7f"), "argocd", "web"); !errors.Is(err, errArgoNotCached) {
+	if _, err := Diff(context.Background(), Env{Client: k, Dial: empty.dialer(t, "argocd", "argocd-redis-5c7f")}, "argocd", "web"); !errors.Is(err, errArgoNotCached) {
 		t.Fatalf("not cached: %v", err)
 	}
 
 	// A wrong password is Redis' error.
 	wrong := &fakeRedis{password: "other"}
-	if _, err := diffArgoApp(context.Background(), k, wrong.dialer(t, "argocd", "argocd-redis-5c7f"), "argocd", "web"); err == nil || !strings.Contains(err.Error(), "WRONGPASS") {
+	if _, err := Diff(context.Background(), Env{Client: k, Dial: wrong.dialer(t, "argocd", "argocd-redis-5c7f")}, "argocd", "web"); err == nil || !strings.Contains(err.Error(), "WRONGPASS") {
 		t.Fatalf("wrong password: %v", err)
 	}
 
 	// A Redis without a password: the Secret's AUTH is refused as pointless and ignored.
 	open := &fakeRedis{keys: map[string][]byte{"app|managed-resources|web|1.8.3": []byte("[]")}}
-	if _, err := diffArgoApp(context.Background(), k, open.dialer(t, "argocd", "argocd-redis-5c7f"), "argocd", "web"); err != nil {
+	if _, err := Diff(context.Background(), Env{Client: k, Dial: open.dialer(t, "argocd", "argocd-redis-5c7f")}, "argocd", "web"); err != nil {
 		t.Fatalf("no password: %v", err)
 	}
 
 	// Garbage in the cache.
 	bad := &fakeRedis{password: "s3cret", keys: map[string][]byte{"app|managed-resources|web|1.8.3": []byte("nope")}}
-	if _, err := diffArgoApp(context.Background(), k, bad.dialer(t, "argocd", "argocd-redis-5c7f"), "argocd", "web"); err == nil || !strings.Contains(err.Error(), "unexpected cached state") {
+	if _, err := Diff(context.Background(), Env{Client: k, Dial: bad.dialer(t, "argocd", "argocd-redis-5c7f")}, "argocd", "web"); err == nil || !strings.Contains(err.Error(), "unexpected cached state") {
 		t.Fatalf("garbage: %v", err)
 	}
 
 	// No Redis pod at all.
-	f.answerWith("GET /api/v1/pods", 200, `{"items":[]}`)
+	f.AnswerWith("GET /api/v1/pods", 200, `{"items":[]}`)
 
-	if _, err := diffArgoApp(context.Background(), k, empty.dialer(t, "", ""), "argocd", "web"); !errors.Is(err, errArgoNoRedis) {
+	if _, err := Diff(context.Background(), Env{Client: k, Dial: empty.dialer(t, "", "")}, "argocd", "web"); !errors.Is(err, errArgoNoRedis) {
 		t.Fatalf("no pod: %v", err)
 	}
 }
 
 func TestArgoInstanceName(t *testing.T) {
-	var app argoObject
+	var app Object
 	app.Metadata.Name, app.Metadata.Namespace = "shop", "team-a"
 
 	if got := argoInstanceName(app, "argocd"); got != "team-a_shop" {
@@ -349,19 +345,5 @@ func TestRespClient(t *testing.T) {
 
 	if got := respGlobEscape("app|m[1]*?"); got != `app|m\[1\]\*\?` {
 		t.Fatalf("escape %q", got)
-	}
-}
-
-func TestDemoArgoDiff(t *testing.T) {
-	d := demoArgoDiff("argocd", "web")
-
-	if d.Kind != "Application" || len(d.Resources) == 0 || d.Revision == d.Applied {
-		t.Fatalf("demo %+v", d)
-	}
-
-	for _, r := range d.Resources {
-		if r.Change == diffChangeChanged && r.Diff == "" {
-			t.Fatalf("%s/%s changed without a diff", r.Kind, r.Name)
-		}
 	}
 }

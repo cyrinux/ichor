@@ -186,3 +186,17 @@ func TestKubeArgoDemo(t *testing.T) {
 		t.Fatalf("got %v", err)
 	}
 }
+
+func TestDemoArgoDiff(t *testing.T) {
+	d := demoArgoDiff("argocd", "web")
+
+	if d.Kind != "Application" || len(d.Resources) == 0 || d.Revision == d.Applied {
+		t.Fatalf("demo %+v", d)
+	}
+
+	for _, r := range d.Resources {
+		if r.Change == diffChangeChanged && r.Diff == "" {
+			t.Fatalf("%s/%s changed without a diff", r.Kind, r.Name)
+		}
+	}
+}

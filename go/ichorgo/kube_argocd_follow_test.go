@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/cyrinux/ichor/go/kube/argocd"
 )
 
 const (
@@ -74,10 +76,10 @@ func (r *followRecorder) phases(t *testing.T) []string {
 func fastArgoFollow(t *testing.T, grace int) {
 	t.Helper()
 
-	interval, oldGrace, step := argoFollowInterval, argoFollowGrace, argoDemoStep
-	argoFollowInterval, argoFollowGrace, argoDemoStep = 5*time.Millisecond, grace, time.Millisecond
+	interval, oldGrace, step := argocd.FollowInterval, argocd.FollowGrace, argoDemoStep
+	argocd.FollowInterval, argocd.FollowGrace, argoDemoStep = 5*time.Millisecond, grace, time.Millisecond
 
-	t.Cleanup(func() { argoFollowInterval, argoFollowGrace, argoDemoStep = interval, oldGrace, step })
+	t.Cleanup(func() { argocd.FollowInterval, argocd.FollowGrace, argoDemoStep = interval, oldGrace, step })
 }
 
 // serveSequence answers GET path with each of seq in turn, the last one from then on.
@@ -182,7 +184,7 @@ func TestArgoSyncFollowIgnoresAnOlderOperation(t *testing.T) {
 	rec := newFollowRecorder()
 	StartArgoSyncFollow(cfg, "admin@test", "", "argocd", "shop", rec)
 
-	if done := rec.wait(t); done != [2]string{argoSyncFailed, ""} {
+	if done := rec.wait(t); done != [2]string{argocd.SyncFailed, ""} {
 		t.Fatalf("done %q", done)
 	}
 
@@ -201,7 +203,7 @@ func TestArgoSyncFollowIgnoresAnOlderOperation(t *testing.T) {
 	rec = newFollowRecorder()
 	StartArgoSyncFollow(cfg, "admin@test", "", "argocd", "shop", rec)
 
-	if done := rec.wait(t); done != [2]string{argoSyncFailed, ""} {
+	if done := rec.wait(t); done != [2]string{argocd.SyncFailed, ""} {
 		t.Fatalf("done %q", done)
 	}
 
@@ -215,7 +217,7 @@ func TestArgoSyncFollowIgnoresAnOlderOperation(t *testing.T) {
 	rec = newFollowRecorder()
 	StartArgoSyncFollow(cfg, "admin@test", "", "argocd", "shop", rec)
 
-	if done := rec.wait(t); done[0] != "" || done[1] != errArgoSyncNotStarted.Error() {
+	if done := rec.wait(t); done[0] != "" || done[1] != argocd.ErrSyncNotStarted.Error() {
 		t.Fatalf("done %q", done)
 	}
 }
@@ -249,7 +251,7 @@ func TestArgoSyncFollowTerminate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if done := rec.wait(t); done != [2]string{argoSyncTerminated, ""} {
+	if done := rec.wait(t); done != [2]string{argocd.SyncTerminated, ""} {
 		t.Fatalf("done %q", done)
 	}
 
