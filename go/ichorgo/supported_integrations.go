@@ -84,8 +84,9 @@ var nativeIntegrationSpecs = []integrationSpec{
 	// The Tailscale operator's Connectors, ProxyGroups, ProxyClasses and DNSConfig.
 	{ID: "tailscale", Name: "Tailscale", Website: "https://tailscale.com/kb/1236/kubernetes-operator", Groups: []string{groupTailscale}, Resource: "connectors"},
 	// The operators the network maps read a Service's outside name from (externalMatchers).
-	// NetBird's, ngrok's and Twingate's rows come from their built-in plugins (go/plugin/builtin/).
-	{ID: "cloudflared", Name: "Cloudflare Tunnel", Website: "https://github.com/adyanth/cloudflare-operator", Groups: []string{groupCloudflare}},
+	// NetBird's, ngrok's, Twingate's and Cloudflare Tunnel's rows come from their built-in plugins
+	// (go/plugin/builtin/).
+
 	// Cluster API: the core objects, plus the Talos control-plane and bootstrap providers' groups
 	// the reader asks (kubeadm's control plane shares the group: clusters tells Cluster API apart).
 	{ID: "cluster-api", Name: "Cluster API", Website: "https://cluster-api.sigs.k8s.io", Groups: []string{groupClusterAPI, groupCAPIControlPlane, groupCAPIBootstrap}, Resource: "clusters"},

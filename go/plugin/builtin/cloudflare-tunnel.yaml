@@ -1,0 +1,528 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# The community Cloudflare operator (adyanth/cloudflare-operator, networking.cfargotunnel.com)
+# runs cloudflared for a Tunnel (namespaced) or a ClusterTunnel, and a TunnelBinding routes
+# hostnames of the tunnel's domain to Services of its own namespace (subjects[], with tunnelRef
+# at the top level, not under spec). Cloudflare ships no operator of its own; a cluster running
+# bare cloudflared serves no group and gets no tile (it stays an app catalog row).
+# The objects carry no conditions: a Tunnel's status holds the tunnel ID and name once it exists
+# on Cloudflare (the rest is reported as events), and a binding's status lists the hostnames it
+# published. The operator runs cloudflared as a Deployment named after the tunnel, labelled
+# cfargotunnel.com/app=cloudflared, in the tunnel's namespace (a ClusterTunnel's in the
+# operator's own namespace): its ready replicas are the tunnel's health.
+# The tunnel spec names a credentials Secret and a Cloudflare account: neither is shown.
+# Read from config/crd/bases/ and internal/controller/*.go (main, 2026-11-11): Tunnel and
+# ClusterTunnel are stored as v1alpha2 (v1alpha1 is still served), TunnelBinding is v1alpha1.
+# A fork (networking.cloudflare-operator.io, other kinds) is not built in: its users import a
+# copy of this file as a user plugin with the group, versions and kinds changed.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: cloudflare-tunnel
+name: Cloudflare Tunnel
+website: https://github.com/adyanth/cloudflare-operator
+icon: cloudflare
+category: networking
+catalogId: cloudflared
+
+detect:
+  - group: networking.cfargotunnel.com
+
+resources:
+  tunnel:
+    group: networking.cfargotunnel.com
+    version: v1alpha2
+    resource: tunnels
+    kind: Tunnel
+    scope: Namespaced
+    optional: true
+  clusterTunnel:
+    group: networking.cfargotunnel.com
+    version: v1alpha2
+    resource: clustertunnels
+    kind: ClusterTunnel
+    scope: Cluster
+    optional: true
+  binding:
+    group: networking.cfargotunnel.com
+    version: v1alpha1
+    resource: tunnelbindings
+    kind: TunnelBinding
+    scope: Namespaced
+    optional: true
+  # The cloudflared Deployments the operator runs, one per tunnel.
+  deployment:
+    group: apps
+    version: v1
+    resource: deployments
+    kind: Deployment
+    scope: Namespaced
+    list: { labelSelector: cfargotunnel.com/app=cloudflared }
+    optional: true
+  # The Services a binding routes to: names only.
+  service:
+    group: ""
+    version: v1
+    resource: services
+    kind: Service
+    scope: Namespaced
+    list: { metadataOnly: true, limit: 2000 }
+    optional: true
+
+fields:
+  tunnel:
+    tunnelName: $.status.tunnelName | default($.spec.newTunnel.name) | default($.spec.existingTunnel.name) | default("")
+    tunnelID: $.status.tunnelId | default("")
+    domain: $.spec.cloudflare.domain | default("")
+    mode: 'has($.spec.existingTunnel) ? "existing" : "new"'
+    protocol: $.spec.protocol | default("auto")
+    fallback: $.spec.fallbackTarget | default("http_status:404")
+    deploymentRef: join(deployment, $.metadata.namespace == left.metadata.namespace && $.metadata.name == left.metadata.name)
+    readyReplicas: fields.deploymentRef.status.readyReplicas | default(0)
+    wantedReplicas: fields.deploymentRef.spec.replicas | default(1)
+  clusterTunnel:
+    tunnelName: $.status.tunnelName | default($.spec.newTunnel.name) | default($.spec.existingTunnel.name) | default("")
+    tunnelID: $.status.tunnelId | default("")
+    domain: $.spec.cloudflare.domain | default("")
+    mode: 'has($.spec.existingTunnel) ? "existing" : "new"'
+    protocol: $.spec.protocol | default("auto")
+    fallback: $.spec.fallbackTarget | default("http_status:404")
+    # In the operator's namespace, which the object does not name: matched by name.
+    deploymentRef: join(deployment, $.metadata.name == left.metadata.name)
+    readyReplicas: fields.deploymentRef.status.readyReplicas | default(0)
+    wantedReplicas: fields.deploymentRef.spec.replicas | default(1)
+  binding:
+    tunnelKind: $.tunnelRef.kind | default("Tunnel")
+    tunnelName: $.tunnelRef.name | default("")
+    dnsUpdates: '$.tunnelRef.disableDNSUpdates == true ? "off" : "on"'
+    subjects: len($.subjects)
+    subjectNames: join($.subjects[*].name, ", ")
+    # The FQDNs printer column: the hostnames, comma-separated.
+    hostnames: join(split($.status.hostnames | default(""), ","), ", ")
+    hostname: $.status.services[*].hostname | first() | default("")
+    targets: join($.status.services[*].target, ", ")
+    tunnelRef: >-
+      fields.tunnelKind == "ClusterTunnel"
+        ? join(clusterTunnel, $.metadata.name == fields.tunnelName)
+        : join(tunnel, $.metadata.namespace == left.metadata.namespace && $.metadata.name == fields.tunnelName)
+    service0: join(service, $.metadata.namespace == left.metadata.namespace && $.metadata.name == left.subjects[0].name)
+    service1: join(service, $.metadata.namespace == left.metadata.namespace && $.metadata.name == left.subjects[1].name)
+    service2: join(service, $.metadata.namespace == left.metadata.namespace && $.metadata.name == left.subjects[2].name)
+    service3: join(service, $.metadata.namespace == left.metadata.namespace && $.metadata.name == left.subjects[3].name)
+
+# First match wins. A tunnel that is not on Cloudflare after ten minutes is stuck (bad
+# credentials, a name already in use: the events say which); before that it is being created.
+health:
+  tunnel:
+    - when: fields.tunnelID == "" && age($.metadata.creationTimestamp) > 600000
+      health: warning
+      reason: notCreated
+      message: "not created on Cloudflare: see the object's events"
+    - when: fields.tunnelID == ""
+      health: info
+      reason: creating
+      message: "being created on Cloudflare"
+    - when: has(fields.deploymentRef) && fields.readyReplicas == 0
+      health: critical
+      reason: down
+      message: "cloudflared: 0 of {{ fields.wantedReplicas }} replicas ready"
+    - when: has(fields.deploymentRef) && fields.readyReplicas < fields.wantedReplicas
+      health: warning
+      reason: degraded
+      message: "cloudflared: {{ fields.readyReplicas }} of {{ fields.wantedReplicas }} replicas ready"
+  clusterTunnel:
+    - when: fields.tunnelID == "" && age($.metadata.creationTimestamp) > 600000
+      health: warning
+      reason: notCreated
+      message: "not created on Cloudflare: see the object's events"
+    - when: fields.tunnelID == ""
+      health: info
+      reason: creating
+      message: "being created on Cloudflare"
+    - when: has(fields.deploymentRef) && fields.readyReplicas == 0
+      health: critical
+      reason: down
+      message: "cloudflared: 0 of {{ fields.wantedReplicas }} replicas ready"
+    - when: has(fields.deploymentRef) && fields.readyReplicas < fields.wantedReplicas
+      health: warning
+      reason: degraded
+      message: "cloudflared: {{ fields.readyReplicas }} of {{ fields.wantedReplicas }} replicas ready"
+  binding:
+    - when: fields.tunnelName != "" && !has(fields.tunnelRef)
+      health: warning
+      reason: tunnelMissing
+      message: "its {{ fields.tunnelKind }} {{ fields.tunnelName }} does not exist"
+    - when: fields.hostname == ""
+      health: info
+      reason: notPublished
+      message: "no hostname published yet"
+
+dataServices:
+  summary:
+    aggregate:
+      tunnels: count(tunnel) + count(clusterTunnel)
+      tunnelsDown: 'count(tunnel, health == "critical") + count(clusterTunnel, health == "critical")'
+      tunnelProblems: 'count(tunnel, health == "warning") + count(clusterTunnel, health == "warning")'
+      bindings: count(binding)
+      bindingProblems: 'count(binding, health == "warning")'
+    health: worst([worst(tunnel.health), worst(clusterTunnel.health), worst(binding.health)])
+
+cards:
+  summary:
+    title: { count: dataServices.summary.tunnels, one: "%d Cloudflare tunnel", other: "%d Cloudflare tunnels" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "bindings", value: dataServices.summary.bindings, tone: info }
+      - { label: "tunnels down", value: dataServices.summary.tunnelsDown, tone: critical, hideWhenZero: true }
+      - { label: "tunnel problems", value: dataServices.summary.tunnelProblems, tone: warning, hideWhenZero: true }
+      - { label: "binding problems", value: dataServices.summary.bindingProblems, tone: warning, hideWhenZero: true }
+  bindings:
+    from: binding
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No tunnel bindings."
+    row:
+      title: 'fields.hostname != "" ? fields.hostname : $.metadata.name'
+      subtitle: '$.metadata.namespace + "/" + $.metadata.name + " → " + fields.tunnelName'
+      status:
+        tone: health
+        text: 'fields.hostname != "" ? "Published" : "Pending"'
+      trailing: { text: $.metadata.creationTimestamp | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Hostnames", value: fields.hostnames, mono: true }
+            - { label: "Targets", value: fields.targets, mono: true }
+            - { label: "Services", value: fields.subjectNames, mono: true }
+            - { label: "Tunnel", value: 'fields.tunnelKind + " " + fields.tunnelName', mono: true }
+            - { label: "DNS updates", value: fields.dnsUpdates }
+        - type: relations
+          items:
+            - { label: "Tunnel", ref: fields.tunnelRef }
+            - { label: "Service", ref: '[fields.service0, fields.service1, fields.service2, fields.service3]' }
+  tunnels:
+    from: tunnel
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No tunnels."
+    row:
+      title: $.metadata.name
+      subtitle: '$.metadata.namespace + (fields.domain != "" ? " · " + fields.domain : "")'
+      status:
+        tone: health
+        text: 'fields.tunnelID == "" ? "Pending" : (has(fields.deploymentRef) ? string(fields.readyReplicas) + "/" + string(fields.wantedReplicas) : "Created")'
+      trailing: { text: $.metadata.creationTimestamp | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Tunnel name", value: fields.tunnelName, mono: true }
+            - { label: "Tunnel ID", value: fields.tunnelID, mono: true }
+            - { label: "Domain", value: fields.domain, mono: true }
+            - { label: "Tunnel", value: fields.mode }
+            - { label: "Protocol", value: fields.protocol }
+            - { label: "Fallback", value: fields.fallback, mono: true }
+        - type: relations
+          items:
+            - { label: "cloudflared", ref: fields.deploymentRef }
+  clusterTunnels:
+    from: clusterTunnel
+    sort: [health desc, $.metadata.name]
+    empty: "No cluster tunnels."
+    row:
+      title: $.metadata.name
+      subtitle: 'fields.domain != "" ? "ClusterTunnel · " + fields.domain : "ClusterTunnel"'
+      status:
+        tone: health
+        text: 'fields.tunnelID == "" ? "Pending" : (has(fields.deploymentRef) ? string(fields.readyReplicas) + "/" + string(fields.wantedReplicas) : "Created")'
+      trailing: { text: $.metadata.creationTimestamp | relativeTime() }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Tunnel name", value: fields.tunnelName, mono: true }
+            - { label: "Tunnel ID", value: fields.tunnelID, mono: true }
+            - { label: "Domain", value: fields.domain, mono: true }
+            - { label: "Tunnel", value: fields.mode }
+            - { label: "Protocol", value: fields.protocol }
+            - { label: "Fallback", value: fields.fallback, mono: true }
+        - type: relations
+          items:
+            - { label: "cloudflared", ref: fields.deploymentRef }
+
+findings:
+  - { id: tunnel-down, from: tunnel, when: 'health == "critical"', severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: tunnels }
+  - { id: tunnel-problem, from: tunnel, when: 'health == "warning"', severity: warning, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: tunnels }
+  - { id: cluster-tunnel-down, from: clusterTunnel, when: 'health == "critical"', severity: critical, title: "{{ name }}", detail: "{{ message }}", opens: clusterTunnels }
+  - { id: cluster-tunnel-problem, from: clusterTunnel, when: 'health == "warning"', severity: warning, title: "{{ name }}", detail: "{{ message }}", opens: clusterTunnels }
+  - { id: binding-problem, from: binding, when: 'health == "warning"', severity: warning, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: bindings }
+
+i18n:
+  fr:
+    "not created on Cloudflare: see the object's events": "pas créé chez Cloudflare
+      : voir les événements de l'objet"
+    "being created on Cloudflare": "en cours de création chez Cloudflare"
+    "cloudflared: 0 of {{ fields.wantedReplicas }} replicas ready": "cloudflared :
+      0 réplica prêt sur {{ fields.wantedReplicas }}"
+    "cloudflared: {{ fields.readyReplicas }} of {{ fields.wantedReplicas }} replicas ready": "cloudflared
+      : {{ fields.readyReplicas }} réplicas prêts sur {{ fields.wantedReplicas }}"
+    "its {{ fields.tunnelKind }} {{ fields.tunnelName }} does not exist": "son {{
+      fields.tunnelKind }} {{ fields.tunnelName }} n'existe pas"
+    "no hostname published yet": "pas encore de nom d'hôte publié"
+    "%d Cloudflare tunnel": "%d tunnel Cloudflare"
+    "%d Cloudflare tunnels": "%d tunnels Cloudflare"
+    "bindings": "liaisons"
+    "tunnels down": "tunnels en panne"
+    "tunnel problems": "tunnels en erreur"
+    "binding problems": "liaisons en erreur"
+    "No tunnel bindings.": "Aucune liaison de tunnel."
+    "Published": "Publié"
+    "Pending": "En attente"
+    "Hostnames": "Noms d'hôte"
+    "Targets": "Cibles"
+    "Services": "Services"
+    "Tunnel": "Tunnel"
+    "DNS updates": "Mises à jour DNS"
+    "Service": "Service"
+    "No tunnels.": "Aucun tunnel."
+    "Created": "Créé"
+    "Tunnel name": "Nom du tunnel"
+    "Tunnel ID": "ID du tunnel"
+    "Domain": "Domaine"
+    "Protocol": "Protocole"
+    "Fallback": "Repli"
+    "cloudflared": "cloudflared"
+    "No cluster tunnels.": "Aucun tunnel de cluster."
+  de:
+    "not created on Cloudflare: see the object's events": "nicht bei Cloudflare angelegt:
+      siehe die Ereignisse des Objekts"
+    "being created on Cloudflare": "wird bei Cloudflare angelegt"
+    "cloudflared: 0 of {{ fields.wantedReplicas }} replicas ready": "cloudflared:
+      0 von {{ fields.wantedReplicas }} Replikaten bereit"
+    "cloudflared: {{ fields.readyReplicas }} of {{ fields.wantedReplicas }} replicas ready": "cloudflared:
+      {{ fields.readyReplicas }} von {{ fields.wantedReplicas }} Replikaten bereit"
+    "its {{ fields.tunnelKind }} {{ fields.tunnelName }} does not exist": "sein {{
+      fields.tunnelKind }} {{ fields.tunnelName }} existiert nicht"
+    "no hostname published yet": "noch kein Hostname veröffentlicht"
+    "%d Cloudflare tunnel": "%d Cloudflare-Tunnel"
+    "%d Cloudflare tunnels": "%d Cloudflare-Tunnel"
+    "bindings": "Bindungen"
+    "tunnels down": "Tunnel ausgefallen"
+    "tunnel problems": "Tunnel mit Problemen"
+    "binding problems": "Bindungen mit Problemen"
+    "No tunnel bindings.": "Keine Tunnel-Bindungen."
+    "Published": "Veröffentlicht"
+    "Pending": "Ausstehend"
+    "Hostnames": "Hostnamen"
+    "Targets": "Ziele"
+    "Services": "Services"
+    "Tunnel": "Tunnel"
+    "DNS updates": "DNS-Aktualisierungen"
+    "Service": "Service"
+    "No tunnels.": "Keine Tunnel."
+    "Created": "Erstellt"
+    "Tunnel name": "Tunnelname"
+    "Tunnel ID": "Tunnel-ID"
+    "Domain": "Domain"
+    "Protocol": "Protokoll"
+    "Fallback": "Fallback"
+    "cloudflared": "cloudflared"
+    "No cluster tunnels.": "Keine Cluster-Tunnel."
+  es:
+    "not created on Cloudflare: see the object's events": "no creado en Cloudflare:
+      consulta los eventos del objeto"
+    "being created on Cloudflare": "creándose en Cloudflare"
+    "cloudflared: 0 of {{ fields.wantedReplicas }} replicas ready": "cloudflared:
+      0 de {{ fields.wantedReplicas }} réplicas listas"
+    "cloudflared: {{ fields.readyReplicas }} of {{ fields.wantedReplicas }} replicas ready": "cloudflared:
+      {{ fields.readyReplicas }} de {{ fields.wantedReplicas }} réplicas listas"
+    "its {{ fields.tunnelKind }} {{ fields.tunnelName }} does not exist": "su {{ fields.tunnelKind
+      }} {{ fields.tunnelName }} no existe"
+    "no hostname published yet": "aún no hay nombre de host publicado"
+    "%d Cloudflare tunnel": "%d túnel de Cloudflare"
+    "%d Cloudflare tunnels": "%d túneles de Cloudflare"
+    "bindings": "vinculaciones"
+    "tunnels down": "túneles caídos"
+    "tunnel problems": "túneles con problemas"
+    "binding problems": "vinculaciones con problemas"
+    "No tunnel bindings.": "Ninguna vinculación de túnel."
+    "Published": "Publicado"
+    "Pending": "Pendiente"
+    "Hostnames": "Nombres de host"
+    "Targets": "Destinos"
+    "Services": "Servicios"
+    "Tunnel": "Túnel"
+    "DNS updates": "Actualizaciones DNS"
+    "Service": "Servicio"
+    "No tunnels.": "Ningún túnel."
+    "Created": "Creado"
+    "Tunnel name": "Nombre del túnel"
+    "Tunnel ID": "ID del túnel"
+    "Domain": "Dominio"
+    "Protocol": "Protocolo"
+    "Fallback": "Alternativa"
+    "cloudflared": "cloudflared"
+    "No cluster tunnels.": "Ningún túnel de clúster."
+  it:
+    "not created on Cloudflare: see the object's events": "non creato su Cloudflare:
+      vedi gli eventi dell'oggetto"
+    "being created on Cloudflare": "in creazione su Cloudflare"
+    "cloudflared: 0 of {{ fields.wantedReplicas }} replicas ready": "cloudflared:
+      0 repliche pronte su {{ fields.wantedReplicas }}"
+    "cloudflared: {{ fields.readyReplicas }} of {{ fields.wantedReplicas }} replicas ready": "cloudflared:
+      {{ fields.readyReplicas }} repliche pronte su {{ fields.wantedReplicas }}"
+    "its {{ fields.tunnelKind }} {{ fields.tunnelName }} does not exist": "il suo
+      {{ fields.tunnelKind }} {{ fields.tunnelName }} non esiste"
+    "no hostname published yet": "ancora nessun nome host pubblicato"
+    "%d Cloudflare tunnel": "%d tunnel Cloudflare"
+    "%d Cloudflare tunnels": "%d tunnel Cloudflare"
+    "bindings": "associazioni"
+    "tunnels down": "tunnel non funzionanti"
+    "tunnel problems": "tunnel con problemi"
+    "binding problems": "associazioni con problemi"
+    "No tunnel bindings.": "Nessuna associazione di tunnel."
+    "Published": "Pubblicato"
+    "Pending": "In attesa"
+    "Hostnames": "Nomi host"
+    "Targets": "Target"
+    "Services": "Service"
+    "Tunnel": "Tunnel"
+    "DNS updates": "Aggiornamenti DNS"
+    "Service": "Service"
+    "No tunnels.": "Nessun tunnel."
+    "Created": "Creato"
+    "Tunnel name": "Nome del tunnel"
+    "Tunnel ID": "ID tunnel"
+    "Domain": "Dominio"
+    "Protocol": "Protocollo"
+    "Fallback": "Fallback"
+    "cloudflared": "cloudflared"
+    "No cluster tunnels.": "Nessun tunnel di cluster."
+  uk:
+    "not created on Cloudflare: see the object's events": "не створено в Cloudflare:
+      дивіться події об'єкта"
+    "being created on Cloudflare": "створюється в Cloudflare"
+    "cloudflared: 0 of {{ fields.wantedReplicas }} replicas ready": "cloudflared:
+      готово 0 з {{ fields.wantedReplicas }} реплік"
+    "cloudflared: {{ fields.readyReplicas }} of {{ fields.wantedReplicas }} replicas ready": "cloudflared:
+      готово {{ fields.readyReplicas }} з {{ fields.wantedReplicas }} реплік"
+    "its {{ fields.tunnelKind }} {{ fields.tunnelName }} does not exist": "його {{
+      fields.tunnelKind }} {{ fields.tunnelName }} не існує"
+    "no hostname published yet": "ще не опубліковано жодного імені хоста"
+    "%d Cloudflare tunnel": "%d тунель Cloudflare"
+    "%d Cloudflare tunnels": "%d тунелів Cloudflare"
+    "bindings": "прив'язки"
+    "tunnels down": "тунелів не працює"
+    "tunnel problems": "тунелів із проблемами"
+    "binding problems": "прив'язок із проблемами"
+    "No tunnel bindings.": "Немає прив'язок тунелів."
+    "Published": "Опубліковано"
+    "Pending": "Очікує"
+    "Hostnames": "Імена хостів"
+    "Targets": "Цілі"
+    "Services": "Сервіси"
+    "Tunnel": "Тунель"
+    "DNS updates": "Оновлення DNS"
+    "Service": "Сервіс"
+    "No tunnels.": "Немає тунелів."
+    "Created": "Створено"
+    "Tunnel name": "Ім'я тунелю"
+    "Tunnel ID": "ID тунелю"
+    "Domain": "Домен"
+    "Protocol": "Протокол"
+    "Fallback": "Резервна ціль"
+    "cloudflared": "cloudflared"
+    "No cluster tunnels.": "Немає тунелів кластера."
+samples:
+  tunnel:
+    - metadata: { name: shop-tunnel, namespace: demo-shop, creationTimestamp: now-30d }
+      spec:
+        cloudflare: { domain: demo-lab.example, secret: cloudflare-api }
+        newTunnel: { name: shop-tunnel }
+        protocol: quic
+      status: { tunnelId: 00000000-0000-4000-8000-000000000001, tunnelName: shop-tunnel, accountId: "", zoneId: "" }
+    - metadata: { name: lab-tunnel, namespace: demo-lab, creationTimestamp: now-5d }
+      spec:
+        cloudflare: { domain: demo-lab.example, secret: cloudflare-api }
+        existingTunnel: { name: lab }
+      status: { tunnelId: 00000000-0000-4000-8000-000000000002, tunnelName: lab, accountId: "", zoneId: "" }
+    - metadata: { name: api-tunnel, namespace: demo-shop, creationTimestamp: now-12d }
+      spec:
+        cloudflare: { domain: demo-lab.example, secret: cloudflare-api }
+        newTunnel: { name: api-tunnel }
+      status: { tunnelId: 00000000-0000-4000-8000-000000000005, tunnelName: api-tunnel, accountId: "", zoneId: "" }
+    - metadata: { name: stuck-tunnel, namespace: demo-lab, creationTimestamp: now-2h }
+      spec:
+        cloudflare: { domain: demo-lab.example, secret: cloudflare-api }
+        newTunnel: { name: stuck-tunnel }
+    - metadata: { name: new-tunnel, namespace: demo-shop, creationTimestamp: now-30s }
+      spec:
+        cloudflare: { domain: demo-lab.example, secret: cloudflare-api }
+        newTunnel: { name: new-tunnel }
+  clusterTunnel:
+    - metadata: { name: edge, creationTimestamp: now-60d }
+      spec:
+        cloudflare: { domain: demo-lab.example, secret: cloudflare-api }
+        newTunnel: { name: edge }
+        protocol: http2
+      status: { tunnelId: 00000000-0000-4000-8000-000000000003, tunnelName: edge, accountId: "", zoneId: "" }
+    - metadata: { name: backoffice, creationTimestamp: now-20d }
+      spec:
+        cloudflare: { domain: demo-lab.example, secret: cloudflare-api }
+        newTunnel: { name: backoffice }
+      status: { tunnelId: 00000000-0000-4000-8000-000000000004, tunnelName: backoffice, accountId: "", zoneId: "" }
+    - metadata: { name: intranet, creationTimestamp: now-90d }
+      spec:
+        cloudflare: { domain: demo-lab.example, secret: cloudflare-api }
+        existingTunnel: { name: intranet }
+      status: { tunnelId: 00000000-0000-4000-8000-000000000006, tunnelName: intranet, accountId: "", zoneId: "" }
+    - metadata: { name: partner, creationTimestamp: now-1d }
+      spec:
+        cloudflare: { domain: demo-lab.example, secret: cloudflare-api }
+        newTunnel: { name: partner }
+    - metadata: { name: staging, creationTimestamp: now-1m }
+      spec:
+        cloudflare: { domain: demo-lab.example, secret: cloudflare-api }
+        newTunnel: { name: staging }
+  binding:
+    - metadata: { name: storefront, namespace: demo-shop, creationTimestamp: now-29d }
+      subjects: [{ kind: Service, name: storefront, spec: { fqdn: shop.demo-lab.example } }]
+      tunnelRef: { kind: Tunnel, name: shop-tunnel }
+      status:
+        hostnames: shop.demo-lab.example
+        services: [{ hostname: shop.demo-lab.example, target: "http://storefront.demo-shop.svc:80" }]
+    - metadata: { name: wiki, namespace: demo-lab, creationTimestamp: now-3h }
+      subjects: [{ kind: Service, name: wiki }]
+      tunnelRef: { kind: Tunnel, name: old-tunnel }
+      status:
+        hostnames: wiki.demo-lab.example
+        services: [{ hostname: wiki.demo-lab.example, target: "http://wiki.demo-lab.svc:80" }]
+    - metadata: { name: dashboards, namespace: demo-lab, creationTimestamp: now-10d }
+      subjects: [{ kind: Service, name: grafana }, { kind: Service, name: prometheus, spec: { fqdn: metrics.demo-lab.example } }]
+      tunnelRef: { kind: ClusterTunnel, name: edge }
+      status:
+        hostnames: grafana.demo-lab.example,metrics.demo-lab.example
+        services:
+          - { hostname: grafana.demo-lab.example, target: "http://grafana.demo-lab.svc:3000" }
+          - { hostname: metrics.demo-lab.example, target: "http://prometheus.demo-lab.svc:9090" }
+    - metadata: { name: docs, namespace: demo-shop, creationTimestamp: now-20s }
+      subjects: [{ kind: Service, name: docs }]
+      tunnelRef: { kind: Tunnel, name: shop-tunnel, disableDNSUpdates: true }
+  deployment:
+    - metadata: { name: shop-tunnel, namespace: demo-shop, labels: { cfargotunnel.com/app: cloudflared } }
+      spec: { replicas: 2 }
+      status: { replicas: 2, readyReplicas: 2 }
+    - metadata: { name: lab-tunnel, namespace: demo-lab, labels: { cfargotunnel.com/app: cloudflared } }
+      spec: { replicas: 1 }
+      status: { replicas: 1 }
+    - metadata: { name: edge, namespace: cloudflare-operator-system, labels: { cfargotunnel.com/app: cloudflared } }
+      spec: { replicas: 2 }
+      status: { replicas: 2, readyReplicas: 1 }
+    - metadata: { name: backoffice, namespace: cloudflare-operator-system, labels: { cfargotunnel.com/app: cloudflared } }
+      spec: { replicas: 1 }
+      status: { replicas: 1, readyReplicas: 0 }
+    - metadata: { name: intranet, namespace: cloudflare-operator-system, labels: { cfargotunnel.com/app: cloudflared } }
+      spec: { replicas: 1 }
+      status: { replicas: 1, readyReplicas: 1 }
+    - metadata: { name: api-tunnel, namespace: demo-shop, labels: { cfargotunnel.com/app: cloudflared } }
+      spec: { replicas: 3 }
+      status: { replicas: 3, readyReplicas: 2 }
+  service:
+    - metadata: { name: storefront, namespace: demo-shop }
+    - metadata: { name: wiki, namespace: demo-lab }
+    - metadata: { name: grafana, namespace: demo-lab }
+    - metadata: { name: prometheus, namespace: demo-lab }
+    - metadata: { name: docs, namespace: demo-shop }
