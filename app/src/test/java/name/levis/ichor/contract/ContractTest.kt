@@ -20,7 +20,15 @@ import name.levis.ichor.model.PluginIndex
 import name.levis.ichor.model.FleetTone
 import name.levis.ichor.model.UpdateProposalPlan
 import name.levis.ichor.model.updateSections
+import name.levis.ichor.model.DiffChange
+import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.FluxStatus
+import name.levis.ichor.model.HelmReleaseDetail
+import name.levis.ichor.model.HelmReleaseList
+import name.levis.ichor.model.HelmRollbackFollowProgress
+import name.levis.ichor.model.HelmRollbackPhase
+import name.levis.ichor.model.HelmRollbackPlan
+import name.levis.ichor.model.canRun
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.ImageReport
 import name.levis.ichor.model.KubeCronJobList
@@ -73,6 +81,16 @@ class ContractTest {
             assertEquals(6, it.spans[2].fg)
         },
         "plugin-index" to Row(PluginIndex.serializer()) { assertEquals(true, it.plugins[0].installed); assertEquals("kube-green", it.plugins[0].iconApp.icon) },
+        "flux-diff" to Row(FluxDiff.serializer()) { assertEquals(DiffChange.CHANGED, it.resources[0].change); assertEquals("3", it.resources[0].liveChanges[0].live) },
+        "argocd-diff" to Row(FluxDiff.serializer()) { assertEquals("Application", it.kind); assertEquals("spec.replicas", it.resources[0].liveChanges[0].label) },
+        "helm-releases" to Row(HelmReleaseList.serializer()) { assertEquals("cert-manager", it.releases[0].name); assertEquals("v1.18.2", it.releases[0].appVersion) },
+        "helm-release" to Row(HelmReleaseDetail.serializer()) { assertEquals("ingress-nginx", it.name); assertEquals("Upgrade complete", it.history[0].description) },
+        // The sheet names the release by its Secrets' namespace; where its objects go shows on each change.
+        "helm-rollback-plan" to Row(HelmRollbackPlan.serializer(), ignored = setOf("releaseNamespace")) {
+            assertEquals("flux-system/ingress-nginx", it.fluxOwner)
+            assertTrue(it.force && !it.canRun)
+        },
+        "helm-rollback-progress" to Row(HelmRollbackFollowProgress.serializer()) { assertEquals(HelmRollbackPhase.RUNNING, it.phase); assertEquals(2, it.total) },
     )
 
     /** Every default written out, so the re-encoded object names every key the model reads. */

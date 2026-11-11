@@ -106,6 +106,11 @@ read. When you change one of those types, run `just contract-update`, then fix t
 Swift models the red tests point at. A new fixture needs a row in both app tests
 (`scripts/check-contract.py` checks it in `./build.sh check`).
 
+A domain's response types must be contract roots before its package moves out of the facade
+(`go/kube/<domain>`). `TestContractTypesAreTagged` walks every type a root reaches and fails on
+an exported field with no json tag, even one the apps do not read yet: Go would write it under
+its Go name, and `omitempty` on an empty list would hide that from the fixtures.
+
 ## Confirming risky actions
 
 Do the same on Android and iOS:
