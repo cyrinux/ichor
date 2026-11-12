@@ -4550,7 +4550,10 @@
     <string name="alerts_silence_remove_matcher">%1$s entfernen</string>
     <string name="alerts_silence_no_matchers">Kein Kriterium mehr: Eine Stummschaltung braucht mindestens eines.</string>
     <string name="alerts_silence_matchers_hint">Schaltet genau diesen Alarm stumm. Entferne ein Kriterium, um mehr Alarme dieser Art stummzuschalten.</string>
-    <string name="alerts_silence_for">Für</string>
+<string name="alerts_silence_dropped_hint">Habe %1$s weggelassen: Ein Kriterium dazu würde mehr als diesen Alarm stummschalten. Füge es hinzu, um das Stummschalten einzugrenzen.</string>
+<string name="alerts_silence_add_dropped">%1$s wieder hinzufügen</string>
+    Habe %1$s weggelassen: Ein Kriterium dazu würde mehr als diesen Alarm stummschalten. Füge es hinzu, um das Stummschalten einzugrenzen.
+<string name="alerts_silence_for">Für</string>
     <string name="alerts_silence_custom">Andere Dauer</string>
     <string name="alerts_silence_hours">Stunden</string>
     <string name="alerts_silence_hours_hint">1 bis 720 Stunden (30 Tage)</string>

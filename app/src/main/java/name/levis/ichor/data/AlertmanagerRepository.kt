@@ -8,6 +8,7 @@ import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import name.levis.ichor.model.AmAlerts
 import name.levis.ichor.model.AmMatcher
+import name.levis.ichor.model.AmSilenceProposal
 import name.levis.ichor.model.AmSilences
 import name.levis.ichor.model.PromDiscovery
 import name.levis.ichor.model.PromSource
@@ -43,10 +44,13 @@ class AlertmanagerRepository(go: GoCall) : GoRepository(go) {
         }
     }
 
-    /** The matchers silencing exactly the alert of [labels] (its HA replica labels left out). */
-    suspend fun silenceMatchers(labels: Map<String, String>): List<AmMatcher> = withContext(Dispatchers.IO) {
+    /**
+     * The matchers silencing exactly the alert of [labels], with the label the core left out
+     * of them (its HA replica label or an empty value), so the form can say what it dropped.
+     */
+    suspend fun silenceMatchers(labels: Map<String, String>): AmSilenceProposal = withContext(Dispatchers.IO) {
         val json = Ichorgo.alertmanagerSilenceMatchers(TalosJson.encodeToString(LABELS, labels))
-        TalosJson.decodeFromString(MATCHERS, json)
+        TalosJson.decodeFromString(AmSilenceProposal.serializer(), json)
     }
 
     /** Silences [matchers] on [source] for [minutes] from now, with [comment]: the new silence's ID. Throws when refused. */

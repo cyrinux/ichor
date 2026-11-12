@@ -118,6 +118,16 @@ data class AmSilence(
 @Serializable
 data class AmSilences(val silences: List<AmSilence> = emptyList())
 
+/**
+ * The matchers the silence form prefills for one alert (its labels through the Go core's
+ * `AlertmanagerSilenceMatchers`): [matchers] mutes exactly this alert; [dropped] names the
+ * label left out of them, if any — an HA replica label or an empty value the core never
+ * matches on. Without it the silence covers every alert of the name, so the form shows what
+ * went and lets the user add it back.
+ */
+@Serializable
+data class AmSilenceProposal(val matchers: List<AmMatcher> = emptyList(), val dropped: String = "")
+
 /** A cluster's Alertmanager setup; [source] null until one is found or chosen. */
 @Serializable
 data class AlertmanagerConfig(val source: PromSource? = null)

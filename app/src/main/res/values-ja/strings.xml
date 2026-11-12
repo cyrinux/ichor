@@ -4444,7 +4444,10 @@
     <string name="alerts_silence_remove_matcher">%1$s を削除</string>
     <string name="alerts_silence_no_matchers">マッチャーが残っていません。サイレンスには少なくとも1つ必要です。</string>
     <string name="alerts_silence_matchers_hint">このアラートだけをミュートします。マッチャーを削除すると、同じ種類のアラートをより多くミュートできます。</string>
-    <string name="alerts_silence_for">期間</string>
+<string name="alerts_silence_dropped_hint">%1$s を省略しました：このラベルの条件をつけるとこのアラート以外もミュートされます。追加してサイレンスの範囲を狭められます。</string>
+<string name="alerts_silence_add_dropped">%1$s を再び追加</string>
+    %1$s を省略しました：このラベルの条件をつけるとこのアラート以外もミュートされます。追加してサイレンスの範囲を狭められます。
+<string name="alerts_silence_for">期間</string>
     <string name="alerts_silence_custom">カスタム</string>
     <string name="alerts_silence_hours">時間</string>
     <string name="alerts_silence_hours_hint">1〜720時間（30日）</string>

@@ -21,6 +21,7 @@ import name.levis.ichor.model.AlertmanagerConfig
 import name.levis.ichor.model.AmAlerts
 import name.levis.ichor.model.AmFilter
 import name.levis.ichor.model.AmMatcher
+import name.levis.ichor.model.AmSilenceProposal
 import name.levis.ichor.model.AmSilence
 import name.levis.ichor.model.AmSilences
 import name.levis.ichor.model.OnCallConfig
@@ -208,7 +209,7 @@ class AlertsViewModel(
     }
 
     /** The matchers that silence exactly the alert of [labels], for the silence form. */
-    suspend fun matchersFor(labels: Map<String, String>): List<AmMatcher> = alertmanager.silenceMatchers(labels)
+    suspend fun matchersFor(labels: Map<String, String>): AmSilenceProposal = alertmanager.silenceMatchers(labels)
 
     /** Silences [matchers] for [minutes] with [comment]; the alerts and silences reload once done. */
     fun silence(matchers: List<AmMatcher>, minutes: Long, comment: String) {

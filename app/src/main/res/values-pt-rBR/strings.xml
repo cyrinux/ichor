@@ -4555,7 +4555,10 @@
     <string name="alerts_silence_remove_matcher">Remover %1$s</string>
     <string name="alerts_silence_no_matchers">Nenhum critério restante: um silenciamento precisa de pelo menos um.</string>
     <string name="alerts_silence_matchers_hint">Silencia exatamente este alerta. Remova um critério para silenciar mais alertas do mesmo tipo.</string>
-    <string name="alerts_silence_for">Duração</string>
+<string name="alerts_silence_dropped_hint">%1$s removido: um critério sobre ele silenciaria mais que este alerta. Adicione-o de volta para limitar o silêncio.</string>
+<string name="alerts_silence_add_dropped">Adicionar %1$s novamente</string>
+    %1$s removido: um critério sobre ele silenciaria mais que este alerta. Adicione-o de volta para limitar o silêncio.
+<string name="alerts_silence_for">Duração</string>
     <string name="alerts_silence_custom">Personalizado</string>
     <string name="alerts_silence_hours">Horas</string>
     <string name="alerts_silence_hours_hint">De 1 a 720 horas (30 dias)</string>

@@ -43,6 +43,7 @@ import name.levis.ichor.model.AM_MAX_SILENCE_MINUTES
 import name.levis.ichor.model.AM_SILENCE_PRESETS
 import name.levis.ichor.model.AmAlert
 import name.levis.ichor.model.AmMatcher
+import name.levis.ichor.model.AmSilenceProposal
 import name.levis.ichor.model.KubePermission
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.MutedText
@@ -61,7 +62,7 @@ private const val MAX_COMMENT = 500
 @Composable
 fun SilenceSheet(
     alert: AmAlert,
-    matchersFor: suspend (Map<String, String>) -> List<AmMatcher>,
+    matchersFor: suspend (Map<String, String>) -> AmSilenceProposal,
     denial: KubePermission?,
     onSilence: (matchers: List<AmMatcher>, minutes: Long, comment: String) -> Unit,
     onDismiss: () -> Unit,
@@ -69,19 +70,22 @@ fun SilenceSheet(
     initialComment: String = "",
 ) {
     var matchers by remember { mutableStateOf<List<AmMatcher>?>(null) }
+    var droppedLabel by remember { mutableStateOf<String?>(null) }
     var matchersError by remember { mutableStateOf<String?>(null) }
     var minutes by rememberSaveable { mutableStateOf(initialMinutes) }
     var custom by rememberSaveable { mutableStateOf(initialMinutes !in AM_SILENCE_PRESETS) }
     var hoursText by rememberSaveable { mutableStateOf(if (custom) (initialMinutes / 60).toString() else "") }
     var comment by rememberSaveable { mutableStateOf(initialComment) }
     LaunchedEffect(alert.fingerprint) {
-        matchers = try {
-            matchersFor(alert.labels)
+        try {
+            val proposal = matchersFor(alert.labels)
+            matchers = proposal.matchers
+            droppedLabel = proposal.dropped.takeIf { it.isNotEmpty() }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             matchersError = e.userMessage()
-            emptyList()
+            matchers = emptyList()
         }
     }
     val chosen = if (custom) (hoursText.toLongOrNull() ?: 0L) * 60 else minutes
@@ -109,7 +113,24 @@ fun SilenceSheet(
                             )
                         }
                     }
-                    MutedText(matchersError ?: stringResource(if (current.isEmpty()) R.string.alerts_silence_no_matchers else R.string.alerts_silence_matchers_hint))
+                    val dropped = droppedLabel
+                    val hint = when {
+                        matchersError != null -> matchersError
+                        dropped != null -> stringResource(R.string.alerts_silence_dropped_hint, dropped)
+                        current.isEmpty() -> stringResource(R.string.alerts_silence_no_matchers)
+                        else -> stringResource(R.string.alerts_silence_matchers_hint)
+                    }
+                    MutedText(hint)
+                    if (dropped != null) {
+                        val present = current.any { it.name == dropped }
+                        if (!present) {
+                            IchorFilterChip(
+                                selected = false,
+                                onClick = { matchers = current + AmMatcher(name = dropped, value = alert.labels[dropped] ?: "") },
+                                label = { Text(stringResource(R.string.alerts_silence_add_dropped, dropped)) },
+                            )
+                        }
+                    }
                 }
             }
             Label(stringResource(R.string.alerts_silence_for))

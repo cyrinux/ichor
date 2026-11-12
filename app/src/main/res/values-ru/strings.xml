@@ -4774,7 +4774,10 @@
     <string name="alerts_silence_remove_matcher">Удалить %1$s</string>
     <string name="alerts_silence_no_matchers">Условий не осталось: для тишины нужно хотя бы одно.</string>
     <string name="alerts_silence_matchers_hint">Заглушает именно это оповещение. Удалите условие, чтобы заглушить больше оповещений такого типа.</string>
-    <string name="alerts_silence_for">На</string>
+<string name="alerts_silence_dropped_hint">Пропущен %1$s: условие по нему заглушит больше, чем это оповещение. Добавьте его, чтобы сузить заглушение.</string>
+<string name="alerts_silence_add_dropped">Добавить %1$s снова</string>
+    Пропущен %1$s: условие по нему заглушит больше, чем это оповещение. Добавьте его, чтобы сузить заглушение.
+<string name="alerts_silence_for">На</string>
     <string name="alerts_silence_custom">Другой срок</string>
     <string name="alerts_silence_hours">Часы</string>
     <string name="alerts_silence_hours_hint">От 1 до 720 часов (30 дней)</string>
