@@ -249,7 +249,7 @@ private struct SilenceForm: View {
                 if let dropped {
                     Text(
                         "Left \(dropped) out: a matcher on it would mute more than this alert. "
-                        + "Add it back to narrow the silence."
+                            + "Add it back to narrow the silence."
                     )
                     .font(.footnote)
                     .foregroundStyle(.secondary)
