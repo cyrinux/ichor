@@ -184,6 +184,7 @@ private struct SilenceForm: View {
     @State private var minutes: Int
     @State private var custom = ""
     @State private var matchers: [AMMatcher] = []
+    @State private var dropped: String?
     @State private var comment: String
 
     init(
@@ -231,10 +232,30 @@ private struct SilenceForm: View {
                 if matchers.isEmpty {
                     Text("A silence needs at least one matcher.").font(.footnote).foregroundStyle(.red)
                 }
+                if let dropped, !matchers.contains(where: { $0.name == dropped }) {
+                    // Offer the label the Go core left out (its HA replica label, an empty
+                    // value) as a matcher the user can add back to narrow the silence.
+                    Button {
+                        withAnimation { matchers.append(AMMatcher(name: dropped, value: alert.labels[dropped] ?? "")) }
+                    } label: {
+                        Label("Add \(dropped) back", systemImage: "plus.circle")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.plain)
+                }
             } header: {
                 Text("Matchers")
             } footer: {
-                Text("As set, the silence mutes only this alert. Remove a matcher to mute more alerts.")
+                if let dropped {
+                    Text(
+                        "Left \(dropped) out: a matcher on it would mute more than this alert. "
+                            + "Add it back to narrow the silence."
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                } else {
+                    Text("As set, the silence mutes only this alert. Remove a matcher to mute more alerts.")
+                }
             }
             Section("Duration") {
                 Picker("Duration", selection: $minutes) {
@@ -284,10 +305,13 @@ private struct SilenceForm: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             guard matchers.isEmpty else { return }
-            // The fallback mutes every alert of this name: still narrow, never everything.
-            matchers =
-                (try? await TalosClient.alertmanagerSilenceMatchers(alert.labels))
-                ?? [AMMatcher(name: "alertname", value: alert.alertname)]
+            if let proposal = try? await TalosClient.alertmanagerSilenceMatchers(alert.labels) {
+                matchers = proposal.matchers
+                dropped = proposal.dropped.isEmpty ? nil : proposal.dropped
+            } else {
+                // The fallback mutes every alert of this name: still narrow, never everything.
+                matchers = [AMMatcher(name: "alertname", value: alert.alertname)]
+            }
         }
     }
 

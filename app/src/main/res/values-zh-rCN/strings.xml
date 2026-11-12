@@ -4444,7 +4444,10 @@
     <string name="alerts_silence_remove_matcher">移除 %1$s</string>
     <string name="alerts_silence_no_matchers">没有剩余的匹配条件：静默至少需要一个。</string>
     <string name="alerts_silence_matchers_hint">仅静默此告警。移除一个匹配条件可静默更多同类告警。</string>
-    <string name="alerts_silence_for">时长</string>
+<string name="alerts_silence_dropped_hint">已丢弃 %1$s：对它的匹配条件会静默超出此告警的范围。加回来可缩小静默范围。</string>
+<string name="alerts_silence_add_dropped">重新添加 %1$s</string>
+    已丢弃 %1$s：对它的匹配条件会静默超出此告警的范围。加回来可缩小静默范围。
+<string name="alerts_silence_for">时长</string>
     <string name="alerts_silence_custom">自定义</string>
     <string name="alerts_silence_hours">小时</string>
     <string name="alerts_silence_hours_hint">1 到 720 小时（30 天）</string>

@@ -4559,7 +4559,10 @@
     <string name="alerts_silence_remove_matcher">Rimuovi %1$s</string>
     <string name="alerts_silence_no_matchers">Nessun criterio rimasto: un silenzio ne richiede almeno uno.</string>
     <string name="alerts_silence_matchers_hint">Silenzia esattamente questo avviso. Rimuovi un criterio per silenziare altri avvisi dello stesso tipo.</string>
-    <string name="alerts_silence_for">Per</string>
+<string name="alerts_silence_dropped_hint">Omesso %1$s: un criterio su di esso silenzierebbe più di questo avviso. Aggiungilo per restringere il silenzio.</string>
+<string name="alerts_silence_add_dropped">Aggiungi di nuovo %1$s</string>
+    Omesso %1$s: un criterio su di esso silenzierebbe più di questo avviso. Aggiungilo per restringere il silenzio.
+<string name="alerts_silence_for">Per</string>
     <string name="alerts_silence_custom">Altra durata</string>
     <string name="alerts_silence_hours">Ore</string>
     <string name="alerts_silence_hours_hint">Da 1 a 720 ore (30 giorni)</string>

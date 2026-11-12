@@ -4770,7 +4770,10 @@
     <string name="alerts_silence_remove_matcher">Прибрати %1$s</string>
     <string name="alerts_silence_no_matchers">Не лишилося жодного критерію: заглушенню потрібен хоча б один.</string>
     <string name="alerts_silence_matchers_hint">Глушить саме це сповіщення. Прибери критерій, щоб заглушити більше сповіщень такого типу.</string>
-    <string name="alerts_silence_for">На</string>
+<string name="alerts_silence_dropped_hint">Пропущено %1$s: критерій за ним заглушить більше, ніж це сповіщення. Додайте його, щоб звужити заглушення.</string>
+<string name="alerts_silence_add_dropped">Додати %1$s знову</string>
+    Пропущено %1$s: критерій за ним заглушить більше, ніж це сповіщення. Додайте його, щоб звужити заглушення.
+<string name="alerts_silence_for">На</string>
     <string name="alerts_silence_custom">Інший час</string>
     <string name="alerts_silence_hours">Години</string>
     <string name="alerts_silence_hours_hint">Від 1 до 720 годин (30 днів)</string>

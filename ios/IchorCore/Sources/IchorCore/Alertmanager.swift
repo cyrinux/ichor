@@ -315,6 +315,29 @@ public struct AMSilence: Decodable, Hashable, Identifiable, Sendable {
     public var expirable: Bool { state != .expired }
 }
 
+/// The matchers the silence form prefills for one alert (the Go core's
+/// `AlertmanagerSilenceMatchers`): `matchers` mutes exactly this alert; `dropped` names the
+/// label left out of them, if any — an HA replica label or an empty value the core never
+/// matches on. Without it the silence covers every alert of that name, so the form shows
+/// what went and lets the user add it back.
+public struct AMSilenceProposal: Decodable, Hashable, Sendable {
+    public let matchers: [AMMatcher]
+    public let dropped: String
+
+    public init(matchers: [AMMatcher] = [], dropped: String = "") {
+        self.matchers = matchers
+        self.dropped = dropped
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        matchers = try c.field(.matchers, [])
+        dropped = try c.field(.dropped, "")
+    }
+
+    private enum CodingKeys: String, CodingKey { case matchers, dropped }
+}
+
 public struct AMSilences: Decodable, Hashable, Sendable {
     public let silences: [AMSilence]
 

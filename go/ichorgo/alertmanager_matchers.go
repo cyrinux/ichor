@@ -118,6 +118,33 @@ func amMatchesEverything(matchers []amMatcher) bool {
 // from each with the same other labels, so a silence leaves them out to cover both.
 var amReplicaLabels = []string{"prometheus_replica", "replica", "__replica__"}
 
+// amSilenceAnswer is what the silence form prefills: the matchers muting exactly one alert,
+// plus the label they could not carry (amDroppedSilenceLabel).
+type amSilenceAnswer struct {
+	Matchers []amMatcher `json:"matchers"`
+	Dropped  string      `json:"dropped"`
+}
+
+// amDroppedSilenceLabel names the label amSilenceMatchers leaves out, most surprising first:
+// an HA replica label (a silence without it mutes the alert on every Prometheus replica but
+// the silenced one), else a label with an empty value (a matcher on it would match a missing
+// label too). "" when every label became a matcher. The form shows what went, so the silence
+// that mutes more than the tapped alert says so and the user can add the label back.
+func amDroppedSilenceLabel(labels map[string]string) string {
+	dropped := ""
+
+	for name, value := range labels {
+		if slices.Contains(amReplicaLabels, name) {
+			return name
+		}
+		if value == "" {
+			dropped = name
+		}
+	}
+
+	return dropped
+}
+
 // amSilenceMatchers are the matchers silencing one alert: every label it has, as equals,
 // alertname first, but the HA replica labels and the empty values. Every label rather than
 // a few "identifying" ones: like Alertmanager's own "Silence" button, it mutes exactly this
@@ -154,9 +181,12 @@ func amSilenceMatchers(labels map[string]string) []amMatcher {
 
 // AlertmanagerSilenceMatchers proposes the matchers to silence one alert, from its labels
 // (labelsJSON: {"name":"value"}, an alert's labels as AlertmanagerAlerts returns them):
-// [{name,value,isRegex:false,isEqual:true}], alertname first, then every other label but
-// the HA replica ones (prometheus_replica, replica). The app shows them in the silence form
-// for the user to trim before AlertmanagerSilence.
+// {matchers:[{name,value,isRegex:false,isEqual:true}],dropped} — alertname first, then every
+// other label but the HA replica ones (prometheus_replica, replica, __replica__) and the
+// empty values. dropped names the label left out ("" when none), so the form can say the
+// silence then mutes more than the tapped alert and show what was dropped, which the user
+// can add back as a matcher. The app shows the matchers in the silence form for the user to
+// trim before AlertmanagerSilence.
 func AlertmanagerSilenceMatchers(labelsJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -170,5 +200,5 @@ func AlertmanagerSilenceMatchers(labelsJSON string) (out string, err error) {
 		revealed[name] = privacy.reveal(value)
 	}
 
-	return toJSON(amSilenceMatchers(revealed))
+	return toJSON(amSilenceAnswer{Matchers: amSilenceMatchers(revealed), Dropped: amDroppedSilenceLabel(revealed)})
 }

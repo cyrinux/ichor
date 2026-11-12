@@ -57,8 +57,9 @@ extension TalosClient {
     }
 
     /// The matchers that silence exactly the alert with `labels` (alertname first, the HA replica
-    /// labels left out), for the silence form to start from.
-    static func alertmanagerSilenceMatchers(_ labels: [String: String]) async throws -> [AMMatcher] {
+    /// labels and empty values left out — the proposal names the one it dropped), for the
+    /// silence form to start from.
+    static func alertmanagerSilenceMatchers(_ labels: [String: String]) async throws -> AMSilenceProposal {
         let labelsJSON = try TalosJSON.encode(labels)
         return try await json { IchorgoAlertmanagerSilenceMatchers(labelsJSON, $0) }
     }

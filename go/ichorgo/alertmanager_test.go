@@ -214,13 +214,37 @@ func TestAlertmanagerSilenceMatchers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var matchers []amMatcher
-	if err := json.Unmarshal([]byte(out), &matchers); err != nil {
+	var proposal amSilenceAnswer
+	if err := json.Unmarshal([]byte(out), &proposal); err != nil {
 		t.Fatal(err)
 	}
 
-	if got, want := amMatchersText(matchers), `{alertname="KubePodCrashLooping", namespace="shop", pod="web-1", severity="warning"}`; got != want {
+	if got, want := amMatchersText(proposal.Matchers), `{alertname="KubePodCrashLooping", namespace="shop", pod="web-1", severity="warning"}`; got != want {
 		t.Fatalf("got %s, want %s", got, want)
+	}
+
+	if proposal.Dropped != "prometheus_replica" {
+		t.Fatalf("dropped %q, want the replica label before the empty value", proposal.Dropped)
+	}
+
+	// Nothing dropped: the answer says so, and the app shows no note.
+	out, err = AlertmanagerSilenceMatchers(`{"alertname":"DiskFull","instance":"n1"}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := json.Unmarshal([]byte(out), &proposal); err != nil {
+		t.Fatal(err)
+	}
+
+	if proposal.Dropped != "" || len(proposal.Matchers) != 2 {
+		t.Fatalf("kept every label: %+v", proposal)
+	}
+
+	// Only an empty value went: it is the one named.
+	out, _ = AlertmanagerSilenceMatchers(`{"alertname":"Watchdog","severity":""}`)
+	if err := json.Unmarshal([]byte(out), &proposal); err != nil || proposal.Dropped != "severity" {
+		t.Fatalf("empty value: %s %v", out, err)
 	}
 
 	if _, err := AlertmanagerSilenceMatchers(`["x"]`); err == nil {

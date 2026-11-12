@@ -4561,7 +4561,9 @@
     <string name="alerts_silence_remove_matcher">Remove %1$s</string>
     <string name="alerts_silence_no_matchers">No matcher left: a silence needs at least one.</string>
     <string name="alerts_silence_matchers_hint">Mutes exactly this alert. Remove a matcher to mute more alerts of its kind.</string>
-    <string name="alerts_silence_for">For</string>
+    <string name="alerts_silence_dropped_hint">Dropped %1$s: a matcher on it would mute more than this alert. Add it back to narrow the silence.</string>
+<string name="alerts_silence_add_dropped">Add %1$s back</string>
+<string name="alerts_silence_for">For</string>
     <string name="alerts_silence_custom">Custom</string>
     <string name="alerts_silence_hours">Hours</string>
     <string name="alerts_silence_hours_hint">1 to 720 hours (30 days)</string>
