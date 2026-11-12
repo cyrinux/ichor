@@ -214,6 +214,8 @@ func gcpRegionOf(zone string) string {
 func GCPOptions(configYAML, contextName, credJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
 
+	contextName = unmaskContext(configYAML, contextName)
+
 	return cloudOptionsJSON(configYAML, contextName, gcpOptionsTimeout, demoGCPOptions, func(ctx context.Context, version string) (gcpOptions, error) {
 		c, err := newGCPClient(credJSON)
 		if err != nil {

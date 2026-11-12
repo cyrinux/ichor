@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -92,8 +93,11 @@ func (a awsInstances) all() []awsInstance {
 func StartAWSCreate(configYAML, contextName, credJSON, specJSON string, listener JoinListener) *JoinRun {
 	var spec awsCreateSpec
 
-	join, template, specErr := newCloudJoin(configYAML, contextName, specJSON, &spec, "instance", listener)
-	spec.TemplateNode = template
+	specErr := json.Unmarshal([]byte(specJSON), &spec)
+	contextName, spec.TemplateNode = unmaskTarget(configYAML, contextName, strings.TrimSpace(spec.TemplateNode))
+	listener = maskedJoinListener{listener}
+
+	join, specErr := newCloudJoin(configYAML, contextName, spec.TemplateNode, specJSON, specErr, "instance", listener)
 
 	h := &awsCreate{
 		join: join,

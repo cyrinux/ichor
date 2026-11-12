@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -123,8 +124,11 @@ type azureMade struct {
 func StartAzureCreate(configYAML, contextName, credJSON, specJSON string, listener JoinListener) *JoinRun {
 	var spec azureCreateSpec
 
-	join, template, specErr := newCloudJoin(configYAML, contextName, specJSON, &spec, "VM", listener)
-	spec.TemplateNode = template
+	specErr := json.Unmarshal([]byte(specJSON), &spec)
+	contextName, spec.TemplateNode = unmaskTarget(configYAML, contextName, strings.TrimSpace(spec.TemplateNode))
+	listener = maskedJoinListener{listener}
+
+	join, specErr := newCloudJoin(configYAML, contextName, spec.TemplateNode, specJSON, specErr, "VM", listener)
 
 	h := &azureCreate{
 		join: join,

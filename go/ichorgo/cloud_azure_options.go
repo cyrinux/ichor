@@ -318,6 +318,8 @@ func azureResourceGroupOf(id string) string {
 func AzureOptions(configYAML, contextName, credJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
 
+	contextName = unmaskContext(configYAML, contextName)
+
 	return cloudOptionsJSON(configYAML, contextName, azureOptionsTimeout, demoAzureOptions, func(ctx context.Context, version string) (azureOptions, error) {
 		c, err := newAzureClient(credJSON)
 		if err != nil {

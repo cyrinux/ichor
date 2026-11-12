@@ -102,8 +102,11 @@ type scwVolume struct {
 func StartScalewayCreate(configYAML, contextName, credJSON, specJSON string, listener JoinListener) *JoinRun {
 	var spec scwCreateSpec
 
-	join, template, specErr := newCloudJoin(configYAML, contextName, specJSON, &spec, "Instance", listener)
-	spec.TemplateNode = template
+	specErr := json.Unmarshal([]byte(specJSON), &spec)
+	contextName, spec.TemplateNode = unmaskTarget(configYAML, contextName, strings.TrimSpace(spec.TemplateNode))
+	listener = maskedJoinListener{listener}
+
+	join, specErr := newCloudJoin(configYAML, contextName, spec.TemplateNode, specJSON, specErr, "Instance", listener)
 
 	h := &scwCreate{
 		join: join,

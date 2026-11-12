@@ -296,12 +296,10 @@ func cloudNodeUserData(j *nodeJoin, omni bool, spec joinConfigRequest, editsJSON
 // cloudJoinRequest is a create spec's new member, with its labelsJson (the JSON
 // NodeCloudUserDataOmni takes, Omni's own prefix refused). A spec that did not decode keeps
 // its own error.
-// cloudOptionsJSON answers a provider's Options call: the demo's samples on the demo context,
-// else read within timeout, given the cluster's Talos version (for the warning when no image
+// cloudOptionsJSON answers a provider's Options call (contextName already unmasked): the demo's
+// samples on the demo context, else read within timeout, given the cluster's Talos version (for the warning when no image
 // carries it; "" without a cluster: no warning).
 func cloudOptionsJSON[T any](configYAML, contextName string, timeout time.Duration, demo func() T, read func(ctx context.Context, version string) (T, error)) (string, error) {
-	contextName = unmaskContext(configYAML, contextName)
-
 	if isTalosDemoContext(configYAML, contextName) {
 		return toJSON(demo())
 	}
@@ -334,32 +332,28 @@ type cloudNodeSpec struct {
 	LabelsJSON   string `json:"labelsJson"`
 }
 
-// newCloudJoin starts every Start<Provider>Create: it decodes specJSON into spec (the provider's
-// request), unmasks the context and the template node, and builds the node's join. It returns
-// the unmasked template node for spec, and the request's error ("invalid <machine> request"),
-// which the run reports before any write.
-func newCloudJoin(configYAML, contextName, specJSON string, spec any, machine string, listener JoinListener) (join *nodeJoin, template string, specErr error) {
+// newCloudJoin builds the node's join of every Start<Provider>Create, from the node half of
+// specJSON. The caller has decoded specJSON (decodeErr), unmasked the context and the template
+// node and masked the listener, where the privacy check sees it. The error is the request's
+// ("invalid <machine> request"), which the run reports before any write.
+func newCloudJoin(configYAML, contextName, template, specJSON string, decodeErr error, machine string, listener JoinListener) (*nodeJoin, error) {
 	var node cloudNodeSpec
 
-	specErr = json.Unmarshal([]byte(specJSON), spec)
-	_ = json.Unmarshal([]byte(specJSON), &node) //nolint:errcheck // the same JSON: specErr has its error
+	_ = json.Unmarshal([]byte(specJSON), &node) //nolint:errcheck // the same JSON: decodeErr has its error
 
-	template = strings.TrimSpace(node.TemplateNode)
-	contextName, template = unmaskTarget(configYAML, contextName, template)
-
-	if specErr != nil {
-		specErr = errors.New("invalid " + machine + " request")
+	if decodeErr != nil {
+		decodeErr = errors.New("invalid " + machine + " request")
 	}
 
-	req, specErr := cloudJoinRequest(template, node.Role, node.Hostname, node.InstallDisk, node.LabelsJSON, specErr)
+	req, specErr := cloudJoinRequest(template, node.Role, node.Hostname, node.InstallDisk, node.LabelsJSON, decodeErr)
 
-	join = &nodeJoin{
-		config: configYAML, context: contextName, listener: maskedJoinListener{listener}, interval: upgradePollInterval,
+	join := &nodeJoin{
+		config: configYAML, context: contextName, listener: listener, interval: upgradePollInterval,
 		req:       req,
 		editsJSON: node.ExtraEdits,
 	}
 
-	return join, template, specErr
+	return join, specErr
 }
 
 func cloudJoinRequest(template, role, hostname, installDisk, labelsJSON string, specErr error) (joinConfigRequest, error) {

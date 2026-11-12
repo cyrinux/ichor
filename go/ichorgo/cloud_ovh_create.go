@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -72,8 +73,11 @@ func (i ovhInstance) address() string {
 func StartOVHCreate(configYAML, contextName, credJSON, specJSON string, listener JoinListener) *JoinRun {
 	var spec ovhCreateSpec
 
-	join, template, specErr := newCloudJoin(configYAML, contextName, specJSON, &spec, "instance", listener)
-	spec.TemplateNode = template
+	specErr := json.Unmarshal([]byte(specJSON), &spec)
+	contextName, spec.TemplateNode = unmaskTarget(configYAML, contextName, strings.TrimSpace(spec.TemplateNode))
+	listener = maskedJoinListener{listener}
+
+	join, specErr := newCloudJoin(configYAML, contextName, spec.TemplateNode, specJSON, specErr, "instance", listener)
 
 	h := &ovhCreate{
 		join: join,
