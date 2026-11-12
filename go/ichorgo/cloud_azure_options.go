@@ -320,34 +320,17 @@ func AzureOptions(configYAML, contextName, credJSON string) (out string, err err
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	if isTalosDemoContext(configYAML, contextName) {
-		return toJSON(demoAzureOptions())
-	}
-
-	c, err := newAzureClient(credJSON)
-	if err != nil {
-		return "", err
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), azureOptionsTimeout)
-	defer cancel()
-
-	// The cluster's Talos version, for the warning when no image carries it; none: no warning.
-	version := ""
-	if strings.TrimSpace(configYAML) != "" {
-		if media, err := cloudBootMedia(configYAML, contextName, ""); err == nil {
-			version = media.TalosVersion
+	return cloudOptionsJSON(configYAML, contextName, azureOptionsTimeout, demoAzureOptions, func(ctx context.Context, version string) (azureOptions, error) {
+		c, err := newAzureClient(credJSON)
+		if err != nil {
+			return azureOptions{}, err
 		}
-	}
 
-	options, err := c.options(ctx, version)
-	if err != nil {
-		return "", err
-	}
+		options, err := c.options(ctx, version)
+		options.Credential = c.updated()
 
-	options.Credential = c.updated()
-
-	return toJSON(options)
+		return options, err
+	})
 }
 
 func (c *azureClient) options(ctx context.Context, version string) (azureOptions, error) {

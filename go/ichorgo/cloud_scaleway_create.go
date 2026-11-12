@@ -103,25 +103,13 @@ func StartScalewayCreate(configYAML, contextName, credJSON, specJSON string, lis
 	var spec scwCreateSpec
 
 	specErr := json.Unmarshal([]byte(specJSON), &spec)
-
-	template := strings.TrimSpace(spec.TemplateNode)
-	contextName, template = unmaskTarget(configYAML, contextName, template)
-	spec.TemplateNode = template
-
+	contextName, spec.TemplateNode = unmaskTarget(configYAML, contextName, strings.TrimSpace(spec.TemplateNode))
 	listener = maskedJoinListener{listener}
 
-	if specErr != nil {
-		specErr = errors.New("invalid Instance request")
-	}
-
-	req, specErr := cloudJoinRequest(spec.TemplateNode, spec.Role, spec.Hostname, spec.InstallDisk, spec.LabelsJSON, specErr)
+	join, specErr := newCloudJoin(configYAML, contextName, spec.TemplateNode, specJSON, specErr, "Instance", listener)
 
 	h := &scwCreate{
-		join: &nodeJoin{
-			config: configYAML, context: contextName, listener: listener, interval: upgradePollInterval,
-			req:       req,
-			editsJSON: spec.ExtraEdits,
-		},
+		join: join,
 		spec: spec, specErr: specErr, credJSON: credJSON, poll: scwPollInterval,
 	}
 

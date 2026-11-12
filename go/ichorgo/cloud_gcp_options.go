@@ -216,34 +216,17 @@ func GCPOptions(configYAML, contextName, credJSON string) (out string, err error
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	if isTalosDemoContext(configYAML, contextName) {
-		return toJSON(demoGCPOptions())
-	}
-
-	c, err := newGCPClient(credJSON)
-	if err != nil {
-		return "", err
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), gcpOptionsTimeout)
-	defer cancel()
-
-	// The cluster's Talos version, for the warning when no image carries it; none: no warning.
-	version := ""
-	if strings.TrimSpace(configYAML) != "" {
-		if media, err := cloudBootMedia(configYAML, contextName, ""); err == nil {
-			version = media.TalosVersion
+	return cloudOptionsJSON(configYAML, contextName, gcpOptionsTimeout, demoGCPOptions, func(ctx context.Context, version string) (gcpOptions, error) {
+		c, err := newGCPClient(credJSON)
+		if err != nil {
+			return gcpOptions{}, err
 		}
-	}
 
-	options, err := c.options(ctx, version)
-	if err != nil {
-		return "", err
-	}
+		options, err := c.options(ctx, version)
+		options.Credential = c.updated()
 
-	options.Credential = c.updated()
-
-	return toJSON(options)
+		return options, err
+	})
 }
 
 func (c *gcpClient) options(ctx context.Context, version string) (gcpOptions, error) {

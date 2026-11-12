@@ -136,32 +136,10 @@ type gcpImageRun struct {
 }
 
 func (r *gcpImageRun) start(timeout time.Duration) *JoinRun {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	run := func(ctx context.Context) error { return r.run(ctx, timeout) }
+	done := func() (any, string) { return r.result, "image " + r.result.Image + " is ready" }
 
-	go func() {
-		defer cancel()
-		defer onPanic(func(msg string) { r.listener.OnDone("", msg) })
-		defer holdCalls(r.config, r.context)()
-
-		err := recordedRun(r.config, r.context, r.auditAction, func() error { return r.run(ctx, timeout) })
-		if err != nil {
-			r.listener.OnDone("", errText(err))
-
-			return
-		}
-
-		out, err := toJSON(r.result)
-		if err != nil {
-			r.listener.OnDone("", errText(err))
-
-			return
-		}
-
-		r.emit(joinPhaseDone, "image "+r.result.Image+" is ready")
-		r.listener.OnDone(privacy.mask(out), "")
-	}()
-
-	return &JoinRun{cancel: cancel}
+	return startCloudImageRun(r.config, r.context, r.listener, r.auditAction, timeout, run, done, r.emit)
 }
 
 func (r *gcpImageRun) auditAction() auditAction {
