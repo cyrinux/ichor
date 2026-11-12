@@ -7039,65 +7039,6 @@
         }
       }
     },
-    "Region" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Region"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Región"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Région"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Regione"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "リージョン"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Região"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Регион"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Регіон"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "区域"
-          }
-        }
-      }
-    },
     "US" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7684,65 +7625,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已触发"
-          }
-        }
-      }
-    },
-    "Acknowledged" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bestätigt"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirmada"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Acquitté"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confermato"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "確認済み"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reconhecido"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подтверждён"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Підтверджено"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已确认"
           }
         }
       }
@@ -8615,7 +8497,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Подтверждено"
+            "value" : "Подтверждён"
           }
         },
         "uk" : {
@@ -177276,84 +177158,6 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ключ сервисного аккаунта (JSON)" } }
       }
     },
-    "Client ID" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ID client"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ID de cliente"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ідентифікатор клієнта"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Client-ID"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ID client"
-          }
-        },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "客户端 ID" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クライアント ID" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "ID do cliente" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ID клиента" } }
-      }
-    },
-    "Client secret" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Secret client"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Secreto de cliente"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Секрет клієнта"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Client-Geheimnis"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Segreto client"
-          }
-        },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "客户端密码" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クライアントシークレット" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Secret do cliente" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Client secret" } }
-      }
-    },
     "Tenant ID" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -207040,34 +206844,6 @@
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "アプリはこのノードを対象にしなくなり、kubelet の停止後に Kubernetes の Node が削除されます。" } },
         "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O app deixa de usar este nó, e o Node do Kubernetes é excluído quando o kubelet parar." } },
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Приложение больше не будет обращаться к этому узлу, а его Node в Kubernetes будет удалён после остановки kubelet." } }
-      }
-    },
-    "Remove" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Retirer" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Quitar" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Entfernen" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi" } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вилучити" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "削除" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Remover" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить" } }
-      }
-    },
-    "Keep" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Conserver" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conservar" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Behalten" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mantieni" } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Залишити" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保留" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "残す" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Manter" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Оставить" } }
       }
     },
     "Forget node" : {

@@ -44,6 +44,22 @@ def conflict_markers(text: str) -> list[int]:
     return [n for n, line in enumerate(text.splitlines(), 1) if CONFLICT_MARKER.match(line)]
 
 
+def _no_duplicates(pairs: list[tuple[str, object]]) -> dict:
+    out: dict = {}
+    for key, value in pairs:
+        if key in out:
+            raise ValueError(f"duplicate key '{key}'")
+        out[key] = value
+    return out
+
+
+def load_catalog(text: str) -> dict:
+    """An iOS String Catalog, refusing a key repeated in one object at any depth: JSON allows it,
+    json.loads keeps the last one and Xcode one of them, so a fix in the other is lost silently.
+    (Android needs no such check: aapt refuses a duplicate <string name>.)"""
+    return json.loads(text, object_pairs_hook=_no_duplicates)
+
+
 def check_markers() -> None:
     files = sorted(ANDROID_RES.glob("values*/strings.xml")) + sorted((ROOT / "ios").rglob("Localizable.xcstrings"))
     for path in files:
@@ -117,8 +133,12 @@ def ios_texts(localization: dict) -> list[str]:
 def check_ios() -> int:
     total = 0
     for catalog in sorted((ROOT / "ios").rglob("Localizable.xcstrings")):
-        data = json.loads(catalog.read_text())
         rel = catalog.relative_to(ROOT)
+        try:
+            data = load_catalog(catalog.read_text())
+        except ValueError as e:
+            errors.append(f"{rel}: {e}")
+            continue
         for key, entry in data.get("strings", {}).items():
             if entry.get("shouldTranslate") is False:
                 continue
