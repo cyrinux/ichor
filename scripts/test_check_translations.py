@@ -34,6 +34,31 @@ class ConflictMarkerTest(unittest.TestCase):
         self.assertEqual(check.conflict_markers(text), [])
 
 
+class DuplicateKeyTest(unittest.TestCase):
+    def test_a_repeated_key_is_refused_by_name(self):
+        text = """{
+  "strings" : {
+    "Keep" : {
+      "localizations" : { "es" : { "stringUnit" : { "state" : "translated", "value" : "Mantener" } } }
+    },
+    "Keep" : {
+      "localizations" : { "es" : { "stringUnit" : { "state" : "translated", "value" : "Conservar" } } }
+    }
+  }
+}"""
+        with self.assertRaisesRegex(ValueError, "duplicate key 'Keep'"):
+            check.load_catalog(text)
+
+    def test_a_repeated_key_deeper_down_is_refused_too(self):
+        text = '{"strings": {"Keep": {"localizations": {"es": {}, "es": {}}}}}'
+        with self.assertRaisesRegex(ValueError, "duplicate key 'es'"):
+            check.load_catalog(text)
+
+    def test_the_same_key_in_two_objects_passes(self):
+        text = '{"strings": {"Keep": {"localizations": {"es": {}}}, "Remove": {"localizations": {"es": {}}}}}'
+        self.assertEqual(set(check.load_catalog(text)["strings"]), {"Keep", "Remove"})
+
+
 class PluralCategoryTest(unittest.TestCase):
     def test_a_language_s_own_categories_pass(self):
         self.assertIsNone(check.plural_problem("ru", {"one", "few", "many", "other"}))
