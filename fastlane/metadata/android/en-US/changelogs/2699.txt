@@ -1,0 +1,6 @@
+• Cloudflare Tunnel plugin, tunnels and the hostnames they publish, shown only when the community operator is installed
+• The Play listing's 7" and 10" tablet screenshots, from the demo
+• Take the Play listing's 7" and 10" tablet screenshots from the demo
+• Keep the Talos test fake within its line budget
+• The Talos test fake fails a held Version call that gives up instead of answering it
+• The dev shell builds Go 1.27.4 until nixpkgs has it, so govulncheck passes again
