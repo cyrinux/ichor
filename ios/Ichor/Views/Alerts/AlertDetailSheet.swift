@@ -251,8 +251,8 @@ private struct SilenceForm: View {
                         "Left \(dropped) out: a matcher on it would mute more than this alert. "
                         + "Add it back to narrow the silence."
                     )
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                 } else {
                     Text("As set, the silence mutes only this alert. Remove a matcher to mute more alerts.")
                 }

@@ -115,7 +115,7 @@ fun SilenceSheet(
                     }
                     val dropped = droppedLabel
                     val hint = when {
-                        matchersError != null -> matchersError
+                        matchersError != null -> matchersError.orEmpty()
                         dropped != null -> stringResource(R.string.alerts_silence_dropped_hint, dropped)
                         current.isEmpty() -> stringResource(R.string.alerts_silence_no_matchers)
                         else -> stringResource(R.string.alerts_silence_matchers_hint)
