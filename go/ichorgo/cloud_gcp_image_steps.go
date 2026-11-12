@@ -287,20 +287,7 @@ func gcpImageCleanupOutcome(why error, name, zone string, deleted, left []string
 			". Delete it in the Google Cloud console"
 	}
 
-	switch {
-	case why == nil && stillThere == "":
-		return nil
-	case why == nil:
-		return fmt.Errorf("image %s is ready. %s", name, stillThere)
-	case len(deleted) > 0 && stillThere != "":
-		return fmt.Errorf("%w. Deleted: %s. %s", why, strings.Join(deleted, ", "), stillThere)
-	case len(deleted) > 0:
-		return fmt.Errorf("%w. Deleted: %s", why, strings.Join(deleted, ", "))
-	case stillThere != "":
-		return fmt.Errorf("%w. %s", why, stillThere)
-	}
-
-	return why
+	return cloudCleanupOutcome(why, "image "+name+" is ready", stillThere, deleted)
 }
 
 type gcpImageCost struct {

@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -124,26 +123,11 @@ type azureMade struct {
 func StartAzureCreate(configYAML, contextName, credJSON, specJSON string, listener JoinListener) *JoinRun {
 	var spec azureCreateSpec
 
-	specErr := json.Unmarshal([]byte(specJSON), &spec)
-
-	template := strings.TrimSpace(spec.TemplateNode)
-	contextName, template = unmaskTarget(configYAML, contextName, template)
+	join, template, specErr := newCloudJoin(configYAML, contextName, specJSON, &spec, "VM", listener)
 	spec.TemplateNode = template
 
-	listener = maskedJoinListener{listener}
-
-	if specErr != nil {
-		specErr = errors.New("invalid VM request")
-	}
-
-	req, specErr := cloudJoinRequest(spec.TemplateNode, spec.Role, spec.Hostname, spec.InstallDisk, spec.LabelsJSON, specErr)
-
 	h := &azureCreate{
-		join: &nodeJoin{
-			config: configYAML, context: contextName, listener: listener, interval: upgradePollInterval,
-			req:       req,
-			editsJSON: spec.ExtraEdits,
-		},
+		join: join,
 		spec: spec, specErr: specErr, credJSON: credJSON, poll: azurePollInterval,
 	}
 

@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -92,26 +91,11 @@ type hetznerAction struct {
 func StartHetznerCreate(configYAML, contextName, tokenJSON, specJSON string, listener JoinListener) *JoinRun {
 	var spec hetznerCreateSpec
 
-	specErr := json.Unmarshal([]byte(specJSON), &spec)
-
-	template := strings.TrimSpace(spec.TemplateNode)
-	contextName, template = unmaskTarget(configYAML, contextName, template)
+	join, template, specErr := newCloudJoin(configYAML, contextName, specJSON, &spec, "server", listener)
 	spec.TemplateNode = template
 
-	listener = maskedJoinListener{listener}
-
-	if specErr != nil {
-		specErr = errors.New("invalid server request")
-	}
-
-	req, specErr := cloudJoinRequest(spec.TemplateNode, spec.Role, spec.Hostname, spec.InstallDisk, spec.LabelsJSON, specErr)
-
 	h := &hetznerCreate{
-		join: &nodeJoin{
-			config: configYAML, context: contextName, listener: listener, interval: upgradePollInterval,
-			req:       req,
-			editsJSON: spec.ExtraEdits,
-		},
+		join: join,
 		spec: spec, specErr: specErr, tokenJSON: tokenJSON, poll: cloudPollInterval,
 	}
 

@@ -343,20 +343,7 @@ func awsCleanupOutcome(why error, imageID, region string, deleted, left []string
 		stillThere = "Could not be deleted, and still billed: " + strings.Join(left, ", ") + " in " + region + ". Delete it in the AWS console"
 	}
 
-	switch {
-	case why == nil && stillThere == "":
-		return nil
-	case why == nil:
-		return fmt.Errorf("AMI %s is ready. %s", imageID, stillThere)
-	case len(deleted) > 0 && stillThere != "":
-		return fmt.Errorf("%w. Deleted: %s. %s", why, strings.Join(deleted, ", "), stillThere)
-	case len(deleted) > 0:
-		return fmt.Errorf("%w. Deleted: %s", why, strings.Join(deleted, ", "))
-	case stillThere != "":
-		return fmt.Errorf("%w. %s", why, stillThere)
-	}
-
-	return why
+	return cloudCleanupOutcome(why, "AMI "+imageID+" is ready", stillThere, deleted)
 }
 
 // findUnanswered looks up what a create with no clear answer may have made: the helper by its
