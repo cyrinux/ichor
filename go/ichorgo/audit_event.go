@@ -75,18 +75,27 @@ func auditEventWanted(e auditEntry, fingerprint string) bool {
 }
 
 // auditClusterFingerprint is the fingerprint of the context an action ran on, as the apps key
-// their per-cluster settings: a Talos context's (contextFingerprint) or a kubeconfig context's
-// (kubeFingerprint), told apart by the config, never by the name alone. contextName is the
-// unmasked name; "" is the config's current context. "" when the context is unknown.
+// their per-cluster settings (see contextIdentity). "" when the context is unknown.
 func auditClusterFingerprint(configYAML, contextName string) string {
+	fingerprint, _ := contextIdentity(configYAML, contextName)
+
+	return fingerprint
+}
+
+// contextIdentity is a context's fingerprint, as the apps key their per-cluster settings, and
+// its cluster's id, the same for every context and phone (see share links): a Talos
+// context's (contextFingerprint, clusterID) or a kubeconfig context's (kubeFingerprint,
+// kubeClusterID), told apart by the config, never by the name alone. contextName is the
+// unmasked name; "" is the config's current context. Both "" when the context is unknown.
+func contextIdentity(configYAML, contextName string) (fingerprint, id string) {
 	if configYAML == "" {
-		return ""
+		return "", ""
 	}
 
 	if isKubeconfig(configYAML) {
 		doc, err := loadKubeconfigDoc(configYAML)
 		if err != nil {
-			return ""
+			return "", ""
 		}
 
 		if contextName == "" {
@@ -95,20 +104,20 @@ func auditClusterFingerprint(configYAML, contextName string) string {
 
 		ctx, ok := doc.context(contextName)
 		if !ok {
-			return ""
+			return "", ""
 		}
 
 		cluster, _ := doc.cluster(ctx.Context.Cluster)
 
-		return kubeFingerprint(contextName, cluster)
+		return kubeFingerprint(contextName, cluster), kubeClusterID(cluster)
 	}
 
 	name, ctx, err := resolveContext(configYAML, contextName)
 	if err != nil {
-		return ""
+		return "", ""
 	}
 
-	return contextFingerprint(name, ctx)
+	return contextFingerprint(name, ctx), clusterID(ctx)
 }
 
 // postAuditEvent writes the Event for e in the background, on the cluster the action ran on.
