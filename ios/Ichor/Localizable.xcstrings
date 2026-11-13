@@ -1,6 +1,230 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Push through ntfy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Push über ntfy" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Push a través de ntfy" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Push via ntfy" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Push tramite ntfy" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Push через ntfy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通过 ntfy 推送" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ntfy でプッシュ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Push pelo ntfy" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Push через ntfy" } }
+      }
+    },
+    "Pairing is not available in the demo cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Koppeln ist im Demo-Cluster nicht verfügbar." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La vinculación no está disponible en el clúster de demostración." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L’appairage n’est pas disponible dans le cluster de démo." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L’abbinamento non è disponibile nel cluster demo." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Підключення недоступне в демо-кластері." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "演示集群中无法配对。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "デモクラスタではペアリングできません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O pareamento não está disponível no cluster de demonstração." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подключение недоступно в демо-кластере." } }
+      }
+    },
+    "Paired · %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gekoppelt · %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Vinculado · %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Appairé · %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Abbinato · %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Підключено · %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已配对 · %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ペアリング済み · %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Pareado · %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подключено · %@" } }
+      }
+    },
+    "Alerts from the cluster's ichor-relay, shown at once by the ntfy app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alerts vom ichor-relay des Clusters, sofort in der ntfy-App angezeigt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Alertas del ichor-relay del clúster, mostradas al instante por la app ntfy." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les alertes de l’ichor-relay du cluster, affichées aussitôt par l’app ntfy." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Gli avvisi dell’ichor-relay del cluster, mostrati subito dall’app ntfy." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сповіщення від ichor-relay кластера, одразу в застосунку ntfy." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "来自集群 ichor-relay 的告警，由 ntfy 应用即时显示。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスタの ichor-relay からのアラートを ntfy アプリですぐに表示します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alertas do ichor-relay do cluster, mostrados na hora pelo app ntfy." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Оповещения от ichor-relay кластера, сразу в приложении ntfy." } }
+      }
+    },
+    "ntfy server" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "ntfy-Server" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Servidor ntfy" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Serveur ntfy" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Server ntfy" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сервер ntfy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "ntfy 服务器" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ntfy サーバー" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Servidor ntfy" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сервер ntfy" } }
+      }
+    },
+    "Topic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Thema" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tema" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sujet" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Argomento" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Тема" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "主题" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "トピック" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tópico" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Тема" } }
+      }
+    },
+    "Include alert text (not encrypted)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alert-Text mitsenden (unverschlüsselt)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Incluir el texto de las alertas (sin cifrar)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Inclure le texte des alertes (non chiffré)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Includi il testo degli avvisi (non cifrato)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додавати текст сповіщень (без шифрування)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "包含告警文本（未加密）" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アラートの本文を含める（暗号化なし）" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Incluir o texto dos alertas (sem criptografia)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавлять текст оповещений (без шифрования)" } }
+      }
+    },
+    "Subscribe to this topic in the ntfy app, then pair. The ntfy app shows the notification; tapping it opens Ichor. Alert names travel through your ntfy server in clear, and anyone who knows the topic can read them: keep the random topic, and prefer your own server." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Abonniere dieses Thema in der ntfy-App und kopple dann. Die ntfy-App zeigt die Benachrichtigung; ein Tippen öffnet Ichor. Alert-Namen gehen im Klartext über deinen ntfy-Server, und wer das Thema kennt, kann sie lesen: Behalte das zufällige Thema und nutze lieber deinen eigenen Server." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Suscríbete a este tema en la app ntfy y luego vincula. La app ntfy muestra la notificación; al tocarla se abre Ichor. Los nombres de las alertas pasan sin cifrar por tu servidor ntfy, y cualquiera que conozca el tema puede leerlos: conserva el tema aleatorio y usa preferiblemente tu propio servidor." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Abonnez-vous à ce sujet dans l’app ntfy, puis appairez. L’app ntfy affiche la notification ; un toucher ouvre Ichor. Les noms des alertes passent en clair par votre serveur ntfy, et quiconque connaît le sujet peut les lire : gardez le sujet aléatoire et préférez votre propre serveur." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Iscriviti a questo argomento nell’app ntfy, poi abbina. L’app ntfy mostra la notifica; toccandola si apre Ichor. I nomi degli avvisi passano in chiaro dal tuo server ntfy e chiunque conosca l’argomento può leggerli: tieni l’argomento casuale e preferisci un server tuo." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Підпишіться на цю тему в застосунку ntfy, потім підключіть. Застосунок ntfy показує сповіщення; дотик відкриває Ichor. Назви сповіщень проходять через ваш сервер ntfy відкритим текстом, і будь-хто, хто знає тему, може їх прочитати: залиште випадкову тему й надавайте перевагу власному серверу." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "先在 ntfy 应用中订阅此主题，然后配对。ntfy 应用显示通知，点按即可打开 Ichor。告警名称以明文经过你的 ntfy 服务器，知道主题的人都能读取：请保留随机主题，最好使用自己的服务器。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ntfy アプリでこのトピックを購読してからペアリングしてください。通知は ntfy アプリに表示され、タップすると Ichor が開きます。アラート名は平文で ntfy サーバーを通過し、トピックを知っている人は誰でも読めます。ランダムなトピックのままにし、できれば自分のサーバーを使ってください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Assine este tópico no app ntfy e depois faça o pareamento. O app ntfy mostra a notificação; um toque abre o Ichor. Os nomes dos alertas passam sem criptografia pelo seu servidor ntfy, e quem souber o tópico pode lê-los: mantenha o tópico aleatório e prefira seu próprio servidor." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подпишитесь на эту тему в приложении ntfy, затем подключите. Приложение ntfy показывает уведомление; касание открывает Ichor. Названия оповещений проходят через ваш сервер ntfy открытым текстом, и любой, кто знает тему, может их прочитать: оставьте случайную тему и по возможности используйте свой сервер." } }
+      }
+    },
+    "Pair" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Koppeln" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Vincular" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Appairer" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Abbina" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Підключити" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "配对" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ペアリング" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Parear" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подключить" } }
+      }
+    },
+    "Not a valid ntfy server or topic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein gültiger ntfy-Server oder kein gültiges Thema" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Servidor o tema de ntfy no válido" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Serveur ou sujet ntfy non valide" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Server o argomento ntfy non valido" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Недійсний сервер або тема ntfy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "ntfy 服务器或主题无效" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ntfy のサーバーまたはトピックが無効です" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Servidor ou tópico do ntfy inválido" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Недопустимый сервер или тема ntfy" } }
+      }
+    },
+    "Open in ntfy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "In ntfy öffnen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abrir en ntfy" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir dans ntfy" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Apri in ntfy" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Відкрити в ntfy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 ntfy 中打开" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ntfy で開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir no ntfy" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открыть в ntfy" } }
+      }
+    },
+    "Unpair" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Entkoppeln" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desvincular" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Désappairer" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi abbinamento" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Відключити" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消配对" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ペアリング解除" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Desparear" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отключить" } }
+      }
+    },
+    "Forget on this phone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Auf diesem Telefon vergessen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Olvidar en este teléfono" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Oublier sur ce téléphone" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dimentica su questo telefono" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Забути на цьому телефоні" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在此手机上忘记" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "この端末で削除" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Esquecer neste telefone" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Забыть на этом телефоне" } }
+      }
+    },
+    "Unpaired, the background checks still alert as before." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nach dem Entkoppeln melden die Hintergrundprüfungen weiter wie bisher." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tras desvincular, las comprobaciones en segundo plano siguen avisando como antes." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Une fois désappairé, les vérifications en arrière-plan alertent comme avant." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dopo aver rimosso l’abbinamento, i controlli in background avvisano come prima." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Після відключення фонові перевірки сповіщають, як і раніше." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消配对后，后台检查仍会照常告警。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ペアリングを解除しても、バックグラウンドチェックはこれまでどおり通知します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Depois de desparear, as verificações em segundo plano continuam alertando como antes." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "После отключения фоновые проверки оповещают, как и раньше." } }
+      }
+    },
+    "No ichor-relay found in this cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein ichor-relay in diesem Cluster gefunden." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se encontró ningún ichor-relay en este clúster." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucun ichor-relay trouvé dans ce cluster." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun ichor-relay trovato in questo cluster." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "У цьому кластері не знайдено ichor-relay." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此集群中未找到 ichor-relay。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このクラスタに ichor-relay が見つかりません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nenhum ichor-relay encontrado neste cluster." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В этом кластере не найден ichor-relay." } }
+      }
+    },
+    "Cannot pair: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Koppeln nicht möglich: %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se puede vincular: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Appairage impossible : %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impossibile abbinare: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не вдалося підключити: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法配对：%@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ペアリングできません: %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não foi possível parear: %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не удалось подключить: %@" } }
+      }
+    },
     "Paste a key" : {
       "extractionState" : "manual",
       "localizations" : {
