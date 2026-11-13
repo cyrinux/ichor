@@ -6837,4 +6837,17 @@
     <string name="image_report_unused_hint">Хранятся на диске узла, ни один контейнер там их не запускает: всего %1$s.</string>
     <string name="image_report_unused_talos_only">Только кластер Talos показывает образы, хранящиеся на его узлах.</string>
     <string name="image_report_nothing">Сообщать не о чем.</string>
+    <string name="relay_push">Push от ichor-relay</string>
+    <string name="relay_push_desc">Оповещения приходят на этот телефон за секунды через дистрибьютор UnifiedPush, например ntfy, со сквозным шифрованием. Фоновые проверки продолжаются.</string>
+    <string name="relay_paired_via">Подключено · через %1$s</string>
+    <string name="relay_pairing">Подключение…</string>
+    <string name="relay_not_paired">Не подключено: %1$s</string>
+    <string name="relay_none_found">В этом кластере не найден relay</string>
+    <string name="relay_no_distributor">Не установлен ни один дистрибьютор UnifiedPush. Установите его, например ntfy, и включите снова.</string>
+    <string name="relay_get_distributor">Получить дистрибьютор</string>
+    <string name="relay_cannot_pair">Не удалось подключить: %1$s</string>
+    <string name="relay_update_distributor">Обновите дистрибьютор UnifiedPush: он не может расшифровать сообщения от relay.</string>
+    <string name="relay_demo">Недоступно в демо-кластере</string>
+    <string name="relay_pick_distributor">Получать push через</string>
+    <string name="relay_truncated_n">Ещё %1$d оповещений в Alertmanager</string>
 </resources>

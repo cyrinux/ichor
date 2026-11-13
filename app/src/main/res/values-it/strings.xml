@@ -6575,4 +6575,17 @@
     <string name="image_report_unused_hint">Tenute sul disco di un nodo, senza alcun container che le usi: %1$s in tutto.</string>
     <string name="image_report_unused_talos_only">Solo un cluster Talos elenca le immagini tenute sui suoi nodi.</string>
     <string name="image_report_nothing">Niente da segnalare.</string>
+    <string name="relay_push">Push da ichor-relay</string>
+    <string name="relay_push_desc">Gli avvisi arrivano su questo telefono in pochi secondi tramite un distributore UnifiedPush come ntfy, cifrati end-to-end. I controlli in background continuano.</string>
+    <string name="relay_paired_via">Abbinato · tramite %1$s</string>
+    <string name="relay_pairing">Abbinamento…</string>
+    <string name="relay_not_paired">Non abbinato: %1$s</string>
+    <string name="relay_none_found">Nessun relay trovato in questo cluster</string>
+    <string name="relay_no_distributor">Nessun distributore UnifiedPush installato. Installane uno, come ntfy, poi riattiva questa opzione.</string>
+    <string name="relay_get_distributor">Scarica un distributore</string>
+    <string name="relay_cannot_pair">Impossibile abbinare: %1$s</string>
+    <string name="relay_update_distributor">Aggiorna il tuo distributore UnifiedPush: non riesce a decifrare i messaggi del relay.</string>
+    <string name="relay_demo">Non disponibile nel cluster demo</string>
+    <string name="relay_pick_distributor">Ricevi push tramite</string>
+    <string name="relay_truncated_n">Altri %1$d avvisi in Alertmanager</string>
 </resources>

@@ -6581,4 +6581,17 @@
     <string name="image_report_unused_hint">Kept on a node\'s disk, run by no container there: %1$s in all.</string>
     <string name="image_report_unused_talos_only">Only a Talos cluster lists the images kept on its nodes.</string>
     <string name="image_report_nothing">Nothing to report.</string>
+    <string name="relay_push">Push from ichor-relay</string>
+    <string name="relay_push_desc">Alerts reach this phone within seconds through a UnifiedPush distributor such as ntfy, encrypted end to end. The background checks keep running.</string>
+    <string name="relay_paired_via">Paired · via %1$s</string>
+    <string name="relay_pairing">Pairing…</string>
+    <string name="relay_not_paired">Not paired: %1$s</string>
+    <string name="relay_none_found">No relay found in this cluster</string>
+    <string name="relay_no_distributor">No UnifiedPush distributor is installed. Install one, such as ntfy, then turn this on again.</string>
+    <string name="relay_get_distributor">Get a distributor</string>
+    <string name="relay_cannot_pair">Cannot pair: %1$s</string>
+    <string name="relay_update_distributor">Update your UnifiedPush distributor: it cannot decrypt messages from the relay.</string>
+    <string name="relay_demo">Not available in the demo cluster</string>
+    <string name="relay_pick_distributor">Receive push through</string>
+    <string name="relay_truncated_n">%1$d more alerts in Alertmanager</string>
 </resources>

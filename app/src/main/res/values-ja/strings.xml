@@ -6435,4 +6435,17 @@
     <string name="image_report_unused_hint">ノードのディスクにあり、そこでどのコンテナも使っていません:合計 %1$s。</string>
     <string name="image_report_unused_talos_only">ノードに保存されたイメージを一覧できるのは Talos クラスターだけです。</string>
     <string name="image_report_nothing">報告することはありません。</string>
+    <string name="relay_push">ichor-relay からのプッシュ</string>
+    <string name="relay_push_desc">アラートは ntfy などの UnifiedPush ディストリビューターを通じて数秒でこの端末に届き、エンドツーエンドで暗号化されます。バックグラウンドチェックは続きます。</string>
+    <string name="relay_paired_via">ペアリング済み · %1$s 経由</string>
+    <string name="relay_pairing">ペアリング中…</string>
+    <string name="relay_not_paired">未ペアリング: %1$s</string>
+    <string name="relay_none_found">このクラスタに relay が見つかりません</string>
+    <string name="relay_no_distributor">UnifiedPush ディストリビューターがインストールされていません。ntfy などをインストールしてから、もう一度オンにしてください。</string>
+    <string name="relay_get_distributor">ディストリビューターを入手</string>
+    <string name="relay_cannot_pair">ペアリングできません: %1$s</string>
+    <string name="relay_update_distributor">UnifiedPush ディストリビューターを更新してください。relay からのメッセージを復号できません。</string>
+    <string name="relay_demo">デモクラスタでは利用できません</string>
+    <string name="relay_pick_distributor">プッシュの受信に使うアプリ</string>
+    <string name="relay_truncated_n">Alertmanager にさらに %1$d 件のアラート</string>
 </resources>

@@ -6575,4 +6575,17 @@
     <string name="image_report_unused_hint">Guardadas en el disco de un nodo, sin ningún contenedor que las use: %1$s en total.</string>
     <string name="image_report_unused_talos_only">Solo un clúster Talos lista las imágenes guardadas en sus nodos.</string>
     <string name="image_report_nothing">Nada que señalar.</string>
+    <string name="relay_push">Push desde ichor-relay</string>
+    <string name="relay_push_desc">Las alertas llegan a este teléfono en segundos a través de un distribuidor UnifiedPush como ntfy, cifradas de extremo a extremo. Las comprobaciones en segundo plano siguen.</string>
+    <string name="relay_paired_via">Vinculado · mediante %1$s</string>
+    <string name="relay_pairing">Vinculando…</string>
+    <string name="relay_not_paired">Sin vincular: %1$s</string>
+    <string name="relay_none_found">No se encontró ningún relay en este clúster</string>
+    <string name="relay_no_distributor">No hay ningún distribuidor UnifiedPush instalado. Instala uno, como ntfy, y vuelve a activar esta opción.</string>
+    <string name="relay_get_distributor">Obtener un distribuidor</string>
+    <string name="relay_cannot_pair">No se puede vincular: %1$s</string>
+    <string name="relay_update_distributor">Actualiza tu distribuidor UnifiedPush: no puede descifrar los mensajes del relay.</string>
+    <string name="relay_demo">No disponible en el clúster de demostración</string>
+    <string name="relay_pick_distributor">Recibir push mediante</string>
+    <string name="relay_truncated_n">%1$d alertas más en Alertmanager</string>
 </resources>

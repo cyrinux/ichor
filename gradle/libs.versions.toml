@@ -11,6 +11,8 @@ serialization = "1.12.0"
 coroutines = "1.11.0"
 camerax = "1.6.2"
 zxing = "3.5.4"
+# Push from ichor-relay through any UnifiedPush distributor (ntfy…); it decrypts the RFC 8291 messages.
+unifiedpush = "3.3.5"
 coreKtx = "1.19.1"
 junit = "4.13.2"
 # The demo-mode smoke test on an emulator (androidTest, CI job ui-smoke).
@@ -56,6 +58,7 @@ camerax-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "ca
 camerax-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
 camerax-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+unifiedpush-connector = { module = "org.unifiedpush.android:connector", version.ref = "unifiedpush" }
 junit = { module = "junit:junit", version.ref = "junit" }
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTestExt" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }

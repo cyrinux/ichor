@@ -6435,4 +6435,17 @@
     <string name="image_report_unused_hint">保存在节点磁盘上,那里没有容器使用:共 %1$s。</string>
     <string name="image_report_unused_talos_only">只有 Talos 集群会列出其节点上保存的镜像。</string>
     <string name="image_report_nothing">没有需要报告的内容。</string>
+    <string name="relay_push">来自 ichor-relay 的推送</string>
+    <string name="relay_push_desc">告警通过 ntfy 等 UnifiedPush 分发器在几秒内送达此手机，并端到端加密。后台检查继续运行。</string>
+    <string name="relay_paired_via">已配对 · 通过 %1$s</string>
+    <string name="relay_pairing">正在配对…</string>
+    <string name="relay_not_paired">未配对：%1$s</string>
+    <string name="relay_none_found">此集群中未找到 relay</string>
+    <string name="relay_no_distributor">未安装 UnifiedPush 分发器。请安装一个（如 ntfy），然后重新开启。</string>
+    <string name="relay_get_distributor">获取分发器</string>
+    <string name="relay_cannot_pair">无法配对：%1$s</string>
+    <string name="relay_update_distributor">请更新你的 UnifiedPush 分发器：它无法解密来自 relay 的消息。</string>
+    <string name="relay_demo">演示集群中不可用</string>
+    <string name="relay_pick_distributor">通过以下应用接收推送</string>
+    <string name="relay_truncated_n">Alertmanager 中还有 %1$d 条告警</string>
 </resources>
