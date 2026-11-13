@@ -1,0 +1,3 @@
+• The silence proposal reports the label it dropped (#940)
+• The cloud entry points unmask and mask in their own body again
+• The translation check refuses a duplicate key in the iOS string catalog
