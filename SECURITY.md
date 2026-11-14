@@ -147,10 +147,15 @@ cluster.
   remove its entry from `devices.json` in the Secret and restart the relay, or rotate
   everything.
 
-A paired device can name any https address as its endpoint, and the relay will post the
-alerts there (plain http only when the relay runs with `RELAY_ALLOW_HTTP=true`, for an
-in-cluster ntfy). Limit the relay's outgoing traffic with a NetworkPolicy if your cluster
-allows it.
+A paired device names its own endpoint, and the relay posts the alerts there: https only,
+plain http when the relay runs with `RELAY_ALLOW_HTTP=true` (for an in-cluster ntfy). The
+relay checks each address it dials, after DNS. It never connects to link-local addresses
+(the cloud metadata service at 169.254.169.254, fe80::/10), unspecified addresses or
+multicast addresses. Loopback and private addresses (10/8, 172.16/12, 192.168/16,
+100.64/10, fc00::/7) are refused too, unless the relay runs with `RELAY_ALLOW_PRIVATE=true`
+or `RELAY_ALLOW_HTTP=true`: an in-cluster ntfy, or an outgoing proxy inside the cluster, needs
+one of them. A refused push is logged with the device id only. A NetworkPolicy limiting the
+relay's outgoing traffic still adds a layer where your cluster allows it.
 
 ### Rotation
 

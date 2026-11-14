@@ -39,7 +39,11 @@ type Options struct {
 	Workers int
 	Timeout time.Duration
 	// AllowHTTP accepts plain-http push endpoints (an in-cluster ntfy); https only otherwise.
+	// It also lets pushes reach private addresses, as AllowPrivate does.
 	AllowHTTP bool
+	// AllowPrivate lets pushes reach loopback and private addresses (see addrPolicy); refused
+	// otherwise. Unused with a Client of one's own.
+	AllowPrivate bool
 }
 
 // Relay serves the pairing API and the Alertmanager webhook, and delivers the pushes.
@@ -96,7 +100,7 @@ func New(o Options) *Relay {
 
 	client := o.Client
 	if client == nil {
-		client = newHTTPClient(nil, http.ProxyFromEnvironment, 0)
+		client = newPushClient(addrPolicy{allowPrivate: o.AllowPrivate || o.AllowHTTP})
 	}
 	r.sender = sender{client: client, now: r.now}
 	r.dedupe = newDedupe(r.now)
@@ -295,6 +299,9 @@ func (r *Relay) deliver(d delivery) {
 		if err := r.removeDevice(rmCtx, device.ID, device.Endpoint); err != nil {
 			r.log.Error("remove device", "device", device.ID, "err", err)
 		}
+	case errors.Is(err, errAddressRefused):
+		// Not released: the endpoint will not become reachable by retrying. Device id only, never the address.
+		r.log.Warn("push endpoint address refused", "device", device.ID)
 	case err != nil:
 		r.dedupe.release(device.ID, alerts)
 		// The error may quote the endpoint (a URL error): log the status only.
