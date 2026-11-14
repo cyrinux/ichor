@@ -171,6 +171,8 @@ fun MonitoringSection(app: TalosApp) {
                     modifier = Modifier.padding(start = 12.dp),
                 )
             }
+            // Push from the cluster's ichor-relay: only with the Alertmanager alerts it delivers.
+            if (alertmanagerWatched) RelayPushRow(app, enabled)
             // And for node storage: every node's volumes and disks are read at every check.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {

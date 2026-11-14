@@ -70,6 +70,9 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val labels = ClusterLabels(app.clusterNames.names.value, maskedBefore)
         val watched = monitoredContexts(stored.summary, stored.activeContext, app.unwatchedClusters.fingerprints.value)
         val signIns = renewSignIns(app, watched) { labels.of(it) }
+        // A removed cluster's push stops; an endpoint the relay refused or could not take (offline, relay down) is registered again.
+        retainRelayPairs(app, stored.summary.contexts.map { it.fingerprint })
+        retryRelayRegistrations(app)
         val reads = readAll(app, stored, before, now)
         val evaluated = monitorRun(
             before,
