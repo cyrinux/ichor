@@ -56,9 +56,9 @@ final class MemoryTrendTests: XCTestCase {
         XCTAssertEqual(alertRuleKind(key: key), "memory")
         XCTAssertEqual(memoryTrendNode(subject: "fd00::7:trend"), "fd00::7")
         var snapshot = ClusterSnapshot(context: "lab", takenAt: Date(), nodes: [:])
-        snapshot.memoryTrends["fd00::7"] =
-            StorageTrendIssue(hostname: "cp-1", name: "memory", critical: true, days: 2, slopePerDay: 2, usedPercent: 85)
-            .value
+        let issue = StorageTrendIssue(
+            hostname: "cp-1", name: "memory", critical: true, days: 2, slopePerDay: 2, usedPercent: 85)
+        snapshot.memoryTrends["fd00::7"] = issue.value
         let alert = Alert(key: key, title: "", text: "", problem: true)
         XCTAssertEqual(alertRuleSeverity(alert, snapshot: snapshot, now: Date()), alertSeverityCritical)
         XCTAssertEqual(

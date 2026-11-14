@@ -49,7 +49,8 @@ public func alertRuleSeverity(_ alert: Alert, snapshot: ClusterSnapshot?, previo
         guard let value = kept({ $0.storageTrends }, volume) else { return alertSeverityWarning }
         return StorageTrendIssue(value: value).critical ? alertSeverityCritical : alertSeverityWarning
     case "memory":
-        guard let value = kept({ $0.memoryTrends }, memoryTrendNode(subject: subject)) else { return alertSeverityWarning }
+        let node = memoryTrendNode(subject: subject)
+        guard let value = kept({ $0.memoryTrends }, node) else { return alertSeverityWarning }
         return StorageTrendIssue(value: value).critical ? alertSeverityCritical : alertSeverityWarning
     case "sensor": return kept({ $0.sensorIssues }, subject).map { level(SensorIssue(value: $0).severity) } ?? ""
     case "kubespan": return alertSeverityCritical

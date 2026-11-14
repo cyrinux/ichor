@@ -182,7 +182,8 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
             let address = memoryTrendNode(subject: subject)
             guard !address.isEmpty else { return nil }
             let kept = snapshot.memoryTrends[address].map { StorageTrendIssue(value: $0).hostname } ?? ""
-            return .node(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept, tab: "")
+            let hostname = kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept
+            return .node(address: address, hostname: hostname, tab: "")
         case "unreachable": return .screen(.cluster)
         case "plugin":
             // "plugin:<id>:<finding>:…": the plugin's screen.
