@@ -109,7 +109,9 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             // A recovered alert's acknowledgement ends: firing again, it repeats again.
             firingKeys(reads, run.state).forEach { (cluster, keys) -> app.alertAcks.retainFiring(cluster, keys) }
             val ongoing = ongoingAlerts(reads, run.state, run.alerts)
-            val notified = postAll(app, run.alerts + proposals + signIns.alerts, ongoing, run.state, now)
+            // Read from the ring with this run's record in it; none from faked names (screenshot mode).
+            val flaps = if (masked) emptyMap() else flapCounts(app, run.alerts, store.alertRules.value, now)
+            val notified = postAll(app, run.alerts + proposals + signIns.alerts, ongoing, run.state, now, flaps)
             if (notified != run.state) store.saveState(notified)
             store.setSignInNotified(signIns.notified)
         }
@@ -169,11 +171,18 @@ private suspend fun storageForecasts(app: TalosApp, reads: List<ClusterRead>, no
  * snoozed is posted as before (see [alertPlan]) and nothing repeats: a rules error never drops
  * an alert. Returns [state] with the posted alerts' times (see [withNotified]).
  */
-private suspend fun postAll(app: TalosApp, clusters: List<ClusterAlerts>, ongoing: List<ClusterAlerts>, state: MonitorState, now: Long): MonitorState {
+private suspend fun postAll(
+    app: TalosApp,
+    clusters: List<ClusterAlerts>,
+    ongoing: List<ClusterAlerts>,
+    state: MonitorState,
+    now: Long,
+    flaps: Map<String, Map<String, Int>>,
+): MonitorState {
     if (clusters.isEmpty() && ongoing.isEmpty()) return state
     val rules = app.monitorStore.alertRules.value
     val snoozed = { cluster: String, key: String -> app.alertSnoozes.isSnoozed(cluster, key, now) }
-    val inputs = alertInputs(clusters, snoozed)
+    val inputs = alertInputs(clusters, flaps, snoozed)
     val ongoingInputs = if (rules == AlertRules.NONE) emptyList() else repeatInputs(ongoing, state, snoozed, app.alertAcks::isAcknowledged)
     val decisions = if (rules == AlertRules.NONE || inputs.size + ongoingInputs.size == 0) {
         null

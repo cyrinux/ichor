@@ -348,7 +348,12 @@ Part of the [Ichor documentation](../README.md#documentation).
   an etcd alarm or another critical alert that still fires is posted again, "Still firing ·
   25 min", until you tap Acknowledge on it, snooze it, or it recovers; acknowledging keeps the
   alert and its history. The repeat waits for the next check (15 minutes at the shortest on
-  both platforms), and a digest cluster does not repeat. The rules travel in backups.
+  both platforms), and a digest cluster does not repeat. A rule can fold flapping alerts:
+  a warning that fired and recovered again and again (from 3 opens in 24 hours by default, 2
+  to 10) goes into the digest instead of its own notification, recovery included, and the
+  digest names it ("2 flapping: …"). The count comes from the cluster's history on the phone,
+  and the "Since you last looked" card marks the alert as flapping. A critical alert still
+  notifies every time. The rules travel in backups.
 - **Widgets:** the home-screen widget, and on Wear OS a tile and a complication with the health
   of the cluster on screen on the phone (ready count in its colour, "N down", etcd alarms; the
   check's age once it is over an hour old). The phone sends them its last background check

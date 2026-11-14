@@ -35,7 +35,8 @@ tour** shows it again.
   or wake a node, upgrade Talos node by node or the whole cluster, upgrade Kubernetes, add,
   replace, reset or wipe a node, recover etcd, rotate the Talos CA. Alerts when a node goes down or a KubeSpan tunnel between two
   nodes is down (on by default on Talos clusters), with quiet hours, a per-cluster
-  minimum severity, a digest, and critical alerts that repeat until acknowledged.
+  minimum severity, a digest, flapping alerts folded into the digest, and critical alerts that
+  repeat until acknowledged.
 - **Any Kubernetes cluster:** workloads with rollout history and undo for Deployments,
   StatefulSets and DaemonSets (the pod template diff first) and a Deployment's pause, pods, logs and shells, a browser of every object with
   summary, YAML, scale and delete, Jobs, Services and load balancing, storage, autoscaling,

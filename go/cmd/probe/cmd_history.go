@@ -19,6 +19,36 @@ const historyMagic = "ICHH"
 
 var historyCommands = []command{
 	{name: "incident-summary", args: "RING_FILE [SINCE] [names]", noConfig: true, run: probeIncidentSummary},
+	{name: "history-flaps", args: "RING_FILE [HOURS]", noConfig: true, run: probeHistoryFlaps},
+}
+
+// probeHistoryFlaps prints the alerts of RING_FILE (a ring or JSON lines, as incident-summary
+// reads it) that opened more than once in the last HOURS (24 by default): what the alert
+// rules' flapping check counts.
+func probeHistoryFlaps(env) (string, error) {
+	if flag.Arg(1) == "" {
+		return "", errors.New("usage: history-flaps RING_FILE [HOURS]")
+	}
+
+	hours := 0
+
+	if arg := flag.Arg(2); arg != "" {
+		h, err := strconv.Atoi(arg)
+		if err != nil {
+			return "", fmt.Errorf("HOURS %q: %w", arg, err)
+		}
+
+		hours = h
+	}
+
+	now := time.Now().UnixMilli()
+
+	ring, err := readProbeRing(flag.Arg(1), now)
+	if err != nil {
+		return "", err
+	}
+
+	return ichorgo.HistoryAlertFlaps(ring, now, hours)
 }
 
 // probeIncidentSummary prints the incident summary of -context over the last SINCE (24h by

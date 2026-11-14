@@ -1,6 +1,77 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Fold flapping alerts into the digest" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Regrouper les alertes instables dans le résumé" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Agrupar las alertas intermitentes en el resumen" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Згортати нестабільні сповіщення в зведення" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Flatternde Alerts in die Zusammenfassung legen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Raggruppa gli avvisi intermittenti nel riepilogo" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将反复波动的告警归入摘要" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "繰り返すアラートをまとめ通知に入れる" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Agrupar alertas intermitentes no resumo" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сворачивать нестабильные оповещения в сводку" } }
+      }
+    },
+    "A warning that fires and recovers again and again in a day goes into the digest, marked as flapping. Critical alerts still notify every time." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Un avertissement qui se déclenche et se rétablit encore et encore dans la journée va dans le résumé, marqué instable. Les alertes critiques notifient toujours à chaque fois." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Un aviso que se dispara y se recupera una y otra vez en un día va al resumen, marcado como intermitente. Las alertas críticas siguen notificando cada vez." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Попередження, яке знову й знову спрацьовує та відновлюється за день, потрапляє до зведення з позначкою нестабільного. Критичні сповіщення й надалі приходять щоразу." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eine Warnung, die an einem Tag immer wieder auslöst und sich erholt, kommt als flatternd markiert in die Zusammenfassung. Kritische Alerts melden sich weiterhin jedes Mal." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Un avviso che scatta e rientra più volte in un giorno va nel riepilogo, segnato come intermittente. Gli avvisi critici notificano comunque ogni volta." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "一天内反复触发又恢复的警告会归入摘要，并标记为波动。严重告警仍会每次通知。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1 日に何度も発生と回復を繰り返す警告は、繰り返しとしてまとめ通知に入ります。重大なアラートは毎回通知されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Um aviso que dispara e se recupera várias vezes num dia vai para o resumo, marcado como intermitente. Alertas críticos continuam notificando toda vez." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Предупреждение, которое за день снова и снова срабатывает и восстанавливается, попадает в сводку с пометкой «нестабильное». Критические оповещения по-прежнему приходят каждый раз." } }
+      }
+    },
+    "From %lld opens in 24 hours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "À partir de %lld déclenchements en 24 heures" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "A partir de %lld disparos en 24 horas" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Від %lld спрацювань за 24 години" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ab %lld Auslösungen in 24 Stunden" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Da %lld attivazioni in 24 ore" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "24 小时内触发 %lld 次起" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "24 時間で %lld 回の発生から" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A partir de %lld disparos em 24 horas" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "От %lld срабатываний за 24 часа" } }
+      }
+    },
+    "Flapping · opened %lld times in 24 h" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Instable · déclenchée %lld fois en 24 h" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Intermitente · disparada %lld veces en 24 h" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Нестабільне · спрацювало %lld разів за 24 год" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Flatternd · %lld-mal in 24 h ausgelöst" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Intermittente · attivato %lld volte in 24 h" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "波动 · 24 小时内触发 %lld 次" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "繰り返し · 24 時間で %lld 回発生" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Intermitente · disparou %lld vezes em 24 h" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Нестабильное · сработало %lld раз за 24 ч" } }
+      }
+    },
+    "%lld flapping: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld flapping: %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld instables : %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld intermitentes: %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Нестабільних: %1$lld: %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld flatternd: %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld intermittenti: %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld 个波动：%2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "繰り返し %1$lld 件: %2$@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld intermitentes: %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Нестабильных: %1$lld: %2$@" } }
+      }
+    },
     "Push through ntfy" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -6578,4 +6578,9 @@
     <string name="relay_demo">Im Demo-Cluster nicht verfügbar</string>
     <string name="relay_pick_distributor">Push empfangen über</string>
     <string name="relay_truncated_n">%1$d weitere Alerts in Alertmanager</string>
+    <string name="alert_rules_flapping">Flatternde Alerts in die Zusammenfassung legen</string>
+    <string name="alert_rules_flapping_desc">Eine Warnung, die an einem Tag immer wieder auslöst und sich erholt, kommt als flatternd markiert in die Zusammenfassung. Kritische Alerts melden sich weiterhin jedes Mal.</string>
+    <string name="alert_rules_flapping_summary">Ab %1$d Auslösungen in 24 Stunden</string>
+    <string name="alert_flapping_chip">Flatternd · %1$d-mal in 24 h ausgelöst</string>
+    <string name="alert_digest_flapping">%1$d flatternd: %2$s</string>
 </resources>

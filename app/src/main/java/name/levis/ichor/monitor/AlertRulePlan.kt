@@ -62,8 +62,15 @@ val Alert.ruleSeverity: String
         AlertKind.PROPOSAL_MERGED, AlertKind.PROPOSAL_CLOSED -> ALERT_SEVERITY_INFO
     }
 
-/** Every alert of a run, in order, as Go reads it; [snoozed] says whether a cluster's (fingerprint) key is snoozed. */
-fun alertInputs(clusters: List<ClusterAlerts>, snoozed: (cluster: String, key: String) -> Boolean): List<AlertInput> =
+/**
+ * Every alert of a run, in order, as Go reads it; [snoozed] says whether a cluster's (fingerprint)
+ * key is snoozed, [flaps] its opens in the last 24 h by fingerprint then key (see [flapCounts]).
+ */
+fun alertInputs(
+    clusters: List<ClusterAlerts>,
+    flaps: Map<String, Map<String, Int>> = emptyMap(),
+    snoozed: (cluster: String, key: String) -> Boolean,
+): List<AlertInput> =
     clusters.flatMap { group ->
         val fingerprint = group.context.fingerprint
         group.alerts.map { alert ->
@@ -74,6 +81,7 @@ fun alertInputs(clusters: List<ClusterAlerts>, snoozed: (cluster: String, key: S
                 severity = alert.ruleSeverity,
                 problem = alert.problem,
                 snoozed = snoozed(fingerprint, alert.key),
+                flaps = flaps[fingerprint]?.get(alert.key) ?: 0,
             )
         }
     }
@@ -81,8 +89,11 @@ fun alertInputs(clusters: List<ClusterAlerts>, snoozed: (cluster: String, key: S
 /** An alert the rules kept quiet: [reason] quiet or severity, [until] the quiet window's end (unix ms). */
 data class MutedAlert(val context: ContextSummary, val alert: Alert, val reason: String, val until: Long)
 
-/** One digest notification: [digest] for the cluster [context], on the [channel] of its first alert. */
-data class DigestPost(val context: ContextSummary, val digest: AlertDigest, val channel: AlertChannel)
+/**
+ * One digest notification: [digest] for the cluster [context], on the [channel] of its first
+ * alert; [flapping] the subjects of the alerts folded as flapping, for its text.
+ */
+data class DigestPost(val context: ContextSummary, val digest: AlertDigest, val channel: AlertChannel, val flapping: List<String> = emptyList())
 
 /** What a run posts: the alerts on their own, the ones only recorded, and one digest per digest cluster. */
 data class AlertPlan(
@@ -130,7 +141,10 @@ fun alertPlan(clusters: List<ClusterAlerts>, inputs: List<AlertInput>, decisions
     }
     val groups = decisions?.digests.orEmpty().associateBy { it.cluster }
     val digests = digested.mapNotNull { (fingerprint, group) ->
-        groups[fingerprint]?.let { DigestPost(group.context, it, group.alerts.first().channel) }
+        groups[fingerprint]?.let { digest ->
+            val flapping = group.alerts.filter { it.key in digest.flappingKeys }.map { it.subject.ifBlank { it.key } }.distinct()
+            DigestPost(group.context, digest, group.alerts.first().channel, flapping)
+        }
     }
     // Sent to a digest Go did not count: posted on their own rather than lost.
     val orphans = digested.filterKeys { it !in groups }.values

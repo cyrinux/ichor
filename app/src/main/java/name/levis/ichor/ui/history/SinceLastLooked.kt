@@ -52,14 +52,17 @@ private const val SINCE_MAX_LINES = 6
 fun SinceLastLookedCard(fingerprint: String) {
     val app = LocalContext.current.applicationContext as TalosApp
     var since by remember(fingerprint) { mutableStateOf<HistorySince?>(null) }
+    var flaps by remember(fingerprint) { mutableStateOf<Map<String, Int>>(emptyMap()) }
     LaunchedEffect(fingerprint) {
-        val start = app.lastLooked.start(fingerprint, System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+        val start = app.lastLooked.start(fingerprint, now)
         since = app.historyRepository.since(fingerprint, start)?.takeIf { it.hasNews }
+        flaps = app.historyRepository.flaps(fingerprint, now)?.opensByKey.orEmpty()
         delay(LOOKED_AFTER_MILLIS)
         app.lastLooked.mark(fingerprint, System.currentTimeMillis())
     }
     val shown = since ?: return
-    val lines = sinceLines(shown) { key, from, to -> app.alertMutes.during(fingerprint, key, from, to) }
+    val lines = sinceLines(shown, flaps) { key, from, to -> app.alertMutes.during(fingerprint, key, from, to) }
     IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.history_since_title), style = MaterialTheme.typography.titleSmall)
@@ -68,6 +71,8 @@ fun SinceLastLookedCard(fingerprint: String) {
                     Text(line.text, style = MaterialTheme.typography.bodyMedium)
                     // Why the phone stayed silent: the alert rules kept it quiet.
                     line.mute?.let { MutedText(mutedLabel(it)) }
+                    // It came and went all day: what the rules fold into the digest.
+                    line.flaps?.let { MutedText(stringResource(R.string.alert_flapping_chip, it)) }
                 }
             }
             if (lines.size > SINCE_MAX_LINES) MutedText(stringResource(R.string.history_since_more, lines.size - SINCE_MAX_LINES))
@@ -81,27 +86,37 @@ fun SinceLastLookedCard(fingerprint: String) {
     }
 }
 
-/** One event of the card, and the alert rules' mute of it when they kept it quiet. */
-private data class SinceLine(val text: String, val mute: AlertMute? = null)
+/**
+ * One event of the card, the alert rules' mute of it when they kept it quiet, and [flaps]: how
+ * many times its alert opened in the last 24 h when more than once (flapping).
+ */
+private data class SinceLine(val text: String, val mute: AlertMute? = null, val flaps: Int? = null)
 
 /**
  * One line per event, most pressing first: still down, new alerts, recovered, resolved, upgrades.
- * [muteOf]: the mute of an alert key while it was open (from, to; null: still open).
+ * [muteOf]: the mute of an alert key while it was open (from, to; null: still open); [flaps]:
+ * the opens in 24 h of the alert keys that flap.
  */
 @Composable
-private fun sinceLines(since: HistorySince, muteOf: (key: String, from: Long, to: Long?) -> AlertMute?): List<SinceLine> = buildList {
+private fun sinceLines(
+    since: HistorySince,
+    flaps: Map<String, Int>,
+    muteOf: (key: String, from: Long, to: Long?) -> AlertMute?,
+): List<SinceLine> = buildList {
     since.nodesDown.forEach {
         val text = stringResource(R.string.history_since_down, historyNodeName(it.node, it.hostname), stateLabel(it.state))
         add(SinceLine(text, muteOf("node:${it.node}", it.downAt, null)))
     }
-    since.newAlerts.forEach { add(SinceLine(stringResource(R.string.history_since_alert_open, alertLabel(it)), muteOf(it.key, it.openedAt, it.closedAt))) }
+    since.newAlerts.forEach {
+        add(SinceLine(stringResource(R.string.history_since_alert_open, alertLabel(it)), muteOf(it.key, it.openedAt, it.closedAt), flaps[it.key]))
+    }
     since.nodesRecovered.forEach {
         val seconds = ((it.upAt ?: it.downAt) - it.downAt) / 1000
         val text = stringResource(R.string.history_since_recovered, historyNodeName(it.node, it.hostname), stateLabel(it.state), localizedDuration(seconds))
         add(SinceLine(text, muteOf("node:${it.node}", it.downAt, it.upAt)))
     }
     since.alertsResolved.forEach {
-        add(SinceLine(stringResource(R.string.history_since_alert_resolved, alertLabel(it)), muteOf(it.key, it.openedAt, it.closedAt)))
+        add(SinceLine(stringResource(R.string.history_since_alert_resolved, alertLabel(it)), muteOf(it.key, it.openedAt, it.closedAt), flaps[it.key]))
     }
     since.upgrades.forEach { add(SinceLine(stringResource(R.string.history_since_upgrade, historyNodeName(it.node, it.hostname), it.from, it.to))) }
     val olderOpen = since.alertsOpen.size - since.newAlerts.size

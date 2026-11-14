@@ -25,7 +25,14 @@ fun postDigest(context: Context, post: DigestPost, cluster: String, clusterId: S
     val res = AppLocale.wrap(context)
     val digest = post.digest
     val title = res.resources.getQuantityString(R.plurals.alert_rules_digest_title, digest.count, digest.count, cluster)
-    val text = res.getString(R.string.alert_rules_digest_text, digest.critical, digest.warning)
+    val counts = res.getString(R.string.alert_rules_digest_text, digest.critical, digest.warning)
+    // "2 flapping: kube-proxy, NodeClockSkew": the ones folded because they come and go.
+    val text = if (digest.flapping > 0) {
+        val names = post.flapping.ifEmpty { digest.flappingKeys }.joinToString(", ")
+        counts + "\n" + res.getString(R.string.alert_digest_flapping, digest.flapping, names)
+    } else {
+        counts
+    }
     val fingerprint = post.context.fingerprint
     val id = alertNotificationId(fingerprint, DIGEST_ALERT_KEY)
 

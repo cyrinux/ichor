@@ -61,6 +61,7 @@ fun AlertRulesGroup(app: TalosApp, enabled: Boolean) {
         enabled,
     ) { i -> update { it.copy(repeatMinutes = ALERT_REPEAT_CHOICES[i].takeIf { m -> m > 0 }) } }
     MutedText(stringResource(R.string.alert_repeat_hint, interval.toInt()))
+    FlapRule(rule, enabled) { opens -> update { it.copy(flapOpens = opens) } }
     IchorOutlinedButton(onClick = { perCluster = true }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
         val count = rules.clusters.size
         Text(

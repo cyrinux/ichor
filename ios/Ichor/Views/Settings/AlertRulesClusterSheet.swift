@@ -129,5 +129,10 @@ private struct ClusterRuleEditor: View {
             next.repeatMinutes = index == 0 ? nil : alertRepeatChoices[index - 1]
             onChange(next)
         }
+        ClusterFlapRows(rule: rule, asDefault: asDefault, off: off) { opens in
+            var next = rule
+            next.flapOpens = opens
+            onChange(next)
+        }
     }
 }

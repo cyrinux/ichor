@@ -300,8 +300,8 @@ func TestAlertRulesDigests(t *testing.T) {
 
 	got := runAlertRules(t, rules, alerts, rulesAt(t, "2026-06-01T12:00:00Z"))
 	want := []alertDigestGroup{
-		{Cluster: rulesStaging, Count: 7, Critical: 2, Warning: 4, FirstKeys: []string{"s1", "s2", "s3", "s4", "s5"}},
-		{Cluster: rulesLab, Count: 1, Critical: 1, FirstKeys: []string{"l1"}},
+		{Cluster: rulesStaging, Count: 7, Critical: 2, Warning: 4, FirstKeys: []string{"s1", "s2", "s3", "s4", "s5"}, FlappingKeys: []string{}},
+		{Cluster: rulesLab, Count: 1, Critical: 1, FirstKeys: []string{"l1"}, FlappingKeys: []string{}},
 	}
 
 	if !reflect.DeepEqual(got.Digests, want) {

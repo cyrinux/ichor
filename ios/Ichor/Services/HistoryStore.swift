@@ -76,6 +76,14 @@ enum HistoryStore {
             ring: data, now: millis, critical: BackgroundMonitor.storageThresholds.crit)
     }
 
+    /// The opens in the last 24 h of `cluster`'s alerts that opened more than once, by alert key;
+    /// empty without a ring (or when it cannot be read).
+    static func flaps(cluster: String, now: Date = Date()) async -> [String: Int] {
+        guard let data = bytes(cluster: cluster) else { return [:] }
+        let millis = Int64(now.timeIntervalSince1970 * 1000)
+        return (try? await TalosClient.historyFlaps(ring: data, now: millis))?.opensByAlertKey ?? [:]
+    }
+
     /// What happened on `cluster` after `lastLooked`; nil without a ring.
     static func since(cluster: String, lastLooked: Int64) async -> HistorySinceSummary? {
         guard let data = bytes(cluster: cluster) else { return nil }

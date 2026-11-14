@@ -56,6 +56,9 @@ struct AlertRulesSection: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
+            FlapRuleRows(rule: rule) { opens in
+                update { $0.flapOpens = opens }
+            }
             Button {
                 perCluster = true
             } label: {

@@ -6850,4 +6850,9 @@
     <string name="relay_demo">Недоступно в демо-кластере</string>
     <string name="relay_pick_distributor">Получать push через</string>
     <string name="relay_truncated_n">Ещё %1$d оповещений в Alertmanager</string>
+    <string name="alert_rules_flapping">Сворачивать нестабильные оповещения в сводку</string>
+    <string name="alert_rules_flapping_desc">Предупреждение, которое за день снова и снова срабатывает и восстанавливается, попадает в сводку с пометкой «нестабильное». Критические оповещения по-прежнему приходят каждый раз.</string>
+    <string name="alert_rules_flapping_summary">От %1$d срабатываний за 24 часа</string>
+    <string name="alert_flapping_chip">Нестабильное · сработало %1$d раз за 24 ч</string>
+    <string name="alert_digest_flapping">Нестабильных: %1$d: %2$s</string>
 </resources>

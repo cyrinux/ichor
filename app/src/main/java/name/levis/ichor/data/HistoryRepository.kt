@@ -2,6 +2,7 @@ package name.levis.ichor.data
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import name.levis.ichor.model.HistoryFlaps
 import name.levis.ichor.model.HistoryForecast
 import name.levis.ichor.model.HistoryQuery
 import name.levis.ichor.model.HistorySince
@@ -29,6 +30,15 @@ class HistoryRepository(private val store: HistoryStore) {
      */
     suspend fun forecast(fingerprint: String, nowMillis: Long, criticalPercent: Int): HistoryForecast? = read(fingerprint) { ring ->
         TalosJson.decodeFromString(HistoryForecast.serializer(), Ichorgo.historyVolumeForecast(ring, nowMillis, criticalPercent.toDouble()))
+    }
+
+    /**
+     * The alerts of the cluster [fingerprint] that opened more than once in the [windowHours]
+     * before [nowMillis]: the flapping check of the alert rules, and the History chip. Keys are the
+     * app's own (not masked), so they match its alerts.
+     */
+    suspend fun flaps(fingerprint: String, nowMillis: Long, windowHours: Int = 24): HistoryFlaps? = read(fingerprint) { ring ->
+        TalosJson.decodeFromString(HistoryFlaps.serializer(), Ichorgo.historyAlertFlaps(ring, nowMillis, windowHours.toLong()))
     }
 
     /** The cluster [fingerprint]'s whole ring as anonymised JSON, for a support bundle. */

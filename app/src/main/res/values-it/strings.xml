@@ -6588,4 +6588,9 @@
     <string name="relay_demo">Non disponibile nel cluster demo</string>
     <string name="relay_pick_distributor">Ricevi push tramite</string>
     <string name="relay_truncated_n">Altri %1$d avvisi in Alertmanager</string>
+    <string name="alert_rules_flapping">Raggruppa gli avvisi intermittenti nel riepilogo</string>
+    <string name="alert_rules_flapping_desc">Un avviso che scatta e rientra più volte in un giorno va nel riepilogo, segnato come intermittente. Gli avvisi critici notificano comunque ogni volta.</string>
+    <string name="alert_rules_flapping_summary">Da %1$d attivazioni in 24 ore</string>
+    <string name="alert_flapping_chip">Intermittente · attivato %1$d volte in 24 h</string>
+    <string name="alert_digest_flapping">%1$d intermittenti: %2$s</string>
 </resources>

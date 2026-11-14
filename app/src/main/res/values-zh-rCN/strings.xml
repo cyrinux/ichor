@@ -6448,4 +6448,9 @@
     <string name="relay_demo">演示集群中不可用</string>
     <string name="relay_pick_distributor">通过以下应用接收推送</string>
     <string name="relay_truncated_n">Alertmanager 中还有 %1$d 条告警</string>
+    <string name="alert_rules_flapping">将反复波动的告警归入摘要</string>
+    <string name="alert_rules_flapping_desc">一天内反复触发又恢复的警告会归入摘要，并标记为波动。严重告警仍会每次通知。</string>
+    <string name="alert_rules_flapping_summary">24 小时内触发 %1$d 次起</string>
+    <string name="alert_flapping_chip">波动 · 24 小时内触发 %1$d 次</string>
+    <string name="alert_digest_flapping">%1$d 个波动：%2$s</string>
 </resources>
