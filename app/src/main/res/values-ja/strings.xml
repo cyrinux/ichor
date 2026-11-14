@@ -6448,4 +6448,9 @@
     <string name="relay_demo">デモクラスタでは利用できません</string>
     <string name="relay_pick_distributor">プッシュの受信に使うアプリ</string>
     <string name="relay_truncated_n">Alertmanager にさらに %1$d 件のアラート</string>
+    <string name="alert_rules_flapping">繰り返すアラートをまとめ通知に入れる</string>
+    <string name="alert_rules_flapping_desc">1 日に何度も発生と回復を繰り返す警告は、繰り返しとしてまとめ通知に入ります。重大なアラートは毎回通知されます。</string>
+    <string name="alert_rules_flapping_summary">24 時間で %1$d 回の発生から</string>
+    <string name="alert_flapping_chip">繰り返し · 24 時間で %1$d 回発生</string>
+    <string name="alert_digest_flapping">繰り返し %1$d 件: %2$s</string>
 </resources>

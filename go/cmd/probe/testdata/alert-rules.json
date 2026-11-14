@@ -1,7 +1,8 @@
 {
   "default": {
     "quietHours": { "start": "23:00", "end": "07:00", "tz": "Europe/Paris", "exceptCritical": true },
-    "minSeverity": "warning"
+    "minSeverity": "warning",
+    "flapOpens": 3
   },
   "clusters": {
     "0f1e2d3c4b5a6978": { "digest": true, "minSeverity": "all" },

@@ -6594,4 +6594,9 @@
     <string name="relay_demo">Not available in the demo cluster</string>
     <string name="relay_pick_distributor">Receive push through</string>
     <string name="relay_truncated_n">%1$d more alerts in Alertmanager</string>
+    <string name="alert_rules_flapping">Fold flapping alerts into the digest</string>
+    <string name="alert_rules_flapping_desc">A warning that fires and recovers again and again in a day goes into the digest, marked as flapping. Critical alerts still notify every time.</string>
+    <string name="alert_rules_flapping_summary">From %1$d opens in 24 hours</string>
+    <string name="alert_flapping_chip">Flapping · opened %1$d times in 24 h</string>
+    <string name="alert_digest_flapping">%1$d flapping: %2$s</string>
 </resources>

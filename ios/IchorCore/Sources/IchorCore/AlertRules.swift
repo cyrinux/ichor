@@ -58,24 +58,35 @@ public struct QuietHours: Codable, Equatable, Hashable, Sendable {
 /// The repeats the settings offer, in minutes, 0 off; the real cadence is the check's.
 public let alertRepeatChoices = [0, 5, 15, 30, 60]
 
+/// The opens per day the flapping stepper offers, and where turning it on starts.
+public let alertFlapRange = 2...10
+public let alertFlapDefault = 3
+
 /// One rule; nil takes the default's. `minSeverity`: all, warning or critical. `repeatMinutes`:
 /// how often a still-firing critical alert is posted again until acknowledged, 0 off.
+/// `flapOpens`: the opens in 24 h from which a non-critical alert is flapping and folded into
+/// the digest, 0 off.
 public struct AlertRule: Codable, Equatable, Hashable, Sendable {
     public var quietHours: QuietHours?
     public var minSeverity: String?
     public var digest: Bool?
     public var repeatMinutes: Int?
+    public var flapOpens: Int?
 
     public init(
-        quietHours: QuietHours? = nil, minSeverity: String? = nil, digest: Bool? = nil, repeatMinutes: Int? = nil
+        quietHours: QuietHours? = nil, minSeverity: String? = nil, digest: Bool? = nil, repeatMinutes: Int? = nil,
+        flapOpens: Int? = nil
     ) {
         self.quietHours = quietHours
         self.minSeverity = minSeverity
         self.digest = digest
         self.repeatMinutes = repeatMinutes
+        self.flapOpens = flapOpens
     }
 
-    public var isEmpty: Bool { quietHours == nil && minSeverity == nil && digest == nil && repeatMinutes == nil }
+    public var isEmpty: Bool {
+        quietHours == nil && minSeverity == nil && digest == nil && repeatMinutes == nil && flapOpens == nil
+    }
 
     /// With a window without a zone in `zone`.
     public func withZone(_ zone: String) -> AlertRule {
@@ -98,6 +109,11 @@ public struct AlertRules: Codable, Equatable, Hashable, Sendable {
     }
 
     public static let none = AlertRules()
+
+    /// The opens per day from which `fingerprint`'s alerts are flapping (its override, else the default); 0 off.
+    public func flapOpens(_ fingerprint: String) -> Int {
+        clusters[fingerprint]?.flapOpens ?? self.default.flapOpens ?? 0
+    }
 
     /// The override of `fingerprint`, or an empty one (every field as default).
     public func clusterRule(_ fingerprint: String) -> AlertRule { clusters[fingerprint] ?? AlertRule() }
@@ -173,11 +189,15 @@ public struct AlertInput: Codable, Equatable, Sendable {
     public var firstSeenMillis: Int64
     public var lastNotifiedMillis: Int64
     public var acknowledged: Bool
+    /// How many times it opened in the last 24 h, this one included (the history ring); 0 unknown.
+    public var flaps: Int
 
     public init(
         cluster: String, key: String, kind: String, severity: String = "", problem: Bool, snoozed: Bool = false,
-        ongoing: Bool = false, firstSeenMillis: Int64 = 0, lastNotifiedMillis: Int64 = 0, acknowledged: Bool = false
+        ongoing: Bool = false, firstSeenMillis: Int64 = 0, lastNotifiedMillis: Int64 = 0, acknowledged: Bool = false,
+        flaps: Int = 0
     ) {
+        self.flaps = flaps
         self.cluster = cluster
         self.key = key
         self.kind = kind
@@ -200,6 +220,7 @@ public let alertReasonSnoozed = "snoozed"
 public let alertReasonSeverity = "severity"
 public let alertReasonQuiet = "quiet"
 public let alertReasonDigest = "digest"
+public let alertReasonFlapping = "flapping"
 
 /// What to do with one alert; `until` (unix ms) the end of the quiet window that muted it, else
 /// 0. `repeats`: posted, it will be posted again while it fires, until acknowledged.
@@ -210,9 +231,12 @@ public struct AlertDecision: Decodable, Equatable, Sendable {
     public let reason: String
     public let until: Int64
     public let repeats: Bool
+    /// Folded as flapping (`alertReasonFlapping`): its opens in 24 h; else 0.
+    public let flaps: Int
 
     public init(
-        cluster: String, key: String, action: String, reason: String = "", until: Int64 = 0, repeats: Bool = false
+        cluster: String, key: String, action: String, reason: String = "", until: Int64 = 0, repeats: Bool = false,
+        flaps: Int = 0
     ) {
         self.cluster = cluster
         self.key = key
@@ -220,9 +244,10 @@ public struct AlertDecision: Decodable, Equatable, Sendable {
         self.reason = reason
         self.until = until
         self.repeats = repeats
+        self.flaps = flaps
     }
 
-    private enum CodingKeys: String, CodingKey { case cluster, key, action, reason, until, repeats }
+    private enum CodingKeys: String, CodingKey { case cluster, key, action, reason, until, repeats, flaps }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -232,26 +257,37 @@ public struct AlertDecision: Decodable, Equatable, Sendable {
         reason = try c.field(.reason, "")
         until = try c.field(.until, 0)
         repeats = try c.field(.repeats, false)
+        flaps = try c.field(.flaps, 0)
     }
 }
 
-/// A digest cluster's alerts of the run: how many, how many critical and warnings, the first keys.
+/// A digest cluster's alerts of the run: how many, how many critical and warnings, the first keys;
+/// `flapping` of them were folded as flapping, `flappingKeys` the first of those.
 public struct AlertDigest: Decodable, Equatable, Sendable {
     public let cluster: String
     public let count: Int
     public let critical: Int
     public let warning: Int
     public let firstKeys: [String]
+    public let flapping: Int
+    public let flappingKeys: [String]
 
-    public init(cluster: String, count: Int, critical: Int = 0, warning: Int = 0, firstKeys: [String] = []) {
+    public init(
+        cluster: String, count: Int, critical: Int = 0, warning: Int = 0, firstKeys: [String] = [], flapping: Int = 0,
+        flappingKeys: [String] = []
+    ) {
         self.cluster = cluster
         self.count = count
         self.critical = critical
         self.warning = warning
         self.firstKeys = firstKeys
+        self.flapping = flapping
+        self.flappingKeys = flappingKeys
     }
 
-    private enum CodingKeys: String, CodingKey { case cluster, count, critical, warning, firstKeys }
+    private enum CodingKeys: String, CodingKey {
+        case cluster, count, critical, warning, firstKeys, flapping, flappingKeys
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -260,6 +296,8 @@ public struct AlertDigest: Decodable, Equatable, Sendable {
         critical = try c.field(.critical, 0)
         warning = try c.field(.warning, 0)
         firstKeys = try c.field(.firstKeys, [])
+        flapping = try c.field(.flapping, 0)
+        flappingKeys = try c.field(.flappingKeys, [])
     }
 }
 

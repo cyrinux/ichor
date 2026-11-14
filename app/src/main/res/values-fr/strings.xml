@@ -6588,4 +6588,9 @@
     <string name="relay_demo">Indisponible dans le cluster de démo</string>
     <string name="relay_pick_distributor">Recevoir les push via</string>
     <string name="relay_truncated_n">%1$d autres alertes dans Alertmanager</string>
+    <string name="alert_rules_flapping">Regrouper les alertes instables dans le résumé</string>
+    <string name="alert_rules_flapping_desc">Un avertissement qui se déclenche et se rétablit encore et encore dans la journée va dans le résumé, marqué instable. Les alertes critiques notifient toujours à chaque fois.</string>
+    <string name="alert_rules_flapping_summary">À partir de %1$d déclenchements en 24 heures</string>
+    <string name="alert_flapping_chip">Instable · déclenchée %1$d fois en 24 h</string>
+    <string name="alert_digest_flapping">%1$d instables : %2$s</string>
 </resources>

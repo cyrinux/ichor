@@ -30,6 +30,9 @@ const (
 	alertReasonSeverity = "severity"
 	alertReasonQuiet    = "quiet"
 	alertReasonDigest   = "digest"
+	// An alert that opened flapOpens times or more in the last 24 h (a non-critical one), and
+	// its recovery: folded into the digest.
+	alertReasonFlapping = "flapping"
 	// An ongoing alert: posted again, or why not.
 	alertReasonRepeat       = "repeat"
 	alertReasonRepeatOff    = "repeatOff"
@@ -39,6 +42,9 @@ const (
 
 // alertRepeatMax is the longest repeat a rule may ask for, a day in minutes.
 const alertRepeatMax = 1440
+
+// alertFlapOpensMax is the highest flapOpens a rule may set (the apps offer 2 to 10).
+const alertFlapOpensMax = 100
 
 // alertRepeatSlack lets a check that runs a little early still repeat: the background checks
 // are not run to the second.
@@ -76,6 +82,9 @@ type alertRule struct {
 	// RepeatMinutes: how often a still-firing critical alert is posted again until it is
 	// acknowledged; 0 (or absent everywhere) is off.
 	RepeatMinutes *int `json:"repeatMinutes"`
+	// FlapOpens: the opens in 24 h from which a non-critical alert is flapping and folded into
+	// the digest (see alertIn.Flaps); 0 (or absent everywhere) is off.
+	FlapOpens *int `json:"flapOpens"`
 }
 
 type alertRules struct {
@@ -97,6 +106,9 @@ type alertIn struct {
 	FirstSeenMillis    int64 `json:"firstSeenMillis"`
 	LastNotifiedMillis int64 `json:"lastNotifiedMillis"`
 	Acknowledged       bool  `json:"acknowledged"`
+	// Flaps: how many times the alert opened in the last 24 h, this one included
+	// (HistoryAlertFlaps); 0 when unknown.
+	Flaps int `json:"flaps"`
 }
 
 type alertDecision struct {
@@ -108,6 +120,8 @@ type alertDecision struct {
 	// Repeats: a posted alert ("notify" or "repeat") will be posted again while it fires, until
 	// it is acknowledged: the app offers Acknowledge on it.
 	Repeats bool `json:"repeats"`
+	// Flaps: the alert's opens in 24 h when it was folded as flapping, for the app's text; else 0.
+	Flaps int `json:"flaps"`
 }
 
 type alertDigestGroup struct {
@@ -116,6 +130,9 @@ type alertDigestGroup struct {
 	Critical  int      `json:"critical"`
 	Warning   int      `json:"warning"`
 	FirstKeys []string `json:"firstKeys"`
+	// Flapping: how many of the alerts were folded as flapping; FlappingKeys the first five.
+	Flapping     int      `json:"flapping"`
+	FlappingKeys []string `json:"flappingKeys"`
 }
 
 type alertRulesResult struct {
@@ -136,13 +153,19 @@ type resolvedRule struct {
 	minSeverity string
 	digest      bool
 	repeat      time.Duration
+	flapOpens   int
 }
 
 // AlertRulesApply decides, for each alert of alertsJSON ([{cluster, key, kind, severity,
 // problem, snoozed}…]), whether the app posts it now ("notify"), drops it ("mute") or adds
 // it to the cluster's digest ("digest"), under rulesJSON ({"default":{rule},
 // "clusters":{"<fingerprint>":{rule}}}, rule = {quietHours:{start,end,tz,exceptCritical},
-// minSeverity: all|warning|critical, digest, repeatMinutes}) as of nowMillis (unix ms).
+// minSeverity: all|warning|critical, digest, repeatMinutes, flapOpens}) as of nowMillis (unix ms).
+//
+// Flapping: with a flapOpens (0..100, 0 off), an alert whose flaps (its opens in the last 24 h,
+// from HistoryAlertFlaps) reach it goes to the digest ("flapping", digest rule or not), after
+// the snooze and the severity floor and before the quiet hours; its recovery too. A critical
+// alert is never folded. The digest counts them apart (flapping, flappingKeys).
 //
 // A cluster's rule overrides the default field by field. The checks run in this order: a
 // snoozed alert is muted ("snoozed"); a problem below the minimum severity is muted
@@ -264,6 +287,10 @@ func resolveAlertRule(name string, base, over alertRule) (resolvedRule, error) {
 		merged.RepeatMinutes = over.RepeatMinutes
 	}
 
+	if over.FlapOpens != nil {
+		merged.FlapOpens = over.FlapOpens
+	}
+
 	out := resolvedRule{minSeverity: "all"}
 
 	if merged.MinSeverity != nil && *merged.MinSeverity != "" {
@@ -286,6 +313,15 @@ func resolveAlertRule(name string, base, over alertRule) (resolvedRule, error) {
 		}
 
 		out.repeat = time.Duration(m) * time.Minute
+	}
+
+	if merged.FlapOpens != nil {
+		n := *merged.FlapOpens
+		if n < 0 || n > alertFlapOpensMax {
+			return out, fmt.Errorf("alert rule %s: flapOpens %d: want 0 to %d", name, n, alertFlapOpensMax)
+		}
+
+		out.flapOpens = n
 	}
 
 	if merged.QuietHours != nil {
@@ -369,7 +405,7 @@ func applyAlertRules(rules map[string]resolvedRule, alerts []alertIn, now time.T
 		out.Decisions = append(out.Decisions, d)
 
 		if d.Action == alertDigest {
-			out.Digests = addToDigest(out.Digests, a, severity)
+			out.Digests = addToDigest(out.Digests, a, severity, d.Reason == alertReasonFlapping)
 		}
 	}
 
@@ -388,6 +424,9 @@ func decideAlert(rule resolvedRule, a alertIn, severity string, now time.Time) a
 		d.Action, d.Reason = alertMute, alertReasonSnoozed
 	case a.Problem && belowAlertFloor(severity, rule.minSeverity):
 		d.Action, d.Reason = alertMute, alertReasonSeverity
+	case rule.flapping(a, severity):
+		// The recovery too: the digest would otherwise say "recovered" for an alert it never posted.
+		d.Action, d.Reason, d.Flaps = alertDigest, alertReasonFlapping, a.Flaps
 	case rule.quiet != nil && !(rule.quiet.exceptCritical && severity == alertCritical):
 		if until := rule.quiet.quietUntil(now); !until.IsZero() {
 			d.Action, d.Reason, d.Until = alertMute, alertReasonQuiet, until.UnixMilli()
@@ -402,6 +441,12 @@ func decideAlert(rule resolvedRule, a alertIn, severity string, now time.Time) a
 	d.Repeats = d.Action == alertNotify && rule.repeats(a, severity)
 
 	return d
+}
+
+// flapping is whether a opened often enough in 24 h to be folded: never a critical alert, which
+// still pages every time (less noise was asked for, not a silent outage).
+func (r resolvedRule) flapping(a alertIn, severity string) bool {
+	return r.flapOpens > 0 && a.Flaps >= r.flapOpens && severity != alertCritical
 }
 
 // repeats is whether the rule posts a still-firing a again: a critical problem, on a cluster
@@ -458,10 +503,10 @@ func belowAlertFloor(severity, minSeverity string) bool {
 	return slices.Index(alertSeverities, severity) < slices.Index(alertSeverities, minSeverity)
 }
 
-func addToDigest(digests []alertDigestGroup, a alertIn, severity string) []alertDigestGroup {
+func addToDigest(digests []alertDigestGroup, a alertIn, severity string, flapping bool) []alertDigestGroup {
 	i := slices.IndexFunc(digests, func(g alertDigestGroup) bool { return g.Cluster == a.Cluster })
 	if i < 0 {
-		digests = append(digests, alertDigestGroup{Cluster: a.Cluster, FirstKeys: []string{}})
+		digests = append(digests, alertDigestGroup{Cluster: a.Cluster, FirstKeys: []string{}, FlappingKeys: []string{}})
 		i = len(digests) - 1
 	}
 
@@ -477,6 +522,14 @@ func addToDigest(digests []alertDigestGroup, a alertIn, severity string) []alert
 
 	if len(g.FirstKeys) < alertDigestKeys {
 		g.FirstKeys = append(g.FirstKeys, a.Key)
+	}
+
+	if flapping {
+		g.Flapping++
+
+		if len(g.FlappingKeys) < alertDigestKeys {
+			g.FlappingKeys = append(g.FlappingKeys, a.Key)
+		}
 	}
 
 	return digests

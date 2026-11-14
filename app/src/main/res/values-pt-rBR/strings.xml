@@ -6583,4 +6583,9 @@
     <string name="relay_demo">Indisponível no cluster de demonstração</string>
     <string name="relay_pick_distributor">Receber push por</string>
     <string name="relay_truncated_n">Mais %1$d alertas no Alertmanager</string>
+    <string name="alert_rules_flapping">Agrupar alertas intermitentes no resumo</string>
+    <string name="alert_rules_flapping_desc">Um aviso que dispara e se recupera várias vezes num dia vai para o resumo, marcado como intermitente. Alertas críticos continuam notificando toda vez.</string>
+    <string name="alert_rules_flapping_summary">A partir de %1$d disparos em 24 horas</string>
+    <string name="alert_flapping_chip">Intermitente · disparou %1$d vezes em 24 h</string>
+    <string name="alert_digest_flapping">%1$d intermitentes: %2$s</string>
 </resources>

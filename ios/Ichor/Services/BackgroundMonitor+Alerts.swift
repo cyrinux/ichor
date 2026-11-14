@@ -8,15 +8,18 @@ import WidgetKit
 // The alerts a check found: their text in the user's language, their actions and links, and posting them.
 extension BackgroundMonitor {
     /// Each cluster's alerts as notifications to post, named after their cluster (the
-    /// notification's subtitle); `snoozes` marks the ones snoozed (postAll drops them).
+    /// notification's subtitle); `snoozes` marks the ones snoozed (postAll drops them); `flaps`
+    /// gives each alert's opens in 24 h, by cluster key then alert key (see flapCounts).
     // Internal, not private: check() in BackgroundMonitor.swift posts its outcomes.
-    static func pending(_ outcomes: [ClusterAlerts], labels: ClusterLabels, snoozes: AlertSnoozes, now: Date) async
-        -> [PendingAlert]
-    {
+    static func pending(
+        _ outcomes: [ClusterAlerts], labels: ClusterLabels, snoozes: AlertSnoozes, now: Date,
+        flaps: [String: [String: Int]] = [:]
+    ) async -> [PendingAlert] {
         var out: [PendingAlert] = []
         for outcome in outcomes {
             let context = outcome.job.context
             let fingerprint = context.fingerprint
+            let opens = flaps[outcome.job.key] ?? [:]
             for alert in outcome.alerts {
                 let link = alertLink(alert, snapshot: outcome.snapshot, cluster: context.clusterID)
                 let text = localized(alert, snapshot: outcome.snapshot, previous: outcome.previous, now: now)
@@ -31,7 +34,8 @@ extension BackgroundMonitor {
                             cluster: fingerprint, key: alert.key,
                             kind: alertRuleKind(key: alert.key, kube: outcome.snapshot.kube), severity: severity,
                             problem: alert.problem,
-                            snoozed: snoozes.isSnoozed(cluster: fingerprint, key: alert.key, now: now)),
+                            snoozed: snoozes.isSnoozed(cluster: fingerprint, key: alert.key, now: now),
+                            flaps: opens[alert.key] ?? 0),
                         localized: text, link: link,
                         actions: alertActions(
                             key: alert.key, problem: alert.problem, canWake: wake, canAcknowledgePage: page),

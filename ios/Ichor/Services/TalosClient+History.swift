@@ -31,6 +31,12 @@ extension TalosClient {
         try await json { IchorgoHistoryVolumeForecast(ring, now, Double(critical), $0) }
     }
 
+    /// The alerts that opened more than once in the `hours` before `now` (epoch ms; 0 → 24 h):
+    /// the alert rules' flapping check and the History marker. Not masked: the keys are the app's own.
+    static func historyFlaps(ring: Data?, now: Int64, hours: Int = 24) async throws -> HistoryFlaps {
+        try await json { IchorgoHistoryAlertFlaps(ring, now, hours, $0) }
+    }
+
     /// The ring as anonymised JSON (nodes, volumes and alerts renamed), for the support bundle.
     static func historyExport(ring: Data?) async throws -> String {
         try await run { IchorgoHistoryExport(ring, $0) }

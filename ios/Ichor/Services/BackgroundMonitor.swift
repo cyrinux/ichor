@@ -302,10 +302,12 @@ enum BackgroundMonitor {
         }
         saveReachability(reach)
         // Real names only: under the screenshot mode the run read masked ones.
+        var flaps: [String: [String: Int]] = [:]
         if historyRecordingAllowed(privacyMasked: UserDefaults.standard.bool(forKey: PrivacyKeys.enabled)) {
             await recordHistory(history, at: now)
-            // The storage trends come from the ring with this run's record in it.
+            // The storage trends and the flapping counts come from the ring with this run's record in it.
             outcomes += await evaluateTrends(history, jobs: jobs, snapshots: &snapshots, now: now)
+            flaps = await flapCounts(outcomes, rules: AlertRulesStore.load(), now: now)
         }
         // Ranked before the save, which reloads the widgets and sends the watch the new tally.
         await publishFleet(contexts: summary.contexts, snapshots: snapshots, reachability: reach, now: now)
@@ -318,7 +320,7 @@ enum BackgroundMonitor {
         let names = UserDefaults.standard.dictionary(forKey: "clusterNames") as? [String: String] ?? [:]
         let labels = ClusterLabels(names: names, masked: UserDefaults.standard.bool(forKey: PrivacyKeys.enabled))
         let snoozes = AlertSnoozeStore.current(now: now)
-        var posts = await pending(outcomes, labels: labels, snoozes: snoozes, now: now)
+        var posts = await pending(outcomes, labels: labels, snoozes: snoozes, now: now, flaps: flaps)
         posts += pendingProposals(proposals, labels: labels, snoozes: snoozes, now: now)
         if let signIns {
             posts += pendingSignIns(signIns, contexts: contexts, labels: labels, snoozes: snoozes, now: now)
