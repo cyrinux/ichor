@@ -1,6 +1,77 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Top messages" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Messages fréquents" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Mensajes frecuentes" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Часті повідомлення" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Häufige Meldungen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Messaggi frequenti" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "常见消息" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "頻出メッセージ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Mensagens frequentes" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Частые сообщения" } }
+      }
+    },
+    "%lld × · %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld × · %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld × · %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld × · %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld × · %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld × · %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld × · %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld 次 · %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld 回 · %2$@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld × · %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld × · %2$@" } }
+      }
+    },
+    "in %lld pods" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "dans %lld pods" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "en %lld pods" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "у %lld подах" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "in %lld Pods" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "in %lld pod" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "来自 %lld 个 Pod" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld 個の Pod" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "em %lld pods" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "в %lld подах" } }
+      }
+    },
+    "Top messages groups a log of at least %lld lines." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les messages fréquents regroupent un journal d’au moins %lld lignes." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Los mensajes frecuentes agrupan un registro de al menos %lld líneas." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Часті повідомлення групують журнал щонайменше з %lld рядків." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Häufige Meldungen fassen ein Log ab %lld Zeilen zusammen." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "I messaggi frequenti raggruppano un log di almeno %lld righe." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "常见消息需要至少 %lld 行日志才能分组。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "頻出メッセージは %lld 行以上のログをまとめます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "As mensagens frequentes agrupam um log de pelo menos %lld linhas." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Частые сообщения группируют журнал не короче %lld строк." } }
+      }
+    },
+    "Numbers, ids, addresses and durations are masked as <*>. Tap a message to filter the log on it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les nombres, identifiants, adresses et durées sont masqués en <*>. Touchez un message pour filtrer le journal dessus." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Los números, identificadores, direcciones y duraciones se enmascaran como <*>. Toca un mensaje para filtrar el registro por él." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Числа, ідентифікатори, адреси й тривалості замінено на <*>. Торкніться повідомлення, щоб відфільтрувати журнал за ним." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zahlen, IDs, Adressen und Dauern werden als <*> maskiert. Tippe auf eine Meldung, um das Log danach zu filtern." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Numeri, ID, indirizzi e durate sono mascherati come <*>. Tocca un messaggio per filtrare il log su di esso." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "数字、ID、地址和时长显示为 <*>。点按一条消息即可按它筛选日志。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "数値、ID、アドレス、時間は <*> で表示されます。メッセージをタップするとログをそれで絞り込みます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Números, IDs, endereços e durações aparecem como <*>. Toque numa mensagem para filtrar o log por ela." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Числа, идентификаторы, адреса и длительности заменены на <*>. Коснитесь сообщения, чтобы отфильтровать журнал по нему." } }
+      }
+    },
     "%@ memory critical %@" : {
       "extractionState" : "manual",
       "localizations" : {

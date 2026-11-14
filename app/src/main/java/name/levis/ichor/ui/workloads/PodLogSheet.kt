@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.FormatListNumbered
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Share
 import name.levis.ichor.ui.design.IchorAssistChip
@@ -32,6 +33,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.rememberScrollState
@@ -231,6 +233,17 @@ fun PodLogSheet(
     LaunchedEffect(follow, query.container, lifecycle) {
         if (follow) lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { followVm.follow(pod.namespace, pod.name, query.container) }
     }
+    // The log read once grouped into its repeated messages; a tap filters the log on one.
+    var topMessages by rememberSaveable(pod.key) { mutableStateOf(false) }
+    if (topMessages) {
+        val lines = remember(snapshot) { snapshot?.text.orEmpty().lines().filter { it.isNotBlank() } }
+        LogTemplatesSheet(
+            lineCount = lines.size,
+            load = { appContext.kubeRepository.logTemplates(lines) },
+            onPick = { vm.load(query.copy(filter = query.filter.copy(text = it, regex = false))) },
+            onDismiss = { topMessages = false },
+        )
+    }
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxHeight(0.92f).padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -242,6 +255,12 @@ fun PodLogSheet(
                 PinButton(ShareTarget.pod(pod.namespace, pod.name), pod.name)
                 ShareLinkButton(ShareTarget.pod(pod.namespace, pod.name), icon = Icons.Outlined.Link)
                 AddToHomeButton(ShareTarget.pod(pod.namespace, pod.name), pod.name)
+                TooltipIconButton(
+                    Icons.Outlined.FormatListNumbered,
+                    stringResource(R.string.log_templates_title),
+                    enabled = !follow && !events && !snapshot?.text.isNullOrEmpty(),
+                    onClick = { topMessages = true },
+                )
                 TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.pod_logs_copy), enabled = hasText, onClick = {
                     withPlainText {
                         copyLog(context, pod, it)

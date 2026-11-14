@@ -6605,4 +6605,9 @@
     <string name="alert_memory_trend_ok_title">%1$s memory no longer growing fast</string>
     <string name="settings_memory_trend">Warn before a node runs out of memory</string>
     <string name="settings_memory_trend_summary">Notifies when a node\'s memory growth over the last week would make it critical (90 %%) within %1$d days, and once it no longer does. Uses the history of the checks.</string>
+    <string name="log_templates_title">Top messages</string>
+    <string name="log_templates_count">%1$d × · %2$s</string>
+    <string name="log_templates_pods">in %1$d pods</string>
+    <string name="log_templates_empty">Top messages groups a log of at least %1$d lines.</string>
+    <string name="log_templates_filter_hint">Numbers, ids, addresses and durations are masked as &lt;*&gt;. Tap a message to filter the log on it.</string>
 </resources>

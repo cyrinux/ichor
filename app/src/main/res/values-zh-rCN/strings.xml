@@ -6459,4 +6459,9 @@
     <string name="alert_memory_trend_ok_title">%1$s 的内存不再快速增长</string>
     <string name="settings_memory_trend">在节点内存耗尽前提醒</string>
     <string name="settings_memory_trend_summary">当节点内存在过去一周的增长会使其在 %1$d 天内达到严重水平（90 %%）时提醒，不再如此时也会告知。使用检查历史。</string>
+    <string name="log_templates_title">常见消息</string>
+    <string name="log_templates_count">%1$d 次 · %2$s</string>
+    <string name="log_templates_pods">来自 %1$d 个 Pod</string>
+    <string name="log_templates_empty">常见消息需要至少 %1$d 行日志才能分组。</string>
+    <string name="log_templates_filter_hint">数字、ID、地址和时长显示为 &lt;*&gt;。点按一条消息即可按它筛选日志。</string>
 </resources>

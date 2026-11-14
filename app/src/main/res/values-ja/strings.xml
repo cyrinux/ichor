@@ -6459,4 +6459,9 @@
     <string name="alert_memory_trend_ok_title">%1$s のメモリの急増が収まりました</string>
     <string name="settings_memory_trend">ノードのメモリが不足する前に警告</string>
     <string name="settings_memory_trend_summary">過去 1 週間のノードのメモリ増加により %1$d 日以内に危険域（90 %%）に達しそうなときと、そうでなくなったときに通知します。チェックの履歴を使います。</string>
+    <string name="log_templates_title">頻出メッセージ</string>
+    <string name="log_templates_count">%1$d 回 · %2$s</string>
+    <string name="log_templates_pods">%1$d 個の Pod</string>
+    <string name="log_templates_empty">頻出メッセージは %1$d 行以上のログをまとめます。</string>
+    <string name="log_templates_filter_hint">数値、ID、アドレス、時間は &lt;*&gt; で表示されます。メッセージをタップするとログをそれで絞り込みます。</string>
 </resources>

@@ -6599,4 +6599,9 @@
     <string name="alert_memory_trend_ok_title">La mémoire de %1$s ne grimpe plus vite</string>
     <string name="settings_memory_trend">Prévenir avant qu’un nœud manque de mémoire</string>
     <string name="settings_memory_trend_summary">Notifie quand la croissance de la mémoire d’un nœud sur la dernière semaine la rendrait critique (90 %%) d’ici %1$d jours, puis quand ce n’est plus le cas. Utilise l’historique des vérifications.</string>
+    <string name="log_templates_title">Messages fréquents</string>
+    <string name="log_templates_count">%1$d × · %2$s</string>
+    <string name="log_templates_pods">dans %1$d pods</string>
+    <string name="log_templates_empty">Les messages fréquents regroupent un journal d’au moins %1$d lignes.</string>
+    <string name="log_templates_filter_hint">Les nombres, identifiants, adresses et durées sont masqués en &lt;*&gt;. Touchez un message pour filtrer le journal dessus.</string>
 </resources>

@@ -6857,4 +6857,9 @@
     <string name="alert_memory_trend_ok_title">Пам’ять %1$s більше не зростає швидко</string>
     <string name="settings_memory_trend">Попереджати, перш ніж вузлу забракне пам’яті</string>
     <string name="settings_memory_trend_summary">Сповіщає, коли зростання пам’яті вузла за останній тиждень зробить її критичною (90 %%) протягом %1$d дн., і коли вже ні. Використовує історію перевірок.</string>
+    <string name="log_templates_title">Часті повідомлення</string>
+    <string name="log_templates_count">%1$d × · %2$s</string>
+    <string name="log_templates_pods">у %1$d подах</string>
+    <string name="log_templates_empty">Часті повідомлення групують журнал щонайменше з %1$d рядків.</string>
+    <string name="log_templates_filter_hint">Числа, ідентифікатори, адреси й тривалості замінено на &lt;*&gt;. Торкніться повідомлення, щоб відфільтрувати журнал за ним.</string>
 </resources>

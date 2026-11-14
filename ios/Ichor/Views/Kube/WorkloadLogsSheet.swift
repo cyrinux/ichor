@@ -10,6 +10,8 @@ struct WorkloadLogsSheet: View {
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<WorkloadLogs> = .loading
     @State private var filter = LogFilter()
+    /// The merged lines while their Top messages sheet is open.
+    @State private var topLines: [WorkloadLogLine]?
     @State private var tail = workloadLogTails.last ?? 2000
     @State private var refreshes = 0
     /// The latest load: an older one (the Go call ignores cancellation) never lands after it.
@@ -49,6 +51,11 @@ struct WorkloadLogsSheet: View {
                         if let shareFile {
                             ShareLink(item: shareFile) { Label("Share", systemImage: "square.and.arrow.up") }
                         }
+                        Button {
+                            topLines = logs.lines
+                        } label: {
+                            Label("Top messages", systemImage: "list.number")
+                        }
                     } label: {
                         Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
                     }
@@ -80,6 +87,16 @@ struct WorkloadLogsSheet: View {
         .task(id: "\(filter)/\(tail)/\(refreshes)/\(model.dataGeneration)") { await load() }
         .onDisappear { removeShareFile() }
         .messageAlert($message)
+        // The merged lines grouped into their repeated messages, with the pods that wrote each.
+        .sheet(isPresented: Binding(get: { topLines != nil }, set: { if !$0 { topLines = nil } })) {
+            let lines = topLines ?? []
+            LogTemplatesSheet(
+                lineCount: lines.count, load: { try await TalosClient.logTemplates(workload: lines) }
+            ) {
+                filter.text = $0
+                filter.regex = false
+            }
+        }
     }
 
     private func load() async {
