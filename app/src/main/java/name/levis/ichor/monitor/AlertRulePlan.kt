@@ -31,6 +31,7 @@ val Alert.ruleKind: String
         AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> "trend"
         AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> "sensor"
         AlertKind.KUBESPAN_DOWN, AlertKind.KUBESPAN_UP -> "kubespan"
+        AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK -> "memory"
         AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> "plugin"
         AlertKind.PROPOSAL_MERGED, AlertKind.PROPOSAL_CLOSED -> "proposal"
         AlertKind.SIGN_IN_REQUIRED -> "signin"
@@ -54,7 +55,7 @@ val Alert.ruleSeverity: String
         AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK -> detail.substringAfterLast('|')
         AlertKind.AM_FIRING, AlertKind.AM_RESOLVED -> AmDetail.parse(detail).severity.lowercase()
         AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageSeverity(detail)
-        AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK ->
+        AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK, AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK ->
             if (TrendDetail.parse(detail).critical) ALERT_SEVERITY_CRITICAL else ALERT_SEVERITY_WARNING
         AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorSeverity(detail)
         AlertKind.KUBESPAN_DOWN, AlertKind.KUBESPAN_UP -> kubespanSeverity(detail)

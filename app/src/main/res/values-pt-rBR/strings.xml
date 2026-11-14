@@ -6588,4 +6588,10 @@
     <string name="alert_rules_flapping_summary">A partir de %1$d disparos em 24 horas</string>
     <string name="alert_flapping_chip">Intermitente · disparou %1$d vezes em 24 h</string>
     <string name="alert_digest_flapping">%1$d intermitentes: %2$s</string>
+    <string name="alert_memory_trend_title">Memória de %1$s crítica em cerca de %2$d dias</string>
+    <string name="alert_memory_trend_day">Memória de %1$s crítica em cerca de um dia</string>
+    <string name="alert_memory_trend_soon">Memória de %1$s crítica em menos de um dia</string>
+    <string name="alert_memory_trend_ok_title">A memória de %1$s não cresce mais rápido</string>
+    <string name="settings_memory_trend">Avisar antes que um nó fique sem memória</string>
+    <string name="settings_memory_trend_summary">Avisa quando o crescimento da memória de um nó na última semana a tornaria crítica (90 %%) em %1$d dias, e quando não mais. Usa o histórico das verificações.</string>
 </resources>

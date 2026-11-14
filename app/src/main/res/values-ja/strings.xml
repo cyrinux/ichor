@@ -6453,4 +6453,10 @@
     <string name="alert_rules_flapping_summary">24 時間で %1$d 回の発生から</string>
     <string name="alert_flapping_chip">繰り返し · 24 時間で %1$d 回発生</string>
     <string name="alert_digest_flapping">繰り返し %1$d 件: %2$s</string>
+    <string name="alert_memory_trend_title">%1$s のメモリは約 %2$d 日で危険域</string>
+    <string name="alert_memory_trend_day">%1$s のメモリは約 1 日で危険域</string>
+    <string name="alert_memory_trend_soon">%1$s のメモリは 1 日以内に危険域</string>
+    <string name="alert_memory_trend_ok_title">%1$s のメモリの急増が収まりました</string>
+    <string name="settings_memory_trend">ノードのメモリが不足する前に警告</string>
+    <string name="settings_memory_trend_summary">過去 1 週間のノードのメモリ増加により %1$d 日以内に危険域（90 %%）に達しそうなときと、そうでなくなったときに通知します。チェックの履歴を使います。</string>
 </resources>

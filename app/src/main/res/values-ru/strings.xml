@@ -6855,4 +6855,10 @@
     <string name="alert_rules_flapping_summary">От %1$d срабатываний за 24 часа</string>
     <string name="alert_flapping_chip">Нестабильное · сработало %1$d раз за 24 ч</string>
     <string name="alert_digest_flapping">Нестабильных: %1$d: %2$s</string>
+    <string name="alert_memory_trend_title">Память %1$s станет критической примерно через %2$d дн.</string>
+    <string name="alert_memory_trend_day">Память %1$s станет критической примерно через день</string>
+    <string name="alert_memory_trend_soon">Память %1$s станет критической меньше чем через день</string>
+    <string name="alert_memory_trend_ok_title">Память %1$s больше не растёт быстро</string>
+    <string name="settings_memory_trend">Предупреждать, пока у узла не кончилась память</string>
+    <string name="settings_memory_trend_summary">Уведомляет, когда рост памяти узла за последнюю неделю сделает её критической (90 %%) за %1$d дн., и когда уже нет. Использует историю проверок.</string>
 </resources>

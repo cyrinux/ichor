@@ -84,6 +84,13 @@ enum HistoryStore {
         return (try? await TalosClient.historyFlaps(ring: data, now: millis))?.opensByAlertKey ?? [:]
     }
 
+    /// Each node's memory projection on `cluster` now; nil without a ring (or when it cannot be read).
+    static func memoryForecast(cluster: String, now: Date = Date()) async -> HistoryMemoryForecast? {
+        guard let data = bytes(cluster: cluster) else { return nil }
+        let millis = Int64(now.timeIntervalSince1970 * 1000)
+        return try? await TalosClient.historyMemoryForecast(ring: data, now: millis)
+    }
+
     /// What happened on `cluster` after `lastLooked`; nil without a ring.
     static func since(cluster: String, lastLooked: Int64) async -> HistorySinceSummary? {
         guard let data = bytes(cluster: cluster) else { return nil }

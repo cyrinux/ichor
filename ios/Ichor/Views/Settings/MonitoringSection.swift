@@ -13,6 +13,7 @@ struct MonitoringSection: View {
     @State private var storageWatched = BackgroundMonitor.storageWatched
     @State private var storageThresholds = BackgroundMonitor.storageThresholds
     @State private var storageTrendWatched = BackgroundMonitor.storageTrendWatched
+    @State private var memoryTrendWatched = BackgroundMonitor.memoryTrendWatched
     @State private var sensorsWatched = BackgroundMonitor.sensorsWatched
     @State private var kubespanWatched = BackgroundMonitor.kubespanWatched
     @State private var sensorThreshold = BackgroundMonitor.sensorThreshold
@@ -163,6 +164,25 @@ struct MonitoringSection: View {
                 }
                 .disabled(!enabled)
             }
+            // Opt-in too: no extra call, a line through each node's memory use in the history kept on this phone.
+            Toggle(
+                isOn: Binding(
+                    get: { memoryTrendWatched },
+                    set: { on in
+                        BackgroundMonitor.memoryTrendWatched = on
+                        memoryTrendWatched = on
+                    })
+            ) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Warn before a node runs out of memory")
+                    Text(
+                        "Notifies when a node's memory growth over the last week would make it critical within 3 days, and once it no longer does. Uses the history of the checks."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
             // On by default: every node's KubeSpan peers are read at every check.
             Toggle(
                 isOn: Binding(
