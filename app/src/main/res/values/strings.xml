@@ -6599,4 +6599,10 @@
     <string name="alert_rules_flapping_summary">From %1$d opens in 24 hours</string>
     <string name="alert_flapping_chip">Flapping · opened %1$d times in 24 h</string>
     <string name="alert_digest_flapping">%1$d flapping: %2$s</string>
+    <string name="alert_memory_trend_title">%1$s memory critical in about %2$d days</string>
+    <string name="alert_memory_trend_day">%1$s memory critical in about a day</string>
+    <string name="alert_memory_trend_soon">%1$s memory critical in less than a day</string>
+    <string name="alert_memory_trend_ok_title">%1$s memory no longer growing fast</string>
+    <string name="settings_memory_trend">Warn before a node runs out of memory</string>
+    <string name="settings_memory_trend_summary">Notifies when a node\'s memory growth over the last week would make it critical (90 %%) within %1$d days, and once it no longer does. Uses the history of the checks.</string>
 </resources>

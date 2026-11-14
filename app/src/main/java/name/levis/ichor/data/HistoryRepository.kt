@@ -4,6 +4,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import name.levis.ichor.model.HistoryFlaps
 import name.levis.ichor.model.HistoryForecast
+import name.levis.ichor.model.HistoryMemoryForecast
+import name.levis.ichor.model.MEMORY_CRITICAL_PERCENT
 import name.levis.ichor.model.HistoryQuery
 import name.levis.ichor.model.HistorySince
 import name.levis.ichorgo.Ichorgo
@@ -40,6 +42,15 @@ class HistoryRepository(private val store: HistoryStore) {
     suspend fun flaps(fingerprint: String, nowMillis: Long, windowHours: Int = 24): HistoryFlaps? = read(fingerprint) { ring ->
         TalosJson.decodeFromString(HistoryFlaps.serializer(), Ichorgo.historyAlertFlaps(ring, nowMillis, windowHours.toLong()))
     }
+
+    /**
+     * Each node's memory trend over the 7 days before [nowMillis], projected to [criticalPercent]
+     * and to full: a leak shows days before the node starts evicting pods.
+     */
+    suspend fun memoryForecast(fingerprint: String, nowMillis: Long, criticalPercent: Int = MEMORY_CRITICAL_PERCENT): HistoryMemoryForecast? =
+        read(fingerprint) { ring ->
+            TalosJson.decodeFromString(HistoryMemoryForecast.serializer(), Ichorgo.historyMemoryForecast(ring, nowMillis, criticalPercent.toDouble()))
+        }
 
     /** The cluster [fingerprint]'s whole ring as anonymised JSON, for a support bundle. */
     suspend fun export(fingerprint: String): String? = read(fingerprint) { ring -> Ichorgo.historyExport(ring) }

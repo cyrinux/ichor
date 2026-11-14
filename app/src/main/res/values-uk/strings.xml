@@ -6851,4 +6851,10 @@
     <string name="alert_rules_flapping_summary">Від %1$d спрацювань за 24 години</string>
     <string name="alert_flapping_chip">Нестабільне · спрацювало %1$d разів за 24 год</string>
     <string name="alert_digest_flapping">Нестабільних: %1$d: %2$s</string>
+    <string name="alert_memory_trend_title">Пам’ять %1$s стане критичною приблизно за %2$d дн.</string>
+    <string name="alert_memory_trend_day">Пам’ять %1$s стане критичною приблизно за день</string>
+    <string name="alert_memory_trend_soon">Пам’ять %1$s стане критичною менш ніж за день</string>
+    <string name="alert_memory_trend_ok_title">Пам’ять %1$s більше не зростає швидко</string>
+    <string name="settings_memory_trend">Попереджати, перш ніж вузлу забракне пам’яті</string>
+    <string name="settings_memory_trend_summary">Сповіщає, коли зростання пам’яті вузла за останній тиждень зробить її критичною (90 %%) протягом %1$d дн., і коли вже ні. Використовує історію перевірок.</string>
 </resources>

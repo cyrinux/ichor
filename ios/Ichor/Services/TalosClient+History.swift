@@ -37,6 +37,14 @@ extension TalosClient {
         try await json { IchorgoHistoryAlertFlaps(ring, now, hours, $0) }
     }
 
+    /// Each node's memory use projected from its last week at `now` (epoch ms) to `critical` (% used)
+    /// and to full: a leak, days before the node starts evicting pods.
+    static func historyMemoryForecast(ring: Data?, now: Int64, critical: Int = memoryCriticalPercent) async throws
+        -> HistoryMemoryForecast
+    {
+        try await json { IchorgoHistoryMemoryForecast(ring, now, Double(critical), $0) }
+    }
+
     /// The ring as anonymised JSON (nodes, volumes and alerts renamed), for the support bundle.
     static func historyExport(ring: Data?) async throws -> String {
         try await run { IchorgoHistoryExport(ring, $0) }

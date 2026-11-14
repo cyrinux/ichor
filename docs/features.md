@@ -353,7 +353,12 @@ Part of the [Ichor documentation](../README.md#documentation).
   to 10) goes into the digest instead of its own notification, recovery included, and the
   digest names it ("2 flapping: …"). The count comes from the cluster's history on the phone,
   and the "Since you last looked" card marks the alert as flapping. A critical alert still
-  notifies every time. The rules travel in backups.
+  notifies every time. The rules travel in backups. A node's History card says where its
+  memory use is heading: the same line through the last week as a volume's fill ("critical in
+  ~6 days", or "growing ~1.8 % a day" when the fit is too noisy to project), so a leak shows
+  before the node starts evicting pods. "Warn before a node runs out of memory" (off by
+  default) posts once the projection is within 3 days of 90 % and clears past 7, through the
+  same alert rules.
 - **Widgets:** the home-screen widget, and on Wear OS a tile and a complication with the health
   of the cluster on screen on the phone (ready count in its colour, "N down", etcd alarms; the
   check's age once it is over an hour old). The phone sends them its last background check

@@ -19,6 +19,7 @@ const historyMagic = "ICHH"
 
 var historyCommands = []command{
 	{name: "incident-summary", args: "RING_FILE [SINCE] [names]", noConfig: true, run: probeIncidentSummary},
+	{name: "history-memory-forecast", args: "RING_FILE [CRITICAL]", noConfig: true, run: probeMemoryForecast},
 	{name: "history-flaps", args: "RING_FILE [HOURS]", noConfig: true, run: probeHistoryFlaps},
 }
 
@@ -83,6 +84,34 @@ func probeIncidentSummary(e env) (string, error) {
 	}
 
 	return ichorgo.IncidentSummary(e.context, ring, now-window.Milliseconds(), now, flag.Arg(3) != "names")
+}
+
+// probeMemoryForecast prints where each node's memory use in RING_FILE (a ring or JSON lines,
+// as incident-summary reads it) is heading, projected to CRITICAL percent (90 by default).
+func probeMemoryForecast(env) (string, error) {
+	if flag.Arg(1) == "" {
+		return "", errors.New("usage: history-memory-forecast RING_FILE [CRITICAL]")
+	}
+
+	crit := 0.0
+
+	if arg := flag.Arg(2); arg != "" {
+		c, err := strconv.ParseFloat(arg, 64)
+		if err != nil {
+			return "", fmt.Errorf("CRITICAL %q: %w", arg, err)
+		}
+
+		crit = c
+	}
+
+	now := time.Now().UnixMilli()
+
+	ring, err := readProbeRing(flag.Arg(1), now)
+	if err != nil {
+		return "", err
+	}
+
+	return ichorgo.HistoryMemoryForecast(ring, now, crit)
 }
 
 // parseSince reads a window: a Go duration ("6h", "90m") or a number of days ("7d").

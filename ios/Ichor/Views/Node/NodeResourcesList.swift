@@ -35,6 +35,8 @@ struct ResourcesList: View {
     /// Memory used (%) over the history's window; a line under two points is left out.
     let memory: [HistoryPoint]
     let window: ClosedRange<Int64>
+    /// Where the memory use is heading (a leak: "Critical in ~6 days"); nil for a flat node.
+    var memoryTrend: VolumeForecastLine?
     let onPressureDetails: () -> Void
 
     /// System and Memory always; Pressure and Disks when shown.
@@ -73,6 +75,16 @@ struct ResourcesList: View {
                         HistorySparkline(
                             points: memory, from: window.lowerBound, to: window.upperBound,
                             label: Text("Memory used over the period"))
+                    }
+                    if let memoryTrend {
+                        // A projection within a week stands out, a pace alone stays muted (as a volume's).
+                        Label {
+                            Text(verbatim: memoryTrend.localized)
+                        } icon: {
+                            Image(systemName: "chart.line.uptrend.xyaxis")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(memoryTrend.isWithinAWeek ? Color.orange : Color.secondary)
                     }
                 } header: {
                     Text("Memory").sectionTarget("memory")

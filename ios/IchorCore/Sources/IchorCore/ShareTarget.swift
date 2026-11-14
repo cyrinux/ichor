@@ -177,6 +177,13 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
             let kept = snapshot.sensorIssues[subject].map { SensorIssue(value: $0).hostname } ?? ""
             return .hardware(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept)
         case "kubespan": return .screen(.kubespan)
+        case "memory":
+            // "<node address>:trend": the node, whose History card shows the trend.
+            let address = memoryTrendNode(subject: subject)
+            guard !address.isEmpty else { return nil }
+            let kept = snapshot.memoryTrends[address].map { StorageTrendIssue(value: $0).hostname } ?? ""
+            let hostname = kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept
+            return .node(address: address, hostname: hostname, tab: "")
         case "unreachable": return .screen(.cluster)
         case "plugin":
             // "plugin:<id>:<finding>:…": the plugin's screen.

@@ -23,6 +23,7 @@ val Alert.channel: AlertChannel
     get() = when (kind) {
         AlertKind.NODE_READY, AlertKind.NODE_NOT_READY, AlertKind.NODE_UNREACHABLE, AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK,
         AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK, AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK,
+        AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK,
         -> AlertChannel.NODES
         AlertKind.KUBESPAN_DOWN, AlertKind.KUBESPAN_UP -> AlertChannel.MESH
         AlertKind.ETCD_ALARM, AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK, AlertKind.AM_FIRING, AlertKind.AM_RESOLVED,
@@ -80,6 +81,9 @@ fun Alert.shareTarget(): ShareTarget? = when (kind) {
     // "sensor:node|hot" or "sensor:node|throttled": that node's Hardware screen.
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> ShareTarget.hardware(key.substringAfter(':').substringBefore('|'), subject)
     AlertKind.KUBESPAN_DOWN, AlertKind.KUBESPAN_UP -> ShareTarget.screen(ShareTarget.KUBESPAN)
+    // "memory:<node address>:trend" (an IPv6 address has colons too): that node, whose History card shows the trend.
+    AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK ->
+        ShareTarget(target = ShareTarget.NODE, addr = key.removePrefix("memory:").removeSuffix(":trend"), host = subject)
 }
 
 /** Argo CD: "namespace/name"; Flux: "Kind namespace/name" (see [Alert.subject]). */

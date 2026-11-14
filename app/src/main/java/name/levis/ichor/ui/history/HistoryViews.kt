@@ -34,6 +34,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.HISTORY_NOT_READY
 import name.levis.ichor.model.HISTORY_READY
 import name.levis.ichor.model.HistoryForecast
+import name.levis.ichor.model.HistoryMemoryForecast
 import name.levis.ichor.model.HistoryNodeSpan
 import name.levis.ichor.model.HistoryQuery
 import name.levis.ichor.model.uncheckedTail
@@ -78,6 +79,21 @@ fun rememberVolumeForecast(): HistoryForecast? {
     val fingerprint = config?.activeSummary?.fingerprint
     val forecast by produceState<HistoryForecast?>(null, fingerprint, critical) {
         value = fingerprint?.let { app.historyRepository.forecast(it, System.currentTimeMillis(), critical) }
+    }
+    return forecast
+}
+
+/**
+ * The shown cluster's node memory trends, projected to 90 % (where evictions start); read once per
+ * cluster, null while it loads or without history.
+ */
+@Composable
+fun rememberMemoryForecast(): HistoryMemoryForecast? {
+    val app = LocalContext.current.applicationContext as TalosApp
+    val config by app.configRepository.config.collectAsStateWithLifecycle()
+    val fingerprint = config?.activeSummary?.fingerprint
+    val forecast by produceState<HistoryMemoryForecast?>(null, fingerprint) {
+        value = fingerprint?.let { app.historyRepository.memoryForecast(it, System.currentTimeMillis()) }
     }
     return forecast
 }

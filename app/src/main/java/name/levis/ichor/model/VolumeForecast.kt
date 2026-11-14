@@ -51,7 +51,10 @@ data class VolumeOutlook(val full: Int? = null, val critical: Int? = null, val g
 fun forecastDays(days: Double): Int = if (days < 1) 0 else days.roundToInt()
 
 /** What [VolumeForecast]'s row shows; null for a volume with no projection that does not grow. */
-fun VolumeForecast.outlook(): VolumeOutlook? {
+fun VolumeForecast.outlook(): VolumeOutlook? = trendOutlook(confident, daysToFull, daysToCritical, slopePerDay)
+
+/** A trend's outlook (volume or node memory): the projection when confident, else its growth, else null. */
+fun trendOutlook(confident: Boolean, daysToFull: Double?, daysToCritical: Double?, slopePerDay: Double): VolumeOutlook? {
     if (confident) {
         val full = daysToFull?.let(::forecastDays)
         val critical = daysToCritical?.let(::forecastDays)?.takeIf { full == null || it < full }

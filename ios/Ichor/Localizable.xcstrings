@@ -1,6 +1,63 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ memory critical %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ memory critical %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mémoire de %1$@ critique %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Memoria de %1$@ crítica %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Пам’ять %1$@ стане критичною %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Speicher von %1$@ kritisch %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Memoria di %1$@ critica %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ 的内存%2$@达到严重水平" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ のメモリは%2$@危険域" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Memória de %1$@ crítica %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Память %1$@ станет критической %2$@" } }
+      }
+    },
+    "%@ memory no longer growing fast" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La mémoire de %@ ne grimpe plus vite" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La memoria de %@ ya no crece rápido" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Пам’ять %@ більше не зростає швидко" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Speicher von %@ wächst nicht mehr schnell" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "La memoria di %@ non cresce più rapidamente" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 的内存不再快速增长" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ のメモリの急増が収まりました" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A memória de %@ não cresce mais rápido" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Память %@ больше не растёт быстро" } }
+      }
+    },
+    "Warn before a node runs out of memory" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Prévenir avant qu’un nœud manque de mémoire" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Avisar antes de que un nodo se quede sin memoria" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Попереджати, перш ніж вузлу забракне пам’яті" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Warnen, bevor einem Knoten der Speicher ausgeht" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvisa prima che un nodo esaurisca la memoria" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在节点内存耗尽前提醒" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノードのメモリが不足する前に警告" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Avisar antes que um nó fique sem memória" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Предупреждать, пока у узла не кончилась память" } }
+      }
+    },
+    "Notifies when a node's memory growth over the last week would make it critical within 3 days, and once it no longer does. Uses the history of the checks." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Notifie quand la croissance de la mémoire d’un nœud sur la dernière semaine la rendrait critique d’ici 3 jours, puis quand ce n’est plus le cas. Utilise l’historique des vérifications." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Avisa cuando el crecimiento de la memoria de un nodo en la última semana la volvería crítica en 3 días, y cuando ya no. Usa el historial de las comprobaciones." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сповіщає, коли зростання пам’яті вузла за останній тиждень зробить її критичною протягом 3 днів, і коли вже ні. Використовує історію перевірок." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Meldet, wenn das Speicherwachstum eines Knotens in der letzten Woche ihn binnen 3 Tagen kritisch machen würde, und wenn nicht mehr. Nutzt den Verlauf der Prüfungen." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvisa quando la crescita della memoria di un nodo nell’ultima settimana la renderebbe critica entro 3 giorni, e quando non più. Usa la cronologia dei controlli." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当节点内存在过去一周的增长会使其在 3 天内达到严重水平时提醒，不再如此时也会告知。使用检查历史。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "過去 1 週間のノードのメモリ増加により 3 日以内に危険域に達しそうなときと、そうでなくなったときに通知します。チェックの履歴を使います。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Avisa quando o crescimento da memória de um nó na última semana a tornaria crítica em 3 dias, e quando não mais. Usa o histórico das verificações." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Уведомляет, когда рост памяти узла за последнюю неделю сделает её критической в течение 3 дней, и когда уже нет. Использует историю проверок." } }
+      }
+    },
     "Fold flapping alerts into the digest" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -81,6 +81,11 @@ data class ClusterSnapshot(
      * [storageTrendStep]), set after the run's history record (see [withStorageTrends]).
      */
     val storageTrends: Map<String, String> = emptyMap(),
+    /**
+     * Nodes whose memory trend alert is open (node address → [TrendDetail], see
+     * [memoryTrendStep]), set after the run's history record (see [withMemoryTrends]).
+     */
+    val memoryTrends: Map<String, String> = emptyMap(),
     /** Watching node temperatures was on for this check (opt-in, Talos clusters only). */
     val sensorWatched: Boolean = false,
     /** The sensors could be read this time. */

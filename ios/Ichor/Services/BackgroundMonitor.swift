@@ -99,6 +99,14 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: storageTrendKey) }
     }
 
+    static let memoryTrendKey = "monitor.memoryTrend"
+    /// Opt-in: an early alert when a node's memory use, growing over the last week (the history
+    /// ring), would make it critical within days.
+    static var memoryTrendWatched: Bool {
+        get { UserDefaults.standard.bool(forKey: memoryTrendKey) }
+        set { UserDefaults.standard.set(newValue, forKey: memoryTrendKey) }
+    }
+
     static let sensorsKey = "monitor.sensors"
     /// Opt-in: also read every node's hottest sensor, to alert when one runs hot or is throttled.
     static var sensorsWatched: Bool {
@@ -307,6 +315,7 @@ enum BackgroundMonitor {
             await recordHistory(history, at: now)
             // The storage trends and the flapping counts come from the ring with this run's record in it.
             outcomes += await evaluateTrends(history, jobs: jobs, snapshots: &snapshots, now: now)
+            outcomes += await evaluateMemory(history, jobs: jobs, snapshots: &snapshots, now: now)
             flaps = await flapCounts(outcomes, rules: AlertRulesStore.load(), now: now)
         }
         // Ranked before the save, which reloads the widgets and sends the watch the new tally.
@@ -380,6 +389,35 @@ enum BackgroundMonitor {
                 forecast, open: snapshot.storageTrends, fillIssues: fill,
                 hostnames: snapshot.nodes.mapValues(\.hostname))
             snapshot.storageTrends = outcome.open
+            snapshots[input.key] = snapshot
+            if !outcome.alerts.isEmpty {
+                out.append(ClusterAlerts(job: job, alerts: outcome.alerts, snapshot: snapshot, previous: job.previous))
+            }
+        }
+        return out
+    }
+
+    /// The nodes' memory trend alerts of this run, from the ring with this run's record in it (see
+    /// evaluateMemoryTrends); the open ones are kept in each snapshot. A cluster not read this run,
+    /// or whose ring cannot be read, keeps its open ones; with the warning off they are forgotten.
+    private static func evaluateMemory(
+        _ inputs: [HistoryInput], jobs: [ClusterJob], snapshots: inout [String: ClusterSnapshot], now: Date
+    ) async -> [ClusterAlerts] {
+        let watched = memoryTrendWatched
+        var out: [ClusterAlerts] = []
+        for input in inputs {
+            guard input.current != nil, var snapshot = snapshots[input.key] else { continue }
+            guard watched else {
+                snapshot.memoryTrends = [:]
+                snapshots[input.key] = snapshot
+                continue
+            }
+            guard let job = jobs.first(where: { $0.key == input.key }),
+                let forecast = await HistoryStore.memoryForecast(cluster: input.key, now: now)
+            else { continue }
+            let outcome = evaluateMemoryTrends(
+                forecast, open: snapshot.memoryTrends, hostnames: snapshot.nodes.mapValues(\.hostname))
+            snapshot.memoryTrends = outcome.open
             snapshots[input.key] = snapshot
             if !outcome.alerts.isEmpty {
                 out.append(ClusterAlerts(job: job, alerts: outcome.alerts, snapshot: snapshot, previous: job.previous))

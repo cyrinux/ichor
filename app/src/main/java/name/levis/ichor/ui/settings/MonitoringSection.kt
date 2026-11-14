@@ -64,6 +64,7 @@ fun MonitoringSection(app: TalosApp) {
     val alertmanagerWatched by store.alertmanagerWatched.collectAsStateWithLifecycle()
     val storageWatched by store.storageWatched.collectAsStateWithLifecycle()
     val storageTrend by store.storageTrendAlerts.collectAsStateWithLifecycle()
+    val memoryTrend by store.memoryTrendAlerts.collectAsStateWithLifecycle()
     val sensorsWatched by store.sensorsWatched.collectAsStateWithLifecycle()
     val kubespanWatched by store.kubespanWatched.collectAsStateWithLifecycle()
     val unreachable by store.unreachableAlerts.collectAsStateWithLifecycle()
@@ -197,6 +198,19 @@ fun MonitoringSection(app: TalosApp) {
                     checked = storageTrend,
                     onCheckedChange = { store.setStorageTrendAlerts(it) },
                     enabled = enabled && storageWatched,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            // And for node memory: no extra call, the trend of the memory use the history keeps.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.settings_memory_trend), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.settings_memory_trend_summary, TREND_OPEN_DAYS.toInt()))
+                }
+                IchorSwitch(
+                    checked = memoryTrend,
+                    onCheckedChange = { store.setMemoryTrendAlerts(it) },
+                    enabled = enabled,
                     modifier = Modifier.padding(start = 12.dp),
                 )
             }

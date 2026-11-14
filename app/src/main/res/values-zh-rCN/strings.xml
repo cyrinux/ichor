@@ -6453,4 +6453,10 @@
     <string name="alert_rules_flapping_summary">24 小时内触发 %1$d 次起</string>
     <string name="alert_flapping_chip">波动 · 24 小时内触发 %1$d 次</string>
     <string name="alert_digest_flapping">%1$d 个波动：%2$s</string>
+    <string name="alert_memory_trend_title">%1$s 的内存约 %2$d 天后达到严重水平</string>
+    <string name="alert_memory_trend_day">%1$s 的内存约 1 天后达到严重水平</string>
+    <string name="alert_memory_trend_soon">%1$s 的内存不到 1 天就会达到严重水平</string>
+    <string name="alert_memory_trend_ok_title">%1$s 的内存不再快速增长</string>
+    <string name="settings_memory_trend">在节点内存耗尽前提醒</string>
+    <string name="settings_memory_trend_summary">当节点内存在过去一周的增长会使其在 %1$d 天内达到严重水平（90 %%）时提醒，不再如此时也会告知。使用检查历史。</string>
 </resources>

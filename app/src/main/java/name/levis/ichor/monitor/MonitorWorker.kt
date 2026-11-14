@@ -18,6 +18,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.HistoryForecast
+import name.levis.ichor.model.HistoryMemoryForecast
 import name.levis.ichor.model.HistoryRecord
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.AlertRules
@@ -94,7 +95,11 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         // (screenshot mode), so the open ones are kept as they are.
         val trendsOn = store.storageTrendAlerts.value
         val forecasts = if (trendsOn && !masked) storageForecasts(app, reads, now) else emptyMap()
-        val run = withStorageTrends(evaluated, before, reads, forecasts, enabled = trendsOn)
+        val storageRun = withStorageTrends(evaluated, before, reads, forecasts, enabled = trendsOn)
+        // The nodes' memory trends, likewise.
+        val memoryOn = store.memoryTrendAlerts.value
+        val memory = if (memoryOn && !masked) memoryForecasts(app, reads, now) else emptyMap()
+        val run = withMemoryTrends(storageRun, before, reads, memory, enabled = memoryOn)
         if (run.state != firstPass) store.saveState(run.state)
         scheduleWidgetStaleRefresh(applicationContext, run.state.clusters.values, now)
 
@@ -161,6 +166,12 @@ private suspend fun storageForecasts(app: TalosApp, reads: List<ClusterRead>, no
         app.historyRepository.forecast(read.context.fingerprint, now, critical)?.let { monitorKeyOf(read.context) to it }
     }.toMap()
 }
+
+/** Each read cluster's node memory forecast (monitor key → forecast), from the ring with this run's record in it. */
+private suspend fun memoryForecasts(app: TalosApp, reads: List<ClusterRead>, now: Long): Map<String, HistoryMemoryForecast> =
+    reads.filter(::wantsMemoryForecast).mapNotNull { read ->
+        app.historyRepository.memoryForecast(read.context.fingerprint, now)?.let { monitorKeyOf(read.context) to it }
+    }.toMap()
 
 /**
  * Posts a run's alerts under the alert rules (quiet hours, minimum severity, digest, repeat),
