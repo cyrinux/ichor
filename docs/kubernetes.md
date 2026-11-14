@@ -14,6 +14,14 @@ per pod, 4 MiB in all, keeping the newest. A pod that cannot answer (still start
 down) shows no lines; a refused `pods/log` shows the refusal. Only what the kubelet still keeps
 can be read. A pod's own log sheet has the same filter and time range.
 
+**Top messages** (in the toolbar of both sheets) groups the loaded lines into their most repeated
+messages: numbers, durations, ids (hex, UUIDs), IP addresses with their port, timestamps, quoted
+strings and a pod name's generated suffix become `<*>`, so "connection to 10.0.0.7:5432 refused
+after 30s" and its thousand twins are one row, with its count, its share of the log and, for a
+workload, how many pods wrote it. Words and field names are kept. A tap filters the log on the
+newest line of that message. It runs on the phone over the lines already loaded (the newest
+4,000), with no call to the cluster, and needs at least 20 lines.
+
 ## Log search (Loki, VictoriaLogs)
 
 The kubelet only keeps the current logs; a cluster running Loki or VictoriaLogs holds weeks of

@@ -38,6 +38,8 @@ struct PodLogsSheet: View {
     /// Streams new lines instead of showing the last ones.
     @State private var following = false
     @State private var follower = LogFollower()
+    /// The loaded log's lines while its Top messages sheet is open.
+    @State private var topLines: [String]?
     @State private var display = LogDisplay()
     @State private var forwarding = false
     @State private var shelling = false
@@ -97,6 +99,13 @@ struct PodLogsSheet: View {
                                 Label("Copy", systemImage: "doc.on.doc")
                             }
                             ShareLink(item: log.plain) { Label("Share", systemImage: "square.and.arrow.up") }
+                            Button {
+                                topLines = log.plain.split(separator: "\n").map(String.init).filter {
+                                    !$0.trimmingCharacters(in: .whitespaces).isEmpty
+                                }
+                            } label: {
+                                Label("Top messages", systemImage: "list.number")
+                            }
                         }
                         if let logsBackend {
                             Button {
@@ -147,6 +156,14 @@ struct PodLogsSheet: View {
                 PodShellView(namespace: pod.namespace, pod: pod.name, container: container)
             }
             .messageAlert($message)
+            // The loaded log grouped into its repeated messages; a tap filters the log on one.
+            .sheet(isPresented: Binding(get: { topLines != nil }, set: { if !$0 { topLines = nil } })) {
+                let lines = topLines ?? []
+                LogTemplatesSheet(lineCount: lines.count, load: { try await TalosClient.logTemplates(lines: lines) }) {
+                    filter.text = $0
+                    filter.regex = false
+                }
+            }
             // Outermost: the toolbar's menu reads it too.
             .loadsKubeActionAccess(namespace: pod.namespace)
         }

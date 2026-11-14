@@ -6589,4 +6589,9 @@
     <string name="alert_memory_trend_ok_title">Speicher von %1$s wächst nicht mehr schnell</string>
     <string name="settings_memory_trend">Warnen, bevor einem Knoten der Speicher ausgeht</string>
     <string name="settings_memory_trend_summary">Meldet, wenn das Speicherwachstum eines Knotens in der letzten Woche ihn binnen %1$d Tagen kritisch (90 %%) machen würde, und wenn nicht mehr. Nutzt den Verlauf der Prüfungen.</string>
+    <string name="log_templates_title">Häufige Meldungen</string>
+    <string name="log_templates_count">%1$d × · %2$s</string>
+    <string name="log_templates_pods">in %1$d Pods</string>
+    <string name="log_templates_empty">Häufige Meldungen fassen ein Log ab %1$d Zeilen zusammen.</string>
+    <string name="log_templates_filter_hint">Zahlen, IDs, Adressen und Dauern werden als &lt;*&gt; maskiert. Tippe auf eine Meldung, um das Log danach zu filtern.</string>
 </resources>

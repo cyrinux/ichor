@@ -6594,4 +6594,9 @@
     <string name="alert_memory_trend_ok_title">A memória de %1$s não cresce mais rápido</string>
     <string name="settings_memory_trend">Avisar antes que um nó fique sem memória</string>
     <string name="settings_memory_trend_summary">Avisa quando o crescimento da memória de um nó na última semana a tornaria crítica (90 %%) em %1$d dias, e quando não mais. Usa o histórico das verificações.</string>
+    <string name="log_templates_title">Mensagens frequentes</string>
+    <string name="log_templates_count">%1$d × · %2$s</string>
+    <string name="log_templates_pods">em %1$d pods</string>
+    <string name="log_templates_empty">As mensagens frequentes agrupam um log de pelo menos %1$d linhas.</string>
+    <string name="log_templates_filter_hint">Números, IDs, endereços e durações aparecem como &lt;*&gt;. Toque numa mensagem para filtrar o log por ela.</string>
 </resources>

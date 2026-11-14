@@ -6861,4 +6861,9 @@
     <string name="alert_memory_trend_ok_title">Память %1$s больше не растёт быстро</string>
     <string name="settings_memory_trend">Предупреждать, пока у узла не кончилась память</string>
     <string name="settings_memory_trend_summary">Уведомляет, когда рост памяти узла за последнюю неделю сделает её критической (90 %%) за %1$d дн., и когда уже нет. Использует историю проверок.</string>
+    <string name="log_templates_title">Частые сообщения</string>
+    <string name="log_templates_count">%1$d × · %2$s</string>
+    <string name="log_templates_pods">в %1$d подах</string>
+    <string name="log_templates_empty">Частые сообщения группируют журнал не короче %1$d строк.</string>
+    <string name="log_templates_filter_hint">Числа, идентификаторы, адреса и длительности заменены на &lt;*&gt;. Коснитесь сообщения, чтобы отфильтровать журнал по нему.</string>
 </resources>
