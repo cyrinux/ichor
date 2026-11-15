@@ -65,10 +65,19 @@ func parseLogLine(line string, now time.Time) logEntry {
 	switch c := firstByte(s); {
 	case c == '{':
 		e, ok = parseJSONLog(s)
-	case strings.IndexByte("IWEF", c) >= 0:
-		e, ok = parseKlogText(s, now)
+	case c >= 'A' && c <= 'Z':
+		if strings.IndexByte("IWEF", c) >= 0 {
+			e, ok = parseKlogText(s, now)
+		}
+
+		if !ok {
+			e, ok = parseLogrusText(s)
+		}
 	case isDigit(c):
 		e, ok = parseTalosService(s)
+		if !ok {
+			e, ok = parseZerologConsole(s, now)
+		}
 	case c >= 'a' && c <= 'z':
 		e, ok = parseKernel(s)
 	}

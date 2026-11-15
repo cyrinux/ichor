@@ -309,6 +309,8 @@ func BenchmarkParseLogLine(b *testing.B) {
 		"I1001 16:00:00.123456    1234 reflector.go:561] watch of *v1.Pod ended",
 		"/usr/lib/udev/rules.d/50-udev-default.rules:101 The line has no effect, ignoring.",
 		ansiSampleLines[0],
+		"INFO[0042] request done    client_ip=10.0.0.7 status=200",
+		`11:58AM ERR main.go:42 > upstream timeout error="dial tcp: i/o timeout"`,
 	}
 
 	b.ReportAllocs()

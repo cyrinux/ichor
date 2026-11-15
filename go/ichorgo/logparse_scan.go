@@ -225,8 +225,17 @@ func (p *jsonScanner) skipArray() bool {
 }
 
 // logfmtPairs parses a whole line of logfmt (key=value key="quoted value"). Any token that
-// is not key=value rejects the line, so prose with an "=" in it is left alone.
+// is not key=value rejects the line, so prose with an "=" in it is left alone; a whole line
+// needs two pairs.
 func logfmtPairs(s string) ([]logPair, bool) {
+	pairs, ok := logfmtTail(s)
+
+	return pairs, ok && len(pairs) >= 2
+}
+
+// logfmtTail parses the key=value fields after a text message (logrus, zerolog): one is
+// enough, any other token rejects them.
+func logfmtTail(s string) ([]logPair, bool) {
 	var pairs []logPair
 
 	for i := 0; ; {
@@ -235,7 +244,7 @@ func logfmtPairs(s string) ([]logPair, bool) {
 		}
 
 		if i == len(s) {
-			return pairs, len(pairs) >= 2
+			return pairs, len(pairs) > 0
 		}
 
 		start := i
