@@ -64,6 +64,13 @@ var nodeCommands = []command{
 
 		return "done: " + <-j.done, nil
 	}},
+	{name: "new-cluster", args: "prepare|start NAME ADDRESS DISK [TALOS-VERSION|-] [K8S-VERSION|-] [yes]", noConfig: true, run: func(e env) (out string, err error) {
+		// prepare: read-only, prints the draft (its talosconfig is a credential). start
+		// (with "yes"): writes for real: stores talosconfig-NAME here, then sends the config to
+		// the machine in maintenance mode at ADDRESS, which erases DISK and becomes the only
+		// control plane of NAME. Disposable machines only.
+		return newClusterProbe(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6), flag.Arg(7))
+	}},
 	{name: "boot-media", args: "[TEMPLATE|-] [amd64|arm64|-] [secure-boot]", run: func(e env) (out string, err error) {
 		// Read-only: what boots a new machine of the cluster (Image Factory links, booter
 		// command, Omni's join arguments). The Omni arguments carry the join token.

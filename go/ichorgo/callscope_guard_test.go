@@ -20,8 +20,9 @@ var screenBoundRuns = []string{
 	"StartVMConsole", "StartClusterHealth",
 }
 
-// clusterlessRuns have no cluster to hold: they sign in to an account, before any cluster exists.
-var clusterlessRuns = []string{"StartDiscoverSignIn", "StartOmniAccountSignIn"}
+// clusterlessRuns have no cluster to hold: they sign in to an account, or make the cluster,
+// before any cluster exists.
+var clusterlessRuns = []string{"StartDiscoverSignIn", "StartNewCluster", "StartOmniAccountSignIn"}
 
 // delegatedRuns take their hold in the function they hand the run to.
 var delegatedRuns = map[string]string{
