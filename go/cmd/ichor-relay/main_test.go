@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"log/slog"
+	"strings"
+	"testing"
+)
 
 func TestParseConfig(t *testing.T) {
 	t.Setenv("RELAY_LISTEN", "")
@@ -28,5 +32,21 @@ func TestParseConfig(t *testing.T) {
 
 	if _, err := parseConfig([]string{"-nope"}); err == nil {
 		t.Error("an unknown flag parsed")
+	}
+
+	if c, err = parseConfig([]string{"--version"}); err != nil || !c.version {
+		t.Errorf("--version: %+v, %v", c, err)
+	}
+}
+
+// --version works in a bare `docker run`: no ServiceAccount namespace, no API server.
+func TestRunVersion(t *testing.T) {
+	t.Setenv("RELAY_NAMESPACE", "")
+	var out strings.Builder
+	if err := run(slog.New(slog.DiscardHandler), &out, []string{"--version"}); err != nil {
+		t.Fatal(err)
+	}
+	if got := out.String(); got != "ichor-relay dev\n" {
+		t.Errorf("--version printed %q", got)
 	}
 }

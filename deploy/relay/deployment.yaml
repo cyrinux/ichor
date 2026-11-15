@@ -1,0 +1,66 @@
+# One replica: a replica reads the Secret at start and after its own write conflicts only, so a
+# second one would miss the devices paired through the first (go/cmd/ichor-relay/main.go).
+# Recreate keeps it at one during a rollout too. No volume: the state is in the Secret.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ichor-relay
+  labels:
+    app.kubernetes.io/name: ichor-relay
+    app.kubernetes.io/part-of: ichor
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ichor-relay
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ichor-relay
+        app.kubernetes.io/part-of: ichor
+    spec:
+      serviceAccountName: ichor-relay
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: relay
+          # The tag is set by kustomization.yaml (images:).
+          image: ghcr.io/cyrinux/ichor-relay
+          # The Secret's namespace is the ServiceAccount's. Set RELAY_ALLOW_HTTP or
+          # RELAY_ALLOW_PRIVATE to "true" for an in-cluster ntfy (docs/relay.md).
+          env:
+            - name: RELAY_LISTEN
+              value: ":8080"
+            - name: RELAY_SECRET
+              value: ichor-relay
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
