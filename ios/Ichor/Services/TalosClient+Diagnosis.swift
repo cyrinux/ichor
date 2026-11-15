@@ -101,6 +101,20 @@ extension TalosClient {
         guard let report else { throw TalosError(message: "CollectHealthExplanation returned no report") }
         return report
     }
+
+    /// Builds the short report "Explain with AI" sends about one subject (`kind` and
+    /// `subjectJSON` from ExplainSubject): its state, its events and, for a pod, its last log
+    /// lines. Nothing leaves the phone here.
+    func collectExplanation(kind: String, subjectJSON: String, anonymize: Bool) async throws -> DiagnosisReport {
+        // Kubernetes reads only: through the cluster's linked kubeconfig when it has one.
+        let report: DiagnosisReport? = try await Self.run {
+            [config = kubeConfig, context = kubeContext, kubeServer = kubeAPIServer] error in
+            IchorgoCollectExplanation(config, context, kubeServer, kind, subjectJSON, anonymize, error).map(
+                DiagnosisReport.init)
+        }
+        guard let report else { throw TalosError(message: "CollectExplanation returned no report") }
+        return report
+    }
 }
 
 private final class DiagnosisBridge: NSObject, IchorgoDiagnosisListenerProtocol, Sendable {

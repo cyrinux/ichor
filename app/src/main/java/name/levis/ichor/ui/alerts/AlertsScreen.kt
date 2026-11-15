@@ -49,6 +49,7 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.KubePermission
 import name.levis.ichor.model.PromSource
+import name.levis.ichor.model.toGoJson
 import name.levis.ichor.monitor.SILENCE_ACTION_MINUTES
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.AppTab
@@ -184,6 +185,7 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
             onCall = state.onCall,
             onCallBusy = { it in busy },
             onCallAct = vm::act,
+            explainSource = state.source?.toGoJson(),
         )
     }
     resolving?.let { incident ->

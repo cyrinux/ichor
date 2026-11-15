@@ -61,7 +61,9 @@ func collectExplainPod(ctx context.Context, k *kubeClient, namespace, name strin
 	wg.Go(func() { data.Events, data.EventsNote = explainEventsOf(ctx, k, namespace, "Pod", name) })
 
 	if container != "" {
-		wg.Go(func() { data.Log, data.LogFrom, data.LogNote = explainLog(ctx, k, namespace, name, container, previous) })
+		wg.Go(func() {
+			data.Log, data.LogFrom, data.LogNote = explainLog(ctx, k, namespace, name, container, previous)
+		})
 	}
 
 	wg.Wait()

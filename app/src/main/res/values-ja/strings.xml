@@ -1830,6 +1830,11 @@
     <string name="ai_provider_device_answer">このスマートフォン上のモデル</string>
     <string name="ai_local_not_ready">ここで回答を読むには、設定でモデルをダウンロードまたはインポートしてください。</string>
     <string name="ai_health_explain_hint_device">失敗したチェック、ノードの準備状態、最近のイベントをこのスマートフォン上のモデルで読み取ります。外部には何も送信されません。</string>
+    <string name="ai_explain_title">何が起きているか</string>
+    <string name="ai_explain_pod_hint">このポッドの状態、イベント、最後のログ行（下に表示）を%1$sに送信します。</string>
+    <string name="ai_explain_alert_hint">このアラートのラベルとアノテーション、対象のイベント（下に表示）を%1$sに送信します。</string>
+    <string name="ai_explain_finding_hint">この検出結果と対象のイベント（下に表示）を%1$sに送信します。</string>
+    <string name="ai_explain_hint_device">下のレポートをこのスマートフォン上のモデルで読み取ります。外部には何も送信されません。</string>
     <string name="ai_local_unavailable">このスマートフォンではモデルを実行できません。</string>
     <string name="ai_local_needs_64bit">モデルには 64 ビットのスマートフォンが必要です。</string>
     <string name="ai_local_old_cpu">このスマートフォンのプロセッサーは古すぎてモデルを実行できません。</string>

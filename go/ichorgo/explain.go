@@ -64,7 +64,7 @@ type explainData struct {
 type explainPodState struct {
 	kubePod
 
-	Phase      string
+	Phase           string
 	ContainerStates []string // "cart: waiting CrashLoopBackOff (…), 23 restarts, last ended OOMKilled (exit 137)"
 }
 

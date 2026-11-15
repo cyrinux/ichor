@@ -1830,6 +1830,11 @@
     <string name="ai_provider_device_answer">此手机上的模型</string>
     <string name="ai_local_not_ready">要在此处读取回答，请在设置中下载或导入模型。</string>
     <string name="ai_health_explain_hint_device">使用此手机上的模型读取失败的检查项、节点就绪状态和最近事件。数据不会离开手机。</string>
+    <string name="ai_explain_title">发生了什么</string>
+    <string name="ai_explain_pod_hint">将此 Pod 的状态、事件和最后几行日志（见下方）发送给 %1$s。</string>
+    <string name="ai_explain_alert_hint">将此告警的标签和注解，以及其所指对象的事件（见下方）发送给 %1$s。</string>
+    <string name="ai_explain_finding_hint">将此检查结果及其所指对象的事件（见下方）发送给 %1$s。</string>
+    <string name="ai_explain_hint_device">用本机上的模型读取下方报告，数据不会离开手机。</string>
     <string name="ai_local_unavailable">此手机无法运行该模型。</string>
     <string name="ai_local_needs_64bit">该模型需要 64 位手机。</string>
     <string name="ai_local_old_cpu">此手机的处理器太旧，无法运行该模型。</string>

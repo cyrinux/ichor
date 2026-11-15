@@ -33,7 +33,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
+import name.levis.ichor.data.alertExplainNote
+import name.levis.ichor.data.alertExplainSubject
+import name.levis.ichor.ui.components.ExplainCard
+import name.levis.ichor.ui.components.ExplainKind
 import name.levis.ichor.model.AmAlert
 import name.levis.ichor.model.KubePermission
 import name.levis.ichor.model.OnCallIncident
@@ -63,7 +71,8 @@ class AlertObjectLinks(
  * labels and other annotations, the runbook and the rule's graph, the pod, namespace or node
  * it is about ([nodes]: the cluster's node names and addresses), and "Silence".
  * [silenceDenial]: why the credentials cannot silence, if known. With an incident behind it in
- * [onCall], what the pager says and its actions.
+ * [onCall], what the pager says and its actions. [explainSource]: the Alertmanager it was read
+ * from (its Go JSON), for "Explain with AI" when the optional AI diagnosis is on.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -77,7 +86,10 @@ fun AlertSheet(
     onCall: OnCallIncidents? = null,
     onCallBusy: (String) -> Boolean = { false },
     onCallAct: (OnCallIncident, String) -> Unit = { _, _ -> },
+    explainSource: String? = null,
 ) {
+    val app = LocalContext.current.applicationContext as TalosApp
+    val ai by app.aiPreferences.settings.collectAsStateWithLifecycle()
     val uri = LocalUriHandler.current
     val objects = remember(alert, nodes) { alert.objectLinks(nodes) }
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -121,6 +133,9 @@ fun AlertSheet(
                 Text(stringResource(R.string.alerts_silence), modifier = Modifier.padding(start = 8.dp))
             }
             KubeDenialNote(silenceDenial)
+            if (ai.enabled && explainSource != null && alert.fingerprint.isNotEmpty()) {
+                ExplainCard(ExplainKind.ALERT, alertExplainSubject(alert, explainSource), alertExplainNote(alert), onLeave = onDismiss)
+            }
             onCall?.incidentOf(alert.fingerprint)?.let { incident ->
                 OnCallIncidentSection(
                     incident,

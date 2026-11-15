@@ -47,6 +47,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
+import name.levis.ichor.data.findingExplainNote
+import name.levis.ichor.data.findingExplainSubject
+import name.levis.ichor.model.CheckupFinding
+import name.levis.ichor.ui.components.ExplainKind
+import name.levis.ichor.ui.components.ExplainSheet
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.rememberLazyListState
 import name.levis.ichor.ui.components.JumpSection
@@ -131,6 +137,19 @@ fun CheckupScreen(
     val state by vm.state.collectAsStateWithLifecycle()
     val progress by vm.readProgress.collectAsStateWithLifecycle()
     var confirmDelete by rememberSaveable { mutableStateOf<String?>(null) }
+    // Explain with AI on a finding, when the optional AI diagnosis is on.
+    val talosApp = LocalContext.current.applicationContext as TalosApp
+    val ai by talosApp.aiPreferences.settings.collectAsStateWithLifecycle()
+    var explaining by remember { mutableStateOf<ExplainedFinding?>(null) }
+    explaining?.let { e ->
+        val fix = checkupFix(e.finding.kind, e.finding.reason, e.finding.extra).takeIf { it != 0 }?.let { stringResource(it) }.orEmpty()
+        ExplainSheet(
+            ExplainKind.FINDING,
+            findingExplainSubject(e.finding, e.text, fix),
+            findingExplainNote(e.text),
+            onDismiss = { explaining = null },
+        )
+    }
 
     val context = LocalContext.current
     LaunchedEffect(vm) {
@@ -167,7 +186,12 @@ fun CheckupScreen(
         },
     ) { padding ->
         Loaded(state, vm::refresh, Modifier.pageContent(padding), progress = progress, stepLabel = { checkupStepLabel(it) }) { report ->
-            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring, onOpenCapacity, onOpenLoadBalancing, onOpenPolicies, onOpenTailscale, onOpenClusterLifecycle, onOpenPlugin), onDeleteLeftover = { confirmDelete = it })
+            CheckupList(
+                report,
+                CheckupLinks(onOpenRelease, onOpenMonitoring, onOpenCapacity, onOpenLoadBalancing, onOpenPolicies, onOpenTailscale, onOpenClusterLifecycle, onOpenPlugin),
+                onDeleteLeftover = { confirmDelete = it },
+                onExplain = if (ai.enabled) ({ f, text -> explaining = ExplainedFinding(f, text) }) else null,
+            )
         }
     }
 }
@@ -188,11 +212,15 @@ private class CheckupLinks(
     val onOpenPlugin: (pluginId: String) -> Unit,
 )
 
+/** The finding "Explain with AI" is about, with its title as the card shows it. */
+private data class ExplainedFinding(val finding: CheckupFinding, val text: String)
+
 @Composable
 private fun CheckupList(
     report: CheckupReport,
     links: CheckupLinks,
     onDeleteLeftover: (namespace: String) -> Unit,
+    onExplain: ((CheckupFinding, String) -> Unit)?,
 ) {
     // Fixed while the report is on screen: the ages must not drift between recompositions.
     val now = remember(report) { System.currentTimeMillis() }
@@ -221,7 +249,7 @@ private fun CheckupList(
             items(sections, key = { it.id }) { section ->
                 val expanded = section.id in open
                 SectionCard(section, expanded, onToggle = { open = if (expanded) open - section.id else open + section.id }) {
-                    SectionBody(section, report, now, links, onDeleteLeftover)
+                    SectionBody(section, report, now, links, onDeleteLeftover, onExplain)
                 }
             }
         }
@@ -326,17 +354,21 @@ private fun SectionBody(
     now: Long,
     links: CheckupLinks,
     onDeleteLeftover: (namespace: String) -> Unit,
+    onExplain: ((CheckupFinding, String) -> Unit)?,
 ) {
     if (section.error.isNotEmpty()) InlineError(stringResource(R.string.checkup_section_error, section.error))
     if (section.findings.isEmpty() && section.error.isEmpty()) {
         MutedText(stringResource(R.string.checkup_nothing_in, section.checked.toString()))
     }
     section.findings.forEach { f ->
+        val title = checkupTitle(f, now)
         FindingCard(
             f,
             now,
             onDelete = if (f.kind == CheckupKind.NETPERF_LEFTOVER) ({ onDeleteLeftover(f.name) }) else null,
             onOpen = if (f.kind == CheckupKind.PLUGIN && f.plugin.isNotEmpty()) ({ links.onOpenPlugin(f.plugin) }) else null,
+            // A note says nothing is wrong: only a warning or a critical finding has something to explain.
+            onExplain = onExplain?.takeIf { f.level != CheckupSeverity.INFO }?.let { explain -> { explain(f, title) } },
         )
     }
     if (section.truncated > 0) MutedText(stringResource(R.string.checkup_truncated, section.truncated.toString()))

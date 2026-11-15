@@ -64,6 +64,7 @@ import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
+import name.levis.ichor.ui.components.ExplainState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -81,18 +82,6 @@ data class HealthState(
     val finished: Boolean = false,
     val error: String? = null,
 )
-
-/** The health check helper's answer about a failed run. */
-data class ExplainState(
-    /** Reading node readiness and events into the report. */
-    val collecting: Boolean = false,
-    val asking: Boolean = false,
-    val text: String = "",
-    /** Why it stopped early; [text] may still hold the part received. */
-    val error: String? = null,
-) {
-    val running: Boolean get() = collecting || asking
-}
 
 class HealthViewModel(
     private val talos: TalosRepository,

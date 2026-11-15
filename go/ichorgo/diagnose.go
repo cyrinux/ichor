@@ -64,10 +64,10 @@ type Diagnosis struct {
 type diagnosisKind int
 
 const (
-	diagnosisFull   diagnosisKind = iota // the full cluster report (CollectDiagnosis)
-	diagnosisHealth                      // a failed health check (CollectHealthExplanation)
-	diagnosisKube                        // the report of a kubeconfig cluster, without Talos
-	diagnosisExplain                     // one pod, alert or checkup finding (CollectExplanation)
+	diagnosisFull    diagnosisKind = iota // the full cluster report (CollectDiagnosis)
+	diagnosisHealth                       // a failed health check (CollectHealthExplanation)
+	diagnosisKube                         // the report of a kubeconfig cluster, without Talos
+	diagnosisExplain                      // one pod, alert or checkup finding (CollectExplanation)
 )
 
 // CollectDiagnosis reads the state of the cluster (os:reader calls only) into a report.

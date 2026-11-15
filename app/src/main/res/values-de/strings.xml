@@ -1884,6 +1884,11 @@
     <string name="ai_provider_device_answer">das Modell auf diesem Telefon</string>
     <string name="ai_local_not_ready">Um die Antwort hier zu lesen, lade in den Einstellungen ein Modell herunter oder importiere eines.</string>
     <string name="ai_health_explain_hint_device">Wertet die fehlgeschlagenen Prüfungen, die Bereitschaft der Knoten und die letzten Ereignisse mit dem Modell auf diesem Telefon aus. Nichts verlässt es.</string>
+    <string name="ai_explain_title">Was los ist</string>
+    <string name="ai_explain_pod_hint">Sendet den Zustand dieses Pods, seine Ereignisse und seine letzten Logzeilen (unten zu sehen) an %1$s.</string>
+    <string name="ai_explain_alert_hint">Sendet die Labels und Annotationen dieses Alarms und die Ereignisse dessen, was er nennt (unten zu sehen), an %1$s.</string>
+    <string name="ai_explain_finding_hint">Sendet diesen Befund und die Ereignisse dessen, was er nennt (unten zu sehen), an %1$s.</string>
+    <string name="ai_explain_hint_device">Liest den Bericht unten mit dem Modell auf diesem Telefon. Nichts verlässt es.</string>
     <string name="ai_local_unavailable">Das Modell kann auf diesem Telefon nicht laufen.</string>
     <string name="ai_local_needs_64bit">Das Modell braucht ein 64-Bit-Telefon.</string>
     <string name="ai_local_old_cpu">Der Prozessor dieses Telefons ist für das Modell zu alt.</string>

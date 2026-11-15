@@ -24,7 +24,10 @@ struct AlertDetailSheet: View {
     let confidence: OnCallConfidence
     /// Runs a verb on the incident and reloads; nil when done, else why not.
     let actOnIncident: (OnCallIncident, OnCallVerb) async -> String?
+    /// The Alertmanager the alert was read from (its JSON for Go), for "Explain with AI".
+    let explainSource: String?
 
+    @Environment(AISettings.self) private var ai
     @Environment(\.dismiss) private var dismiss
     @State private var silencing: Bool
 
@@ -33,7 +36,8 @@ struct AlertDetailSheet: View {
         silence: @escaping (_ matchers: [AMMatcher], _ minutes: Int, _ comment: String) async -> String?,
         open: @escaping (Route) -> Void, silenced: @escaping () -> Void, silenceComment: String? = nil,
         incident: OnCallIncident? = nil, confidence: OnCallConfidence = .alertname,
-        actOnIncident: @escaping (OnCallIncident, OnCallVerb) async -> String? = { _, _ in nil }
+        actOnIncident: @escaping (OnCallIncident, OnCallVerb) async -> String? = { _, _ in nil },
+        explainSource: String? = nil
     ) {
         self.alert = alert
         self.node = node
@@ -45,6 +49,7 @@ struct AlertDetailSheet: View {
         self.incident = incident
         self.confidence = confidence
         self.actOnIncident = actOnIncident
+        self.explainSource = explainSource
         _silencing = State(initialValue: silenceComment != nil)
     }
 
@@ -58,6 +63,12 @@ struct AlertDetailSheet: View {
                     }
                 }
                 linksSection
+                // Only when the optional AI diagnosis is on.
+                if ai.enabled, let explainSource, !alert.fingerprint.isEmpty {
+                    ExplainSection(
+                        subject: .alert(sourceJSON: explainSource, fingerprint: alert.fingerprint),
+                        note: alertExplainNote(alertname: alert.alertname))
+                }
                 Section {
                     NavigationLink {
                         SilenceForm(alert: alert, silence: silence, done: silenced)

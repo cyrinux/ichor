@@ -60,9 +60,16 @@ private const val LIST_PREVIEW = 6
  * One problem: what it is about, what happens, Kubernetes' own words and what to do, and
  * [onDelete] when the checkup can remove it (a namespace a network test left behind). A
  * plugin's finding names its plugin; [onOpen] opens where it leads (the plugin's screen).
+ * [onExplain]: "Explain with AI", when the optional AI diagnosis is on.
  */
 @Composable
-fun FindingCard(f: CheckupFinding, now: Long, onDelete: (() -> Unit)? = null, onOpen: (() -> Unit)? = null) {
+fun FindingCard(
+    f: CheckupFinding,
+    now: Long,
+    onDelete: (() -> Unit)? = null,
+    onOpen: (() -> Unit)? = null,
+    onExplain: (() -> Unit)? = null,
+) {
     val colors = LocalStatusColors.current
     val (icon, tint) = when (f.level) {
         CheckupSeverity.CRITICAL -> Icons.Outlined.Error to colors.bad
@@ -101,6 +108,9 @@ fun FindingCard(f: CheckupFinding, now: Long, onDelete: (() -> Unit)? = null, on
                 checkupFix(f.kind, f.reason, f.extra).takeIf { it != 0 }?.let { MutedText(stringResource(it)) }
                 if (onDelete != null) {
                     IchorTextButton(onClick = onDelete) { Text(stringResource(R.string.common_delete), color = colors.bad) }
+                }
+                if (onExplain != null) {
+                    IchorTextButton(onClick = onExplain) { Text(stringResource(R.string.ai_health_explain)) }
                 }
             }
             if (onOpen != null) {
