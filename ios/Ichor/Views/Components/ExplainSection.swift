@@ -95,21 +95,23 @@ struct ExplainSection: View {
             }
             ExplainAnswerRows(text: explanation.text, error: explanation.error, running: explanation.asking)
             reportRows
+            // The row always shown carries the section's lifecycle: a List gives a Section's
+            // modifiers to each of its rows.
             NavigationLink {
                 DiagnosisView(initialNote: note)
             } label: {
                 Text("Continue in Diagnosis")
             }
+            .task(id: "\(model.dataGeneration)#\(ai.anonymize)") {
+                guard let client = model.client else { return }
+                await explanation.load(client: client, subject: subject, anonymize: ai.anonymize)
+            }
+            .onDisappear { explanation.stop() }
         } header: {
             Text("What is going on")
         } footer: {
             footer
         }
-        .task(id: "\(model.dataGeneration)#\(ai.anonymize)") {
-            guard let client = model.client else { return }
-            await explanation.load(client: client, subject: subject, anonymize: ai.anonymize)
-        }
-        .onDisappear { explanation.stop() }
     }
 
     @ViewBuilder private var reportRows: some View {
