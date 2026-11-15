@@ -1,11 +1,11 @@
 package name.levis.ichor.ui.newcluster
 
-import androidx.compose.foundation.ExperimentalLayoutApi
-import androidx.compose.foundation.FlowRow
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
 import name.levis.ichor.data.JoinRunState
 import name.levis.ichor.model.JoinPhase
 import name.levis.ichor.model.MaintenanceInspection
@@ -79,7 +81,7 @@ fun NewClusterScreen(
         factory = factory { NewClusterViewModel(app.nodeLifecycleRepository, app.configRepository, app.joinManager) },
     ),
 ) {
-    val joins = app().joinManager
+    val joins = (LocalContext.current.applicationContext as TalosApp).joinManager
     val run by joins.current.collectAsStateWithLifecycle()
     IchorScaffold(
         topBar = {
@@ -221,10 +223,11 @@ private fun DraftSection(vm: NewClusterViewModel) {
         is UiState.Failed -> ErrorBox(state.message, vm::prepare)
         is UiState.Loaded -> {
             DraftCard(state.data)
-            startError?.let { (res, arg) -> Text(stringResource(res, arg), color = LocalStatusColors.current.bad) }
             IchorButton(onClick = { confirm = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.new_cluster_create))
             }
+            // Why the cluster could not be stored or started, under the button that tried.
+            startError?.let { (res, arg) -> Text(stringResource(res, arg), color = LocalStatusColors.current.bad) }
         }
     }
     if (confirm) {
@@ -266,7 +269,7 @@ private fun DraftCard(draft: NewClusterDraft) {
 /** The followed run; a run that sent nothing offers to remove the stored entry it leaves. */
 @Composable
 private fun RunSection(run: JoinRunState, vm: NewClusterViewModel, onOpenCluster: () -> Unit) {
-    val joins = app().joinManager
+    val joins = (LocalContext.current.applicationContext as TalosApp).joinManager
     val sent = run.events.any { JoinPhase.of(it.phase) == JoinPhase.INSTALLING }
     val name = run.request.newCluster?.name.orEmpty()
     SectionTitle(stringResource(R.string.new_cluster_step_run))

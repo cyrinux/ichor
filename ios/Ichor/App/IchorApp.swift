@@ -130,7 +130,7 @@ struct RootView: View {
     var body: some View {
         ZStack {
             if everUnlocked || !lockStore.lock.locked {
-                content
+                NewClusterRoot { content }
                     // Under the cover below: VoiceOver must not read the old names either.
                     .accessibilityHidden(settings.maskTransition)
             }
@@ -177,10 +177,6 @@ struct RootView: View {
         } else if !model.unreadable.isEmpty {
             // Fail closed: neither store is shown while one cannot be read.
             ConfigUnreadableView()
-        } else if JoinJob.shared.request?.newCluster != nil {
-            // Storing a new cluster's talosconfig switches the root away from the import screen:
-            // its run stays on screen here until it is closed.
-            NavigationStack { NewClusterView() }
         } else if !model.hasConfig {
             // A backup sent to a new phone lands here: restored without asking.
             NavigationStack { ImportView() }

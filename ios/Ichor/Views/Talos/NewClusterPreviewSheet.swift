@@ -25,6 +25,21 @@ struct NewClusterPreviewSheet: View {
     }
 }
 
+/// The app's root while a new-cluster run is held, else `content`: storing the first cluster's
+/// talosconfig switches the root away from the import screen, so the run stays on screen here
+/// until it is closed.
+struct NewClusterRoot<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        if JoinJob.shared.request?.newCluster != nil {
+            NavigationStack { NewClusterView() }
+        } else {
+            content()
+        }
+    }
+}
+
 /// The followed new-cluster run: its timeline, then the cluster or why it stopped. A run that sent
 /// nothing offers to remove the context it stored.
 struct NewClusterRunSections: View {
