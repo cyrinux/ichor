@@ -6,10 +6,10 @@ import (
 	"time"
 )
 
-// demoPodLog is a few lines of a container's log; the previous run ends with a crash.
+// demoPodLog is a few lines of a container's log; the previous run ends with a crash. Like
+// the live read (no timestamps=true), the lines carry no RFC 3339 prefix: the logrus lines
+// start with their level, so they get it and their fields.
 func demoPodLog(pod string, previous bool) string {
-	start := time.Now().Add(-10 * time.Minute)
-
 	var b strings.Builder
 
 	// Two lines as logrus writes them with colours forced on: the apps draw them coloured.
@@ -30,8 +30,8 @@ func demoPodLog(pod string, previous bool) string {
 		lines = append(lines, "panic: runtime error: invalid memory address or nil pointer dereference", "exit status 2")
 	}
 
-	for i, l := range lines {
-		fmt.Fprintf(&b, "%s %s\n", start.Add(time.Duration(i)*time.Second).UTC().Format(time.RFC3339), l)
+	for _, l := range lines {
+		b.WriteString(l + "\n")
 	}
 
 	return b.String()
