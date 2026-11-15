@@ -112,11 +112,28 @@ label).
 
 Pairing goes through the Kubernetes API server's service proxy with the phone's own credentials,
 the way Ichor reads Alertmanager: whoever may read the Secret `ichor-relay` may pair (see
-[Roles](roles.md)). On the phone, **Settings → Alerts**:
+[Roles](roles.md)). Pair each cluster on each phone; unpaired, the background checks still alert
+as before.
 
-- **Android:** install a UnifiedPush distributor (ntfy, from F-Droid or Google Play, or
-  another), then turn on **Push from ichor-relay**.
-- **iOS:** install the ntfy app, then **Push through ntfy → Pair**.
+**Android.** Install a UnifiedPush distributor: ntfy (from F-Droid or Google Play) or any other
+([the list](https://unifiedpush.org/users/distributors/), also behind **Get a distributor** in
+the app). Then **Settings → Alerts**: turn on **Alertmanager alerts**, which shows the row
+**Push from ichor-relay**, and turn that on. With
+several distributors installed, Ichor asks which one to receive through; the row then says
+**Paired · via** that distributor. Messages are encrypted for the phone (RFC 8291) before they
+leave the relay, so the distributor's push server sees nothing readable, and Ichor shows them
+as its own alert notifications. If the row says to update your distributor, the one installed
+cannot decrypt the relay's messages.
+
+**iOS.** UnifiedPush does not exist on iOS, so the relay publishes to a topic on an ntfy server
+and the ntfy app shows the notification. Install the ntfy app, then **Settings → Alerts → Push
+through ntfy**: keep the random topic Ichor generates (anyone who knows a topic can read it),
+**Copy** it, subscribe to it in the ntfy app, then **Pair**. These messages are not end-to-end
+encrypted: the ntfy server sees the title (Ichor, the cluster's nickname and the firing and
+critical counts) and one line per alert with its severity, name and namespace; with **Include alert
+text** it also sees each alert's summary. Prefer your own ntfy server: one you host needs
+[`upstream-base-url`](https://docs.ntfy.sh/config/#ios-instant-notifications) set for the iOS
+app to deliver instantly. Tapping the notification opens Ichor on the cluster's Alerts screen.
 
 ## An ntfy server in the cluster
 
