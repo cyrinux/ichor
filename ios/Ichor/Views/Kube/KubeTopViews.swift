@@ -22,22 +22,68 @@ struct NodeUsageView: View {
     }
 }
 
-/// A pod's CPU and memory in use against its limit, else its request (no bar when neither).
+/// A pod's CPU and memory in use against its limit, else its request (no bar when neither). With
+/// two or more containers, each one's usage against its own bounds follows, in the spec's order,
+/// as `kubectl top pod NAME --containers`; a single container would only repeat the pod.
 struct PodUsageView: View {
     let top: KubeTopPod
 
     var body: some View {
-        VStack(spacing: 2) {
-            UsageLine(
-                label: String(localized: "CPU"),
-                value: formatCPU(top.cpu) + (top.cpuBound > 0 ? " / \(formatCPU(top.cpuBound))" : ""),
-                fraction: top.cpuFraction)
-            UsageLine(
-                label: String(localized: "Memory"),
-                value: formatBytes(Int64(top.memory))
-                    + (top.memoryBound > 0 ? " / \(formatBytes(Int64(top.memoryBound)))" : ""),
-                fraction: top.memoryFraction)
+        VStack(alignment: .leading, spacing: 2) {
+            UsageLines(
+                cpu: top.cpu, cpuBound: top.cpuBound, cpuFraction: top.cpuFraction,
+                memory: top.memory, memoryBound: top.memoryBound, memoryFraction: top.memoryFraction)
+            if top.containers.count > 1 {
+                Text("Containers")
+                    .font(.caption.weight(.semibold))
+                    .padding(.top, 6)
+                ForEach(top.containers) { container in
+                    ContainerUsage(container: container)
+                }
+            }
         }
+    }
+}
+
+/// One container: its name, then its CPU and memory lines, indented under the pod's.
+private struct ContainerUsage: View {
+    let container: KubeTopContainer
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: container.name)
+                .font(.caption2)
+                .lineLimit(1)
+                .truncationMode(.tail)
+            UsageLines(
+                cpu: container.cpu, cpuBound: container.cpuBound, cpuFraction: container.cpuFraction,
+                memory: container.memory, memoryBound: container.memoryBound,
+                memoryFraction: container.memoryFraction)
+        }
+        .padding(.leading, 12)
+        .padding(.top, 2)
+    }
+}
+
+/// The CPU and Memory lines of a pod or a container: used, then " / " its limit, else its request.
+private struct UsageLines: View {
+    let cpu: Double
+    let cpuBound: Double
+    let cpuFraction: Double?
+    let memory: Double
+    let memoryBound: Double
+    let memoryFraction: Double?
+
+    var body: some View {
+        UsageLine(
+            label: String(localized: "CPU"),
+            value: formatCPU(cpu) + (cpuBound > 0 ? " / \(formatCPU(cpuBound))" : ""),
+            fraction: cpuFraction)
+        UsageLine(
+            label: String(localized: "Memory"),
+            value: formatBytes(Int64(memory))
+                + (memoryBound > 0 ? " / \(formatBytes(Int64(memoryBound)))" : ""),
+            fraction: memoryFraction)
     }
 }
 

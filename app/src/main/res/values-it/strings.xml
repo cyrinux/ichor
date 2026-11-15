@@ -2695,6 +2695,7 @@
     <string name="castai_near_limit_detail">La richiesta di memoria sale al %1$s%% del limite. CAST AI mantiene i limiti, quindi il pod ha poco margine prima di un OOM kill.</string>
     <string name="castai_healthy">Integro</string>
     <string name="castai_containers">Container</string>
+    <string name="top_containers">Container</string>
     <string name="castai_no_limit">nessun limite</string>
     <string name="castai_limit_share">limite %1$s · %2$s%%</string>
     <string name="castai_plans_empty">Ancora nessun consolidamento dei nodi.</string>

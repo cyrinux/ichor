@@ -2840,6 +2840,7 @@
     <string name="castai_near_limit_detail">Запит пам\'яті зростає до %1$s%% від ліміту. CAST AI не змінює ліміти, тож поду лишається мало запасу до OOM kill.</string>
     <string name="castai_healthy">Справний</string>
     <string name="castai_containers">Контейнери</string>
+    <string name="top_containers">Контейнери</string>
     <string name="castai_no_limit">без ліміту</string>
     <string name="castai_limit_share">ліміт %1$s · %2$s%%</string>
     <string name="castai_plans_empty">Консолідації вузлів ще не було.</string>

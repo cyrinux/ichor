@@ -2695,6 +2695,7 @@
     <string name="castai_near_limit_detail">La requête mémoire atteint %1$s %% de sa limite. CAST AI garde les limites telles quelles : le pod a peu de marge avant d\'être tué pour manque de mémoire.</string>
     <string name="castai_healthy">Sain</string>
     <string name="castai_containers">Conteneurs</string>
+    <string name="top_containers">Conteneurs</string>
     <string name="castai_no_limit">sans limite</string>
     <string name="castai_limit_share">limite %1$s · %2$s %%</string>
     <string name="castai_plans_empty">Aucune consolidation de nœuds pour l\'instant.</string>

@@ -30,7 +30,9 @@ Part of the [Ichor documentation](../README.md#documentation).
   restart one with a rolling update (`kubectl rollout restart`), then follow it live with its
   old and new pods (`kubectl rollout status`); list pods with their
   `kubectl get pods` status (a pod that cannot pull its image says why: not found, pull limit,
-  pull secret, certificate, network, and what to do) and delete one so its controller starts a new one, or only those of
+  pull secret, certificate, network, and what to do), a pod's CPU and memory in its sheet
+  (`kubectl top pod`, from metrics-server) against its requests and limits, and each container's
+  usage against its own request and limit (`--containers`, sidecars included), and delete one so its controller starts a new one, or only those of
   a node or of a workload (`--field-selector spec.nodeName=`, the workload's selector), or clean up a
   namespace's dead pods in one tap from the Pods tab (Completed, Evicted, CrashLoopBackOff, ImagePullBackOff…, as k9s's `z`
   picks them, with a preview to uncheck any first; the sweep runs in the background with a progress

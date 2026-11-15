@@ -2612,6 +2612,7 @@
     <string name="castai_near_limit_detail">メモリリクエストが制限の %1$s%% まで増加します。CAST AI は制限を変更しないため、Pod が OOM Kill されるまでの余裕がほとんどありません。</string>
     <string name="castai_healthy">正常</string>
     <string name="castai_containers">コンテナ</string>
+    <string name="top_containers">コンテナ</string>
     <string name="castai_no_limit">制限なし</string>
     <string name="castai_limit_share">制限 %1$s · %2$s%%</string>
     <string name="castai_plans_empty">ノードの統合はまだありません。</string>

@@ -78,6 +78,8 @@ public struct KubeTopPod: Decodable, Hashable, Identifiable, Sendable {
     public let cpuLimit: Double
     public let memoryRequest: Double
     public let memoryLimit: Double
+    /// Each container's usage, in the pod spec's order: the one-pod read only (empty in lists).
+    public let containers: [KubeTopContainer]
 
     public var id: String { "\(namespace)/\(name)" }
 
@@ -90,7 +92,8 @@ public struct KubeTopPod: Decodable, Hashable, Identifiable, Sendable {
 
     public init(
         namespace: String, name: String, node: String = "", cpu: Double = 0, memory: Double = 0,
-        cpuRequest: Double = 0, cpuLimit: Double = 0, memoryRequest: Double = 0, memoryLimit: Double = 0
+        cpuRequest: Double = 0, cpuLimit: Double = 0, memoryRequest: Double = 0, memoryLimit: Double = 0,
+        containers: [KubeTopContainer] = []
     ) {
         self.namespace = namespace
         self.name = name
@@ -101,10 +104,11 @@ public struct KubeTopPod: Decodable, Hashable, Identifiable, Sendable {
         self.cpuLimit = cpuLimit
         self.memoryRequest = memoryRequest
         self.memoryLimit = memoryLimit
+        self.containers = containers
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, node, cpu, memory, cpuRequest, cpuLimit, memoryRequest, memoryLimit
+        case namespace, name, node, cpu, memory, cpuRequest, cpuLimit, memoryRequest, memoryLimit, containers
     }
 
     public init(from decoder: Decoder) throws {
@@ -112,6 +116,55 @@ public struct KubeTopPod: Decodable, Hashable, Identifiable, Sendable {
         namespace = try c.field(.namespace, "")
         name = try c.field(.name, "")
         node = try c.field(.node, "")
+        cpu = try c.field(.cpu, 0)
+        memory = try c.field(.memory, 0)
+        cpuRequest = try c.field(.cpuRequest, 0)
+        cpuLimit = try c.field(.cpuLimit, 0)
+        memoryRequest = try c.field(.memoryRequest, 0)
+        memoryLimit = try c.field(.memoryLimit, 0)
+        containers = try c.field(.containers, [])
+    }
+}
+
+/// One container's usage against its own requests and limits; a bound it does not set is 0.
+public struct KubeTopContainer: Decodable, Hashable, Identifiable, Sendable {
+    public let name: String
+    public let cpu: Double
+    public let memory: Double
+    public let cpuRequest: Double
+    public let cpuLimit: Double
+    public let memoryRequest: Double
+    public let memoryLimit: Double
+
+    public var id: String { name }
+
+    /// CPU use as a share of the limit, else of the request; nil when neither is set.
+    public var cpuFraction: Double? { fraction(cpu, of: cpuBound) }
+    public var memoryFraction: Double? { fraction(memory, of: memoryBound) }
+    /// What the bar measures against: the limit, else the request, 0 for neither.
+    public var cpuBound: Double { cpuLimit > 0 ? cpuLimit : cpuRequest }
+    public var memoryBound: Double { memoryLimit > 0 ? memoryLimit : memoryRequest }
+
+    public init(
+        name: String, cpu: Double = 0, memory: Double = 0, cpuRequest: Double = 0, cpuLimit: Double = 0,
+        memoryRequest: Double = 0, memoryLimit: Double = 0
+    ) {
+        self.name = name
+        self.cpu = cpu
+        self.memory = memory
+        self.cpuRequest = cpuRequest
+        self.cpuLimit = cpuLimit
+        self.memoryRequest = memoryRequest
+        self.memoryLimit = memoryLimit
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case name, cpu, memory, cpuRequest, cpuLimit, memoryRequest, memoryLimit
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.field(.name, "")
         cpu = try c.field(.cpu, 0)
         memory = try c.field(.memory, 0)
         cpuRequest = try c.field(.cpuRequest, 0)

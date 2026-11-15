@@ -2612,6 +2612,7 @@
     <string name="castai_near_limit_detail">内存请求增至其限制的 %1$s%%。CAST AI 会保持限制不变，因此 Pod 在被 OOM 终止前几乎没有余量。</string>
     <string name="castai_healthy">健康</string>
     <string name="castai_containers">容器</string>
+    <string name="top_containers">容器</string>
     <string name="castai_no_limit">无限制</string>
     <string name="castai_limit_share">限制 %1$s · %2$s%%</string>
     <string name="castai_plans_empty">尚无节点整合。</string>

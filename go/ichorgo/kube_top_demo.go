@@ -1,5 +1,7 @@
 package ichorgo
 
+import "strings"
+
 // Demo `kubectl top`: fixed, plausible usage on the demo nodes and pods, so screenshots show
 // bars at a few levels (one pod over its request, one near its memory limit).
 
@@ -66,10 +68,52 @@ func demoTopPod(namespace, name string) func() kubeTopPods {
 
 		for _, p := range demoTopPods(namespace)().Pods {
 			if p.Name == name {
+				p.Containers = demoTopContainers(p)
 				out.Pods = append(out.Pods, p)
 			}
 		}
 
 		return out
 	}
+}
+
+// demoPodContainers splits the demo pods that run a sidecar; their figures add up to the pod's.
+var demoPodContainers = map[string][]kubeTopContainer{
+	"postgres-0": {
+		{Name: "postgres", CPU: 0.17, Memory: 384 << 20, CPURequest: 0.2, CPULimit: 0.9, MemoryRequest: 448 << 20, MemoryLimit: 960 << 20},
+		{Name: "metrics", CPU: 0.01, Memory: 26 << 20, CPURequest: 0.05, CPULimit: 0.1, MemoryRequest: 64 << 20, MemoryLimit: 64 << 20},
+	},
+}
+
+// demoTopContainers is a demo pod's containers: its sidecar split, else one container that is
+// the whole pod, named after its workload.
+func demoTopContainers(p kubeTopPod) []kubeTopContainer {
+	if cs, ok := demoPodContainers[p.Name]; ok {
+		return cs
+	}
+
+	name := p.Name
+	for _, d := range demoPods() {
+		if d.Name == p.Name && d.Namespace == p.Namespace {
+			name = demoWorkloadName(d.Owner)
+		}
+	}
+
+	return []kubeTopContainer{{
+		Name: name, CPU: p.CPU, Memory: p.Memory, CPURequest: p.CPURequest, CPULimit: p.CPULimit,
+		MemoryRequest: p.MemoryRequest, MemoryLimit: p.MemoryLimit,
+	}}
+}
+
+// demoWorkloadName is the workload an owner reference names: "ReplicaSet/hello-ichor-7d9c5"
+// is hello-ichor (a ReplicaSet ends with its template hash), "StatefulSet/postgres" postgres.
+func demoWorkloadName(owner string) string {
+	kind, name, _ := strings.Cut(owner, "/")
+	if kind == "ReplicaSet" {
+		if i := strings.LastIndex(name, "-"); i > 0 {
+			name = name[:i]
+		}
+	}
+
+	return name
 }

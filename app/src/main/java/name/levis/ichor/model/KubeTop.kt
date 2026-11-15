@@ -51,9 +51,28 @@ data class KubeTopPod(
     val cpuLimit: Double = 0.0,
     val memoryRequest: Double = 0.0,
     val memoryLimit: Double = 0.0,
+    /** Each container's usage, in the pod spec's order: the one-pod read only (empty in lists). */
+    val containers: List<KubeTopContainer> = emptyList(),
 ) {
     val key: String get() = "$namespace/$name"
 
+    /** CPU use as a share of the limit, else of the request; null when neither is set. */
+    fun cpuFraction(): Float? = fractionOf(cpu, cpuLimit.takeIf { it > 0 } ?: cpuRequest)
+
+    fun memoryFraction(): Float? = fractionOf(memory, memoryLimit.takeIf { it > 0 } ?: memoryRequest)
+}
+
+/** One container's usage against its own requests and limits; a bound it does not set is 0. */
+@Serializable
+data class KubeTopContainer(
+    val name: String = "",
+    val cpu: Double = 0.0,
+    val memory: Double = 0.0,
+    val cpuRequest: Double = 0.0,
+    val cpuLimit: Double = 0.0,
+    val memoryRequest: Double = 0.0,
+    val memoryLimit: Double = 0.0,
+) {
     /** CPU use as a share of the limit, else of the request; null when neither is set. */
     fun cpuFraction(): Float? = fractionOf(cpu, cpuLimit.takeIf { it > 0 } ?: cpuRequest)
 
