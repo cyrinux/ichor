@@ -17,6 +17,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.FileOpen
@@ -57,6 +59,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.design.IchorCard
 import name.levis.ichor.model.DiscoveryProvider
 import name.levis.ichor.model.TalosForm
 import name.levis.ichor.model.discoveryLogo
@@ -85,6 +89,7 @@ internal fun SourcePicker(
     onDemo: (kube: Boolean) -> Unit,
     onDiscover: (DiscoveryProvider) -> Unit,
     restore: (@Composable () -> Unit)?,
+    onNewCluster: (() -> Unit)? = null,
 ) {
     Column(Modifier.fillMaxSize()) {
         if (error != null) {
@@ -97,7 +102,7 @@ internal fun SourcePicker(
         }
         Box(Modifier.weight(1f)) {
             when (source) {
-                ImportSource.PICK -> Sources(onSource, onYaml, onDemo, onDiscover, restore)
+                ImportSource.PICK -> Sources(onSource, onYaml, onDemo, onDiscover, restore, onNewCluster)
                 ImportSource.PASTE -> PasteSource(pasted, onPasted, onYaml)
                 ImportSource.QR -> QrScanner(onScanned = onYaml)
                 ImportSource.FORM -> TalosFormSource(form, onForm, onSubmitForm)
@@ -119,6 +124,7 @@ private fun Sources(
     onDemo: (kube: Boolean) -> Unit,
     onDiscover: (DiscoveryProvider) -> Unit,
     restore: (@Composable () -> Unit)?,
+    onNewCluster: (() -> Unit)?,
 ) {
     var readError by rememberSaveable { mutableStateOf<String?>(null) }
     val pickFile = rememberConfigFilePicker(
@@ -136,6 +142,7 @@ private fun Sources(
             onForm = { onSource(ImportSource.FORM) },
         )
         readError?.let { Text(it, color = LocalStatusColors.current.bad) }
+        onNewCluster?.let { NewClusterEntry(it) }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.kube_discover_entry), style = MaterialTheme.typography.titleSmall)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -155,6 +162,21 @@ private fun Sources(
         ) {
             DemoButton(onDemo)
             restore?.invoke()
+        }
+    }
+}
+
+/** No cluster to bring: make one from a machine booted from the Talos ISO. */
+@Composable
+private fun NewClusterEntry(onClick: () -> Unit) {
+    IchorCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Icon(Icons.Outlined.AddCircleOutline, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.new_cluster_title), style = MaterialTheme.typography.titleSmall)
+                MutedText(stringResource(R.string.new_cluster_entry))
+            }
+            Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

@@ -79,6 +79,7 @@ data class JoinProgress(
 /** The phases of a join, in order. */
 enum class JoinPhase(val wire: String) {
     KEY("key"),
+    SECRETS("secrets"),
     CREATING("creating"),
     STARTING("starting"),
     APPLYING("applying"),
@@ -88,6 +89,8 @@ enum class JoinPhase(val wire: String) {
     REBOOTING("rebooting"),
     BOOTED("booted"),
     JOINING("joining"),
+    BOOTSTRAPPING("bootstrapping"),
+    READY("ready"),
     OMNI("omni"),
     REGISTERING("registering"),
     RESCUE("rescue"),
@@ -103,6 +106,9 @@ enum class JoinPhase(val wire: String) {
 
         /** A node in maintenance mode that gets its config from the app. */
         val maintenanceRun = listOf(APPLYING, INSTALLING, REBOOTING, BOOTED, JOINING, REGISTERING, DONE)
+
+        /** A new cluster: its talosconfig stored, its first control plane installed and bootstrapped. */
+        val newClusterRun = listOf(SECRETS, APPLYING, INSTALLING, BOOTED, BOOTSTRAPPING, READY)
 
         /** A server created with the config as its user data. */
         val cloudRun = listOf(CREATING, STARTING, REBOOTING, BOOTED, JOINING, REGISTERING, DONE)

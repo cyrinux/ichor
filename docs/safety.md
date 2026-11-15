@@ -28,6 +28,17 @@ Part of the [Ichor documentation](../README.md#documentation).
   | Leave etcd first (`--graceful`, on by default) | Cordon, drain and leave etcd cleanly first. Off on a control plane, its etcd member stays behind: remove it from the etcd screen. |
   | Reboot after (`--reboot`, on by default) | Off, the node stays powered off once wiped. |
 
+- **Creating a new cluster (Add a cluster → New Talos cluster):** the phone makes the cluster's
+  secrets (its CAs, keys and tokens) and keeps them in memory only, for 30 minutes at most; the
+  preview hides them. Nothing is sent before the cluster's talosconfig is stored on the phone (sealed,
+  and in app backups like any cluster): the secrets then live only in that talosconfig and in the
+  control plane's machine config, from which they can be read again later. The machine must answer
+  in maintenance mode (booted from the Talos ISO, not installed) on a private, VPN or link-local
+  address; an installed node is refused. Its install disk is erased: the cluster's name is typed to
+  confirm. The config is sent once; etcd is bootstrapped once (retried only while etcd is not ready
+  for it). A run that stops before the config is sent leaves the machine untouched and offers to
+  remove the stored entry; after it, the install goes on and the entry is kept. Refused in screenshot
+  mode and on the demo.
 - **Replacing a control plane (etcd → a failed member's menu → Replace this control plane…,
   `os:admin`):** one screen walks through the replacement, step by step, read from the cluster
   so that leaving and coming back resumes:

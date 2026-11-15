@@ -66,6 +66,8 @@ import name.levis.ichor.model.OVHCheck
 import name.levis.ichor.model.OVHCreateSpec
 import name.levis.ichor.model.OVHOptions
 import name.levis.ichor.model.JoinConfigPreview
+import name.levis.ichor.model.NewClusterDraft
+import name.levis.ichor.model.NewClusterSpec
 import name.levis.ichor.model.K8sUpgradePlan
 import name.levis.ichor.model.K8sVersionChoice
 import name.levis.ichor.model.MaintenanceAction
@@ -396,6 +398,18 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
         replacing: Boolean,
         stop: Flow<Any>,
     ): Flow<JoinEvent> = streams.joinNode(address, template, role, hostname, installDisk, staticAddress, replacing, stop)
+
+    /** NewClusterPrepare: a new cluster's secrets and configs, held by the Go core behind the draft's id. Sends nothing. */
+    suspend fun newClusterPrepare(spec: NewClusterSpec): NewClusterDraft = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(
+            NewClusterDraft.serializer(),
+            Ichorgo.newClusterPrepare(TalosJson.encodeToString(NewClusterSpec.serializer(), spec)),
+        )
+    }
+
+    /** See [TalosStreams.newCluster]. */
+    fun newCluster(draftId: String, address: String, talosconfig: String, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.newCluster(draftId, address, talosconfig, stop)
 
     /** What a Hetzner token may do. Creates nothing. */
     suspend fun hetznerTest(token: String): HetznerTokenCheck = withContext(Dispatchers.IO) {

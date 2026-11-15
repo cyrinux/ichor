@@ -183,6 +183,7 @@ internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() 
                 when {
                     allocating -> stringResource(R.string.omni_allocate_done, run.hostname)
                     run.request.omni -> stringResource(R.string.hetzner_run_done_omni, run.hostname)
+                    run.request.newCluster != null -> stringResource(R.string.new_cluster_done, run.hostname, run.address)
                     else -> stringResource(R.string.join_run_done, run.hostname, run.address)
                 },
                 color = colors.ok,
@@ -205,7 +206,7 @@ internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() 
                         onOpenNode()
                     },
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text(stringResource(R.string.join_run_open_node)) }
+                ) { Text(stringResource(if (run.request.newCluster != null) R.string.new_cluster_open else R.string.join_run_open_node)) }
             }
         }
     }
@@ -241,6 +242,9 @@ internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() 
 internal val JoinPhase.label: Int
     get() = when (this) {
         JoinPhase.KEY -> R.string.hetzner_phase_key
+        JoinPhase.SECRETS -> R.string.join_phase_secrets
+        JoinPhase.BOOTSTRAPPING -> R.string.join_phase_bootstrapping
+        JoinPhase.READY -> R.string.join_phase_ready
         JoinPhase.RESCUE -> R.string.hetzner_phase_rescue
         JoinPhase.WRITING -> R.string.hetzner_phase_writing
         JoinPhase.SNAPSHOT -> R.string.hetzner_phase_snapshot

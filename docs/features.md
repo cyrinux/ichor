@@ -13,6 +13,13 @@ Part of the [Ichor documentation](../README.md#documentation).
   in which every node trusts both CAs until all of them trust the new one, and the phone's own
   talosconfig is replaced on the way. Every talosconfig issued before stops working at the end,
   so it is the way to cut off a lost phone or a leaked config. See [Safety](safety.md).
+- **New Talos cluster:** with no laptop, turn a machine booted from the Talos ISO on the local
+  network (or a VPN) into the first control plane of a new cluster (Add a cluster → New Talos
+  cluster), like `talosctl gen secrets`, `gen config`, `apply-config --insecure` and `bootstrap`:
+  inspect the machine, pick its install disk, preview the redacted config made for its own Talos
+  version, then type the cluster's name to confirm. The talosconfig is stored first, then the
+  config is sent and the run follows the install, the etcd bootstrap and the Kubernetes API.
+  Workers then join with Add a node. See [Safety](safety.md).
 - **Add a node at a cloud provider:** create the server for a new Talos or Omni node at Hetzner
   Cloud, OVHcloud, AWS EC2, Azure or Google Cloud Compute Engine from the phone, with the price
   shown first and the host name typed to confirm, then follow it until it joins (or appears in

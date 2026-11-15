@@ -48,6 +48,7 @@ import name.levis.ichor.ui.backup.IncomingBackup
 import name.levis.ichor.ui.changelog.WhatsNewHost
 import name.levis.ichor.ui.debug.LiveShell
 import name.levis.ichor.ui.importconfig.ImportScreen
+import name.levis.ichor.ui.newcluster.NewClusterScreen
 import name.levis.ichor.ui.kubebrowser.KubeBrowserRoutes
 import name.levis.ichor.ui.kubebrowser.KubeLinks
 import name.levis.ichor.ui.overview.OverviewScreen
@@ -244,7 +245,12 @@ fun Navigation(
             }
             DeepLink.JOIN_NODE -> if (!startWithImport && app.joinManager.current.value != null) {
                 // An allocation is followed on its own screen; Add a node shows the other runs.
-                val route = if (app.joinManager.current.value?.request?.omniAllocate != null) Routes.OMNI_ALLOCATE else Routes.JOIN_NODE
+                val request = app.joinManager.current.value?.request
+                val route = when {
+                    request?.omniAllocate != null -> Routes.OMNI_ALLOCATE
+                    request?.newCluster != null -> Routes.NEW_CLUSTER
+                    else -> Routes.JOIN_NODE
+                }
                 nav.navigate(route) { launchSingleTop = true }
             }
             // The Kubernetes runs: the screen they were started from, while the manager holds them.
@@ -313,6 +319,16 @@ fun Navigation(
                     },
                     // Adding a cluster comes from the overview or the settings: one can go back.
                     onBack = if (nav.previousBackStackEntry != null) ({ nav.popBackStack() }) else null,
+                    onNewCluster = { nav.navigate(Routes.NEW_CLUSTER) { launchSingleTop = true } },
+                )
+            }
+            composable(Routes.NEW_CLUSTER) {
+                NewClusterScreen(
+                    onBack = { nav.popBackStack() },
+                    onOpenCluster = {
+                        app.launchSync(runNow = true)
+                        nav.resetTo(Routes.OVERVIEW)
+                    },
                 )
             }
             composable(Routes.DEMO) {
