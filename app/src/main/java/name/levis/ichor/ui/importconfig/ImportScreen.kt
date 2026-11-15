@@ -74,6 +74,8 @@ fun ImportScreen(
     kubeDemo: Boolean = false,
     incoming: String? = null,
     onIncomingTaken: () -> Unit = {},
+    /** Opens "New Talos cluster" (null: not offered here). */
+    onNewCluster: (() -> Unit)? = null,
     vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(
         app.configRepository,
         app.kubeAuthRepository,
@@ -184,6 +186,7 @@ fun ImportScreen(
                     onYaml = vm::submit,
                     onDemo = vm::startDemo,
                     onDiscover = vm::startDiscovery,
+                    onNewCluster = onNewCluster,
                     // A restore replaces every cluster: offered when there is none yet.
                     restore = if (firstRun) ({ RestoreBackupButton(onRestored = onImported) }) else null,
                 )

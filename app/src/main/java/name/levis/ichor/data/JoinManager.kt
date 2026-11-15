@@ -64,11 +64,14 @@ data class JoinRequest(
     val gcpImage: GCPImageSpec? = null,
     /** A machine of Omni to put in the cluster ([hostname] and [role] are the machine's and the set's). */
     val omniAllocate: OmniAllocateSpec? = null,
+    /** No cluster yet: the machine at [address] becomes the first control plane of this one. */
+    val newCluster: NewClusterStart? = null,
 ) {
     /** The steps of this run's timeline. */
     val phases: List<JoinPhase>
         get() = when {
             omniAllocate != null -> JoinPhase.omniAllocateRun
+            newCluster != null -> JoinPhase.newClusterRun
             else -> imageKind?.phases ?: when {
                 !cloud -> JoinPhase.maintenanceRun
                 omni -> JoinPhase.cloudOmniRun
@@ -93,6 +96,14 @@ data class JoinRequest(
     /** No node at all: the run makes a Talos image (a Hetzner snapshot, an AWS AMI, an Azure or a Compute Engine image). */
     val imageRun: Boolean
         get() = imageKind != null
+}
+
+/**
+ * A prepared new cluster (NewClusterPrepare): its draft in the Go core and its [talosconfig],
+ * stored as the context [name] before the run. Kept out of [toString]: it is a credential.
+ */
+data class NewClusterStart(val draftId: String, val name: String, val talosconfig: String) {
+    override fun toString(): String = "NewClusterStart($name)"
 }
 
 /** The node join the app follows: at most one at a time. */
@@ -142,12 +153,14 @@ class JoinManager(
     @Synchronized
     fun start(request: JoinRequest, providerToken: String = ""): Boolean {
         if (_current.value?.running == true) return false
-        val context = configs.config.value?.activeContext.orEmpty()
+        // A new cluster's address goes to its own context, stored before the run.
+        val context = request.newCluster?.name ?: configs.config.value?.activeContext.orEmpty()
         _current.value = JoinRunState(request, context)
         val stopped = MutableStateFlow(false).also { stopRequested = it }
         job = scope.launch {
             try {
-                val events = request.omniAllocate?.let { lifecycle.omniAllocate(it, stopped.filter { s -> s }) }
+                val events = request.newCluster?.let { lifecycle.newCluster(it.draftId, request.address, it.talosconfig, stopped.filter { s -> s }) }
+                    ?: request.omniAllocate?.let { lifecycle.omniAllocate(it, stopped.filter { s -> s }) }
                     ?: request.snapshot?.let { lifecycle.hetznerSnapshot(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.awsImage?.let { lifecycle.awsImage(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.azureImage?.let { lifecycle.azureImage(providerToken, it, stopped.filter { s -> s }) }

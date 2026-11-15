@@ -14,6 +14,7 @@ reads those roles and explains up front when a feature needs more.
 | etcd members, leader, DB size, alarms | `EtcdMemberList`, `EtcdStatus`, `EtcdAlarmList` | `os:reader` |
 | Background alerts and widget | same as the overview and etcd | `os:reader` |
 | AI diagnosis report (optional) | the calls above, `Time`, `Events`, `Containers`, `NodeStatus`, `StaticPodStatus` | `os:reader` |
+| **New Talos cluster** | maintenance `ApplyConfiguration` (unauthenticated, on a machine booted from the ISO), then `Version`, `Bootstrap`, `EtcdMemberList`, `Kubeconfig` with the cluster's own talosconfig | none on the machine; the talosconfig the phone makes is **`os:admin`** |
 | **Reboot (`-m default\|powercycle\|force`) / shutdown (`--force`)** | `Reboot`, `Shutdown` | **`os:operator`** |
 | **Cluster health check** | `ClusterService/HealthCheck` | **`os:admin`** |
 | **Kubeconfig export** | `Kubeconfig` | **`os:admin`** |

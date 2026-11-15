@@ -121,11 +121,13 @@ final class JoinJob {
         }
     }
 
-    /// The Go run of `request`: an Omni allocation, an image run, a cloud create or a plain join.
+    /// The Go run of `request`: a new cluster, an Omni allocation, an image run, a cloud create or a
+    /// plain join.
     /// One `if` per kind: a single chain of `??` is too slow for the type checker.
     private static func startRun(
         client: TalosClient, request: JoinRequest, providerToken: String
     ) -> (events: AsyncStream<JoinEvent>, stop: @Sendable () -> Void) {
+        if request.newCluster != nil { return TalosClient.startNewCluster(request) }
         if let spec = request.omniAllocate { return client.startOmniAllocate(spec) }
         if let spec = request.snapshot { return client.startHetznerSnapshot(spec, token: providerToken) }
         if let spec = request.awsImage { return client.startAWSImage(spec, credential: providerToken) }

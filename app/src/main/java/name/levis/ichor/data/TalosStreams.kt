@@ -285,6 +285,32 @@ internal class TalosStreams(private val configs: ConfigRepository) {
     }.buffer(Channel.UNLIMITED) // every step is kept: the timeline needs them
 
     /**
+     * StartNewCluster: the draft [draftId] sent to the machine in maintenance mode at [address],
+     * then followed until it is bootstrapped. [talosconfig] is the draft's, already stored. [stop]
+     * emitting stops the run, which still reports its end; once the config is sent, only the
+     * following stops.
+     */
+    fun newCluster(draftId: String, address: String, talosconfig: String, stop: Flow<Any>): Flow<JoinEvent> = callbackFlow {
+        val listener = object : JoinListener {
+            override fun onProgress(json: String) {
+                runCatching { TalosJson.decodeFromString(JoinProgress.serializer(), json) }.getOrNull()
+                    ?.let { trySend(JoinEvent.Progress(it)) }
+            }
+
+            override fun onDone(nodeAddress: String, errMessage: String) {
+                trySend(JoinEvent.Done(nodeAddress, errMessage.ifEmpty { null }?.let(::goErrorText)))
+                close()
+            }
+        }
+        val run = Ichorgo.startNewCluster(draftId, address, talosconfig, listener)
+        launch {
+            stop.first()
+            run.cancel()
+        }
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED) // every step is kept: the timeline needs them
+
+    /**
      * Creates a Hetzner server with the new node's user data and follows it (StartHetznerCreate).
      * Cancelling deletes the server it created, so a collector that goes away does not cancel:
      * only [stop] does, and the run always ends by itself.

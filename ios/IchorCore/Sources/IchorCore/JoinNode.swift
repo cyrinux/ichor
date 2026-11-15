@@ -143,6 +143,8 @@ public struct JoinRequest: Equatable, Sendable {
     public let gcpImage: GCPImageSpec?
     /// A machine of Omni to put in the cluster (`hostname` and `role` are the machine's and the set's).
     public let omniAllocate: OmniAllocateSpec?
+    /// No cluster yet: the machine at `address` becomes the first control plane of this one.
+    public let newCluster: NewClusterStart?
 
     public init(
         address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
@@ -150,8 +152,9 @@ public struct JoinRequest: Equatable, Sendable {
         aws: AWSCreateSpec? = nil, azure: AzureCreateSpec? = nil,
         gcp: GCPCreateSpec? = nil, omni: Bool = false,
         snapshot: HetznerSnapshotSpec? = nil, awsImage: AWSImageSpec? = nil, azureImage: AzureImageSpec? = nil,
-        gcpImage: GCPImageSpec? = nil, omniAllocate: OmniAllocateSpec? = nil
+        gcpImage: GCPImageSpec? = nil, omniAllocate: OmniAllocateSpec? = nil, newCluster: NewClusterStart? = nil
     ) {
+        self.newCluster = newCluster
         self.omniAllocate = omniAllocate
         self.awsImage = awsImage
         self.azureImage = azureImage
@@ -175,6 +178,7 @@ public struct JoinRequest: Equatable, Sendable {
     /// The steps of this run's timeline.
     public var phases: [JoinPhase] {
         if omniAllocate != nil { return JoinPhase.omniAllocateRun }
+        if newCluster != nil { return JoinPhase.newClusterRun }
         if let imageKind { return imageKind.phases }
         guard cloud else { return JoinPhase.maintenanceRun }
         return omni ? JoinPhase.cloudOmniRun : JoinPhase.cloudRun
@@ -202,7 +206,7 @@ public struct JoinRequest: Equatable, Sendable {
             address: address, template: template, role: role, hostname: hostname, disk: disk,
             staticAddress: staticAddress, replacing: on, hetzner: hetzner, ovh: ovh, aws: aws, azure: azure, gcp: gcp,
             omni: omni, snapshot: snapshot, awsImage: awsImage, azureImage: azureImage, gcpImage: gcpImage,
-            omniAllocate: omniAllocate)
+            omniAllocate: omniAllocate, newCluster: newCluster)
     }
 }
 
@@ -259,13 +263,15 @@ public struct JoinProgress: Decodable, Equatable, Sendable {
 
 /// Phases of a node join, in order.
 public enum JoinPhase: String, CaseIterable, Comparable, Sendable {
-    case key, creating, starting, applying, allocated, installing, booting, rebooting, booted, joining, omni
-    case registering, rescue, writing, snapshot, register, cleanup, done
+    case key, secrets, creating, starting, applying, allocated, installing, booting, rebooting, booted, joining
+    case bootstrapping, ready, omni, registering, rescue, writing, snapshot, register, cleanup, done
 
     /// A node in maintenance mode that gets its config from the app.
     public static let maintenanceRun: [JoinPhase] = [
         .applying, .installing, .rebooting, .booted, .joining, .registering, .done,
     ]
+    /// A new cluster: its talosconfig stored, its first control plane installed and bootstrapped.
+    public static let newClusterRun: [JoinPhase] = [.secrets, .applying, .installing, .booted, .bootstrapping, .ready]
     /// A server created with the config as its user data.
     public static let cloudRun: [JoinPhase] = [
         .creating, .starting, .rebooting, .booted, .joining, .registering, .done,

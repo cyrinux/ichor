@@ -154,6 +154,7 @@ struct ImportView: View {
         ScrollView {
             VStack(spacing: 20) {
                 dropZone
+                newClusterEntry
                 if let error { Text(error).foregroundStyle(.statusBad).font(.footnote) }
                 if busy { ProgressView() }
                 VStack(alignment: .leading, spacing: 8) {
@@ -200,6 +201,25 @@ struct ImportView: View {
             }
             .padding()
         }
+    }
+
+    /// No cluster to bring: make one from a machine booted from the Talos ISO.
+    private var newClusterEntry: some View {
+        NavigationLink {
+            NewClusterView()
+        } label: {
+            Label {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("New Talos cluster").font(.headline)
+                    Text("Turn a machine booted from the Talos ISO into a new cluster")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+            } icon: {
+                Image(systemName: "plus.circle")
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .disabled(busy)
     }
 
     /// The Ichor glyph over the two config kinds, and the three ways to bring one in.

@@ -1,6 +1,373 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "New Talos cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nouveau cluster Talos" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nuevo clúster de Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Новий кластер Talos" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Neuer Talos-Cluster" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nuovo cluster Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新建 Talos 集群" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "新しい Talos クラスター" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Novo cluster Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Новый кластер Talos" } }
+      }
+    },
+    "Turn a machine booted from the Talos ISO into a new cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Faire d'une machine démarrée sur l'ISO Talos un nouveau cluster" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Convierte una máquina arrancada desde la ISO de Talos en un clúster nuevo" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зробити машину, завантажену з ISO Talos, новим кластером" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eine vom Talos-ISO gestartete Maschine zu einem neuen Cluster machen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Trasforma una macchina avviata dalla ISO di Talos in un nuovo cluster" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将从 Talos ISO 启动的机器变成新集群" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos ISO で起動したマシンから新しいクラスターを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Transforme uma máquina iniciada pela ISO do Talos em um novo cluster" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сделать машину, загруженную с ISO Talos, новым кластером" } }
+      }
+    },
+    "Boot a machine on your local network from the Talos ISO and type the address its console shows. This phone makes the cluster's secrets and configs, sends the config to the machine and bootstraps it: no laptop needed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Démarrez une machine de votre réseau local sur l'ISO Talos et saisissez l'adresse affichée sur sa console. Ce téléphone crée les secrets et les configs du cluster, envoie la config à la machine et l'amorce : pas besoin d'ordinateur." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Arranca una máquina de tu red local desde la ISO de Talos y escribe la dirección que muestra su consola. Este teléfono crea los secretos y las configuraciones del clúster, envía la configuración a la máquina y la inicializa: no hace falta un portátil." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Завантажте машину у вашій локальній мережі з ISO Talos і введіть адресу, яку показує її консоль. Цей телефон створює секрети й конфігурації кластера, надсилає конфігурацію машині та ініціалізує її: ноутбук не потрібен." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Starte eine Maschine in deinem lokalen Netz vom Talos-ISO und gib die Adresse ein, die ihre Konsole zeigt. Dieses Telefon erzeugt die Secrets und Configs des Clusters, sendet die Config an die Maschine und bootstrappt sie: kein Laptop nötig." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvia una macchina della tua rete locale dalla ISO di Talos e digita l'indirizzo mostrato dalla sua console. Questo telefono crea i segreti e le configurazioni del cluster, invia la configurazione alla macchina e la inizializza: nessun portatile necessario." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "用 Talos ISO 启动本地网络中的一台机器，然后输入其控制台显示的地址。本手机会生成集群的密钥和配置，将配置发送到机器并完成引导：无需笔记本电脑。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ローカルネットワーク上のマシンを Talos ISO で起動し、コンソールに表示されたアドレスを入力してください。この端末がクラスターのシークレットと設定を作成し、マシンに設定を送信してブートストラップします。ノート PC は不要です。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Inicie uma máquina da sua rede local pela ISO do Talos e digite o endereço que o console dela mostra. Este telefone cria os segredos e as configurações do cluster, envia a configuração para a máquina e faz o bootstrap: sem precisar de um notebook." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Загрузите машину в вашей локальной сети с ISO Talos и введите адрес, который показывает её консоль. Этот телефон создаёт секреты и конфигурации кластера, отправляет конфигурацию на машину и инициализирует её: ноутбук не нужен." } }
+      }
+    },
+    "In the demo, type demo as the address: the preview works, creating the cluster is refused." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Dans la démo, saisissez demo comme adresse : l'aperçu fonctionne, la création du cluster est refusée." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "En la demo, escribe demo como dirección: la vista previa funciona y la creación del clúster se rechaza." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "У демо введіть demo як адресу: попередній перегляд працює, створення кластера відхиляється." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "In der Demo gib demo als Adresse ein: die Vorschau funktioniert, das Erstellen des Clusters wird abgelehnt." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nella demo, digita demo come indirizzo: l'anteprima funziona, la creazione del cluster viene rifiutata." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在演示中，将地址输入为 demo：预览可用，创建集群会被拒绝。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "デモではアドレスに demo と入力してください。プレビューは動作しますが、クラスターの作成は拒否されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Na demo, digite demo como endereço: a prévia funciona, a criação do cluster é recusada." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В демо введите demo как адрес: предпросмотр работает, создание кластера отклоняется." } }
+      }
+    },
+    "2. The cluster: its name, the install disk and Kubernetes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "2. Le cluster : son nom, le disque d'installation et Kubernetes" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "2. El clúster: su nombre, el disco de instalación y Kubernetes" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "2. Кластер: його назва, диск для встановлення і Kubernetes" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "2. Der Cluster: sein Name, die Installationsdisk und Kubernetes" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "2. Il cluster: il nome, il disco di installazione e Kubernetes" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "2. 集群：名称、安装磁盘和 Kubernetes" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "2. クラスター: 名前、インストール先ディスク、Kubernetes" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "2. O cluster: o nome, o disco de instalação e o Kubernetes" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "2. Кластер: его имя, диск для установки и Kubernetes" } }
+      }
+    },
+    "3. Store the access, install and bootstrap" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "3. Enregistrer l'accès, installer et amorcer" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "3. Guardar el acceso, instalar e inicializar" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "3. Зберегти доступ, встановити й ініціалізувати" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "3. Zugang speichern, installieren und bootstrappen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "3. Salvare l'accesso, installare e inizializzare" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "3. 保存访问凭据、安装并引导" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "3. アクセス情報を保存し、インストールしてブートストラップ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "3. Salvar o acesso, instalar e fazer o bootstrap" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "3. Сохранить доступ, установить и инициализировать" } }
+      }
+    },
+    "Cluster name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nom du cluster" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nombre del clúster" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Назва кластера" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Clustername" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nome del cluster" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群名称" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスター名" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nome do cluster" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Имя кластера" } }
+      }
+    },
+    "Default for this Talos" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Par défaut pour ce Talos" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Predeterminada para este Talos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Типова для цього Talos" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Standard für dieses Talos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Predefinita per questo Talos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此 Talos 的默认值" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "この Talos の既定値" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Padrão para este Talos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "По умолчанию для этого Talos" } }
+      }
+    },
+    "Run workloads on the control plane" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Exécuter les charges sur le control plane" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ejecutar cargas en el control plane" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Запускати навантаження на control plane" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Workloads auf der Control Plane ausführen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Eseguire i carichi sul control plane" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在控制平面上运行工作负载" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "コントロールプレーンでワークロードを実行" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Executar cargas no control plane" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запускать нагрузки на control plane" } }
+      }
+    },
+    "Needed while the cluster has a single node." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nécessaire tant que le cluster n'a qu'un nœud." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Necesario mientras el clúster tenga un solo nodo." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Потрібно, поки кластер має лише один вузол." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nötig, solange der Cluster nur einen Knoten hat." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Necessario finché il cluster ha un solo nodo." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群只有一个节点时需要开启。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターのノードが 1 台のうちは必要です。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Necessário enquanto o cluster tiver um único nó." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Нужно, пока в кластере только один узел." } }
+      }
+    },
+    "Prepare the cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Préparer le cluster" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Preparar el clúster" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Підготувати кластер" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Cluster vorbereiten" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prepara il cluster" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "准备集群" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターを準備" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Preparar o cluster" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подготовить кластер" } }
+      }
+    },
+    "Talos %@ · Kubernetes %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Talos %1$@ · Kubernetes %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Talos %1$@ · Kubernetes %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Talos %1$@ · Kubernetes %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Talos %1$@ · Kubernetes %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Talos %1$@ · Kubernetes %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Talos %1$@ · Kubernetes %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Talos %1$@ · Kubernetes %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos %1$@ · Kubernetes %2$@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Talos %1$@ · Kubernetes %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Talos %1$@ · Kubernetes %2$@" } }
+      }
+    },
+    "The secrets are hidden here. They are made on this phone and leave it only inside the config sent to the machine." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les secrets sont masqués ici. Ils sont créés sur ce téléphone et ne le quittent que dans la config envoyée à la machine." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Los secretos están ocultos aquí. Se crean en este teléfono y solo salen de él dentro de la configuración enviada a la máquina." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Секрети тут приховано. Їх створено на цьому телефоні, і вони залишають його лише в конфігурації, надісланій машині." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Secrets sind hier verborgen. Sie entstehen auf diesem Telefon und verlassen es nur in der Config, die an die Maschine geht." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "I segreti qui sono nascosti. Vengono creati su questo telefono e lo lasciano solo dentro la configurazione inviata alla macchina." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此处已隐藏密钥。密钥在本手机上生成，仅随发送到机器的配置离开本手机。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "シークレットはここでは隠されています。この端末で作成され、マシンに送る設定の中でのみ端末から出ます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Os segredos estão ocultos aqui. Eles são criados neste telefone e só saem dele dentro da configuração enviada à máquina." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Секреты здесь скрыты. Они создаются на этом телефоне и покидают его только в конфигурации, отправленной на машину." } }
+      }
+    },
+    "Create the cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer le cluster" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear el clúster" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити кластер" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Cluster erstellen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea il cluster" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "创建集群" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar o cluster" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать кластер" } }
+      }
+    },
+    "Create %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer %@ ?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Crear %@?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити %@?" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ erstellen?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Creare %@?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "创建 %@？" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ を作成しますか?" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar %@?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать %@?" } }
+      }
+    },
+    "This erases %@ on %@ and makes it the only control plane of %@. Its talosconfig is stored on this phone first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This erases %1$@ on %2$@ and makes it the only control plane of %3$@. Its talosconfig is stored on this phone first." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cela efface %1$@ sur %2$@ et en fait l'unique control plane de %3$@. Son talosconfig est d'abord enregistré sur ce téléphone." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esto borra %1$@ en %2$@ y la convierte en el único control plane de %3$@. Su talosconfig se guarda antes en este teléfono." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Це стирає %1$@ на %2$@ і робить її єдиним control plane кластера %3$@. Його talosconfig спершу зберігається на цьому телефоні." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das löscht %1$@ auf %2$@ und macht sie zur einzigen Control Plane von %3$@. Ihre talosconfig wird zuerst auf diesem Telefon gespeichert." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questo cancella %1$@ su %2$@ e la rende l'unico control plane di %3$@. Il suo talosconfig viene prima salvato su questo telefono." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这将擦除 %2$@ 上的 %1$@，并使其成为 %3$@ 唯一的控制平面。其 talosconfig 会先保存到本手机。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ の %1$@ を消去し、%3$@ の唯一のコントロールプレーンにします。talosconfig は先にこの端末に保存されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Isso apaga %1$@ em %2$@ e a torna o único control plane de %3$@. O talosconfig é salvo antes neste telefone." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Это стирает %1$@ на %2$@ и делает её единственным control plane кластера %3$@. Его talosconfig сначала сохраняется на этом телефоне." } }
+      }
+    },
+    "A cluster named %@ is already on this phone: pick another name." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Un cluster nommé %@ est déjà sur ce téléphone : choisissez un autre nom." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ya hay un clúster llamado %@ en este teléfono: elige otro nombre." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Кластер з назвою %@ уже є на цьому телефоні: виберіть іншу назву." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein Cluster namens %@ ist schon auf diesem Telefon: wähle einen anderen Namen." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Su questo telefono c'è già un cluster chiamato %@: scegli un altro nome." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "本手机上已有名为 %@ 的集群：请换一个名称。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ という名前のクラスターはすでにこの端末にあります。別の名前を選んでください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Já existe um cluster chamado %@ neste telefone: escolha outro nome." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Кластер с именем %@ уже есть на этом телефоне: выберите другое имя." } }
+      }
+    },
+    "Another run is being followed: wait for it to end." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Une autre opération est en cours de suivi : attendez qu'elle se termine." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ya se está siguiendo otra operación: espera a que termine." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Уже відстежується інший запуск: дочекайтеся його завершення." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein anderer Lauf wird gerade verfolgt: warte, bis er endet." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Si sta già seguendo un'altra operazione: attendi che finisca." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在跟踪另一个任务：请等待其结束。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "別の処理を追跡中です。終わるまでお待ちください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Outra execução está sendo acompanhada: aguarde o fim." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Уже отслеживается другой запуск: дождитесь его окончания." } }
+      }
+    },
+    "The talosconfig could not be stored: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le talosconfig n'a pas pu être enregistré : %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudo guardar el talosconfig: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не вдалося зберегти talosconfig: %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die talosconfig konnte nicht gespeichert werden: %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impossibile salvare il talosconfig: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法保存 talosconfig：%@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "talosconfig を保存できませんでした: %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não foi possível salvar o talosconfig: %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не удалось сохранить talosconfig: %@" } }
+      }
+    },
+    "Remove the cluster entry" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Retirer l'entrée du cluster" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Quitar la entrada del clúster" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Видалити запис кластера" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Clustereintrag entfernen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi la voce del cluster" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除集群条目" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターの項目を削除" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Remover a entrada do cluster" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить запись кластера" } }
+      }
+    },
+    "Nothing reached the machine: the talosconfig stored for this cluster is of no use." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rien n'a atteint la machine : le talosconfig enregistré pour ce cluster ne sert à rien." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nada llegó a la máquina: el talosconfig guardado para este clúster no sirve." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "До машини нічого не дійшло: збережений для цього кластера talosconfig не потрібен." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nichts hat die Maschine erreicht: die für diesen Cluster gespeicherte talosconfig nützt nichts." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nulla ha raggiunto la macchina: il talosconfig salvato per questo cluster non serve." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有任何内容到达机器：为此集群保存的 talosconfig 已无用处。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "マシンには何も届いていません。このクラスター用に保存した talosconfig は不要です。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nada chegou à máquina: o talosconfig salvo para este cluster não tem utilidade." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "До машины ничего не дошло: сохранённый для этого кластера talosconfig не нужен." } }
+      }
+    },
+    "%@ is up: its control plane answers at %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ is up: its control plane answers at %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ est prêt : son control plane répond à %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ está listo: su control plane responde en %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ працює: його control plane відповідає на %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ läuft: seine Control Plane antwortet unter %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ è attivo: il suo control plane risponde a %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ 已启动：其控制平面在 %2$@ 响应" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ が稼働中です。コントロールプレーンは %2$@ で応答しています" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ está no ar: o control plane responde em %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ работает: его control plane отвечает на %2$@" } }
+      }
+    },
+    "Open the cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir le cluster" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abrir el clúster" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Відкрити кластер" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Cluster öffnen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Apri il cluster" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开集群" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターを開く" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir o cluster" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открыть кластер" } }
+      }
+    },
+    "Store the talosconfig" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Enregistrer le talosconfig" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Guardar el talosconfig" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зберегти talosconfig" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "talosconfig speichern" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Salva il talosconfig" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存 talosconfig" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "talosconfig を保存" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Salvar o talosconfig" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сохранить talosconfig" } }
+      }
+    },
+    "Bootstrap etcd" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Amorcer etcd" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Inicializar etcd" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ініціалізувати etcd" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "etcd bootstrappen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Inizializza etcd" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "引导 etcd" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "etcd をブートストラップ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Fazer o bootstrap do etcd" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Инициализировать etcd" } }
+      }
+    },
+    "Cluster ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cluster prêt" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Clúster listo" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Кластер готовий" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Cluster bereit" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cluster pronto" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "集群就绪" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスター準備完了" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cluster pronto" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Кластер готов" } }
+      }
+    },
     "Top messages" : {
       "extractionState" : "manual",
       "localizations" : {

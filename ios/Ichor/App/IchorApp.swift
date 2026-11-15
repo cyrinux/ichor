@@ -130,7 +130,7 @@ struct RootView: View {
     var body: some View {
         ZStack {
             if everUnlocked || !lockStore.lock.locked {
-                content
+                NewClusterRoot { content }
                     // Under the cover below: VoiceOver must not read the old names either.
                     .accessibilityHidden(settings.maskTransition)
             }
