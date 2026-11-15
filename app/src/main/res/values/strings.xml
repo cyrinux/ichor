@@ -1891,6 +1891,11 @@
     <string name="ai_provider_device_answer">the model on this phone</string>
     <string name="ai_local_not_ready">To read the answer here, download or import a model in Settings.</string>
     <string name="ai_health_explain_hint_device">Reads the failed checks, node readiness and recent events with the model on this phone. Nothing leaves it.</string>
+    <string name="ai_explain_title">What is going on</string>
+    <string name="ai_explain_pod_hint">Sends this pod’s state, its events and its last log lines, shown below, to %1$s.</string>
+    <string name="ai_explain_alert_hint">Sends this alert’s labels and annotations, and the events of what it names, shown below, to %1$s.</string>
+    <string name="ai_explain_finding_hint">Sends this finding and the events of what it names, shown below, to %1$s.</string>
+    <string name="ai_explain_hint_device">Reads the report below with the model on this phone. Nothing leaves it.</string>
     <string name="ai_local_unavailable">The model cannot run on this phone.</string>
     <string name="ai_local_needs_64bit">The model needs a 64-bit phone.</string>
     <string name="ai_local_old_cpu">This phone’s processor is too old to run the model.</string>

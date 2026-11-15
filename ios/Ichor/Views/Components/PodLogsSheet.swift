@@ -18,8 +18,11 @@ struct PodLogsSheet: View {
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(AISettings.self) private var ai
     @Environment(\.dismiss) private var dismiss
     @State private var state: LoadState<PodLogSnapshot> = .loading
+    /// Explain with AI, for a pod in trouble, when the optional AI diagnosis is on.
+    @State private var explaining = false
     @State private var previous = false
     @State private var filter = LogFilter()
     /// "" lets Kubernetes pick the only container.
@@ -114,6 +117,13 @@ struct PodLogsSheet: View {
                                 Label(openInLogsBackendTitle(logsBackend), systemImage: "text.magnifyingglass")
                             }
                         }
+                        if ai.enabled, !shown.healthy || shown.restarts > 0 {
+                            Button {
+                                explaining = true
+                            } label: {
+                                Label("Explain with AI", systemImage: "sparkles")
+                            }
+                        }
                         Button {
                             forwarding = true
                         } label: {
@@ -145,6 +155,11 @@ struct PodLogsSheet: View {
             .onChange(of: following) { _, on in if on { previous = false } }
             .navigationDestination(isPresented: $forwarding) {
                 PortForwardView(namespace: pod.namespace, pod: pod.name)
+            }
+            .navigationDestination(isPresented: $explaining) {
+                ExplainPage(
+                    subject: .pod(namespace: pod.namespace, name: pod.name),
+                    note: podExplainNote(namespace: pod.namespace, name: pod.name, status: shown.status))
             }
             .navigationDestination(isPresented: $searchingLogs) {
                 LogSearchView(

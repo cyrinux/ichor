@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.JsonObject
 import name.levis.ichorgo.Diagnosis
 import name.levis.ichorgo.DiagnosisListener
 import name.levis.ichorgo.Ichorgo
@@ -75,6 +76,21 @@ class DiagnosisRepository(
         val linesJson = TalosJson.encodeToString(ListSerializer(String.serializer()), lines)
         return withContext(Dispatchers.IO) {
             Ichorgo.collectHealthExplanation(stored.yaml, stored.activeContext, server, linesJson, failure, anonymize)
+        }
+    }
+
+    /**
+     * Builds the short report "Explain with AI" sends about one [kind] of subject ("pod",
+     * "alert" or "finding"; [subject] as Go's CollectExplanation reads it): its state, its
+     * events and, for a pod, its last log lines. Nothing leaves the phone here.
+     */
+    suspend fun collectExplanation(kind: String, subject: JsonObject, anonymize: Boolean): Diagnosis {
+        // Kubernetes reads only: through the cluster's Kubernetes access when one is set, like the
+        // screens the subject comes from.
+        val target = kubeServers.targetFor(configs.forCall())
+        val subjectJson = TalosJson.encodeToString(JsonObject.serializer(), subject)
+        return withContext(Dispatchers.IO) {
+            Ichorgo.collectExplanation(target.yaml, target.context, target.server, kind, subjectJson, anonymize)
         }
     }
 

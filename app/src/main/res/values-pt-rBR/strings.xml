@@ -1886,6 +1886,11 @@
     <string name="ai_provider_device_answer">o modelo neste telefone</string>
     <string name="ai_local_not_ready">Para ler a resposta aqui, baixe ou importe um modelo nas Configurações.</string>
     <string name="ai_health_explain_hint_device">Lê as verificações com falha, a prontidão dos nós e os eventos recentes com o modelo neste telefone. Nada sai dele.</string>
+    <string name="ai_explain_title">O que está acontecendo</string>
+    <string name="ai_explain_pod_hint">Envia o estado deste pod, seus eventos e suas últimas linhas de log, mostrados abaixo, para %1$s.</string>
+    <string name="ai_explain_alert_hint">Envia os rótulos e as anotações deste alerta e os eventos do que ele cita, mostrados abaixo, para %1$s.</string>
+    <string name="ai_explain_finding_hint">Envia esta constatação e os eventos do que ela cita, mostrados abaixo, para %1$s.</string>
+    <string name="ai_explain_hint_device">Lê o relatório abaixo com o modelo deste telefone. Nada sai dele.</string>
     <string name="ai_local_unavailable">O modelo não pode ser executado neste telefone.</string>
     <string name="ai_local_needs_64bit">O modelo requer um telefone de 64 bits.</string>
     <string name="ai_local_old_cpu">O processador deste telefone é antigo demais para executar o modelo.</string>

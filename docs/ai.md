@@ -110,6 +110,19 @@ and never contacts a model provider.
   error events (no logs, no etcd), anonymized like the report, and the answer names the likely
   cause and the next two or three screens to check. *Continue in Diagnosis* opens the full
   report with the failure as the note.
+- **Explain a pod, an alert or a finding:** a pod that does not run or restarted (in its log
+  sheet), an alert (in its sheet) and a warning or critical checkup finding each offer *Explain
+  with AI*. The short report is read first and shown before anything is sent; one tap sends it,
+  and the answer names the likely cause, the line of the report that shows it and the next screens
+  to check. What is sent, per subject: for a pod, its status, each container's state, restarts
+  and last termination, the image pull problem if any, its events and the last 40 lines of the
+  container in trouble (the previous run when it restarted, without colours); for an alert, its
+  labels, annotations, state and start, and the events of the pod or workload its labels name;
+  for a finding, the finding as the checkup words it, its fix and the events of the object it
+  names. The reads are get and list only, bounded to 10 seconds and 16 KiB; one the credentials
+  refuse (often `pods/log`) leaves a line in the report instead. It is anonymized and scrubbed
+  like the full report, and the model never asks for more here. *Continue in Diagnosis* opens the
+  full report with the subject as the note.
 - **Panel assistant:** on the Metrics screen, the sparkle button (or *Ask AI* in the panel
   editor) opens a chat with the same model to write a PromQL panel from a description, or to
   change the one being edited. The model gets the metric names your source knows and the
@@ -131,6 +144,9 @@ OPENAI_API_KEY=... go run ./cmd/probe diagnose openai gpt-6-astra
 # nothing is sent), or sends it with the real names and prints the answer
 go run ./cmd/probe health-explain-report
 ANTHROPIC_API_KEY=... go run ./cmd/probe health-explain anthropic
+# Explain with AI: a pod, an alert (Alertmanager source, fingerprint) or a finding (its JSON)
+go run ./cmd/probe explain-report pod default web-0
+ANTHROPIC_API_KEY=... go run ./cmd/probe explain anthropic pod default web-0
 # The panel assistant: the metric names (nothing is sent), then one question with its checked panel
 SRC='{"mode":"proxy","namespace":"monitoring","service":"prometheus-operated","port":9090}'
 go run ./cmd/probe prom-metrics "$SRC"

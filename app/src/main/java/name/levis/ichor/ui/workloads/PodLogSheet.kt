@@ -59,6 +59,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.podExplainNote
+import name.levis.ichor.data.podExplainSubject
+import name.levis.ichor.ui.components.ExplainKind
+import name.levis.ichor.ui.components.ExplainSheet
 import name.levis.ichor.ui.logsearch.openInLogsBackendLabel
 import name.levis.ichor.ui.logsearch.rememberLogsBackend
 import name.levis.ichor.data.KubeRepository
@@ -211,6 +215,21 @@ fun PodLogSheet(
     val shellDenial = rememberKubeDenial(KubeAction.EXEC_POD, pod.namespace)
     // The pod's events in place of its log: why it does not start, when there is no log yet.
     var events by rememberSaveable(pod.key) { mutableStateOf(false) }
+    // Explain with AI, for a pod in trouble, when the optional AI diagnosis is on.
+    val ai by appContext.aiPreferences.settings.collectAsStateWithLifecycle()
+    var explain by rememberSaveable(pod.key) { mutableStateOf(false) }
+    if (explain) {
+        ExplainSheet(
+            ExplainKind.POD,
+            podExplainSubject(pod),
+            podExplainNote(pod),
+            onDismiss = { explain = false },
+            onLeave = {
+                explain = false
+                onDismiss()
+            },
+        )
+    }
     // New lines as they are written (`kubectl logs -f`), in place of the last ones read once.
     var follow by rememberSaveable(pod.key) { mutableStateOf(false) }
     val snapshot = (state as? UiState.Loaded)?.data
@@ -305,6 +324,11 @@ fun PodLogSheet(
                                 },
                                 label = { Text(stringResource(R.string.pod_logs_previous)) },
                             )
+                        }
+                    }
+                    if (ai.enabled && (!pod.healthy || pod.restarts > 0)) {
+                        item(key = "explain") {
+                            IchorAssistChip(onClick = { explain = true }, label = { Text(stringResource(R.string.ai_health_explain)) })
                         }
                     }
                     item(key = "events") {

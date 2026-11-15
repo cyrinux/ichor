@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -55,6 +56,7 @@ import name.levis.ichor.ui.overview.OverviewScreen
 import name.levis.ichor.ui.overview.OverviewScreenNavigation
 import name.levis.ichor.ui.share.OpenLink
 import name.levis.ichor.ui.share.parseShareLink
+import name.levis.ichor.ui.nav.LocalOpenDiagnosis
 import name.levis.ichor.ui.nav.Routes
 import name.levis.ichor.ui.nav.WithClusterRail
 import name.levis.ichor.ui.nav.appGraph
@@ -304,119 +306,122 @@ fun Navigation(
     }
     // On a tablet, the clusters and the cluster's sections in a rail beside the screens.
     WithClusterRail(nav, app) { Box(Modifier.fillMaxSize()) {
-        NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW, modifier = Modifier.fillMaxSize()) {
-            talosGraph(nav, app, kubeLinks)
-            kubeGraph(nav, app, kubeLinks)
-            gitOpsGraph(nav, app, kubeLinks)
-            appGraph(nav, app, kubeLinks, openTarget)
-            composable(Routes.IMPORT) {
-                ImportScreen(
-                    incoming = incomingConfig,
-                    onIncomingTaken = { incomingConfig = null },
-                    onImported = {
-                        app.launchSync(runNow = true)
-                        nav.resetTo(Routes.OVERVIEW)
-                    },
-                    // Adding a cluster comes from the overview or the settings: one can go back.
-                    onBack = if (nav.previousBackStackEntry != null) ({ nav.popBackStack() }) else null,
-                    onNewCluster = { nav.navigate(Routes.NEW_CLUSTER) { launchSingleTop = true } },
-                )
-            }
-            composable(Routes.NEW_CLUSTER) {
-                NewClusterScreen(
-                    onBack = { nav.popBackStack() },
-                    onOpenCluster = {
-                        app.launchSync(runNow = true)
-                        nav.resetTo(Routes.OVERVIEW)
-                    },
-                )
-            }
-            composable(Routes.DEMO) {
-                ImportScreen(
-                    autoStartDemo = true,
-                    onImported = {
-                        app.launchSync(runNow = true)
-                        nav.resetTo(Routes.OVERVIEW)
-                    },
-                    onBack = { nav.popBackStack() },
-                )
-            }
-            composable(Routes.DEMO_KUBE) {
-                ImportScreen(
-                    autoStartDemo = true,
-                    kubeDemo = true,
-                    onImported = {
-                        app.launchSync(runNow = true)
-                        nav.resetTo(Routes.OVERVIEW)
-                    },
-                    onBack = { nav.popBackStack() },
-                )
-            }
-            composable(Routes.OVERVIEW) {
-                OverviewScreen(
-                    OverviewScreenNavigation(
-                        onNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
-                        onNodeAction = nav::openNodeAction,
-                        onEtcd = { nav.navigate(Routes.ETCD) },
-                        onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
-                        onWorkloads = { nav.navigate(Routes.workloads()) },
-                        onMetrics = { nav.navigate(Routes.metrics()) },
-                        onAlerts = { nav.navigate(Routes.alerts()) },
-                        onDataServices = { kind, solo -> nav.navigate(Routes.dataServices(kind, solo)) },
-                        onPlugin = { nav.navigate(name.levis.ichor.ui.plugins.pluginRoute(it)) },
-                        onArgoCD = { nav.navigate(Routes.ARGO_CD) },
-                        onFlux = { nav.navigate(Routes.FLUX) },
-                        onHealth = { nav.navigate(Routes.HEALTH) },
-                        onEvents = { nav.navigate(Routes.events()) },
-                        onInsights = { nav.navigate(Routes.INSIGHTS) },
-                        onApps = { attention -> nav.navigate(Routes.apps(attention)) },
-                        onSettings = { nav.navigate(Routes.SETTINGS) },
-                        onFunding = { nav.navigate(Routes.FUNDING) },
-                        onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
-                        onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
-                        onUpgradeCluster = { version -> nav.navigate(Routes.clusterUpgrade(version)) },
-                        onUpgradeKubernetes = { nav.navigate(Routes.K8S_UPGRADE) },
-                        onAddNode = { nav.navigate(Routes.JOIN_NODE) },
-                        onRunbooks = { nav.navigate(Routes.RUNBOOKS) },
-                        onUpdates = { nav.navigate(Routes.UPDATES) },
-                        onDiagnose = { nav.navigate(Routes.diagnosis()) },
-                        onAddCluster = { nav.navigate(Routes.IMPORT) },
-                        onClustersCleared = { nav.resetTo(Routes.IMPORT) },
-                        onChangelog = { nav.navigate(Routes.CHANGELOG) },
-                        onAllNodes = { nav.navigate(Routes.nodes(it)) },
-                        onKubeNodes = { nav.navigate(Routes.kubeNodes(it)) },
-                        onCheckup = { nav.navigate(Routes.CHECKUP) },
-                        onCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
-                        onLogSearch = { nav.navigate(Routes.logSearch()) },
-                        onApiHealth = { nav.navigate(Routes.API_HEALTH) },
-                        onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
-                        onPolicies = { nav.navigate(Routes.POLICIES) },
-                        onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
-                        onVirtualMachines = { nav.navigate(Routes.VIRTUAL_MACHINES) },
-                        onArgoRollouts = { nav.navigate(Routes.ARGO_ROLLOUTS) },
-                        onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
-                        onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
-                        onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
-                        onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
-                        onRepository = { nav.navigate(Routes.repoSource()) },
-                        onGitHosts = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
-                        onCrossplane = { nav.navigate(KubeBrowserRoutes.CROSSPLANE) },
-                        onTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
-                        onClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
-                        onLoadBalancing = { nav.navigate(KubeBrowserRoutes.LOAD_BALANCING) },
-                        onJobs = { nav.navigate(KubeBrowserRoutes.JOBS) },
-                        onKubeEvents = { nav.navigate(Routes.KUBE_EVENTS) },
-                        onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
-                        onNodeDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
-                        onNodeMeta = { nav.navigate(Routes.nodeMeta(it, it)) },
-                        onActivity = { nav.navigate(Routes.activity(it)) },
-                        onSearch = { nav.navigate(Routes.SEARCH) { launchSingleTop = true } },
-                        onFleet = { nav.navigate(Routes.FLEET) { launchSingleTop = true } },
-                        onOpenTarget = openTarget,
-                    ),
-                )
-                // After an update: what changed since the build that ran before.
-                WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
+        // "Continue in Diagnosis" from an Explain with AI card, on whichever screen it is.
+        CompositionLocalProvider(LocalOpenDiagnosis provides { note -> nav.navigate(Routes.diagnosis(note)) }) {
+            NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW, modifier = Modifier.fillMaxSize()) {
+                talosGraph(nav, app, kubeLinks)
+                kubeGraph(nav, app, kubeLinks)
+                gitOpsGraph(nav, app, kubeLinks)
+                appGraph(nav, app, kubeLinks, openTarget)
+                composable(Routes.IMPORT) {
+                    ImportScreen(
+                        incoming = incomingConfig,
+                        onIncomingTaken = { incomingConfig = null },
+                        onImported = {
+                            app.launchSync(runNow = true)
+                            nav.resetTo(Routes.OVERVIEW)
+                        },
+                        // Adding a cluster comes from the overview or the settings: one can go back.
+                        onBack = if (nav.previousBackStackEntry != null) ({ nav.popBackStack() }) else null,
+                        onNewCluster = { nav.navigate(Routes.NEW_CLUSTER) { launchSingleTop = true } },
+                    )
+                }
+                composable(Routes.NEW_CLUSTER) {
+                    NewClusterScreen(
+                        onBack = { nav.popBackStack() },
+                        onOpenCluster = {
+                            app.launchSync(runNow = true)
+                            nav.resetTo(Routes.OVERVIEW)
+                        },
+                    )
+                }
+                composable(Routes.DEMO) {
+                    ImportScreen(
+                        autoStartDemo = true,
+                        onImported = {
+                            app.launchSync(runNow = true)
+                            nav.resetTo(Routes.OVERVIEW)
+                        },
+                        onBack = { nav.popBackStack() },
+                    )
+                }
+                composable(Routes.DEMO_KUBE) {
+                    ImportScreen(
+                        autoStartDemo = true,
+                        kubeDemo = true,
+                        onImported = {
+                            app.launchSync(runNow = true)
+                            nav.resetTo(Routes.OVERVIEW)
+                        },
+                        onBack = { nav.popBackStack() },
+                    )
+                }
+                composable(Routes.OVERVIEW) {
+                    OverviewScreen(
+                        OverviewScreenNavigation(
+                            onNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
+                            onNodeAction = nav::openNodeAction,
+                            onEtcd = { nav.navigate(Routes.ETCD) },
+                            onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
+                            onWorkloads = { nav.navigate(Routes.workloads()) },
+                            onMetrics = { nav.navigate(Routes.metrics()) },
+                            onAlerts = { nav.navigate(Routes.alerts()) },
+                            onDataServices = { kind, solo -> nav.navigate(Routes.dataServices(kind, solo)) },
+                            onPlugin = { nav.navigate(name.levis.ichor.ui.plugins.pluginRoute(it)) },
+                            onArgoCD = { nav.navigate(Routes.ARGO_CD) },
+                            onFlux = { nav.navigate(Routes.FLUX) },
+                            onHealth = { nav.navigate(Routes.HEALTH) },
+                            onEvents = { nav.navigate(Routes.events()) },
+                            onInsights = { nav.navigate(Routes.INSIGHTS) },
+                            onApps = { attention -> nav.navigate(Routes.apps(attention)) },
+                            onSettings = { nav.navigate(Routes.SETTINGS) },
+                            onFunding = { nav.navigate(Routes.FUNDING) },
+                            onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
+                            onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
+                            onUpgradeCluster = { version -> nav.navigate(Routes.clusterUpgrade(version)) },
+                            onUpgradeKubernetes = { nav.navigate(Routes.K8S_UPGRADE) },
+                            onAddNode = { nav.navigate(Routes.JOIN_NODE) },
+                            onRunbooks = { nav.navigate(Routes.RUNBOOKS) },
+                            onUpdates = { nav.navigate(Routes.UPDATES) },
+                            onDiagnose = { nav.navigate(Routes.diagnosis()) },
+                            onAddCluster = { nav.navigate(Routes.IMPORT) },
+                            onClustersCleared = { nav.resetTo(Routes.IMPORT) },
+                            onChangelog = { nav.navigate(Routes.CHANGELOG) },
+                            onAllNodes = { nav.navigate(Routes.nodes(it)) },
+                            onKubeNodes = { nav.navigate(Routes.kubeNodes(it)) },
+                            onCheckup = { nav.navigate(Routes.CHECKUP) },
+                            onCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
+                            onLogSearch = { nav.navigate(Routes.logSearch()) },
+                            onApiHealth = { nav.navigate(Routes.API_HEALTH) },
+                            onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
+                            onPolicies = { nav.navigate(Routes.POLICIES) },
+                            onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
+                            onVirtualMachines = { nav.navigate(Routes.VIRTUAL_MACHINES) },
+                            onArgoRollouts = { nav.navigate(Routes.ARGO_ROLLOUTS) },
+                            onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
+                            onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
+                            onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
+                            onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
+                            onRepository = { nav.navigate(Routes.repoSource()) },
+                            onGitHosts = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
+                            onCrossplane = { nav.navigate(KubeBrowserRoutes.CROSSPLANE) },
+                            onTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
+                            onClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
+                            onLoadBalancing = { nav.navigate(KubeBrowserRoutes.LOAD_BALANCING) },
+                            onJobs = { nav.navigate(KubeBrowserRoutes.JOBS) },
+                            onKubeEvents = { nav.navigate(Routes.KUBE_EVENTS) },
+                            onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
+                            onNodeDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
+                            onNodeMeta = { nav.navigate(Routes.nodeMeta(it, it)) },
+                            onActivity = { nav.navigate(Routes.activity(it)) },
+                            onSearch = { nav.navigate(Routes.SEARCH) { launchSingleTop = true } },
+                            onFleet = { nav.navigate(Routes.FLEET) { launchSingleTop = true } },
+                            onOpenTarget = openTarget,
+                        ),
+                    )
+                    // After an update: what changed since the build that ran before.
+                    WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
+                }
             }
         }
         if (maskSwitching) MaskSwitchingPlaceholder()

@@ -64,9 +64,10 @@ type Diagnosis struct {
 type diagnosisKind int
 
 const (
-	diagnosisFull   diagnosisKind = iota // the full cluster report (CollectDiagnosis)
-	diagnosisHealth                      // a failed health check (CollectHealthExplanation)
-	diagnosisKube                        // the report of a kubeconfig cluster, without Talos
+	diagnosisFull    diagnosisKind = iota // the full cluster report (CollectDiagnosis)
+	diagnosisHealth                       // a failed health check (CollectHealthExplanation)
+	diagnosisKube                         // the report of a kubeconfig cluster, without Talos
+	diagnosisExplain                      // one pod, alert or checkup finding (CollectExplanation)
 )
 
 // CollectDiagnosis reads the state of the cluster (os:reader calls only) into a report.
@@ -141,6 +142,10 @@ func (d *Diagnosis) systemPrompt(language string) string {
 		return kubeDiagnosisSystemPrompt(language, d.mask != nil)
 	}
 
+	if d.kind == diagnosisExplain {
+		return explainSystemPrompt(language, d.mask != nil)
+	}
+
 	return diagnosisSystemPrompt(language, d.mask != nil)
 }
 
@@ -156,6 +161,10 @@ func (d *Diagnosis) systemPromptFor(provider, language string) string {
 
 	if d.kind == diagnosisKube {
 		return kubeDiagnosisSystemPromptSmall(language, d.mask != nil)
+	}
+
+	if d.kind == diagnosisExplain {
+		return explainSystemPromptSmall(language, d.mask != nil)
 	}
 
 	return diagnosisSystemPromptSmall(language, d.mask != nil)

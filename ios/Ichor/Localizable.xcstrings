@@ -1,6 +1,81 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "What is going on" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "What is going on" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ce qui se passe" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Qué está pasando" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Was los ist" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cosa succede" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Що відбувається" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "何が起きているか" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O que está acontecendo" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Что происходит" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "发生了什么" } }
+      }
+    },
+    "Sends this pod’s state, its events and its last log lines, shown below, to %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sends this pod’s state, its events and its last log lines, shown below, to %1$@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Envoie l’état de ce pod, ses événements et ses dernières lignes de journal, affichés ci-dessous, à %1$@." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Envía el estado de este pod, sus eventos y sus últimas líneas de registro, que se muestran abajo, a %1$@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sendet den Zustand dieses Pods, seine Ereignisse und seine letzten Logzeilen (unten zu sehen) an %1$@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Invia lo stato di questo pod, i suoi eventi e le ultime righe di log, mostrati qui sotto, a %1$@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Надсилає стан цього пода, його події та останні рядки журналу (показані нижче) до %1$@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このポッドの状態、イベント、最後のログ行（下に表示）を%1$@に送信します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Envia o estado deste pod, seus eventos e suas últimas linhas de log, mostrados abaixo, para %1$@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отправляет в %1$@ состояние этого пода, его события и последние строки журнала (показаны ниже)." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将此 Pod 的状态、事件和最后几行日志（见下方）发送给 %1$@。" } }
+      }
+    },
+    "Sends this alert’s labels and annotations, and the events of what it names, shown below, to %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sends this alert’s labels and annotations, and the events of what it names, shown below, to %1$@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Envoie les étiquettes et annotations de cette alerte, et les événements de ce qu’elle désigne, affichés ci-dessous, à %1$@." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Envía las etiquetas y anotaciones de esta alerta, y los eventos de lo que nombra, que se muestran abajo, a %1$@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sendet die Labels und Annotationen dieses Alarms und die Ereignisse dessen, was er nennt (unten zu sehen), an %1$@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Invia le etichette e le annotazioni di questo avviso, e gli eventi di ciò che nomina, mostrati qui sotto, a %1$@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Надсилає мітки й анотації цього сповіщення та події того, що воно називає (показані нижче), до %1$@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このアラートのラベルとアノテーション、対象のイベント（下に表示）を%1$@に送信します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Envia os rótulos e as anotações deste alerta e os eventos do que ele cita, mostrados abaixo, para %1$@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отправляет в %1$@ метки и аннотации этого оповещения и события того, что в нём названо (показаны ниже)." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将此告警的标签和注解，以及其所指对象的事件（见下方）发送给 %1$@。" } }
+      }
+    },
+    "Sends this finding and the events of what it names, shown below, to %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sends this finding and the events of what it names, shown below, to %1$@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Envoie ce constat et les événements de ce qu’il désigne, affichés ci-dessous, à %1$@." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Envía este hallazgo y los eventos de lo que nombra, que se muestran abajo, a %1$@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sendet diesen Befund und die Ereignisse dessen, was er nennt (unten zu sehen), an %1$@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Invia questo rilievo e gli eventi di ciò che nomina, mostrati qui sotto, a %1$@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Надсилає цю знахідку та події того, що вона називає (показані нижче), до %1$@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "この検出結果と対象のイベント（下に表示）を%1$@に送信します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Envia esta constatação e os eventos do que ela cita, mostrados abaixo, para %1$@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отправляет в %1$@ эту находку и события того, что в ней названо (показаны ниже)." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将此检查结果及其所指对象的事件（见下方）发送给 %1$@。" } }
+      }
+    },
+    "Reads the report below with the model on this phone. Nothing leaves it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reads the report below with the model on this phone. Nothing leaves it." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lit le rapport ci-dessous avec le modèle de ce téléphone. Rien n’en sort." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Lee el informe de abajo con el modelo de este teléfono. Nada sale de él." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Liest den Bericht unten mit dem Modell auf diesem Telefon. Nichts verlässt es." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Legge il rapporto qui sotto con il modello su questo telefono. Nulla ne esce." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Читає звіт нижче моделлю на цьому телефоні. Ніщо його не залишає." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "下のレポートをこのスマートフォン上のモデルで読み取ります。外部には何も送信されません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Lê o relatório abaixo com o modelo deste telefone. Nada sai dele." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Читает отчёт ниже моделью на этом телефоне. Ничто его не покидает." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "用本机上的模型读取下方报告，数据不会离开手机。" } }
+      }
+    },
     "New Talos cluster" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -114,7 +114,8 @@ struct AlertsView: View {
                 silenceComment: silenceComment,
                 incident: onCall?.incident(of: alert.fingerprint),
                 confidence: onCall?.matches[alert.fingerprint]?.confidence ?? .alertname,
-                actOnIncident: actOnIncident)
+                actOnIncident: actOnIncident,
+                explainSource: source.flatMap { try? TalosJSON.encode($0) })
         }
         .sheet(isPresented: $sourceOpen) {
             SourceSheet(

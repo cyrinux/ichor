@@ -100,20 +100,7 @@ struct HealthExplainSection: View {
             } else {
                 NotReadyHint(onPhone: ai.onPhone)
             }
-            if !explanation.text.isEmpty {
-                Text(verbatim: explanation.text).textSelection(.enabled)
-            }
-            // A failure keeps what was already written above it.
-            if let error = explanation.error {
-                Text(verbatim: error).foregroundStyle(.statusBad)
-            }
-            if !explanation.running, !explanation.text.isEmpty {
-                Button {
-                    UIPasteboard.general.string = explanation.text
-                } label: {
-                    Label("Copy", systemImage: "doc.on.doc")
-                }
-            }
+            ExplainAnswerRows(text: explanation.text, error: explanation.error, running: explanation.running)
             NavigationLink("Continue in Diagnosis", value: Route.diagnosis(note: healthFailureNote(failure)))
         } header: {
             Text("What went wrong")

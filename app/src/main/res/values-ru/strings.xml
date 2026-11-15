@@ -1998,6 +1998,11 @@
     <string name="ai_provider_device_answer">модель на этом телефоне</string>
     <string name="ai_local_not_ready">Чтобы читать ответ здесь, скачайте или импортируйте модель в настройках.</string>
     <string name="ai_health_explain_hint_device">Анализирует непройденные проверки, готовность узлов и недавние события с помощью модели на этом телефоне. Ничего не покидает устройство.</string>
+    <string name="ai_explain_title">Что происходит</string>
+    <string name="ai_explain_pod_hint">Отправляет в %1$s состояние этого пода, его события и последние строки журнала (показаны ниже).</string>
+    <string name="ai_explain_alert_hint">Отправляет в %1$s метки и аннотации этого оповещения и события того, что в нём названо (показаны ниже).</string>
+    <string name="ai_explain_finding_hint">Отправляет в %1$s эту находку и события того, что в ней названо (показаны ниже).</string>
+    <string name="ai_explain_hint_device">Читает отчёт ниже моделью на этом телефоне. Ничто его не покидает.</string>
     <string name="ai_local_unavailable">Модель не может работать на этом телефоне.</string>
     <string name="ai_local_needs_64bit">Для модели нужен 64-битный телефон.</string>
     <string name="ai_local_old_cpu">Процессор этого телефона слишком старый для работы модели.</string>

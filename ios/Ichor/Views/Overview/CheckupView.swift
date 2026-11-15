@@ -301,11 +301,15 @@ private struct CheckupSectionBody: View {
 }
 
 /// One problem: what it is about, what happens, Kubernetes' own words and what to do, and
-/// `onDelete` when the checkup can remove it (a namespace a network test left behind).
+/// `onDelete` when the checkup can remove it (a namespace a network test left behind), and
+/// "Explain with AI" for a warning or a critical one when the optional AI diagnosis is on.
 private struct CheckupFindingRow: View {
     let finding: CheckupFinding
     let now: Int64
     var onDelete: (() -> Void)?
+
+    @Environment(AISettings.self) private var ai
+    @State private var explaining = false
 
     private var subject: String {
         finding.kind == .event && !finding.extra.isEmpty ? "\(finding.extra) \(finding.subject)" : finding.subject
@@ -332,9 +336,26 @@ private struct CheckupFindingRow: View {
                         .font(.callout)
                         .buttonStyle(.borderless)
                 }
+                if ai.enabled, finding.severity != .info {
+                    Button("Explain with AI") { explaining = true }
+                        .font(.callout)
+                        .buttonStyle(.borderless)
+                }
             }
         }
         .padding(.vertical, 2)
+        .sheet(isPresented: $explaining) {
+            let text = finding.title(now: now)
+            NavigationStack {
+                ExplainPage(
+                    subject: .finding(finding, text: text, fix: finding.fix ?? ""),
+                    note: findingExplainNote(text: text)
+                )
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button("Done") { explaining = false } }
+                }
+            }
+        }
     }
 }
 

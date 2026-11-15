@@ -1,37 +1,10 @@
 package name.levis.ichor.ui.health
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.foundation.verticalScroll
-import name.levis.ichor.ui.design.IchorButton
-import name.levis.ichor.ui.design.IchorCard
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import name.levis.ichor.ui.design.IchorOutlinedButton
-import androidx.compose.material3.Text
-import name.levis.ichor.ui.design.IchorTextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import name.levis.ichor.ui.components.LoadFailureRow
 import name.levis.ichor.R
-import name.levis.ichor.TalosApp
-import name.levis.ichor.ui.diagnosis.aiTarget
-import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.components.copyToClipboard
+import name.levis.ichor.ui.components.ExplainCardContent
+import name.levis.ichor.ui.components.ExplainState
 
 /**
  * The health check helper, under a failed run when AI is enabled: explains the failure in
@@ -44,68 +17,14 @@ fun HealthExplainCard(
     onStop: () -> Unit,
     onContinue: () -> Unit,
 ) {
-    val app = LocalContext.current.applicationContext as TalosApp
-    val settings by app.aiPreferences.settings.collectAsStateWithLifecycle()
-    val target = aiTarget(app, settings)
-    val providerName = target.name
-    val language = LocalConfiguration.current.locales[0].language
-    val askable = target.askable
-
-    IchorCard(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.ai_health_explain_title), style = MaterialTheme.typography.titleMedium)
-            when {
-                explain.running -> ExplainProgress(providerName, onStop)
-                askable -> {
-                    MutedText(
-                        if (target.onPhone) {
-                            stringResource(R.string.ai_health_explain_hint_device)
-                        } else {
-                            stringResource(R.string.ai_health_explain_hint, providerName)
-                        },
-                    )
-                    IchorButton(onClick = { onExplain(language) }, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.ai_health_explain))
-                    }
-                }
-                else -> MutedText(stringResource(target.notReadyText))
-            }
-            ExplainAnswer(explain)
-            IchorOutlinedButton(onClick = onContinue, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.ai_health_continue))
-            }
-        }
-    }
-}
-
-@Composable
-private fun ExplainProgress(providerName: String, onStop: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-        Text(
-            stringResource(R.string.ai_asking, providerName),
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.weight(1f),
-        )
-        IchorTextButton(onClick = onStop) { Text(stringResource(R.string.ai_stop)) }
-    }
-}
-
-@Composable
-private fun ExplainAnswer(explain: ExplainState) {
-    val context = LocalContext.current
-    if (explain.text.isNotEmpty()) {
-        // Bounded so the check's own lines stay on screen below it.
-        SelectionContainer(Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
-            Text(explain.text, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-    // The Explain button above asks again.
-    explain.error?.let { LoadFailureRow(it, onRetry = null) }
-    if (explain.text.isNotEmpty() && !explain.running) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            MutedText(stringResource(R.string.ai_disclaimer), Modifier.weight(1f))
-            IchorTextButton(onClick = { copyToClipboard(context, "answer", explain.text) }) { Text(stringResource(R.string.ai_copy)) }
-        }
-    }
+    ExplainCardContent(
+        title = stringResource(R.string.ai_health_explain_title),
+        hint = { provider, onPhone ->
+            if (onPhone) stringResource(R.string.ai_health_explain_hint_device) else stringResource(R.string.ai_health_explain_hint, provider)
+        },
+        explain = explain,
+        onExplain = onExplain,
+        onStop = onStop,
+        onContinue = onContinue,
+    )
 }

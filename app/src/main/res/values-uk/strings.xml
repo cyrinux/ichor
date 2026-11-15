@@ -1996,6 +1996,11 @@
     <string name="ai_provider_device_answer">модель на цьому телефоні</string>
     <string name="ai_local_not_ready">Щоб прочитати відповідь тут, завантажте або імпортуйте модель у Налаштуваннях.</string>
     <string name="ai_health_explain_hint_device">Аналізує невдалі перевірки, стан вузлів і недавні події моделлю на цьому телефоні. Нічого не виходить за його межі.</string>
+    <string name="ai_explain_title">Що відбувається</string>
+    <string name="ai_explain_pod_hint">Надсилає стан цього пода, його події та останні рядки журналу (показані нижче) до %1$s.</string>
+    <string name="ai_explain_alert_hint">Надсилає мітки й анотації цього сповіщення та події того, що воно називає (показані нижче), до %1$s.</string>
+    <string name="ai_explain_finding_hint">Надсилає цю знахідку та події того, що вона називає (показані нижче), до %1$s.</string>
+    <string name="ai_explain_hint_device">Читає звіт нижче моделлю на цьому телефоні. Ніщо його не залишає.</string>
     <string name="ai_local_unavailable">Модель не може працювати на цьому телефоні.</string>
     <string name="ai_local_needs_64bit">Моделі потрібен 64-бітний телефон.</string>
     <string name="ai_local_old_cpu">Процесор цього телефона застарий для моделі.</string>
