@@ -27,7 +27,10 @@ final class NewClusterTests: XCTestCase {
     func testDraftDecodesAndHidesItsCredential() throws {
         let draft = try TalosJSON.decode(
             NewClusterDraft.self,
-            from: #"{"draftId":"d1","talosconfig":"secret-yaml","redactedControlplane":"x","warnings":["w"],"size":3,"talosVersion":"v1.14.2","kubernetesVersion":"1.37.1"}"#
+            from: """
+                {"draftId":"d1","talosconfig":"secret-yaml","redactedControlplane":"x","warnings":["w"],"size":3,
+                 "talosVersion":"v1.14.2","kubernetesVersion":"1.37.1"}
+                """
         )
         XCTAssertEqual(draft.talosconfig, "secret-yaml")
         XCTAssertFalse(draft.description.contains("secret-yaml"))
