@@ -1,0 +1,4 @@
+• Pod and workload logs show their top repeated messages, one tap to filter on one
+• History shows where a node's memory use is heading, with an optional early alert
+• Alerts that come and go all day are folded into the digest and marked as flapping
+• Ichor-relay refuses to push to loopback, link-local and private addresses
