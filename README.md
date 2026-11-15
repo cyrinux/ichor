@@ -103,6 +103,7 @@ tag and compared in CI (`just verify-release`, see
 | [etcd](docs/etcd.md) | Snapshots, recovery, the NOSPACE fix |
 | [Cluster insights](docs/insights.md) | Drift, incident recorder, bottleneck metrics |
 | [AI diagnosis](docs/ai.md) | Optional, off by default, on Talos and kubeconfig clusters |
+| [Push without polling](docs/relay.md) | ichor-relay, optional and in the cluster: Alertmanager's alerts pushed to the phone within seconds |
 | [Plugins](docs/plugins.md) | The plugin file format and how to write one from a CRD |
 | [Runbooks](docs/runbooks.md) | The runbook format and its actions |
 | [Build](docs/build.md) | Repository layout, Android, iOS and CI builds |

@@ -1,0 +1,18 @@
+# The phone reaches the relay through the API server's service proxy:
+# /api/v1/namespaces/ichor-relay/services/ichor-relay:8080/proxy/… (go/ichorgo/relay_pair.go).
+# The Service's name, its namespace and its port (8080, named http) are part of that contract.
+apiVersion: v1
+kind: Service
+metadata:
+  name: ichor-relay
+  labels:
+    app.kubernetes.io/name: ichor-relay
+    app.kubernetes.io/part-of: ichor
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: ichor-relay
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

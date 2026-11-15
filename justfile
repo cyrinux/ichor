@@ -74,6 +74,15 @@ release-tag version *flags:
     if [[ "${ICHOR_RELEASE_SKIP_GATE:-}" != 1 ]]; then
         just check
     fi
+    # deploy/relay runs the ichor-relay image of this release: `kubectl apply -k
+    # "…/deploy/relay?ref=v<version>"` gets the image release.yml builds from the tag, which
+    # checks the pin. Before the notes: they are named after the tagged commit's count.
+    kustomization=deploy/relay/kustomization.yaml
+    sed -i -E "s/^( *newTag:).*/\1 v${version}/" "$kustomization"
+    if [[ -n "$(git status --porcelain -- "$kustomization")" ]]; then
+        git add "$kustomization"
+        git commit -q -m "chore: ichor-relay image v${version}"
+    fi
     # Google Play's "What's new": drafted from the changelog for the commit about to be
     # tagged (HEAD + 1), edited, then committed. Empty it to let CI generate the notes;
     # without a terminal CI always does, unless --yes commits the draft unedited.
@@ -100,6 +109,16 @@ release-tag version *flags:
     # --atomic: if main moved meanwhile, neither the notes commit nor the tag lands.
     echo "Push it with: git push --atomic origin HEAD:main v${version}"
     echo "If that is rejected, drop the tag (git tag -d v${version}) and release again from the new main."
+
+# The ichor-relay image from this checkout (localhost/ichor-relay:dev), as release.yml builds it
+# for one platform. Not part of `check`.
+relay-image:
+    docker build -f go/cmd/ichor-relay/Dockerfile --build-arg VERSION="$(git describe --tags --always)" -t localhost/ichor-relay:dev go
+
+# Applies deploy/relay to the current kubectl context (docs/relay.md). It runs the image the
+# kustomization pins: the last release's.
+relay-apply:
+    kubectl apply -k deploy/relay
 
 # Debug APK (Go tests, gomobile AAR, Kotlin unit tests, assemble).
 build:

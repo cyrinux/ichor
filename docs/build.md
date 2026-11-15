@@ -12,6 +12,8 @@ ios/            iOS: SwiftUI app (XcodeGen) + IchorCore Swift package
 go/ichorgo  Go core exposed to Kotlin and Swift (JSON in/out)
 native/llm      on-device model engine (llama.cpp behind a C API), shared by app/ and ios/
 go/cmd/probe    desktop CLI calling the same Go functions
+go/cmd/ichor-relay  optional in-cluster push relay (image: its Dockerfile)
+deploy/relay    its Kubernetes manifests (see relay.md)
 flake.nix       Nix build environment (default)
 build/          amd64 Docker toolchain (CI)
 ```
@@ -163,6 +165,12 @@ changelog, so a release that fails verification never reaches anyone. When `veri
 download the run's `reproducibility-differences` artifact, then either delete the draft and
 the tag and tag again once fixed, or, if the difference is understood, publish it by hand:
 `gh release edit v0.1.0 --draft=false --latest`.
+
+Its `relay` job, in parallel and not awaited by the release, builds the ichor-relay image for
+amd64 and arm64 and pushes `ghcr.io/cyrinux/ichor-relay:<tag>` and `:latest` with the job's
+token. It first checks that `deploy/relay/kustomization.yaml` pins that tag, which
+`just release-tag` commits before tagging, so `kubectl apply -k "…/deploy/relay?ref=<tag>"`
+runs the image of that release.
 
 To sign the release APK in CI, generate a key once and upload it as secrets of the `release`
 environment (Settings → Environments; restricted to `v*` tags, so pull requests never see them):

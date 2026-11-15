@@ -1,0 +1,36 @@
+# Ingress: port 8080 only, from any source. Alertmanager posts from its own namespace, but the
+# phone pairs through the API server's service proxy, whose requests come from the API server's
+# host address, not from a pod: a podSelector or namespaceSelector would block pairing. Every
+# endpoint but /healthz needs a token (the webhook token or the pairing token).
+#
+# Egress: DNS, the push servers on 443 (UnifiedPush endpoints, ntfy.sh) and the Kubernetes API
+# for the relay's Secret. Most network plugins check egress after the kubernetes Service is
+# translated to its endpoints, so the API server's own port (6443 on Talos and kubeadm) is
+# allowed as well as 443. A plain-http ntfy in the cluster needs its port added here.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ichor-relay
+  labels:
+    app.kubernetes.io/name: ichor-relay
+    app.kubernetes.io/part-of: ichor
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: ichor-relay
+  policyTypes: ["Ingress", "Egress"]
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443

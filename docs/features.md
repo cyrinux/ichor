@@ -300,6 +300,10 @@ Part of the [Ichor documentation](../README.md#documentation).
   alert to silence it (the form opens with matchers that mute only that alert; nothing is sent
   before **Silence**), swipe a silence to expire it. On Android a long press on an alert also lists
   the PagerDuty incident's Acknowledge and Resolve, and Share.
+- **Push without polling (optional):** run ichor-relay in the cluster, point Alertmanager's webhook
+  at it, and its alerts reach the paired phones within seconds instead of at the next background
+  check: through a UnifiedPush distributor on Android (encrypted end to end), through the ntfy app
+  on iOS. Setup: [Push without polling](relay.md).
 - **On-call (PagerDuty):** set a token, your PagerDuty email and the services to watch per cluster
   (**On-call**, under Settings → Clusters on Android and in a cluster's menu on iOS; **Test** checks
   the token). An alert with an open incident shows **Triggered** or **Acknowledged by …**. Its sheet

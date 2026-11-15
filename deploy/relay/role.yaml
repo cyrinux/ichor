@@ -1,0 +1,21 @@
+# The relay keeps its whole state (VAPID key pair, pairing and webhook tokens, paired devices) in
+# one Secret, ichor-relay, which it creates on its first start.
+# get and update are scoped to that one name. create cannot be: the name of an object is not
+# known before it exists, so resourceNames never restricts create. The relay creates exactly one
+# Secret, ichor-relay; this Role grants create on Secrets in this namespace only, where nothing
+# else runs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ichor-relay
+  labels:
+    app.kubernetes.io/name: ichor-relay
+    app.kubernetes.io/part-of: ichor
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["ichor-relay"]
+    verbs: ["get", "update"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create"]

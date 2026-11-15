@@ -7,6 +7,8 @@
 // one replica: a replica reads the Secret at start and after its own write conflicts only, so
 // a second one would miss the devices paired through the first, and dedupe is in memory.
 //
+// `ichor-relay --version` prints the version the release build stamps (-X main.version) and exits.
+//
 // Environment (flags of the same meaning override it):
 //
 //	RELAY_LISTEN     listen address (default :8080)
@@ -31,6 +33,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -44,14 +47,17 @@ import (
 
 const shutdownTimeout = 20 * time.Second
 
+// version is set at build time: -ldflags "-X main.version=v1.2.3".
+var version = "dev"
+
 type config struct {
 	listen, namespace, secret, kubeAPI string
-	allowHTTP, allowPrivate            bool
+	allowHTTP, allowPrivate, version   bool
 }
 
 func main() {
 	log := slog.New(slog.NewJSONHandler(os.Stderr, nil))
-	if err := run(log, os.Args[1:]); err != nil {
+	if err := run(log, os.Stdout, os.Args[1:]); err != nil {
 		log.Error("ichor-relay stopped", "err", err)
 		os.Exit(1)
 	}
@@ -66,8 +72,12 @@ func parseConfig(args []string) (config, error) {
 	fs.StringVar(&c.kubeAPI, "kube-api", os.Getenv("RELAY_KUBE_API"), "API server URL without credentials (kubectl proxy)")
 	fs.BoolVar(&c.allowHTTP, "allow-http", os.Getenv("RELAY_ALLOW_HTTP") == "true", "accept plain-http push endpoints")
 	fs.BoolVar(&c.allowPrivate, "allow-private", os.Getenv("RELAY_ALLOW_PRIVATE") == "true", "let pushes reach loopback and private addresses")
+	fs.BoolVar(&c.version, "version", false, "print the version and exit")
 	if err := fs.Parse(args); err != nil {
 		return config{}, err
+	}
+	if c.version {
+		return c, nil
 	}
 
 	if c.namespace == "" {
@@ -81,9 +91,13 @@ func parseConfig(args []string) (config, error) {
 	return c, nil
 }
 
-func run(log *slog.Logger, args []string) error {
+func run(log *slog.Logger, stdout io.Writer, args []string) error {
 	c, err := parseConfig(args)
 	if err != nil {
+		return err
+	}
+	if c.version {
+		_, err := fmt.Fprintf(stdout, "ichor-relay %s\n", version)
 		return err
 	}
 
@@ -120,7 +134,7 @@ func run(log *slog.Logger, args []string) error {
 
 	serveErr := make(chan error, 1)
 	go func() { serveErr <- srv.ListenAndServe() }()
-	log.Info("listening", "addr", c.listen)
+	log.Info("listening", "addr", c.listen, "version", version)
 
 	select {
 	case err := <-serveErr:

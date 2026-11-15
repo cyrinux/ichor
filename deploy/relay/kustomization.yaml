@@ -1,0 +1,18 @@
+# kubectl apply -k "https://github.com/cyrinux/ichor/deploy/relay?ref=vX.Y.Z"
+# `just release-tag` sets newTag to the release it tags, so a ref of vX.Y.Z runs the image built
+# from that tag (ghcr.io/cyrinux/ichor-relay:vX.Y.Z). Setup and the Alertmanager receiver:
+# docs/relay.md.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ichor-relay
+resources:
+  - namespace.yaml
+  - serviceaccount.yaml
+  - role.yaml
+  - rolebinding.yaml
+  - deployment.yaml
+  - service.yaml
+  - networkpolicy.yaml
+images:
+  - name: ghcr.io/cyrinux/ichor-relay
+    newTag: latest
