@@ -20,10 +20,12 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.KubeTopContainer
 import name.levis.ichor.model.KubeTopNode
 import name.levis.ichor.model.KubeTopNodes
 import name.levis.ichor.model.KubeTopPod
@@ -94,23 +96,64 @@ fun NodeUsage(top: KubeTopNode, modifier: Modifier = Modifier) {
     }
 }
 
-/** A pod's CPU and memory in use against its limit, else its request (no bar when neither). */
+/**
+ * A pod's CPU and memory in use against its limit, else its request (no bar when neither). With
+ * two or more containers, each one's usage against its own bounds follows, in the spec's order,
+ * as `kubectl top pod NAME --containers`; a single container would only repeat the pod.
+ */
 @Composable
 fun PodUsage(top: KubeTopPod, modifier: Modifier = Modifier) {
-    val cpuOf = top.cpuLimit.takeIf { it > 0 } ?: top.cpuRequest
-    val memoryOf = top.memoryLimit.takeIf { it > 0 } ?: top.memoryRequest
     Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        UsageLine(
-            stringResource(R.string.node_live_cpu),
-            formatCpu(top.cpu) + if (cpuOf > 0) " / ${formatCpu(cpuOf)}" else "",
-            top.cpuFraction(),
+        UsageLines(
+            top.cpu, top.cpuLimit, top.cpuRequest, top.cpuFraction(),
+            top.memory, top.memoryLimit, top.memoryRequest, top.memoryFraction(),
         )
-        UsageLine(
-            stringResource(R.string.node_live_memory),
-            formatBytes(top.memory.toLong()) + if (memoryOf > 0) " / ${formatBytes(memoryOf.toLong())}" else "",
-            top.memoryFraction(),
+        if (top.containers.size > 1) {
+            Text(
+                stringResource(R.string.top_containers),
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+            top.containers.forEach { ContainerUsage(it) }
+        }
+    }
+}
+
+/** One container: its name, then its CPU and memory lines, indented under the pod's. */
+@Composable
+private fun ContainerUsage(c: KubeTopContainer) {
+    Column(Modifier.padding(start = 12.dp, top = 2.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            c.name,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        UsageLines(
+            c.cpu, c.cpuLimit, c.cpuRequest, c.cpuFraction(),
+            c.memory, c.memoryLimit, c.memoryRequest, c.memoryFraction(),
         )
     }
+}
+
+/** The CPU and Memory lines of a pod or a container: used, then " / " its limit, else its request. */
+@Composable
+private fun UsageLines(
+    cpu: Double, cpuLimit: Double, cpuRequest: Double, cpuFraction: Float?,
+    memory: Double, memoryLimit: Double, memoryRequest: Double, memoryFraction: Float?,
+) {
+    val cpuOf = cpuLimit.takeIf { it > 0 } ?: cpuRequest
+    val memoryOf = memoryLimit.takeIf { it > 0 } ?: memoryRequest
+    UsageLine(
+        stringResource(R.string.node_live_cpu),
+        formatCpu(cpu) + if (cpuOf > 0) " / ${formatCpu(cpuOf)}" else "",
+        cpuFraction,
+    )
+    UsageLine(
+        stringResource(R.string.node_live_memory),
+        formatBytes(memory.toLong()) + if (memoryOf > 0) " / ${formatBytes(memoryOf.toLong())}" else "",
+        memoryFraction,
+    )
 }
 
 /** "CPU  [bar]  125m / 1": read as one phrase by screen readers. */

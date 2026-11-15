@@ -1,0 +1,38 @@
+{
+  "available": true,
+  "boundsRead": true,
+  "forbidden": false,
+  "pods": [
+    {
+      "containers": [
+        {
+          "cpu": 0.17,
+          "cpuLimit": 0.9,
+          "cpuRequest": 0.2,
+          "memory": 402653184,
+          "memoryLimit": 1006632960,
+          "memoryRequest": 469762048,
+          "name": "postgres"
+        },
+        {
+          "cpu": 0.01,
+          "cpuLimit": 0.1,
+          "cpuRequest": 0.05,
+          "memory": 27262976,
+          "memoryLimit": 67108864,
+          "memoryRequest": 67108864,
+          "name": "metrics"
+        }
+      ],
+      "cpu": 0.18,
+      "cpuLimit": 1,
+      "cpuRequest": 0.25,
+      "memory": 429916160,
+      "memoryLimit": 1073741824,
+      "memoryRequest": 536870912,
+      "name": "postgres-0",
+      "namespace": "demo",
+      "node": "demo-worker-2"
+    }
+  ]
+}

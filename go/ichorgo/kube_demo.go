@@ -42,6 +42,13 @@ func demoPullRateLimited(p kubePod) kubePod {
 	return p
 }
 
+// demoWithSidecar adds a second, ready container to a running demo pod (a metrics exporter).
+func demoWithSidecar(p kubePod, image string) kubePod {
+	p.Containers, p.Ready, p.Images = 2, 2, append(p.Images, image)
+
+	return p
+}
+
 func demoPods() []kubePod {
 	created := demoBoot.UnixMilli()
 	pod := func(ns, name, status, node, owner, image string, ready, restarts int) kubePod {
@@ -58,7 +65,7 @@ func demoPods() []kubePod {
 		pod("demo", "worker-6f4b8-pqrst", "Running", "demo-worker-2", "ReplicaSet/worker-6f4b8", "busybox:1.37", 1, 0),
 		pod("demo", "worker-6f4b8-uvwxy", "CrashLoopBackOff", "demo-worker-1", "ReplicaSet/worker-6f4b8", "busybox:1.37", 0, 14),
 		demoPullRateLimited(pod("demo", "reports-5b7c9-xkq2p", "ImagePullBackOff", "demo-worker-2", "ReplicaSet/reports-5b7c9", demoPullImage, 0, 0)),
-		pod("demo", "postgres-0", "Running", "demo-worker-2", "StatefulSet/postgres", "postgres:17", 1, 0),
+		demoWithSidecar(pod("demo", "postgres-0", "Running", "demo-worker-2", "StatefulSet/postgres", "postgres:17", 1, 0), "quay.io/prometheuscommunity/postgres-exporter:v0.17.1"),
 		pod("kube-system", "coredns-5c6b7-aaaaa", "Running", "demo-cp-1", "ReplicaSet/coredns-5c6b7", "registry.k8s.io/coredns/coredns:v1.12.0", 1, 0),
 		pod("kube-system", "coredns-5c6b7-bbbbb", "Running", "demo-cp-2", "ReplicaSet/coredns-5c6b7", "registry.k8s.io/coredns/coredns:v1.12.0", 1, 0),
 	}

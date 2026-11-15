@@ -23,6 +23,23 @@ class KubeTopTest {
     }
 
     @Test
+    fun decodesAPodWithItsContainers() {
+        val json = """{"available":true,"boundsRead":true,"pods":[{"namespace":"web","name":"api","cpu":0.125,"memory":230686720,
+            "containers":[{"name":"app","cpu":0.12,"memory":209715200,"cpuRequest":0.25,"cpuLimit":1,"memoryRequest":268435456,"memoryLimit":0},
+            {"name":"proxy","cpu":0.005,"memory":20971520,"cpuRequest":0,"cpuLimit":0,"memoryRequest":0,"memoryLimit":0}]}]}"""
+        val pod = TalosJson.decodeFromString(KubeTopPods.serializer(), json).pods.single()
+        assertEquals(listOf("app", "proxy"), pod.containers.map { it.name })
+        val app = pod.containers.first()
+        assertEquals(0.12f, app.cpuFraction()!!, 1e-6f)
+        // No memory limit: against its own request.
+        assertEquals(0.78125f, app.memoryFraction()!!, 1e-6f)
+        // Neither bound: no bar.
+        assertNull(pod.containers.last().cpuFraction())
+        // An older core sends no containers: an empty list, not a failure.
+        assertTrue(TalosJson.decodeFromString(KubeTopPod.serializer(), """{"name":"api"}""").containers.isEmpty())
+    }
+
+    @Test
     fun aPodBarIsMeasuredAgainstItsLimitElseItsRequest() {
         val bounded = KubeTopPod(cpu = 0.5, cpuRequest = 0.25, cpuLimit = 1.0, memory = 300.0, memoryRequest = 200.0)
         assertEquals(0.5f, bounded.cpuFraction()!!, 1e-6f)

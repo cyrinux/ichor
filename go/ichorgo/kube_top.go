@@ -48,11 +48,25 @@ type kubeTopPods struct {
 }
 
 // kubeTopPod is one pod's usage (summed over its containers) with its requests and limits.
-// A limit is 0 when some container has none: the pod is then not bounded.
+// A limit is 0 when some container has none: the pod is then not bounded. Containers is filled
+// by the one-pod read only (KubeTopPod); the lists leave it out, so they stay as small (CYR-112).
 type kubeTopPod struct {
-	Namespace     string  `json:"namespace"`
+	Namespace     string             `json:"namespace"`
+	Name          string             `json:"name"`
+	Node          string             `json:"node"`
+	CPU           float64            `json:"cpu"`
+	Memory        float64            `json:"memory"`
+	CPURequest    float64            `json:"cpuRequest"`
+	CPULimit      float64            `json:"cpuLimit"`
+	MemoryRequest float64            `json:"memoryRequest"`
+	MemoryLimit   float64            `json:"memoryLimit"`
+	Containers    []kubeTopContainer `json:"containers,omitempty"`
+}
+
+// kubeTopContainer is one container's usage with its own requests and limits, in the pod's
+// units (cores, bytes); a bound the container does not set is 0.
+type kubeTopContainer struct {
 	Name          string  `json:"name"`
-	Node          string  `json:"node"`
 	CPU           float64 `json:"cpu"`
 	Memory        float64 `json:"memory"`
 	CPURequest    float64 `json:"cpuRequest"`
@@ -79,8 +93,20 @@ type podMetrics struct {
 		Namespace string `json:"namespace"`
 	} `json:"metadata"`
 	Containers []struct {
+		Name  string       `json:"name"`
 		Usage metricsUsage `json:"usage"`
 	} `json:"containers"`
+}
+
+// specContainer is a container of a pod spec with what it asked.
+type specContainer struct {
+	Name string `json:"name"`
+	// RestartPolicy "Always" on an init container makes it a sidecar, running beside the others.
+	RestartPolicy string `json:"restartPolicy"`
+	Resources     struct {
+		Requests map[string]string `json:"requests"`
+		Limits   map[string]string `json:"limits"`
+	} `json:"resources"`
 }
 
 // podResources is the part of a pod top needs: where it runs and what its containers asked.
@@ -90,13 +116,9 @@ type podResources struct {
 		Namespace string `json:"namespace"`
 	} `json:"metadata"`
 	Spec struct {
-		NodeName   string `json:"nodeName"`
-		Containers []struct {
-			Resources struct {
-				Requests map[string]string `json:"requests"`
-				Limits   map[string]string `json:"limits"`
-			} `json:"resources"`
-		} `json:"containers"`
+		NodeName       string          `json:"nodeName"`
+		Containers     []specContainer `json:"containers"`
+		InitContainers []specContainer `json:"initContainers"`
 	} `json:"spec"`
 }
 
@@ -276,7 +298,46 @@ func readTopPod(ctx context.Context, k *kubeClient, namespace, name string) (kub
 		return kubeTopPods{}, err
 	}
 
-	return kubeTopPods{Available: true, BoundsRead: true, Pods: []kubeTopPod{topPodOf(m, spec)}}, nil
+	p := topPodOf(m, spec)
+	p.Containers = topContainersOf(m, spec)
+
+	return kubeTopPods{Available: true, BoundsRead: true, Pods: []kubeTopPod{p}}, nil
+}
+
+// topContainersOf is each running container's usage and bounds, as `kubectl top pod NAME
+// --containers`: spec.containers, then the sidecars (init containers that always restart,
+// which metrics-server reports too), in the spec's order. A container metrics-server has not
+// measured yet (just started) is listed with no usage.
+func topContainersOf(m podMetrics, spec podResources) []kubeTopContainer {
+	usage := make(map[string]metricsUsage, len(m.Containers))
+	for _, c := range m.Containers {
+		usage[c.Name] = c.Usage
+	}
+
+	running := make([]specContainer, 0, len(spec.Spec.Containers)+len(spec.Spec.InitContainers))
+	running = append(running, spec.Spec.Containers...)
+
+	for _, c := range spec.Spec.InitContainers {
+		if c.RestartPolicy == "Always" {
+			running = append(running, c)
+		}
+	}
+
+	out := make([]kubeTopContainer, 0, len(running))
+	for _, c := range running {
+		u := usage[c.Name]
+		out = append(out, kubeTopContainer{
+			Name:          c.Name,
+			CPU:           parseQuantity(u.CPU),
+			Memory:        parseQuantity(u.Memory),
+			CPURequest:    parseQuantity(c.Resources.Requests["cpu"]),
+			CPULimit:      parseQuantity(c.Resources.Limits["cpu"]),
+			MemoryRequest: parseQuantity(c.Resources.Requests["memory"]),
+			MemoryLimit:   parseQuantity(c.Resources.Limits["memory"]),
+		})
+	}
+
+	return out
 }
 
 func topPodOf(m podMetrics, spec podResources) kubeTopPod {

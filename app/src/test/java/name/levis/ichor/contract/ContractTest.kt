@@ -36,6 +36,7 @@ import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.KubePodPage
 import name.levis.ichor.model.KubeSpanMeshHealth
 import name.levis.ichor.model.KubeSpanOverview
+import name.levis.ichor.model.KubeTopPods
 import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.NetMap
 import name.levis.ichor.model.LogEntry
@@ -59,6 +60,7 @@ class ContractTest {
         "kube-workloads" to Row(KubeWorkloadList.serializer()) { assertTrue(it.workloads.first().name.isNotEmpty()) },
         "kube-cronjobs" to Row(KubeCronJobList.serializer()) { assertTrue(it.cronJobs.first().name.isNotEmpty()) },
         "kube-nodes" to Row(KubeNodesOverview.serializer()) { assertTrue(it.nodes.isNotEmpty()) },
+        "kube-top-pod" to Row(KubeTopPods.serializer()) { assertEquals(2, it.pods.single().containers.size) },
         "argocd" to Row(ArgoStatus.serializer()) { assertTrue(it.installed && it.apps.isNotEmpty()) },
         "flux" to Row(FluxStatus.serializer()) { assertTrue(it.installed) },
         "alerts" to Row(AmAlerts.serializer()) { assertTrue(it.groups.isNotEmpty()) },
