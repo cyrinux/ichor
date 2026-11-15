@@ -18,6 +18,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.HistoryForecast
+import name.levis.ichor.model.HistoryMemoryForecast
 import name.levis.ichor.model.HistoryRecord
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.AlertRules
@@ -70,6 +71,9 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val labels = ClusterLabels(app.clusterNames.names.value, maskedBefore)
         val watched = monitoredContexts(stored.summary, stored.activeContext, app.unwatchedClusters.fingerprints.value)
         val signIns = renewSignIns(app, watched) { labels.of(it) }
+        // A removed cluster's push stops; an endpoint the relay refused or could not take (offline, relay down) is registered again.
+        retainRelayPairs(app, stored.summary.contexts.map { it.fingerprint })
+        retryRelayRegistrations(app)
         val reads = readAll(app, stored, before, now)
         val evaluated = monitorRun(
             before,
@@ -91,7 +95,11 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         // (screenshot mode), so the open ones are kept as they are.
         val trendsOn = store.storageTrendAlerts.value
         val forecasts = if (trendsOn && !masked) storageForecasts(app, reads, now) else emptyMap()
-        val run = withStorageTrends(evaluated, before, reads, forecasts, enabled = trendsOn)
+        val storageRun = withStorageTrends(evaluated, before, reads, forecasts, enabled = trendsOn)
+        // The nodes' memory trends, likewise.
+        val memoryOn = store.memoryTrendAlerts.value
+        val memory = if (memoryOn && !masked) memoryForecasts(app, reads, now) else emptyMap()
+        val run = withMemoryTrends(storageRun, before, reads, memory, enabled = memoryOn)
         if (run.state != firstPass) store.saveState(run.state)
         scheduleWidgetStaleRefresh(applicationContext, run.state.clusters.values, now)
 
@@ -106,7 +114,9 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             // A recovered alert's acknowledgement ends: firing again, it repeats again.
             firingKeys(reads, run.state).forEach { (cluster, keys) -> app.alertAcks.retainFiring(cluster, keys) }
             val ongoing = ongoingAlerts(reads, run.state, run.alerts)
-            val notified = postAll(app, run.alerts + proposals + signIns.alerts, ongoing, run.state, now)
+            // Read from the ring with this run's record in it; none from faked names (screenshot mode).
+            val flaps = if (masked) emptyMap() else flapCounts(app, run.alerts, store.alertRules.value, now)
+            val notified = postAll(app, run.alerts + proposals + signIns.alerts, ongoing, run.state, now, flaps)
             if (notified != run.state) store.saveState(notified)
             store.setSignInNotified(signIns.notified)
         }
@@ -157,6 +167,12 @@ private suspend fun storageForecasts(app: TalosApp, reads: List<ClusterRead>, no
     }.toMap()
 }
 
+/** Each read cluster's node memory forecast (monitor key → forecast), from the ring with this run's record in it. */
+private suspend fun memoryForecasts(app: TalosApp, reads: List<ClusterRead>, now: Long): Map<String, HistoryMemoryForecast> =
+    reads.filter(::wantsMemoryForecast).mapNotNull { read ->
+        app.historyRepository.memoryForecast(read.context.fingerprint, now)?.let { monitorKeyOf(read.context) to it }
+    }.toMap()
+
 /**
  * Posts a run's alerts under the alert rules (quiet hours, minimum severity, digest, repeat),
  * decided once over every cluster's: each one Go says to notify on its own, one digest per
@@ -166,11 +182,18 @@ private suspend fun storageForecasts(app: TalosApp, reads: List<ClusterRead>, no
  * snoozed is posted as before (see [alertPlan]) and nothing repeats: a rules error never drops
  * an alert. Returns [state] with the posted alerts' times (see [withNotified]).
  */
-private suspend fun postAll(app: TalosApp, clusters: List<ClusterAlerts>, ongoing: List<ClusterAlerts>, state: MonitorState, now: Long): MonitorState {
+private suspend fun postAll(
+    app: TalosApp,
+    clusters: List<ClusterAlerts>,
+    ongoing: List<ClusterAlerts>,
+    state: MonitorState,
+    now: Long,
+    flaps: Map<String, Map<String, Int>>,
+): MonitorState {
     if (clusters.isEmpty() && ongoing.isEmpty()) return state
     val rules = app.monitorStore.alertRules.value
     val snoozed = { cluster: String, key: String -> app.alertSnoozes.isSnoozed(cluster, key, now) }
-    val inputs = alertInputs(clusters, snoozed)
+    val inputs = alertInputs(clusters, flaps, snoozed)
     val ongoingInputs = if (rules == AlertRules.NONE) emptyList() else repeatInputs(ongoing, state, snoozed, app.alertAcks::isAcknowledged)
     val decisions = if (rules == AlertRules.NONE || inputs.size + ongoingInputs.size == 0) {
         null

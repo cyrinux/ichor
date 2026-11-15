@@ -7,6 +7,7 @@ func TestParseConfig(t *testing.T) {
 	t.Setenv("RELAY_SECRET", "")
 	t.Setenv("RELAY_KUBE_API", "")
 	t.Setenv("RELAY_ALLOW_HTTP", "")
+	t.Setenv("RELAY_ALLOW_PRIVATE", "")
 	t.Setenv("RELAY_NAMESPACE", "monitoring")
 
 	c, err := parseConfig(nil)
@@ -17,11 +18,11 @@ func TestParseConfig(t *testing.T) {
 		t.Errorf("defaults: %+v", c)
 	}
 
-	c, err = parseConfig([]string{"-listen", ":9000", "-secret", "push", "-kube-api", "http://127.0.0.1:8001", "-allow-http"})
+	c, err = parseConfig([]string{"-listen", ":9000", "-secret", "push", "-kube-api", "http://127.0.0.1:8001", "-allow-http", "-allow-private"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c != (config{listen: ":9000", namespace: "monitoring", secret: "push", kubeAPI: "http://127.0.0.1:8001", allowHTTP: true}) {
+	if c != (config{listen: ":9000", namespace: "monitoring", secret: "push", kubeAPI: "http://127.0.0.1:8001", allowHTTP: true, allowPrivate: true}) {
 		t.Errorf("flags: %+v", c)
 	}
 

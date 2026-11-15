@@ -42,9 +42,15 @@ type historyForecastResult struct {
 }
 
 type historyVolumeForecast struct {
-	Key            string   `json:"key"`
-	Name           string   `json:"name"`
-	Node           string   `json:"node"`
+	Key  string `json:"key"`
+	Name string `json:"name"`
+	Node string `json:"node"`
+	historyTrend
+}
+
+// historyTrend is a series' projection, shared by the volume and the memory forecasts (its
+// fields are flattened into their rows).
+type historyTrend struct {
 	UsedPercent    float64  `json:"usedPercent"`
 	LatestAt       int64    `json:"latestAt"`
 	SlopePerDay    float64  `json:"slopePerDay"`
@@ -105,9 +111,9 @@ func forecastVolumes(records []historyRecord, now int64, crit float64) historyFo
 	}
 
 	for _, v := range latest.Volumes {
-		row := forecastVolume(afterCleanup(series[v.Key]), crit)
-		row.Key, row.Name, row.Node = v.Key, v.Name, v.Node
-		res.Volumes = append(res.Volumes, row)
+		res.Volumes = append(res.Volumes, historyVolumeForecast{
+			Key: v.Key, Name: v.Name, Node: v.Node, historyTrend: forecastSeries(afterCleanup(series[v.Key]), crit),
+		})
 	}
 
 	slices.SortFunc(res.Volumes, func(a, b historyVolumeForecast) int { return cmp.Compare(a.Key, b.Key) })
@@ -128,13 +134,13 @@ func afterCleanup(points []historyPoint) []historyPoint {
 	return points[start:]
 }
 
-// forecastVolume fits points (in time order, at least one) and projects the fill.
-func forecastVolume(points []historyPoint, crit float64) historyVolumeForecast {
+// forecastSeries fits points (in time order, at least one) and projects them to crit and 100.
+func forecastSeries(points []historyPoint, crit float64) historyTrend {
 	last := points[len(points)-1]
 	span := last.T - points[0].T
 	slope, r2 := fitLine(points)
 
-	row := historyVolumeForecast{
+	row := historyTrend{
 		UsedPercent: last.V,
 		LatestAt:    last.T,
 		SlopePerDay: roundTo(slope, 100),

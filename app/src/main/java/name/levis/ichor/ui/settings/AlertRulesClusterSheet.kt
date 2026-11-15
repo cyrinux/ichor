@@ -128,4 +128,5 @@ private fun ClusterRuleEditor(rule: AlertRule, onChange: (AlertRule) -> Unit) {
         rule.repeatMinutes?.let { ALERT_REPEAT_CHOICES.indexOf(it) + 1 }?.coerceAtLeast(0) ?: 0,
         enabled = true,
     ) { i -> onChange(rule.copy(repeatMinutes = if (i == 0) null else ALERT_REPEAT_CHOICES[i - 1])) }
+    ClusterFlapRule(rule) { opens -> onChange(rule.copy(flapOpens = opens)) }
 }

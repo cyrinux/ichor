@@ -30,7 +30,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+    - uses: cachix/install-nix-action@3dc140bfc76c49fbd4dd958429132e3746bcb086 # v31.11.5
 
     # /nix/store, keyed on the flake: without it every job downloads the Android SDK and NDK
     # zips from Google and unpacks them (the androidsdk derivation is not in cache.nixos.org).

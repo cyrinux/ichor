@@ -8,15 +8,18 @@ import WidgetKit
 // The alerts a check found: their text in the user's language, their actions and links, and posting them.
 extension BackgroundMonitor {
     /// Each cluster's alerts as notifications to post, named after their cluster (the
-    /// notification's subtitle); `snoozes` marks the ones snoozed (postAll drops them).
+    /// notification's subtitle); `snoozes` marks the ones snoozed (postAll drops them); `flaps`
+    /// gives each alert's opens in 24 h, by cluster key then alert key (see flapCounts).
     // Internal, not private: check() in BackgroundMonitor.swift posts its outcomes.
-    static func pending(_ outcomes: [ClusterAlerts], labels: ClusterLabels, snoozes: AlertSnoozes, now: Date) async
-        -> [PendingAlert]
-    {
+    static func pending(
+        _ outcomes: [ClusterAlerts], labels: ClusterLabels, snoozes: AlertSnoozes, now: Date,
+        flaps: [String: [String: Int]] = [:]
+    ) async -> [PendingAlert] {
         var out: [PendingAlert] = []
         for outcome in outcomes {
             let context = outcome.job.context
             let fingerprint = context.fingerprint
+            let opens = flaps[outcome.job.key] ?? [:]
             for alert in outcome.alerts {
                 let link = alertLink(alert, snapshot: outcome.snapshot, cluster: context.clusterID)
                 let text = localized(alert, snapshot: outcome.snapshot, previous: outcome.previous, now: now)
@@ -31,7 +34,8 @@ extension BackgroundMonitor {
                             cluster: fingerprint, key: alert.key,
                             kind: alertRuleKind(key: alert.key, kube: outcome.snapshot.kube), severity: severity,
                             problem: alert.problem,
-                            snoozed: snoozes.isSnoozed(cluster: fingerprint, key: alert.key, now: now)),
+                            snoozed: snoozes.isSnoozed(cluster: fingerprint, key: alert.key, now: now),
+                            flaps: opens[alert.key] ?? 0),
                         localized: text, link: link,
                         actions: alertActions(
                             key: alert.key, problem: alert.problem, canWake: wake, canAcknowledgePage: page),
@@ -225,6 +229,13 @@ extension BackgroundMonitor {
                 return (alert.title, alert.text)
             }
             return localizedStorage(alert, issue: StorageIssue(value: value), warn: snapshot.storageWarn)
+        case "memory":
+            // "<node>:trend": named from the trend kept, the current one or, once resolved, the last.
+            let node = memoryTrendNode(subject: subject)
+            guard let value = snapshot.memoryTrends[node] ?? previous?.memoryTrends[node] else {
+                return (alert.title, alert.text)
+            }
+            return localizedMemoryTrend(alert, issue: StorageTrendIssue(value: value))
         case "plugin":
             // The finding's key: worded by the plugin, already in the app's language (Go's locale).
             guard let value = snapshot.pluginIssues[alert.key] ?? previous?.pluginIssues[alert.key] else {
@@ -382,6 +393,21 @@ extension BackgroundMonitor {
         let growth = "\(storagePercentText(issue.slopePerDay)) %"
         let fill = "\(storagePercentText(issue.usedPercent)) %"
         return (title, String(localized: "growing ~\(growth) a day, now at \(fill)"))
+    }
+
+    /// A node whose memory use, growing over the last week, is about to reach critical (90 %).
+    private static func localizedMemoryTrend(_ alert: Alert, issue: StorageTrendIssue) -> (title: String, text: String)
+    {
+        let host = issue.hostname
+        guard alert.problem else { return (String(localized: "\(host) memory no longer growing fast"), "") }
+        let when = issue.when.localized
+        // The "%" goes with the number, so no key carries a literal one.
+        let growth = "\(storagePercentText(issue.slopePerDay)) %"
+        let used = "\(storagePercentText(issue.usedPercent)) %"
+        return (
+            String(localized: "\(host) memory critical \(when)"),
+            String(localized: "growing ~\(growth) a day, now at \(used)")
+        )
     }
 
     static func requestPermission() async -> Bool {

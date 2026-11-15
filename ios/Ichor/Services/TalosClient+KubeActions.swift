@@ -92,6 +92,20 @@ extension TalosClient {
         }
     }
 
+    /// A pod's log `lines` grouped into their `limit` most repeated messages; on the phone, no cluster call.
+    static func logTemplates(lines: [String], limit: Int = logTemplatesLimit) async throws -> LogTemplates {
+        let input = logTemplatesInput(lines)
+        return try await json { IchorgoLogTemplates(input, limit, $0) }
+    }
+
+    /// A workload's merged `lines` grouped likewise, each message counting the pods that wrote it.
+    static func logTemplates(workload lines: [WorkloadLogLine], limit: Int = logTemplatesLimit) async throws
+        -> LogTemplates
+    {
+        let input = logTemplatesInput(lines)
+        return try await json { IchorgoLogTemplates(input, limit, $0) }
+    }
+
     /// The pods of `namespace` ("" for every namespace, one page) that k9s's sanitize would
     /// delete: Completed, Pending, CrashLoopBackOff, Error, ImagePullBackOff, Evicted...
     func sanitizePreview(namespace: String) async throws -> KubeSanitizePreview {

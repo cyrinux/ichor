@@ -10,6 +10,8 @@ final class HistoryLook {
     private(set) var summary: HistorySinceSummary?
     /// The alerts the rules kept quiet on the cluster, for the line that says why.
     private(set) var mutes = AlertMuteStore.ClusterMutes(cluster: "", mutes: AlertMutes())
+    /// The opens in 24 h of the alert keys that flap (more than one), for the "Flapping" line.
+    private(set) var flaps: [String: Int] = [:]
     private var cluster = ""
 
     /// Loads what happened on `cluster` since the last look, then marks the home looked at once
@@ -21,8 +23,10 @@ final class HistoryLook {
         guard !cluster.isEmpty else { return }
         if let since = HistoryLastLooked.since(stored: HistoryStore.lastLooked(cluster: cluster)) {
             let loaded = await HistoryStore.since(cluster: cluster, lastLooked: since)
+            let opens = await HistoryStore.flaps(cluster: cluster)
             guard !Task.isCancelled, self.cluster == cluster else { return }
             mutes = AlertMuteStore.of(cluster: cluster)
+            flaps = opens
             summary = loaded.flatMap { $0.hasNews ? $0 : nil }
         }
         try? await Task.sleep(for: .seconds(HistoryLastLooked.dwellSeconds))
@@ -65,6 +69,10 @@ struct HistorySinceSection: View {
         func muted(_ key: String, from: Int64, to: Int64?) -> String {
             look.mutes.during(key: key, from: from, to: to).map(mutedLabel) ?? ""
         }
+        // It came and went all day: what the rules fold into the digest.
+        func flapping(_ key: String) -> String {
+            look.flaps[key].map { String(localized: "Flapping · opened \($0) times in 24 h") } ?? ""
+        }
         for node in summary.nodesDown {
             let health: NodeHealth = node.state == "unreachable" ? .unreachable : .notReady
             let title =
@@ -85,7 +93,8 @@ struct HistorySinceSection: View {
                     id: "open \(alert.track) \(alert.key)", title: title, icon: "exclamationmark.triangle.fill",
                     tint: tint, at: alert.openedAt,
                     muted: muted(
-                        historyAlertKey(track: alert.track, key: alert.key), from: alert.openedAt, to: alert.closedAt)))
+                        historyAlertKey(track: alert.track, key: alert.key), from: alert.openedAt, to: alert.closedAt),
+                    flapping: flapping(historyAlertKey(track: alert.track, key: alert.key))))
         }
         for node in summary.nodesRecovered {
             out.append(
@@ -102,7 +111,8 @@ struct HistorySinceSection: View {
                     title: String(localized: "\(alert.label) resolved"),
                     icon: "checkmark.circle.fill", tint: .statusOK, at: alert.closedAt ?? alert.openedAt,
                     muted: muted(
-                        historyAlertKey(track: alert.track, key: alert.key), from: alert.openedAt, to: alert.closedAt)))
+                        historyAlertKey(track: alert.track, key: alert.key), from: alert.openedAt, to: alert.closedAt),
+                    flapping: flapping(historyAlertKey(track: alert.track, key: alert.key))))
         }
         for upgrade in summary.upgrades {
             out.append(
@@ -136,6 +146,8 @@ private struct HistorySinceRow: View, Identifiable {
     let at: Int64
     /// Why no notification told it (the alert rules), "" when one did.
     var muted = ""
+    /// "Flapping · opened 5 times in 24 h" when its alert came and went, else "".
+    var flapping = ""
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -147,6 +159,9 @@ private struct HistorySinceRow: View, Identifiable {
                     }
                     if !muted.isEmpty {
                         Text(verbatim: muted).font(.caption).foregroundStyle(.secondary)
+                    }
+                    if !flapping.isEmpty {
+                        Text(verbatim: flapping).font(.caption).foregroundStyle(.secondary)
                     }
                 }
             } icon: {

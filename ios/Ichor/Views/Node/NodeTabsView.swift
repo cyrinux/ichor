@@ -26,6 +26,8 @@ struct NodeTabsView: View {
     @State private var serviceRequest: ServiceRequest?
     /// The cluster's history over `period` (uptime strip, memory line); nil without one.
     @State private var history: HistoryQueryResult?
+    /// Where each node's memory use is heading (the last week of the history); nil without one.
+    @State private var memoryForecast: HistoryMemoryForecast?
     @State private var period = HistoryPeriod.week
 
     init(ref: NodeRef, initialTab: Tab = .services) {
@@ -75,8 +77,9 @@ struct NodeTabsView: View {
         .task { await nodes.loadFeatures(node: ref.address) }
         // Masked like the screen in screenshot mode: reloaded when it changes.
         .task(id: "\(period.rawValue)#\(model.dataGeneration)") {
-            history = await HistoryStore.query(
-                cluster: model.activeSummary.map(monitorClusterKey) ?? "", period: period)
+            let cluster = model.activeSummary.map(monitorClusterKey) ?? ""
+            history = await HistoryStore.query(cluster: cluster, period: period)
+            memoryForecast = await HistoryStore.memoryForecast(cluster: cluster)
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -139,7 +142,8 @@ struct NodeTabsView: View {
             LoadStateView(state: resources, retry: loadResources) {
                 ResourcesList(
                     resources: $0, clock: clock, pressure: model.allows(.cgroups) ? pressure : nil,
-                    memory: history?.memory(of: ref.address) ?? [], window: historyWindow
+                    memory: history?.memory(of: ref.address) ?? [], window: historyWindow,
+                    memoryTrend: memoryForecast?.node(ref.address)?.line
                 ) { tab = .cgroups }
             }
             .refreshable { await loadResources() }

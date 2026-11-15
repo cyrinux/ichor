@@ -355,12 +355,22 @@ Part of the [Ichor documentation](../README.md#documentation).
   it refreshes; never in screenshot mode.
 - **Notifications:** with the app lock on, alerts show only a generic text on the lock screen.
   The widget and the Wear OS tile show counts only, no hostnames.
+- **Push alerts through ichor-relay (optional, in the cluster):** what leaves the cluster.
+  - Through UnifiedPush, the alerts are encrypted end to end for each phone: the push server
+    sees only when a push goes out, its size and whether a critical alert fires.
+  - Through ntfy (the iOS path), the message is plain text: alert names, severities and
+    namespaces, and the summaries only if you pair as verbose. Use a topic nobody can guess.
+  - The relay keeps an alert's name, severity, namespace and summary, and drops its other
+    labels. Your kubeconfig and talosconfig never leave the phone; the project runs no server.
+  - Whoever may read the relay's Secret may pair a phone: RBAC decides. Who sees what, each
+    token and how to rotate them: [Trust model of ichor-relay](../SECURITY.md#trust-model-of-ichor-relay).
 - **Kubeconfig export:** the kubeconfig is written only to the file you choose. Use it with
   kubectl or any Kubernetes client, then delete the file.
 
 ## Reaching the cluster: VPN, firewall and ACLs
 
-Ichor talks straight to the Talos API and the Kubernetes API; it has no relay. How those APIs
+Ichor talks straight to the Talos API and the Kubernetes API; nothing relays those calls (the
+optional ichor-relay only pushes alerts out). How those APIs
 are exposed is up to you and outside the app, but a phone moves between networks, so we
 recommend never putting them on the open internet:
 

@@ -200,6 +200,8 @@ dependencies {
     // QR codes: the import scanner's decoder and the encoder for sharing an issued talosconfig.
     // Pure Java, no Android or Google Play deps, so the open-source APK stays free.
     implementation(libs.zxing.core)
+    // Push from ichor-relay: the UnifiedPush connector (Apache-2.0, no Google Play deps), not the FCM distributor.
+    implementation(libs.unifiedpush.connector)
     implementation(libs.termlib)
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.fragment.ktx)

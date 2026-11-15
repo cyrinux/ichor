@@ -3,6 +3,7 @@ import IchorCore
 
 struct MonitoringSection: View {
     @Environment(LockStore.self) private var lockStore
+    @Environment(AppModel.self) private var model
     @State private var enabled = BackgroundMonitor.alertsEnabled
     @State private var dataWatched = BackgroundMonitor.dataServicesWatched
     @State private var importedPlugins = BackgroundMonitor.importedPluginAlerts
@@ -12,12 +13,16 @@ struct MonitoringSection: View {
     @State private var storageWatched = BackgroundMonitor.storageWatched
     @State private var storageThresholds = BackgroundMonitor.storageThresholds
     @State private var storageTrendWatched = BackgroundMonitor.storageTrendWatched
+    @State private var memoryTrendWatched = BackgroundMonitor.memoryTrendWatched
     @State private var sensorsWatched = BackgroundMonitor.sensorsWatched
     @State private var kubespanWatched = BackgroundMonitor.kubespanWatched
     @State private var sensorThreshold = BackgroundMonitor.sensorThreshold
     @State private var unreachableWatched = BackgroundMonitor.unreachableWatched
     @State private var unreachableRuns = BackgroundMonitor.unreachableRuns
     @State private var message: String?
+    @State private var relayOpen = false
+    /// The cluster on screen's pairing with its ichor-relay, read again when the sheet closes.
+    @State private var relayRecord: RelayPairingRecord?
 
     var body: some View {
         Section {
@@ -115,6 +120,9 @@ struct MonitoringSection: View {
                 }
             }
             .disabled(!enabled)
+            if alertmanagerWatched, let context = model.activeSummary, !context.fingerprint.isEmpty {
+                relayRow(context)
+            }
             // Opt-in too: one Talos call per check reads every node's volumes and disks.
             Toggle(
                 isOn: Binding(
@@ -156,6 +164,25 @@ struct MonitoringSection: View {
                 }
                 .disabled(!enabled)
             }
+            // Opt-in too: no extra call, a line through each node's memory use in the history kept on this phone.
+            Toggle(
+                isOn: Binding(
+                    get: { memoryTrendWatched },
+                    set: { on in
+                        BackgroundMonitor.memoryTrendWatched = on
+                        memoryTrendWatched = on
+                    })
+            ) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Warn before a node runs out of memory")
+                    Text(
+                        "Notifies when a node's memory growth over the last week would make it critical within 3 days, and once it no longer does. Uses the history of the checks."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
             // On by default: every node's KubeSpan peers are read at every check.
             Toggle(
                 isOn: Binding(
@@ -277,6 +304,40 @@ struct MonitoringSection: View {
                 }
             }
         }
+    }
+
+    /// The cluster on screen pushed to the ntfy app by its ichor-relay: pairs or shows the pairing.
+    @ViewBuilder private func relayRow(_ context: ContextSummary) -> some View {
+        Button {
+            relayOpen = true
+        } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Push through ntfy")
+                Group {
+                    if context.demo {
+                        Text("Pairing is not available in the demo cluster.")
+                    } else if let relayRecord {
+                        Text("Paired · \(ntfyTopicLabel(relayRecord.endpoint))")
+                    } else {
+                        Text("Alerts from the cluster's ichor-relay, shown at once by the ntfy app.")
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+        }
+        .disabled(context.demo || model.client == nil)
+        .task(id: context.fingerprint) { readRelayRecord() }
+        .sheet(isPresented: $relayOpen, onDismiss: readRelayRecord) {
+            if let client = model.client {
+                RelayPairingSheet(
+                    client: client, fingerprint: context.fingerprint, label: model.labels.given(context) ?? "")
+            }
+        }
+    }
+
+    private func readRelayRecord() {
+        relayRecord = RelayStore.read(model.activeSummary?.fingerprint ?? "")
     }
 
     /// The warning and critical fill thresholds; critical stays above warning.

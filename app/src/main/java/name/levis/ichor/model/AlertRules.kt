@@ -48,8 +48,10 @@ data class AlertRule(
     val minSeverity: String? = null,
     val digest: Boolean? = null,
     val repeatMinutes: Int? = null,
+    /** The opens in 24 h from which a non-critical alert is flapping and folded into the digest; 0 off. */
+    val flapOpens: Int? = null,
 ) {
-    val isEmpty: Boolean get() = quietHours == null && minSeverity == null && digest == null && repeatMinutes == null
+    val isEmpty: Boolean get() = quietHours == null && minSeverity == null && digest == null && repeatMinutes == null && flapOpens == null
 
     fun withZone(zone: String): AlertRule = copy(quietHours = quietHours?.let { if (it.tz.isBlank()) it.copy(tz = zone) else it })
 }
@@ -83,6 +85,10 @@ const val ALERT_SEVERITY_CRITICAL = "critical"
 /** The repeats the settings offer, in minutes, 0 off; the real cadence is the check's. */
 val ALERT_REPEAT_CHOICES = listOf(0, 5, 15, 30, 60)
 
+/** The opens per day the flapping stepper offers, and where turning it on starts. */
+val ALERT_FLAP_RANGE = 2..10
+const val ALERT_FLAP_DEFAULT = 3
+
 /**
  * One alert a check is about to post, as Go reads it; [cluster] is the context fingerprint.
  * [ongoing]: it did not change, it still fires since it was posted at [lastNotifiedMillis]
@@ -100,6 +106,8 @@ data class AlertInput(
     val firstSeenMillis: Long = 0,
     val lastNotifiedMillis: Long = 0,
     val acknowledged: Boolean = false,
+    /** How many times it opened in the last 24 h, this one included (the history ring); 0 unknown. */
+    val flaps: Int = 0,
 )
 
 const val ALERT_ACTION_NOTIFY = "notify"
@@ -111,6 +119,7 @@ const val ALERT_REASON_SNOOZED = "snoozed"
 const val ALERT_REASON_SEVERITY = "severity"
 const val ALERT_REASON_QUIET = "quiet"
 const val ALERT_REASON_DIGEST = "digest"
+const val ALERT_REASON_FLAPPING = "flapping"
 
 /**
  * What to do with one alert; [until] (unix ms) the end of the quiet window that muted it, else
@@ -124,9 +133,14 @@ data class AlertDecision(
     val reason: String = "",
     val until: Long = 0,
     val repeats: Boolean = false,
+    /** Folded as flapping ([ALERT_REASON_FLAPPING]): its opens in 24 h; else 0. */
+    val flaps: Int = 0,
 )
 
-/** A digest cluster's alerts of the run: how many, how many critical and warnings, and the first keys. */
+/**
+ * A digest cluster's alerts of the run: how many, how many critical and warnings, and the first
+ * keys; [flapping] of them were folded as flapping, [flappingKeys] the first of those.
+ */
 @Serializable
 data class AlertDigest(
     val cluster: String,
@@ -134,6 +148,8 @@ data class AlertDigest(
     val critical: Int = 0,
     val warning: Int = 0,
     val firstKeys: List<String> = emptyList(),
+    val flapping: Int = 0,
+    val flappingKeys: List<String> = emptyList(),
 )
 
 /** Ichorgo.alertRulesApply's answer: one decision per alert in order, one digest per digest cluster. */

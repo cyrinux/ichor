@@ -33,6 +33,19 @@ extension BackgroundMonitor {
     /// refuses them, every alert not snoozed is posted as before (alertRulePlan): a rules error
     /// never drops an alert. An ongoing one (pendingRepeats) is posted again, "Still firing ·
     /// 25 min", only when Go says its repeat is due; the posted ones that repeat get Acknowledge.
+    /// The opens in 24 h of each alert key, by cluster key, for the clusters of `outcomes` whose
+    /// rule folds flapping alerts (read from the ring, this run's record in it). Nodes, KubeSpan
+    /// and sensors are not in the ring's alerts: they never get a count.
+    static func flapCounts(_ outcomes: [ClusterAlerts], rules: AlertRules, now: Date) async -> [String: [String: Int]] {
+        var out: [String: [String: Int]] = [:]
+        for outcome in outcomes where out[outcome.job.key] == nil {
+            guard rules.flapOpens(outcome.job.context.fingerprint) > 0 else { continue }
+            let opens = await HistoryStore.flaps(cluster: outcome.job.key, now: now)
+            if !opens.isEmpty { out[outcome.job.key] = opens }
+        }
+        return out
+    }
+
     /// Returns the problems posted, by cluster key: what their next repeat counts from.
     @discardableResult
     static func postAll(_ pending: [PendingAlert], now: Date) async -> [String: [String]] {
@@ -80,19 +93,31 @@ extension BackgroundMonitor {
         AlertMuteStore.record(mutes, now: millis)
         for digest in plan.digests {
             guard let first = digested[digest.cluster] else { continue }
-            await postDigest(digest, first: first, hideDetails: hide)
+            let flapping = pending.filter {
+                $0.input.cluster == digest.cluster && digest.flappingKeys.contains($0.alert.key)
+            }
+            await postDigest(digest, first: first, flapping: flapping.map(\.localized.title), hideDetails: hide)
         }
         return posted
     }
 
     /// One notification for a digest cluster's alerts of a run: "3 findings on staging-eu" and
     /// "Critical: 1, warnings: 2", in the category of its first alert, opening the cluster's
-    /// home. Posted under the same id each run, so it replaces the previous run's.
-    private static func postDigest(_ digest: AlertDigest, first: PendingAlert, hideDetails: Bool) async {
+    /// home. Posted under the same id each run, so it replaces the previous run's. `flapping`: the
+    /// titles of the alerts folded because they come and go, named on a line of their own.
+    private static func postDigest(
+        _ digest: AlertDigest, first: PendingAlert, flapping: [String], hideDetails: Bool
+    ) async {
         let content = UNMutableNotificationContent()
         content.title = String(localized: "\(digest.count) findings on \(first.label)")
         content.subtitle = first.label
-        content.body = String(localized: "Critical: \(digest.critical), warnings: \(digest.warning)")
+        let counts = String(localized: "Critical: \(digest.critical), warnings: \(digest.warning)")
+        if digest.flapping > 0 {
+            let names = (flapping.isEmpty ? digest.flappingKeys : flapping).joined(separator: ", ")
+            content.body = counts + "\n" + String(localized: "\(digest.flapping) flapping: \(names)")
+        } else {
+            content.body = counts
+        }
         content.sound = .default
         content.categoryIdentifier = category(alertKey: first.alert.key, hideDetails: hideDetails)
         var info = [AlertNotificationActions.clusterKey: first.context.fingerprint]

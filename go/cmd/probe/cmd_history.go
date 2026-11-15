@@ -19,6 +19,37 @@ const historyMagic = "ICHH"
 
 var historyCommands = []command{
 	{name: "incident-summary", args: "RING_FILE [SINCE] [names]", noConfig: true, run: probeIncidentSummary},
+	{name: "history-memory-forecast", args: "RING_FILE [CRITICAL]", noConfig: true, run: probeMemoryForecast},
+	{name: "history-flaps", args: "RING_FILE [HOURS]", noConfig: true, run: probeHistoryFlaps},
+}
+
+// probeHistoryFlaps prints the alerts of RING_FILE (a ring or JSON lines, as incident-summary
+// reads it) that opened more than once in the last HOURS (24 by default): what the alert
+// rules' flapping check counts.
+func probeHistoryFlaps(env) (string, error) {
+	if flag.Arg(1) == "" {
+		return "", errors.New("usage: history-flaps RING_FILE [HOURS]")
+	}
+
+	hours := 0
+
+	if arg := flag.Arg(2); arg != "" {
+		h, err := strconv.Atoi(arg)
+		if err != nil {
+			return "", fmt.Errorf("HOURS %q: %w", arg, err)
+		}
+
+		hours = h
+	}
+
+	now := time.Now().UnixMilli()
+
+	ring, err := readProbeRing(flag.Arg(1), now)
+	if err != nil {
+		return "", err
+	}
+
+	return ichorgo.HistoryAlertFlaps(ring, now, hours)
 }
 
 // probeIncidentSummary prints the incident summary of -context over the last SINCE (24h by
@@ -53,6 +84,34 @@ func probeIncidentSummary(e env) (string, error) {
 	}
 
 	return ichorgo.IncidentSummary(e.context, ring, now-window.Milliseconds(), now, flag.Arg(3) != "names")
+}
+
+// probeMemoryForecast prints where each node's memory use in RING_FILE (a ring or JSON lines,
+// as incident-summary reads it) is heading, projected to CRITICAL percent (90 by default).
+func probeMemoryForecast(env) (string, error) {
+	if flag.Arg(1) == "" {
+		return "", errors.New("usage: history-memory-forecast RING_FILE [CRITICAL]")
+	}
+
+	crit := 0.0
+
+	if arg := flag.Arg(2); arg != "" {
+		c, err := strconv.ParseFloat(arg, 64)
+		if err != nil {
+			return "", fmt.Errorf("CRITICAL %q: %w", arg, err)
+		}
+
+		crit = c
+	}
+
+	now := time.Now().UnixMilli()
+
+	ring, err := readProbeRing(flag.Arg(1), now)
+	if err != nil {
+		return "", err
+	}
+
+	return ichorgo.HistoryMemoryForecast(ring, now, crit)
 }
 
 // parseSince reads a window: a Go duration ("6h", "90m") or a number of days ("7d").

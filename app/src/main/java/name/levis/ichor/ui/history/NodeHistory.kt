@@ -46,15 +46,20 @@ fun NodeUptime(node: String, modifier: Modifier = Modifier, reachability: NodeRe
     }
 }
 
-/** The node's memory use over the last 7 days, as a small line under its memory bar; nothing without points. */
+/**
+ * The node's memory use over the last 7 days, as a small line under its memory bar, and where it
+ * is heading (a leak: "critical in ~6 days", or "growing ~1.8 % a day"); nothing without points.
+ */
 @Composable
 fun NodeMemoryHistory(node: String, modifier: Modifier = Modifier) {
     val history = rememberClusterHistory(HISTORY_SHORT_DAYS) ?: return
     val series = history.memory.find { it.node == node }?.series?.takeIf { it.size >= 2 } ?: return
     val description = pluralStringResource(R.plurals.history_memory_description, HISTORY_SHORT_DAYS, HISTORY_SHORT_DAYS)
+    val outlook = rememberMemoryForecast()?.nodes?.find { it.node == node }?.outlook()
     Column(modifier) {
         MutedText(description)
         PercentSparkline(series, history.from, history.to, description)
+        outlook?.let { VolumeOutlookText(it) }
     }
 }
 

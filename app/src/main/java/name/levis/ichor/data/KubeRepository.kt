@@ -5,6 +5,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import name.levis.ichor.model.LogTemplates
+import name.levis.ichor.model.WorkloadLogLine
 import name.levis.ichor.model.KubeChange
 import name.levis.ichor.model.ApiHealthReport
 import name.levis.ichor.model.CheckupReport
@@ -234,6 +237,19 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
     /** [text] without its ANSI escapes, to copy or share; off the main thread. */
     suspend fun stripLogEscapes(text: String): String = withContext(Dispatchers.Default) { LogParser.strip(text) }
 
+    /** [lines] (a pod's log) grouped into their [limit] most repeated messages; on the phone, no cluster call. */
+    suspend fun logTemplates(lines: List<String>, limit: Int = LOG_TEMPLATES_LIMIT): LogTemplates =
+        templates(TalosJson.encodeToString(LOG_LINES, lines), limit)
+
+    /** A workload's merged [lines] grouped likewise, each message counting the pods that wrote it. */
+    @JvmName("workloadLogTemplates")
+    suspend fun logTemplates(lines: List<WorkloadLogLine>, limit: Int = LOG_TEMPLATES_LIMIT): LogTemplates =
+        templates(TalosJson.encodeToString(WORKLOAD_LINES, lines), limit)
+
+    private suspend fun templates(json: String, limit: Int): LogTemplates = withContext(Dispatchers.Default) {
+        TalosJson.decodeFromString(LogTemplates.serializer(), Ichorgo.logTemplates(json, limit.toLong()))
+    }
+
     /** The logs of [workload]'s pods merged by time, `kubectl logs -l` through the Kubernetes API (os:admin). */
     suspend fun workloadLogs(workload: KubeWorkload, filter: LogFilter, tailLines: Int): WorkloadLogs = go.kube { cfg, ctx, server ->
         val json = Ichorgo.kubeWorkloadLogs(cfg, ctx, server, workload.kind, workload.namespace, workload.name, "", filter.text, filter.regex, filter.sinceMinutes.toLong(), tailLines.toLong())
@@ -448,3 +464,9 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
         checked.copy(secret = if (checked.auth == PromSource.AUTH_NONE) "" else source.secret.trim())
     }
 }
+
+/** How many repeated messages the Top messages sheet lists. */
+const val LOG_TEMPLATES_LIMIT = 20
+
+private val LOG_LINES = ListSerializer(String.serializer())
+private val WORKLOAD_LINES = ListSerializer(WorkloadLogLine.serializer())

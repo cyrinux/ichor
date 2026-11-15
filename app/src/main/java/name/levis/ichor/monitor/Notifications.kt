@@ -181,6 +181,7 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.CLUSTER_REACHABLE -> context.getString(R.string.monitor_cluster_reachable)
     AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertTitle(context, alert)
     AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertTitle(context, alert)
+    AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK -> memoryTrendAlertTitle(context, alert)
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertTitle(context, alert)
     AlertKind.KUBESPAN_DOWN -> context.getString(R.string.monitor_kubespan_down, alert.subject)
     AlertKind.KUBESPAN_UP -> context.getString(R.string.monitor_kubespan_up, alert.subject)
@@ -271,6 +272,24 @@ private fun trendAlertTitle(context: Context, alert: Alert): String {
         d.critical -> context.resources.getQuantityString(R.plurals.monitor_storage_trend_critical, d.days, d.name, d.hostname, d.days)
         else -> context.resources.getQuantityString(R.plurals.monitor_storage_trend_full, d.days, d.name, d.hostname, d.days)
     }
+}
+
+/** "worker-1 memory critical in about 3 days" (less than a day, about a day), or the cleared form. */
+private fun memoryTrendAlertTitle(context: Context, alert: Alert): String {
+    val d = TrendDetail.parse(alert.detail)
+    return when {
+        !alert.problem -> context.getString(R.string.alert_memory_trend_ok_title, d.hostname)
+        d.days < 1 -> context.getString(R.string.alert_memory_trend_soon, d.hostname)
+        d.days == 1 -> context.getString(R.string.alert_memory_trend_day, d.hostname)
+        else -> context.getString(R.string.alert_memory_trend_title, d.hostname, d.days)
+    }
+}
+
+/** "growing ~1.8 % a day, now at 84 %", as a volume's; the setting's name once cleared. */
+private fun memoryTrendAlertText(context: Context, alert: Alert): String {
+    if (!alert.problem) return context.getString(R.string.settings_memory_trend)
+    val d = TrendDetail.parse(alert.detail)
+    return context.getString(R.string.monitor_storage_trend_text, formatSlope(d.slopePerDay), d.percent)
 }
 
 /** "growing ~2.4 % a day, now at 81 %"; "Node storage" once cleared. */
@@ -410,6 +429,7 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.CLUSTER_REACHABLE -> context.getString(R.string.monitor_cluster_reachable_text)
     AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertText(context, alert)
     AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertText(context, alert)
+    AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK -> memoryTrendAlertText(context, alert)
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertText(context, alert)
     AlertKind.KUBESPAN_DOWN -> kubespanAlertText(context, alert)
     AlertKind.KUBESPAN_UP -> context.getString(R.string.monitor_kubespan)

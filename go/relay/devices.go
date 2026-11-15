@@ -68,6 +68,12 @@ func validateDevice(d Device, allowHTTP bool) error {
 	}
 }
 
+// ValidateDevice checks a device as the relay will (https endpoints only), for the phone to
+// refuse it before sending it.
+func ValidateDevice(d Device) error {
+	return validateDevice(d, false)
+}
+
 // validateURL accepts an absolute URL of one of schemes, with a host for http(s).
 func validateURL(raw string, schemes ...string) error {
 	if len(raw) > maxURLLen {

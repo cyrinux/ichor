@@ -15,6 +15,8 @@ enum class AlertKind {
     STORAGE_PROBLEM, STORAGE_OK,
     /** A volume projected critical (or full) within days ([Alert.detail]: a [TrendDetail]), or no longer. */
     STORAGE_TREND, STORAGE_TREND_OK,
+    /** A node's memory projected critical within days ([Alert.detail]: a [TrendDetail]), or no longer. */
+    MEMORY_TREND, MEMORY_TREND_OK,
     /** A node running hot or throttled ([Alert.detail]: a [SensorDetail]), or no longer. */
     SENSOR_PROBLEM, SENSOR_OK,
     /** A KubeSpan tunnel between two nodes down ([Alert.detail]: a [KubeSpanDetail]), or back. */
@@ -139,6 +141,7 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             pluginPending = plugin.pending,
             // Stepped after the run's history record (see [withStorageTrends]); kept until then.
             storageTrends = prev?.takeIf { comparable && storage.watched }?.storageTrends.orEmpty(),
+            memoryTrends = prev?.takeIf { comparable }?.memoryTrends.orEmpty(),
         ),
     )
 }

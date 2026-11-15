@@ -246,6 +246,15 @@
             android:exported="false"
             tools:targetApi="34" />
 
+        <!-- Push from ichor-relay: the UnifiedPush distributor binds it with endpoints and decrypted alerts. Not a foreground service. -->
+        <service
+            android:name=".monitor.RelayPushService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.unifiedpush.android.connector.PUSH_EVENT" />
+            </intent-filter>
+        </service>
+
         <!-- Cancel on the model download's notification. -->
         <receiver
             android:name=".localmodel.ModelDownloadCancelReceiver"

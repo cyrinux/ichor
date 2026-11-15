@@ -49,6 +49,9 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     /// Open storage trend alerts (volume key → StorageTrendIssue value, see evaluateStorageTrends):
     /// set after the history ring is written, carried over by evaluate.
     public var storageTrends: [String: String]
+    /// Open memory trend alerts (node address → StorageTrendIssue value, see evaluateMemoryTrends):
+    /// set after the history ring is written, carried over by evaluate.
+    public var memoryTrends: [String: String] = [:]
     /// Watching node temperatures was on for this check (opt-in, Talos clusters only), and it could be read.
     public var sensorWatched: Bool
     public var sensorChecked: Bool
@@ -178,6 +181,7 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         storagePending = try c.field(.storagePending, [])
         storageWarn = try c.field(.storageWarn, storageWarnDefault)
         storageTrends = try c.field(.storageTrends, [:])
+        memoryTrends = try c.field(.memoryTrends, [:])
         sensorWatched = try c.field(.sensorWatched, false)
         sensorChecked = try c.field(.sensorChecked, false)
         sensorIssues = try c.field(.sensorIssues, [:])
@@ -641,6 +645,7 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
             previous: previous, current: current, comparable: comparable, alerts: &alerts)
         // The trend alerts are evaluated once the history ring has this check (evaluateStorageTrends).
         next.storageTrends = comparable && current.storageWatched ? previous?.storageTrends ?? [:] : [:]
+        next.memoryTrends = comparable ? previous?.memoryTrends ?? [:] : [:]
     }
     if let previous, comparable, !current.unreachableAsAWhole {
         for addr in current.nodes.keys.sorted() {

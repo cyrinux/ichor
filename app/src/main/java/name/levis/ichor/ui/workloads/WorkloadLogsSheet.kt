@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.FormatListNumbered
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import name.levis.ichor.ui.design.IchorFilterChip
@@ -28,7 +29,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -133,6 +137,17 @@ fun WorkloadLogsSheet(
     val logs = (state as? UiState.Loaded)?.data
     val hasText = !logs?.lines.isNullOrEmpty()
     LaunchedEffect(workload.key) { vm.load(workload) }
+    // The merged lines grouped into their repeated messages, with the pods that wrote each; a tap filters on one.
+    var topMessages by rememberSaveable(workload.key) { mutableStateOf(false) }
+    if (topMessages) {
+        val lines = logs?.lines.orEmpty()
+        LogTemplatesSheet(
+            lineCount = lines.size,
+            load = { appContext.kubeRepository.logTemplates(lines) },
+            onPick = { vm.load(workload, query.copy(filter = query.filter.copy(text = it, regex = false))) },
+            onDismiss = { topMessages = false },
+        )
+    }
     DisposableEffect(vm) {
         onDispose {
             vm.close()
@@ -146,6 +161,9 @@ fun WorkloadLogsSheet(
                     Text(workload.name, style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text("${workload.kind}  ·  ${workload.namespace}", style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                TooltipIconButton(Icons.Outlined.FormatListNumbered, stringResource(R.string.log_templates_title), enabled = hasText, onClick = {
+                    topMessages = true
+                })
                 TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.pod_logs_copy), enabled = hasText, onClick = {
                     // Logs may hold secrets: kept out of the clipboard preview (honoured from Android 13).
                     copyToClipboard(context, workload.name, logs?.asText().orEmpty(), sensitive = true)
