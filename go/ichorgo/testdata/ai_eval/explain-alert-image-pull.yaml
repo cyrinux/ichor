@@ -1,0 +1,24 @@
+id: explain-alert-image-pull
+kind: explain
+report: |
+  Alert KubePodNotReady (warning), active since 2026-10-01 17:40 UTC
+    summary: Pod has been in a non-ready state for more than 15 minutes.
+    description: Pod ns-1/pod-1 has been in a non-ready state for longer than 15 minutes.
+    runbook: obj-1
+    labels: job: obj-2; namespace: ns-1; pod: pod-1
+
+  Collected 2026-10-01 18:04 UTC through the Kubernetes API.
+
+  EVENTS (3, newest first)
+    2026-10-01 18:03:10 Warning Pod pod-1 Failed, 12 times: Failed to pull image "img-1": failed to resolve reference "img-1": unexpected status from HEAD request: 401 Unauthorized
+    2026-10-01 18:03:10 Warning Pod pod-1 Failed, 12 times: Error: ErrImagePull
+    2026-10-01 18:02:55 Normal Pod pod-1 BackOff, 60 times: Back-off pulling image "img-1"
+expect:
+  must:
+    - ["401", "Unauthorized", "credentials", "pull secret", "imagePullSecrets"]
+    - "pod-1"
+    - "Check next"
+  mustNot:
+    - "talosctl"
+    - "OOMKilled"
+  maxWords: 180

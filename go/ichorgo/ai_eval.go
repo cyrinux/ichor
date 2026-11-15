@@ -52,7 +52,7 @@ func (t aiEvalTerm) foundIn(lower string) bool {
 // aiEvalCase is one file of the set.
 type aiEvalCase struct {
 	ID       string `json:"id"`
-	Kind     string `json:"kind"`     // the kind of report: aiEvalFull or aiEvalHealth
+	Kind     string `json:"kind"`     // the kind of report: aiEvalFull, aiEvalHealth or aiEvalExplain
 	Language string `json:"language"` // "" for English
 	Report   string `json:"report"`
 	Note     string `json:"note"`
@@ -64,12 +64,13 @@ type aiEvalCase struct {
 }
 
 const (
-	aiEvalFull   = "full"
-	aiEvalHealth = "health"
+	aiEvalFull    = "full"
+	aiEvalHealth  = "health"
+	aiEvalExplain = "explain"
 )
 
 // aiEvalKinds maps a case's kind to the instructions it is sent with.
-var aiEvalKinds = map[string]diagnosisKind{aiEvalFull: diagnosisFull, aiEvalHealth: diagnosisHealth}
+var aiEvalKinds = map[string]diagnosisKind{aiEvalFull: diagnosisFull, aiEvalHealth: diagnosisHealth, aiEvalExplain: diagnosisExplain}
 
 // aiEvalResult is the grade of one answer. Score is the share of the must terms found, 0 when
 // the answer holds something forbidden or is too long; Pass means a score of 1.
