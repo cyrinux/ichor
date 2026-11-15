@@ -320,6 +320,16 @@ func (m fakeTalosMachine) Bootstrap(ctx context.Context, req *machineapi.Bootstr
 	defer m.f.mu.Unlock()
 
 	m.f.bootstraps = append(m.f.bootstraps, req)
+
+	if len(m.f.bootstrapErrs) > 0 {
+		err := m.f.bootstrapErrs[0]
+		m.f.bootstrapErrs = m.f.bootstrapErrs[1:]
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	delete(m.f.etcdDown, node)
 
 	return &machineapi.BootstrapResponse{Messages: []*machineapi.Bootstrap{{}}}, nil

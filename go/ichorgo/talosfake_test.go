@@ -94,6 +94,8 @@ type fakeTalos struct {
 	// recovered is what EtcdRecover received, per node; bootstraps the Bootstrap requests.
 	recovered  map[string][]byte
 	bootstraps []*machineapi.BootstrapRequest
+	// bootstrapErrs are the answers of the next Bootstraps, in order (each recorded first).
+	bootstrapErrs []error
 	// pcaps are the pcap streams a node's PacketCapture sends; pcapHold keeps a node's stream
 	// open after it (until the capture is stopped), like a live capture.
 	pcaps    map[string][]byte

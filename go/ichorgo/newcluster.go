@@ -1,543 +1,493 @@
 package ichorgo
 
-// Bootstrapping a whole cluster from the phone, for the case a node at its console offers:
-// it is booted from the Talos ISO (maintenance mode, nothing installed) and becomes the
-// cluster's first and only control plane; the user joins more nodes afterwards
-// (StartNodeJoin). Like `talosctl gen config` does on a laptop, the phone makes the
-// cluster's secrets (its CAs, tokens and keys) and the node's control-plane config, sends
-// that config over the insecure maintenance API (what `talosctl apply-config --insecure`
-// does), follows the node through its install and reboot, bootstraps etcd, then hands the
-// app an os:admin talosconfig and the admin kubeconfig. The secrets are made on the phone
-// and leave it only inside the config sent to the address the user confirmed.
+// Step 5 of the Talos lifecycle, the preparing half: a new single-node cluster from a machine
+// booted from the Talos ISO, like `talosctl gen secrets` + `gen config` on a laptop.
+// NewClusterPrepare makes the cluster's secrets and configs and keeps them in Go memory
+// behind a draft id (gomobile passes strings only, so the bundle never crosses into the
+// apps); the apps show the redacted preview and store the talosconfig, then StartNewCluster
+// (newcluster_run.go) sends the config and bootstraps. Nothing here reaches the network.
 
 import (
-	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
+	"slices"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
-	"github.com/siderolabs/talos/pkg/machinery/client"
+	"github.com/siderolabs/talos/pkg/machinery/compatibility"
 	machineryconfig "github.com/siderolabs/talos/pkg/machinery/config"
+	"github.com/siderolabs/talos/pkg/machinery/config/configloader"
+	"github.com/siderolabs/talos/pkg/machinery/config/encoder"
+	"github.com/siderolabs/talos/pkg/machinery/config/generate"
 	"github.com/siderolabs/talos/pkg/machinery/config/generate/secrets"
+	"github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/siderolabs/talos/pkg/machinery/constants"
-	"github.com/siderolabs/talos/pkg/machinery/role"
 )
 
-const (
-	// newClusterTimeout bounds the whole run: an install, a reboot and a control plane
-	// coming up take a few minutes.
-	newClusterTimeout = 20 * time.Minute
-	// newClusterInstallGrace: how long the node may stay unreachable between taking the
-	// config and answering as the installed system, before the run gives up on it.
-	newClusterInstallGrace = 5 * time.Minute
-	// newClusterReadyFor bounds the wait for the installed node to report itself ready.
-	newClusterReadyFor = 3 * time.Minute
-	// newClusterAnswerFor bounds the retries of the first handshake: a node that never
-	// answers (a wrong address, an ISO that never boots) should not burn the whole run
-	// before the app is told what to check.
-	newClusterAnswerFor = 2 * time.Minute
-	// newClusterApplyFor bounds the retries of the config apply (a node that just booted
-	// the ISO may still be bringing up its maintenance API).
-	newClusterApplyFor = 60 * time.Second
-	// newClusterAdminTTLHours is the lifetime of the talosconfig the run hands over.
-	newClusterAdminTTLHours = 24 * 30
-	// newClusterDefaultPort is the API server port of the endpoint built from the node.
-	newClusterDefaultPort = 6443
-)
+// newClusterDraftTTL: a draft lives this long; an app restart loses it sooner, which is
+// fine: nothing was sent, the person starts again.
+const newClusterDraftTTL = 30 * time.Minute
 
-// Phases reported through NewClusterListener.OnProgress, in order.
-const (
-	newClusterPhaseGenerating = "generating"
-	newClusterPhaseApplying   = "applying"
-	newClusterPhaseInstalling = "installing"
-	newClusterPhaseBooting    = "booting"
-	newClusterPhaseReady      = "ready"
-	newClusterPhaseBootstrap  = "bootstrap"
-	newClusterPhaseIssuing    = "issuing"
-	newClusterPhaseDone       = "done"
-)
+// newClusterSpec is what the apps send NewClusterPrepare.
+type newClusterSpec struct {
+	Name              string `json:"name"`
+	Endpoint          string `json:"endpoint"`
+	KubernetesVersion string `json:"kubernetesVersion"`
+	TalosVersion      string `json:"talosVersion"`
+	InstallDisk       string `json:"installDisk"`
+	InstallImage      string `json:"installImage"`
+	// AllowScheduling is a pointer: absent means on (a single node runs the workloads).
+	AllowScheduling *bool    `json:"allowSchedulingOnControlPlanes"`
+	AdditionalSANs  []string `json:"additionalSans"`
+	ExtraEditsJSON  string   `json:"extraEditsJSON"`
+}
+
+// newClusterDraft is what NewClusterPrepare returns: the talosconfig (a credential the app
+// stores) and the previews, never the secrets bundle.
+type newClusterDraft struct {
+	DraftID              string   `json:"draftId"`
+	Talosconfig          string   `json:"talosconfig"`
+	RedactedControlplane string   `json:"redactedControlplane"`
+	RedactedWorker       string   `json:"redactedWorker"`
+	Warnings             []string `json:"warnings"`
+	Size                 int      `json:"size"` // bytes of the control-plane config sent
+	TalosVersion         string   `json:"talosVersion"`
+	KubernetesVersion    string   `json:"kubernetesVersion"`
+}
+
+// newClusterRequest is a validated spec.
+type newClusterRequest struct {
+	name, host, endpoint       string // host: the machine; endpoint: https://host:6443
+	kubernetesVersion          string // no leading v
+	talosVersion, installImage string // talosVersion: v1.x.y, empty for the machinery's own
+	installDisk                string
+	allowScheduling            bool
+	sans                       []string
+	edits                      []configEdit
+}
+
+// newClusterDraftEntry is a prepared draft: what StartNewCluster sends and checks.
+type newClusterDraftEntry struct {
+	req     newClusterRequest
+	bundle  *secrets.Bundle
+	full    string // the control-plane config sent to the machine
+	talos   string // the os:admin talosconfig the app stores before the run
+	expires time.Time
+}
 
 var (
-	// The three bounded waits as variables: the tests shorten them the way the other runs
-	// shorten upgradePollInterval; the constants above are the shipped values.
-	newClusterAnswerWait = newClusterAnswerFor
-	newClusterApplyWait  = newClusterApplyFor
-	newClusterGraceWait  = newClusterInstallGrace
-	newClusterReadyWait  = newClusterReadyFor
-	// newClusterTestInterval is the poll step the test twins run with (the tests' fast
-	// step; production runs use upgradePollInterval). The tests' shortNewClusterWaits
-	// shortens it further.
-	newClusterTestInterval = 250 * time.Millisecond
-
-	errNewClusterPrivacy = errors.New("turn privacy mode off to bootstrap a cluster: its secrets are generated here and carried to the node in the config")
-	// errInstalledNoMaintenance: the address runs a Talos that asks for a client
-	// certificate: it belongs to a cluster and cannot be wiped from here.
-	errInstalledNoMaintenance = errors.New("that node belongs to a cluster already (it asks for a client certificate): boot it from the Talos ISO to reuse it")
+	newClusterDraftsMu sync.Mutex
+	newClusterDrafts   = map[string]*newClusterDraftEntry{}
 )
 
-// newClusterRequest is what a bootstrap was asked for, validated.
-type newClusterRequest struct {
-	address           string // host or host:port, as typed (the maintenance address)
-	host              string // the address without its port: the node to follow and dial
-	clusterName       string
-	kubernetesVersion string // x.y[.z], no leading v
-	installDisk       string
-	installImage      string // the Image Factory installer reference, when chosen
-	hostname          string
-	endpoint          string // https://host:6443: the API server the cluster and kubeconfig point at
-}
+// NewClusterPrepare makes a new cluster's secrets and configs from specJSON {"name",
+// "endpoint" (the machine's address), "kubernetesVersion" (empty: the default),
+// "talosVersion" (the machine's, from MaintenanceNodeInspect), "installDisk",
+// "installImage" (empty: the installer of talosVersion), "allowSchedulingOnControlPlanes"
+// (default true), "additionalSans", "extraEditsJSON"} and keeps them in memory for 30
+// minutes. It returns {"draftId","talosconfig","redactedControlplane","redactedWorker",
+// "warnings","size","talosVersion","kubernetesVersion"}: the app stores the talosconfig as
+// a new context, then calls StartNewCluster. Refused in privacy mode; recorded in the
+// activity log as new-cluster-generated (name and versions, never a secret).
+func NewClusterPrepare(specJSON string) (out string, err error) {
+	defer maskResult(&out, &err)
 
-// NewClusterListener follows a bootstrap (implemented in Kotlin/Swift).
-type NewClusterListener interface {
-	// OnProgress gets {"phase","message","at","address"} (at: unix ms; address: where the
-	// node is followed) on every change.
-	OnProgress(json string)
-	// OnTalosconfig hands over the os:admin talosconfig of the new cluster (the app stores
-	// it as a new context); OnKubeconfig the admin kubeconfig. Both are called exactly
-	// once, only when the bootstrap succeeded.
-	OnTalosconfig(talosconfigYAML string)
-	OnKubeconfig(kubeconfigYAML string)
-	// OnDone is called exactly once; nodeAddress is where the control plane answers (empty
-	// when it never did), errMessage is empty when the cluster bootstrapped.
-	OnDone(nodeAddress string, errMessage string)
-}
+	var spec newClusterSpec
 
-// NewClusterRun is a handle on a running bootstrap.
-type NewClusterRun struct {
-	cancel context.CancelFunc
-}
-
-// Cancel stops the run before its next step. Once the config is on the node the install
-// cannot be undone; start the bootstrap again to follow the node from where it is.
-func (r *NewClusterRun) Cancel() { r.cancel() }
-
-type newClusterProgress struct {
-	Phase   string `json:"phase"`
-	Message string `json:"message"`
-	At      int64  `json:"at"`
-	Address string `json:"address,omitempty"`
-}
-
-// startRun opens the run's scope-bound goroutine: the run records itself in the activity
-// log (recordedRun, so a panic is recorded too) and holds its cluster's scope for the
-// duration. The audit and call-scope guards see the wiring here, in the run's own start.
-func startRun(c *newCluster, ctx context.Context, cancel context.CancelFunc) {
-	go func() {
-		defer cancel()
-		defer onPanic(func(msg string) { c.listener.OnDone("", msg) })
-		defer holdCalls("", "")()
-
-		var err error
-
-		if privacy.isEnabled() {
-			err = errNewClusterPrivacy
-		} else {
-			err = recordedRun("", "", c.auditAction, func() error { return c.run(ctx) })
-		}
-
-		c.listener.OnDone(c.node, errText(err))
+	defer func() {
+		recordOutcome("", "", auditAction{Action: "new-cluster-generated", Params: newClusterAuditParams(spec)}, err)
 	}()
-}
 
-// newCluster is one run of StartNewCluster.
-type newCluster struct {
-	address, clusterName, kubernetesVersion, installDisk, hostname, endpoint string
-	listener                                                                 NewClusterListener
-
-	req  newClusterRequest
-	node string // where the control plane is followed: the address without its port
-
-	// bundle is made once per run and reused across attempts: a second bootstrap of a
-	// node that already took an earlier attempt's config carries the same cluster
-	// identity, so it follows what it installed rather than clashing with it. The admin
-	// certificate is issued once and kept for the same reason: dialCluster needs it too.
-	bundle    *secrets.Bundle
-	adminCert *x509Pair
-	applied   bool // the config may be on the node: Cancel cannot undo anything any more
-
-	// draft carries a prepared cluster (NewClusterPrepare): its bundle and the exact
-	// control-plane config are reused as-is, and storedYAML is the talosconfig the app
-	// stored before this run, used to follow the node. Empty on the legacy path, where the
-	// run makes the secrets itself (the tests' StartNewCluster twin).
-	draft      *newClusterDraftEntry
-	storedYAML string
-
-	// dialAddress and clusterAddress, when set (the tests), are where the fake's
-	// maintenance API and installed cluster API answer: the endpoint host stays the
-	// address the console shows. Production dials address itself.
-	dialAddress    string
-	clusterAddress string
-
-	// interval is how often the node is asked; timeout bounds the whole run. The tests
-	// replace both (they also replace upgradePollInterval, which the runs share).
-	interval time.Duration
-	timeout  time.Duration
-}
-
-// dial is where the node's API answers: the address as typed, or the test fake's endpoint.
-func (c *newCluster) dial() string {
-	if c.dialAddress != "" {
-		return c.dialAddress
+	if privacy.isEnabled() {
+		return "", errJoinPrivacy
 	}
 
-	return c.req.address
-}
+	if err := json.Unmarshal([]byte(specJSON), &spec); err != nil {
+		return "", fmt.Errorf("invalid new cluster: %w", err)
+	}
 
-// x509Pair is a PEM certificate and its key (the run's os:admin client certificate).
-type x509Pair struct {
-	Crt []byte
-	Key []byte
-}
-
-func (c *newCluster) start(timeout time.Duration) *NewClusterRun {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	run := &NewClusterRun{cancel: cancel}
-
-	startRun(c, ctx, cancel)
-
-	return run
-}
-
-func (c *newCluster) auditAction() auditAction {
-	return auditAction{Action: "cluster-bootstrap", Node: c.node, Params: "hostname=" + strings.TrimSpace(c.hostname) +
-		" k8s=" + strings.TrimSpace(c.kubernetesVersion) + " disk=" + strings.TrimSpace(c.installDisk) +
-		" endpoint=" + strings.TrimSpace(c.endpoint)}
-}
-
-func (c *newCluster) emit(phase, message string) {
-	emitJSON(newClusterProgress{Phase: phase, Message: message, At: time.Now().UnixMilli(), Address: c.node}, c.listener.OnProgress)
-}
-
-func (c *newCluster) run(ctx context.Context) error {
-	req, err := c.request()
+	req, err := parseNewClusterSpec(spec)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	c.req = req
-	c.node = req.host
-
-	if c.interval == 0 {
-		c.interval = upgradePollInterval
-	}
-
-	// The user already confirmed the machine's address in the prepares step (or the
-	// address was validated for the draft): keep the local-network rule.
-	if err := checkMaintenanceAddress(ctx, req.address); err != nil {
-		return err
-	}
-
-	if c.draft == nil {
-		c.emit(newClusterPhaseGenerating, "this phone is making "+req.clusterName+"'s CAs, tokens and keys")
-
-		if err := c.ensureBundle(); err != nil {
-			return err
-		}
-	}
-
-	if err := c.apply(ctx); err != nil {
-		return c.ended(err)
-	}
-
-	if err := c.follow(ctx); err != nil {
-		return c.ended(err)
-	}
-
-	c.emit(newClusterPhaseBootstrap, "bootstrapping etcd on "+c.node)
-
-	cl, err := c.dialCluster()
+	entry, err := prepareNewCluster(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	defer cl.Close() //nolint:errcheck
-
-	if err := cl.Bootstrap(withRunNode(ctx, c.node), &machineapi.BootstrapRequest{}); err != nil {
-		return fmt.Errorf("bootstrap etcd on %s: %s", c.node, friendlyError(err))
-	}
-
-	c.emit(newClusterPhaseIssuing, "issuing the cluster's talosconfig and kubeconfig")
-
-	if err := c.handOver(ctx, cl); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// request is the run's validated request: the draft's own for a prepared run (the address
-// comes from the start call), the parts parsed for the legacy twin.
-func (c *newCluster) request() (newClusterRequest, error) {
-	if c.draft != nil {
-		return c.draft.req, nil
-	}
-
-	return parseNewClusterRequest(c.address, c.clusterName, c.kubernetesVersion, c.installDisk, c.hostname, c.endpoint)
-}
-
-// ended turns the run's context ending into what to say about it.
-func (c *newCluster) ended(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
-		if c.applied {
-			return fmt.Errorf("stopped: %s did not come up in time and the install cannot be undone; start the bootstrap again to follow the node from where it is",
-				c.req.address)
-		}
-
-		return errors.New("stopped before the config was sent: nothing changed on the node")
-	}
-
-	return err
-}
-
-// newClusterSecretsCache holds the one bundle the test runs share (see ensureBundle):
-// package state, only ever touched by the test twins.
-var newClusterSecretsCache *secrets.Bundle
-
-// bundleFor makes the run's bundle: its own (a test scripted one), else the tests' shared
-// one, else a fresh one. Making a bundle costs real entropy and seconds; the test twins
-// share one.
-func (c *newCluster) bundleFor() (*secrets.Bundle, error) {
-	if c.draft != nil {
-		return c.draft.bundle, nil
-	}
-
-	if c.bundle != nil {
-		return c.bundle, nil
-	}
-
-	if newClusterSecretsCache != nil {
-		return newClusterSecretsCache, nil
-	}
-
-	return secrets.NewBundle(secrets.NewClock(), machineryconfig.TalosVersionCurrent)
-}
-
-// ensureBundle makes the cluster's secrets and the run's os:admin certificate once
-// (see newCluster.bundle).
-func (c *newCluster) ensureBundle() error {
-	bundle, err := c.bundleFor()
+	redactedCP, redactedWorker, warnings, err := newClusterPreview(entry)
 	if err != nil {
-		return fmt.Errorf("generate the cluster's secrets: %w", err)
+		return "", err
 	}
 
-	admin, err := bundle.GenerateTalosAPIClientCertificateWithTTL(role.MakeSet(role.Admin), newClusterAdminTTLHours*time.Hour)
+	id, err := storeNewClusterDraft(entry)
 	if err != nil {
-		return fmt.Errorf("issue the admin certificate: %w", err)
+		return "", err
 	}
 
-	c.bundle, c.adminCert = bundle, &x509Pair{Crt: admin.Crt, Key: admin.Key}
-
-	return nil
-}
-
-// apply sends the config to the node, wiping it first when it turns out to answer as an
-// installed Talos whose API still takes no client certificate (a fresh install that was
-// never given a cluster identity).
-func (c *newCluster) apply(ctx context.Context) error {
-	c.emit(newClusterPhaseApplying, "reaching "+c.req.address+" over the maintenance API")
-
-	// A refused handshake means the maintenance API is not up yet (an ISO still booting);
-	// a node whose API asks for a client certificate belongs to a cluster already.
-	upSince := time.Now()
-
-	for {
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-
-		installed, err := asksClientCert(ctx, c.dial())
-
-		switch {
-		case err == nil && !installed:
-		case err == nil:
-			return errInstalledNoMaintenance
-		case isRetryable(err) && time.Since(upSince) < newClusterAnswerWait:
-			sleepCtx(ctx, c.interval)
-			continue
-		case dialRefused(err):
-			return fmt.Errorf("%s does not answer: boot the node from the Talos ISO (its console must show maintenance mode) and start again", c.req.address)
-		default:
-			return errors.New(friendlyError(err))
-		}
-
-		break
+	talosVersion := req.talosVersion
+	if talosVersion == "" {
+		talosVersion = machineryconfig.TalosVersionCurrent.String()
 	}
 
-	// The maintenance client opens once and serves the wipe check and the apply: the
-	// fake drops a target with no warning, and each call answers within nodeTimeout.
-	m, err := maintenanceClient(ctx, c.dial())
-	if err != nil {
-		return err
-	}
-
-	defer m.Close() //nolint:errcheck
-
-	if nodeAnswersAsInstalled(ctx, m) {
-		if err := c.wipe(ctx, m); err != nil {
-			return err
-		}
-	}
-
-	// The config is what takes the most time to have: the secrets and the node's
-	// config are made while the node is reached, so the apply goes out at once. A prepared
-	// draft already holds the exact config made by NewClusterPrepare: reuse it byte for
-	// byte, so what the app previewed is what the node is sent.
-	full := ""
-	if c.draft != nil {
-		full = c.draft.full
-	} else {
-		if err := c.ensureBundle(); err != nil {
-			return err
-		}
-
-		var err error
-
-		if full, err = generatedClusterConfig(c.req, c.bundle); err != nil {
-			return err
-		}
-	}
-
-	c.emit(newClusterPhaseApplying, "sending the config to "+c.req.address)
-
-	deadline := time.Now().Add(newClusterApplyWait)
-
-	for {
-		// A cancel that landed before the config is even dispatched never touched
-		// the node: nothing changed, and the run says so.
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-
-		// From the accepted attempt on, the config may be on the node even when the
-		// answer never comes back; the flag goes on before the call, so a lost answer
-		// (an Unavailable the retry loop takes for a node still booting) stays honest.
-		c.applied = true
-
-		_, err = m.ApplyConfiguration(ctx, &machineapi.ApplyConfigurationRequest{
-			Data: []byte(full), Mode: machineapi.ApplyConfigurationRequest_AUTO,
-		})
-		if err == nil {
-			break
-		}
-
-		if isRetryable(err) && ctx.Err() == nil && !time.Now().After(deadline) {
-			sleepCtx(ctx, c.interval)
-
-			continue
-		}
-
-		if ctx.Err() != nil {
-			// The apply was the run's last word: what its end says about the node is
-			// the run's, not this one call's transport error. A cancel that arrived
-			// while the call was still held never reached the node: honest ends tell
-			// that the config went out only from an attempt whose answer came back.
-			return ctx.Err()
-		}
-
-		return fmt.Errorf("the node refused the config: %s", friendlyError(err))
-	}
-
-	c.emit(newClusterPhaseInstalling, "the node installs Talos to "+c.req.installDisk+" and reboots: it does not answer meanwhile")
-
-	return nil
-}
-
-// wipe resets an installed-but-certificate-free node: Talos's reset of the system
-// partitions with a reboot back into maintenance mode (what `talosctl reset --system`
-// does), then waits for it to answer again with no machine config.
-func (c *newCluster) wipe(ctx context.Context, m *client.Client) error {
-	c.emit(newClusterPhaseApplying, "the node is an installed Talos without a cluster: resetting it first (its system disk is erased)")
-
-	c.applied = true // a reset cannot be undone either
-
-	_, err := m.ResetGenericWithResponse(ctx, &machineapi.ResetRequest{
-		Graceful: true, Reboot: true,
-		SystemPartitionsToWipe: []*machineapi.ResetPartitionSpec{
-			{Label: constants.EFIPartitionLabel, Wipe: true},
-			{Label: constants.BIOSGrubPartitionLabel, Wipe: true},
-			{Label: constants.MetaPartitionLabel, Wipe: true},
-			{Label: constants.StatePartitionLabel, Wipe: true},
-		},
+	return toJSON(newClusterDraft{
+		DraftID: id, Talosconfig: entry.talos,
+		RedactedControlplane: redactedCP, RedactedWorker: redactedWorker,
+		Warnings: warnings, Size: len(entry.full),
+		TalosVersion: talosVersion, KubernetesVersion: req.kubernetesVersion,
 	})
-	if err != nil {
-		if !isRetryable(err) {
-			return fmt.Errorf("reset the installed node: %s", friendlyError(err))
-		}
-		// The answer was lost on the way back while the node rebooted: keep going.
-		c.emit(newClusterPhaseApplying, "the reset took the node down: waiting for it to come back in maintenance mode")
+}
+
+func newClusterAuditParams(spec newClusterSpec) string {
+	return "name=" + strings.TrimSpace(spec.Name) + " talos=" + strings.TrimSpace(spec.TalosVersion) +
+		" k8s=" + strings.TrimSpace(spec.KubernetesVersion)
+}
+
+// parseNewClusterSpec validates what the person typed.
+func parseNewClusterSpec(spec newClusterSpec) (newClusterRequest, error) {
+	req := newClusterRequest{
+		name:              strings.TrimSpace(spec.Name),
+		host:              hostOnly(strings.TrimSpace(spec.Endpoint)),
+		kubernetesVersion: strings.TrimPrefix(strings.TrimSpace(spec.KubernetesVersion), "v"),
+		talosVersion:      strings.TrimSpace(spec.TalosVersion),
+		installDisk:       strings.TrimSpace(spec.InstallDisk),
+		installImage:      strings.TrimSpace(spec.InstallImage),
+		allowScheduling:   spec.AllowScheduling == nil || *spec.AllowScheduling,
 	}
 
-	deadline := time.Now().Add(newClusterGraceWait)
+	if req.kubernetesVersion == "" {
+		req.kubernetesVersion = constants.DefaultKubernetesVersion
+	}
 
-	for {
-		if err := ctx.Err(); err != nil {
+	if req.talosVersion != "" && !strings.HasPrefix(req.talosVersion, "v") {
+		req.talosVersion = "v" + req.talosVersion
+	}
+
+	switch {
+	case req.name == "" || !validHostname(req.name) || strings.Contains(req.name, "."):
+		return req, fmt.Errorf("%q is not a cluster name (letters, digits and dashes)", spec.Name)
+	case req.host == "" || (net.ParseIP(req.host) == nil && !validHostname(req.host)):
+		return req, errMaintenanceAddress
+	case !strings.HasPrefix(req.installDisk, "/dev/"):
+		return req, fmt.Errorf("%q is not a disk (/dev/sda, /dev/nvme0n1…)", spec.InstallDisk)
+	case !kubeVersionOK(req.kubernetesVersion):
+		return req, fmt.Errorf("%q is not a Kubernetes version (1.34.1)", spec.KubernetesVersion)
+	case strings.ContainsAny(req.installImage, " \t\n"):
+		return req, fmt.Errorf("%q is not an image reference", spec.InstallImage)
+	}
+
+	k8s, err := newClusterKubeVersion(req.kubernetesVersion, req.talosVersion, strings.TrimSpace(spec.KubernetesVersion) == "")
+	if err != nil {
+		return req, err
+	}
+
+	req.kubernetesVersion = k8s
+	req.endpoint = "https://" + net.JoinHostPort(req.host, strconv.Itoa(constants.DefaultControlPlanePort))
+
+	for _, san := range spec.AdditionalSANs {
+		if san = strings.TrimSpace(san); san != "" && !slices.Contains(req.sans, san) {
+			req.sans = append(req.sans, san)
+		}
+	}
+
+	if strings.TrimSpace(spec.ExtraEditsJSON) != "" {
+		if err := json.Unmarshal([]byte(spec.ExtraEditsJSON), &req.edits); err != nil {
+			return req, fmt.Errorf("invalid edits: %w", err)
+		}
+	}
+
+	return req, nil
+}
+
+// hostOnly is an address without its port and brackets.
+func hostOnly(address string) string {
+	if h, _, err := net.SplitHostPort(address); err == nil {
+		return h
+	}
+
+	return strings.Trim(address, "[]")
+}
+
+// kubeVersionOK: 1.x or 1.x.y, digits only.
+func kubeVersionOK(v string) bool {
+	parts := strings.Split(v, ".")
+	if (len(parts) != 2 && len(parts) != 3) || parts[0] != "1" {
+		return false
+	}
+
+	for _, p := range parts {
+		if p == "" || len(p) > 3 || strings.ContainsFunc(p, func(r rune) bool { return r < '0' || r > '9' }) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// newClusterKubeVersion checks that the machine's Talos runs Kubernetes k8s. A defaulted
+// version Talos cannot run falls back to the newest minor it can (x.y.0); a chosen one is
+// refused. An unknown Talos version (or one machinery does not know) checks nothing.
+func newClusterKubeVersion(k8s, talosVersion string, defaulted bool) (string, error) {
+	if talosVersion == "" {
+		return k8s, nil
+	}
+
+	talos, err := compatibility.ParseTalosVersion(&machineapi.VersionInfo{Tag: talosVersion})
+	if err != nil {
+		return "", fmt.Errorf("%q is not a Talos version (v1.11.2)", talosVersion)
+	}
+
+	supported := func(v string) error {
+		kv, err := compatibility.ParseKubernetesVersion(v)
+		if err != nil {
 			return err
 		}
 
-		// The fake takes the whole node (its maintenance API included) while it
-		// reboots; a real node keeps answering throughout. Either way the wipe is
-		// done when the API answers again with no machine status.
-		if nodeAnswered(ctx, m) && !nodeAnswersAsInstalled(ctx, m) {
-			return nil
+		return kv.SupportedWith(talos)
+	}
+
+	err = supported(k8s)
+	if err == nil || strings.Contains(err.Error(), "is not supported") {
+		return k8s, nil
+	}
+
+	if !defaulted || strings.Contains(err.Error(), "too old") {
+		return "", errors.New(friendlyError(err))
+	}
+
+	minor, _ := strconv.Atoi(strings.Split(k8s, ".")[1])
+	for ; minor > 0; minor-- {
+		if v := "1." + strconv.Itoa(minor) + ".0"; supported(v) == nil {
+			return v, nil
+		}
+	}
+
+	return "", errors.New(friendlyError(err))
+}
+
+// newClusterContract is the config version contract of the machine's Talos: a config of a
+// newer contract is refused at apply.
+func newClusterContract(talosVersion string) (*machineryconfig.VersionContract, error) {
+	if talosVersion == "" {
+		return machineryconfig.TalosVersionCurrent, nil
+	}
+
+	contract, err := machineryconfig.ParseContractFromVersion(talosVersion)
+	if err != nil {
+		return nil, fmt.Errorf("%q is not a Talos version (v1.11.2)", talosVersion)
+	}
+
+	return contract, nil
+}
+
+// prepareNewCluster makes the secrets, the control-plane config and the talosconfig.
+func prepareNewCluster(req newClusterRequest) (*newClusterDraftEntry, error) {
+	contract, err := newClusterContract(req.talosVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	bundle, err := secrets.NewBundle(secrets.NewFixedClock(time.Now()), contract)
+	if err != nil {
+		return nil, fmt.Errorf("generate the cluster's secrets: %s", friendlyError(err))
+	}
+
+	in, err := newClusterInput(req, bundle, contract)
+	if err != nil {
+		return nil, err
+	}
+
+	full, err := newClusterConfig(in, machine.TypeControlPlane, req.edits)
+	if err != nil {
+		return nil, err
+	}
+
+	tc, err := in.Talosconfig()
+	if err != nil {
+		return nil, fmt.Errorf("make the talosconfig: %s", friendlyError(err))
+	}
+
+	talos, err := tc.Bytes()
+	if err != nil {
+		return nil, fmt.Errorf("make the talosconfig: %s", friendlyError(err))
+	}
+
+	return &newClusterDraftEntry{req: req, bundle: bundle, full: full, talos: string(talos)}, nil
+}
+
+func newClusterInput(req newClusterRequest, bundle *secrets.Bundle, contract *machineryconfig.VersionContract) (*generate.Input, error) {
+	opts := []generate.Option{
+		generate.WithSecretsBundle(bundle),
+		generate.WithVersionContract(contract),
+		generate.WithInstallDisk(req.installDisk),
+		// The talosconfig's endpoint is the machine, its only control plane.
+		generate.WithEndpointList([]string{req.host}),
+		generate.WithAllowSchedulingOnControlPlanes(req.allowScheduling),
+	}
+
+	if image := newClusterInstallImage(req); image != "" {
+		opts = append(opts, generate.WithInstallImage(image))
+	}
+
+	if len(req.sans) > 0 {
+		opts = append(opts, generate.WithAdditionalSubjectAltNames(req.sans))
+	}
+
+	in, err := generate.NewInput(req.name, req.endpoint, req.kubernetesVersion, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("make the cluster's config: %s", friendlyError(err))
+	}
+
+	return in, nil
+}
+
+// newClusterInstallImage is the installer the machine installs: the one chosen, else the
+// installer of the machine's own Talos version (not the machinery's, which may be newer).
+func newClusterInstallImage(req newClusterRequest) string {
+	if req.installImage != "" || req.talosVersion == "" {
+		return req.installImage
+	}
+
+	return "ghcr.io/siderolabs/installer:" + req.talosVersion
+}
+
+// newClusterConfig is the machine config of typ with the edits applied, validated as a
+// client validates a join config.
+func newClusterConfig(in *generate.Input, typ machine.Type, edits []configEdit) (string, error) {
+	cfg, err := in.Config(typ)
+	if err != nil {
+		return "", fmt.Errorf("make the %s config: %s", typ, friendlyError(err))
+	}
+
+	text, err := cfg.EncodeString(encoder.WithComments(encoder.CommentsDisabled))
+	if err != nil {
+		return "", err
+	}
+
+	if len(edits) > 0 {
+		docs, err := parseConfigDocs(text)
+		if err != nil {
+			return "", err
 		}
 
-		if time.Now().After(deadline) {
-			return fmt.Errorf("%s did not come back in maintenance mode after the reset: check its console", c.req.address)
+		if docs, err = applyConfigEdits(docs, edits); err != nil {
+			return "", err
 		}
 
-		sleepCtx(ctx, c.interval)
-	}
-}
-
-// answeredAsInstalled: does the node answer a machine status read? Only an installed
-// Talos has one (the maintenance mode of the ISO has nothing to report).
-type maskedNewClusterListener struct{ NewClusterListener }
-
-func (l maskedNewClusterListener) OnProgress(json string) {
-	l.NewClusterListener.OnProgress(privacy.mask(json))
-}
-
-func (l maskedNewClusterListener) OnTalosconfig(talosconfigYAML string) {
-	// A credential the app stores: never masked.
-	l.NewClusterListener.OnTalosconfig(talosconfigYAML)
-}
-
-func (l maskedNewClusterListener) OnKubeconfig(kubeconfigYAML string) {
-	l.NewClusterListener.OnKubeconfig(kubeconfigYAML)
-}
-
-func (l maskedNewClusterListener) OnDone(nodeAddress, errMessage string) {
-	// The address goes into the stored talosconfig: it stays real (bootstraps refuse privacy mode).
-	l.NewClusterListener.OnDone(nodeAddress, privacy.maskPlain(errMessage))
-}
-
-// newClusterForTest runs StartNewCluster's flow with the fake's poll interval and a test
-// timeout: the exported entry point's constants (a 20 minute ceiling) are not for tests.
-func newClusterForTest(address, clusterName, kubernetesVersion, installDisk, hostname, endpoint string, listener NewClusterListener, timeout time.Duration) *NewClusterRun {
-	c := &newCluster{
-		address: address, clusterName: clusterName, kubernetesVersion: kubernetesVersion,
-		installDisk: installDisk, hostname: hostname, endpoint: endpoint,
-		listener: maskedNewClusterListener{listener}, interval: newClusterTestInterval,
+		if text, err = encodeConfigDocs(docs); err != nil {
+			return "", err
+		}
 	}
 
-	return c.start(timeout)
-}
-
-// newClusterAt is StartNewCluster's test twin: the console address the user typed, and the
-// endpoint the fake node's API actually answers on (production dials both at the address).
-func newClusterAt(address, installTarget, clusterAddress, clusterName, kubernetesVersion, installDisk, hostname, endpoint string, listener NewClusterListener, timeout time.Duration) *NewClusterRun {
-	c := &newCluster{
-		address: address, dialAddress: installTarget, clusterAddress: clusterAddress,
-		clusterName: clusterName, kubernetesVersion: kubernetesVersion,
-		installDisk: installDisk, hostname: hostname, endpoint: endpoint, listener: listener,
-		interval: newClusterTestInterval,
+	provider, err := configloader.NewFromBytes([]byte(text))
+	if err != nil {
+		return "", fmt.Errorf("the new config is not valid: %w", err)
 	}
 
-	return c.start(timeout)
+	if _, err := provider.ValidateAsClient(joinRuntime{}); err != nil {
+		return "", fmt.Errorf("the new config is not valid: %w", err)
+	}
+
+	return provider.EncodeString(encoder.WithComments(encoder.CommentsDisabled))
+}
+
+// newClusterPreview is what the apps show before the run: both configs redacted, and one
+// warning per thing the person confirms.
+func newClusterPreview(e *newClusterDraftEntry) (redactedCP, redactedWorker string, warnings []string, err error) {
+	if redactedCP, err = redactConfig(e.full); err != nil {
+		return "", "", nil, err
+	}
+
+	contract, err := newClusterContract(e.req.talosVersion)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	in, err := newClusterInput(e.req, e.bundle, contract)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	worker, err := newClusterConfig(in, machine.TypeWorker, nil)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	if redactedWorker, err = redactConfig(worker); err != nil {
+		return "", "", nil, err
+	}
+
+	warnings = []string{
+		"This phone generates the cluster's CAs, keys and tokens; they then live only in the control plane's config and in the talosconfig stored here.",
+		"The config is sent over TLS but without authentication to " + e.req.host + ": a machine in maintenance mode cannot prove who it is. Check the IP its console shows.",
+		"The machine installs Talos to " + e.req.installDisk + " and erases it; it becomes the only control plane of " + e.req.name + ".",
+	}
+
+	if e.req.talosVersion == "" {
+		warnings = append(warnings, "The machine's Talos version is unknown: the config is made for "+machineryconfig.TalosVersionCurrent.String()+", which an older Talos refuses.")
+	}
+
+	return redactedCP, redactedWorker, warnings, nil
+}
+
+// storeNewClusterDraft keeps e for newClusterDraftTTL under a random id, dropping expired
+// drafts on the way.
+func storeNewClusterDraft(e *newClusterDraftEntry) (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", errors.New(friendlyError(err))
+	}
+
+	id := hex.EncodeToString(b)
+	now := time.Now()
+	e.expires = now.Add(newClusterDraftTTL)
+
+	newClusterDraftsMu.Lock()
+	defer newClusterDraftsMu.Unlock()
+
+	for k, d := range newClusterDrafts {
+		if now.After(d.expires) {
+			delete(newClusterDrafts, k)
+		}
+	}
+
+	newClusterDrafts[id] = e
+
+	return id, nil
+}
+
+var errNewClusterDraftGone = errors.New("this new cluster's draft is gone (it lasts 30 minutes, and the app restarted or it was used): remove the cluster entry and prepare it again")
+
+// takeNewClusterDraft hands a draft over once: it is cleared on use.
+func takeNewClusterDraft(id string) (*newClusterDraftEntry, error) {
+	newClusterDraftsMu.Lock()
+	defer newClusterDraftsMu.Unlock()
+
+	e, ok := newClusterDrafts[id]
+	delete(newClusterDrafts, id)
+
+	if !ok || time.Now().After(e.expires) {
+		return nil, errNewClusterDraftGone
+	}
+
+	return e, nil
+}
+
+// returnNewClusterDraft puts back a draft whose run ended before anything was sent, so the
+// person can try again with the talosconfig already stored.
+func returnNewClusterDraft(id string, e *newClusterDraftEntry) {
+	newClusterDraftsMu.Lock()
+	defer newClusterDraftsMu.Unlock()
+
+	if time.Now().Before(e.expires) {
+		newClusterDrafts[id] = e
+	}
 }
