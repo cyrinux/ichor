@@ -507,7 +507,7 @@ var nodeFindingKinds = []string{
 
 // collectKubeReport is CollectDiagnosis for a kubeconfig context.
 func collectKubeReport(configYAML, contextName, kubeServer string, anonymize bool) (*Diagnosis, error) {
-	d := &Diagnosis{kind: diagnosisKube}
+	d := &Diagnosis{kind: diagnosisKube, cluster: kubeTarget{configYAML, contextName, kubeServer}}
 	d.screenshotMode, d.screenshotResets = privacy.state()
 
 	var (

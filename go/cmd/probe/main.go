@@ -180,10 +180,13 @@ func loadProbeConfig(path, contextName string, omniBrowser, mask bool) string {
 // answerPrinter prints the answer as it grows.
 type answerPrinter struct {
 	printed int
+	text    string // the whole answer so far
 	done    chan string
 }
 
 func (p *answerPrinter) OnAnswer(text string) {
+	p.text = text
+
 	if len(text) > p.printed {
 		fmt.Print(text[p.printed:])
 		p.printed = len(text)
@@ -233,6 +236,26 @@ func diagnose(cfg, contextName, provider, model string) error {
 	}
 
 	return nil
+}
+
+// diagnoseRunbook asks the diagnosis like diagnose, then turns its answer into a runbook and
+// prints the proposal (the YAML, its plan, the steps left out) without running anything.
+func diagnoseRunbook(e env, provider, model string) (string, error) {
+	d, err := ichorgo.CollectDiagnosis(e.cfg, e.context, e.kubeServer, false)
+	if err != nil {
+		return "", err
+	}
+
+	p := &answerPrinter{done: make(chan string, 1)}
+	d.Ask(provider, aiKey(provider), model, os.Getenv("ICHOR_AI_BASE_URL"), "en", "", true, p)
+
+	if msg := <-p.done; msg != "" {
+		return "", fmt.Errorf("diagnosis failed: %s", msg)
+	}
+
+	fmt.Println()
+
+	return ichorgo.ProposeRunbook(d, provider, aiKey(provider), model, os.Getenv("ICHOR_AI_BASE_URL"), "en", p.text)
 }
 
 // healthLines collects a health check's lines, as the apps show them.

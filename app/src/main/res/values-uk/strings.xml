@@ -1988,6 +1988,15 @@
     <string name="ai_stop">Зупинити</string>
     <string name="ai_copy">Копіювати</string>
     <string name="ai_disclaimer">Відповіді ШІ можуть бути хибними. Перевіряйте команду перед виконанням, особливо якщо вона скидає вузол або змінює etcd.</string>
+    <string name="ai_runbook_propose">Перетворити виправлення на runbook</string>
+    <string name="ai_runbook_proposing">Складання runbook…</string>
+    <string name="ai_runbook_title">Runbook із відповіді</string>
+    <string name="ai_runbook_hint">Написано моделлю з її відповіді; перевірено планувальником; нічого не запускається, доки ви не підтвердите кожен крок.</string>
+    <string name="ai_runbook_empty">Жоден крок відповіді не можна виконати із застосунку.</string>
+    <string name="ai_runbook_rejected">Неможливо із застосунку</string>
+    <string name="ai_runbook_rejected_row">%1$s: %2$s</string>
+    <string name="ai_runbook_keep">Зберегти</string>
+    <string name="ai_runbook_kept">Збережено з runbook цього кластера.</string>
     <string name="ai_health_explain_title">Що пішло не так</string>
     <string name="ai_health_explain_hint">Надсилає невдалі перевірки, готовність вузлів і нещодавні події до %1$s.</string>
     <string name="ai_health_explain">Пояснити за допомогою ШІ</string>

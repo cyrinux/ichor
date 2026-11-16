@@ -64,12 +64,14 @@ fun DiagnosisScreen(
     initialNote: String,
     onBack: () -> Unit,
     onSettings: () -> Unit,
+    onRunbookRunning: () -> Unit,
     vm: DiagnosisViewModel = viewModel(factory = factory { DiagnosisViewModel(app.diagnosisRepository, app.aiPreferences) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val context = LocalContext.current
     val report by vm.report.collectAsStateWithLifecycle()
     val answer by vm.answer.collectAsStateWithLifecycle()
+    val proposal by vm.proposal.collectAsStateWithLifecycle()
     val settings by app.aiPreferences.settings.collectAsStateWithLifecycle()
     val language = LocalConfiguration.current.locales[0].language
     var note by rememberSaveable { mutableStateOf(initialNote) }
@@ -133,6 +135,9 @@ fun DiagnosisScreen(
             ) { Text(stringResource(R.string.ai_share)) }
             MutedText(stringResource(R.string.ai_share_hint))
             AnswerCard(answer, providerName, onStop = vm::stop)
+            if (askable && !answer.asking && answer.error == null && answer.text.isNotBlank()) {
+                RunbookProposalSection(proposal, onPropose = { vm.proposeRunbook(language) }, onKept = vm::markKept, onRunning = onRunbookRunning)
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ package name.levis.ichor.ui.diagnosis
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +17,7 @@ import name.levis.ichor.data.AiToolCall
 import name.levis.ichor.data.finished
 import name.levis.ichor.data.AnswerEvent
 import name.levis.ichor.data.DiagnosisRepository
+import name.levis.ichor.model.RunbookProposal
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.userMessage
 
@@ -33,6 +35,15 @@ data class AnswerState(
     val toolsUnsupported: Boolean = false,
 )
 
+/** The runbook the model wrote from the answer: asked for, then the [proposal] or why there is none. */
+data class ProposalState(
+    val proposing: Boolean = false,
+    val proposal: RunbookProposal? = null,
+    val error: String? = null,
+    /** The proposal was kept with the cluster's runbooks. */
+    val kept: Boolean = false,
+)
+
 class DiagnosisViewModel(
     private val repository: DiagnosisRepository,
     private val preferences: AiPreferences,
@@ -43,8 +54,12 @@ class DiagnosisViewModel(
     private val _answer = MutableStateFlow(AnswerState())
     val answer: StateFlow<AnswerState> = _answer.asStateFlow()
 
+    private val _proposal = MutableStateFlow(ProposalState())
+    val proposal: StateFlow<ProposalState> = _proposal.asStateFlow()
+
     private var collectJob: Job? = null
     private var askJob: Job? = null
+    private var proposeJob: Job? = null
 
     /** What the current report was (or is being) collected for, see [ensureCollected]. */
     private var collectedFor: String? = null
@@ -67,6 +82,7 @@ class DiagnosisViewModel(
         collectJob?.cancel()
         stop()
         _answer.value = AnswerState()
+        clearProposal()
         _report.value = UiState.Loading
         collectJob = viewModelScope.launch {
             _report.value = uiStateOf {
@@ -81,6 +97,7 @@ class DiagnosisViewModel(
         val settings = preferences.settings.value
         askJob?.cancel()
         _answer.value = AnswerState(asking = true)
+        clearProposal()
         askJob = viewModelScope.launch {
             repository.ask(report.diagnosis, settings, preferences.apiKey(settings.provider), language, note)
                 .catch { e -> _answer.update { it.copy(asking = false, error = e.userMessage()) } }
@@ -96,6 +113,32 @@ class DiagnosisViewModel(
                     }
                 }
         }
+    }
+
+    /** Asks the model to turn the finished answer into a runbook, planned on the report's cluster; nothing runs. */
+    fun proposeRunbook(language: String) {
+        val report = (_report.value as? UiState.Loaded)?.data ?: return
+        val answer = _answer.value.text.takeIf { it.isNotBlank() && !_answer.value.asking } ?: return
+        val settings = preferences.settings.value
+        proposeJob?.cancel()
+        _proposal.value = ProposalState(proposing = true)
+        proposeJob = viewModelScope.launch {
+            _proposal.value = try {
+                ProposalState(proposal = repository.proposeRunbook(report.diagnosis, settings, preferences.apiKey(settings.provider), language, answer))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                ProposalState(error = e.userMessage())
+            }
+        }
+    }
+
+    fun markKept() = _proposal.update { it.copy(kept = true) }
+
+    /** Drops the proposal: nothing of it was stored unless it was kept. */
+    fun clearProposal() {
+        proposeJob?.cancel()
+        _proposal.value = ProposalState()
     }
 
     /** Stops waiting for the answer, keeping what was received. */

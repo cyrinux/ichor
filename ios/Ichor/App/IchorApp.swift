@@ -561,7 +561,7 @@ struct MainNavigation: View {
         case .health: HealthView()
         case .settings: SettingsView()
         case .settingsPage(let page): SettingsPageView(page: page)
-        case .diagnosis(let note): DiagnosisView(initialNote: note)
+        case .diagnosis(let note): DiagnosisView(initialNote: note, path: $path)
         case .importConfig: ImportView { path.removeAll() }
         case .clusters: ClustersView()
         case .debugShell(let node, let hostname): DebugShellView(node: node, hostname: hostname)

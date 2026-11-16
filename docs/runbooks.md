@@ -14,7 +14,8 @@ pasting it, from a file or from an https link; the app shows its plan before kee
 never runs it on import. Run asks before each destructive step (the node's hostname for a
 node step), follows the run in the notification (Android) or a Live Activity (iOS), and can
 be stopped. A step the cluster's permissions refuse keeps Run off until you let the run go
-past it ("continue on error").
+past it ("continue on error"). The AI diagnosis can also write its fix as a runbook, checked
+by the same planner before you keep or run it ([AI diagnosis](ai.md)).
 
 Runbooks cannot do anything the app cannot already do: there are no loops or branches, and
 the only checks are the `wait` and `assert` steps below, which read and never change anything.

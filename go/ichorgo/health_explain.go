@@ -45,7 +45,7 @@ func CollectHealthExplanation(configYAML, contextName, kubeServer, linesJSON, fa
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	d = &Diagnosis{kind: diagnosisHealth}
+	d = &Diagnosis{kind: diagnosisHealth, cluster: kubeTarget{configYAML, contextName, kubeServer}}
 	d.screenshotMode, d.screenshotResets = privacy.state()
 
 	var data diagnosisData

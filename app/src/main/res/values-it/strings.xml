@@ -1883,6 +1883,15 @@
     <string name="ai_stop">Interrompi</string>
     <string name="ai_copy">Copia</string>
     <string name="ai_disclaimer">Le risposte dell’IA possono essere sbagliate. Controlla un comando prima di eseguirlo, soprattutto se reimposta un nodo o modifica etcd.</string>
+    <string name="ai_runbook_propose">Trasforma la soluzione in un runbook</string>
+    <string name="ai_runbook_proposing">Scrittura del runbook…</string>
+    <string name="ai_runbook_title">Runbook dalla risposta</string>
+    <string name="ai_runbook_hint">Scritto dal modello a partire dalla sua risposta; verificato dal pianificatore; nulla viene eseguito finché non confermi ogni passo.</string>
+    <string name="ai_runbook_empty">Nessun passo della risposta si può fare dall’app.</string>
+    <string name="ai_runbook_rejected">Non possibile dall’app</string>
+    <string name="ai_runbook_rejected_row">%1$s: %2$s</string>
+    <string name="ai_runbook_keep">Conserva</string>
+    <string name="ai_runbook_kept">Salvato con i runbook di questo cluster.</string>
     <string name="ai_health_explain_title">Cosa non va</string>
     <string name="ai_health_explain_hint">Invia i controlli falliti, lo stato dei nodi e gli eventi recenti a %1$s.</string>
     <string name="ai_health_explain">Spiega con l’IA</string>
