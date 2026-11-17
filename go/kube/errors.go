@@ -111,6 +111,13 @@ func TransportError(err error) string {
 		return proxyErr.Error()
 	}
 
+	// Its own sentence too, with its code: the apps say what to fix (the pin, the key, the
+	// bastion's forwarding).
+	var bastionErr *httpx.BastionError
+	if errors.As(err, &bastionErr) {
+		return bastionErr.Error()
+	}
+
 	if reason := dialerr.Reason(err.Error()); reason != "" {
 		return reason
 	}
@@ -155,6 +162,9 @@ func IsTransportError(err error) bool {
 
 	var proxyErr *httpx.ProxyError
 
+	var bastionErr *httpx.BastionError
+
 	return errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) ||
-		errors.As(err, &urlErr) || errors.As(err, &netErr) || errors.As(err, &proxyErr) || dialerr.Reason(err.Error()) != ""
+		errors.As(err, &urlErr) || errors.As(err, &netErr) || errors.As(err, &proxyErr) ||
+		errors.As(err, &bastionErr) || dialerr.Reason(err.Error()) != ""
 }

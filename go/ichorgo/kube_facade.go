@@ -39,8 +39,11 @@ type kubeClient struct {
 	tls          *tls.Config // the kubeconfig's TLS settings, for connections outside http (exec)
 	// namespace is the kubeconfig context's namespace, "" when it sets none.
 	namespace string
-	// proxy is the kubeconfig's proxy-url, for connections outside http; nil dials directly.
-	proxy *httpx.ProxyDialer
+	// proxy is the kubeconfig's proxy-url or the context's SSH bastion, for connections outside
+	// http; nil dials directly.
+	proxy streamDialer
+	// hop releases the bastion this client shares with the other clients of its probe.
+	hop *hopRelease
 }
 
 // openKubeClient builds a client for kubeconfig and picks the first API server address that
@@ -122,6 +125,14 @@ func openKubeClientCreds(ctx context.Context, creds *kubeCredentials, talosEndpo
 				return nil, explained
 			}
 
+			// The bastion itself failing (its key, the sign-in, reaching it) fails every
+			// address alike: its own message, code first, for the apps.
+			if bastionErr := hopFailure(err); bastionErr != nil {
+				discardFrom(i + 1)
+
+				return nil, bastionErr
+			}
+
 			failures = append(failures, candidates[i].Host+": "+kubeTransportError(err))
 		}
 	}
@@ -163,16 +174,24 @@ func kubeServerCandidates(server *url.URL, talosEndpoints []string) []*url.URL {
 }
 
 func newKubeClient(base *url.URL, creds *kubeCredentials) *kubeClient {
-	// The API server does not redirect: the client never sends the credentials anywhere else.
-	httpc := httpx.New(httpx.Opts{TLS: creds.tls, DialTimeout: kubeProbeTimeout, IdleTimeout: sessionIdle, ProxyURL: creds.proxy})
+	opts := httpx.Opts{TLS: creds.tls, DialTimeout: kubeProbeTimeout, IdleTimeout: sessionIdle, ProxyURL: creds.proxy}
 
 	k := &kubeClient{
-		base: base, http: httpc, token: creds.token, tokens: creds.tokens, certs: creds.certs,
+		base: base, token: creds.token, tokens: creds.tokens, certs: creds.certs,
 		tls: creds.tls.Clone(), namespace: creds.namespace,
 	}
-	if creds.proxy != nil {
+
+	switch {
+	case creds.proxy != nil:
+		// A proxy-url wins over a bastion (kube_bastion.go).
 		k.proxy = httpx.NewProxyDialer(creds.proxy, kubeProbeTimeout)
+	case creds.bastion != nil:
+		k.proxy, k.hop = creds.bastion, &hopRelease{hop: creds.bastion.retain()}
+		opts.Dial = creds.bastion.DialContext
 	}
+
+	// The API server does not redirect: the client never sends the credentials anywhere else.
+	k.http = httpx.New(opts)
 
 	return k
 }
@@ -186,8 +205,12 @@ func (k *kubeClient) bearer(ctx context.Context) (string, error) {
 	return k.token, nil
 }
 
-// close drops the client's idle connections (its TLS sessions hold the client key).
-func (k *kubeClient) close() { k.http.CloseIdleConnections() }
+// close drops the client's idle connections (its TLS sessions hold the client key), and its
+// share of an SSH bastion: the last client of a context closes the SSH connection.
+func (k *kubeClient) close() {
+	k.http.CloseIdleConnections()
+	k.hop.release()
+}
 
 // withKube runs fn with the context's Kubernetes client, bounded by callTimeout once the
 // client is there. A call that gets no answer or is refused for its credentials drops the
@@ -432,7 +455,16 @@ func openStoredKubeClient(target kubeTarget) (*kubeClient, error) {
 			return nil, err
 		}
 
-		return openKubeClient(context.Background(), kubeconfig, nil, target.server)
+		creds, err := parseKubeconfig(kubeconfig)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := attachBastion(creds, sc.key); err != nil {
+			return nil, err
+		}
+
+		return openKubeClientCreds(context.Background(), creds, nil, target.server)
 	}
 
 	tokens := kubeAuth.source(sc.key, sc.method)
@@ -469,6 +501,10 @@ func openStoredKubeClient(target kubeTarget) (*kubeClient, error) {
 		creds.tls.GetClientCertificate = presentCertificate(tokens)
 	} else {
 		creds.tokens = tokens
+	}
+
+	if err := attachBastion(creds, sc.key); err != nil {
+		return nil, err
 	}
 
 	return openKubeClientCreds(context.Background(), creds, nil, target.server)
