@@ -15,4 +15,4 @@ resources:
   - networkpolicy.yaml
 images:
   - name: ghcr.io/cyrinux/ichor-relay
-    newTag: latest
+    newTag: v1.67.0
