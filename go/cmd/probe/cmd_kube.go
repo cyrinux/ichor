@@ -37,14 +37,6 @@ var kubeCommands = []command{
 		return ichorgo.KubeRenewSignIns("", e.cfg)
 	}},
 	{name: "kube-signin", args: "[CONTEXT]", run: probeKubeSignIn},
-	// teleport-clusters / teleport-add: the Kubernetes clusters of CONTEXT's Teleport proxy,
-	// and the kubeconfig with one more (printed, never written).
-	{name: "teleport-clusters", args: "CONTEXT", run: func(e env) (string, error) {
-		return ichorgo.KubeTeleportClusters(e.cfg, flag.Arg(1))
-	}},
-	{name: "teleport-add", args: "CONTEXT KUBE_CLUSTER", run: func(e env) (string, error) {
-		return ichorgo.KubeTeleportAddCluster(e.cfg, flag.Arg(1), flag.Arg(2))
-	}},
 	{name: "discover", args: "PROVIDER SECRETS_JSON", noConfig: true, run: probeDiscover},
 	{name: "oncall-incidents", args: "ONCALL_JSON_FILE [AM_ALERTS_JSON_FILE]", run: probeOnCallIncidents},
 	{name: "oncall-test", args: "ONCALL_JSON_FILE", noConfig: true, run: probeOnCallTest},
