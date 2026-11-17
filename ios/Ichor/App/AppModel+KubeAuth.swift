@@ -76,23 +76,6 @@ extension AppModel {
             kube: kubeYAML, context: kube.name, fingerprint: kube.fingerprint, label: labels.of(kube))
     }
 
-    /// Adds the Kubernetes cluster `kubeCluster` through the Teleport proxy of the stored
-    /// kubeconfig cluster `context` (a new context, as tsh kube login writes it), keeping the
-    /// cluster on screen. Returns the new context, to sign it in next.
-    func addTeleportCluster(from context: String, kubeCluster: String) async throws -> String {
-        try checkWritable()
-        let added = try await TalosClient.teleportAddCluster(
-            kube: kubeYAML ?? "", context: context, kubeCluster: kubeCluster)
-        let onScreen = activeContext
-        let generation = TalosClient.privacyGeneration()  // before parsing: see ConfigSummaryCache.store
-        let parsed = try await TalosClient.parseKubeconfig(added.kubeconfig)
-        try SecureConfigStore.save(Data(added.kubeconfig.utf8), item: .kubeconfig)
-        apply(
-            talos: yaml, talosSummary: talosSummary, kube: added.kubeconfig, kubeSummary: parsed, preferred: onScreen,
-            generation: generation)
-        return added.context
-    }
-
     /// The sign-in target of the stored kubeconfig context `name` (another cluster of a
     /// Teleport proxy, opened from its sign-in sheet).
     func kubeSignInTarget(named name: String) -> KubeSignInTarget? {
