@@ -74,6 +74,16 @@ class KubeSignInTest {
                 """"kubeCluster":"sample-kube","teleportConnector":"sample-github"},"signedIn":true,"user":"sample-user","sessionExpires":1700000000}""",
         )
         assertEquals(R.string.kube_signin_method_teleport, signInMethodName(teleport.method))
+
+        val clusters = TalosJson.decodeFromString(
+            TeleportClusters.serializer(),
+            """{"proxy":"proxy.example.org:443","teleportCluster":"teleport.example.org","user":"sample-user",""" +
+                """"clusters":[{"name":"sample-kube","context":"admin@test","signedIn":true,"expires":1700000000},""" +
+                """{"name":"other-kube","context":"teleport.example.org-other-kube","signedIn":false}]}""",
+        )
+        assertEquals(listOf("sample-kube", "other-kube"), clusters.clusters.map { it.name })
+        assertEquals(0L, clusters.clusters[1].expires)
+        assertEquals("teleport.example.org-other-kube", TalosJson.decodeFromString(TeleportAdded.serializer(), """{"kubeconfig":"x","context":"teleport.example.org-other-kube"}""").context)
         assertEquals(TELEPORT_VALUES.map { it.first }, TELEPORT_VALUES.map { it.first }.filter { teleport.values.containsKey(it) })
 
         val oidc = TalosJson.decodeFromString(KubeSignInInfo.serializer(), """{"method":"oidc","kind":"browser","signedIn":true,"user":"me@example.com","sessionExpires":1700000000}""")

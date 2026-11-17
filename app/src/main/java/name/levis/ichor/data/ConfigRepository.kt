@@ -7,6 +7,7 @@ import name.levis.ichor.util.StartupTrace
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.ImportChoice
 import name.levis.ichor.model.ImportConflict
+import name.levis.ichor.model.TeleportAdded
 import name.levis.ichor.model.isKube
 import name.levis.ichor.security.DekHolder
 import name.levis.ichor.security.SecurityKeyRequiredException
@@ -241,6 +242,18 @@ class ConfigRepository(
         require(talos.isNotBlank() || kube.isNotBlank()) { "no cluster to restore" }
         val summary = parse(talos, kube)
         commit(talos, kube, summary, contextAt(summary, activeIndex))
+    }
+
+    /**
+     * Adds the Kubernetes cluster [kubeCluster] through the Teleport proxy of the stored
+     * kubeconfig cluster [context] (a new context, as tsh kube login writes it), keeping the
+     * cluster on screen. Returns the new context's name, to sign it in next.
+     */
+    suspend fun addTeleportCluster(context: String, kubeCluster: String): String = writing {
+        val current = _config.value ?: throw NoConfigException()
+        val added = TalosJson.decodeFromString(TeleportAdded.serializer(), Ichorgo.kubeTeleportAddCluster(current.kubeYaml, context, kubeCluster))
+        commit(current.talosYaml, added.kubeconfig, parse(current.talosYaml, added.kubeconfig), current.activeContext)
+        added.context
     }
 
     /** The position of the context on screen (contexts keep their order whether masked or not). */

@@ -177301,6 +177301,160 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这会从手机中移除证书。" } }
       }
     },
+    "Signed in as %@ at this proxy; this cluster only needs its certificate." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Angemeldet als %@ an diesem Proxy; dieser Cluster braucht nur sein Zertifikat." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sesión iniciada como %@ en este proxy; este clúster solo necesita su certificado." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Connecté en tant que %@ à ce proxy ; ce cluster n’a besoin que de son certificat." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Accesso effettuato come %@ su questo proxy; questo cluster ha bisogno solo del suo certificato." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このプロキシに %@ としてサインイン済みです。このクラスターには証明書だけが必要です。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Conectado como %@ neste proxy; este cluster só precisa do certificado dele." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вы вошли как %@ на этом прокси; этому кластеру нужен только его сертификат." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ви ввійшли як %@ на цьому проксі; цьому кластеру потрібен лише його сертифікат." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已在此代理以 %@ 身份登录；此集群只需要获取它的证书。" } }
+      }
+    },
+    "Get a certificate for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zertifikat für %@ holen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Obtener un certificado para %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Obtenir un certificat pour %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ottieni un certificato per %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ の証明書を取得" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Obter um certificado para %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Получить сертификат для %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Отримати сертифікат для %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "获取 %@ 的证书" } }
+      }
+    },
+    "Kubernetes clusters at this proxy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes-Cluster an diesem Proxy" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Clústeres de Kubernetes en este proxy" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Clusters Kubernetes de ce proxy" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cluster Kubernetes su questo proxy" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このプロキシの Kubernetes クラスター" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Clusters do Kubernetes neste proxy" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Кластеры Kubernetes на этом прокси" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Кластери Kubernetes на цьому проксі" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此代理下的 Kubernetes 集群" } }
+      }
+    },
+    "Certificate until %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zertifikat bis %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Certificado hasta %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Certificat jusqu’au %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Certificato fino al %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "証明書の期限: %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Certificado até %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сертификат до %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сертифікат до %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "证书有效期至 %@" } }
+      }
+    },
+    "No certificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Zertifikat" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin certificado" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucun certificat" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun certificato" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "証明書なし" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sem certificado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Нет сертификата" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Немає сертифіката" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无证书" } }
+      }
+    },
+    "Only the clusters added here are listed: add another by its name in Teleport. Its sign-in opens the browser again; your identity provider usually skips the password." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nur die hier hinzugefügten Cluster werden aufgeführt: Füge einen weiteren mit seinem Namen in Teleport hinzu. Seine Anmeldung öffnet erneut den Browser; dein Identitätsanbieter überspringt das Passwort meist." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Solo se muestran los clústeres añadidos aquí: añade otro con su nombre en Teleport. Su inicio de sesión vuelve a abrir el navegador; tu proveedor de identidad suele omitir la contraseña." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Seuls les clusters ajoutés ici sont listés : ajoutez-en un autre par son nom dans Teleport. Sa connexion rouvre le navigateur ; votre fournisseur d’identité saute en général le mot de passe." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sono elencati solo i cluster aggiunti qui: aggiungine un altro con il suo nome in Teleport. Il suo accesso riapre il browser; di solito il tuo provider di identità salta la password." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ここで追加したクラスターだけが表示されます。ほかのクラスターは Teleport での名前で追加してください。サインインでは再びブラウザーが開きますが、通常 ID プロバイダーはパスワードを省略します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Só os clusters adicionados aqui aparecem: adicione outro pelo nome dele no Teleport. O login dele abre o navegador de novo; seu provedor de identidade costuma pular a senha." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Показаны только кластеры, добавленные здесь: добавьте другой по его имени в Teleport. Вход снова откроет браузер; провайдер удостоверений обычно не спрашивает пароль." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Показано лише кластери, додані тут: додайте інший за його назвою в Teleport. Вхід знову відкриє браузер; постачальник ідентичності зазвичай не питає пароль." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这里只列出在此添加的集群：可按其在 Teleport 中的名称添加其他集群。登录时会再次打开浏览器，身份提供方通常会跳过密码。" } }
+      }
+    },
+    "Kubernetes cluster name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Name des Kubernetes-Clusters" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nombre del clúster de Kubernetes" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nom du cluster Kubernetes" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nome del cluster Kubernetes" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes クラスター名" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nome do cluster do Kubernetes" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Имя кластера Kubernetes" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Назва кластера Kubernetes" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes 集群名称" } }
+      }
+    },
+    "Add a cluster by name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Cluster per Name hinzufügen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir un clúster por su nombre" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter un cluster par son nom" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi un cluster per nome" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "名前でクラスターを追加" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Adicionar um cluster pelo nome" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Добавить кластер по имени" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Додати кластер за назвою" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "按名称添加集群" } }
+      }
+    },
+    "Sign out of this Teleport proxy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Von diesem Teleport-Proxy abmelden" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cerrar sesión en este proxy de Teleport" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Se déconnecter de ce proxy Teleport" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Esci da questo proxy Teleport" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "この Teleport プロキシからサインアウト" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sair deste proxy do Teleport" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выйти из этого прокси Teleport" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вийти з цього проксі Teleport" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "退出此 Teleport 代理" } }
+      }
+    },
+    "This removes every certificate of this proxy from the phone. Each of its clusters asks you to sign in again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dadurch werden alle Zertifikate dieses Proxys vom Telefon entfernt. Jeder seiner Cluster bittet dich, dich erneut anzumelden." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esto elimina del teléfono todos los certificados de este proxy. Cada uno de sus clústeres te pedirá que vuelvas a iniciar sesión." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cela supprime du téléphone tous les certificats de ce proxy. Chacun de ses clusters vous demandera de vous reconnecter." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questo rimuove dal telefono tutti i certificati di questo proxy. Ognuno dei suoi cluster ti chiederà di accedere di nuovo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このプロキシのすべての証明書をスマートフォンから削除します。各クラスターで再度サインインが必要になります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Isso remove do celular todos os certificados deste proxy. Cada um dos clusters dele pedirá um novo login." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Все сертификаты этого прокси будут удалены с телефона. Каждый из его кластеров попросит войти снова." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Усі сертифікати цього проксі буде видалено з телефона. Кожен із його кластерів попросить увійти знову." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这会从手机中移除此代理的所有证书。其每个集群都会要求你重新登录。" } }
+      }
+    },
+    "Signed in" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Angemeldet" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sesión iniciada" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Connecté" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Accesso effettuato" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サインイン済み" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Conectado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вход выполнен" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вхід виконано" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已登录" } }
+      }
+    },
     "It only prints a token: paste that token, or use a client certificate." : {
       "extractionState" : "manual",
       "localizations" : {

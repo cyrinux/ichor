@@ -8,6 +8,10 @@ struct KubeTeleportDetails: View {
 
     var body: some View {
         Section {
+            if let user = info.teleportUserElsewhere {
+                Text("Signed in as \(user) at this proxy; this cluster only needs its certificate.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
             ForEach(info.teleportValues, id: \.self) { item in
                 LabeledContent {
                     Text(verbatim: item.value).font(.callout.monospaced())

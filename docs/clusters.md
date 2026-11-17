@@ -230,6 +230,13 @@ It points at the Teleport proxy, which routes on the TLS server name; the app ho
 
 Teleport's RBAC and audit log apply as with `tsh`. Issue it again before `--ttl` ends.
 
+A Teleport certificate reaches one Kubernetes cluster, so each cluster has its own sign-in. The
+sign-in sheet lists the clusters of the same proxy you have added, shows who is signed in at
+the proxy, and lets you add another cluster by its name in Teleport: its sign-in opens the
+browser again, and your identity provider usually skips the password. **Sign out of this
+Teleport proxy** removes every certificate of the proxy. Listing the clusters Teleport allows
+you is not available yet.
+
 **Tailscale's Kubernetes API proxy.** With the
 [Tailscale operator](https://tailscale.com/kb/1437/kubernetes-operator-api-server-proxy)'s API
 server proxy in auth mode, the phone on the tailnet signs in with its Tailscale identity, and

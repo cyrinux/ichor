@@ -4480,6 +4480,16 @@
     <string name="kube_signin_teleport_connector">Sign-in connector</string>
     <string name="kube_signin_teleport_explain">Signs in at your Teleport proxy in the browser and keeps a short-lived certificate; when it expires you sign in again.</string>
     <string name="kube_signin_teleport_sign_out_note">This removes the certificate from the phone.</string>
+    <string name="kube_signin_teleport_signed_in_at_proxy">Signed in as %1$s at this proxy; this cluster only needs its certificate.</string>
+    <string name="kube_signin_teleport_get_cert">Get a certificate for %1$s</string>
+    <string name="kube_signin_teleport_clusters">Kubernetes clusters at this proxy</string>
+    <string name="kube_signin_teleport_cert_until">Certificate until %1$s</string>
+    <string name="kube_signin_teleport_no_cert">No certificate</string>
+    <string name="kube_signin_teleport_add_hint">Only the clusters added here are listed: add another by its name in Teleport. Its sign-in opens the browser again; your identity provider usually skips the password.</string>
+    <string name="kube_signin_teleport_add_label">Kubernetes cluster name</string>
+    <string name="kube_signin_teleport_add">Add a cluster by name</string>
+    <string name="kube_signin_teleport_sign_out_all">Sign out of this Teleport proxy</string>
+    <string name="kube_signin_teleport_sign_out_all_body">This removes every certificate of this proxy from the phone. Each of its clusters asks you to sign in again.</string>
     <string name="kube_field_omni_service_account_key">Service account key (OMNI_SERVICE_ACCOUNT_KEY)</string>
     <string name="import_omni_identity">Omni identity</string>
     <string name="import_omni_cluster">Omni cluster</string>

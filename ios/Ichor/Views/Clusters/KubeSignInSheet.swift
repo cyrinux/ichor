@@ -7,14 +7,18 @@ import UniformTypeIdentifiers
 /// method takes (credentials to enter, the browser, or a device code). Successes reload the
 /// cluster's screens.
 struct KubeSignInSheet: View {
-    let target: KubeSignInTarget
     var onSignedIn: () -> Void
 
     // Explicit: the private @State properties make the memberwise init private.
     init(target: KubeSignInTarget, onSignedIn: @escaping () -> Void = {}) {
-        self.target = target
+        _target = State(initialValue: target)
         self.onSignedIn = onSignedIn
     }
+
+    /// The cluster signing in: a Teleport proxy's other clusters open in the same sheet.
+    @State private var target: KubeSignInTarget
+    /// A cluster just added by name signs in once its sign-in is read.
+    @State private var startWhenLoaded = false
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -39,9 +43,13 @@ struct KubeSignInSheet: View {
                         }
                     } else {
                         Section {
-                            Button("Sign in") { flow.start(target) }
+                            Button(signInLabel(info)) { flow.start(target) }
                                 .disabled(flow.isRunning)
                         }
+                    }
+                    if info.isTeleport {
+                        KubeTeleportClustersSection(
+                            target: target, onOpen: open, onAdded: openAndSignIn, onSignedOut: reloadInfo)
                     }
                 }
             }
@@ -57,7 +65,13 @@ struct KubeSignInSheet: View {
             }
         }
         .interactiveDismissDisabled(flow.isRunning)
-        .task { await loadInfo() }
+        .task(id: target.id) {
+            await loadInfo()
+            if startWhenLoaded, info?.isCredentials == false {
+                startWhenLoaded = false
+                flow.start(target)
+            }
+        }
         .onChange(of: flow.phase) { _, phase in
             guard phase == .signedIn else { return }
             Task {
@@ -103,6 +117,32 @@ struct KubeSignInSheet: View {
         } header: {
             Text(verbatim: target.label)
         }
+    }
+
+    /// "Get a certificate for …" when already signed in at the Teleport proxy, else "Sign in".
+    private func signInLabel(_ info: KubeSignInInfo) -> String {
+        guard let kube = info.teleportCertificateTarget else { return String(localized: "Sign in") }
+        return String(localized: "Get a certificate for \(kube)")
+    }
+
+    /// Shows the sign-in of the stored context `context` instead (another cluster of the proxy).
+    private func open(_ context: String) {
+        guard let next = model.kubeSignInTarget(named: context) else { return }
+        flow.cancel()
+        flow = KubeSignInFlow()
+        info = nil
+        loading = true
+        target = next
+    }
+
+    /// A cluster just added by name: its sign-in starts once it is read.
+    private func openAndSignIn(_ context: String) {
+        startWhenLoaded = true
+        open(context)
+    }
+
+    private func reloadInfo() {
+        Task { await loadInfo() }
     }
 
     private func loadInfo() async {

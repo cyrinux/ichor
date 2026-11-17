@@ -141,11 +141,28 @@ func (m *teleportMethod) describe(state kubeAuthState) map[string]string {
 		out["teleportCluster"] = m.teleportCluster
 	}
 
-	if c := state.secret(teleportConnector); c != "" {
+	if c := m.connector(state); c != "" {
 		out[teleportConnector] = c
 	}
 
+	// No certificate here yet, but signed in at the proxy for another of its clusters.
+	if state.session(teleportSessionCert) == "" {
+		if user := m.sharedIdentity().User; user != "" {
+			out[teleportUserValue] = user
+		}
+	}
+
 	return out
+}
+
+// connector is the SSO connector to sign in with: this context's last one, else the one the
+// proxy's last sign-in used (so another cluster's sign-in picks the same identity provider).
+func (m *teleportMethod) connector(state kubeAuthState) string {
+	if c := state.secret(teleportConnector); c != "" {
+		return c
+	}
+
+	return m.sharedIdentity().secret(teleportConnector)
 }
 
 // mint returns the stored certificate and key as one PEM bundle while the certificate has

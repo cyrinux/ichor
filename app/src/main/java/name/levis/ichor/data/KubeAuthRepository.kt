@@ -18,6 +18,7 @@ import name.levis.ichor.model.SignInProgress
 import name.levis.ichor.model.SignInRenewal
 import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.SsoRoleChoice
+import name.levis.ichor.model.TeleportClusters
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.SignInListener
 import name.levis.ichorgo.SignInRun
@@ -97,6 +98,20 @@ class KubeAuthRepository(
     /** Forgets [context]'s sign-in (its tokens and the secrets entered). */
     suspend fun signOut(context: String) = withContext(Dispatchers.IO) {
         if (isTalos(context)) Ichorgo.talosSignOut(talosYaml(), context) else Ichorgo.kubeSignOut(kubeYaml(), context)
+        onSignInChanged(context)
+    }
+
+    /** The Kubernetes clusters of the Teleport proxy [context] signs in at, each with its stored context. */
+    suspend fun teleportClusters(context: String): TeleportClusters = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(TeleportClusters.serializer(), Ichorgo.kubeTeleportClusters(kubeYaml(), context))
+    }
+
+    /** Adds the Kubernetes cluster [kubeCluster] through [context]'s Teleport proxy; returns its new context. */
+    suspend fun teleportAddCluster(context: String, kubeCluster: String): String = configs.addTeleportCluster(context, kubeCluster)
+
+    /** Signs out of [context]'s Teleport proxy: every certificate of it, and who signed in there. */
+    suspend fun teleportSignOutAll(context: String) = withContext(Dispatchers.IO) {
+        Ichorgo.kubeTeleportSignOutAll(kubeYaml(), context)
         onSignInChanged(context)
     }
 

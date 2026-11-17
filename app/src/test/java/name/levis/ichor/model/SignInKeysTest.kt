@@ -21,6 +21,16 @@ class SignInKeysTest {
     }
 
     @Test
+    fun teleportClustersKeepTheirProxySignIn() {
+        val contexts = listOf(
+            ContextSummary("teleport.example.org-a", fingerprint = "k1", kind = KIND_KUBE, signIn = "teleport", authKey = "teleport:proxy/a"),
+            ContextSummary("teleport.example.org-b", fingerprint = "k2", kind = KIND_KUBE, signIn = "teleport", authKey = "teleport:proxy/a"),
+        )
+
+        assertEquals(listOf("k1", "teleport:proxy/a", "k2"), signInKeys(contexts))
+    }
+
+    @Test
     fun backupKeepsTheOmniServiceAccount() {
         val states = mapOf("omnikey" to "sa-state", "gone" to "x")
         val kept = backupKubeAuth(listOf("omnikey"), states) { "backed-up-$it" }

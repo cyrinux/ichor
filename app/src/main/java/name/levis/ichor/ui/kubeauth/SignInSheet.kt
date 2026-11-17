@@ -41,6 +41,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,10 +81,13 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 @Composable
 fun SignInSheet(context: String, onDismiss: () -> Unit, onSignedIn: () -> Unit) {
     val app = LocalContext.current.applicationContext as TalosApp
-    val vm: SignInViewModel = viewModel(key = "kube-sign-in-$context", factory = factory { SignInViewModel(app.kubeAuthRepository, context, onBrowserDone = app::bringToFront) })
+    // A Teleport proxy's other clusters open in the same sheet.
+    var shown by rememberSaveable(context) { mutableStateOf(context) }
+    var startWhenReady by remember { mutableStateOf(false) }
+    val vm: SignInViewModel = viewModel(key = "kube-sign-in-$shown", factory = factory { SignInViewModel(app.kubeAuthRepository, shown, onBrowserDone = app::bringToFront) })
     val state by vm.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(context) { vm.load() }
+    LaunchedEffect(shown) { vm.load() }
     val signInWithGoogle = rememberGoogleSignIn(app.googleNativeSignIn, onAnswer = { answer, failedText -> vm.googleAnswer(answer, failedText) })
     // Closing the sheet stops waiting for the browser; the next one starts afresh.
     DisposableEffect(vm) { onDispose { vm.close() } }
@@ -91,6 +95,11 @@ fun SignInSheet(context: String, onDismiss: () -> Unit, onSignedIn: () -> Unit) 
         if (state is SignInUi.Done) {
             app.signInChanged()
             onSignedIn()
+        }
+        // A cluster just added by name signs in at once.
+        if (startWhenReady && state is SignInUi.Ready) {
+            startWhenReady = false
+            vm.startSignIn()
         }
     }
 
@@ -112,7 +121,18 @@ fun SignInSheet(context: String, onDismiss: () -> Unit, onSignedIn: () -> Unit) 
                     } else {
                         if (s.info.method == METHOD_TELEPORT) TeleportDetails(s.info)
                         MutedText(stringResource(R.string.kube_signin_browser_hint))
-                        IchorButton(onClick = vm::startSignIn, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.kube_signin_action)) }
+                        IchorButton(onClick = vm::startSignIn, modifier = Modifier.fillMaxWidth()) { Text(browserSignInText(s.info)) }
+                        if (s.info.method == METHOD_TELEPORT) {
+                            TeleportClusters(
+                                context = shown,
+                                onOpen = { shown = it },
+                                onAdded = {
+                                    startWhenReady = true
+                                    shown = it
+                                },
+                                onSignedOut = vm::load,
+                            )
+                        }
                     }
                     s.error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
                 }
