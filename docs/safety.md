@@ -39,6 +39,22 @@ Part of the [Ichor documentation](../README.md#documentation).
   for it). A run that stops before the config is sent leaves the machine untouched and offers to
   remove the stored entry; after it, the install goes on and the entry is kept. Refused in screenshot
   mode and on the demo.
+- **Creating a new cluster at Hetzner (Add a cluster → New Talos cluster → A server at Hetzner):**
+  billable: a server (by the started hour) and an IPv4 Primary IP (from its creation), so the cost
+  of both shows first and the cluster's name is typed to confirm. With a Read & Write token, every
+  refusal comes before any write (a read-only token, a snapshot of another architecture than the
+  server type, a type not sold in the location, user data over 32 KiB). The run reserves the
+  Primary IP first, because the cluster's endpoint is written into its config; it makes the
+  secrets for that address and hands the talosconfig to the app, which stores it before the server
+  is up (a store that fails stops the run). The server then boots with the control-plane config as
+  its user data: the maintenance API is never exposed on the Internet. Before etcd is bootstrapped,
+  a failed or stopped run deletes the server and the Primary IP it made, by id (a create that got
+  no clear answer is found by the run's label), and offers to remove the stored entry. After the
+  bootstrap the cluster exists: nothing is deleted and the message says where it runs. The one case
+  that needs the Hetzner console is a cleanup that fails: the message names the server or the
+  Primary IP to delete there, still billed until then. The cluster's endpoint is the Primary IP:
+  moving the cluster to another address later means new certificates. Refused in screenshot mode
+  and on the demo.
 - **Replacing a control plane (etcd → a failed member's menu → Replace this control plane…,
   `os:admin`):** one screen walks through the replacement, step by step, read from the cluster
   so that leaving and coming back resumes:

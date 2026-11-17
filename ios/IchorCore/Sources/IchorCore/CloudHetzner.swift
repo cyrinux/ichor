@@ -173,6 +173,51 @@ public struct HetznerSnapshotCost: Decodable, Equatable, Sendable {
     }
 }
 
+/// StartHetznerNewCluster's specJSON: a one-node cluster on a server and a Primary IP. Never holds
+/// the token.
+public struct HetznerNewClusterSpec: Encodable, Equatable, Sendable {
+    public let name: String
+    public let serverType: String
+    public let location: String
+    public let snapshotId: Int64
+    public let kubernetesVersion: String
+    public let allowSchedulingOnControlPlanes: Bool
+
+    public init(
+        name: String, serverType: String, location: String, snapshotId: Int64, kubernetesVersion: String = "",
+        allowSchedulingOnControlPlanes: Bool = true
+    ) {
+        self.name = name
+        self.serverType = serverType
+        self.location = location
+        self.snapshotId = snapshotId
+        self.kubernetesVersion = kubernetesVersion
+        self.allowSchedulingOnControlPlanes = allowSchedulingOnControlPlanes
+    }
+}
+
+/// The cost line of a new cluster at Hetzner: the server and its Primary IP, before tax, in `currency`.
+public struct HetznerNewClusterCost: Decodable, Equatable, Sendable {
+    public let currency: String
+    public let serverHourly: String
+    public let serverMonthly: String
+    public let primaryIPMonthly: String
+    public let totalMonthly: String
+
+    private enum CodingKeys: String, CodingKey {
+        case currency, serverHourly, serverMonthly, primaryIPMonthly, totalMonthly
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        currency = try c.field(.currency, "")
+        serverHourly = try c.field(.serverHourly, "")
+        serverMonthly = try c.field(.serverMonthly, "")
+        primaryIPMonthly = try c.field(.primaryIPMonthly, "")
+        totalMonthly = try c.field(.totalMonthly, "")
+    }
+}
+
 /// StartHetznerCreate's specJSON. Never holds the token.
 public struct HetznerCreateSpec: Encodable, Equatable, Sendable {
     public let serverType: String

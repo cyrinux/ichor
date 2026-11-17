@@ -21,7 +21,7 @@ import (
 // shell history). The Scaleway key comes from SCW_ACCESS_KEY, SCW_SECRET_KEY,
 // SCW_DEFAULT_PROJECT_ID and SCW_DEFAULT_ZONE, the names Scaleway's own CLI reads.
 var cloudCommands = []command{
-	{name: "hetzner", args: "test|options|estimate ARCH LOCATION|snapshot ARCH LOCATION -yes|create TEMPLATE ROLE HOSTNAME DISK TYPE LOCATION SNAPSHOT_ID -yes", run: func(e env) (string, error) {
+	{name: "hetzner", args: "test|options|estimate ARCH LOCATION|snapshot ARCH LOCATION -yes|create TEMPLATE ROLE HOSTNAME DISK TYPE LOCATION SNAPSHOT_ID -yes|new-cluster NAME TYPE LOCATION SNAPSHOT_ID -yes|cluster-estimate TYPE LOCATION", run: func(e env) (string, error) {
 		token := os.Getenv("HETZNER_TOKEN")
 		if token == "" && flag.Arg(1) != "options" {
 			return "", errors.New("set HETZNER_TOKEN to a scratch project's token")
@@ -43,9 +43,13 @@ var cloudCommands = []command{
 			return ichorgo.HetznerSnapshotEstimate(string(tokenJSON), flag.Arg(2), flag.Arg(3))
 		case "snapshot":
 			return hetznerSnapshot(e, string(tokenJSON))
+		case "new-cluster":
+			return hetznerNewCluster(e, string(tokenJSON))
+		case "cluster-estimate":
+			return ichorgo.HetznerNewClusterEstimate(e.cfg, e.context, string(tokenJSON), flag.Arg(2), flag.Arg(3))
 		}
 
-		return "", errors.New("usage: hetzner test|options|estimate|snapshot|create …")
+		return "", errors.New("usage: hetzner test|options|estimate|snapshot|create|new-cluster|cluster-estimate …")
 	}},
 	{name: "ovh", args: "test|options|policy|create TEMPLATE ROLE HOSTNAME DISK REGION FLAVOR_ID IMAGE_ID -yes", run: func(e env) (string, error) {
 		credJSON, err := json.Marshal(map[string]string{

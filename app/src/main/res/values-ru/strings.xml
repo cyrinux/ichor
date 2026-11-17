@@ -6908,6 +6908,14 @@
     <string name="new_cluster_title">Новый кластер Talos</string>
     <string name="new_cluster_entry">Сделать машину, загруженную с ISO Talos, новым кластером</string>
     <string name="new_cluster_intro">Загрузите машину в вашей локальной сети с ISO Talos и введите адрес, который показывает её консоль. Этот телефон создаёт секреты и конфигурации кластера, отправляет конфигурацию на машину и инициализирует её: ноутбук не нужен.</string>
+    <string name="hetzner_phase_ip">Зарезервировать Primary IP</string>
+    <string name="new_cluster_where">Где машина</string>
+    <string name="new_cluster_where_local">В моей сети</string>
+    <string name="new_cluster_where_hetzner">Сервер в Hetzner</string>
+    <string name="new_cluster_hetzner_intro">Токен проекта, тип сервера, локация и снапшот Talos проекта: этот телефон резервирует Primary IP, создаёт для него секреты кластера, сохраняет talosconfig, затем создаёт сервер и выполняет bootstrap. Рабочие узлы добавляются позже через «Добавить узел».</string>
+    <string name="new_cluster_hetzner_no_snapshot">В этом проекте нет снапшота Talos для %1$s: создайте его через «Добавить узел → Hetzner» и вернитесь.</string>
+    <string name="new_cluster_hetzner_cost">Около %1$s в месяц: сервер %2$s, его Primary IP %3$s. Оплата с момента создания; удаляются, если запуск завершится ошибкой до появления кластера.</string>
+    <string name="new_cluster_hetzner_confirm_body">Будут созданы платный сервер %1$s и Primary IP в %2$s (около %3$s в месяц), из них получится кластер %4$s. Введите имя для подтверждения.</string>
     <string name="new_cluster_demo">В демо введите demo как адрес: предпросмотр работает, создание кластера отклоняется.</string>
     <string name="new_cluster_step_cluster">2. Кластер: его имя, диск для установки и Kubernetes</string>
     <string name="new_cluster_step_run">3. Сохранить доступ, установить и инициализировать</string>

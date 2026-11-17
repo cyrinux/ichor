@@ -369,8 +369,17 @@ internal class TalosStreams(private val configs: ConfigRepository) {
     fun omniAllocate(machineId: String, machineSetId: String, stop: Flow<Any>): Flow<JoinEvent> =
         hetznerRun(stop) { yaml, context, listener -> Ichorgo.startOmniAllocate(yaml, context, machineId, machineSetId, listener) }
 
-    private fun hetznerRun(stop: Flow<Any>, start: (String, String, JoinListener) -> JoinRun): Flow<JoinEvent> = callbackFlow {
-        val stored = configs.forCall()
+    /**
+     * Makes a one-node cluster at Hetzner (StartHetznerNewCluster). The first cluster may have no
+     * config before it: the run then goes without one. As for [hetznerCreate], only [stop] cancels.
+     */
+    fun hetznerNewCluster(tokenJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop, needsConfig = false) { yaml, context, listener ->
+            Ichorgo.startHetznerNewCluster(yaml, context, tokenJson, specJson, listener)
+        }
+
+    private fun hetznerRun(stop: Flow<Any>, needsConfig: Boolean = true, start: (String, String, JoinListener) -> JoinRun): Flow<JoinEvent> = callbackFlow {
+        val stored = if (needsConfig) configs.forCall() else configs.config.value
         val listener = object : JoinListener {
             override fun onProgress(json: String) {
                 runCatching { TalosJson.decodeFromString(JoinProgress.serializer(), json) }.getOrNull()
@@ -382,7 +391,7 @@ internal class TalosStreams(private val configs: ConfigRepository) {
                 close()
             }
         }
-        val run = start(stored.yaml, stored.activeContext, listener)
+        val run = start(stored?.yaml.orEmpty(), stored?.activeContext.orEmpty(), listener)
         launch {
             stop.first()
             run.cancel()

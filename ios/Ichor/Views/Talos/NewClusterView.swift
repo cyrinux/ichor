@@ -20,16 +20,30 @@ struct NewClusterView: View {
     @State private var startError: String?
     @State private var confirming = false
     @State private var showingConfig = false
+    @State private var atHetzner = false
     private var job: JoinJob { .shared }
 
     var body: some View {
         List {
-            if let request = job.request, let start = request.newCluster {
-                NewClusterRunSections(request: request, start: start)
+            if let request = job.request, let name = request.newClusterName {
+                NewClusterRunSections(request: request, name: name)
             } else {
-                machineSections
-                if let machine { clusterSection(machine) }
-                draftSections
+                Section {
+                    Picker("Where is the machine", selection: $atHetzner) {
+                        Text("On my network").tag(false)
+                        Text("A server at Hetzner").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text("Where is the machine")
+                }
+                if atHetzner {
+                    HetznerNewClusterSection()
+                } else {
+                    machineSections
+                    if let machine { clusterSection(machine) }
+                    draftSections
+                }
             }
         }
         .navigationTitle("New Talos cluster")

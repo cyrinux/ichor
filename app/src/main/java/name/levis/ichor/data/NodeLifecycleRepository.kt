@@ -24,6 +24,8 @@ import name.levis.ichor.model.CpReplaceWait
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.EndpointProbe
 import name.levis.ichor.model.HetznerCreateSpec
+import name.levis.ichor.model.HetznerNewClusterCost
+import name.levis.ichor.model.HetznerNewClusterSpec
 import name.levis.ichor.model.HetznerOptions
 import name.levis.ichor.model.HetznerSnapshotCost
 import name.levis.ichor.model.HetznerSnapshotSpec
@@ -424,6 +426,31 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** See [TalosStreams.hetznerCreate]. */
     fun hetznerCreate(token: String, spec: HetznerCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.hetznerCreate(hetznerTokenJson(token), TalosJson.encodeToString(HetznerCreateSpec.serializer(), spec), stop)
+
+    /** Server types, locations and snapshots for a new cluster: works before any cluster is stored. */
+    suspend fun hetznerClusterOptions(token: String): HetznerOptions = withContext(Dispatchers.IO) {
+        val stored = configs.config.value
+        TalosJson.decodeFromString(
+            HetznerOptions.serializer(),
+            Ichorgo.hetznerOptions(stored?.yaml.orEmpty(), stored?.activeContext.orEmpty(), hetznerTokenJson(token)),
+        )
+    }
+
+    /** The cost line of a new cluster at Hetzner: the server and its Primary IP. Creates nothing. */
+    suspend fun hetznerNewClusterEstimate(token: String, serverType: String, location: String): HetznerNewClusterCost =
+        withContext(Dispatchers.IO) {
+            val stored = configs.config.value
+            TalosJson.decodeFromString(
+                HetznerNewClusterCost.serializer(),
+                Ichorgo.hetznerNewClusterEstimate(
+                    stored?.yaml.orEmpty(), stored?.activeContext.orEmpty(), hetznerTokenJson(token), serverType, location,
+                ),
+            )
+        }
+
+    /** See [TalosStreams.hetznerNewCluster]. */
+    fun hetznerNewCluster(token: String, spec: HetznerNewClusterSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.hetznerNewCluster(hetznerTokenJson(token), TalosJson.encodeToString(HetznerNewClusterSpec.serializer(), spec), stop)
 
     /** The cost line of a snapshot run. Creates nothing. */
     suspend fun hetznerSnapshotEstimate(token: String, arch: String, location: String): HetznerSnapshotCost = withContext(Dispatchers.IO) {

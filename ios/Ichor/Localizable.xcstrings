@@ -1,6 +1,608 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Reserve the Primary IP" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primary IP reservieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reservar la Primary IP"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réserver la Primary IP"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riserva la Primary IP"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primary IP を予約"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reservar o Primary IP"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зарезервировать Primary IP"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зарезервувати Primary IP"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预留 Primary IP"
+          }
+        }
+      }
+    },
+    "Where is the machine" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wo ist die Maschine"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dónde está la máquina"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Où est la machine"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dov'è la macchina"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マシンの場所"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onde está a máquina"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Где машина"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Де машина"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "机器在哪里"
+          }
+        }
+      }
+    },
+    "On my network" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In meinem Netzwerk"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En mi red"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur mon réseau"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sulla mia rete"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自分のネットワーク"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na minha rede"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В моей сети"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У моїй мережі"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在我的网络中"
+          }
+        }
+      }
+    },
+    "A server at Hetzner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Server bei Hetzner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un servidor en Hetzner"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un serveur chez Hetzner"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un server su Hetzner"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hetzner のサーバー"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um servidor na Hetzner"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер в Hetzner"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер у Hetzner"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hetzner 上的服务器"
+          }
+        }
+      }
+    },
+    "A project token, a server type, a location and the project's Talos snapshot: this phone reserves a Primary IP, makes the cluster's secrets for it, stores the talosconfig, then creates the server and bootstraps it. Workers come later from Add a node." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Projekt-Token, ein Servertyp, ein Standort und der Talos-Snapshot des Projekts: Dieses Telefon reserviert eine Primary IP, erzeugt dafür die Secrets des Clusters, speichert die talosconfig, erstellt dann den Server und bootstrapt ihn. Worker kommen später über Node hinzufügen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un token de proyecto, un tipo de servidor, una ubicación y el snapshot de Talos del proyecto: este teléfono reserva una Primary IP, crea los secretos del clúster para ella, guarda el talosconfig y luego crea el servidor y lo arranca. Los workers llegan después desde Añadir un nodo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un jeton de projet, un type de serveur, un emplacement et le snapshot Talos du projet : ce téléphone réserve une Primary IP, crée les secrets du cluster pour elle, enregistre le talosconfig, puis crée le serveur et l'amorce. Les workers viennent ensuite depuis Ajouter un nœud."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un token di progetto, un tipo di server, una località e lo snapshot Talos del progetto: questo telefono riserva una Primary IP, crea i segreti del cluster per essa, salva il talosconfig, poi crea il server e lo avvia. I worker arrivano dopo da Aggiungi un nodo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プロジェクトのトークン、サーバータイプ、ロケーション、プロジェクトの Talos スナップショット：このスマホが Primary IP を予約し、そのアドレスでクラスターのシークレットを作り、talosconfig を保存してから、サーバーを作成してブートストラップします。ワーカーは後で「ノードを追加」から追加します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um token de projeto, um tipo de servidor, uma localização e o snapshot Talos do projeto: este celular reserva um Primary IP, cria os segredos do cluster para ele, salva o talosconfig e então cria o servidor e faz o bootstrap. Os workers vêm depois por Adicionar um nó."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Токен проекта, тип сервера, локация и снапшот Talos проекта: этот телефон резервирует Primary IP, создаёт для него секреты кластера, сохраняет talosconfig, затем создаёт сервер и выполняет bootstrap. Рабочие узлы добавляются позже через «Добавить узел»."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Токен проєкту, тип сервера, локація та снапшот Talos проєкту: цей телефон резервує Primary IP, створює для нього секрети кластера, зберігає talosconfig, потім створює сервер і виконує bootstrap. Робочі вузли додаються пізніше через «Додати вузол»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一个项目令牌、一种服务器类型、一个位置和项目的 Talos 快照：这部手机会预留一个 Primary IP，为它生成集群的密钥，保存 talosconfig，然后创建服务器并引导它。工作节点之后通过“添加节点”加入。"
+          }
+        }
+      }
+    },
+    "This project has no Talos snapshot for %@: make one from Add a node → Hetzner, then come back." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Projekt hat keinen Talos-Snapshot für %@: Erstelle einen über Node hinzufügen → Hetzner und komm dann zurück."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este proyecto no tiene snapshot de Talos para %@: crea uno desde Añadir un nodo → Hetzner y vuelve."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce projet n'a pas de snapshot Talos pour %@ : créez-en un depuis Ajouter un nœud → Hetzner, puis revenez."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo progetto non ha uno snapshot Talos per %@: creane uno da Aggiungi un nodo → Hetzner, poi torna qui."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このプロジェクトには %@ 用の Talos スナップショットがありません：「ノードを追加 → Hetzner」で作成してから戻ってください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este projeto não tem snapshot Talos para %@: crie um em Adicionar um nó → Hetzner e volte."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В этом проекте нет снапшота Talos для %@: создайте его через «Добавить узел → Hetzner» и вернитесь."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У цьому проєкті немає снапшота Talos для %@: створіть його через «Додати вузол → Hetzner» і поверніться."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该项目没有适用于 %@ 的 Talos 快照：请在“添加节点 → Hetzner”中创建一个，然后再回来。"
+          }
+        }
+      }
+    },
+    "About %@ a month: the server %@, its Primary IP %@. Billed from creation; deleted again if the run fails before the cluster exists." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About %1$@ a month: the server %2$@, its Primary IP %3$@. Billed from creation; deleted again if the run fails before the cluster exists."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etwa %1$@ pro Monat: der Server %2$@, seine Primary IP %3$@. Ab Erstellung berechnet; wieder gelöscht, wenn der Lauf scheitert, bevor der Cluster existiert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unos %1$@ al mes: el servidor %2$@, su Primary IP %3$@. Se factura desde su creación; se borra si la ejecución falla antes de que exista el clúster."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Environ %1$@ par mois : le serveur %2$@, sa Primary IP %3$@. Facturé dès la création ; supprimé si l'exécution échoue avant que le cluster existe."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Circa %1$@ al mese: il server %2$@, la sua Primary IP %3$@. Fatturato dalla creazione; eliminato se l'esecuzione fallisce prima che il cluster esista."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "月額約 %1$@：サーバー %2$@、Primary IP %3$@。作成時から課金され、クラスターができる前に実行が失敗すると削除されます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca de %1$@ por mês: o servidor %2$@, seu Primary IP %3$@. Cobrado desde a criação; apagado se a execução falhar antes de o cluster existir."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Около %1$@ в месяц: сервер %2$@, его Primary IP %3$@. Оплата с момента создания; удаляются, если запуск завершится ошибкой до появления кластера."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Близько %1$@ на місяць: сервер %2$@, його Primary IP %3$@. Оплата з моменту створення; видаляються, якщо запуск завершиться помилкою до появи кластера."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每月约 %1$@：服务器 %2$@，其 Primary IP %3$@。自创建起计费；如果运行在集群建成前失败，会再次删除。"
+          }
+        }
+      }
+    },
+    "This creates a billed %@ server and a Primary IP in %@ (about %@ a month) and makes the cluster %@. Type the name to confirm." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This creates a billed %1$@ server and a Primary IP in %2$@ (about %3$@ a month) and makes the cluster %4$@. Type the name to confirm."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das erstellt einen berechneten %1$@-Server und eine Primary IP in %2$@ (etwa %3$@ pro Monat) und macht daraus den Cluster %4$@. Gib den Namen zur Bestätigung ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto crea un servidor %1$@ facturado y una Primary IP en %2$@ (unos %3$@ al mes) y hace con ellos el clúster %4$@. Escribe el nombre para confirmar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ceci crée un serveur %1$@ facturé et une Primary IP à %2$@ (environ %3$@ par mois) et en fait le cluster %4$@. Saisissez le nom pour confirmer."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo crea un server %1$@ a pagamento e una Primary IP in %2$@ (circa %3$@ al mese) e ne fa il cluster %4$@. Digita il nome per confermare."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ に課金される %1$@ サーバーと Primary IP を作成し（月額約 %3$@）、クラスター %4$@ を作ります。確認のため名前を入力してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isto cria um servidor %1$@ cobrado e um Primary IP em %2$@ (cerca de %3$@ por mês) e faz com eles o cluster %4$@. Digite o nome para confirmar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Будут созданы платный сервер %1$@ и Primary IP в %2$@ (около %3$@ в месяц), из них получится кластер %4$@. Введите имя для подтверждения."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Буде створено платний сервер %1$@ і Primary IP у %2$@ (близько %3$@ на місяць), з них вийде кластер %4$@. Введіть назву для підтвердження."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这将在 %2$@ 创建一台计费的 %1$@ 服务器和一个 Primary IP（每月约 %3$@），并组成集群 %4$@。输入名称以确认。"
+          }
+        }
+      }
+    },
+    "Stopping before etcd is bootstrapped deletes the server and the Primary IP this run made." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Stopp vor dem Bootstrap von etcd löscht den Server und die Primary IP, die dieser Lauf erstellt hat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener antes del bootstrap de etcd borra el servidor y la Primary IP que creó esta ejecución."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter avant l'amorçage d'etcd supprime le serveur et la Primary IP créés par cette exécution."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fermarsi prima del bootstrap di etcd elimina il server e la Primary IP creati da questa esecuzione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd のブートストラップ前に停止すると、この実行で作成したサーバーと Primary IP が削除されます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parar antes do bootstrap do etcd apaga o servidor e o Primary IP que esta execução criou."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Остановка до bootstrap etcd удаляет сервер и Primary IP, созданные этим запуском."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинка до bootstrap etcd видаляє сервер і Primary IP, створені цим запуском."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 etcd 引导之前停止会删除此次运行创建的服务器和 Primary IP。"
+          }
+        }
+      }
+    },
+    "The cluster was not bootstrapped: the talosconfig stored for it is of no use." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Cluster wurde nicht gebootstrapt: Die dafür gespeicherte talosconfig nützt nichts."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El clúster no se arrancó: el talosconfig guardado para él no sirve."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le cluster n'a pas été amorcé : le talosconfig enregistré pour lui ne sert à rien."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il cluster non è stato avviato: il talosconfig salvato per esso non serve."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クラスターはブートストラップされていません：保存した talosconfig は使えません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O cluster não recebeu bootstrap: o talosconfig salvo para ele não tem utilidade."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кластер не прошёл bootstrap: сохранённый для него talosconfig бесполезен."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кластер не пройшов bootstrap: збережений для нього talosconfig марний."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "集群未完成引导：为它保存的 talosconfig 已无用处。"
+          }
+        }
+      }
+    },
     "Grafana IRM API URL" : {
       "extractionState" : "manual",
       "localizations" : {

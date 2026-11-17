@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.model.HetznerCreateSpec
+import name.levis.ichor.model.HetznerNewClusterSpec
 import name.levis.ichor.model.AWSCreateSpec
 import name.levis.ichor.model.AWSImageResult
 import name.levis.ichor.model.AWSImageSpec
@@ -66,12 +67,15 @@ data class JoinRequest(
     val omniAllocate: OmniAllocateSpec? = null,
     /** No cluster yet: the machine at [address] becomes the first control plane of this one. */
     val newCluster: NewClusterStart? = null,
+    /** No cluster yet: a server and a Primary IP at Hetzner become a new one-node cluster ([hostname] is its name). */
+    val hetznerCluster: HetznerNewClusterSpec? = null,
 ) {
     /** The steps of this run's timeline. */
     val phases: List<JoinPhase>
         get() = when {
             omniAllocate != null -> JoinPhase.omniAllocateRun
             newCluster != null -> JoinPhase.newClusterRun
+            hetznerCluster != null -> JoinPhase.hetznerClusterRun
             else -> imageKind?.phases ?: when {
                 !cloud -> JoinPhase.maintenanceRun
                 omni -> JoinPhase.cloudOmniRun
@@ -81,7 +85,7 @@ data class JoinRequest(
 
     /** A machine to create at a cloud provider. */
     val cloud: Boolean
-        get() = hetzner != null || ovh != null || aws != null || azure != null || gcp != null
+        get() = hetzner != null || ovh != null || aws != null || azure != null || gcp != null || hetznerCluster != null
 
     /** What the run makes when it makes a Talos image instead of a node; null for a node. */
     val imageKind: ImageRunKind?
@@ -142,6 +146,8 @@ class JoinManager(
     private val _current = MutableStateFlow<JoinRunState?>(null)
     val current: StateFlow<JoinRunState?> = _current.asStateFlow()
     private var job: Job? = null
+    /** Why a new cluster's talosconfig could not be stored during its run. */
+    private var storeError: String? = null
     /** Set by [stop]: the Go run stops following and still reports how it ended. */
     private var stopRequested = MutableStateFlow(false)
 
@@ -153,13 +159,15 @@ class JoinManager(
     @Synchronized
     fun start(request: JoinRequest, providerToken: String = ""): Boolean {
         if (_current.value?.running == true) return false
-        // A new cluster's address goes to its own context, stored before the run.
-        val context = request.newCluster?.name ?: configs.config.value?.activeContext.orEmpty()
+        // A new cluster's address goes to its own context, stored before the run (at Hetzner: during it).
+        val context = request.newCluster?.name ?: request.hetznerCluster?.name ?: configs.config.value?.activeContext.orEmpty()
         _current.value = JoinRunState(request, context)
+        storeError = null
         val stopped = MutableStateFlow(false).also { stopRequested = it }
         job = scope.launch {
             try {
                 val events = request.newCluster?.let { lifecycle.newCluster(it.draftId, request.address, it.talosconfig, stopped.filter { s -> s }) }
+                    ?: request.hetznerCluster?.let { lifecycle.hetznerNewCluster(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.omniAllocate?.let { lifecycle.omniAllocate(it, stopped.filter { s -> s }) }
                     ?: request.snapshot?.let { lifecycle.hetznerSnapshot(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.awsImage?.let { lifecycle.awsImage(providerToken, it, stopped.filter { s -> s }) }
@@ -174,7 +182,11 @@ class JoinManager(
                 events
                     .collect { event ->
                         when (event) {
-                            is JoinEvent.Progress -> _current.update { it?.copy(events = it.events + event.progress) }
+                            is JoinEvent.Progress -> {
+                                val progress = event.progress
+                                if (progress.talosconfig.isNotEmpty()) storeNewCluster(context, progress.talosconfig, stopped)
+                                _current.update { it?.copy(events = it.events + progress.copy(talosconfig = "")) }
+                            }
                             is JoinEvent.Done -> finish(context, event)
                         }
                     }
@@ -188,7 +200,38 @@ class JoinManager(
         return true
     }
 
+    /**
+     * Stores a new cluster's talosconfig as the run hands it over, before its server is up: a
+     * cluster is never bootstrapped without its access on this phone. A store that fails stops the
+     * run, which then deletes what it made.
+     */
+    private suspend fun storeNewCluster(context: String, talosconfig: String, stopped: MutableStateFlow<Boolean>) {
+        val error = try {
+            if (configs.importConflicts(talosconfig).isNotEmpty()) {
+                text(R.string.new_cluster_name_taken, listOf(context))
+            } else {
+                configs.save(talosconfig)
+                null
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            text(R.string.new_cluster_store_failed, listOf(e.message ?: e.toString()))
+        }
+        if (error != null) {
+            storeError = error
+            _current.update { it?.copy(stopping = true) }
+            stopped.value = true
+        }
+    }
+
     private suspend fun finish(context: String, done: JoinEvent.Done) {
+        // The talosconfig could not be stored: that comes first, whatever the run said.
+        storeError?.let { stored ->
+            storeError = null
+            _current.update { it?.copy(finished = true, error = listOfNotNull(stored, done.error).joinToString("\n")) }
+            return
+        }
         // An image run's "address" is its result; no node to add.
         if (_current.value?.request?.snapshot != null) {
             val result = runCatching { TalosJson.decodeFromString(HetznerSnapshotResult.serializer(), done.address) }.getOrNull()

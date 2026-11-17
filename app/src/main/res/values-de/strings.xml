@@ -6636,6 +6636,14 @@
     <string name="new_cluster_title">Neuer Talos-Cluster</string>
     <string name="new_cluster_entry">Eine vom Talos-ISO gestartete Maschine zu einem neuen Cluster machen</string>
     <string name="new_cluster_intro">Starte eine Maschine in deinem lokalen Netz vom Talos-ISO und gib die Adresse ein, die ihre Konsole zeigt. Dieses Telefon erzeugt die Secrets und Configs des Clusters, sendet die Config an die Maschine und bootstrappt sie: kein Laptop nötig.</string>
+    <string name="hetzner_phase_ip">Primary IP reservieren</string>
+    <string name="new_cluster_where">Wo ist die Maschine</string>
+    <string name="new_cluster_where_local">In meinem Netzwerk</string>
+    <string name="new_cluster_where_hetzner">Ein Server bei Hetzner</string>
+    <string name="new_cluster_hetzner_intro">Ein Projekt-Token, ein Servertyp, ein Standort und der Talos-Snapshot des Projekts: Dieses Telefon reserviert eine Primary IP, erzeugt dafür die Secrets des Clusters, speichert die talosconfig, erstellt dann den Server und bootstrapt ihn. Worker kommen später über Node hinzufügen.</string>
+    <string name="new_cluster_hetzner_no_snapshot">Dieses Projekt hat keinen Talos-Snapshot für %1$s: Erstelle einen über Node hinzufügen → Hetzner und komm dann zurück.</string>
+    <string name="new_cluster_hetzner_cost">Etwa %1$s pro Monat: der Server %2$s, seine Primary IP %3$s. Ab Erstellung berechnet; wieder gelöscht, wenn der Lauf scheitert, bevor der Cluster existiert.</string>
+    <string name="new_cluster_hetzner_confirm_body">Das erstellt einen berechneten %1$s-Server und eine Primary IP in %2$s (etwa %3$s pro Monat) und macht daraus den Cluster %4$s. Gib den Namen zur Bestätigung ein.</string>
     <string name="new_cluster_demo">In der Demo gib demo als Adresse ein: die Vorschau funktioniert, das Erstellen des Clusters wird abgelehnt.</string>
     <string name="new_cluster_step_cluster">2. Der Cluster: sein Name, die Installationsdisk und Kubernetes</string>
     <string name="new_cluster_step_run">3. Zugang speichern, installieren und bootstrappen</string>

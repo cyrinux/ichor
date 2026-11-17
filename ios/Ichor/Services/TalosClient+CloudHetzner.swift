@@ -31,6 +31,36 @@ extension TalosClient {
         }
     }
 
+    /// Server types, locations and snapshots for a new cluster, which may be the first one: `config`
+    /// and `context` are the active ones or empty (they only tell the demo). Never cached.
+    static func hetznerClusterOptions(config: String, context: String, token: String) async throws -> HetznerOptions {
+        let tokenJSON = hetznerTokenJSON(token)
+        return try await json { IchorgoHetznerOptions(config, context, tokenJSON, $0) }
+    }
+
+    /// The cost line of a new cluster at Hetzner: the server and its Primary IP. Creates nothing.
+    static func hetznerNewClusterEstimate(
+        config: String, context: String, token: String, serverType: String, location: String
+    ) async throws -> HetznerNewClusterCost {
+        let tokenJSON = hetznerTokenJSON(token)
+        return try await json {
+            IchorgoHetznerNewClusterEstimate(config, context, tokenJSON, serverType, location, $0)
+        }
+    }
+
+    /// Makes a one-node cluster on a server and a Primary IP (StartHetznerNewCluster). Its `secrets`
+    /// event carries the talosconfig, which JoinJob stores before the server is up. `stop` deletes
+    /// what the run made until etcd is bootstrapped; only `stop` stops it, as above.
+    func startHetznerNewCluster(
+        _ spec: HetznerNewClusterSpec, token: String
+    ) -> (events: AsyncStream<JoinEvent>, stop: @Sendable () -> Void) {
+        let specJSON = (try? JSONEncoder().encode(spec)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+        let tokenJSON = Self.hetznerTokenJSON(token)
+        return hetznerRun { [config, context] bridge in
+            IchorgoStartHetznerNewCluster(config, context, tokenJSON, specJSON, bridge)
+        }
+    }
+
     /// The cost line of a snapshot run. Creates nothing.
     static func hetznerSnapshotEstimate(token: String, arch: String, location: String) async throws
         -> HetznerSnapshotCost

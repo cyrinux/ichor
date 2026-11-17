@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,10 +39,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.JoinRunState
+import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.JoinPhase
 import name.levis.ichor.model.MaintenanceInspection
 import name.levis.ichor.model.NewClusterDraft
 import name.levis.ichor.model.installDisks
+import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.joinAddress
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
@@ -71,7 +74,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
  * typing the cluster's name; the talosconfig is stored, then the run is followed. [onOpenCluster]
  * shows the new cluster once it is up.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun NewClusterScreen(
     onBack: () -> Unit,
@@ -81,7 +84,9 @@ fun NewClusterScreen(
         factory = factory { NewClusterViewModel(app.nodeLifecycleRepository, app.configRepository, app.joinManager) },
     ),
 ) {
-    val joins = (LocalContext.current.applicationContext as TalosApp).joinManager
+    val app = LocalContext.current.applicationContext as TalosApp
+    val joins = app.joinManager
+    val configs = app.configRepository.config
     val run by joins.current.collectAsStateWithLifecycle()
     IchorScaffold(
         topBar = {
@@ -92,14 +97,25 @@ fun NewClusterScreen(
             Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            val current = run?.takeIf { it.request.newCluster != null }
+            val current = run?.takeIf { it.request.newCluster != null || it.request.hetznerCluster != null }
             if (current != null) {
                 RunSection(current, vm, onOpenCluster)
             } else {
-                MutedText(stringResource(R.string.new_cluster_intro))
-                MachineSection(vm)
-                FormSection(vm)
-                DraftSection(vm)
+                val config by configs.collectAsStateWithLifecycle()
+                var atHetzner by rememberSaveable { mutableStateOf(false) }
+                SectionTitle(stringResource(R.string.new_cluster_where))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    IchorFilterChip(selected = !atHetzner, onClick = { atHetzner = false }, label = { Text(stringResource(R.string.new_cluster_where_local)) })
+                    IchorFilterChip(selected = atHetzner, onClick = { atHetzner = true }, label = { Text(stringResource(R.string.new_cluster_where_hetzner)) })
+                }
+                if (atHetzner) {
+                    HetznerNewClusterSection(demo = config?.activeSummary?.isDemo == true)
+                } else {
+                    MutedText(stringResource(R.string.new_cluster_intro))
+                    MachineSection(vm)
+                    FormSection(vm)
+                    DraftSection(vm)
+                }
             }
         }
     }
@@ -266,15 +282,21 @@ private fun DraftCard(draft: NewClusterDraft) {
     }
 }
 
-/** The followed run; a run that sent nothing offers to remove the stored entry it leaves. */
+/**
+ * The followed run; a run that failed before the cluster existed offers to remove the stored
+ * entry it leaves (at Hetzner: once the talosconfig was stored, until etcd was bootstrapped).
+ */
 @Composable
 private fun RunSection(run: JoinRunState, vm: NewClusterViewModel, onOpenCluster: () -> Unit) {
     val joins = (LocalContext.current.applicationContext as TalosApp).joinManager
-    val sent = run.events.any { JoinPhase.of(it.phase) == JoinPhase.INSTALLING }
-    val name = run.request.newCluster?.name.orEmpty()
+    val hetzner = run.request.hetznerCluster != null
+    val reached = { phase: JoinPhase -> run.events.any { JoinPhase.of(it.phase) == phase } }
+    val sent = reached(if (hetzner) JoinPhase.BOOTSTRAPPING else JoinPhase.INSTALLING)
+    val stored = !hetzner || reached(JoinPhase.SECRETS)
+    val name = run.request.newCluster?.name ?: run.request.hetznerCluster?.name.orEmpty()
     SectionTitle(stringResource(R.string.new_cluster_step_run))
     JoinRunView(run = run, onStop = joins::stop, onOpenNode = onOpenCluster, onClose = joins::dismiss)
-    if (run.finished && run.error != null && !sent && run.request.address != DEMO_MACHINE) {
+    if (run.finished && run.error != null && !sent && stored && run.request.address != DEMO_MACHINE) {
         MutedText(stringResource(R.string.new_cluster_remove_help))
         IchorOutlinedButton(onClick = { vm.removeEntry(name) {} }, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.new_cluster_remove))

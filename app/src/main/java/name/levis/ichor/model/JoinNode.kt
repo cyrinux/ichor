@@ -74,11 +74,17 @@ data class JoinProgress(
     val message: String = "",
     val at: Long = 0,
     val address: String = "",
-)
+    /** A new cluster's talosconfig, once, on its secrets step: stored, then dropped from the event. */
+    val talosconfig: String = "",
+) {
+    // The talosconfig is a credential: never in a log line.
+    override fun toString(): String = "JoinProgress($phase, $message)"
+}
 
 /** The phases of a join, in order. */
 enum class JoinPhase(val wire: String) {
     KEY("key"),
+    IP("ip"),
     SECRETS("secrets"),
     CREATING("creating"),
     STARTING("starting"),
@@ -109,6 +115,9 @@ enum class JoinPhase(val wire: String) {
 
         /** A new cluster: its talosconfig stored, its first control plane installed and bootstrapped. */
         val newClusterRun = listOf(SECRETS, APPLYING, INSTALLING, BOOTED, BOOTSTRAPPING, READY)
+
+        /** A new cluster at Hetzner: its Primary IP, its talosconfig stored, its server created and bootstrapped. */
+        val hetznerClusterRun = listOf(IP, SECRETS, CREATING, STARTING, BOOTED, BOOTSTRAPPING, READY)
 
         /** A server created with the config as its user data. */
         val cloudRun = listOf(CREATING, STARTING, REBOOTING, BOOTED, JOINING, REGISTERING, DONE)

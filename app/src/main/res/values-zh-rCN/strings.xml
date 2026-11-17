@@ -6506,6 +6506,14 @@
     <string name="new_cluster_title">新建 Talos 集群</string>
     <string name="new_cluster_entry">将从 Talos ISO 启动的机器变成新集群</string>
     <string name="new_cluster_intro">用 Talos ISO 启动本地网络中的一台机器，然后输入其控制台显示的地址。本手机会生成集群的密钥和配置，将配置发送到机器并完成引导：无需笔记本电脑。</string>
+    <string name="hetzner_phase_ip">预留 Primary IP</string>
+    <string name="new_cluster_where">机器在哪里</string>
+    <string name="new_cluster_where_local">在我的网络中</string>
+    <string name="new_cluster_where_hetzner">Hetzner 上的服务器</string>
+    <string name="new_cluster_hetzner_intro">一个项目令牌、一种服务器类型、一个位置和项目的 Talos 快照：这部手机会预留一个 Primary IP，为它生成集群的密钥，保存 talosconfig，然后创建服务器并引导它。工作节点之后通过“添加节点”加入。</string>
+    <string name="new_cluster_hetzner_no_snapshot">该项目没有适用于 %1$s 的 Talos 快照：请在“添加节点 → Hetzner”中创建一个，然后再回来。</string>
+    <string name="new_cluster_hetzner_cost">每月约 %1$s：服务器 %2$s，其 Primary IP %3$s。自创建起计费；如果运行在集群建成前失败，会再次删除。</string>
+    <string name="new_cluster_hetzner_confirm_body">这将在 %2$s 创建一台计费的 %1$s 服务器和一个 Primary IP（每月约 %3$s），并组成集群 %4$s。输入名称以确认。</string>
     <string name="new_cluster_demo">在演示中，将地址输入为 demo：预览可用，创建集群会被拒绝。</string>
     <string name="new_cluster_step_cluster">2. 集群：名称、安装磁盘和 Kubernetes</string>
     <string name="new_cluster_step_run">3. 保存访问凭据、安装并引导</string>

@@ -41,6 +41,7 @@ import name.levis.ichor.data.CloudProviderStore
 import name.levis.ichor.data.JoinRequest
 import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.model.HetznerCreateSpec
+import name.levis.ichor.model.HetznerNewClusterCost
 import name.levis.ichor.model.HetznerOptions
 import name.levis.ichor.model.HetznerSnapshotCost
 import name.levis.ichor.model.HetznerTokenCheck
@@ -61,8 +62,15 @@ import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiStateOf
 
-/** The project's token and what a server can be created from. The token never reaches the screen. */
-class HetznerCreateViewModel(private val lifecycle: NodeLifecycleRepository, private val store: CloudProviderStore) : ViewModel() {
+/**
+ * The project's token and what a server can be created from. The token never reaches the screen.
+ * [newCluster]: for a new cluster, which may be the first one, so the options need no stored cluster.
+ */
+class HetznerCreateViewModel(
+    private val lifecycle: NodeLifecycleRepository,
+    private val store: CloudProviderStore,
+    private val newCluster: Boolean = false,
+) : ViewModel() {
     private val _projects = MutableStateFlow<List<String>>(emptyList())
     val projects: StateFlow<List<String>> = _projects.asStateFlow()
     private val _project = MutableStateFlow("")
@@ -105,7 +113,7 @@ class HetznerCreateViewModel(private val lifecycle: NodeLifecycleRepository, pri
         loading?.cancel()
         loading = viewModelScope.launch {
             val token = token(project)
-            val state = uiStateOf { lifecycle.hetznerOptions(token) }
+            val state = uiStateOf { options(token) }
             if (state is UiState.Loaded) _options.value = state
         }
     }
@@ -113,10 +121,19 @@ class HetznerCreateViewModel(private val lifecycle: NodeLifecycleRepository, pri
     suspend fun estimate(arch: String, location: String): HetznerSnapshotCost =
         lifecycle.hetznerSnapshotEstimate(token(_project.value), arch, location)
 
+    /** The server and Primary IP of a new cluster ([token] blank on the demo). */
+    suspend fun clusterEstimate(serverType: String, location: String): HetznerNewClusterCost {
+        val project = _project.value
+        return lifecycle.hetznerNewClusterEstimate(if (project.isBlank()) "" else token(project), serverType, location)
+    }
+
+    private suspend fun options(token: String): HetznerOptions =
+        if (newCluster) lifecycle.hetznerClusterOptions(token) else lifecycle.hetznerOptions(token)
+
     private fun loadOptions(token: String) {
         loading?.cancel()
         _options.value = UiState.Loading
-        loading = viewModelScope.launch { _options.value = uiStateOf { lifecycle.hetznerOptions(token) } }
+        loading = viewModelScope.launch { _options.value = uiStateOf { options(token) } }
     }
 
     suspend fun token(project: String): String =
@@ -215,7 +232,7 @@ fun HetznerCreateCard(
             }
         }
     }
-    if (addingToken) TokenDialog(vm) { addingToken = false }
+    if (addingToken) HetznerTokenDialog(vm) { addingToken = false }
     snapshotFor?.let { ask ->
         HetznerSnapshotSheet(
             options = ask.options,
@@ -351,7 +368,7 @@ private fun ServerForm(
 
 /** Project label and token: masked, tested, then sealed. A read-only token cannot be saved for creating. */
 @Composable
-private fun TokenDialog(vm: HetznerCreateViewModel, onDismiss: () -> Unit) {
+internal fun HetznerTokenDialog(vm: HetznerCreateViewModel, onDismiss: () -> Unit) {
     val colors = LocalStatusColors.current
     val scope = rememberCoroutineScope()
     var project by remember { mutableStateOf("") }
