@@ -45,7 +45,10 @@ func newFakeTeleport(t *testing.T, ping string) *fakeTeleport {
 
 	f := &fakeTeleport{t: t, ping: ping}
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /webapi/ping", func(w http.ResponseWriter, _ *http.Request) { _, _ = io.WriteString(w, f.ping) })
+	answerPing := func(w http.ResponseWriter, _ *http.Request) { _, _ = io.WriteString(w, f.ping) }
+	mux.HandleFunc("GET /webapi/ping", answerPing)
+	// A new sign-in pings the connector it last used.
+	mux.HandleFunc("GET /webapi/ping/{connector}", answerPing)
 	mux.HandleFunc("POST /webapi/{kind}/login/console", f.console)
 	f.Server = httptest.NewTLSServer(mux)
 	t.Cleanup(f.Close)
@@ -356,24 +359,8 @@ func TestTeleportMintAndRenewal(t *testing.T) {
 	}
 }
 
-func TestTeleportNeverReachesKubernetesYet(t *testing.T) {
-	withAuthStore(t)
-
-	f := newFakeTeleport(t, teleportGitHubPing)
-	cfg := teleportKubeconfig(t, f)
-
-	if err := teleportSignIn(t, cfg, teleportBrowser{notAfter: time.Now().Add(time.Hour)}, f); err != "" {
-		t.Fatal(err)
-	}
-
-	// The certificate and key are not a bearer token: the client refuses rather than send them.
-	_, err := KubeNodes(cfg, teleportTestContext, "")
-	if err == nil || !strings.Contains(err.Error(), "later version") || strings.Contains(err.Error(), "BEGIN") {
-		t.Fatalf("nodes: %v", err)
-	}
-}
-
-func TestTeleportImportWaitsForTheClient(t *testing.T) {
+// A tsh kubeconfig imports with nothing to wait for: the client presents the certificate.
+func TestTeleportImportsWithoutAProblem(t *testing.T) {
 	f := newFakeTeleport(t, teleportGitHubPing)
 
 	s := parseKubeSummary(t, teleportKubeconfig(t, f, "--insecure"))
@@ -382,7 +369,7 @@ func TestTeleportImportWaitsForTheClient(t *testing.T) {
 			continue
 		}
 
-		if c.Auth != authTeleport || c.AuthDetail != "sample-kube" || c.Problem != KubeProblemSignInLater || c.ExecHint != "" || !c.Insecure {
+		if c.Auth != authTeleport || c.AuthDetail != "sample-kube" || c.Problem != "" || c.ExecHint != "" || !c.Insecure {
 			t.Errorf("tsh context %+v", c)
 		}
 	}

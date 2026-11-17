@@ -21,6 +21,9 @@ type kubeCredentials struct {
 	token  string
 	// tokens replaces token for a context that signs in through a method.
 	tokens *authTokenSource
+	// certs is the source of a context whose method signs in with a client certificate: tls
+	// presents it, there is no token.
+	certs *authTokenSource
 	// namespace is the current context's namespace, "" when it sets none.
 	namespace string
 	// proxy is the cluster's proxy-url, credentials included; nil for a direct connection.
