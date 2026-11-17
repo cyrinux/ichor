@@ -19,7 +19,11 @@ Part of the [Ichor documentation](../README.md#documentation).
   inspect the machine, pick its install disk, preview the redacted config made for its own Talos
   version, then type the cluster's name to confirm. The talosconfig is stored first, then the
   config is sent and the run follows the install, the etcd bootstrap and the Kubernetes API.
-  Workers then join with Add a node. See [Safety](safety.md).
+  Workers then join with Add a node. Or at Hetzner, with nothing but the phone (… → A server at
+  Hetzner): pick a project token, a server type, a location and the project's Talos snapshot, see
+  the monthly cost of the server and its Primary IP, type the name; the phone reserves the IP,
+  makes the secrets for it, stores the talosconfig, creates the server with the config as its
+  user data and bootstraps it. Workers then come from Add a node → Hetzner. See [Safety](safety.md).
 - **Add a node at a cloud provider:** create the server for a new Talos or Omni node at Hetzner
   Cloud, OVHcloud, AWS EC2, Azure or Google Cloud Compute Engine from the phone, with the price
   shown first and the host name typed to confirm, then follow it until it joins (or appears in

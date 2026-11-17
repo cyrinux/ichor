@@ -51,9 +51,12 @@ final class JoinJob {
 
     /// `register` adds the joined node's address to the stored talosconfig. `providerToken` is the
     /// provider's credential for a request with a machine to create: kept out of the request, which
-    /// stays on screen.
+    /// stays on screen. `storeTalosconfig` stores a new cluster's talosconfig when the run hands it
+    /// over (at Hetzner, before the server is up); a store that fails stops the run, which then
+    /// deletes what it made.
     func start(
         client: TalosClient, request: JoinRequest, providerToken: String = "",
+        storeTalosconfig: (@MainActor (String) async throws -> Void)? = nil,
         register: @escaping @MainActor (String) async throws -> Void
     ) {
         guard !isActive else { return }
@@ -72,9 +75,21 @@ final class JoinJob {
         stop = run.stop
         task = Task {
             var result = Outcome.failed(String(localized: "The join ended without a result."))
+            var storeError: String?
             for await event in run.events {
                 switch event {
-                case .progress(let progress): events.append(progress)
+                case .progress(let progress):
+                    if !progress.talosconfig.isEmpty, let storeTalosconfig {
+                        do {
+                            try await storeTalosconfig(progress.talosconfig)
+                        } catch {
+                            storeError = String(
+                                localized: "The talosconfig could not be stored: \(error.localizedDescription)")
+                            stopping = true
+                            run.stop()
+                        }
+                    }
+                    events.append(progress.withoutTalosconfig)
                 case .done(let address, let error):
                     if let error {
                         result = .failed(error)
@@ -96,6 +111,14 @@ final class JoinJob {
                     } else if request.omni {
                         result = .appearedInOmni
                     }
+                }
+            }
+            if let storeError {
+                // The cluster's access could not be stored: that comes first, whatever the run said.
+                if case .failed(let message) = result {
+                    result = .failed(storeError + "\n" + message)
+                } else {
+                    result = .failed(storeError)
                 }
             }
             if case .joined(let address) = result {
@@ -128,6 +151,7 @@ final class JoinJob {
         client: TalosClient, request: JoinRequest, providerToken: String
     ) -> (events: AsyncStream<JoinEvent>, stop: @Sendable () -> Void) {
         if request.newCluster != nil { return TalosClient.startNewCluster(request) }
+        if let spec = request.hetznerCluster { return client.startHetznerNewCluster(spec, token: providerToken) }
         if let spec = request.omniAllocate { return client.startOmniAllocate(spec) }
         if let spec = request.snapshot { return client.startHetznerSnapshot(spec, token: providerToken) }
         if let spec = request.awsImage { return client.startAWSImage(spec, credential: providerToken) }

@@ -64,6 +64,8 @@ type newClusterRun struct {
 	draft   *newClusterDraftEntry
 	node    string // the machine's host, where it is followed
 	applied bool   // the config was sent: nothing can be undone any more
+	// bootstrapped: etcd took the bootstrap, the cluster exists.
+	bootstrapped bool
 }
 
 func (c *newClusterRun) start(timeout time.Duration) *JoinRun {
@@ -227,6 +229,8 @@ func (c *newClusterRun) follow(ctx context.Context, cl *client.Client) error {
 	if err := c.bootstrap(ctx, cl); err != nil {
 		return err
 	}
+
+	c.bootstrapped = true
 
 	if err := c.poll(ctx, func(nctx context.Context) (bool, error) {
 		return c.etcdHasMember(nctx, cl), nil

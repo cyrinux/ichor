@@ -6652,6 +6652,14 @@
     <string name="new_cluster_title">New Talos cluster</string>
     <string name="new_cluster_entry">Turn a machine booted from the Talos ISO into a new cluster</string>
     <string name="new_cluster_intro">Boot a machine on your local network from the Talos ISO and type the address its console shows. This phone makes the cluster\'s secrets and configs, sends the config to the machine and bootstraps it: no laptop needed.</string>
+    <string name="hetzner_phase_ip">Reserve the Primary IP</string>
+    <string name="new_cluster_where">Where is the machine</string>
+    <string name="new_cluster_where_local">On my network</string>
+    <string name="new_cluster_where_hetzner">A server at Hetzner</string>
+    <string name="new_cluster_hetzner_intro">A project token, a server type, a location and the project\'s Talos snapshot: this phone reserves a Primary IP, makes the cluster\'s secrets for it, stores the talosconfig, then creates the server and bootstraps it. Workers come later from Add a node.</string>
+    <string name="new_cluster_hetzner_no_snapshot">This project has no Talos snapshot for %1$s: make one from Add a node → Hetzner, then come back.</string>
+    <string name="new_cluster_hetzner_cost">About %1$s a month: the server %2$s, its Primary IP %3$s. Billed from creation; deleted again if the run fails before the cluster exists.</string>
+    <string name="new_cluster_hetzner_confirm_body">This creates a billed %1$s server and a Primary IP in %2$s (about %3$s a month) and makes the cluster %4$s. Type the name to confirm.</string>
     <string name="new_cluster_demo">In the demo, type demo as the address: the preview works, creating the cluster is refused.</string>
     <string name="new_cluster_step_cluster">2. The cluster: its name, the install disk and Kubernetes</string>
     <string name="new_cluster_step_run">3. Store the access, install and bootstrap</string>

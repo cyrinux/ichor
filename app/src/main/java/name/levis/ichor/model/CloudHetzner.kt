@@ -84,6 +84,27 @@ data class HetznerSnapshotCost(
     val currency: String = "",
 )
 
+/** StartHetznerNewCluster's specJSON: a one-node cluster on a server and a Primary IP. Never holds the token. */
+@Serializable
+data class HetznerNewClusterSpec(
+    val name: String,
+    val serverType: String,
+    val location: String,
+    val snapshotId: Long,
+    val kubernetesVersion: String = "",
+    val allowSchedulingOnControlPlanes: Boolean = true,
+)
+
+/** The cost line of a new cluster at Hetzner: the server and its Primary IP, before tax, in [currency]. */
+@Serializable
+data class HetznerNewClusterCost(
+    val currency: String = "",
+    val serverHourly: String = "",
+    val serverMonthly: String = "",
+    val primaryIPMonthly: String = "",
+    val totalMonthly: String = "",
+)
+
 /** The locations a throwaway server of [arch] can be made in. */
 fun HetznerOptions.locationsFor(arch: String): List<HetznerLocation> =
     locations.filter { l -> serverTypes.any { it.arch == arch && it.price(l.name) != null } }

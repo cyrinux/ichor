@@ -6646,6 +6646,14 @@
     <string name="new_cluster_title">Nuovo cluster Talos</string>
     <string name="new_cluster_entry">Trasforma una macchina avviata dalla ISO di Talos in un nuovo cluster</string>
     <string name="new_cluster_intro">Avvia una macchina della tua rete locale dalla ISO di Talos e digita l\'indirizzo mostrato dalla sua console. Questo telefono crea i segreti e le configurazioni del cluster, invia la configurazione alla macchina e la inizializza: nessun portatile necessario.</string>
+    <string name="hetzner_phase_ip">Riserva la Primary IP</string>
+    <string name="new_cluster_where">Dov\'è la macchina</string>
+    <string name="new_cluster_where_local">Sulla mia rete</string>
+    <string name="new_cluster_where_hetzner">Un server su Hetzner</string>
+    <string name="new_cluster_hetzner_intro">Un token di progetto, un tipo di server, una località e lo snapshot Talos del progetto: questo telefono riserva una Primary IP, crea i segreti del cluster per essa, salva il talosconfig, poi crea il server e lo avvia. I worker arrivano dopo da Aggiungi un nodo.</string>
+    <string name="new_cluster_hetzner_no_snapshot">Questo progetto non ha uno snapshot Talos per %1$s: creane uno da Aggiungi un nodo → Hetzner, poi torna qui.</string>
+    <string name="new_cluster_hetzner_cost">Circa %1$s al mese: il server %2$s, la sua Primary IP %3$s. Fatturato dalla creazione; eliminato se l\'esecuzione fallisce prima che il cluster esista.</string>
+    <string name="new_cluster_hetzner_confirm_body">Questo crea un server %1$s a pagamento e una Primary IP in %2$s (circa %3$s al mese) e ne fa il cluster %4$s. Digita il nome per confermare.</string>
     <string name="new_cluster_demo">Nella demo, digita demo come indirizzo: l\'anteprima funziona, la creazione del cluster viene rifiutata.</string>
     <string name="new_cluster_step_cluster">2. Il cluster: il nome, il disco di installazione e Kubernetes</string>
     <string name="new_cluster_step_run">3. Salvare l\'accesso, installare e inizializzare</string>

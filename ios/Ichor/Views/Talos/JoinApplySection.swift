@@ -185,6 +185,7 @@ extension JoinPhase {
     var localizedLabel: String {
         switch self {
         case .key: String(localized: "Add a temporary SSH key")
+        case .ip: String(localized: "Reserve the Primary IP")
         case .secrets: String(localized: "Store the talosconfig")
         case .bootstrapping: String(localized: "Bootstrap etcd")
         case .ready: String(localized: "Cluster ready")

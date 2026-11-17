@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/cyrinux/ichor/go/ichorgo"
 )
@@ -71,4 +73,60 @@ func newClusterProbe(mode, name, address, disk, talosVersion, k8sVersion, confir
 	ichorgo.StartNewCluster(draft.DraftID, address, draft.Talosconfig, j)
 
 	return "done: " + <-j.done, nil
+}
+
+// hetznerNewCluster makes a billable one-node cluster at Hetzner (a server and a Primary IP):
+// scratch projects only, and only with -yes. The talosconfig is stored when the run hands it
+// over, before the server exists.
+func hetznerNewCluster(e env, tokenJSON string) (string, error) {
+	if flag.NArg() != 7 || flag.Arg(6) != "-yes" {
+		return "", errors.New("usage: hetzner new-cluster NAME TYPE LOCATION SNAPSHOT_ID -yes (creates a billable server and Primary IP)")
+	}
+
+	snapshot, err := strconv.ParseInt(flag.Arg(5), 10, 64)
+	if err != nil {
+		return "", errors.New("SNAPSHOT_ID is a number")
+	}
+
+	name := flag.Arg(2)
+
+	spec, err := json.Marshal(map[string]any{"name": name, "serverType": flag.Arg(3), "location": flag.Arg(4), "snapshotId": snapshot})
+	if err != nil {
+		return "", err
+	}
+
+	j := newClusterListener{joinProbe: joinProbe{done: make(chan string, 1)}, path: argPath("talosconfig-" + name)}
+	ichorgo.StartHetznerNewCluster(e.cfg, e.context, tokenJSON, string(spec), j)
+
+	return "done: " + <-j.done, nil
+}
+
+// newClusterListener stores the talosconfig the secrets event carries, and prints the
+// events without it.
+type newClusterListener struct {
+	joinProbe
+
+	path string
+}
+
+func (l newClusterListener) OnProgress(event string) {
+	var p map[string]any
+	if err := json.Unmarshal([]byte(event), &p); err != nil {
+		fmt.Println(event)
+
+		return
+	}
+
+	if talosconfig, ok := p["talosconfig"].(string); ok {
+		if err := os.WriteFile(l.path, []byte(talosconfig), 0o600); err != nil {
+			fmt.Fprintln(os.Stderr, "could not store the talosconfig:", err)
+		} else {
+			fmt.Fprintln(os.Stderr, "stored", l.path)
+		}
+
+		p["talosconfig"] = "(stored)"
+	}
+
+	out, _ := json.Marshal(p)
+	fmt.Println(string(out))
 }

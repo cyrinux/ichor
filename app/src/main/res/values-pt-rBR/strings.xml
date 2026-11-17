@@ -6641,6 +6641,14 @@
     <string name="new_cluster_title">Novo cluster Talos</string>
     <string name="new_cluster_entry">Transforme uma máquina iniciada pela ISO do Talos em um novo cluster</string>
     <string name="new_cluster_intro">Inicie uma máquina da sua rede local pela ISO do Talos e digite o endereço que o console dela mostra. Este telefone cria os segredos e as configurações do cluster, envia a configuração para a máquina e faz o bootstrap: sem precisar de um notebook.</string>
+    <string name="hetzner_phase_ip">Reservar o Primary IP</string>
+    <string name="new_cluster_where">Onde está a máquina</string>
+    <string name="new_cluster_where_local">Na minha rede</string>
+    <string name="new_cluster_where_hetzner">Um servidor na Hetzner</string>
+    <string name="new_cluster_hetzner_intro">Um token de projeto, um tipo de servidor, uma localização e o snapshot Talos do projeto: este celular reserva um Primary IP, cria os segredos do cluster para ele, salva o talosconfig e então cria o servidor e faz o bootstrap. Os workers vêm depois por Adicionar um nó.</string>
+    <string name="new_cluster_hetzner_no_snapshot">Este projeto não tem snapshot Talos para %1$s: crie um em Adicionar um nó → Hetzner e volte.</string>
+    <string name="new_cluster_hetzner_cost">Cerca de %1$s por mês: o servidor %2$s, seu Primary IP %3$s. Cobrado desde a criação; apagado se a execução falhar antes de o cluster existir.</string>
+    <string name="new_cluster_hetzner_confirm_body">Isto cria um servidor %1$s cobrado e um Primary IP em %2$s (cerca de %3$s por mês) e faz com eles o cluster %4$s. Digite o nome para confirmar.</string>
     <string name="new_cluster_demo">Na demo, digite demo como endereço: a prévia funciona, a criação do cluster é recusada.</string>
     <string name="new_cluster_step_cluster">2. O cluster: o nome, o disco de instalação e o Kubernetes</string>
     <string name="new_cluster_step_run">3. Salvar o acesso, instalar e fazer o bootstrap</string>

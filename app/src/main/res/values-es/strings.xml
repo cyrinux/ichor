@@ -6646,6 +6646,14 @@
     <string name="new_cluster_title">Nuevo clúster de Talos</string>
     <string name="new_cluster_entry">Convierte una máquina arrancada desde la ISO de Talos en un clúster nuevo</string>
     <string name="new_cluster_intro">Arranca una máquina de tu red local desde la ISO de Talos y escribe la dirección que muestra su consola. Este teléfono crea los secretos y las configuraciones del clúster, envía la configuración a la máquina y la inicializa: no hace falta un portátil.</string>
+    <string name="hetzner_phase_ip">Reservar la Primary IP</string>
+    <string name="new_cluster_where">Dónde está la máquina</string>
+    <string name="new_cluster_where_local">En mi red</string>
+    <string name="new_cluster_where_hetzner">Un servidor en Hetzner</string>
+    <string name="new_cluster_hetzner_intro">Un token de proyecto, un tipo de servidor, una ubicación y el snapshot de Talos del proyecto: este teléfono reserva una Primary IP, crea los secretos del clúster para ella, guarda el talosconfig y luego crea el servidor y lo arranca. Los workers llegan después desde Añadir un nodo.</string>
+    <string name="new_cluster_hetzner_no_snapshot">Este proyecto no tiene snapshot de Talos para %1$s: crea uno desde Añadir un nodo → Hetzner y vuelve.</string>
+    <string name="new_cluster_hetzner_cost">Unos %1$s al mes: el servidor %2$s, su Primary IP %3$s. Se factura desde su creación; se borra si la ejecución falla antes de que exista el clúster.</string>
+    <string name="new_cluster_hetzner_confirm_body">Esto crea un servidor %1$s facturado y una Primary IP en %2$s (unos %3$s al mes) y hace con ellos el clúster %4$s. Escribe el nombre para confirmar.</string>
     <string name="new_cluster_demo">En la demo, escribe demo como dirección: la vista previa funciona y la creación del clúster se rechaza.</string>
     <string name="new_cluster_step_cluster">2. El clúster: su nombre, el disco de instalación y Kubernetes</string>
     <string name="new_cluster_step_run">3. Guardar el acceso, instalar e inicializar</string>

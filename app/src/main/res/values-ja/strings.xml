@@ -6506,6 +6506,14 @@
     <string name="new_cluster_title">新しい Talos クラスター</string>
     <string name="new_cluster_entry">Talos ISO で起動したマシンから新しいクラスターを作成</string>
     <string name="new_cluster_intro">ローカルネットワーク上のマシンを Talos ISO で起動し、コンソールに表示されたアドレスを入力してください。この端末がクラスターのシークレットと設定を作成し、マシンに設定を送信してブートストラップします。ノート PC は不要です。</string>
+    <string name="hetzner_phase_ip">Primary IP を予約</string>
+    <string name="new_cluster_where">マシンの場所</string>
+    <string name="new_cluster_where_local">自分のネットワーク</string>
+    <string name="new_cluster_where_hetzner">Hetzner のサーバー</string>
+    <string name="new_cluster_hetzner_intro">プロジェクトのトークン、サーバータイプ、ロケーション、プロジェクトの Talos スナップショット：このスマホが Primary IP を予約し、そのアドレスでクラスターのシークレットを作り、talosconfig を保存してから、サーバーを作成してブートストラップします。ワーカーは後で「ノードを追加」から追加します。</string>
+    <string name="new_cluster_hetzner_no_snapshot">このプロジェクトには %1$s 用の Talos スナップショットがありません：「ノードを追加 → Hetzner」で作成してから戻ってください。</string>
+    <string name="new_cluster_hetzner_cost">月額約 %1$s：サーバー %2$s、Primary IP %3$s。作成時から課金され、クラスターができる前に実行が失敗すると削除されます。</string>
+    <string name="new_cluster_hetzner_confirm_body">%2$s に課金される %1$s サーバーと Primary IP を作成し（月額約 %3$s）、クラスター %4$s を作ります。確認のため名前を入力してください。</string>
     <string name="new_cluster_demo">デモではアドレスに demo と入力してください。プレビューは動作しますが、クラスターの作成は拒否されます。</string>
     <string name="new_cluster_step_cluster">2. クラスター: 名前、インストール先ディスク、Kubernetes</string>
     <string name="new_cluster_step_run">3. アクセス情報を保存し、インストールしてブートストラップ</string>

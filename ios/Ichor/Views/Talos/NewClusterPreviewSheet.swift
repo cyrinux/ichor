@@ -32,7 +32,7 @@ struct NewClusterRoot<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        if JoinJob.shared.request?.newCluster != nil {
+        if JoinJob.shared.request?.newClusterName != nil {
             NavigationStack { NewClusterView() }
         } else {
             content()
@@ -44,15 +44,24 @@ struct NewClusterRoot<Content: View>: View {
 /// nothing offers to remove the context it stored.
 struct NewClusterRunSections: View {
     let request: JoinRequest
-    let start: NewClusterStart
+    /// The cluster's name, as its context is stored.
+    let name: String
 
     @Environment(AppModel.self) private var model
     @State private var confirmStop = false
     @State private var removeError: String?
     private var job: JoinJob { .shared }
 
-    /// The config reached the machine: its install goes on, the stored entry is its access.
-    private var sent: Bool { job.events.contains { $0.phase == JoinPhase.installing.rawValue } }
+    private var atHetzner: Bool { request.hetznerCluster != nil }
+
+    private func reached(_ phase: JoinPhase) -> Bool { job.events.contains { $0.phase == phase.rawValue } }
+
+    /// The config reached the machine (at Hetzner: etcd is being bootstrapped): the cluster may
+    /// exist, the stored entry is its access.
+    private var sent: Bool { reached(atHetzner ? .bootstrapping : .installing) }
+
+    /// A context was stored for the cluster (at Hetzner, only once the run handed the talosconfig over).
+    private var stored: Bool { !atHetzner || reached(.secrets) }
 
     var body: some View {
         if job.isActive {
@@ -78,7 +87,9 @@ struct NewClusterRunSections: View {
         Section {
             outcome
         } footer: {
-            if job.isActive {
+            if job.isActive && atHetzner {
+                Text("Stopping before etcd is bootstrapped deletes the server and the Primary IP this run made.")
+            } else if job.isActive {
                 Text("Once the config is sent, the install cannot be undone: stopping only stops following it.")
             }
         }
@@ -86,7 +97,11 @@ struct NewClusterRunSections: View {
             Button("Stop following", role: .destructive) { job.requestStop() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("\(start.name) goes on installing and appears on the overview once it joins.")
+            if atHetzner {
+                Text("Stopping before etcd is bootstrapped deletes the server and the Primary IP this run made.")
+            } else {
+                Text("\(name) goes on installing and appears on the overview once it joins.")
+            }
         }
     }
 
@@ -94,7 +109,7 @@ struct NewClusterRunSections: View {
         switch job.outcome {
         case .joined(let address)?:
             Label {
-                Text("\(start.name) is up: its control plane answers at \(address)")
+                Text("\(name) is up: its control plane answers at \(address)")
             } icon: {
                 Image(systemName: "checkmark.seal.fill").foregroundStyle(.statusOK)
             }
@@ -105,9 +120,14 @@ struct NewClusterRunSections: View {
             } icon: {
                 Image(systemName: "xmark.octagon.fill").foregroundStyle(.statusBad)
             }
-            if !sent && request.address != demoMaintenanceAddress {
-                Text("Nothing reached the machine: the talosconfig stored for this cluster is of no use.")
-                    .font(.footnote).foregroundStyle(.secondary)
+            if !sent && stored && request.address != demoMaintenanceAddress {
+                if atHetzner {
+                    Text("The cluster was not bootstrapped: the talosconfig stored for it is of no use.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                } else {
+                    Text("Nothing reached the machine: the talosconfig stored for this cluster is of no use.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
                 Button("Remove the cluster entry", role: .destructive) { Task { await removeEntry() } }
             }
             if let removeError {
@@ -129,7 +149,7 @@ struct NewClusterRunSections: View {
 
     private func removeEntry() async {
         do {
-            try await model.removeCluster(start.name)
+            try await model.removeCluster(name)
             job.clear()
         } catch {
             removeError = error.localizedDescription

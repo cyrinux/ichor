@@ -145,6 +145,8 @@ public struct JoinRequest: Equatable, Sendable {
     public let omniAllocate: OmniAllocateSpec?
     /// No cluster yet: the machine at `address` becomes the first control plane of this one.
     public let newCluster: NewClusterStart?
+    /// No cluster yet: a server and a Primary IP at Hetzner become a one-node cluster (`hostname` is its name).
+    public let hetznerCluster: HetznerNewClusterSpec?
 
     public init(
         address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
@@ -152,9 +154,11 @@ public struct JoinRequest: Equatable, Sendable {
         aws: AWSCreateSpec? = nil, azure: AzureCreateSpec? = nil,
         gcp: GCPCreateSpec? = nil, omni: Bool = false,
         snapshot: HetznerSnapshotSpec? = nil, awsImage: AWSImageSpec? = nil, azureImage: AzureImageSpec? = nil,
-        gcpImage: GCPImageSpec? = nil, omniAllocate: OmniAllocateSpec? = nil, newCluster: NewClusterStart? = nil
+        gcpImage: GCPImageSpec? = nil, omniAllocate: OmniAllocateSpec? = nil, newCluster: NewClusterStart? = nil,
+        hetznerCluster: HetznerNewClusterSpec? = nil
     ) {
         self.newCluster = newCluster
+        self.hetznerCluster = hetznerCluster
         self.omniAllocate = omniAllocate
         self.awsImage = awsImage
         self.azureImage = azureImage
@@ -179,13 +183,19 @@ public struct JoinRequest: Equatable, Sendable {
     public var phases: [JoinPhase] {
         if omniAllocate != nil { return JoinPhase.omniAllocateRun }
         if newCluster != nil { return JoinPhase.newClusterRun }
+        if hetznerCluster != nil { return JoinPhase.hetznerClusterRun }
         if let imageKind { return imageKind.phases }
         guard cloud else { return JoinPhase.maintenanceRun }
         return omni ? JoinPhase.cloudOmniRun : JoinPhase.cloudRun
     }
 
     /// A machine to create at a cloud provider.
-    public var cloud: Bool { hetzner != nil || ovh != nil || aws != nil || azure != nil || gcp != nil }
+    public var cloud: Bool {
+        hetzner != nil || ovh != nil || aws != nil || azure != nil || gcp != nil || hetznerCluster != nil
+    }
+
+    /// The cluster this run makes, when it makes one (from a machine, or at Hetzner).
+    public var newClusterName: String? { newCluster?.name ?? hetznerCluster?.name }
 
     /// What the run makes when it makes a Talos image instead of a node; nil for a node.
     public var imageKind: ImageRunKind? {
@@ -206,7 +216,7 @@ public struct JoinRequest: Equatable, Sendable {
             address: address, template: template, role: role, hostname: hostname, disk: disk,
             staticAddress: staticAddress, replacing: on, hetzner: hetzner, ovh: ovh, aws: aws, azure: azure, gcp: gcp,
             omni: omni, snapshot: snapshot, awsImage: awsImage, azureImage: azureImage, gcpImage: gcpImage,
-            omniAllocate: omniAllocate, newCluster: newCluster)
+            omniAllocate: omniAllocate, newCluster: newCluster, hetznerCluster: hetznerCluster)
     }
 }
 
@@ -237,20 +247,23 @@ public struct MadeImage: Equatable, Sendable {
 }
 
 /// One step of a node join (StartNodeJoin): `at` is unix ms, `address` where the node is followed.
-public struct JoinProgress: Decodable, Equatable, Sendable {
+public struct JoinProgress: Decodable, Equatable, Sendable, CustomStringConvertible {
     public let phase: String
     public let message: String
     public let at: Int64
     public let address: String
+    /// A new cluster's talosconfig, once, on its secrets step: stored, then dropped (`withoutTalosconfig`).
+    public let talosconfig: String
 
-    public init(phase: String, message: String = "", at: Int64 = 0, address: String = "") {
+    public init(phase: String, message: String = "", at: Int64 = 0, address: String = "", talosconfig: String = "") {
         self.phase = phase
         self.message = message
         self.at = at
         self.address = address
+        self.talosconfig = talosconfig
     }
 
-    private enum CodingKeys: String, CodingKey { case phase, message, at, address }
+    private enum CodingKeys: String, CodingKey { case phase, message, at, address, talosconfig }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -258,12 +271,21 @@ public struct JoinProgress: Decodable, Equatable, Sendable {
         message = try c.field(.message, "")
         at = try c.field(.at, 0)
         address = try c.field(.address, "")
+        talosconfig = try c.field(.talosconfig, "")
     }
+
+    /// The event as the timeline keeps it: the talosconfig is a credential.
+    public var withoutTalosconfig: JoinProgress {
+        JoinProgress(phase: phase, message: message, at: at, address: address)
+    }
+
+    // Never the talosconfig in a log line.
+    public var description: String { "JoinProgress(\(phase), \(message))" }
 }
 
 /// Phases of a node join, in order.
 public enum JoinPhase: String, CaseIterable, Comparable, Sendable {
-    case key, secrets, creating, starting, applying, allocated, installing, booting, rebooting, booted, joining
+    case key, ip, secrets, creating, starting, applying, allocated, installing, booting, rebooting, booted, joining
     case bootstrapping, ready, omni, registering, rescue, writing, snapshot, register, cleanup, done
 
     /// A node in maintenance mode that gets its config from the app.
@@ -272,6 +294,10 @@ public enum JoinPhase: String, CaseIterable, Comparable, Sendable {
     ]
     /// A new cluster: its talosconfig stored, its first control plane installed and bootstrapped.
     public static let newClusterRun: [JoinPhase] = [.secrets, .applying, .installing, .booted, .bootstrapping, .ready]
+    /// A new cluster at Hetzner: its Primary IP, its talosconfig stored, its server created and bootstrapped.
+    public static let hetznerClusterRun: [JoinPhase] = [
+        .ip, .secrets, .creating, .starting, .booted, .bootstrapping, .ready,
+    ]
     /// A server created with the config as its user data.
     public static let cloudRun: [JoinPhase] = [
         .creating, .starting, .rebooting, .booted, .joining, .registering, .done,

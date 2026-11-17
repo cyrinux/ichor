@@ -242,6 +242,7 @@ internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() 
 internal val JoinPhase.label: Int
     get() = when (this) {
         JoinPhase.KEY -> R.string.hetzner_phase_key
+        JoinPhase.IP -> R.string.hetzner_phase_ip
         JoinPhase.SECRETS -> R.string.join_phase_secrets
         JoinPhase.BOOTSTRAPPING -> R.string.join_phase_bootstrapping
         JoinPhase.READY -> R.string.join_phase_ready
