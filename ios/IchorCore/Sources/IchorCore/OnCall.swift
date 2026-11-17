@@ -11,25 +11,47 @@ public struct OnCallConfig: Codable, Equatable, Sendable {
     public var from: String
     public var serviceIds: [String]
     public var region: String
+    /// Grafana IRM: the stack's OnCall API address.
+    public var baseURL: String
 
     public static let kindPagerDuty = "pagerduty"
+    public static let kindGrafana = "grafana"
     public static let regionUS = "us"
     public static let regionEU = "eu"
 
     public init(
         kind: String = OnCallConfig.kindPagerDuty, token: String = "", from: String = "", serviceIds: [String] = [],
-        region: String = OnCallConfig.regionUS
+        region: String = OnCallConfig.regionUS, baseURL: String = ""
     ) {
         self.kind = kind
         self.token = token
         self.from = from
         self.serviceIds = serviceIds
         self.region = region
+        self.baseURL = baseURL
     }
 
-    /// Enough to ask PagerDuty for incidents.
+    private enum CodingKeys: String, CodingKey {
+        case kind, token, from, serviceIds, region, baseURL
+    }
+
+    /// Settings saved before a field existed read it as empty, not as a failure.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try c.decodeIfPresent(String.self, forKey: .kind) ?? OnCallConfig.kindPagerDuty
+        token = try c.decodeIfPresent(String.self, forKey: .token) ?? ""
+        from = try c.decodeIfPresent(String.self, forKey: .from) ?? ""
+        serviceIds = try c.decodeIfPresent([String].self, forKey: .serviceIds) ?? []
+        region = try c.decodeIfPresent(String.self, forKey: .region) ?? OnCallConfig.regionUS
+        baseURL = try c.decodeIfPresent(String.self, forKey: .baseURL) ?? ""
+    }
+
+    public var isGrafana: Bool { kind == OnCallConfig.kindGrafana }
+
+    /// Enough to ask the provider for incidents.
     public var isSet: Bool {
-        !token.trimmingCharacters(in: .whitespaces).isEmpty && !serviceIds.isEmpty
+        guard !token.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+        return isGrafana ? !baseURL.trimmingCharacters(in: .whitespaces).isEmpty : !serviceIds.isEmpty
     }
 }
 

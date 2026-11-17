@@ -6254,6 +6254,14 @@
     <string name="oncall_page_ack_failed">Échec de l\'acquittement : %1$s</string>
     <string name="oncall_page_no_incident">Aucun incident ouvert pour cette alerte</string>
     <string name="oncall_restore_note">Saisissez de nouveau le jeton d\'astreinte : les sauvegardes ne le contiennent jamais.</string>
+    <string name="oncall_grafana">Grafana IRM</string>
+    <string name="oncall_grafana_url">URL de l\'API Grafana IRM</string>
+    <string name="oncall_grafana_url_hint">Collez https://&lt;stack&gt;.grafana.net/api/plugins/grafana-irm-app/resources/api/v1</string>
+    <string name="oncall_grafana_section">Groupe d\'alertes Grafana IRM</string>
+    <string name="oncall_grafana_open">Ouvrir dans Grafana IRM</string>
+    <string name="oncall_grafana_resolve_body">Grafana IRM résout ce groupe d\'alertes pour toutes les personnes d\'astreinte.</string>
+    <string name="oncall_grafana_action_failed">Grafana IRM: %1$s</string>
+    <string name="oncall_grafana_load_failed">Impossible de lire Grafana IRM : %1$s</string>
     <string name="log_search_title">Recherche dans les logs</string>
     <string name="log_search_source">Backend de logs</string>
     <string name="log_search_none_found">Aucun backend de logs trouvé</string>

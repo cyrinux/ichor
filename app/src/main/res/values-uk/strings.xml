@@ -6512,6 +6512,14 @@
     <string name="oncall_page_ack_failed">Не вдалося підтвердити: %1$s</string>
     <string name="oncall_page_no_incident">Немає відкритого інциденту для цього сповіщення</string>
     <string name="oncall_restore_note">Задайте токен чергування знову: до резервних копій він не потрапляє.</string>
+    <string name="oncall_grafana">Grafana IRM</string>
+    <string name="oncall_grafana_url">URL API Grafana IRM</string>
+    <string name="oncall_grafana_url_hint">Вставте https://&lt;stack&gt;.grafana.net/api/plugins/grafana-irm-app/resources/api/v1</string>
+    <string name="oncall_grafana_section">Група сповіщень Grafana IRM</string>
+    <string name="oncall_grafana_open">Відкрити в Grafana IRM</string>
+    <string name="oncall_grafana_resolve_body">Grafana IRM закриє цю групу сповіщень для всіх чергових.</string>
+    <string name="oncall_grafana_action_failed">Grafana IRM: %1$s</string>
+    <string name="oncall_grafana_load_failed">Не вдалося прочитати Grafana IRM: %1$s</string>
     <string name="log_search_title">Пошук у логах</string>
     <string name="log_search_source">Сховище логів</string>
     <string name="log_search_none_found">Сховище логів не знайдено</string>

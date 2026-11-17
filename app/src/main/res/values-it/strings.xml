@@ -6254,6 +6254,14 @@
     <string name="oncall_page_ack_failed">Conferma non riuscita: %1$s</string>
     <string name="oncall_page_no_incident">Nessun incidente aperto per questo avviso</string>
     <string name="oncall_restore_note">Imposta di nuovo il token di reperibilità: i backup non lo contengono mai.</string>
+    <string name="oncall_grafana">Grafana IRM</string>
+    <string name="oncall_grafana_url">URL dell\'API di Grafana IRM</string>
+    <string name="oncall_grafana_url_hint">Incolla https://&lt;stack&gt;.grafana.net/api/plugins/grafana-irm-app/resources/api/v1</string>
+    <string name="oncall_grafana_section">Gruppo di avvisi Grafana IRM</string>
+    <string name="oncall_grafana_open">Apri in Grafana IRM</string>
+    <string name="oncall_grafana_resolve_body">Grafana IRM risolve questo gruppo di avvisi per tutti i reperibili.</string>
+    <string name="oncall_grafana_action_failed">Grafana IRM: %1$s</string>
+    <string name="oncall_grafana_load_failed">Impossibile leggere Grafana IRM: %1$s</string>
     <string name="log_search_title">Ricerca nei log</string>
     <string name="log_search_source">Backend dei log</string>
     <string name="log_search_none_found">Nessun backend dei log trovato</string>

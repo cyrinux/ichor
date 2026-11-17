@@ -752,7 +752,8 @@ func runRolloutPause(e env) (out string, err error) {
 }
 
 // probeOnCallIncidents lists the open incidents of the on-call settings in ONCALL_JSON_FILE
-// ({"kind":"pagerduty","token":…,"from":…,"serviceIds":[…],"region":"us"}), matched to the alerts of
+// ({"kind":"pagerduty","token":…,"from":…,"serviceIds":[…],"region":"us"}, or
+// {"kind":"grafana","token":…,"baseURL":"https://<stack>.grafana.net/api/plugins/grafana-irm-app/resources/api/v1"}), matched to the alerts of
 // AM_ALERTS_JSON_FILE ([{fingerprint,labels}]) when given.
 func probeOnCallIncidents(e env) (string, error) {
 	if flag.NArg() < 2 {

@@ -20,6 +20,22 @@ final class OnCallTests: XCTestCase {
         XCTAssertTrue(OnCallConfig(token: "sample", serviceIds: ["P1"]).isSet)
     }
 
+    func testGrafanaConfigIsSetNeedsATokenAndABaseURL() {
+        let grafana = OnCallConfig(kind: OnCallConfig.kindGrafana, token: "sample")
+        XCTAssertFalse(grafana.isSet)
+        var withURL = grafana
+        withURL.baseURL = "https://sample.grafana.net/api/plugins/grafana-irm-app/resources/api/v1"
+        XCTAssertTrue(withURL.isSet)
+        XCTAssertTrue(withURL.isGrafana)
+    }
+
+    func testSettingsSavedBeforeGrafanaStillRead() throws {
+        let old = Data(#"{"kind":"pagerduty","token":"sample","from":"","serviceIds":["P1"],"region":"eu"}"#.utf8)
+        let config = try JSONDecoder().decode(OnCallConfig.self, from: old)
+        XCTAssertEqual(config, OnCallConfig(token: "sample", serviceIds: ["P1"], region: OnCallConfig.regionEU))
+        XCTAssertTrue(config.isSet)
+    }
+
     func testAcknowledgePageTakesTheAcknowledgePlace() {
         let paged = alertActions(key: "am:f00d", problem: true, canWake: false, canAcknowledgePage: true)
         XCTAssertEqual(paged, [.silence, .acknowledgePage, .snooze])

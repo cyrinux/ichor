@@ -65,15 +65,18 @@ private sealed interface TestState {
 }
 
 /**
- * The on-call integration of the cluster [fingerprint]: PagerDuty for now, its token (masked, never
- * read back into the field: left empty it keeps the stored one), the email it acts as, the region,
- * the services to watch, Test, and Delete to remove it from this device.
+ * The on-call integration of the cluster [fingerprint]: PagerDuty or Grafana IRM, its token (masked,
+ * never read back into the field: left empty it keeps the stored one of the same provider); for
+ * PagerDuty the email it acts as, the region and the services to watch, for Grafana IRM the stack's
+ * API address; Test, and Delete to remove it from this device.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 internal fun OnCallSheet(app: TalosApp, fingerprint: String, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     var stored by remember { mutableStateOf(OnCallConfig()) }
+    var kind by remember { mutableStateOf(OnCallConfig.KIND_PAGERDUTY) }
+    var baseURL by remember { mutableStateOf("") }
     var token by remember { mutableStateOf("") }
     var from by remember { mutableStateOf("") }
     var region by remember { mutableStateOf(OnCallConfig.REGION_US) }
@@ -84,12 +87,23 @@ internal fun OnCallSheet(app: TalosApp, fingerprint: String, onDismiss: () -> Un
     LaunchedEffect(fingerprint) {
         val read = withContext(Dispatchers.IO) { app.onCallStore.read(fingerprint) }
         stored = read
+        kind = read.kind
+        baseURL = read.baseURL
         from = read.from
         region = read.region
         services = read.serviceIds
     }
 
-    fun current() = OnCallConfig(token = token.trim().ifEmpty { stored.token }, from = from.trim(), serviceIds = services, region = region)
+    // A token saved for the other provider is not offered to this one.
+    val savedToken = if (stored.kind == kind) stored.token else ""
+    fun current() = OnCallConfig(
+        kind = kind,
+        token = token.trim().ifEmpty { savedToken },
+        from = from.trim(),
+        serviceIds = services,
+        region = region,
+        baseURL = baseURL.trim(),
+    )
     fun addService() {
         val id = service.trim()
         if (id.isNotEmpty() && id !in services) services = services + id
@@ -104,9 +118,17 @@ internal fun OnCallSheet(app: TalosApp, fingerprint: String, onDismiss: () -> Un
             Text(stringResource(R.string.oncall_title), style = MaterialTheme.typography.titleLarge)
             Text(stringResource(R.string.oncall_provider), style = MaterialTheme.typography.labelLarge)
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                SegmentedButton(selected = true, onClick = {}, shape = SegmentedButtonDefaults.itemShape(0, 1)) {
-                    Text(stringResource(R.string.oncall_pagerduty))
-                }
+                listOf(OnCallConfig.KIND_PAGERDUTY to R.string.oncall_pagerduty, OnCallConfig.KIND_GRAFANA to R.string.oncall_grafana)
+                    .forEachIndexed { index, (value, label) ->
+                        SegmentedButton(
+                            selected = kind == value,
+                            onClick = {
+                                kind = value
+                                test = TestState.Idle
+                            },
+                            shape = SegmentedButtonDefaults.itemShape(index, 2),
+                        ) { Text(stringResource(label)) }
+                    }
             }
             OutlinedTextField(
                 value = token,
@@ -115,51 +137,66 @@ internal fun OnCallSheet(app: TalosApp, fingerprint: String, onDismiss: () -> Un
                     test = TestState.Idle
                 },
                 label = { Text(stringResource(R.string.oncall_token)) },
-                supportingText = if (stored.token.isNotEmpty() && token.isEmpty()) ({ Text(stringResource(R.string.oncall_token_saved)) }) else null,
+                supportingText = if (savedToken.isNotEmpty() && token.isEmpty()) ({ Text(stringResource(R.string.oncall_token_saved)) }) else null,
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false),
                 modifier = Modifier.fillMaxWidth(),
             )
-            OutlinedTextField(
-                value = from,
-                onValueChange = { from = it },
-                label = { Text(stringResource(R.string.oncall_from)) },
-                supportingText = { Text(stringResource(R.string.oncall_from_hint)) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, autoCorrectEnabled = false),
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Text(stringResource(R.string.oncall_region), style = MaterialTheme.typography.labelLarge)
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                listOf(OnCallConfig.REGION_US to R.string.oncall_region_us, OnCallConfig.REGION_EU to R.string.oncall_region_eu).forEachIndexed { index, (value, label) ->
-                    SegmentedButton(selected = region == value, onClick = { region = value }, shape = SegmentedButtonDefaults.itemShape(index, 2)) {
-                        Text(stringResource(label))
+            if (kind == OnCallConfig.KIND_GRAFANA) {
+                OutlinedTextField(
+                    value = baseURL,
+                    onValueChange = {
+                        baseURL = it
+                        test = TestState.Idle
+                    },
+                    label = { Text(stringResource(R.string.oncall_grafana_url)) },
+                    supportingText = { Text(stringResource(R.string.oncall_grafana_url_hint)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                OutlinedTextField(
+                    value = from,
+                    onValueChange = { from = it },
+                    label = { Text(stringResource(R.string.oncall_from)) },
+                    supportingText = { Text(stringResource(R.string.oncall_from_hint)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, autoCorrectEnabled = false),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text(stringResource(R.string.oncall_region), style = MaterialTheme.typography.labelLarge)
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    listOf(OnCallConfig.REGION_US to R.string.oncall_region_us, OnCallConfig.REGION_EU to R.string.oncall_region_eu).forEachIndexed { index, (value, label) ->
+                        SegmentedButton(selected = region == value, onClick = { region = value }, shape = SegmentedButtonDefaults.itemShape(index, 2)) {
+                            Text(stringResource(label))
+                        }
                     }
                 }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = service,
-                    onValueChange = { service = it },
-                    label = { Text(stringResource(R.string.oncall_service_ids)) },
-                    supportingText = { Text(stringResource(R.string.oncall_service_hint)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
-                    modifier = Modifier.weight(1f),
-                )
-                IchorTextButton(onClick = ::addService, enabled = service.isNotBlank()) { Text(stringResource(R.string.oncall_service_add)) }
-            }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                services.forEach { id ->
-                    InputChip(
-                        selected = false,
-                        onClick = { services = services - id },
-                        label = { Text(id) },
-                        trailingIcon = {
-                            Icon(Icons.Outlined.Close, stringResource(R.string.oncall_service_remove, id), Modifier.size(18.dp))
-                        },
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = service,
+                        onValueChange = { service = it },
+                        label = { Text(stringResource(R.string.oncall_service_ids)) },
+                        supportingText = { Text(stringResource(R.string.oncall_service_hint)) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
+                        modifier = Modifier.weight(1f),
                     )
+                    IchorTextButton(onClick = ::addService, enabled = service.isNotBlank()) { Text(stringResource(R.string.oncall_service_add)) }
+                }
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    services.forEach { id ->
+                        InputChip(
+                            selected = false,
+                            onClick = { services = services - id },
+                            label = { Text(id) },
+                            trailingIcon = {
+                                Icon(Icons.Outlined.Close, stringResource(R.string.oncall_service_remove, id), Modifier.size(18.dp))
+                            },
+                        )
+                    }
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

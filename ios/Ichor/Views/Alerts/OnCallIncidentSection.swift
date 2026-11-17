@@ -26,10 +26,12 @@ struct OnCallBadgeLabel: View {
 }
 
 /// The incident behind an alert in its sheet: its state and title, how sure the match is, Acknowledge
-/// unless already done, Resolve after one question, and the link to PagerDuty. A failure stays here.
+/// unless already done, Resolve after one question, and the link to the pager. A failure stays here.
 struct OnCallIncidentSection: View {
     let incident: OnCallIncident
     let confidence: OnCallConfidence
+    /// The pager is Grafana IRM: alert groups, not numbered PagerDuty incidents.
+    var grafana = false
     /// Runs the verb and reloads; nil when done, else why not.
     let act: (OnCallVerb) async -> String?
 
@@ -38,13 +40,16 @@ struct OnCallIncidentSection: View {
     @State private var confirmingResolve = false
 
     var body: some View {
-        Section("PagerDuty incident") {
+        Section(grafana ? String(localized: "Grafana IRM alert group") : String(localized: "PagerDuty incident")) {
             OnCallBadgeLabel(incident: incident)
             Text(verbatim: incident.title).textSelection(.enabled)
-            LabeledContent {
-                Text(verbatim: incident.service)
-            } label: {
-                Text("Incident #\(String(incident.number))")
+            // A Grafana IRM alert group has no number.
+            if incident.number > 0 {
+                LabeledContent {
+                    Text(verbatim: incident.service)
+                } label: {
+                    Text("Incident #\(String(incident.number))")
+                }
             }
             if confidence != .exact {
                 Text("Matched by alert name only: check it is the same incident.").font(.footnote)
@@ -55,10 +60,12 @@ struct OnCallIncidentSection: View {
             }
             Button("Resolve", role: .destructive) { confirmingResolve = true }.disabled(busy)
             if let url = URL(string: incident.url), url.scheme?.lowercased() == "https" {
-                Link(destination: url) { Text("Open in PagerDuty") }
+                Link(destination: url) {
+                    Text(grafana ? String(localized: "Open in Grafana IRM") : String(localized: "Open in PagerDuty"))
+                }
             }
             if let failure {
-                Text("PagerDuty: \(failure)").font(.footnote).foregroundStyle(.red)
+                Text(verbatim: onCallFailure(failure, grafana: grafana)).font(.footnote).foregroundStyle(.red)
             }
         }
         .confirmationDialog(
@@ -67,7 +74,11 @@ struct OnCallIncidentSection: View {
             Button("Resolve", role: .destructive) { run(.resolve) }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("PagerDuty closes incident #\(String(incident.number)) for everyone on call.")
+            if grafana {
+                Text("Grafana IRM resolves this alert group for everyone on call.")
+            } else {
+                Text("PagerDuty closes incident #\(String(incident.number)) for everyone on call.")
+            }
         }
     }
 
@@ -79,4 +90,9 @@ struct OnCallIncidentSection: View {
             busy = false
         }
     }
+}
+
+/// Why the pager refused or failed, named after it.
+func onCallFailure(_ message: String, grafana: Bool) -> String {
+    grafana ? String(localized: "Grafana IRM: \(message)") : String(localized: "PagerDuty: \(message)")
 }

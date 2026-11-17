@@ -84,6 +84,7 @@ fun AlertSheet(
     onSilence: () -> Unit,
     onDismiss: () -> Unit,
     onCall: OnCallIncidents? = null,
+    onCallGrafana: Boolean = false,
     onCallBusy: (String) -> Boolean = { false },
     onCallAct: (OnCallIncident, String) -> Unit = { _, _ -> },
     explainSource: String? = null,
@@ -141,6 +142,7 @@ fun AlertSheet(
                     incident,
                     onCall.matches[alert.fingerprint]?.confidence.orEmpty(),
                     onCallBusy(incident.id),
+                    grafana = onCallGrafana,
                 ) { verb -> onCallAct(incident, verb) }
             }
             SectionTitle(stringResource(R.string.alerts_labels))

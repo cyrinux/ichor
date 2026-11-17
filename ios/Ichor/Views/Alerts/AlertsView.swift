@@ -35,6 +35,8 @@ struct AlertsView: View {
     @State private var onCall: OnCallIncidents?
     /// Why the last read of the incidents failed; what was read before stays.
     @State private var onCallError: String?
+    /// The cluster's pager is Grafana IRM.
+    @State private var onCallGrafana = false
     @State private var selected: AMAlert?
     /// Silence 1 h chosen on the selected alert's notification: the comment its form starts with.
     @State private var silenceComment: String?
@@ -115,6 +117,7 @@ struct AlertsView: View {
                 incident: onCall?.incident(of: alert.fingerprint),
                 confidence: onCall?.matches[alert.fingerprint]?.confidence ?? .alertname,
                 actOnIncident: actOnIncident,
+                onCallGrafana: onCallGrafana,
                 explainSource: source.flatMap { try? TalosJSON.encode($0) })
         }
         .sheet(isPresented: $sourceOpen) {
@@ -241,7 +244,9 @@ struct AlertsView: View {
                         .secondary)
                 }
                 if let onCallError {
-                    LoadFailureRow(message: "PagerDuty: \(onCallError)", retry: { await reload() }, compact: true)
+                    LoadFailureRow(
+                        message: onCallFailure(onCallError, grafana: onCallGrafana),
+                        retry: { await reload() }, compact: true)
                 }
                 ForEach(groups) { group in
                     Section {
@@ -428,6 +433,7 @@ struct AlertsView: View {
     private func loadOnCall(_ alerts: AMAlerts, client: TalosClient, key: String) async {
         let demo = model.activeSummary?.demo == true
         let config = demo ? OnCallConfig() : OnCallStore.read(fingerprint)
+        onCallGrafana = config.isGrafana
         guard demo || config.isSet else {
             onCall = nil
             onCallError = nil

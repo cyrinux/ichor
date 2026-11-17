@@ -6516,6 +6516,14 @@
     <string name="oncall_page_ack_failed">Не удалось подтвердить: %1$s</string>
     <string name="oncall_page_no_incident">Нет открытого инцидента для этого оповещения</string>
     <string name="oncall_restore_note">Задайте токен дежурства снова: в резервные копии он не попадает.</string>
+    <string name="oncall_grafana">Grafana IRM</string>
+    <string name="oncall_grafana_url">URL API Grafana IRM</string>
+    <string name="oncall_grafana_url_hint">Вставьте https://&lt;stack&gt;.grafana.net/api/plugins/grafana-irm-app/resources/api/v1</string>
+    <string name="oncall_grafana_section">Группа оповещений Grafana IRM</string>
+    <string name="oncall_grafana_open">Открыть в Grafana IRM</string>
+    <string name="oncall_grafana_resolve_body">Grafana IRM закроет эту группу оповещений для всех дежурных.</string>
+    <string name="oncall_grafana_action_failed">Grafana IRM: %1$s</string>
+    <string name="oncall_grafana_load_failed">Не удалось прочитать Grafana IRM: %1$s</string>
     <string name="log_search_title">Поиск по логам</string>
     <string name="log_search_source">Хранилище логов</string>
     <string name="log_search_none_found">Хранилище логов не найдено</string>

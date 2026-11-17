@@ -6249,6 +6249,14 @@
     <string name="oncall_page_ack_failed">Não foi possível reconhecer: %1$s</string>
     <string name="oncall_page_no_incident">Nenhum incidente aberto para este alerta</string>
     <string name="oncall_restore_note">Defina o token de plantão novamente: os backups nunca o incluem.</string>
+    <string name="oncall_grafana">Grafana IRM</string>
+    <string name="oncall_grafana_url">URL da API do Grafana IRM</string>
+    <string name="oncall_grafana_url_hint">Cole https://&lt;stack&gt;.grafana.net/api/plugins/grafana-irm-app/resources/api/v1</string>
+    <string name="oncall_grafana_section">Grupo de alertas do Grafana IRM</string>
+    <string name="oncall_grafana_open">Abrir no Grafana IRM</string>
+    <string name="oncall_grafana_resolve_body">O Grafana IRM resolve este grupo de alertas para todos de plantão.</string>
+    <string name="oncall_grafana_action_failed">Grafana IRM: %1$s</string>
+    <string name="oncall_grafana_load_failed">Não foi possível ler o Grafana IRM: %1$s</string>
     <string name="log_search_title">Busca de logs</string>
     <string name="log_search_source">Backend de logs</string>
     <string name="log_search_none_found">Nenhum backend de logs encontrado</string>

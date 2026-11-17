@@ -56,6 +56,8 @@ data class AlertsState(
     val onCall: OnCallIncidents? = null,
     /** Why the last read of the incidents failed; what was read before stays. */
     val onCallError: String? = null,
+    /** The integration is Grafana IRM: alert groups, not numbered PagerDuty incidents. */
+    val onCallGrafana: Boolean = false,
 )
 
 /** The outcome of a silence created ([silenceId]) or expired, of a verb on an incident ([onCallVerb]), or why it failed. */
@@ -173,12 +175,17 @@ class AlertsViewModel(
     private fun loadOnCall(alerts: AmAlerts) {
         onCallJob?.cancel()
         onCallJob = viewModelScope.launch {
+            var grafana = false
             val outcome = cancellableCatching {
                 val config = onCallConfig()
+                grafana = config.kind == OnCallConfig.KIND_GRAFANA
                 if (demo || config.isSet) onCall.incidents(config, alerts) else null
             }
             _state.update { s ->
-                outcome.fold({ s.copy(onCall = it, onCallError = null) }, { s.copy(onCallError = it.userMessage()) })
+                outcome.fold(
+                    { s.copy(onCall = it, onCallError = null, onCallGrafana = grafana) },
+                    { s.copy(onCallError = it.userMessage(), onCallGrafana = grafana) },
+                )
             }
         }
     }

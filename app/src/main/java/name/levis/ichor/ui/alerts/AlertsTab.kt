@@ -62,10 +62,14 @@ fun AlertsTab(
     rowCallbacks: AlertRowCallbacks,
     onCall: OnCallIncidents? = null,
     onCallError: String? = null,
+    onCallGrafana: Boolean = false,
 ) {
     Column(Modifier.fillMaxSize()) {
         FilterBar(filter, onFilter)
-        onCallError?.let { MutedText(stringResource(R.string.oncall_load_failed, it), Modifier.padding(horizontal = 16.dp)) }
+        onCallError?.let {
+            val text = if (onCallGrafana) R.string.oncall_grafana_load_failed else R.string.oncall_load_failed
+            MutedText(stringResource(text, it), Modifier.padding(horizontal = 16.dp))
+        }
         when (state) {
             UiState.Loading -> LoadingBox()
             is UiState.Failed -> ErrorBox(state.message, onRefresh)

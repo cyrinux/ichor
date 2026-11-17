@@ -51,13 +51,15 @@ fun OnCallBadge(incident: OnCallIncident, modifier: Modifier = Modifier) {
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun OnCallIncidentSection(incident: OnCallIncident, confidence: String, busy: Boolean, onAct: (String) -> Unit) {
+fun OnCallIncidentSection(incident: OnCallIncident, confidence: String, busy: Boolean, grafana: Boolean = false, onAct: (String) -> Unit) {
     val uri = LocalUriHandler.current
     var confirmResolve by remember { mutableStateOf(false) }
-    SectionTitle(stringResource(R.string.oncall_section))
+    SectionTitle(stringResource(if (grafana) R.string.oncall_grafana_section else R.string.oncall_section))
     OnCallBadge(incident)
     Text(incident.title)
-    MutedText(listOf(stringResource(R.string.oncall_incident_number, incident.number.toString()), incident.service).filter { it.isNotEmpty() }.joinToString(" · "))
+    // A Grafana IRM alert group has no number.
+    val number = if (incident.number > 0) stringResource(R.string.oncall_incident_number, incident.number.toString()) else ""
+    MutedText(listOf(number, incident.service).filter { it.isNotEmpty() }.joinToString(" · "))
     if (confidence != OnCallConfidence.EXACT) MutedText(stringResource(R.string.oncall_match_by_name))
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (incident.status == OnCallStatus.TRIGGERED) {
@@ -65,12 +67,15 @@ fun OnCallIncidentSection(incident: OnCallIncident, confidence: String, busy: Bo
         }
         IchorOutlinedButton(onClick = { confirmResolve = true }, enabled = !busy) { Text(stringResource(R.string.oncall_resolve)) }
         if (incident.url.isNotEmpty()) {
-            IchorOutlinedButton(onClick = { runCatching { uri.openUri(incident.url) } }) { Text(stringResource(R.string.oncall_open)) }
+            IchorOutlinedButton(onClick = { runCatching { uri.openUri(incident.url) } }) {
+                Text(stringResource(if (grafana) R.string.oncall_grafana_open else R.string.oncall_open))
+            }
         }
     }
     if (confirmResolve) {
         OnCallResolveDialog(
             incident,
+            grafana = grafana,
             onConfirm = {
                 confirmResolve = false
                 onAct(OnCallVerb.RESOLVE)
@@ -82,11 +87,13 @@ fun OnCallIncidentSection(incident: OnCallIncident, confidence: String, busy: Bo
 
 /** The one question before resolving [incident]: PagerDuty closes it for everyone on call. */
 @Composable
-fun OnCallResolveDialog(incident: OnCallIncident, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+fun OnCallResolveDialog(incident: OnCallIncident, grafana: Boolean = false, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.oncall_resolve_title)) },
-        text = { Text(stringResource(R.string.oncall_resolve_body, incident.number.toString())) },
+        text = {
+            Text(if (grafana) stringResource(R.string.oncall_grafana_resolve_body) else stringResource(R.string.oncall_resolve_body, incident.number.toString()))
+        },
         confirmButton = { IchorTextButton(onClick = onConfirm) { Text(stringResource(R.string.oncall_resolve)) } },
         dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )

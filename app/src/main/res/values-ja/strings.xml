@@ -6114,6 +6114,14 @@
     <string name="oncall_page_ack_failed">確認応答できませんでした: %1$s</string>
     <string name="oncall_page_no_incident">このアラートに対応する未解決のインシデントはありません</string>
     <string name="oncall_restore_note">オンコールトークンを再設定してください。バックアップには含まれません。</string>
+    <string name="oncall_grafana">Grafana IRM</string>
+    <string name="oncall_grafana_url">Grafana IRM API の URL</string>
+    <string name="oncall_grafana_url_hint">https://&lt;stack&gt;.grafana.net/api/plugins/grafana-irm-app/resources/api/v1 を貼り付けます</string>
+    <string name="oncall_grafana_section">Grafana IRM アラートグループ</string>
+    <string name="oncall_grafana_open">Grafana IRM で開く</string>
+    <string name="oncall_grafana_resolve_body">Grafana IRM はオンコールの全員に対してこのアラートグループを解決します。</string>
+    <string name="oncall_grafana_action_failed">Grafana IRM: %1$s</string>
+    <string name="oncall_grafana_load_failed">Grafana IRM を読み取れませんでした: %1$s</string>
     <string name="log_search_title">ログ検索</string>
     <string name="log_search_source">ログバックエンド</string>
     <string name="log_search_none_found">ログバックエンドが見つかりません</string>
