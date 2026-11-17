@@ -314,7 +314,7 @@ struct HetznerCreateSection: View {
 }
 
 /// A project label and its token: masked, tested, then sealed. A read-only token is not saved.
-private struct HetznerTokenSheet: View {
+struct HetznerTokenSheet: View {
     let onSaved: (String) -> Void
 
     @Environment(\.dismiss) private var dismiss
