@@ -167,7 +167,7 @@ private fun ClusterForm(options: HetznerOptions, vm: HetznerCreateViewModel, onC
     when (val state = cost) {
         null -> Unit
         UiState.Loading -> LoadingBox()
-        is UiState.Failed -> ErrorBox(state.message) { attempt++ }
+        is UiState.Failed -> ErrorBox(state.message, onRetry = { attempt += 1 })
         is UiState.Loaded -> Text(
             stringResource(
                 R.string.new_cluster_hetzner_cost,
