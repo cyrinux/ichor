@@ -4363,6 +4363,16 @@
     <string name="kube_signin_teleport_connector">登录连接器</string>
     <string name="kube_signin_teleport_explain">在浏览器中登录你的 Teleport 代理，并保留一个短期证书；证书过期后需重新登录。</string>
     <string name="kube_signin_teleport_sign_out_note">这会从手机中移除证书。</string>
+    <string name="kube_signin_teleport_signed_in_at_proxy">已在此代理以 %1$s 身份登录；此集群只需要获取它的证书。</string>
+    <string name="kube_signin_teleport_get_cert">获取 %1$s 的证书</string>
+    <string name="kube_signin_teleport_clusters">此代理下的 Kubernetes 集群</string>
+    <string name="kube_signin_teleport_cert_until">证书有效期至 %1$s</string>
+    <string name="kube_signin_teleport_no_cert">无证书</string>
+    <string name="kube_signin_teleport_add_hint">这里只列出在此添加的集群：可按其在 Teleport 中的名称添加其他集群。登录时会再次打开浏览器，身份提供方通常会跳过密码。</string>
+    <string name="kube_signin_teleport_add_label">Kubernetes 集群名称</string>
+    <string name="kube_signin_teleport_add">按名称添加集群</string>
+    <string name="kube_signin_teleport_sign_out_all">退出此 Teleport 代理</string>
+    <string name="kube_signin_teleport_sign_out_all_body">这会从手机中移除此代理的所有证书。其每个集群都会要求你重新登录。</string>
     <string name="kube_field_omni_service_account_key">服务账号密钥（OMNI_SERVICE_ACCOUNT_KEY）</string>
     <string name="import_omni_identity">Omni 身份</string>
     <string name="import_omni_cluster">Omni 集群</string>

@@ -4693,6 +4693,16 @@
     <string name="kube_signin_teleport_connector">Коннектор входа</string>
     <string name="kube_signin_teleport_explain">Входит на ваш прокси Teleport в браузере и хранит краткосрочный сертификат; когда он истекает, вы входите снова.</string>
     <string name="kube_signin_teleport_sign_out_note">Сертификат будет удалён с телефона.</string>
+    <string name="kube_signin_teleport_signed_in_at_proxy">Вы вошли как %1$s на этом прокси; этому кластеру нужен только его сертификат.</string>
+    <string name="kube_signin_teleport_get_cert">Получить сертификат для %1$s</string>
+    <string name="kube_signin_teleport_clusters">Кластеры Kubernetes на этом прокси</string>
+    <string name="kube_signin_teleport_cert_until">Сертификат до %1$s</string>
+    <string name="kube_signin_teleport_no_cert">Нет сертификата</string>
+    <string name="kube_signin_teleport_add_hint">Показаны только кластеры, добавленные здесь: добавьте другой по его имени в Teleport. Вход снова откроет браузер; провайдер удостоверений обычно не спрашивает пароль.</string>
+    <string name="kube_signin_teleport_add_label">Имя кластера Kubernetes</string>
+    <string name="kube_signin_teleport_add">Добавить кластер по имени</string>
+    <string name="kube_signin_teleport_sign_out_all">Выйти из этого прокси Teleport</string>
+    <string name="kube_signin_teleport_sign_out_all_body">Все сертификаты этого прокси будут удалены с телефона. Каждый из его кластеров попросит войти снова.</string>
     <string name="kube_field_omni_service_account_key">Ключ сервисного аккаунта (OMNI_SERVICE_ACCOUNT_KEY)</string>
     <string name="import_omni_identity">Идентификатор Omni</string>
     <string name="import_omni_cluster">Кластер Omni</string>

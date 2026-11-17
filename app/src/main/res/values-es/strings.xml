@@ -4478,6 +4478,16 @@
     <string name="kube_signin_teleport_connector">Conector de inicio de sesión</string>
     <string name="kube_signin_teleport_explain">Inicia sesión en tu proxy de Teleport en el navegador y guarda un certificado de corta duración; cuando caduca, vuelves a iniciar sesión.</string>
     <string name="kube_signin_teleport_sign_out_note">Esto elimina el certificado del teléfono.</string>
+    <string name="kube_signin_teleport_signed_in_at_proxy">Sesión iniciada como %1$s en este proxy; este clúster solo necesita su certificado.</string>
+    <string name="kube_signin_teleport_get_cert">Obtener un certificado para %1$s</string>
+    <string name="kube_signin_teleport_clusters">Clústeres de Kubernetes en este proxy</string>
+    <string name="kube_signin_teleport_cert_until">Certificado hasta %1$s</string>
+    <string name="kube_signin_teleport_no_cert">Sin certificado</string>
+    <string name="kube_signin_teleport_add_hint">Solo se muestran los clústeres añadidos aquí: añade otro con su nombre en Teleport. Su inicio de sesión vuelve a abrir el navegador; tu proveedor de identidad suele omitir la contraseña.</string>
+    <string name="kube_signin_teleport_add_label">Nombre del clúster de Kubernetes</string>
+    <string name="kube_signin_teleport_add">Añadir un clúster por su nombre</string>
+    <string name="kube_signin_teleport_sign_out_all">Cerrar sesión en este proxy de Teleport</string>
+    <string name="kube_signin_teleport_sign_out_all_body">Esto elimina del teléfono todos los certificados de este proxy. Cada uno de sus clústeres te pedirá que vuelvas a iniciar sesión.</string>
     <string name="kube_field_omni_service_account_key">Clave de la cuenta de servicio (OMNI_SERVICE_ACCOUNT_KEY)</string>
     <string name="import_omni_identity">Identidad de Omni</string>
     <string name="import_omni_cluster">Clúster de Omni</string>

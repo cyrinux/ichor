@@ -38,12 +38,14 @@ type fakeTeleport struct {
 	pubKey  any
 	// postForm makes the console answer a SAML form instead of a redirect URL.
 	postForm bool
+	// kubeCluster is the Kubernetes cluster the next console request must ask for.
+	kubeCluster string
 }
 
 func newFakeTeleport(t *testing.T, ping string) *fakeTeleport {
 	t.Helper()
 
-	f := &fakeTeleport{t: t, ping: ping}
+	f := &fakeTeleport{t: t, ping: ping, kubeCluster: "sample-kube"}
 	mux := http.NewServeMux()
 	answerPing := func(w http.ResponseWriter, _ *http.Request) { _, _ = io.WriteString(w, f.ping) }
 	mux.HandleFunc("GET /webapi/ping", answerPing)
@@ -91,7 +93,7 @@ func (f *fakeTeleport) console(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !teleportCallbackPattern.MatchString(typed.RedirectURL) || typed.CertTTL != teleportCertTTL ||
-		req["KubernetesCluster"] != "sample-kube" || req["RouteToCluster"] != "teleport.example.org" ||
+		req["KubernetesCluster"] != f.wantKubeCluster() || req["RouteToCluster"] != "teleport.example.org" ||
 		typed.ConnectorID != "sample-github" || r.PathValue("kind") != "github" {
 		f.t.Errorf("console request %s on %s", raw, r.URL.Path)
 	}
@@ -211,12 +213,26 @@ func teleportKubeconfig(t *testing.T, f *fakeTeleport, extra ...string) string {
 	return execKubeconfig(api, "tsh", args...)
 }
 
+func (f *fakeTeleport) wantKubeCluster() string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	return f.kubeCluster
+}
+
 // teleportSignIn runs the sign-in to the end and returns OnDone's message.
 func teleportSignIn(t *testing.T, cfg string, b teleportBrowser, f *fakeTeleport) string {
 	t.Helper()
 
+	return teleportSignInAt(t, cfg, teleportTestContext, b, f)
+}
+
+// teleportSignInAt is teleportSignIn on the named context.
+func teleportSignInAt(t *testing.T, cfg, contextName string, b teleportBrowser, f *fakeTeleport) string {
+	t.Helper()
+
 	rec := recSignIn{prompts: make(chan signInPrompt, 1), done: make(chan string, 1), onURL: b.follow(t, f)}
-	StartKubeSignIn(cfg, teleportTestContext, rec)
+	StartKubeSignIn(cfg, contextName, rec)
 
 	select {
 	case err := <-rec.done:

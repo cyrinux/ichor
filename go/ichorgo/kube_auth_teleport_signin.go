@@ -60,7 +60,7 @@ func (m *teleportMethod) signIn(ctx context.Context, state kubeAuthState, prompt
 	ctx, cancel := context.WithTimeout(ctx, teleportCallbackTimeout)
 	defer cancel()
 
-	p, err := m.ping(ctx, state.secret(teleportConnector))
+	p, err := m.ping(ctx, m.connector(state))
 	if err != nil {
 		return state, err
 	}

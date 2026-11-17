@@ -269,7 +269,8 @@ fun backupKubeAuth(fingerprints: List<String>, states: Map<String, String>, forB
  */
 fun signInKeys(contexts: List<ContextSummary>): List<String> = contexts.flatMap {
     when {
-        it.isKube -> listOf(it.fingerprint)
+        // A Teleport cluster also keeps its proxy's shared sign-in (authKey).
+        it.isKube -> listOf(it.fingerprint, it.authKey)
         it.omni -> listOf(it.fingerprint, it.authKey)
         else -> emptyList()
     }

@@ -131,6 +131,11 @@ func summarizeKubeContext(doc *kubeconfigDoc, name string) kubeContextSummary {
 		if s.Auth == authTeleport && slices.Contains(user.User.Exec.Args, "--insecure") {
 			s.Insecure = true
 		}
+
+		// The proxy's shared sign-in (kube_auth_teleport_clusters.go): kept with the context.
+		if s.Auth == authTeleport {
+			s.AuthKey = teleportUserAuthKey(user)
+		}
 	}
 
 	s.Problem, s.ProblemDetail = kubeContextProblem(doc, name, cluster, user)

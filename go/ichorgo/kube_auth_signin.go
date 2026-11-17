@@ -99,5 +99,15 @@ func runSignIn(ctx context.Context, storedYAML, contextName string, listener Sig
 	kubeAuth.save(sc.key, signed)
 	kubeClients.forgetConfig(storedYAML, contextName)
 
+	// A Teleport sign-in is the user's at the proxy too: its other clusters show it.
+	if s, ok := im.(signInShares); ok {
+		s.shareSignIn(signed)
+	}
+
 	return nil
+}
+
+// signInShares lets a method keep part of a sign-in for the other contexts it serves.
+type signInShares interface {
+	shareSignIn(signed kubeAuthState)
 }

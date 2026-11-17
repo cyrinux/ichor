@@ -76,6 +76,12 @@ extension AppModel {
             kube: kubeYAML, context: kube.name, fingerprint: kube.fingerprint, label: labels.of(kube))
     }
 
+    /// The sign-in target of the stored kubeconfig context `name` (another cluster of a
+    /// Teleport proxy, opened from its sign-in sheet).
+    func kubeSignInTarget(named name: String) -> KubeSignInTarget? {
+        signInTarget(for: summary?.context(named: name))
+    }
+
     /// The sign-in of the cluster on screen, if it has one.
     var activeSignInTarget: KubeSignInTarget? { signInTarget(for: activeSummary) }
 }

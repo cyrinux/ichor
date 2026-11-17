@@ -125,6 +125,33 @@ fun signInMethodName(method: String): Int? = when (method) {
 /** The Teleport sign-in method (a kubeconfig written by tsh kube login). */
 const val METHOD_TELEPORT = "teleport"
 
+/** Who is signed in at the Teleport proxy, for a cluster with no certificate of its own yet. */
+const val TELEPORT_USER = "teleportUser"
+
+/** One Kubernetes cluster of a Teleport proxy the stored kubeconfig reaches (Go KubeTeleportClusters). */
+@Serializable
+data class TeleportCluster(
+    val name: String = "",
+    /** The stored context that reaches it. */
+    val context: String = "",
+    val signedIn: Boolean = false,
+    /** The certificate's end, unix seconds; 0 when not signed in. */
+    val expires: Long = 0,
+)
+
+/** The Kubernetes clusters of a Teleport proxy, and who is signed in there ("" when nobody). */
+@Serializable
+data class TeleportClusters(
+    val proxy: String = "",
+    val teleportCluster: String = "",
+    val user: String = "",
+    val clusters: List<TeleportCluster> = emptyList(),
+)
+
+/** A Kubernetes cluster added by name (Go KubeTeleportAddCluster): the kubeconfig to store and its new context. */
+@Serializable
+data class TeleportAdded(val kubeconfig: String = "", val context: String = "")
+
 /** The values a Teleport sign-in shows, read-only, with their labels, in order. */
 val TELEPORT_VALUES: List<Pair<String, Int>> = listOf(
     "teleportProxy" to R.string.kube_signin_teleport_proxy,

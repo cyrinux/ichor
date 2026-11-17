@@ -82,6 +82,23 @@ extension AppModel {
             generation: generation)
     }
 
+    /// Adds the Kubernetes cluster `kubeCluster` through the Teleport proxy of the stored
+    /// kubeconfig cluster `context` (a new context, as tsh kube login writes it), keeping the
+    /// cluster on screen. Returns the new context, to sign it in next.
+    func addTeleportCluster(from context: String, kubeCluster: String) async throws -> String {
+        try checkWritable()
+        let added = try await TalosClient.teleportAddCluster(
+            kube: kubeYAML ?? "", context: context, kubeCluster: kubeCluster)
+        let onScreen = activeContext
+        let generation = TalosClient.privacyGeneration()  // before parsing: see ConfigSummaryCache.store
+        let parsed = try await TalosClient.parseKubeconfig(added.kubeconfig)
+        try SecureConfigStore.save(Data(added.kubeconfig.utf8), item: .kubeconfig)
+        apply(
+            talos: yaml, talosSummary: talosSummary, kube: added.kubeconfig, kubeSummary: parsed, preferred: onScreen,
+            generation: generation)
+        return added.context
+    }
+
     /// Adds the built-in Kubernetes demo next to the stored clusters, replacing one added before.
     func saveKubeDemo() async throws {
         let added = try await TalosClient.demoKubeconfig()

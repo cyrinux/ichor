@@ -48,6 +48,28 @@ extension TalosClient {
         }
     }
 
+    /// The Kubernetes clusters of the Teleport proxy `context` signs in at.
+    static func teleportClusters(kube: String, context: String) async throws -> KubeTeleportClusters {
+        let json = try await run { IchorgoKubeTeleportClusters(kube, context, $0) }
+        return try KubeTeleportClusters.decode(json)
+    }
+
+    /// The stored kubeconfig with a context for `kubeCluster` through `context`'s Teleport
+    /// proxy, and that context's name (nothing is stored: see AppModel.addTeleportCluster).
+    static func teleportAddCluster(kube: String, context: String, kubeCluster: String) async throws
+        -> KubeTeleportAdded
+    {
+        let json = try await run { IchorgoKubeTeleportAddCluster(kube, context, kubeCluster, $0) }
+        return try KubeTeleportAdded.decode(json)
+    }
+
+    /// Signs out of `context`'s Teleport proxy: every certificate of it, and who signed in there.
+    static func teleportSignOutAll(kube: String, context: String) async throws {
+        try await run { error -> Void in
+            _ = IchorgoKubeTeleportSignOutAll(kube, context, error)
+        }
+    }
+
     static func signOut(kube: String, context: String, talos: Bool = false) async throws {
         try await run { error -> Void in
             _ = talos ? IchorgoTalosSignOut(kube, context, error) : IchorgoKubeSignOut(kube, context, error)
