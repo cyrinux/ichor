@@ -32,6 +32,8 @@ type kubeClient struct {
 	token string
 	// tokens replaces token for a cluster that signs in through a method (OIDC, EKS…).
 	tokens *authTokenSource
+	// certs is the source of the client certificate tls presents, for a certificateMethod.
+	certs *authTokenSource
 	// unauthorized is what a refused token means for this cluster, "" for the API server's own message.
 	unauthorized string
 	tls          *tls.Config // the kubeconfig's TLS settings, for connections outside http (exec)
@@ -111,6 +113,15 @@ func openKubeClientCreds(ctx context.Context, creds *kubeCredentials, talosEndpo
 			return nil, err
 		default:
 			clients[i].close()
+
+			// A refusal a certificate method explains (Teleport's expired certificate) is not
+			// an address that failed.
+			if explained := clients[i].refusal(err); explained != err {
+				discardFrom(i + 1)
+
+				return nil, explained
+			}
+
 			failures = append(failures, candidates[i].Host+": "+kubeTransportError(err))
 		}
 	}
@@ -155,7 +166,10 @@ func newKubeClient(base *url.URL, creds *kubeCredentials) *kubeClient {
 	// The API server does not redirect: the client never sends the credentials anywhere else.
 	httpc := httpx.New(httpx.Opts{TLS: creds.tls, DialTimeout: kubeProbeTimeout, IdleTimeout: sessionIdle, ProxyURL: creds.proxy})
 
-	k := &kubeClient{base: base, http: httpc, token: creds.token, tokens: creds.tokens, tls: creds.tls.Clone(), namespace: creds.namespace}
+	k := &kubeClient{
+		base: base, http: httpc, token: creds.token, tokens: creds.tokens, certs: creds.certs,
+		tls: creds.tls.Clone(), namespace: creds.namespace,
+	}
 	if creds.proxy != nil {
 		k.proxy = httpx.NewProxyDialer(creds.proxy, kubeProbeTimeout)
 	}
@@ -260,13 +274,27 @@ func callKube[T any](ctx context.Context, target kubeTarget, k *kubeClient, fres
 
 	out, err := fn(ctx, k)
 	if err != nil {
-		var apiErr *kubeAPIError
+		err = k.refusal(err)
+
+		var (
+			apiErr *kubeAPIError
+			signIn *errSignInRequired
+		)
 
 		switch {
+		case errors.As(err, &signIn) && !errors.As(err, &apiErr):
+			// A certificate refused at the handshake: the next call starts from the stored one.
+			if k.certs != nil {
+				k.certs.invalidate()
+			}
+
+			kubeClients.forget(target, k)
 		case errors.As(err, &apiErr):
 			if apiErr.Code == http.StatusUnauthorized {
-				if k.tokens != nil {
-					k.tokens.invalidate()
+				for _, source := range []*authTokenSource{k.tokens, k.certs} {
+					if source != nil {
+						source.invalidate()
+					}
 				}
 
 				kubeClients.forget(target, k)
@@ -285,6 +313,20 @@ func callKube[T any](ctx context.Context, target kubeTarget, k *kubeClient, fres
 	}
 
 	return out, nil
+}
+
+// refusal is err in the words of the cluster's certificate method (Teleport's proxy refusals);
+// err for any other cluster.
+func (k *kubeClient) refusal(err error) error {
+	if k.certs == nil {
+		return err
+	}
+
+	if m, ok := k.certs.method.(certificateMethod); ok {
+		return m.refusal(err, k.tls.ServerName)
+	}
+
+	return err
 }
 
 // kubeReadJSON reads with fn (demo() in the demo inventory) and returns the result as JSON.
@@ -375,8 +417,9 @@ func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
 }
 
 // openStoredKubeClient opens a cluster added from a kubeconfig. A context that signs in
-// through a method gets its token source; the first token is minted before probing, so a
-// needed sign-in is reported as such rather than as an unreachable server.
+// through a method gets its token source (a certificate method: the certificate its TLS
+// presents); the first token is minted before probing, so a needed sign-in is reported as
+// such rather than as an unreachable server.
 func openStoredKubeClient(target kubeTarget) (*kubeClient, error) {
 	sc, err := signInContext(target.config, target.context)
 	if err != nil {
@@ -392,18 +435,19 @@ func openStoredKubeClient(target kubeTarget) (*kubeClient, error) {
 		return openKubeClient(context.Background(), kubeconfig, nil, target.server)
 	}
 
-	// What a preview method gets is not a bearer token (Teleport's is a client certificate
-	// and its key): never send it as one.
-	if previewSignIns[sc.method.name()] {
-		return nil, fmt.Errorf("reaching Kubernetes with a %s sign-in comes in a later version", sc.method.name())
-	}
-
 	tokens := kubeAuth.source(sc.key, sc.method)
+	_, isCertificate := sc.method.(certificateMethod)
 
 	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
 	defer cancel()
 
-	if _, err := tokens.get(ctx); err != nil {
+	if isCertificate {
+		_, err = tokens.certificate(ctx)
+	} else {
+		_, err = tokens.get(ctx)
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -417,7 +461,15 @@ func openStoredKubeClient(target kubeTarget) (*kubeClient, error) {
 		return nil, err
 	}
 
-	creds.token, creds.tokens = "", tokens
+	creds.token = ""
+
+	if isCertificate {
+		// Never a bearer token: the certificate goes in the handshake, of REST and stream alike.
+		creds.certs = tokens
+		creds.tls.GetClientCertificate = presentCertificate(tokens)
+	} else {
+		creds.tokens = tokens
+	}
 
 	return openKubeClientCreds(context.Background(), creds, nil, target.server)
 }

@@ -2,6 +2,8 @@ package ichorgo
 
 import (
 	"context"
+	"crypto/sha256"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -123,6 +125,16 @@ type interactiveMethod interface {
 	signIn(ctx context.Context, state kubeAuthState, prompt func(signInPrompt), callbacks <-chan string) (kubeAuthState, error)
 }
 
+// certificateMethod is a method whose credential is a client certificate and its key (mint
+// returns both as one PEM bundle): the client presents it in the TLS handshake and never sends
+// it as a bearer token.
+type certificateMethod interface {
+	signInMethod
+	// refusal is err in the provider's words, for a cluster reached at serverName (the TLS
+	// server name, "" when the kubeconfig sets none); err itself when it says nothing more.
+	refusal(err error, serverName string) error
+}
+
 // tokenRefreshMargin renews a token this long before it expires.
 const tokenRefreshMargin = time.Minute
 
@@ -135,6 +147,9 @@ type authTokenSource struct {
 	mu     sync.Mutex
 	token  string
 	expiry time.Time
+	// pair is token parsed as a client certificate, and the hash of the token it was parsed from.
+	pair   *tls.Certificate
+	pairOf [sha256.Size]byte
 }
 
 func (s *authTokenSource) get(ctx context.Context) (string, error) {
@@ -166,12 +181,50 @@ func (s *authTokenSource) get(ctx context.Context) (string, error) {
 	return token, nil
 }
 
+// certificate is the client certificate of a certificateMethod, parsed once per value minted:
+// the TLS handshake asks for it on every new connection, so it must not block on the network
+// (minting a certificate reads the stored one).
+func (s *authTokenSource) certificate(ctx context.Context) (*tls.Certificate, error) {
+	bundle, err := s.get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	sum := sha256.Sum256([]byte(bundle))
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.pair != nil && s.pairOf == sum {
+		return s.pair, nil
+	}
+
+	pair, err := tls.X509KeyPair([]byte(bundle), []byte(bundle))
+	if err != nil {
+		return nil, signInRequired(s.method.name(), "the stored certificate is not readable")
+	}
+
+	s.pair, s.pairOf = &pair, sum
+
+	return &pair, nil
+}
+
+// presentCertificate is the tls.Config hook that presents source's certificate.
+func presentCertificate(source *authTokenSource) func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
+	return func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
+		ctx, cancel := context.WithTimeout(info.Context(), callTimeout)
+		defer cancel()
+
+		return source.certificate(ctx)
+	}
+}
+
 // invalidate drops the cached token: the API server refused it.
 func (s *authTokenSource) invalidate() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.token, s.expiry = "", time.Time{}
+	s.token, s.expiry, s.pair = "", time.Time{}, nil
 }
 
 // authRegistry holds the store and one token source per cluster, kept across clients: a
@@ -361,11 +414,6 @@ func newSignInMethod(method string, user *kubeStoreUser, cluster *kubeStoreClust
 // extraSignInMethods are the cloud methods, registered by their files.
 var extraSignInMethods = map[string]func(*kubeStoreUser, *kubeStoreCluster) (signInMethod, error){}
 
-// previewSignIns are registered methods the import does not offer yet: they sign in (the
-// probe drives them) but the Kubernetes client cannot use what they get. Teleport's
-// certificate waits for the client to present it.
-var previewSignIns = map[string]bool{}
-
 // supportedSignIn reports whether the app can sign in with method.
 func supportedSignIn(method string) bool {
 	if method == authOIDC {
@@ -374,7 +422,7 @@ func supportedSignIn(method string) bool {
 
 	_, ok := extraSignInMethods[method]
 
-	return ok && !previewSignIns[method]
+	return ok
 }
 
 // kubeSignInKind is what the app shows to sign in with a method: "browser" (OIDC, device

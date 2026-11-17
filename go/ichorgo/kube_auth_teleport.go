@@ -64,7 +64,6 @@ func init() {
 	extraSignInMethods[authTeleport] = func(user *kubeStoreUser, cluster *kubeStoreCluster) (signInMethod, error) {
 		return newTeleportMethod(user, cluster)
 	}
-	previewSignIns[authTeleport] = true
 }
 
 func newTeleportMethod(user *kubeStoreUser, cluster *kubeStoreCluster) (*teleportMethod, error) {
@@ -150,7 +149,8 @@ func (m *teleportMethod) describe(state kubeAuthState) map[string]string {
 }
 
 // mint returns the stored certificate and key as one PEM bundle while the certificate has
-// more than tokenRefreshMargin left. It is a client certificate, never a bearer token.
+// more than tokenRefreshMargin left. It is a client certificate (teleportMethod is a
+// certificateMethod), never a bearer token.
 func (m *teleportMethod) mint(_ context.Context, state kubeAuthState) (string, time.Time, kubeAuthState, error) {
 	certPEM, keyPEM := state.session(teleportSessionCert), state.session(teleportSessionKey)
 	if certPEM == "" || keyPEM == "" {
