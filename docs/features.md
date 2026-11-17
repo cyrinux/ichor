@@ -301,13 +301,15 @@ Part of the [Ichor documentation](../README.md#documentation).
 - **Alertmanager:** the cluster's alerts grouped by name, worst first, and its silences. Swipe an
   alert to silence it (the form opens with matchers that mute only that alert; nothing is sent
   before **Silence**), swipe a silence to expire it. On Android a long press on an alert also lists
-  the PagerDuty incident's Acknowledge and Resolve, and Share.
+  the on-call incident's Acknowledge and Resolve, and Share.
 - **Push without polling (optional):** run ichor-relay in the cluster, point Alertmanager's webhook
   at it, and its alerts reach the paired phones within seconds instead of at the next background
   check: through a UnifiedPush distributor on Android (encrypted end to end), through the ntfy app
   on iOS. Setup: [Push without polling](relay.md).
-- **On-call (PagerDuty):** set a token, your PagerDuty email and the services to watch per cluster
-  (**On-call**, under Settings → Clusters on Android and in a cluster's menu on iOS; **Test** checks
+- **On-call (PagerDuty or Grafana IRM):** per cluster, pick the provider and set a token; for
+  PagerDuty your PagerDuty email and the services to watch, for Grafana IRM the stack's API address
+  (`https://<stack>.grafana.net/api/plugins/grafana-irm-app/resources/api/v1`, where its alert
+  groups are the incidents) (**On-call**, under Settings → Clusters on Android and in a cluster's menu on iOS; **Test** checks
   the token). An alert with an open incident shows **Triggered** or **Acknowledged by …**. Its sheet
   acknowledges or resolves the incident, and its notification gets **Acknowledge page**, which runs
   without opening the app once the device is unlocked. The action log records both. The token stays

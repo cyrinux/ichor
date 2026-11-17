@@ -19,6 +19,7 @@ import (
 
 const (
 	onCallKindPagerDuty = "pagerduty"
+	onCallKindGrafana   = "grafana"
 
 	onCallStatusTriggered    = "triggered"
 	onCallStatusAcknowledged = "acknowledged"
@@ -42,13 +43,15 @@ var (
 	onCallID = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
 )
 
-// onCallConfig is the settings of one cluster's integration. Region is "us" or "eu".
+// onCallConfig is the settings of one cluster's integration. PagerDuty: From, ServiceIDs and
+// Region ("us" or "eu"); Grafana IRM: BaseURL, the stack's OnCall API.
 type onCallConfig struct {
 	Kind       string   `json:"kind"`
 	Token      string   `json:"token"`
 	From       string   `json:"from"`
 	ServiceIDs []string `json:"serviceIds"`
 	Region     string   `json:"region"`
+	BaseURL    string   `json:"baseURL"`
 }
 
 // onCallIncident is one open incident. Details holds its alerts' text for the matching; it stays
@@ -108,10 +111,37 @@ func parseOnCallConfig(configJSON string) (onCallConfig, error) {
 
 	c.Token, c.From = strings.TrimSpace(c.Token), strings.TrimSpace(c.From)
 	c.Region = cmp.Or(strings.ToLower(strings.TrimSpace(c.Region)), "us")
+	c.BaseURL = strings.TrimRight(strings.TrimSpace(c.BaseURL), "/")
 
+	switch c.Kind {
+	case onCallKindPagerDuty:
+		return checkPagerDutyConfig(c)
+	case onCallKindGrafana:
+		return checkGrafanaConfig(c)
+	}
+
+	return onCallConfig{}, errors.New("this on-call provider is not supported")
+}
+
+func checkGrafanaConfig(c onCallConfig) (onCallConfig, error) {
 	switch {
-	case c.Kind != onCallKindPagerDuty:
-		return onCallConfig{}, errors.New("this on-call provider is not supported")
+	case c.Token == "":
+		return onCallConfig{}, errors.New("add the Grafana IRM token")
+	case len(c.Token) > onCallMaxTextLen || strings.ContainsFunc(c.Token, isHeaderUnsafe):
+		return onCallConfig{}, errors.New("the Grafana IRM token is not valid")
+	case len(c.BaseURL) > onCallMaxTextLen:
+		return onCallConfig{}, errors.New("the Grafana IRM base URL is too long")
+	}
+
+	if problem := checkGrafanaBaseURL(c.BaseURL); problem != "" {
+		return onCallConfig{}, errors.New(problem)
+	}
+
+	return c, nil
+}
+
+func checkPagerDutyConfig(c onCallConfig) (onCallConfig, error) {
+	switch {
 	case c.Token == "":
 		return onCallConfig{}, errors.New("add the PagerDuty token")
 	case len(c.Token) > onCallMaxTextLen || strings.ContainsFunc(c.Token, isHeaderUnsafe):
@@ -132,7 +162,13 @@ func parseOnCallConfig(configJSON string) (onCallConfig, error) {
 // isHeaderUnsafe tells a character that cannot go in a request header (a pasted line end).
 func isHeaderUnsafe(r rune) bool { return r < 0x20 || r == 0x7f }
 
-func newOnCallProvider(c onCallConfig) onCallProvider { return newPagerDuty(c) }
+func newOnCallProvider(c onCallConfig) onCallProvider {
+	if c.Kind == onCallKindGrafana {
+		return newGrafanaIRM(c)
+	}
+
+	return newPagerDuty(c)
+}
 
 // OnCallIncidents lists the open incidents of the cluster's integration (onCallJSON, see
 // onCallConfig) and matches them to the Alertmanager alerts of amAlertsJSON

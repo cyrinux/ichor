@@ -27,6 +27,14 @@ class OnCallTest {
     }
 
     @Test
+    fun grafanaIsSetWithATokenAndABaseURL() {
+        val grafana = OnCallConfig(kind = OnCallConfig.KIND_GRAFANA, token = "sample")
+        assertFalse(grafana.isSet)
+        assertTrue(grafana.copy(baseURL = "https://sample.grafana.net/api/plugins/grafana-irm-app/resources/api/v1").isSet)
+        assertTrue(grafana.copy(baseURL = "https://sample.grafana.net/x").toGoJson().contains("\"baseURL\""))
+    }
+
+    @Test
     fun theIncidentOfAnAlertComesFromItsMatch() {
         val incidents = OnCallIncidents(
             incidents = listOf(OnCallIncident(id = "P1", status = OnCallStatus.TRIGGERED)),

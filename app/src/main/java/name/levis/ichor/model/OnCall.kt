@@ -36,12 +36,15 @@ data class OnCallConfig(
     val from: String = "",
     val serviceIds: List<String> = emptyList(),
     @EncodeDefault val region: String = REGION_US,
+    /** Grafana IRM: the stack's OnCall API address. */
+    val baseURL: String = "",
 ) {
-    /** Enough to ask PagerDuty for incidents. */
-    val isSet: Boolean get() = token.isNotBlank() && serviceIds.isNotEmpty()
+    /** Enough to ask the provider for incidents. */
+    val isSet: Boolean get() = token.isNotBlank() && if (kind == KIND_GRAFANA) baseURL.isNotBlank() else serviceIds.isNotEmpty()
 
     companion object {
         const val KIND_PAGERDUTY = "pagerduty"
+        const val KIND_GRAFANA = "grafana"
         const val REGION_US = "us"
         const val REGION_EU = "eu"
     }

@@ -158,6 +158,7 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
                             ),
                             onCall = state.onCall,
                             onCallError = state.onCallError,
+                            onCallGrafana = state.onCallGrafana,
                         )
                         else -> SilencesTab(
                             state.silences,
@@ -183,6 +184,7 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
             onSilence = { opened = null; silencing = alert },
             onDismiss = { opened = null },
             onCall = state.onCall,
+            onCallGrafana = state.onCallGrafana,
             onCallBusy = { it in busy },
             onCallAct = vm::act,
             explainSource = state.source?.toGoJson(),
@@ -191,6 +193,7 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
     resolving?.let { incident ->
         OnCallResolveDialog(
             incident,
+            grafana = state.onCallGrafana,
             onConfirm = {
                 resolving = null
                 vm.act(incident, OnCallVerb.RESOLVE)
@@ -270,7 +273,8 @@ private fun NoSource(state: AlertsState, modifier: Modifier, onSetUp: () -> Unit
 private fun ActionToasts(vm: AlertsViewModel) = ResultToasts(vm.results) { context, r ->
     val error = r.error?.resolve(context)
     val text = when {
-        error != null && r.onCallVerb != null -> context.getString(R.string.oncall_action_failed, error)
+        error != null && r.onCallVerb != null ->
+            context.getString(if (vm.state.value.onCallGrafana) R.string.oncall_grafana_action_failed else R.string.oncall_action_failed, error)
         r.onCallVerb == OnCallVerb.ACKNOWLEDGE -> context.getString(R.string.oncall_acknowledged)
         r.onCallVerb == OnCallVerb.RESOLVE -> context.getString(R.string.oncall_resolved)
         error != null && r.expired -> context.getString(R.string.alerts_expire_failed, error)

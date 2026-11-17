@@ -1,14 +1,17 @@
 import SwiftUI
 import IchorCore
 
-/// The on-call integration of a cluster: PagerDuty for now, its token (never read back into the
-/// field: left empty it keeps the stored one), the email it acts as, the region, the services to
-/// watch, Test, and Delete to remove it from this device.
+/// The on-call integration of a cluster: PagerDuty or Grafana IRM, its token (never read back into
+/// the field: left empty it keeps the stored one of the same provider); for PagerDuty the email it
+/// acts as, the region and the services to watch, for Grafana IRM the stack's API address; Test, and
+/// Delete to remove it from this device.
 struct OnCallSheet: View {
     let fingerprint: String
 
     @Environment(\.dismiss) private var dismiss
     @State private var stored = OnCallConfig()
+    @State private var kind = OnCallConfig.kindPagerDuty
+    @State private var baseURL = ""
     @State private var token = ""
     @State private var from = ""
     @State private var region = OnCallConfig.regionUS
@@ -19,18 +22,26 @@ struct OnCallSheet: View {
     @State private var testFailed = false
     @State private var failure: String?
 
+    /// A token saved for the other provider is not offered to this one.
+    private var savedToken: String { stored.kind == kind ? stored.token : "" }
+
     private var current: OnCallConfig {
         let typed = token.trimmingCharacters(in: .whitespacesAndNewlines)
         return OnCallConfig(
-            token: typed.isEmpty ? stored.token : typed, from: from.trimmingCharacters(in: .whitespacesAndNewlines),
-            serviceIds: services, region: region)
+            kind: kind, token: typed.isEmpty ? savedToken : typed,
+            from: from.trimmingCharacters(in: .whitespacesAndNewlines), serviceIds: services, region: region,
+            baseURL: baseURL.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    LabeledContent("Provider") { Text(verbatim: "PagerDuty") }
+                    Picker("Provider", selection: $kind) {
+                        Text(verbatim: "PagerDuty").tag(OnCallConfig.kindPagerDuty)
+                        Text(verbatim: "Grafana IRM").tag(OnCallConfig.kindGrafana)
+                    }
+                    .onChange(of: kind) { _, _ in testResult = nil }
                 } footer: {
                     Text("See the PagerDuty incident behind this cluster's alerts, and acknowledge it from the phone.")
                 }
@@ -38,21 +49,32 @@ struct OnCallSheet: View {
                     SecureField("API token", text: $token)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
-                    if !stored.token.isEmpty && token.isEmpty {
+                    if !savedToken.isEmpty && token.isEmpty {
                         Text("A token is saved. Leave empty to keep it.").font(.footnote).foregroundStyle(.secondary)
                     }
-                    TextField("Your PagerDuty email", text: $from)
-                        .keyboardType(.emailAddress)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    Picker("Region", selection: $region) {
-                        Text("US").tag(OnCallConfig.regionUS)
-                        Text("EU").tag(OnCallConfig.regionEU)
+                    if kind == OnCallConfig.kindGrafana {
+                        TextField("Grafana IRM API URL", text: $baseURL)
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                    } else {
+                        TextField("Your PagerDuty email", text: $from)
+                            .keyboardType(.emailAddress)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                        Picker("Region", selection: $region) {
+                            Text("US").tag(OnCallConfig.regionUS)
+                            Text("EU").tag(OnCallConfig.regionEU)
+                        }
                     }
                 } footer: {
-                    Text("PagerDuty needs it to know who acknowledges.")
+                    if kind == OnCallConfig.kindGrafana {
+                        Text("Paste https://<stack>.grafana.net/api/plugins/grafana-irm-app/resources/api/v1")
+                    } else {
+                        Text("PagerDuty needs it to know who acknowledges.")
+                    }
                 }
-                servicesSection
+                if kind == OnCallConfig.kindPagerDuty { servicesSection }
                 testSection
                 if !stored.token.isEmpty {
                     Section {
@@ -73,6 +95,8 @@ struct OnCallSheet: View {
         }
         .task {
             stored = OnCallStore.read(fingerprint)
+            kind = stored.kind
+            baseURL = stored.baseURL
             from = stored.from
             region = stored.region
             services = stored.serviceIds

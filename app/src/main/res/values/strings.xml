@@ -6260,6 +6260,14 @@
     <string name="oncall_page_ack_failed">Could not acknowledge: %1$s</string>
     <string name="oncall_page_no_incident">No open incident for this alert</string>
     <string name="oncall_restore_note">Set the on-call token again: backups never carry it.</string>
+    <string name="oncall_grafana">Grafana IRM</string>
+    <string name="oncall_grafana_url">Grafana IRM API URL</string>
+    <string name="oncall_grafana_url_hint">Paste https://&lt;stack&gt;.grafana.net/api/plugins/grafana-irm-app/resources/api/v1</string>
+    <string name="oncall_grafana_section">Grafana IRM alert group</string>
+    <string name="oncall_grafana_open">Open in Grafana IRM</string>
+    <string name="oncall_grafana_resolve_body">Grafana IRM resolves this alert group for everyone on call.</string>
+    <string name="oncall_grafana_action_failed">Grafana IRM: %1$s</string>
+    <string name="oncall_grafana_load_failed">Could not read Grafana IRM: %1$s</string>
     <string name="log_search_title">Log search</string>
     <string name="log_search_source">Log backend</string>
     <string name="log_search_none_found">No log backend found</string>

@@ -6114,6 +6114,14 @@
     <string name="oncall_page_ack_failed">无法确认：%1$s</string>
     <string name="oncall_page_no_incident">此告警没有未关闭的事件</string>
     <string name="oncall_restore_note">请重新设置值班令牌：备份绝不包含它。</string>
+    <string name="oncall_grafana">Grafana IRM</string>
+    <string name="oncall_grafana_url">Grafana IRM API 地址</string>
+    <string name="oncall_grafana_url_hint">粘贴 https://&lt;stack&gt;.grafana.net/api/plugins/grafana-irm-app/resources/api/v1</string>
+    <string name="oncall_grafana_section">Grafana IRM 告警组</string>
+    <string name="oncall_grafana_open">在 Grafana IRM 中打开</string>
+    <string name="oncall_grafana_resolve_body">Grafana IRM 将为所有值班人员解决此告警组。</string>
+    <string name="oncall_grafana_action_failed">Grafana IRM: %1$s</string>
+    <string name="oncall_grafana_load_failed">无法读取 Grafana IRM：%1$s</string>
     <string name="log_search_title">日志搜索</string>
     <string name="log_search_source">日志后端</string>
     <string name="log_search_none_found">未找到日志后端</string>

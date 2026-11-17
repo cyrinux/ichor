@@ -24,6 +24,8 @@ struct AlertDetailSheet: View {
     let confidence: OnCallConfidence
     /// Runs a verb on the incident and reloads; nil when done, else why not.
     let actOnIncident: (OnCallIncident, OnCallVerb) async -> String?
+    /// The pager is Grafana IRM.
+    let onCallGrafana: Bool
     /// The Alertmanager the alert was read from (its JSON for Go), for "Explain with AI".
     let explainSource: String?
 
@@ -37,7 +39,7 @@ struct AlertDetailSheet: View {
         open: @escaping (Route) -> Void, silenced: @escaping () -> Void, silenceComment: String? = nil,
         incident: OnCallIncident? = nil, confidence: OnCallConfidence = .alertname,
         actOnIncident: @escaping (OnCallIncident, OnCallVerb) async -> String? = { _, _ in nil },
-        explainSource: String? = nil
+        onCallGrafana: Bool = false, explainSource: String? = nil
     ) {
         self.alert = alert
         self.node = node
@@ -49,6 +51,7 @@ struct AlertDetailSheet: View {
         self.incident = incident
         self.confidence = confidence
         self.actOnIncident = actOnIncident
+        self.onCallGrafana = onCallGrafana
         self.explainSource = explainSource
         _silencing = State(initialValue: silenceComment != nil)
     }
@@ -58,7 +61,7 @@ struct AlertDetailSheet: View {
             List {
                 summarySection
                 if let incident {
-                    OnCallIncidentSection(incident: incident, confidence: confidence) { verb in
+                    OnCallIncidentSection(incident: incident, confidence: confidence, grafana: onCallGrafana) { verb in
                         await actOnIncident(incident, verb)
                     }
                 }
