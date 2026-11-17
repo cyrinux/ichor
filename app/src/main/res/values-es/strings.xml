@@ -4136,7 +4136,6 @@
     <string name="kube_problem_sign_in_later">Este inicio de sesión aún no está soportado: llegará en una versión futura.</string>
     <string name="kube_problem_exec">Este plugin exec no está soportado. Usa un certificado de cliente o un token.</string>
     <string name="kube_problem_exec_named">El plugin de credenciales %1$s no puede ejecutarse en un teléfono.</string>
-    <string name="kube_exec_hint_teleport">El inicio de sesión de Teleport desde el teléfono está previsto; mientras tanto, exporta un kubeconfig con un certificado de cliente.</string>
     <string name="kube_exec_hint_token_wrapper">Solo imprime un token: pega ese token o usa un certificado de cliente.</string>
     <string name="kube_exec_hint_oidc_no_issuer">Vuelve a exportarlo con --oidc-issuer-url para que el inicio de sesión OIDC integrado tome el relevo.</string>
     <string name="kube_exec_hint_unknown">Usa un certificado de cliente o un token.</string>
@@ -4472,6 +4471,13 @@
     <string name="kube_gke_project">proyecto %1$s</string>
     <string name="kube_signin_method_omni">Sidero Omni</string>
     <string name="kube_signin_method_omni_sa">Cuenta de servicio de Omni</string>
+    <string name="kube_signin_method_teleport">Teleport</string>
+    <string name="kube_signin_teleport_proxy">Proxy</string>
+    <string name="kube_signin_teleport_cluster">Clúster de Teleport</string>
+    <string name="kube_signin_teleport_kube_cluster">Clúster de Kubernetes</string>
+    <string name="kube_signin_teleport_connector">Conector de inicio de sesión</string>
+    <string name="kube_signin_teleport_explain">Inicia sesión en tu proxy de Teleport en el navegador y guarda un certificado de corta duración; cuando caduca, vuelves a iniciar sesión.</string>
+    <string name="kube_signin_teleport_sign_out_note">Esto elimina el certificado del teléfono.</string>
     <string name="kube_field_omni_service_account_key">Clave de la cuenta de servicio (OMNI_SERVICE_ACCOUNT_KEY)</string>
     <string name="import_omni_identity">Identidad de Omni</string>
     <string name="import_omni_cluster">Clúster de Omni</string>

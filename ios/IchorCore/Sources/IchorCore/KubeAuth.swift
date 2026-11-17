@@ -81,6 +81,19 @@ public struct KubeSsoRoleChoice: Codable, Equatable, Hashable, Sendable {
 }
 
 /// How a stored kubeconfig context signs in (Go KubeSignInInfo; nil for static credentials).
+/// The Teleport sign-in method (Go authTeleport).
+public let kubeTeleportMethod = "teleport"
+
+/// The values a Teleport sign-in describes (Go teleportMethod.describe): the proxy, the Teleport
+/// and Kubernetes clusters, and the SSO connector last used. Same order on Android.
+public let kubeTeleportValueKeys = ["teleportProxy", "teleportCluster", "kubeCluster", "teleportConnector"]
+
+/// One of a Teleport sign-in's values, by its key.
+public struct KubeTeleportValue: Hashable, Sendable {
+    public let key: String
+    public let value: String
+}
+
 public struct KubeSignInInfo: Decodable, Equatable, Sendable {
     /// oidc, eks, gke, azure, digitalocean, rancher.
     public let method: String
@@ -134,6 +147,18 @@ public struct KubeSignInInfo: Decodable, Equatable, Sendable {
     }
 
     public var isCredentials: Bool { kind == "credentials" }
+
+    /// A Teleport sign-in (a kubeconfig written by tsh kube login).
+    public var isTeleport: Bool { method == kubeTeleportMethod }
+
+    /// What a Teleport sign-in goes to, read-only, in the order the sheet shows it; the values
+    /// the core did not send are left out.
+    public var teleportValues: [KubeTeleportValue] {
+        kubeTeleportValueKeys.compactMap { key in
+            guard let value = values[key], !value.isEmpty else { return nil }
+            return KubeTeleportValue(key: key, value: value)
+        }
+    }
 
     /// The field sets to choose from: the options, else the fields alone.
     public var fieldSets: [[String]] {

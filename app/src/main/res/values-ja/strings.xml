@@ -4023,7 +4023,6 @@
     <string name="kube_problem_sign_in_later">このサインイン方法はまだサポートしていません。今後のバージョンで対応予定です。</string>
     <string name="kube_problem_exec">この exec プラグインはサポートしていません。クライアント証明書またはトークンを使用してください。</string>
     <string name="kube_problem_exec_named">認証情報プラグイン %1$s はスマートフォンでは実行できません。</string>
-    <string name="kube_exec_hint_teleport">スマートフォンからの Teleport サインインは予定されています。それまではクライアント証明書付きの kubeconfig をエクスポートしてください。</string>
     <string name="kube_exec_hint_token_wrapper">トークンを出力するだけです。そのトークンを貼り付けるか、クライアント証明書を使用してください。</string>
     <string name="kube_exec_hint_oidc_no_issuer">組み込みの OIDC サインインが引き継げるよう、--oidc-issuer-url を付けて再度エクスポートしてください。</string>
     <string name="kube_exec_hint_unknown">クライアント証明書またはトークンを使用してください。</string>
@@ -4357,6 +4356,13 @@
     <string name="kube_gke_project">プロジェクト %1$s</string>
     <string name="kube_signin_method_omni">Sidero Omni</string>
     <string name="kube_signin_method_omni_sa">Omni サービスアカウント</string>
+    <string name="kube_signin_method_teleport">Teleport</string>
+    <string name="kube_signin_teleport_proxy">プロキシ</string>
+    <string name="kube_signin_teleport_cluster">Teleport クラスター</string>
+    <string name="kube_signin_teleport_kube_cluster">Kubernetes クラスター</string>
+    <string name="kube_signin_teleport_connector">サインインコネクタ</string>
+    <string name="kube_signin_teleport_explain">ブラウザで Teleport プロキシにサインインし、短期間有効な証明書を保持します。期限が切れたら再度サインインします。</string>
+    <string name="kube_signin_teleport_sign_out_note">スマートフォンから証明書を削除します。</string>
     <string name="kube_field_omni_service_account_key">サービスアカウントキー（OMNI_SERVICE_ACCOUNT_KEY）</string>
     <string name="import_omni_identity">Omni ID</string>
     <string name="import_omni_cluster">Omni クラスター</string>

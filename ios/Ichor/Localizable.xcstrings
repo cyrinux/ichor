@@ -177217,18 +177217,88 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "凭据插件 %@ 无法在手机上运行。" } }
       }
     },
-    "Teleport sign-in from the phone is planned; until then, export a kubeconfig with a client certificate." : {
+    "Proxy" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Teleport-Anmeldung vom Telefon ist geplant; exportiere bis dahin eine kubeconfig mit Client-Zertifikat." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "El inicio de sesión de Teleport desde el teléfono está previsto; mientras tanto, exporta un kubeconfig con un certificado de cliente." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La connexion Teleport depuis le téléphone est prévue ; d’ici là, exportez un kubeconfig avec un certificat client." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "L’accesso Teleport dal telefono è in programma; nel frattempo esporta un kubeconfig con un certificato client." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "スマートフォンからの Teleport サインインは予定されています。それまではクライアント証明書付きの kubeconfig をエクスポートしてください。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O login do Teleport pelo celular está planejado; até lá, exporte um kubeconfig com um certificado de cliente." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вход через Teleport с телефона запланирован; пока экспортируйте kubeconfig с клиентским сертификатом." } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вхід через Teleport з телефона заплановано; доти експортуйте kubeconfig із клієнтським сертифікатом." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "计划支持从手机登录 Teleport；在此之前，请导出带客户端证书的 kubeconfig。" } }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Proxy" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Proxy" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Proxy" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Proxy" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プロキシ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Proxy" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Прокси" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Проксі" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "代理" } }
+      }
+    },
+    "Teleport cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Teleport-Cluster" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Clúster de Teleport" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cluster Teleport" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cluster Teleport" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Teleport クラスター" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cluster do Teleport" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Кластер Teleport" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Кластер Teleport" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Teleport 集群" } }
+      }
+    },
+    "Kubernetes cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes-Cluster" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Clúster de Kubernetes" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cluster Kubernetes" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cluster Kubernetes" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes クラスター" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cluster do Kubernetes" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Кластер Kubernetes" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Кластер Kubernetes" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes 集群" } }
+      }
+    },
+    "Sign-in connector" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Anmelde-Connector" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conector de inicio de sesión" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Connecteur de connexion" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Connettore di accesso" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サインインコネクタ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Conector de login" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Коннектор входа" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Конектор входу" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "登录连接器" } }
+      }
+    },
+    "Signs in at your Teleport proxy in the browser and keeps a short-lived certificate; when it expires you sign in again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Meldet sich im Browser an deinem Teleport-Proxy an und behält ein kurzlebiges Zertifikat; läuft es ab, meldest du dich erneut an." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Inicia sesión en tu proxy de Teleport en el navegador y guarda un certificado de corta duración; cuando caduca, vuelves a iniciar sesión." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Se connecte à votre proxy Teleport dans le navigateur et garde un certificat de courte durée ; quand il expire, vous vous reconnectez." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Accede al tuo proxy Teleport nel browser e conserva un certificato di breve durata; quando scade, accedi di nuovo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ブラウザで Teleport プロキシにサインインし、短期間有効な証明書を保持します。期限が切れたら再度サインインします。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Faz login no seu proxy do Teleport pelo navegador e guarda um certificado de curta duração; quando ele expira, você faz login de novo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Входит на ваш прокси Teleport в браузере и хранит краткосрочный сертификат; когда он истекает, вы входите снова." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Входить на ваш проксі Teleport у браузері й зберігає короткостроковий сертифікат; коли він спливає, ви входите знову." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在浏览器中登录你的 Teleport 代理，并保留一个短期证书；证书过期后需重新登录。" } }
+      }
+    },
+    "This removes the certificate from the phone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dadurch wird das Zertifikat vom Telefon entfernt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esto elimina el certificado del teléfono." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cela supprime le certificat du téléphone." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questo rimuove il certificato dal telefono." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "スマートフォンから証明書を削除します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Isso remove o certificado do celular." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сертификат будет удалён с телефона." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сертифікат буде видалено з телефона." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这会从手机中移除证书。" } }
       }
     },
     "It only prints a token: paste that token, or use a client certificate." : {

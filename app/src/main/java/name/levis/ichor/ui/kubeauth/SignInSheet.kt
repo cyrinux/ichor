@@ -62,6 +62,7 @@ import name.levis.ichor.model.GCP_LOGIN_CONFIG
 import name.levis.ichor.model.GCP_OAUTH_CLIENT_ID
 import name.levis.ichor.model.GCP_USER_CREDENTIALS
 import name.levis.ichor.model.KubeSignInInfo
+import name.levis.ichor.model.METHOD_TELEPORT
 import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.SsoRoleChoice
 import name.levis.ichor.model.credentialsComplete
@@ -109,6 +110,7 @@ fun SignInSheet(context: String, onDismiss: () -> Unit, onSignedIn: () -> Unit) 
                     if (s.info.kind == KubeSignInInfo.KIND_CREDENTIALS) {
                         CredentialsForm(s.info, s.checking, onSubmit = vm::submit, onGoogle = signInWithGoogle)
                     } else {
+                        if (s.info.method == METHOD_TELEPORT) TeleportDetails(s.info)
                         MutedText(stringResource(R.string.kube_signin_browser_hint))
                         IchorButton(onClick = vm::startSignIn, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.kube_signin_action)) }
                     }

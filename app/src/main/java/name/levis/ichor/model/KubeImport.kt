@@ -79,7 +79,6 @@ const val KUBE_PROBLEM_EXEC = "kube-exec-unsupported"
 /** What to do instead of an exec plugin the phone cannot run (ParseKubeconfig's execHint). */
 @StringRes
 fun kubeExecHintText(hint: String): Int = when (hint) {
-    "teleport" -> R.string.kube_exec_hint_teleport
     "token-wrapper" -> R.string.kube_exec_hint_token_wrapper
     "oidc-no-issuer" -> R.string.kube_exec_hint_oidc_no_issuer
     else -> R.string.kube_exec_hint_unknown

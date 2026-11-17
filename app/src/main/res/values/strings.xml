@@ -4138,7 +4138,6 @@
     <string name="kube_problem_sign_in_later">This sign-in is not supported yet: it comes in a later version.</string>
     <string name="kube_problem_exec">This exec plugin is not supported. Use a client certificate or a token.</string>
     <string name="kube_problem_exec_named">The %1$s credential plugin cannot run on a phone.</string>
-    <string name="kube_exec_hint_teleport">Teleport sign-in from the phone is planned; until then, export a kubeconfig with a client certificate.</string>
     <string name="kube_exec_hint_token_wrapper">It only prints a token: paste that token, or use a client certificate.</string>
     <string name="kube_exec_hint_oidc_no_issuer">Export it again with --oidc-issuer-url so the built-in OIDC sign-in can take over.</string>
     <string name="kube_exec_hint_unknown">Use a client certificate or a token.</string>
@@ -4474,6 +4473,13 @@
     <string name="kube_gke_project">project %1$s</string>
     <string name="kube_signin_method_omni">Sidero Omni</string>
     <string name="kube_signin_method_omni_sa">Omni service account</string>
+    <string name="kube_signin_method_teleport">Teleport</string>
+    <string name="kube_signin_teleport_proxy">Proxy</string>
+    <string name="kube_signin_teleport_cluster">Teleport cluster</string>
+    <string name="kube_signin_teleport_kube_cluster">Kubernetes cluster</string>
+    <string name="kube_signin_teleport_connector">Sign-in connector</string>
+    <string name="kube_signin_teleport_explain">Signs in at your Teleport proxy in the browser and keeps a short-lived certificate; when it expires you sign in again.</string>
+    <string name="kube_signin_teleport_sign_out_note">This removes the certificate from the phone.</string>
     <string name="kube_field_omni_service_account_key">Service account key (OMNI_SERVICE_ACCOUNT_KEY)</string>
     <string name="import_omni_identity">Omni identity</string>
     <string name="import_omni_cluster">Omni cluster</string>

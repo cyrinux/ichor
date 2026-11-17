@@ -37,6 +37,17 @@ final class SignInRenewalTests: XCTestCase {
             signInAlertPlan(renewals: ended, contexts: contexts, notified: renewed.notified).contexts, [oidc])
     }
 
+    func testAnExpiredTeleportCertificateIsTold() {
+        let reason =
+            "Your Teleport certificate expired. Its length (12 hours by default) is set by your Teleport administrator."
+        let ended = [
+            SignInRenewal(
+                context: "sso-lab", method: "teleport", status: SignInRenewal.signInRequiredStatus, reason: reason)
+        ]
+        XCTAssertTrue(ended[0].needsUser)
+        XCTAssertEqual(signInAlertPlan(renewals: ended, contexts: [oidc, omni], notified: []).contexts, [oidc])
+    }
+
     func testOfflineTellsNothingAndKeepsWhatWasTold() {
         let offline = [SignInRenewal(context: "sso-lab", status: SignInRenewal.error)]
         let plan = signInAlertPlan(renewals: offline, contexts: [oidc], notified: ["fpoidc"])

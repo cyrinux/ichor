@@ -82,7 +82,8 @@ class KubeImportTest {
 
     @Test
     fun execHintsForKnownCodes() {
-        assertEquals(R.string.kube_exec_hint_teleport, kubeExecHintText("teleport"))
+        // A tsh kubeconfig signs in at the Teleport proxy: no hint left for it.
+        assertEquals(R.string.kube_exec_hint_unknown, kubeExecHintText("teleport"))
         assertEquals(R.string.kube_exec_hint_token_wrapper, kubeExecHintText("token-wrapper"))
         assertEquals(R.string.kube_exec_hint_oidc_no_issuer, kubeExecHintText("oidc-no-issuer"))
         // An older core sends no hint, a newer one may send one this app does not know.

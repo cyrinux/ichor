@@ -118,8 +118,20 @@ fun signInMethodName(method: String): Int? = when (method) {
     "rancher" -> R.string.kube_signin_method_rancher
     "omni" -> R.string.kube_signin_method_omni
     "omni-service-account" -> R.string.kube_signin_method_omni_sa
+    METHOD_TELEPORT -> R.string.kube_signin_method_teleport
     else -> null
 }
+
+/** The Teleport sign-in method (a kubeconfig written by tsh kube login). */
+const val METHOD_TELEPORT = "teleport"
+
+/** The values a Teleport sign-in shows, read-only, with their labels, in order. */
+val TELEPORT_VALUES: List<Pair<String, Int>> = listOf(
+    "teleportProxy" to R.string.kube_signin_teleport_proxy,
+    "teleportCluster" to R.string.kube_signin_teleport_cluster,
+    "kubeCluster" to R.string.kube_signin_teleport_kube_cluster,
+    "teleportConnector" to R.string.kube_signin_teleport_connector,
+)
 
 /** How a sign-in or discovery field is entered. */
 enum class FieldKind { TEXT, SECRET, JSON }
