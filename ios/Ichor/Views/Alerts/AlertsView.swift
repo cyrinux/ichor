@@ -100,25 +100,7 @@ struct AlertsView: View {
                 silenceComment = nil
             }
         ) { alert in
-            AlertDetailSheet(
-                alert: alert, node: alertNode(alert.labels, in: nodes),
-                canOpenKube: model.allows(.workloads), silence: silence,
-                open: { route in
-                    pendingRoute = route
-                    selected = nil
-                },
-                silenced: {
-                    selected = nil
-                    succeeded += 1
-                    announce(String(localized: "Silenced"))
-                    Task { await reload() }
-                },
-                silenceComment: silenceComment,
-                incident: onCall?.incident(of: alert.fingerprint),
-                confidence: onCall?.matches[alert.fingerprint]?.confidence ?? .alertname,
-                actOnIncident: actOnIncident,
-                onCallGrafana: onCallGrafana,
-                explainSource: source.flatMap { try? TalosJSON.encode($0) })
+            detailSheet(alert)
         }
         .sheet(isPresented: $sourceOpen) {
             SourceSheet(
@@ -426,6 +408,29 @@ struct AlertsView: View {
         }
         takeAlertAction()
         if case .loaded(let read, _, _) = alerts { await loadOnCall(read, client: client, key: key) }
+    }
+
+    /// The sheet of `alert`, apart from `body` to keep the type checker fast.
+    private func detailSheet(_ alert: AMAlert) -> some View {
+        AlertDetailSheet(
+            alert: alert, node: alertNode(alert.labels, in: nodes),
+            canOpenKube: model.allows(.workloads), silence: silence,
+            open: { route in
+                pendingRoute = route
+                selected = nil
+            },
+            silenced: {
+                selected = nil
+                succeeded += 1
+                announce(String(localized: "Silenced"))
+                Task { await reload() }
+            },
+            silenceComment: silenceComment,
+            incident: onCall?.incident(of: alert.fingerprint),
+            confidence: onCall?.matches[alert.fingerprint]?.confidence ?? .alertname,
+            actOnIncident: actOnIncident,
+            onCallGrafana: onCallGrafana,
+            explainSource: source.flatMap { try? TalosJSON.encode($0) })
     }
 
     /// The incidents behind `alerts`, after them: the alerts never wait for the pager. The demo
