@@ -28,6 +28,9 @@ struct KubeSignInSheet: View {
         NavigationStack {
             Form {
                 statusSection
+                if let info, info.isTeleport {
+                    KubeTeleportDetails(info: info)
+                }
                 KubeSignInProgress(flow: flow, target: target)
                 if let info {
                     if info.isCredentials {
@@ -90,6 +93,9 @@ struct KubeSignInSheet: View {
                     }
                     Button("Sign out", role: .destructive) { Task { await signOut() } }
                         .disabled(signingOut || flow.isRunning)
+                    if info.isTeleport {
+                        Text("This removes the certificate from the phone.").font(.footnote).foregroundStyle(.secondary)
+                    }
                 } else {
                     Text("Not signed in").foregroundStyle(.secondary)
                 }

@@ -4023,7 +4023,6 @@
     <string name="kube_problem_sign_in_later">暂不支持此登录方式：将在后续版本中提供。</string>
     <string name="kube_problem_exec">不支持此 exec 插件。使用客户端证书或令牌。</string>
     <string name="kube_problem_exec_named">凭据插件 %1$s 无法在手机上运行。</string>
-    <string name="kube_exec_hint_teleport">计划支持从手机登录 Teleport；在此之前，请导出带客户端证书的 kubeconfig。</string>
     <string name="kube_exec_hint_token_wrapper">它只输出一个令牌：粘贴该令牌，或使用客户端证书。</string>
     <string name="kube_exec_hint_oidc_no_issuer">请使用 --oidc-issuer-url 重新导出，以便内置的 OIDC 登录接管。</string>
     <string name="kube_exec_hint_unknown">使用客户端证书或令牌。</string>
@@ -4357,6 +4356,13 @@
     <string name="kube_gke_project">项目 %1$s</string>
     <string name="kube_signin_method_omni">Sidero Omni</string>
     <string name="kube_signin_method_omni_sa">Omni 服务账号</string>
+    <string name="kube_signin_method_teleport">Teleport</string>
+    <string name="kube_signin_teleport_proxy">代理</string>
+    <string name="kube_signin_teleport_cluster">Teleport 集群</string>
+    <string name="kube_signin_teleport_kube_cluster">Kubernetes 集群</string>
+    <string name="kube_signin_teleport_connector">登录连接器</string>
+    <string name="kube_signin_teleport_explain">在浏览器中登录你的 Teleport 代理，并保留一个短期证书；证书过期后需重新登录。</string>
+    <string name="kube_signin_teleport_sign_out_note">这会从手机中移除证书。</string>
     <string name="kube_field_omni_service_account_key">服务账号密钥（OMNI_SERVICE_ACCOUNT_KEY）</string>
     <string name="import_omni_identity">Omni 身份</string>
     <string name="import_omni_cluster">Omni 集群</string>

@@ -38,6 +38,7 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.KubeSignInInfo
+import name.levis.ichor.model.METHOD_TELEPORT
 import name.levis.ichor.model.SignInNeeded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -118,6 +119,10 @@ fun SignInAccountDialog(cluster: ContextSummary, label: String, onSignIn: () -> 
                     onSuccess = { it?.let { i -> Text(signInStatus(i), style = MaterialTheme.typography.bodyMedium) } },
                     onFailure = { Text(it.userMessage(), color = LocalStatusColors.current.bad) },
                 )
+                // What Sign out does to a Teleport cluster: its only credential goes.
+                if (cluster.signIn == METHOD_TELEPORT && info?.getOrNull()?.signedIn == true) {
+                    MutedText(stringResource(R.string.kube_signin_teleport_sign_out_note))
+                }
             }
         },
         confirmButton = {

@@ -20,6 +20,17 @@ class SignInAlertsTest {
         signInAlertPlan(renewals, contexts, notified) { "label of ${it.name}" }
 
     @Test
+    fun anExpiredTeleportCertificateAlerts() {
+        val ended = SignInRenewal(
+            context = "sso-lab", kind = SignInRenewal.KIND_KUBE, method = "teleport", status = SignInRenewal.STATUS_SIGN_IN_REQUIRED,
+            reason = "Your Teleport certificate expired. Its length (12 hours by default) is set by your Teleport administrator.",
+        )
+
+        assertTrue(ended.needsUser)
+        assertEquals(AlertKind.SIGN_IN_REQUIRED, plan(listOf(ended)).alerts.single().alerts.single().kind)
+    }
+
+    @Test
     fun anEndedSessionAlertsOnceUntilSignedInAgain() {
         val ended = listOf(renewal("sso-lab", SignInRenewal.STATUS_SIGN_IN_REQUIRED))
 

@@ -207,9 +207,10 @@ sealed kubeconfig:
       proxy-url: http://ichor:s3cret@proxy.example.com:3128
 ```
 
-**Teleport.** The `tsh kube credentials` plugin that `tsh kube login` writes cannot run on the
-phone yet (see the table below). Until then, an administrator issues a kubeconfig with a
-short-lived client certificate for a Teleport user (or a bot) whose roles allow the cluster:
+**Teleport.** A kubeconfig that `tsh kube login` writes imports as is: the app signs in at the
+Teleport proxy in the browser instead of running `tsh` (see the table below). Without a
+browser sign-in (a shared phone, a bot), an administrator can instead issue a kubeconfig with a
+short-lived client certificate for a Teleport user whose roles allow the cluster:
 
 ```sh
 tctl auth sign --user=ichor-phone --format=kubernetes \
@@ -261,13 +262,13 @@ when no such label is set, as on bare metal.
 | Azure `kubelogin` (AKS with Entra ID) | Device code or browser, or a service principal |
 | `doctl … exec-credential` | A DigitalOcean API token (short-lived cluster credentials from it) |
 | `rancher token` | A Rancher API key |
+| `tsh kube credentials` (Teleport) | Signs in at the Teleport proxy in the browser (GitHub, OIDC or SAML connector) and keeps the short-lived certificate; sign in again when it expires |
 
 Any other `exec:` plugin cannot run on the phone, and the context cannot be imported. The import
 preview names the plugin and says what to do instead:
 
 | Plugin | What to do instead |
 |---|---|
-| `tsh` (Teleport) | Teleport sign-in from the phone is planned; until then, export a kubeconfig with a client certificate (`tctl auth sign --format=kubernetes`, [example](#example-kubeconfigs-proxy-bastion-teleport-tailscale)) |
 | `vault`, `aws-vault`, `az` | They only print a token: paste that token, or use a client certificate |
 | kubelogin without `--oidc-issuer-url` | Export it again with the issuer URL, and the built-in OIDC sign-in takes over |
 | Anything else | Use a client certificate or a token |

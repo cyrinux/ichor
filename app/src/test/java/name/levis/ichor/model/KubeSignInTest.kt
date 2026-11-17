@@ -68,6 +68,14 @@ class KubeSignInTest {
         assertFalse(credentialsComplete(native.fieldSets[1], emptyMap()))
         assertEquals(R.string.kube_signin_option_google, fieldSetLabel(native.fieldSets[1]))
 
+        val teleport = TalosJson.decodeFromString(
+            KubeSignInInfo.serializer(),
+            """{"method":"teleport","kind":"browser","values":{"teleportProxy":"proxy.example.org:443","teleportCluster":"teleport.example.org",""" +
+                """"kubeCluster":"sample-kube","teleportConnector":"sample-github"},"signedIn":true,"user":"sample-user","sessionExpires":1700000000}""",
+        )
+        assertEquals(R.string.kube_signin_method_teleport, signInMethodName(teleport.method))
+        assertEquals(TELEPORT_VALUES.map { it.first }, TELEPORT_VALUES.map { it.first }.filter { teleport.values.containsKey(it) })
+
         val oidc = TalosJson.decodeFromString(KubeSignInInfo.serializer(), """{"method":"oidc","kind":"browser","signedIn":true,"user":"me@example.com","sessionExpires":1700000000}""")
         assertEquals(listOf(emptyList<String>()), oidc.fieldSets)
         assertTrue(oidc.signedIn)

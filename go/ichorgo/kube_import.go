@@ -64,7 +64,6 @@ const (
 
 // What to do instead of an exec plugin the phone cannot run. The apps map the codes to localized text.
 const (
-	ExecHintTeleport     = "teleport"       // tsh before its sign-in: kept for the apps' tables until they drop it
 	ExecHintTokenWrapper = "token-wrapper"  // vault, aws-vault, az: paste the token they print
 	ExecHintOIDCNoIssuer = "oidc-no-issuer" // kubelogin without an issuer: re-export with one
 	ExecHintUnknown      = "unknown"

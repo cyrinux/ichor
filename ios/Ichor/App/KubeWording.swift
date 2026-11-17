@@ -18,6 +18,7 @@ extension ContextSummary {
             case "rancher": "Rancher"
             case "omni": "Sidero Omni"
             case "omni-service-account": String(localized: "Omni service account")
+            case kubeTeleportMethod: "Teleport"
             case "exec": String(localized: "Exec plugin")
             case "auth-provider": String(localized: "Auth provider")
             case "basic": String(localized: "Username and password")
@@ -30,11 +31,6 @@ extension ContextSummary {
     /// What to do instead of the exec plugin the phone cannot run.
     private var localizedExecHint: String {
         switch execHint {
-        case "teleport":
-            return String(
-                localized:
-                    "Teleport sign-in from the phone is planned; until then, export a kubeconfig with a client certificate."
-            )
         case "token-wrapper":
             return String(localized: "It only prints a token: paste that token, or use a client certificate.")
         case "oidc-no-issuer":

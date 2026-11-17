@@ -2,6 +2,22 @@ import XCTest
 @testable import IchorCore
 
 final class KubeAuthTests: XCTestCase {
+    func testTeleportInfoListsItsValuesInOrder() throws {
+        let json =
+            #"{"method":"teleport","kind":"browser","values":{"kubeCluster":"sample-kube","teleportProxy":"proxy.example.org:443","#
+            + #""teleportConnector":"sample-github","teleportCluster":"teleport.example.org"},"signedIn":true,"user":"sample-user","#
+            + #""sessionExpires":1700000000}"#
+        let info = try JSONDecoder().decode(KubeSignInInfo.self, from: Data(json.utf8))
+        XCTAssertTrue(info.isTeleport)
+        XCTAssertEqual(info.teleportValues.map(\.key), kubeTeleportValueKeys)
+        XCTAssertEqual(info.teleportValues.first?.value, "proxy.example.org:443")
+
+        let partial = KubeSignInInfo(
+            method: "teleport", kind: "browser", values: ["kubeCluster": "sample-kube", "teleportConnector": ""])
+        XCTAssertEqual(partial.teleportValues, [KubeTeleportValue(key: "kubeCluster", value: "sample-kube")])
+        XCTAssertFalse(KubeSignInInfo(method: "oidc", kind: "browser").isTeleport)
+    }
+
     func testDiscoverNeedsSignIn() {
         XCTAssertTrue(
             kubeDiscoverNeedsSignIn(["gcpOAuthClientId", "gcpOAuthClientSecret", "gcpOAuthRedirectUrl", "gcpProjects"]))
