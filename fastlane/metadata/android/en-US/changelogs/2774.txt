@@ -1,0 +1,7 @@
+• The sign-in sheet names Teleport and shows what it signs in to
+• Teleport clusters reach Kubernetes with the sign-in certificate
+• Grafana IRM joins PagerDuty as an on-call provider
+• The AI diagnosis turns its fix into a runbook you review and confirm
+• Logrus and zerolog console lines get their level and fields
+• A pod's sheet shows each container's CPU and memory against its own request and limit
+• Ship ichor-relay as a ghcr.io image with plain manifests and a setup page
