@@ -262,18 +262,18 @@ func checkSecretsEvent(t *testing.T, raw []string) {
 func TestHetznerNewClusterRefusedBeforeWrite(t *testing.T) {
 	for _, tc := range []struct {
 		name, want string
-		fake       fakeHetzner
+		fake       *fakeHetzner
 		edit       func(*hetznerNewClusterSpec)
 	}{
-		{name: "read-only token", want: "read-only", fake: fakeHetzner{readOnly: true}},
-		{name: "architecture", want: "pick another", fake: fakeHetzner{imageArch: hetznerArchARM}},
+		{name: "read-only token", want: "read-only", fake: &fakeHetzner{readOnly: true}},
+		{name: "architecture", want: "pick another", fake: &fakeHetzner{imageArch: hetznerArchARM}},
 		{name: "name", want: "not a cluster name", edit: func(s *hetznerNewClusterSpec) { s.Name = "my lab" }},
 		{name: "snapshot", want: "pick a server type", edit: func(s *hetznerNewClusterSpec) { s.SnapshotID = 0 }},
 		{name: "location", want: "not sold in", edit: func(s *hetznerNewClusterSpec) { s.Location = "hel1" }},
 		{name: "kubernetes", want: "Kubernetes version", edit: func(s *hetznerNewClusterSpec) { s.KubernetesVersion = "latest" }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			fh := &fakeHetznerCluster{fakeHetzner: &tc.fake}
+			fh := &fakeHetznerCluster{fakeHetzner: tc.fake}
 			startFakeHetznerCluster(t, fh)
 
 			rec := newJoinRecorder()
