@@ -38,6 +38,13 @@ struct HetznerNewClusterSection: View {
                 "A project token, a server type, a location and the project's Talos snapshot: this phone reserves a Primary IP, makes the cluster's secrets for it, stores the talosconfig, then creates the server and bootstraps it. Workers come later from Add a node."
             )
             .font(.footnote).foregroundStyle(.secondary)
+            .task { await load() }
+            .sheet(isPresented: $addingToken) {
+                HetznerTokenSheet { added in
+                    reloadProjects()
+                    pick(added)
+                }
+            }
             if demo {
                 Text("Demo cluster: these are samples, and nothing is created.")
                     .font(.footnote).foregroundStyle(.secondary)
@@ -46,13 +53,6 @@ struct HetznerNewClusterSection: View {
             }
         } header: {
             Text("A server at Hetzner")
-        }
-        .task { await load() }
-        .sheet(isPresented: $addingToken) {
-            HetznerTokenSheet { added in
-                reloadProjects()
-                pick(added)
-            }
         }
         if let options { optionsSection(options) }
     }
