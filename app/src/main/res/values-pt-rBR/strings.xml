@@ -1878,6 +1878,15 @@
     <string name="ai_stop">Parar</string>
     <string name="ai_copy">Copiar</string>
     <string name="ai_disclaimer">As respostas da IA podem estar erradas. Confira um comando antes de executá-lo, especialmente um que redefine um nó ou altera o etcd.</string>
+    <string name="ai_runbook_propose">Transformar a correção em runbook</string>
+    <string name="ai_runbook_proposing">Escrevendo o runbook…</string>
+    <string name="ai_runbook_title">Runbook a partir da resposta</string>
+    <string name="ai_runbook_hint">Escrito pelo modelo a partir da resposta; verificado pelo planejador; nada é executado até você confirmar cada etapa.</string>
+    <string name="ai_runbook_empty">Nenhuma etapa da resposta pode ser feita pelo app.</string>
+    <string name="ai_runbook_rejected">Não é possível pelo app</string>
+    <string name="ai_runbook_rejected_row">%1$s: %2$s</string>
+    <string name="ai_runbook_keep">Manter</string>
+    <string name="ai_runbook_kept">Mantido com os runbooks deste cluster.</string>
     <string name="ai_health_explain_title">O que deu errado</string>
     <string name="ai_health_explain_hint">Envia as verificações com falha, a prontidão dos nós e os eventos recentes para %1$s.</string>
     <string name="ai_health_explain">Explicar com IA</string>

@@ -95,7 +95,7 @@ func diagnosisSystemPrompt(language string, anonymized bool) string {
 
 // Log lines can hold anything, including text written by whoever runs a pod: a "</report>"
 // in there must not end the report early, nor a fake operator note follow it.
-var promptTag = regexp.MustCompile(`(?i)<(/?\s*(?:report|operator_note))`)
+var promptTag = regexp.MustCompile(`(?i)<(/?\s*(?:report|operator_note|answer))`)
 
 // neutralizeTags turns the "<" of anything that looks like one of the message's own tags
 // into a look-alike, so the only real tags are the ones diagnosisUserMessage writes.

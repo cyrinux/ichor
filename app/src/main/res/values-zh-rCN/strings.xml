@@ -1822,6 +1822,15 @@
     <string name="ai_stop">停止</string>
     <string name="ai_copy">复制</string>
     <string name="ai_disclaimer">AI 的回答可能有误。运行命令前请先检查，尤其是会重置节点或更改 etcd 的命令。</string>
+    <string name="ai_runbook_propose">将修复方案转为运行手册</string>
+    <string name="ai_runbook_proposing">正在编写运行手册…</string>
+    <string name="ai_runbook_title">根据回答生成的运行手册</string>
+    <string name="ai_runbook_hint">由模型根据其回答编写，并经规划器检查；在你确认每一步之前不会运行任何操作。</string>
+    <string name="ai_runbook_empty">回答中没有可在应用内执行的步骤。</string>
+    <string name="ai_runbook_rejected">无法在应用中执行</string>
+    <string name="ai_runbook_rejected_row">%1$s：%2$s</string>
+    <string name="ai_runbook_keep">保留</string>
+    <string name="ai_runbook_kept">已保存到此集群的运行手册中。</string>
     <string name="ai_health_explain_title">出了什么问题</string>
     <string name="ai_health_explain_hint">将失败的检查项、节点就绪状态和最近事件发送给 %1$s。</string>
     <string name="ai_health_explain">用 AI 解释</string>

@@ -382,6 +382,9 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "diagnose-runbook", args: "anthropic|openai [MODEL]", run: func(e env) (out string, err error) {
+		return diagnoseRunbook(e, flag.Arg(1), flag.Arg(2))
+	}},
 	{name: "ai-models", args: "anthropic|openai", run: func(e env) (out string, err error) {
 		out, err = ichorgo.AIModels(flag.Arg(1), aiKey(flag.Arg(1)), os.Getenv("ICHOR_AI_BASE_URL"))
 

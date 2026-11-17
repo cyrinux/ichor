@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonObject
+import name.levis.ichor.model.RunbookProposal
 import name.levis.ichorgo.Diagnosis
 import name.levis.ichorgo.DiagnosisListener
 import name.levis.ichorgo.Ichorgo
@@ -91,6 +92,20 @@ class DiagnosisRepository(
         val subjectJson = TalosJson.encodeToString(JsonObject.serializer(), subject)
         return withContext(Dispatchers.IO) {
             Ichorgo.collectExplanation(target.yaml, target.context, target.server, kind, subjectJson, anonymize)
+        }
+    }
+
+    /**
+     * Asks the model to write [answer] (the diagnosis answer as shown) as a runbook of the app's
+     * own actions, and plans it on the cluster of the report. Nothing is stored or run.
+     */
+    suspend fun proposeRunbook(diagnosis: Diagnosis, settings: AiSettings, apiKey: String, language: String, answer: String): RunbookProposal {
+        val baseUrl = baseUrlOf(settings)
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(
+                RunbookProposal.serializer(),
+                Ichorgo.proposeRunbook(diagnosis, settings.provider, apiKey, settings.model, baseUrl, language, answer),
+            )
         }
     }
 

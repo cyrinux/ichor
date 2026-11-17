@@ -1,6 +1,111 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Turn the fix into a runbook" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Turn the fix into a runbook" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Transformer le correctif en runbook" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Convertir la solución en runbook" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lösung in ein Runbook umwandeln" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Trasforma la soluzione in un runbook" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Перетворити виправлення на runbook" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "修正をランブックにする" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Transformar a correção em runbook" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Превратить исправление в runbook" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将修复方案转为运行手册" } }
+      }
+    },
+    "Writing the runbook…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Writing the runbook…" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rédaction du runbook…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Escribiendo el runbook…" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Runbook wird geschrieben…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scrittura del runbook…" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Складання runbook…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ランブックを作成中…" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escrevendo o runbook…" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Составление runbook…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在编写运行手册…" } }
+      }
+    },
+    "Runbook from the answer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Runbook from the answer" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Runbook issu de la réponse" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Runbook a partir de la respuesta" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Runbook aus der Antwort" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Runbook dalla risposta" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Runbook із відповіді" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "回答から作ったランブック" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Runbook a partir da resposta" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Runbook из ответа" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "根据回答生成的运行手册" } }
+      }
+    },
+    "Written by the model from its answer; checked by the planner; nothing runs until you confirm each step." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Written by the model from its answer; checked by the planner; nothing runs until you confirm each step." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Écrit par le modèle à partir de sa réponse ; vérifié par le planificateur ; rien ne s’exécute avant que vous confirmiez chaque étape." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Escrito por el modelo a partir de su respuesta; comprobado por el planificador; nada se ejecuta hasta que confirmas cada paso." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Vom Modell aus seiner Antwort geschrieben, vom Planer geprüft; nichts läuft, bevor Sie jeden Schritt bestätigen." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scritto dal modello a partire dalla sua risposta; verificato dal pianificatore; nulla viene eseguito finché non confermi ogni passo." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Написано моделлю з її відповіді; перевірено планувальником; нічого не запускається, доки ви не підтвердите кожен крок." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "モデルが回答から作成し、プランナーが確認しました。各ステップを確認するまで何も実行されません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escrito pelo modelo a partir da resposta; verificado pelo planejador; nada é executado até você confirmar cada etapa." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Написано моделью по её ответу; проверено планировщиком; ничего не запускается, пока вы не подтвердите каждый шаг." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "由模型根据其回答编写，并经规划器检查；在你确认每一步之前不会运行任何操作。" } }
+      }
+    },
+    "No step of the answer is something the app can do." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No step of the answer is something the app can do." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucune étape de la réponse n’est faisable depuis l’app." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ningún paso de la respuesta se puede hacer desde la app." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Schritt der Antwort ist in der App möglich." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun passo della risposta si può fare dall’app." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Жоден крок відповіді не можна виконати із застосунку." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "回答のどのステップもアプリでは実行できません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nenhuma etapa da resposta pode ser feita pelo app." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ни один шаг ответа нельзя выполнить из приложения." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "回答中没有可在应用内执行的步骤。" } }
+      }
+    },
+    "Not possible from the app" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not possible from the app" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Impossible depuis l’app" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No es posible desde la app" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "In der App nicht möglich" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non possibile dall’app" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Неможливо із застосунку" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アプリからは実行できません" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não é possível pelo app" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Невозможно из приложения" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法在应用中执行" } }
+      }
+    },
+    "Kept with this cluster’s runbooks." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Kept with this cluster’s runbooks." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Gardé avec les runbooks de ce cluster." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Guardado con los runbooks de este clúster." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bei den Runbooks dieses Clusters gespeichert." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Salvato con i runbook di questo cluster." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Збережено з runbook цього кластера." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このクラスターのランブックに保存しました。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Mantido com os runbooks deste cluster." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сохранено с runbook этого кластера." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已保存到此集群的运行手册中。" } }
+      }
+    },
     "What is going on" : {
       "extractionState" : "manual",
       "localizations" : {

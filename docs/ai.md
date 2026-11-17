@@ -123,6 +123,17 @@ and never contacts a model provider.
   refuse (often `pods/log`) leaves a line in the report instead. It is anonymized and scrubbed
   like the full report, and the model never asks for more here. *Continue in Diagnosis* opens the
   full report with the subject as the note.
+- **From the answer to a runbook:** under a finished answer, *Turn the fix into a runbook* asks
+  the same model once more, with the [runbook](runbooks.md) format and the app's own actions
+  (the built-in ones, and those of the plugins the cluster runs), to write the answer's fix as
+  steps. The model gets the report and the answer anonymized as before, and never a tool. What
+  it writes goes through the runbook planner step by step: an unknown action (a `kubectl` or
+  `talosctl` command), a parameter the action does not take, a `${name}`, a target that the
+  report and the answer never named, or a plugin the cluster does not run is left out and listed
+  under *Not possible from the app* with its reason. The rest is planned as any runbook (the
+  role, the cluster's RBAC, the destructive steps). Nothing is stored or run: *Keep* adds it to
+  the cluster's runbooks, *Run* starts the usual run, which asks before each destructive step and
+  is refused in the demo. Leaving the screen without Keep leaves nothing behind.
 - **Panel assistant:** on the Metrics screen, the sparkle button (or *Ask AI* in the panel
   editor) opens a chat with the same model to write a PromQL panel from a description, or to
   change the one being edited. The model gets the metric names your source knows and the
@@ -140,6 +151,8 @@ go run ./cmd/probe diagnose-report        # the anonymized report; nothing is se
 # stderr each thing the model asks for:
 ANTHROPIC_API_KEY=... go run ./cmd/probe diagnose anthropic
 OPENAI_API_KEY=... go run ./cmd/probe diagnose openai gpt-6-astra
+# The diagnosis, then its fix as a runbook: the YAML, its plan and the steps left out (nothing runs)
+ANTHROPIC_API_KEY=... go run ./cmd/probe diagnose-runbook anthropic
 # The health check helper: runs the health check, then prints what would be sent (anonymized,
 # nothing is sent), or sends it with the real names and prints the answer
 go run ./cmd/probe health-explain-report

@@ -1883,6 +1883,15 @@
     <string name="ai_stop">Arrêter</string>
     <string name="ai_copy">Copier</string>
     <string name="ai_disclaimer">Les réponses de l’IA peuvent être fausses. Vérifiez une commande avant de l’exécuter, surtout si elle réinitialise un nœud ou modifie etcd.</string>
+    <string name="ai_runbook_propose">Transformer le correctif en runbook</string>
+    <string name="ai_runbook_proposing">Rédaction du runbook…</string>
+    <string name="ai_runbook_title">Runbook issu de la réponse</string>
+    <string name="ai_runbook_hint">Écrit par le modèle à partir de sa réponse ; vérifié par le planificateur ; rien ne s’exécute avant que vous confirmiez chaque étape.</string>
+    <string name="ai_runbook_empty">Aucune étape de la réponse n’est faisable depuis l’app.</string>
+    <string name="ai_runbook_rejected">Impossible depuis l’app</string>
+    <string name="ai_runbook_rejected_row">%1$s : %2$s</string>
+    <string name="ai_runbook_keep">Garder</string>
+    <string name="ai_runbook_kept">Gardé avec les runbooks de ce cluster.</string>
     <string name="ai_health_explain_title">Ce qui ne va pas</string>
     <string name="ai_health_explain_hint">Envoie les vérifications en échec, l’état des nœuds et les événements récents à %1$s.</string>
     <string name="ai_health_explain">Expliquer avec l’IA</string>

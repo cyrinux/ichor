@@ -1990,6 +1990,15 @@
     <string name="ai_stop">Остановить</string>
     <string name="ai_copy">Копировать</string>
     <string name="ai_disclaimer">Ответы ИИ могут быть ошибочными. Проверяйте команду перед запуском, особенно если она сбрасывает узел или изменяет etcd.</string>
+    <string name="ai_runbook_propose">Превратить исправление в runbook</string>
+    <string name="ai_runbook_proposing">Составление runbook…</string>
+    <string name="ai_runbook_title">Runbook из ответа</string>
+    <string name="ai_runbook_hint">Написано моделью по её ответу; проверено планировщиком; ничего не запускается, пока вы не подтвердите каждый шаг.</string>
+    <string name="ai_runbook_empty">Ни один шаг ответа нельзя выполнить из приложения.</string>
+    <string name="ai_runbook_rejected">Невозможно из приложения</string>
+    <string name="ai_runbook_rejected_row">%1$s: %2$s</string>
+    <string name="ai_runbook_keep">Сохранить</string>
+    <string name="ai_runbook_kept">Сохранено с runbook этого кластера.</string>
     <string name="ai_health_explain_title">Что пошло не так</string>
     <string name="ai_health_explain_hint">Отправляет в %1$s непройденные проверки, готовность узлов и недавние события.</string>
     <string name="ai_health_explain">Объяснить с помощью ИИ</string>

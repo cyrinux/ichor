@@ -48,6 +48,19 @@ final class DiagnosisReport: Sendable {
         return askNow(provider: provider, settings: settings, language: language, note: note, allowTools: allowTools)
     }
 
+    /// Asks the model to write `answer` (the diagnosis answer as shown) as a runbook of the app's
+    /// own actions, planned on the report's cluster. Nothing is stored or run.
+    func proposeRunbook(
+        provider: String, settings: AIProviderSettings, language: String, answer: String
+    ) async throws -> RunbookProposal {
+        // The cluster's Ollama: its forward opens first.
+        let resolved = provider == ollamaClusterProvider ? try await AIForward.shared.resolved(settings) : settings
+        return try await TalosClient.json { [go] error in
+            IchorgoProposeRunbook(
+                go.value, provider, resolved.apiKey, resolved.model, resolved.baseURL, language, answer, error)
+        }
+    }
+
     private func askNow(
         provider: String, settings: AIProviderSettings, language: String, note: String, allowTools: Bool
     ) -> AsyncStream<DiagnosisEvent> {

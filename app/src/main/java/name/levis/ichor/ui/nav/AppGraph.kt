@@ -72,6 +72,7 @@ internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kub
             initialNote = entry.arguments?.getString("note").orEmpty(),
             onBack = { nav.popBackStack() },
             onSettings = { nav.navigate(Routes.SETTINGS) },
+            onRunbookRunning = { nav.navigate(Routes.RUNBOOK_RUN) },
         )
     }
     composable(Routes.ACTIVITY, arguments = listOf(navArgument("cluster") { type = NavType.StringType; defaultValue = "" })) { entry ->

@@ -14,10 +14,13 @@ struct DiagnosisView: View {
     @State private var toolCalls: [AIToolCall] = []
     @State private var toolsUnsupported = false
     @State private var asking: Task<Void, Never>?
+    /// Where a proposed runbook's run opens; nil where the diagnosis is pushed without a path.
+    private let path: Binding<[Route]>?
 
     /// `initialNote`: what the screen that opened this one already knows (a failed health check).
-    init(initialNote: String = "") {
+    init(initialNote: String = "", path: Binding<[Route]>? = nil) {
         _note = State(initialValue: initialNote)
+        self.path = path
     }
 
     var body: some View {
@@ -118,6 +121,9 @@ struct DiagnosisView: View {
                         "AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd."
                     )
                 }
+            }
+            if asking == nil, answerError == nil, !answer.isEmpty, let provider = ai.provider, ai.canAsk {
+                RunbookProposalSection(report: report, provider: provider, answer: answer, path: path)
             }
         }
         .refreshable { await collect() }

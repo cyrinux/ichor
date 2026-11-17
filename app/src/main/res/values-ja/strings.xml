@@ -1822,6 +1822,15 @@
     <string name="ai_stop">停止</string>
     <string name="ai_copy">コピー</string>
     <string name="ai_disclaimer">AI の回答は誤っている場合があります。コマンドは実行前に確認してください。特にノードをリセットするものや etcd を変更するものは注意が必要です。</string>
+    <string name="ai_runbook_propose">修正をランブックにする</string>
+    <string name="ai_runbook_proposing">ランブックを作成中…</string>
+    <string name="ai_runbook_title">回答から作ったランブック</string>
+    <string name="ai_runbook_hint">モデルが回答から作成し、プランナーが確認しました。各ステップを確認するまで何も実行されません。</string>
+    <string name="ai_runbook_empty">回答のどのステップもアプリでは実行できません。</string>
+    <string name="ai_runbook_rejected">アプリからは実行できません</string>
+    <string name="ai_runbook_rejected_row">%1$s：%2$s</string>
+    <string name="ai_runbook_keep">保存</string>
+    <string name="ai_runbook_kept">このクラスターのランブックに保存しました。</string>
     <string name="ai_health_explain_title">問題の内容</string>
     <string name="ai_health_explain_hint">失敗したチェック、ノードの準備状態、最近のイベントを %1$s に送信します。</string>
     <string name="ai_health_explain">AI で説明</string>

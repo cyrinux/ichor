@@ -1883,6 +1883,15 @@
     <string name="ai_stop">Stop</string>
     <string name="ai_copy">Copy</string>
     <string name="ai_disclaimer">AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd.</string>
+    <string name="ai_runbook_propose">Turn the fix into a runbook</string>
+    <string name="ai_runbook_proposing">Writing the runbook…</string>
+    <string name="ai_runbook_title">Runbook from the answer</string>
+    <string name="ai_runbook_hint">Written by the model from its answer; checked by the planner; nothing runs until you confirm each step.</string>
+    <string name="ai_runbook_empty">No step of the answer is something the app can do.</string>
+    <string name="ai_runbook_rejected">Not possible from the app</string>
+    <string name="ai_runbook_rejected_row">%1$s: %2$s</string>
+    <string name="ai_runbook_keep">Keep</string>
+    <string name="ai_runbook_kept">Kept with this cluster’s runbooks.</string>
     <string name="ai_health_explain_title">What went wrong</string>
     <string name="ai_health_explain_hint">Sends the failed checks, node readiness and recent events to %1$s.</string>
     <string name="ai_health_explain">Explain with AI</string>

@@ -58,6 +58,8 @@ type Diagnosis struct {
 	kind diagnosisKind
 	// tools is what the model may read more of; nil for a report that takes no tools.
 	tools *diagnosisToolTarget
+	// cluster is the cluster the report is about, which a proposed runbook is planned on.
+	cluster kubeTarget
 }
 
 // diagnosisKind tells which question a report answers.
@@ -89,7 +91,7 @@ func CollectDiagnosis(configYAML, contextName, kubeServer string, anonymize bool
 		return collectKubeReport(configYAML, contextName, kubeServer, anonymize)
 	}
 
-	d = &Diagnosis{}
+	d = &Diagnosis{cluster: kubeTarget{configYAML, contextName, kubeServer}}
 	d.screenshotMode, d.screenshotResets = privacy.state()
 
 	data, err := withSession(configYAML, contextName, diagnosisCollectTimeout, func(ctx context.Context, s *session) (diagnosisData, error) {
