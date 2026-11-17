@@ -39,7 +39,7 @@ struct AlertDetailSheet: View {
         open: @escaping (Route) -> Void, silenced: @escaping () -> Void, silenceComment: String? = nil,
         incident: OnCallIncident? = nil, confidence: OnCallConfidence = .alertname,
         actOnIncident: @escaping (OnCallIncident, OnCallVerb) async -> String? = { _, _ in nil },
-        explainSource: String? = nil
+        onCallGrafana: Bool = false, explainSource: String? = nil
     ) {
         self.alert = alert
         self.node = node
@@ -51,6 +51,7 @@ struct AlertDetailSheet: View {
         self.incident = incident
         self.confidence = confidence
         self.actOnIncident = actOnIncident
+        self.onCallGrafana = onCallGrafana
         self.explainSource = explainSource
         _silencing = State(initialValue: silenceComment != nil)
     }
