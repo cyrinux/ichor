@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/cyrinux/ichor/go/plugin"
+	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
 )
 
 // The facade contract (CYR-440): golden JSON of the responses the apps read most, written from
@@ -38,6 +40,19 @@ var contractFixtures = []struct {
 	{"kube-cronjobs", func() any { return kubeCronJobList{CronJobs: demoCronJobs(contractNow)} }},
 	{"kube-nodes", func() any { return demoEKSNodes() }},
 	{"kube-nodegroups", func() any { return demoNodeGroups(contractNow) }},
+	// A node directory with each entry type (fixed times: the demo's follow the clock).
+	{"node-files", func() any {
+		return buildNodeDirListing("/var/log", []*machineapi.FileInfo{
+			{Name: "/var/log/pods", IsDir: true, Modified: contractNow.Unix()},
+			{Name: "/var/log/containers.log", Size: 2048, Modified: contractNow.Unix()},
+			{Name: "/var/log/current", Mode: uint32(fs.ModeSymlink), Link: "/var/log/pods"},
+		})
+	}},
+	{"node-file-read", func() any {
+		f, _ := demoNodeFileRead(machineConfigPath)
+
+		return f
+	}},
 	// One pod's usage with its containers (the pod sheet); the demo's postgres runs a sidecar.
 	{"kube-top-pod", func() any { return demoTopPod("demo", "postgres-0")() }},
 	{"argocd", func() any { return demoArgoCD(contractNow) }},

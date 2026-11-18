@@ -1,0 +1,8 @@
+{
+  "binary": false,
+  "path": "/system/state/config.yaml",
+  "redacted": true,
+  "size": 388,
+  "text": "version: v1alpha1\nmachine:\n  type: worker\n  token: \u003credacted\u003e\n  ca:\n    crt: LS0tLS1CRUdJTi...\n    key: \u003credacted\u003e\n  install:\n    disk: /dev/sda\n    image: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.11.3\ncluster:\n  clusterName: demo\n  controlPlane:\n    endpoint: https://demo.invalid:6443\n  token: \u003credacted\u003e\n  secretboxEncryptionSecret: '******'\n",
+  "truncated": false
+}

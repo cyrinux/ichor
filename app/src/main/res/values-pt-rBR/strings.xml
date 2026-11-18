@@ -6689,4 +6689,23 @@
     <string name="join_phase_secrets">Salvar o talosconfig</string>
     <string name="join_phase_bootstrapping">Fazer o bootstrap do etcd</string>
     <string name="join_phase_ready">Cluster pronto</string>
+    <string name="node_menu_files">Arquivos</string>
+    <string name="node_files_title">Arquivos do nó</string>
+    <string name="node_files_go_to">Ir para o caminho</string>
+    <string name="node_files_path_label">Caminho absoluto</string>
+    <string name="node_files_path_invalid">Digite um caminho absoluto, sem ..</string>
+    <string name="node_files_go_list">Listar</string>
+    <string name="node_files_go_read">Ler</string>
+    <string name="node_files_empty">Este diretório está vazio</string>
+    <string name="node_files_truncated">Somente as primeiras %1$s entradas são mostradas</string>
+    <string name="node_files_link_to">Link para %1$s</string>
+    <string name="node_files_open_as_file">Ler como arquivo</string>
+    <string name="node_file_size">%1$s lidos</string>
+    <string name="node_file_truncated">somente os primeiros 512 KiB</string>
+    <string name="node_file_redacted">segredos ocultados</string>
+    <string name="node_file_binary">Arquivo binário: seus bytes não são mostrados.</string>
+    <string name="node_file_empty">Este arquivo está vazio</string>
+    <string name="node_file_copy">Copiar</string>
+    <string name="node_file_share">Compartilhar</string>
+    <string name="node_file_share_chooser">Compartilhar o arquivo</string>
 </resources>

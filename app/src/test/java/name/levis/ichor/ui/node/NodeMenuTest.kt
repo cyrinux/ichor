@@ -40,7 +40,7 @@ class NodeMenuTest {
         assertEquals(
             listOf(
                 NodeMenuEntry.KERNEL_LOG, NodeMenuEntry.EVENTS, NodeMenuEntry.NETWORK,
-                NodeMenuEntry.HARDWARE, NodeMenuEntry.IMAGES, NodeMenuEntry.STORAGE,
+                NodeMenuEntry.HARDWARE, NodeMenuEntry.IMAGES, NodeMenuEntry.STORAGE, NodeMenuEntry.FILES,
             ),
             groups[1].second,
         )

@@ -29,7 +29,7 @@ import name.levis.ichor.model.MonoTextScale
 import name.levis.ichor.ui.theme.monoSmall
 
 /** The screens whose dense monospace text the user resizes; each keeps its own size. */
-enum class MonoScreen(val key: String) { LOGS("logs"), CAPTURE("capture") }
+enum class MonoScreen(val key: String) { LOGS("logs"), CAPTURE("capture"), FILES("files") }
 
 /** What a [ScalableMonoText] hands its rows: the picked style and the screen-reader actions. */
 private class MonoText(val style: TextStyle, val actions: List<CustomAccessibilityAction>)

@@ -10,6 +10,7 @@ import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.Lan
@@ -79,6 +80,8 @@ enum class NodeMenuEntry(
     HARDWARE(NodeMenuGroup.INSPECT, R.string.node_menu_hardware, TalosFeature.HARDWARE, null),
     IMAGES(NodeMenuGroup.INSPECT, R.string.node_menu_images, TalosFeature.IMAGES, null),
     STORAGE(NodeMenuGroup.INSPECT, R.string.node_menu_storage, TalosFeature.MOUNTS, null),
+    // Directory listing and file reads (talosctl ls / read): every Talos version, os:reader.
+    FILES(NodeMenuGroup.INSPECT, R.string.node_menu_files, null, null),
     RESOURCES(NodeMenuGroup.INSPECT, R.string.node_menu_resources, TalosFeature.RESOURCE_BROWSER, Feature.RESOURCE_BROWSER),
     DEBUG_SHELL(NodeMenuGroup.TROUBLESHOOT, R.string.node_menu_debug_shell, TalosFeature.DEBUG_SHELL, Feature.DEBUG_SHELL),
     // The same privileged netshoot container as the debug shell, one check at a time.
@@ -115,6 +118,7 @@ internal val NodeMenuEntry.icon: ImageVector
         NodeMenuEntry.HARDWARE -> Icons.Outlined.Memory
         NodeMenuEntry.IMAGES -> Icons.Outlined.Layers
         NodeMenuEntry.STORAGE -> Icons.Outlined.SdStorage
+        NodeMenuEntry.FILES -> Icons.Outlined.Folder
         NodeMenuEntry.RESOURCES -> Icons.Outlined.AccountTree
         NodeMenuEntry.CAPTURE -> Icons.Outlined.NetworkCheck
         NodeMenuEntry.NET_TOOLS -> Icons.Outlined.Dns
@@ -162,7 +166,7 @@ val NodeMenuEntry.transport: NodeTransport
         NodeMenuEntry.TAB_SERVICES, NodeMenuEntry.TAB_RESOURCES, NodeMenuEntry.TAB_LIVE,
         NodeMenuEntry.TAB_PROCESSES, NodeMenuEntry.TAB_CONTAINERS, NodeMenuEntry.TAB_CGROUPS,
         NodeMenuEntry.KERNEL_LOG, NodeMenuEntry.EVENTS, NodeMenuEntry.NETWORK, NodeMenuEntry.HARDWARE,
-        NodeMenuEntry.IMAGES, NodeMenuEntry.STORAGE, NodeMenuEntry.RESOURCES, NodeMenuEntry.DEBUG_SHELL,
+        NodeMenuEntry.IMAGES, NodeMenuEntry.STORAGE, NodeMenuEntry.FILES, NodeMenuEntry.RESOURCES, NodeMenuEntry.DEBUG_SHELL,
         NodeMenuEntry.NET_TOOLS, NodeMenuEntry.CAPTURE, NodeMenuEntry.MACHINE_CONFIG, NodeMenuEntry.UPGRADE,
         NodeMenuEntry.RESET -> NodeTransport.TALOS
     }

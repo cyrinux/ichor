@@ -6684,4 +6684,23 @@
     <string name="join_phase_secrets">talosconfig speichern</string>
     <string name="join_phase_bootstrapping">etcd bootstrappen</string>
     <string name="join_phase_ready">Cluster bereit</string>
+    <string name="node_menu_files">Dateien</string>
+    <string name="node_files_title">Node-Dateien</string>
+    <string name="node_files_go_to">Zu Pfad wechseln</string>
+    <string name="node_files_path_label">Absoluter Pfad</string>
+    <string name="node_files_path_invalid">Gib einen absoluten Pfad ohne .. ein</string>
+    <string name="node_files_go_list">Auflisten</string>
+    <string name="node_files_go_read">Lesen</string>
+    <string name="node_files_empty">Dieses Verzeichnis ist leer</string>
+    <string name="node_files_truncated">Nur die ersten %1$s Einträge werden angezeigt</string>
+    <string name="node_files_link_to">Verweis auf %1$s</string>
+    <string name="node_files_open_as_file">Als Datei lesen</string>
+    <string name="node_file_size">%1$s gelesen</string>
+    <string name="node_file_truncated">nur die ersten 512 KiB</string>
+    <string name="node_file_redacted">Geheimnisse geschwärzt</string>
+    <string name="node_file_binary">Binärdatei: ihre Bytes werden nicht angezeigt.</string>
+    <string name="node_file_empty">Diese Datei ist leer</string>
+    <string name="node_file_copy">Kopieren</string>
+    <string name="node_file_share">Teilen</string>
+    <string name="node_file_share_chooser">Datei teilen</string>
 </resources>

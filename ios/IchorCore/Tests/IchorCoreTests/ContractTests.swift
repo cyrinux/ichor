@@ -38,6 +38,13 @@ final class ContractTests: XCTestCase {
             XCTAssertTrue($0.groups[0].atMax)
             XCTAssertEqual($0.groups[0].issues.first?.code, "AsgInstanceLaunchFailures")
         },
+        "node-files": ContractTests.row(NodeDirListing.self) {
+            XCTAssertEqual($0.entries.map(\.type), ["dir", "file", "link"])
+            XCTAssertEqual($0.entries.last?.target, "/var/log/pods")
+        },
+        "node-file-read": ContractTests.row(NodeFileText.self) {
+            XCTAssertTrue($0.redacted && !$0.binary && $0.text.contains("<redacted>"))
+        },
         "kube-top-pod": ContractTests.row(KubeTopPods.self) { XCTAssertEqual($0.pods.first?.containers.count, 2) },
         "log-entry": ContractTests.row(LogEntry.self) { XCTAssertEqual($0.spans.first?.fgRgb, "#ff8700") },
         "argocd": ContractTests.row(ArgoStatus.self),

@@ -9,6 +9,8 @@ import name.levis.ichor.util.StartupTrace
 import name.levis.ichor.model.MetaKeyList
 import name.levis.ichor.model.AuditReport
 import name.levis.ichor.model.CgroupReport
+import name.levis.ichor.model.NodeDirListing
+import name.levis.ichor.model.NodeFileText
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.NetTool
 import name.levis.ichor.model.NetToolEvent
@@ -146,6 +148,16 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** The node's cgroup tree with pressure, for the pressure card and the Cgroups tab (os:admin; not cached). */
     suspend fun cgroups(node: String): CgroupReport = call { cfg, ctx ->
         TalosJson.decodeFromString(CgroupReport.serializer(), Ichorgo.nodeCgroups(cfg, ctx, node))
+    }
+
+    /** The entries directly below [dir] on the node ("" for /var/log), for the Files screen (os:reader; not cached). */
+    suspend fun nodeFiles(node: String, dir: String): NodeDirListing = call { cfg, ctx ->
+        TalosJson.decodeFromString(NodeDirListing.serializer(), Ichorgo.nodeFiles(cfg, ctx, node, dir))
+    }
+
+    /** The text of [path] on the node, capped at 512 KiB, secrets under /system/state redacted (os:reader). */
+    suspend fun nodeFileRead(node: String, path: String): NodeFileText = call { cfg, ctx ->
+        TalosJson.decodeFromString(NodeFileText.serializer(), Ichorgo.nodeFileRead(cfg, ctx, node, path))
     }
 
     /** One sample of the node's system and CRI containers for the Pods tab (not cached: always fresh). */

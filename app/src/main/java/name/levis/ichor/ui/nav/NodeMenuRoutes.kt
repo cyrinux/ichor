@@ -14,6 +14,7 @@ internal fun nodeMenuRoute(addr: String, host: String, entry: NodeMenuEntry): St
     NodeMenuEntry.HARDWARE -> Routes.hardware(addr, host)
     NodeMenuEntry.IMAGES -> Routes.images(addr, host)
     NodeMenuEntry.STORAGE -> Routes.storage(addr, host)
+    NodeMenuEntry.FILES -> Routes.nodeFiles(addr, host)
     NodeMenuEntry.RESOURCES -> Routes.resources(addr, host)
     NodeMenuEntry.DEBUG_SHELL -> Routes.debug(addr, host)
     NodeMenuEntry.CAPTURE -> Routes.capture(addr, host)

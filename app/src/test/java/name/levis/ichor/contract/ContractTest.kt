@@ -11,6 +11,8 @@ import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.AmAlerts
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.CheckupReport
+import name.levis.ichor.model.NodeDirListing
+import name.levis.ichor.model.NodeFileText
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.ClusterUpdates
@@ -66,6 +68,11 @@ class ContractTest {
             assertTrue(it.groups[0].atMax)
             assertEquals("AsgInstanceLaunchFailures", it.groups[0].issues.first().code)
         },
+        "node-files" to Row(NodeDirListing.serializer()) {
+            assertEquals(listOf("dir", "file", "link"), it.entries.map { e -> e.type })
+            assertEquals("/var/log/pods", it.entries.last().target)
+        },
+        "node-file-read" to Row(NodeFileText.serializer()) { assertTrue(it.redacted && !it.binary && it.text.contains("<redacted>")) },
         "kube-top-pod" to Row(KubeTopPods.serializer()) { assertEquals(2, it.pods.single().containers.size) },
         "argocd" to Row(ArgoStatus.serializer()) { assertTrue(it.installed && it.apps.isNotEmpty()) },
         "flux" to Row(FluxStatus.serializer()) { assertTrue(it.installed) },

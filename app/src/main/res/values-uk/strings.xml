@@ -6952,4 +6952,23 @@
     <string name="join_phase_secrets">Зберегти talosconfig</string>
     <string name="join_phase_bootstrapping">Ініціалізувати etcd</string>
     <string name="join_phase_ready">Кластер готовий</string>
+    <string name="node_menu_files">Файли</string>
+    <string name="node_files_title">Файли вузла</string>
+    <string name="node_files_go_to">Перейти до шляху</string>
+    <string name="node_files_path_label">Абсолютний шлях</string>
+    <string name="node_files_path_invalid">Введіть абсолютний шлях без ..</string>
+    <string name="node_files_go_list">Список</string>
+    <string name="node_files_go_read">Читати</string>
+    <string name="node_files_empty">Цей каталог порожній</string>
+    <string name="node_files_truncated">Показано лише перші %1$s записів</string>
+    <string name="node_files_link_to">Посилання на %1$s</string>
+    <string name="node_files_open_as_file">Прочитати як файл</string>
+    <string name="node_file_size">Прочитано %1$s</string>
+    <string name="node_file_truncated">лише перші 512 КіБ</string>
+    <string name="node_file_redacted">секрети приховано</string>
+    <string name="node_file_binary">Двійковий файл: його байти не показуються.</string>
+    <string name="node_file_empty">Цей файл порожній</string>
+    <string name="node_file_copy">Копіювати</string>
+    <string name="node_file_share">Поділитися</string>
+    <string name="node_file_share_chooser">Поділитися файлом</string>
 </resources>

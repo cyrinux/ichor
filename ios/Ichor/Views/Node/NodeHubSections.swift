@@ -3,7 +3,7 @@ import IchorCore
 
 /// A screen the node hub pushes from one of its rows (one destination for every row).
 enum NodeHubScreen: Hashable {
-    case kernelLog, events, network, storage, images, resourceBrowser, hardware, kubePods
+    case kernelLog, events, network, storage, files, images, resourceBrowser, hardware, kubePods
     case debugShell, netTools, capture
     case machineConfig, upgrade, maintenance, drain, nodeMeta
 
@@ -15,6 +15,7 @@ enum NodeHubScreen: Hashable {
         case .events: EventsView(node: ref.address, hostnames: [ref.address: ref.hostname])
         case .network: NetworkView(node: ref.address, hostname: ref.hostname)
         case .storage: StorageView(node: ref.address, hostname: ref.hostname)
+        case .files: NodeFilesView(node: ref.address, hostname: ref.hostname)
         case .images: ImagesView(node: ref.address, hostname: ref.hostname)
         case .resourceBrowser: ResourceTypesView(node: ref.address, hostname: ref.hostname)
         case .hardware: HardwareView(node: ref.address, hostname: ref.hostname)
@@ -160,6 +161,9 @@ struct NodeInspectSection: View {
                 title: String(localized: "Storage"), systemImage: "internaldrive", support: support(.storage, .mounts)
             ) {
                 open = .storage
+            }
+            NodeHubButton(title: String(localized: "Files"), systemImage: "folder", support: support(.files)) {
+                open = .files
             }
             NodeHubButton(
                 title: String(localized: "Images"), systemImage: "shippingbox", support: support(.images, .images)

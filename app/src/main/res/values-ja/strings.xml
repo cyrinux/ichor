@@ -6554,4 +6554,23 @@
     <string name="join_phase_secrets">talosconfig を保存</string>
     <string name="join_phase_bootstrapping">etcd をブートストラップ</string>
     <string name="join_phase_ready">クラスター準備完了</string>
+    <string name="node_menu_files">ファイル</string>
+    <string name="node_files_title">ノードのファイル</string>
+    <string name="node_files_go_to">パスへ移動</string>
+    <string name="node_files_path_label">絶対パス</string>
+    <string name="node_files_path_invalid">.. を含まない絶対パスを入力してください</string>
+    <string name="node_files_go_list">一覧</string>
+    <string name="node_files_go_read">読む</string>
+    <string name="node_files_empty">このディレクトリは空です</string>
+    <string name="node_files_truncated">最初の %1$s 件のみ表示しています</string>
+    <string name="node_files_link_to">%1$s へのリンク</string>
+    <string name="node_files_open_as_file">ファイルとして読む</string>
+    <string name="node_file_size">%1$s 読み込み済み</string>
+    <string name="node_file_truncated">先頭の 512 KiB のみ</string>
+    <string name="node_file_redacted">シークレットは伏せ字</string>
+    <string name="node_file_binary">バイナリファイルのため、内容は表示しません。</string>
+    <string name="node_file_empty">このファイルは空です</string>
+    <string name="node_file_copy">コピー</string>
+    <string name="node_file_share">共有</string>
+    <string name="node_file_share_chooser">ファイルを共有</string>
 </resources>
