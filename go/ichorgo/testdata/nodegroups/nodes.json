@@ -1,0 +1,6 @@
+{"items":[
+ {"metadata":{"name":"ip-10-0-1-10","labels":{"eks.amazonaws.com/nodegroup":"system"}}},
+ {"metadata":{"name":"ip-10-0-1-11","labels":{"eks.amazonaws.com/nodegroup":"system"}}},
+ {"metadata":{"name":"ip-10-0-2-20","labels":{"eks.amazonaws.com/nodegroup":"batch"}}},
+ {"metadata":{"name":"ip-10-0-3-30","labels":{"karpenter.sh/nodepool":"general"}}}
+]}

@@ -618,6 +618,11 @@ var dataCommands = []command{
 
 		return out, err
 	}},
+	{name: "kube-nodegroups", args: "", run: func(e env) (string, error) {
+		// kube-nodegroups: the EKS managed node groups, with the cluster's own AWS sign-in
+		// (read-only; installed false on a cluster that does not sign in through EKS).
+		return ichorgo.KubeNodeGroups(e.cfg, e.context, e.kubeServer)
+	}},
 	{name: "hubble", args: "[SECONDS] [all|drops] [NAMESPACE [POD]]", run: func(e env) (out string, err error) {
 		// hubble [SECONDS] [all|drops] [NAMESPACE [POD]]: read-only exec in the cilium agents.
 		out = hubbleRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))

@@ -1,0 +1,1 @@
+{"nodegroup":{"nodegroupName":"spot","clusterName":"prod","version":"1.34","releaseVersion":"1.34.1-20251016","createdAt":1.76E9,"status":"UPDATING","capacityType":"SPOT","scalingConfig":{"minSize":1,"maxSize":10,"desiredSize":2},"instanceTypes":["m7i.large"],"amiType":"AL2023_ARM_64_STANDARD","diskSize":20}}

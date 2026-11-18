@@ -151,15 +151,9 @@ func pick(s map[string]string, keys ...string) map[string]string {
 func (m *eksMethod) usesSSO(state kubeAuthState) bool { return state.secret(awsFieldSSOStartURL) != "" }
 
 func (m *eksMethod) mint(ctx context.Context, state kubeAuthState) (string, time.Time, kubeAuthState, error) {
-	creds, state, err := m.credentials(ctx, state)
+	creds, state, err := m.signingCredentials(ctx, state)
 	if err != nil {
 		return "", time.Time{}, state, err
-	}
-
-	if m.roleARN != "" {
-		if creds, state, err = m.assumedRole(ctx, creds, state); err != nil {
-			return "", time.Time{}, state, err
-		}
 	}
 
 	now := time.Now()
@@ -168,6 +162,17 @@ func (m *eksMethod) mint(ctx context.Context, state kubeAuthState) (string, time
 	presigned := sigV4Presign(u, headers, creds, m.region, "sts", emptySHA256, 60*time.Second, now)
 
 	return eksTokenPrefix + base64.RawURLEncoding.EncodeToString([]byte(presigned)), now.Add(eksTokenLife), state, nil
+}
+
+// signingCredentials are the credentials the cluster's calls are signed with: credentials,
+// then the kubeconfig's --role-arn when it names one.
+func (m *eksMethod) signingCredentials(ctx context.Context, state kubeAuthState) (awsCredentials, kubeAuthState, error) {
+	creds, state, err := m.credentials(ctx, state)
+	if err != nil || m.roleARN == "" {
+		return creds, state, err
+	}
+
+	return m.assumedRole(ctx, creds, state)
 }
 
 // credentials are the AWS credentials to sign with: the keys entered, or role credentials
