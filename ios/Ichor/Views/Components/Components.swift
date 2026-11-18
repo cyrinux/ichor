@@ -31,6 +31,11 @@ struct LoadStateView<T, Content: View>: View {
             // A cluster that needs its user to sign in: the way to, rather than an error.
             if let reason = kubeSignInRequiredReason(message), let target = model?.activeSignInTarget {
                 KubeSignInRequiredView(target: target, reason: reason, retry: retry)
+            } else if let problem = bastionProblem(message),
+                let target = model?.bastionTarget(for: model?.activeSummary, problem: problem)
+            {
+                // The way through the cluster's SSH bastion failed: its settings, not a raw code.
+                KubeBastionProblemView(target: target, problem: problem, retry: retry)
             } else if let notice = versionNotice(message) {
                 // "This node's Talos version cannot do that" is information, not a failure.
                 VersionNoticeView(notice: notice, detail: message, retry: retry)

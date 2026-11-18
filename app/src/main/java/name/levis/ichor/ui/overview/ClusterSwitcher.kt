@@ -94,6 +94,7 @@ import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.KUBE_AUTH_TOKEN
 import name.levis.ichor.model.accessLabel
+import name.levis.ichor.model.bastionOffered
 import name.levis.ichor.model.clusterGroups
 import name.levis.ichor.model.clusterTagsOf
 import name.levis.ichor.model.hueOf
@@ -102,6 +103,7 @@ import name.levis.ichor.model.parseCloudContext
 import name.levis.ichor.model.proxyHost
 import name.levis.ichor.model.seedFromHue
 import name.levis.ichor.model.seedOf
+import name.levis.ichor.ui.kubeauth.BastionSheet
 import name.levis.ichor.monitor.CERT_WARN_DAYS
 import name.levis.ichor.monitor.clusterFingerprints
 import name.levis.ichor.ui.components.BundledLogo
@@ -286,6 +288,7 @@ fun ClusterSheet(
     var tagging by remember { mutableStateOf<ContextSummary?>(null) }
     var removing by remember { mutableStateOf<ContextSummary?>(null) }
     var addressing by remember { mutableStateOf<ContextSummary?>(null) }
+    var bastionFor by remember { mutableStateOf<ContextSummary?>(null) }
     var renaming by remember { mutableStateOf<ContextSummary?>(null) }
     var coloring by remember { mutableStateOf<ContextSummary?>(null) }
     val contexts = config.summary.contexts
@@ -340,6 +343,7 @@ fun ClusterSheet(
                     kubeServer = kubeServers[context.fingerprint]?.takeIf { it.isNotEmpty() && !labels.masked && context.usesOwnKubeServer },
                     onKubeServer = { addressing = context }
                         .takeIf { onKubeServer != null && context.fingerprint.isNotBlank() && !context.demo && !labels.masked && context.usesOwnKubeServer },
+                    onBastion = { bastionFor = context }.takeIf { bastionOffered(context, labels.masked) },
                 )
             }
             if (groups == null) {
@@ -370,6 +374,7 @@ fun ClusterSheet(
         }
     }
 
+    bastionFor?.let { BastionSheet(it.name, onDismiss = { bastionFor = null }, onChanged = { bastionFor = null }) }
     addressing?.let { context ->
         // Screenshot mode turned on with the dialog open: closed, not just hidden until it is off.
         LaunchedEffect(labels.masked) { if (labels.masked) addressing = null }
@@ -481,6 +486,7 @@ private fun ClusterRow(
     /** The API address set on this device, shown under the endpoints; null: the kubeconfig's. */
     kubeServer: String?,
     onKubeServer: (() -> Unit)?,
+    onBastion: (() -> Unit)?,
 ) {
     val label = labels.of(context)
     IchorListItem(
@@ -508,6 +514,7 @@ private fun ClusterRow(
                     )
                 }
                 context.proxyHost?.let { Text(stringResource(R.string.kube_proxy_via, it), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                BastionRowLine(context, labels.masked)
                 kubeServer?.let { Text(stringResource(R.string.cluster_kube_server_set, it), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 // Which cluster needs a new talosconfig soon, without having to open each.
                 if (context.certNotAfter > 0 && daysUntil(context.certNotAfter) <= CERT_WARN_DAYS) {
@@ -540,6 +547,7 @@ private fun ClusterRow(
                 onActivity = onActivity,
                 onRepository = onRepository,
                 onKubeServer = onKubeServer,
+                onBastion = onBastion,
                 onRemove = onRemove,
             )
         },
@@ -572,6 +580,7 @@ private fun ClusterRowMenu(
     onActivity: (() -> Unit)?,
     onRepository: (() -> Unit)?,
     onKubeServer: (() -> Unit)?,
+    onBastion: (() -> Unit)?,
     onRemove: () -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
@@ -646,6 +655,7 @@ private fun ClusterRowMenu(
                     onClick = item(it),
                 )
             }
+            onBastion?.let { BastionMenuItem(item(it)) }
             account?.let { (title, onOpen) ->
                 DropdownMenuItem(
                     text = { Text(stringResource(title)) },

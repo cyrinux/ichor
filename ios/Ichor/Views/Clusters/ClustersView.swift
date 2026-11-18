@@ -107,6 +107,9 @@ struct ClustersView: View {
     /// The sign-in of each kubeconfig cluster that signs in through a method, by fingerprint.
     @State private var signIns: [String: KubeSignInInfo] = [:]
     @State private var signingIn: KubeSignInTarget?
+    /// The SSH bastions of the kubeconfig clusters (by fingerprint), what their rows say.
+    @State private var bastions: [String: KubeBastionInfo] = [:]
+    @State private var editingBastion: KubeBastionTarget?
     @State private var showingServiceAccountHelp = false
 
     var body: some View {
@@ -164,6 +167,9 @@ struct ClustersView: View {
         .endpointTools(editing: $editingEndpoints, scanning: $scanning)
         .sheet(item: $signingIn) { KubeSignInSheet(target: $0) }
         .kubeServerAlert(for: $editingServer)
+        .sheet(item: $editingBastion) { target in
+            KubeBastionSheet(target: target) { model.reloadKubernetes() }
+        }
         .sheet(item: $editingRepo) { context in
             ClusterRepoSheet(
                 context: context, label: model.labels.of(context), saved: git.repos[context.fingerprint])
@@ -172,7 +178,10 @@ struct ClustersView: View {
         .sheet(item: $tagging) { ClusterTagsSheet(context: $0) }
         .sheet(isPresented: $showingServiceAccountHelp) { ServiceAccountHelpSheet() }
         .navigationDestination(item: $activityOf) { ActivityLogView(cluster: $0) }
-        .task(id: "\(model.summary?.contexts.map(\.fingerprint) ?? [])#\(model.dataGeneration)") { await loadSignIns() }
+        .task(id: "\(model.summary?.contexts.map(\.fingerprint) ?? [])#\(model.dataGeneration)") {
+            await loadSignIns()
+            await loadBastions()
+        }
         .themedBackground()
         .navigationTitle("Clusters")
         .confirmationDialog(
@@ -269,6 +278,14 @@ struct ClustersView: View {
                             let server = model.kubeServers[context.fingerprint]
                         {
                             Text("API address: \(server)")
+                                .font(.caption)
+                                .foregroundStyle(Color.secondary)
+                                .lineLimit(1)
+                        }
+                        if model.bastionTarget(for: context) != nil,
+                            let bastion = bastions[context.fingerprint], bastion.configured
+                        {
+                            Text("Through SSH bastion \(bastion.displayHost)")
                                 .font(.caption)
                                 .foregroundStyle(Color.secondary)
                                 .lineLimit(1)
@@ -390,6 +407,13 @@ struct ClustersView: View {
                 Label("Kubernetes API address…", systemImage: "server.rack")
             }
         }
+        if let target = model.bastionTarget(for: context) {
+            Button {
+                editingBastion = target
+            } label: {
+                Label("Through SSH bastion…", systemImage: "network")
+            }
+        }
         if !model.labels.masked && !context.fingerprint.isEmpty {
             Button {
                 startRenaming(context)
@@ -483,6 +507,17 @@ struct ClustersView: View {
             }
         }
         signIns = loaded
+    }
+
+    private func loadBastions() async {
+        var loaded: [String: KubeBastionInfo] = [:]
+        for context in model.summary?.contexts ?? [] {
+            guard let target = model.bastionTarget(for: context) else { continue }
+            if let info = try? await TalosClient.bastionInfo(kube: target.kube, context: target.context) {
+                loaded[context.fingerprint] = info
+            }
+        }
+        bastions = loaded
     }
 
     private func color(of context: ContextSummary) -> Binding<Color> {

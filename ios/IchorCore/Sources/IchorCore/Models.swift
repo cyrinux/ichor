@@ -96,6 +96,9 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
     /// Where an Omni context's sign-in is kept (shared by an identity's clusters on one
     /// instance): kept and backed up with the cluster, see authStoreFingerprints.
     public let authKey: String?
+    /// Where a kubeconfig context's SSH bastion is kept in the auth store (with the cluster,
+    /// see authStoreFingerprints); nil when the core sends none.
+    public let bastionKey: String?
 
     public var id: String { name }
 
@@ -118,8 +121,9 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
         demo: Bool = false, namespace: String? = nil, auth: String? = nil, authDetail: String? = nil,
         user: String? = nil, insecure: Bool = false, problem: String? = nil, problemDetail: String? = nil,
         signIn: String? = nil, omni: Bool = false, identity: String? = nil, cluster: String? = nil,
-        authKey: String? = nil, proxyURL: String? = nil, execHint: String? = nil
+        authKey: String? = nil, proxyURL: String? = nil, execHint: String? = nil, bastionKey: String? = nil
     ) {
+        self.bastionKey = bastionKey
         self.proxyURL = proxyURL
         self.execHint = execHint
         self.name = name
@@ -149,7 +153,7 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
         case name, kind, fingerprint, endpoints, nodes, roles, certNotAfter, demo
         case namespace, auth, authDetail, user, insecure, problem, problemDetail, signIn, proxyURL
         case execHint
-        case omni, identity, cluster, authKey
+        case omni, identity, cluster, authKey, bastionKey
         case clusterID = "clusterId"
     }
 
@@ -179,6 +183,7 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
         identity = try c.decodeIfPresent(String.self, forKey: .identity)
         cluster = try c.decodeIfPresent(String.self, forKey: .cluster)
         authKey = try c.decodeIfPresent(String.self, forKey: .authKey).flatMap { $0.isEmpty ? nil : $0 }
+        bastionKey = try c.decodeIfPresent(String.self, forKey: .bastionKey).flatMap { $0.isEmpty ? nil : $0 }
     }
 }
 

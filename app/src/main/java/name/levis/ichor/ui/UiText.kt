@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import name.levis.ichor.R
 import name.levis.ichor.i18n.AppLocale
+import name.levis.ichor.model.BastionProblem
+import name.levis.ichor.model.bastionProblem
 import name.levis.ichor.model.signInMethodName
 import name.levis.ichor.model.signInNeeded
 
@@ -26,12 +28,16 @@ sealed interface UiText {
      */
     data class SignInRequired(val method: String, val reason: String = "") : UiText
 
+    /** A call through the SSH bastion failed ([problem]): screens offer the bastion settings. */
+    data class Bastion(val problem: BastionProblem) : UiText
+
     fun resolve(context: Context): String = when (this) {
         is Raw -> text
         is Res -> context.getString(id, *args.map { if (it is UiText) it.resolve(context) else it }.toTypedArray())
         is SignInRequired -> signInMethodName(method)?.let { context.getString(R.string.kube_signin_required_error, context.getString(it)) }
             ?: method.takeIf { it.isNotEmpty() }?.let { context.getString(R.string.kube_signin_required_error, it) }
             ?: context.getString(R.string.kube_signin_required_error_plain)
+        is Bastion -> context.getString(problem.text)
     }
 }
 
@@ -46,9 +52,10 @@ object AppTexts {
  * the app's language, never with the core's code. Anything else stays as it is.
  */
 fun goErrorText(message: String): String {
-    val needed = signInNeeded(message) ?: return message
-    val text = UiText.SignInRequired(needed.method, needed.reason)
-    return AppTexts.context?.let { text.resolve(AppLocale.wrap(it)) } ?: SIGN_IN_REQUIRED_FALLBACK
+    val text = bastionProblem(message)?.let { UiText.Bastion(it) }
+        ?: signInNeeded(message)?.let { UiText.SignInRequired(it.method, it.reason) }
+        ?: return message
+    return AppTexts.context?.let { text.resolve(AppLocale.wrap(it)) } ?: if (text is UiText.Bastion) message else SIGN_IN_REQUIRED_FALLBACK
 }
 
 /** Only before the app started (unit tests): the core's code must not show either way. */
@@ -61,5 +68,17 @@ fun UiText.asString(): String = resolve(LocalContext.current)
 open class LocalizedException(val text: UiText) : Exception(text.toString())
 
 fun Throwable.uiText(): UiText = (this as? LocalizedException)?.text
+    ?: bastionProblem(message)?.let { UiText.Bastion(it) }
     ?: signInNeeded(message)?.let { UiText.SignInRequired(it.method, it.reason) }
     ?: UiText.Raw(userMessage())
+
+/** The sentence of a bastion [BastionProblem]: what failed and where to look. */
+@get:StringRes
+val BastionProblem.text: Int
+    get() = when (this) {
+        BastionProblem.UNREACHABLE -> R.string.bastion_problem_unreachable
+        BastionProblem.HOST_KEY -> R.string.bastion_problem_host_key
+        BastionProblem.AUTH -> R.string.bastion_problem_auth
+        BastionProblem.KEY -> R.string.bastion_problem_key
+        BastionProblem.FORWARD -> R.string.bastion_problem_forward
+    }

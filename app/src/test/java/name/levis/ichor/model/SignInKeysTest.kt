@@ -31,6 +31,19 @@ class SignInKeysTest {
     }
 
     @Test
+    fun kubeClustersKeepTheirSshBastion() {
+        val contexts = listOf(
+            ContextSummary("jump", fingerprint = "k1", kind = KIND_KUBE, bastionKey = "bastionk"),
+            // A Talos context's bastion comes later: nothing to keep for it yet.
+            ContextSummary("lab", fingerprint = "t1", bastionKey = "bastiont"),
+        )
+
+        // Without it the store would prune the entry and the cluster would silently go direct.
+        assertEquals(listOf("k1", "bastionk"), signInKeys(contexts))
+        assertEquals(mapOf("bastionk" to "b"), restoredKubeAuth(mapOf("bastionk" to "b"), signInKeys(contexts)))
+    }
+
+    @Test
     fun backupKeepsTheOmniServiceAccount() {
         val states = mapOf("omnikey" to "sa-state", "gone" to "x")
         val kept = backupKubeAuth(listOf("omnikey"), states) { "backed-up-$it" }
