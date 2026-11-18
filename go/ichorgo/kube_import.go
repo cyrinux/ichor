@@ -41,6 +41,9 @@ type kubeContextSummary struct {
 	SignIn string `json:"signIn,omitempty"`
 	// ProxyURL is the kubeconfig's proxy-url as scheme://host:port, never with its credentials.
 	ProxyURL string `json:"proxyURL,omitempty"`
+	// BastionKey is the auth store key of the context's SSH bastion (kube_bastion.go), set for
+	// every context but the demo: the apps keep it among the keys their store retains.
+	BastionKey string `json:"bastionKey,omitempty"`
 }
 
 type kubeconfigSummary struct {
@@ -136,6 +139,10 @@ func summarizeKubeContext(doc *kubeconfigDoc, name string) kubeContextSummary {
 		if s.Auth == authTeleport {
 			s.AuthKey = teleportUserAuthKey(user)
 		}
+	}
+
+	if !s.Demo {
+		s.BastionKey = kubeBastionKey(s.Fingerprint)
 	}
 
 	s.Problem, s.ProblemDetail = kubeContextProblem(doc, name, cluster, user)

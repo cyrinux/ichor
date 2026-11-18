@@ -6,6 +6,7 @@ package httpx
 
 import (
 	"cmp"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -41,6 +42,10 @@ type Opts struct {
 	// ProxyURL is the proxy every connection of this client goes through (from ParseProxyURL);
 	// nil is none. The environment's proxy settings are never read.
 	ProxyURL *url.URL
+	// Dial opens every connection of this client instead of a direct TCP dial (an SSH
+	// bastion's DialContext); nil dials directly. ProxyURL wins when both are set, as a
+	// kubeconfig's proxy-url wins over a bastion.
+	Dial func(ctx context.Context, network, addr string) (net.Conn, error)
 	// proxyTLS is for the hop to an https proxy; nil is the system's roots.
 	proxyTLS *tls.Config
 }
@@ -70,6 +75,10 @@ func New(o Opts) *http.Client {
 		TLSHandshakeTimeout: handshake,
 		IdleConnTimeout:     cmp.Or(o.IdleTimeout, idleTimeout),
 		ForceAttemptHTTP2:   true,
+	}
+
+	if o.Dial != nil {
+		transport.DialContext = o.Dial
 	}
 
 	if o.ProxyURL != nil {

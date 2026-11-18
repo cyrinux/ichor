@@ -105,5 +105,10 @@ func kubeError(err error) error {
 		return signIn
 	}
 
+	// An SSH bastion's failure as itself: the apps recognise its code.
+	if bastionErr := asBastionError(err); !errors.As(err, &apiErr) && bastionErr != nil {
+		return bastionErr
+	}
+
 	return kube.Error(err)
 }

@@ -99,6 +99,23 @@ func (m *privacyMask) learnKubeconfigLocked(configYAML string) {
 	}
 }
 
+// learnTarget registers one more address the results may carry (an SSH bastion's host), so
+// the screens show a fake and the fake maps back.
+func (m *privacyMask) learnTarget(target string) {
+	if m == privacy {
+		diagMask.learnTarget(target)
+	}
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if !m.enabled || target == "" {
+		return
+	}
+
+	m.learnTargetLocked(target)
+}
+
 // learnContextLocked gives a context a neutral name: "homelab", "homelab-2"... with the
 // user part of "user@cluster" kept only when it is a Talos role. Generic names stay as they
 // are, and fakes never reuse a real name of the config, so a name maps back unambiguously.

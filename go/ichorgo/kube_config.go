@@ -28,6 +28,9 @@ type kubeCredentials struct {
 	namespace string
 	// proxy is the cluster's proxy-url, credentials included; nil for a direct connection.
 	proxy *url.URL
+	// bastion is the SSH bastion every connection to the API server goes through (a stored
+	// context's device setting, see kube_bastion.go); nil for none. Ignored with a proxy.
+	bastion *bastionHop
 }
 
 type kubeconfigFile struct {
