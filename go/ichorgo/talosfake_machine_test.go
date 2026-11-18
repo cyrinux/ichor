@@ -530,7 +530,12 @@ func (m fakeTalosMachine) List(req *machineapi.ListRequest, stream grpc.ServerSt
 
 	m.f.mu.Lock()
 	tree, scripted := m.f.files[node]
+	denied := m.f.denied[req.GetRoot()]
 	m.f.mu.Unlock()
+
+	if denied {
+		return status.Errorf(codes.PermissionDenied, "not authorized")
+	}
 
 	if !scripted {
 		return stream.Send(&machineapi.FileInfo{Name: req.GetRoot() + "/logs", IsDir: true})
@@ -547,13 +552,23 @@ func (m fakeTalosMachine) List(req *machineapi.ListRequest, stream grpc.ServerSt
 	}
 
 	for _, name := range slices.Sorted(maps.Keys(children)) {
-		if err := stream.Send(&machineapi.FileInfo{Name: req.GetRoot() + "/" + name, RelativeName: name, IsDir: children[name]}); err != nil {
+		full := req.GetRoot() + "/" + name
+		info := &machineapi.FileInfo{Name: full, RelativeName: name, IsDir: children[name], Modified: fakeFileModified}
+
+		if !children[name] {
+			info.Size = int64(len(tree[full]))
+		}
+
+		if err := stream.Send(info); err != nil {
 			return err
 		}
 	}
 
 	return nil
 }
+
+// fakeFileModified is every fake file's modification time (unix seconds).
+const fakeFileModified = 1_767_323_045 // 2026-01-02T03:04:05Z
 
 // fakeChildren are the entries directly below dir in tree (name -> is a directory), nil
 // when dir does not exist.
@@ -585,7 +600,12 @@ func (m fakeTalosMachine) Read(req *machineapi.ReadRequest, stream grpc.ServerSt
 
 	m.f.mu.Lock()
 	content, ok := m.f.files[node][req.GetPath()]
+	denied := m.f.denied[req.GetPath()]
 	m.f.mu.Unlock()
+
+	if denied {
+		return status.Errorf(codes.PermissionDenied, "not authorized")
+	}
 
 	if !ok {
 		return status.Errorf(codes.Unknown, "open %s: no such file or directory", req.GetPath())
