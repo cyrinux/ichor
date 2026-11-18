@@ -42,7 +42,9 @@ import name.levis.ichor.data.AutoscalingRepository
 import name.levis.ichor.model.AutoscalingProblem
 import name.levis.ichor.model.AutoscalingReport
 import name.levis.ichor.model.HpaRow
+import name.levis.ichor.model.AUTOSCALING_GROUP_NODE_GROUPS
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.ManagedNodeGroupRow
 import name.levis.ichor.model.NodeClaimRow
 import name.levis.ichor.model.NodePoolRow
 import name.levis.ichor.model.ScaledJobRow
@@ -88,6 +90,7 @@ private sealed interface Open {
     data class ScaledJob(val row: ScaledJobRow) : Open
     data class Vpa(val row: VpaRow) : Open
     data class Pool(val row: NodePoolRow, val claims: List<NodeClaimRow>) : Open
+    data class NodeGroup(val row: ManagedNodeGroupRow) : Open
 }
 
 /**
@@ -135,6 +138,7 @@ fun AutoscalingScreen(
             is Open.ScaledJob -> ScaledJobSheet(o.row, onDismiss = { open = null })
             is Open.Vpa -> VpaSheet(o.row, onDismiss = { open = null }, onObject = { open = null; onObject(it) })
             is Open.Pool -> NodePoolSheet(o.row, o.claims, onDismiss = { open = null }, onObject = { open = null; onObject(it) })
+            is Open.NodeGroup -> NodeGroupSheet(report.nodeGroups.groups.firstOrNull { it.key == o.row.key } ?: o.row, onDismiss = { open = null })
             null -> {}
         }
     }
@@ -174,6 +178,7 @@ private fun AutoscalingList(
     fun openSj(row: ScaledJobRow) = onOpen(Open.ScaledJob(row))
     fun openVpa(row: VpaRow) = onOpen(Open.Vpa(row))
     fun openPool(row: NodePoolRow) = onOpen(Open.Pool(row, claimsOf[row.name].orEmpty()))
+    fun openNodeGroup(row: ManagedNodeGroupRow) = onOpen(Open.NodeGroup(row))
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
         item(key = "filters") {
@@ -205,6 +210,7 @@ private fun AutoscalingList(
                     "keda" -> view.keda.scaledObjects.firstOrNull { it.key == problem.key }?.let(::openSo)
                         ?: view.keda.scaledJobs.firstOrNull { it.key == problem.key }?.let(::openSj)
                     "vpa" -> view.vpa.items.firstOrNull { it.key == problem.key }?.let(::openVpa)
+                    AUTOSCALING_GROUP_NODE_GROUPS -> view.nodeGroups.groups.firstOrNull { it.key == problem.key }?.let(::openNodeGroup)
                     else -> view.karpenter.nodePools.firstOrNull { it.key == problem.key }?.let(::openPool)
                         ?: view.karpenter.nodeClaims.firstOrNull { it.key == problem.key }?.let { claim ->
                             view.karpenter.nodePools.firstOrNull { it.name == claim.pool }?.let(::openPool)
@@ -243,8 +249,18 @@ private fun AutoscalingList(
                 NodePoolRowItem(row, claimsOf[row.name].orEmpty().size, onClick = { openPool(row) })
             }
         }
+        // Only on a cluster that signs in through EKS: elsewhere there is nothing to say.
+        if (view.nodeGroups.installed) {
+            item(key = "h-nodegroups", contentType = "cardGroupTitle") {
+                GroupHeader(stringResource(R.string.autoscaling_section_nodegroups), true, nodeGroupsError(view.nodeGroups), false)
+            }
+            cardRows(view.nodeGroups.groups, key = { "ng-" + it.key }) { row ->
+                NodeGroupRowItem(row, onClick = { openNodeGroup(row) })
+            }
+        }
 
-        if (listOf(view.hpa.items, view.keda.scaledObjects, view.keda.scaledJobs, view.vpa.items, view.karpenter.nodePools).all { it.isEmpty() }) {
+        val lists = listOf(view.hpa.items, view.keda.scaledObjects, view.keda.scaledJobs, view.vpa.items, view.karpenter.nodePools, view.nodeGroups.groups)
+        if (lists.all { it.isEmpty() }) {
             item(key = "empty") { EmptyText(emptyOrNoMatch(query, R.string.autoscaling_empty, R.string.autoscaling_no_match)) }
         }
     }
@@ -298,6 +314,7 @@ private fun groupLabel(group: String): String = stringResource(
         "hpa" -> R.string.autoscaling_section_hpa
         "keda" -> R.string.autoscaling_section_keda
         "vpa" -> R.string.autoscaling_section_vpa
+        AUTOSCALING_GROUP_NODE_GROUPS -> R.string.autoscaling_section_nodegroups
         else -> R.string.autoscaling_section_karpenter
     },
 )

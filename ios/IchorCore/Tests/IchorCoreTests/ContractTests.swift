@@ -33,6 +33,11 @@ final class ContractTests: XCTestCase {
             XCTAssertFalse($0.items.isEmpty)
         },
         "kube-nodes": ContractTests.row(KubeNodesOverview.self),
+        "kube-nodegroups": ContractTests.row(NodeGroupsReport.self) {
+            XCTAssertEqual($0.groups.map(\.name), ["gpu", "system"])
+            XCTAssertTrue($0.groups[0].atMax)
+            XCTAssertEqual($0.groups[0].issues.first?.code, "AsgInstanceLaunchFailures")
+        },
         "kube-top-pod": ContractTests.row(KubeTopPods.self) { XCTAssertEqual($0.pods.first?.containers.count, 2) },
         "log-entry": ContractTests.row(LogEntry.self) { XCTAssertEqual($0.spans.first?.fgRgb, "#ff8700") },
         "argocd": ContractTests.row(ArgoStatus.self),

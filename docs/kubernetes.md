@@ -619,6 +619,11 @@ limit?" in two taps:
   with the lower and upper bounds. No recommendation yet says so, not zero.
 - **Node pools (Karpenter):** each pool's usage against its limits, its disruption budgets, and
   its NodeClaims with their instance type and state.
+- **Node pools (EKS):** on an EKS cluster, each managed node group's desired size against its
+  minimum and maximum, Kubernetes version and AMI release, capacity type, instance types, the
+  cluster's nodes in it, and AWS' health issues. A group at its maximum, with a health issue or
+  not ACTIVE is listed under Needs attention. Read with the cluster's own AWS sign-in
+  ([IAM actions](clusters.md)); not shown on other clusters.
 
 A group the cluster does not run (KEDA, VPA, Karpenter) collapses to one "not installed" line;
 credentials that cannot read one group show the reason in that group's header only.

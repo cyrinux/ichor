@@ -39,6 +39,7 @@ import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubeTopPods
 import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.NetMap
+import name.levis.ichor.model.NodeGroupsReport
 import name.levis.ichor.model.LogEntry
 import name.levis.ichor.model.OnCallIncidents
 import org.junit.Assert.assertEquals
@@ -60,6 +61,11 @@ class ContractTest {
         "kube-workloads" to Row(KubeWorkloadList.serializer()) { assertTrue(it.workloads.first().name.isNotEmpty()) },
         "kube-cronjobs" to Row(KubeCronJobList.serializer()) { assertTrue(it.cronJobs.first().name.isNotEmpty()) },
         "kube-nodes" to Row(KubeNodesOverview.serializer()) { assertTrue(it.nodes.isNotEmpty()) },
+        "kube-nodegroups" to Row(NodeGroupsReport.serializer()) {
+            assertEquals(listOf("gpu", "system"), it.groups.map { g -> g.name })
+            assertTrue(it.groups[0].atMax)
+            assertEquals("AsgInstanceLaunchFailures", it.groups[0].issues.first().code)
+        },
         "kube-top-pod" to Row(KubeTopPods.serializer()) { assertEquals(2, it.pods.single().containers.size) },
         "argocd" to Row(ArgoStatus.serializer()) { assertTrue(it.installed && it.apps.isNotEmpty()) },
         "flux" to Row(FluxStatus.serializer()) { assertTrue(it.installed) },

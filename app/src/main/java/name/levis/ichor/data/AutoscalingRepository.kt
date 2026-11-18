@@ -1,16 +1,39 @@
 package name.levis.ichor.data
 
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import name.levis.ichor.model.AutoscalingReport
+import name.levis.ichor.model.NodeGroupsReport
 import name.levis.ichorgo.Ichorgo
 
 /** What scales the cluster: HPAs, KEDA, VPA recommendations and Karpenter, through the Kubernetes API (os:admin). */
 class AutoscalingRepository(private val configs: ConfigRepository, private val kubeServers: KubeServers) {
-    /** Every autoscaler's rows with their states, and the per-workload index. */
-    suspend fun autoscaling(): AutoscalingReport = withContext(Dispatchers.IO) {
-        val target = kubeServers.targetFor(configs.forCall())
-        TalosJson.decodeFromString(AutoscalingReport.serializer(), Ichorgo.kubeAutoscaling(target.yaml, target.context, target.server))
+    /** Every autoscaler's rows with their states, the per-workload index, and the cloud's node groups. */
+    suspend fun autoscaling(): AutoscalingReport = coroutineScope {
+        val groups = async { nodeGroups() }
+        val report = withContext(Dispatchers.IO) {
+            val target = kubeServers.targetFor(configs.forCall())
+            TalosJson.decodeFromString(AutoscalingReport.serializer(), Ichorgo.kubeAutoscaling(target.yaml, target.context, target.server))
+        }
+        report.copy(nodeGroups = groups.await())
+    }
+
+    /**
+     * The cluster's EKS managed node groups, read with its own AWS sign-in. A failed read is the
+     * group's error line: the rest of the Autoscaling screen does not depend on AWS.
+     */
+    suspend fun nodeGroups(): NodeGroupsReport = withContext(Dispatchers.IO) {
+        try {
+            val target = kubeServers.targetFor(configs.forCall())
+            TalosJson.decodeFromString(NodeGroupsReport.serializer(), Ichorgo.kubeNodeGroups(target.yaml, target.context, target.server))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            NodeGroupsReport(error = e.message.orEmpty())
+        }
     }
 
     /** Pauses the ScaledObject at [replicas], holds it at its count (-1) or resumes it (-2). */

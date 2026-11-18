@@ -260,6 +260,14 @@ reserved capacity (`karpenter.sh/capacity-type`, `eks.amazonaws.com/capacityType
 `cloud.google.com/gke-spot`, `kubernetes.azure.com/scalesetpriority`). Nothing is shown
 when no such label is set, as on bare metal.
 
+An EKS cluster also lists its managed node groups on the Autoscaling screen, under **Node
+pools (EKS)**: desired, minimum and maximum size, Kubernetes version, AMI release, capacity
+type, instance types, the cluster's nodes in each group, and AWS' health issues. They are
+read with the cluster's own sign-in (access keys or IAM Identity Center, then the kubeconfig's
+`--role-arn`), which needs `eks:ListNodegroups` and `eks:DescribeNodegroup` on the cluster on
+top of what adding it asked for. A role without them shows which action is missing; the rest
+of the screen is unaffected. Read-only for now.
+
 | Kubeconfig user | What the app does |
 |---|---|
 | Client certificate, token (ServiceAccount) | Uses it as is |
