@@ -1,0 +1,7 @@
+• Reach a Kubernetes API server through an SSH bastion with a pinned host key
+• Create a new Talos cluster on a Hetzner server from the phone
+• One Teleport sign-in per proxy, its clusters listed and added by name
+• The Hetzner token sheet is shared with the new-cluster section
+• The cost line's retry passes onRetry by name
+• The Hetzner new-cluster refusal table holds fakes by pointer
+• The Hetzner new-cluster section loads from a row, not its Section
