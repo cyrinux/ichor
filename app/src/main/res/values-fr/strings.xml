@@ -6694,4 +6694,23 @@
     <string name="join_phase_secrets">Enregistrer le talosconfig</string>
     <string name="join_phase_bootstrapping">Amorcer etcd</string>
     <string name="join_phase_ready">Cluster prêt</string>
+    <string name="node_menu_files">Fichiers</string>
+    <string name="node_files_title">Fichiers du nœud</string>
+    <string name="node_files_go_to">Aller au chemin</string>
+    <string name="node_files_path_label">Chemin absolu</string>
+    <string name="node_files_path_invalid">Saisissez un chemin absolu, sans ..</string>
+    <string name="node_files_go_list">Lister</string>
+    <string name="node_files_go_read">Lire</string>
+    <string name="node_files_empty">Ce répertoire est vide</string>
+    <string name="node_files_truncated">Seules les %1$s premières entrées sont affichées</string>
+    <string name="node_files_link_to">Lien vers %1$s</string>
+    <string name="node_files_open_as_file">Le lire comme fichier</string>
+    <string name="node_file_size">%1$s lus</string>
+    <string name="node_file_truncated">seulement les 512 premiers Kio</string>
+    <string name="node_file_redacted">secrets masqués</string>
+    <string name="node_file_binary">Fichier binaire : ses octets ne sont pas affichés.</string>
+    <string name="node_file_empty">Ce fichier est vide</string>
+    <string name="node_file_copy">Copier</string>
+    <string name="node_file_share">Partager</string>
+    <string name="node_file_share_chooser">Partager le fichier</string>
 </resources>

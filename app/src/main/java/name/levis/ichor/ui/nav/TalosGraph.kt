@@ -61,6 +61,7 @@ import name.levis.ichor.ui.resources.ResourceListScreen
 import name.levis.ichor.ui.resources.ResourceRef
 import name.levis.ichor.ui.resources.ResourceTypesScreen
 import name.levis.ichor.ui.storage.StorageScreen
+import name.levis.ichor.ui.node.NodeFilesScreen
 import name.levis.ichor.ui.upgrade.UpgradeScreen
 
 /** The Talos screens: a node and its tabs, logs, storage, resources, shells, events, KubeSpan, etcd, health. */
@@ -320,6 +321,10 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
     composable(Routes.STORAGE, arguments = nodeArguments()) { entry ->
         val addr = entry.arguments?.getString("addr").orEmpty()
         StorageScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
+    }
+    composable(Routes.NODE_FILES, arguments = nodeArguments()) { entry ->
+        val addr = entry.arguments?.getString("addr").orEmpty()
+        NodeFilesScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
     }
     composable(Routes.RESOURCES, arguments = nodeArguments()) { entry ->
         val addr = entry.arguments?.getString("addr").orEmpty()

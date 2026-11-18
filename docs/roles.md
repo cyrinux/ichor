@@ -11,6 +11,7 @@ reads those roles and explains up front when a feature needs more.
 | Cluster overview (readiness, stage, version, role) | `Version`, COSI resources | `os:reader` |
 | Node services and resources | `ServiceList`, `Memory`, `LoadAvg`, `SystemStat`, `CPUInfo`, `Mounts` | `os:reader` |
 | Service logs and kernel log (dmesg) | `Logs`, `Dmesg` | `os:reader` |
+| Node files: list a directory, read a text file (512 KiB, secrets under `/system/state` redacted) | `List`, `Read` | `os:reader` |
 | etcd members, leader, DB size, alarms | `EtcdMemberList`, `EtcdStatus`, `EtcdAlarmList` | `os:reader` |
 | Background alerts and widget | same as the overview and etcd | `os:reader` |
 | AI diagnosis report (optional) | the calls above, `Time`, `Events`, `Containers`, `NodeStatus`, `StaticPodStatus` | `os:reader` |

@@ -6554,4 +6554,23 @@
     <string name="join_phase_secrets">保存 talosconfig</string>
     <string name="join_phase_bootstrapping">引导 etcd</string>
     <string name="join_phase_ready">集群就绪</string>
+    <string name="node_menu_files">文件</string>
+    <string name="node_files_title">节点文件</string>
+    <string name="node_files_go_to">转到路径</string>
+    <string name="node_files_path_label">绝对路径</string>
+    <string name="node_files_path_invalid">请输入不含 .. 的绝对路径</string>
+    <string name="node_files_go_list">列出</string>
+    <string name="node_files_go_read">读取</string>
+    <string name="node_files_empty">此目录为空</string>
+    <string name="node_files_truncated">仅显示前 %1$s 项</string>
+    <string name="node_files_link_to">链接到 %1$s</string>
+    <string name="node_files_open_as_file">作为文件读取</string>
+    <string name="node_file_size">已读取 %1$s</string>
+    <string name="node_file_truncated">仅前 512 KiB</string>
+    <string name="node_file_redacted">密钥已隐去</string>
+    <string name="node_file_binary">二进制文件：不显示其字节。</string>
+    <string name="node_file_empty">此文件为空</string>
+    <string name="node_file_copy">复制</string>
+    <string name="node_file_share">分享</string>
+    <string name="node_file_share_chooser">分享文件</string>
 </resources>

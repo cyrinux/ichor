@@ -24,6 +24,7 @@ internal object Routes {
     const val NODE_TABS = "node/tabs?addr={addr}&host={host}&tab={tab}"
     const val LOGS = "logs?addr={addr}&host={host}&service={service}&container={container}&title={title}&subtitle={subtitle}"
     const val STORAGE = "storage?addr={addr}&host={host}"
+    const val NODE_FILES = "node-files?addr={addr}&host={host}"
     const val RESOURCES = "resources?addr={addr}&host={host}"
     const val RESOURCE_LIST = "resourcelist?addr={addr}&host={host}&ns={ns}&type={type}&sensitive={sensitive}"
     const val RESOURCE = "resource?addr={addr}&host={host}&ns={ns}&type={type}&id={id}&sensitive={sensitive}"
@@ -58,6 +59,7 @@ internal object Routes {
     fun apps(attention: Boolean = false) = "apps?attention=$attention"
 
     fun storage(addr: String, host: String) = "storage?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
+    fun nodeFiles(addr: String, host: String) = "node-files?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
     fun resources(addr: String, host: String) = "resources?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 

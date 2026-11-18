@@ -248,6 +248,14 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "node-files", args: "NODE [DIR]", run: func(e env) (string, error) {
+		// node-files NODE [DIR]: a directory's entries, like talosctl ls (DIR "": /var/log).
+		return ichorgo.NodeFiles(e.cfg, e.context, flag.Arg(1), flag.Arg(2))
+	}},
+	{name: "node-read", args: "NODE PATH", run: func(e env) (string, error) {
+		// node-read NODE PATH: a file's text, like talosctl read, capped and redacted.
+		return ichorgo.NodeFileRead(e.cfg, e.context, flag.Arg(1), flag.Arg(2))
+	}},
 	{name: "images", args: "NODE", run: func(e env) (out string, err error) {
 		out, err = ichorgo.NodeImages(e.cfg, e.context, flag.Arg(1))
 

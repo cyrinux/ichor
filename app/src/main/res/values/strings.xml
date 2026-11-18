@@ -6700,4 +6700,23 @@
     <string name="join_phase_secrets">Store the talosconfig</string>
     <string name="join_phase_bootstrapping">Bootstrap etcd</string>
     <string name="join_phase_ready">Cluster ready</string>
+    <string name="node_menu_files">Files</string>
+    <string name="node_files_title">Node files</string>
+    <string name="node_files_go_to">Go to path</string>
+    <string name="node_files_path_label">Absolute path</string>
+    <string name="node_files_path_invalid">Type an absolute path, without ..</string>
+    <string name="node_files_go_list">List</string>
+    <string name="node_files_go_read">Read</string>
+    <string name="node_files_empty">This directory is empty</string>
+    <string name="node_files_truncated">Only the first %1$s entries are shown</string>
+    <string name="node_files_link_to">Link to %1$s</string>
+    <string name="node_files_open_as_file">Read it as a file</string>
+    <string name="node_file_size">%1$s read</string>
+    <string name="node_file_truncated">only the first 512 KiB</string>
+    <string name="node_file_redacted">secrets redacted</string>
+    <string name="node_file_binary">Binary file: its bytes are not shown.</string>
+    <string name="node_file_empty">This file is empty</string>
+    <string name="node_file_copy">Copy</string>
+    <string name="node_file_share">Share</string>
+    <string name="node_file_share_chooser">Share the file</string>
 </resources>

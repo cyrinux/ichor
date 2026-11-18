@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The screens whose dense monospaced text the user resizes; each keeps its own size.
 enum MonoScreen: String {
-    case logs, capture
+    case logs, capture, files
 }
 
 /// What a `scalableMonoText` container hands its rows: the picked size and the screen-reader

@@ -80,6 +80,8 @@ type fakeTalos struct {
 	// files are a node's file tree (absolute path -> content), served by List and Read; a
 	// node without one lists a fixed directory.
 	files map[string]map[string]string
+	// denied are the paths whose List and Read answer PermissionDenied (a role that may not).
+	denied map[string]bool
 	// cpuFreq is a node's CPUFreqStats answer (a node without an entry: Unimplemented).
 	cpuFreq map[string][]*machineapi.CPUFreqStats
 	// applies are the ApplyConfiguration requests received, in order; a real (not dry run)

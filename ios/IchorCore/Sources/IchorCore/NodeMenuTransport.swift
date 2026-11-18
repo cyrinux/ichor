@@ -12,7 +12,7 @@ public enum NodeHubEntry: String, CaseIterable, Sendable {
     // Status: the tabs, then the Kubernetes pods.
     case services, resources, live, processes, containers, cgroups, kubePods
     // Inspect.
-    case kernelLog, events, network, storage, images, resourceBrowser, hardware
+    case kernelLog, events, network, storage, files, images, resourceBrowser, hardware
     // Troubleshoot.
     case debugShell, netTools, capture
     // Operate.
@@ -26,7 +26,7 @@ public enum NodeHubEntry: String, CaseIterable, Sendable {
         case .kubePods, .maintenance, .drain, .cordon, .taintsLabels:
             .kube
         case .services, .resources, .live, .processes, .containers, .cgroups, .kernelLog, .events, .network,
-            .storage, .images, .resourceBrowser, .hardware, .debugShell, .netTools, .capture, .machineConfig,
+            .storage, .files, .images, .resourceBrowser, .hardware, .debugShell, .netTools, .capture, .machineConfig,
             .upgrade, .reset, .power:
             .talos
         }

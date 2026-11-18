@@ -3,6 +3,11 @@
 Part of the [Ichor documentation](../README.md#documentation).
 
 - **Viewing:** node status, services, resources, logs, etcd and the cluster health check.
+- **Node files:** a node's menu → **Files** browses `/var/log`, `/system/state`, `/etc`,
+  `/proc/net` and `/run` (or any absolute path) and opens a text file, up to 512 KiB, with Copy
+  and Share, like `talosctl ls` and `talosctl read`. A binary file says so instead of showing
+  bytes; the machine config and the other files under `/system/state` show with their secrets
+  redacted. Read-only, `os:reader`.
 - **Actions:** reboot or shut down a node, and wake a powered-off one with Wake-on-LAN (set a
   MAC address and, optionally, a broadcast address and port per node, from its action sheet;
   the phone sends the magic packet itself, so it has to reach the node's network). The MACs of

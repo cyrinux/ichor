@@ -1,0 +1,35 @@
+{
+  "dir": "/var/log",
+  "entries": [
+    {
+      "modified": "2026-01-02T03:04:05Z",
+      "name": "pods",
+      "path": "/var/log/pods",
+      "size": 0,
+      "target": "",
+      "type": "dir"
+    },
+    {
+      "modified": "2026-01-02T03:04:05Z",
+      "name": "containers.log",
+      "path": "/var/log/containers.log",
+      "size": 2048,
+      "target": "",
+      "type": "file"
+    },
+    {
+      "modified": "",
+      "name": "current",
+      "path": "/var/log/current",
+      "size": 0,
+      "target": "/var/log/pods",
+      "type": "link"
+    }
+  ],
+  "roots": [
+    "/var/log",
+    "/system/state",
+    "/etc"
+  ],
+  "truncated": false
+}
