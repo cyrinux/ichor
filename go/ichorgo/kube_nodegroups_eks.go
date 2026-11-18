@@ -340,12 +340,12 @@ func demoNodeGroupsFor(target kubeTarget) func() nodeGroupsReport {
 			return noNodeGroups()
 		}
 
-		return demoNodeGroups()
+		return demoNodeGroups(time.Now())
 	}
 }
 
-func demoNodeGroups() nodeGroupsReport {
-	created := time.Now().Add(-60 * 24 * time.Hour).UnixMilli()
+func demoNodeGroups(now time.Time) nodeGroupsReport {
+	created := now.Add(-60 * 24 * time.Hour).UnixMilli()
 
 	system := 0
 

@@ -36,11 +36,14 @@ public struct AutoscalingReport: Decodable, Equatable, Hashable, Sendable {
     /// One entry per (workload, autoscaler kind), for the workload sheet's chip.
     public let workloads: [AutoscaledWorkload]
     public let workloadsTruncated: Bool
+    /// The cloud's node pools (EKS managed node groups): a call of its own, attached by the
+    /// client with `withNodeGroups(_:)`, never decoded from the autoscaling answer.
+    public let nodeGroups: NodeGroupsReport
 
     public init(
         hpa: HpaGroup = HpaGroup(), keda: KedaGroup = KedaGroup(), vpa: VpaGroup = VpaGroup(),
         karpenter: KarpenterGroup = KarpenterGroup(), workloads: [AutoscaledWorkload] = [],
-        workloadsTruncated: Bool = false
+        workloadsTruncated: Bool = false, nodeGroups: NodeGroupsReport = NodeGroupsReport()
     ) {
         self.hpa = hpa
         self.keda = keda
@@ -48,6 +51,7 @@ public struct AutoscalingReport: Decodable, Equatable, Hashable, Sendable {
         self.karpenter = karpenter
         self.workloads = workloads
         self.workloadsTruncated = workloadsTruncated
+        self.nodeGroups = nodeGroups
     }
 
     public init(from decoder: Decoder) throws {
@@ -58,6 +62,14 @@ public struct AutoscalingReport: Decodable, Equatable, Hashable, Sendable {
         karpenter = try c.field(.karpenter, KarpenterGroup())
         workloads = try c.field(.workloads, [])
         workloadsTruncated = try c.field(.workloadsTruncated, false)
+        nodeGroups = NodeGroupsReport()
+    }
+
+    /// The same report with the cloud's node groups attached.
+    public func withNodeGroups(_ groups: NodeGroupsReport) -> AutoscalingReport {
+        AutoscalingReport(
+            hpa: hpa, keda: keda, vpa: vpa, karpenter: karpenter, workloads: workloads,
+            workloadsTruncated: workloadsTruncated, nodeGroups: groups)
     }
 
     private enum CodingKeys: String, CodingKey { case hpa, keda, vpa, karpenter, workloads, workloadsTruncated }
@@ -102,6 +114,7 @@ public struct AutoscalingReport: Decodable, Equatable, Hashable, Sendable {
                 }),
             workloads: workloads,
             workloadsTruncated: workloadsTruncated,
+            nodeGroups: nodeGroups.filtered(query: q),
         )
     }
 
@@ -366,6 +379,7 @@ public struct AutoscalingProblem: Equatable, Hashable, Identifiable, Sendable {
         case keda = "keda"
         case vpa = "vpa"
         case karpenter = "karpenter"
+        case nodeGroups = "nodegroups"
         case unknown = ""
 
         public static let wireFallback: Self = .unknown
@@ -432,6 +446,16 @@ extension AutoscalingReport {
                 AutoscalingProblem(
                     group: .karpenter, key: row.id, namespace: "", name: row.name, state: row.state,
                     message: row.message))
+        }
+        // At the maximum or with a health issue first, then the other states (Android's order).
+        let groups = nodeGroups.groups.filter(\.needsAttention)
+        let serious = groups.filter { $0.atMax || !$0.issues.isEmpty }
+        let other = groups.filter { !$0.atMax && $0.issues.isEmpty }
+        for row in serious + other {
+            out.append(
+                AutoscalingProblem(
+                    group: .nodeGroups, key: row.id, namespace: "", name: row.name, state: row.state,
+                    message: row.issues.first?.message ?? row.status))
         }
         return out
     }

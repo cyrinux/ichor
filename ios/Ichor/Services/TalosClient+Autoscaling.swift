@@ -4,11 +4,24 @@ import Ichorgo
 
 /// What scales the cluster: HPAs, KEDA, VPA recommendations and Karpenter, through the Kubernetes API (os:admin).
 extension TalosClient {
-    /// Every autoscaler's rows with their states, and the per-workload index.
+    /// Every autoscaler's rows with their states, the per-workload index, and the cloud's node groups.
     func autoscaling() async throws -> AutoscalingReport {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+        async let groups = nodeGroups()
+        let report: AutoscalingReport = try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeAutoscaling(config, context, kubeServer, $0)
         }
+        return report.withNodeGroups(await groups)
+    }
+
+    /// The cluster's EKS managed node groups, read with its own AWS sign-in. A failed read is
+    /// an empty report: the rest of the Autoscaling screen does not depend on AWS.
+    func nodeGroups() async -> NodeGroupsReport {
+        let report: NodeGroupsReport? = try? await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeNodeGroups(config, context, kubeServer, $0)
+        }
+        return report ?? NodeGroupsReport()
     }
 
     /// Pauses the ScaledObject at `replicas`, holds it at its count (`ScaledObjectPause.hold`)

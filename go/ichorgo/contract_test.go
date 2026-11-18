@@ -37,6 +37,7 @@ var contractFixtures = []struct {
 	{"kube-workloads", func() any { return kubeWorkloadList{Workloads: demoKubeWorkloads()} }},
 	{"kube-cronjobs", func() any { return kubeCronJobList{CronJobs: demoCronJobs(contractNow)} }},
 	{"kube-nodes", func() any { return demoEKSNodes() }},
+	{"kube-nodegroups", func() any { return demoNodeGroups(contractNow) }},
 	// One pod's usage with its containers (the pod sheet); the demo's postgres runs a sidecar.
 	{"kube-top-pod", func() any { return demoTopPod("demo", "postgres-0")() }},
 	{"argocd", func() any { return demoArgoCD(contractNow) }},

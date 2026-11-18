@@ -17,6 +17,7 @@ struct AutoscalingView: View {
         case scaledJob(ScaledJobRow)
         case vpa(VpaRow)
         case pool(NodePoolRow, claims: [NodeClaimRow])
+        case nodeGroup(ManagedNodeGroupRow)
 
         var id: String {
             switch self {
@@ -25,6 +26,7 @@ struct AutoscalingView: View {
             case .scaledJob(let row): "sj/" + row.id
             case .vpa(let row): "vpa/" + row.id
             case .pool(let row, _): "pool/" + row.id
+            case .nodeGroup(let row): "ng/" + row.id
             }
         }
     }
@@ -95,10 +97,14 @@ struct AutoscalingView: View {
                     }
                 }
             }
+            // Only on a cluster that signs in through EKS: elsewhere there is nothing to say.
+            if view.nodeGroups.installed {
+                nodeGroupsSection(view.nodeGroups)
+            }
         }
         .overlay {
             if view.hpa.items.isEmpty && view.keda.scaledObjects.isEmpty && view.keda.scaledJobs.isEmpty
-                && view.vpa.items.isEmpty && view.karpenter.nodePools.isEmpty
+                && view.vpa.items.isEmpty && view.karpenter.nodePools.isEmpty && view.nodeGroups.groups.isEmpty
             {
                 ContentUnavailableView("Nothing scales this cluster automatically", systemImage: "arrow.up.and.down")
             } else if attention.isEmpty && allRows(view).isEmpty && !query.isEmpty {
@@ -111,6 +117,26 @@ struct AutoscalingView: View {
 
     private func allRows(_ view: AutoscalingReport) -> [Any] {
         view.hpa.items + view.keda.scaledObjects + view.keda.scaledJobs + view.vpa.items + view.karpenter.nodePools
+            + view.nodeGroups.groups
+    }
+
+    /// The EKS managed node groups, with the permission or AWS error line above them.
+    private func nodeGroupsSection(_ report: NodeGroupsReport) -> some View {
+        Section {
+            let error = NodeGroupText.error(report)
+            if !error.isEmpty {
+                Text(AutoscaleText.groupError(error)).font(.footnote).foregroundStyle(Color.statusBad)
+            }
+            ForEach(report.groups) { row in
+                Button {
+                    selected = .nodeGroup(row)
+                } label: {
+                    NodeGroupRowView(row: row)
+                }
+            }
+        } header: {
+            Text("Node pools (EKS)")
+        }
     }
 
     /// The rows that need attention, across the four groups; empty says everything is fine.
@@ -153,6 +179,8 @@ struct AutoscalingView: View {
             {
                 selected = .pool(pool, claims: claims[pool.name] ?? [])
             }
+        case .nodeGroups:
+            if let row = view.nodeGroups.groups.first(where: { $0.id == problem.key }) { selected = .nodeGroup(row) }
         case .unknown:
             break
         }
@@ -225,6 +253,7 @@ private struct ProblemRow: View {
         case .keda: "KEDA"
         case .vpa: "Vertical (VPA)"
         case .karpenter: "Node pools (Karpenter)"
+        case .nodeGroups: "Node pools (EKS)"
         case .unknown: ""
         }
     }

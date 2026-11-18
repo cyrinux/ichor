@@ -287,7 +287,7 @@ private fun ConditionLine(label: String, ok: Boolean) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Sheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+internal fun Sheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).navigationBarsPadding().padding(bottom = 16.dp),

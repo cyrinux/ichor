@@ -2,6 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 // Mirrors go/ichorgo/kube_autoscaling.go: what scales the cluster (HPAs, KEDA, VPA,
 // Karpenter) and the per-workload index. Quantities stay strings ("250m", "63%"): the Go
@@ -30,6 +31,8 @@ data class AutoscalingReport(
     /** One entry per (workload, autoscaler kind), for the workload sheet's chip. */
     val workloads: List<AutoscaledWorkload> = emptyList(),
     @SerialName("workloadsTruncated") val workloadsTruncated: Boolean = false,
+    /** The cloud's node pools (EKS managed node groups): a call of its own, attached by the repository. */
+    @Transient val nodeGroups: NodeGroupsReport = NodeGroupsReport(),
 )
 
 /** What every group says about itself before its rows. */
@@ -277,7 +280,7 @@ data class AutoscaledWorkload(
 
 /** One problem row of the "Needs attention" section, across the four groups. */
 data class AutoscalingProblem(
-    /** hpa, keda, vpa or karpenter. */
+    /** hpa, keda, vpa, karpenter or nodegroups. */
     val group: String,
     /** The row's key inside its group ("ns/name", or the pool/claim name). */
     val key: String,
@@ -316,6 +319,10 @@ fun AutoscalingReport.problems(): List<AutoscalingProblem> = buildList {
         }
         add(AutoscalingProblem("karpenter", it.key, "", it.name, state, it.message))
     }
+    nodeGroups.problemGroups().forEach {
+        val state = if (it.atMax) AUTOSCALE_AT_MAX else AUTOSCALE_NOT_READY
+        add(AutoscalingProblem(AUTOSCALING_GROUP_NODE_GROUPS, it.key, "", it.name, state, it.issues.firstOrNull()?.message ?: it.status))
+    }
 }
 
 /** "2 of 1–10": where the replica count sits between the bounds. */
@@ -348,6 +355,7 @@ fun AutoscalingReport.filtered(namespace: String?, query: String): AutoscalingRe
             nodePools = karpenter.nodePools.filter { keep(it.name, it.capacityTypes.joinToString(" ")) },
             nodeClaims = karpenter.nodeClaims.filter { keep(it.name, it.pool, it.nodeName, it.instanceType, it.capacityType) },
         ),
+        nodeGroups = nodeGroups.filtered(q),
     )
 }
 
