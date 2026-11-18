@@ -74,7 +74,7 @@ fun CredentialFields(fields: List<String>, values: Map<String, String>, onValue:
 }
 
 @Composable
-private fun SecretField(value: String, onValue: (String) -> Unit, label: String, enabled: Boolean) {
+internal fun SecretField(value: String, onValue: (String) -> Unit, label: String, enabled: Boolean) {
     var visible by remember { mutableStateOf(false) }
     OutlinedTextField(
         value = value,

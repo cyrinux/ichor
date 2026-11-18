@@ -167,6 +167,20 @@ proxy's certificate is checked against the phone's own roots. It does not carry 
 Omni, or a sign-in provider's own calls (OIDC, EKS…), which stay direct; the environment's proxy
 settings are never read.
 
+**Built-in SSH bastion:** a cluster added from a kubeconfig can reach its API server through
+an SSH jump host without any proxy to run: the cluster's menu → **Through SSH bastion…**. Give
+the bastion's host (`bastion.example.net` or `host:port`), the user and a private key (pasted
+or picked from a file, with its passphrase) or a password. **Check host key** shows the key the
+bastion presents (type and SHA256 fingerprint): compare it with the bastion's own
+(`ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` there) before **Trust and save**. Saving
+checks the whole way for real (host key, sign-in, a connection to the API server) and keeps the
+setting, key included, sealed on the device and in encrypted backups; only the fingerprint is
+shown again. Every Kubernetes call of that cluster then goes through the bastion, terminals and
+port-forwards included, and its row says "Through SSH bastion <host>". The bastion must allow
+TCP forwarding to the API server (`AllowTcpForwarding yes`). If its host key changes, nothing
+goes through until you compare and trust the new one (**Bastion settings** on the error). A
+cluster with its own `proxy-url` keeps the proxy; Talos clusters cannot use a bastion yet.
+
 ### Example kubeconfigs: proxy, bastion, Teleport, Tailscale
 
 Samples to adapt (hosts, names and data are made up). Flatten a kubeconfig before importing it

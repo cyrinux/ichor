@@ -529,8 +529,9 @@ public func keepKubeAccess(_ links: [String: String], talos: [String], kube: [St
 /// The clusters whose states the auth store keeps (keyed by fingerprint): every cluster added
 /// from a kubeconfig, and the Talos clusters reached through Omni (their keys).
 public func authStoreFingerprints(talos: [ContextSummary], kube: [ContextSummary]) -> [String] {
-    // A Teleport cluster also keeps its proxy's shared sign-in (authKey).
-    var keys = kube.flatMap { [$0.fingerprint, $0.authKey ?? ""] }
+    // A Teleport cluster also keeps its proxy's shared sign-in (authKey), any cluster its SSH
+    // bastion (bastionKey).
+    var keys = kube.flatMap { [$0.fingerprint, $0.authKey ?? "", $0.bastionKey ?? ""] }
     // An Omni sign-in is kept per identity and instance (authKey); older cores kept it under
     // the context's fingerprint, which the core moves to the auth key on first use.
     for context in talos where context.omni && !context.isKube {

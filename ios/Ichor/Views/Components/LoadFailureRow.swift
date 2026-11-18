@@ -37,6 +37,7 @@ struct LoadFailureRow: View {
         // Not failures: what this node's Talos version cannot do, a cluster that needs a sign-in.
         if let notice = versionNotice(message) { return notice.localizedMessage }
         if let reason = kubeSignInRequiredReason(message), !reason.isEmpty { return reason }
+        if let problem = bastionProblem(message) { return problem.localizedMessage }
         return saying ? String(localized: "Couldn't load: \(message)") : message
     }
 }

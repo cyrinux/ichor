@@ -409,7 +409,9 @@ recommend never putting them on the open internet:
     with the Tailscale apps), [NetBird](https://netbird.io/) or
     [ZeroTier](https://www.zerotier.com/). A mesh VPN needs no open port on the cluster side.
   - **An access proxy instead:** [Teleport](https://goteleport.com/) in front of the
-    Kubernetes API (SSO, short-lived certificates, audit), or an SSH bastion giving a SOCKS5
+    Kubernetes API (SSO, short-lived certificates, audit), or an SSH bastion: built in for
+    kubeconfig clusters (host key pinned, see
+    [Built-in SSH bastion](clusters.md#kubernetes-clusters-without-talos)), or giving a SOCKS5
     proxy. Kubeconfig examples for both, and for Tailscale's API proxy:
     [Example kubeconfigs](clusters.md#example-kubeconfigs-proxy-bastion-teleport-tailscale).
   - **In the app:** set the cluster to **VPN only** (cluster switcher → the cluster's menu).
