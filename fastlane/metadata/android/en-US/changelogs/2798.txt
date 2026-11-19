@@ -1,0 +1,5 @@
+• Set a kubeconfig cluster's SSH bastion on Android and iOS
+• Browse a node's files and read them on Android and iOS
+• List a Talos node's directories and read its text files from the core
+• Show EKS managed node groups on the Autoscaling screen of both apps
+• Read EKS managed node groups with the cluster's own AWS sign-in
