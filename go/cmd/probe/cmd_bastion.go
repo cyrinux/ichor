@@ -14,7 +14,11 @@ import (
 // a key file (never a password on the command line).
 var bastionPasswordEnv = flag.String("password-env", "", "bastion: read the SSH password from this environment variable instead of a key file")
 
-// SSH bastion: reach a kubeconfig context's API server through a jump host. The probe's auth
+// bastionScope is a talosconfig context's choice: all (Talos API and Kubernetes) or kube.
+var bastionScope = flag.String("bastion-scope", "", "bastion: for a talosconfig context, all (default) or kube (Kubernetes only)")
+
+// SSH bastion: reach a context's API server (and a talosconfig context's Talos API, unless
+// -bastion-scope kube) through a jump host. The probe's auth
 // store is in memory: the host key is trusted for this run only.
 var bastionCommands = []command{
 	{name: "bastion", args: "CONTEXT HOST USER [KEYFILE]", run: runBastion},
@@ -40,7 +44,7 @@ func runBastion(e env) (string, error) {
 		return "", err
 	}
 
-	fields := map[string]string{"host": host, "user": user, "hostKey": key.HostKey}
+	fields := map[string]string{"host": host, "user": user, "hostKey": key.HostKey, "scope": *bastionScope}
 
 	if keyFile != "" {
 		pem, err := os.ReadFile(keyFile) //nolint:gosec // the key file the person named

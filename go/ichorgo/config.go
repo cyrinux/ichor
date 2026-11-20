@@ -44,6 +44,9 @@ type contextSummary struct {
 	// AuthKey is where the AuthStore keeps an Omni context's sign-in (shared by the contexts
 	// of one identity on one instance): the apps keep it, and back it up, with the cluster.
 	AuthKey string `json:"authKey,omitempty"`
+	// BastionKey is where the AuthStore keeps a (non-Omni) context's SSH bastion
+	// (talos_bastion.go): the apps keep and back it up with the cluster, as a kubeconfig one's.
+	BastionKey string `json:"bastionKey,omitempty"`
 }
 
 // ParseConfig validates a talosconfig YAML and returns a JSON configSummary.
@@ -124,10 +127,13 @@ func summarizeContext(name string, ctx *clientconfig.Context) (contextSummary, e
 		return contextSummary{}, fmt.Errorf("invalid client certificate: %w", err)
 	}
 
+	fingerprint := contextFingerprint(name, ctx)
+
 	return contextSummary{
 		Name:         name,
 		Kind:         kindTalos,
-		Fingerprint:  contextFingerprint(name, ctx),
+		Fingerprint:  fingerprint,
+		BastionKey:   talosBastionKey(fingerprint, ctx),
 		ClusterID:    clusterID(ctx),
 		Endpoints:    slices.Clone(ctx.Endpoints),
 		Nodes:        slices.Clone(ctx.Nodes),

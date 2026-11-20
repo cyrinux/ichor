@@ -460,6 +460,21 @@ func (d *BastionDialer) Close() error {
 	return nil
 }
 
+// Connect opens the SSH connection (the pin, the sign-in) without forwarding anything: the check
+// of a bastion whose far end is not known yet. A failure is a *BastionError.
+func (d *BastionDialer) Connect(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, d.timeout)
+	defer cancel()
+
+	if _, err := d.sshClient(ctx); err != nil {
+		return d.classify(ctx, err, d.host)
+	}
+
+	d.scheduleIdle()
+
+	return nil
+}
+
 // Host is the bastion's address (host:port), for messages.
 func (d *BastionDialer) Host() string { return d.host }
 

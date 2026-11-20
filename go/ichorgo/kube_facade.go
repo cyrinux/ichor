@@ -414,8 +414,9 @@ func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
 	}
 
 	var (
-		endpoints []string
-		omni      *kubeClient
+		endpoints  []string
+		omni       *kubeClient
+		bastionKey string
 	)
 
 	// Not under the call scope: the client this opens serves mutations and later reads too.
@@ -428,7 +429,7 @@ func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
 			return "", err
 		}
 
-		endpoints = s.context.Endpoints
+		endpoints, bastionKey = s.context.Endpoints, s.bastionKey
 
 		return fetchKubeconfig(ctx, s)
 	})
@@ -436,7 +437,18 @@ func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
 		return omni, err
 	}
 
-	return openKubeClient(context.Background(), kubeconfig, endpoints, target.server)
+	creds, err := parseKubeconfig(kubeconfig)
+	if err != nil {
+		return nil, err
+	}
+
+	// The context's SSH bastion, whatever its scope: its own SSH connection, not the session's
+	// (talos_bastion.go).
+	if err := attachBastionKey(creds, bastionKey); err != nil {
+		return nil, err
+	}
+
+	return openKubeClientCreds(context.Background(), creds, endpoints, target.server)
 }
 
 // openStoredKubeClient opens a cluster added from a kubeconfig. A context that signs in
