@@ -67,6 +67,7 @@ reads those roles and explains up front when a feature needs more.
 | **Create a Compute Engine VM for a new node** | As for a Hetzner server. At Google Cloud, a service account key (JSON) with the custom role the app prints, on the project: the reads it lists (the project, zones, machine types, networks, subnets, Cloud NAT routers, images, the serial console of a failed boot), the create and delete of instances with their boot disk, the use of the image and the subnet (and of an external address when asked), and the zone operations. `testIamPermissions` checks it before any write | **`os:admin`** |
 | **Make a Talos image at Google Cloud** | As for a Hetzner snapshot. At Google Cloud, the same service account key and printed role: it also holds the labelling, use and delete of disks, the stop and serial console of a VM, the create, labelling and delete of images, and the global operations | **`os:admin`** |
 | **Cloud host user data for a new node** | Plain Talos: `Version` and COSI `MachineConfig` (sensitive) of the template member, as for its config; on Omni, `GetMachineJoinConfig` for the join config (Omni's Operator role) | **`os:admin`** |
+| **Export the secrets bundle (`talosctl gen secrets --from-controlplane-config`)** | COSI `MachineConfig` (sensitive) of a control plane, as for its config | **`os:admin`** |
 | **Rotate the Talos API CA (`talosctl rotate-ca --kubernetes=false`)** | COSI `OSRoot` and `MachineConfig` (sensitive), `ApplyConfiguration` (no reboot), `Version` on every node | **`os:admin`** |
 
 Notes:

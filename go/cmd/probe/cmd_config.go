@@ -70,6 +70,11 @@ var configCommands = []command{
 
 		return generate(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), address, "")
 	}},
+	{name: "secrets-bundle", args: "NODE", run: func(e env) (string, error) {
+		// The cluster's secrets.yaml rebuilt from control plane NODE's config, for
+		// `talosctl gen config --with-secrets -`: keep it off disk, or in an encrypted place.
+		return ichorgo.ClusterSecretsBundle(e.cfg, e.context, flag.Arg(1))
+	}},
 	{name: "meta", args: "NODE", run: func(e env) (string, error) {
 		return ichorgo.NodeMetaKeys(e.cfg, e.context, flag.Arg(1))
 	}},

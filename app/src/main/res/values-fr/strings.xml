@@ -6746,4 +6746,13 @@
     <string name="bastion_problem_auth">Le bastion SSH a refusé l’utilisateur, la clé ou le mot de passe.</string>
     <string name="bastion_problem_key">La clé privée est illisible : vérifiez-la ainsi que sa phrase secrète.</string>
     <string name="bastion_problem_forward">Le bastion SSH refuse de se connecter au serveur API : il doit autoriser le transfert TCP vers celui-ci.</string>
+    <string name="node_menu_secrets_bundle">Exporter le bundle de secrets</string>
+    <string name="secrets_bundle_confirm_title">Exporter le bundle de secrets ?</string>
+    <string name="secrets_bundle_confirm_body">secrets.yaml contient toutes les CA, clés et jetons de « %1$s » : qui le détient peut prendre le contrôle du cluster, et seule sa reconstruction le révoque. Enregistrez-le uniquement dans un endroit chiffré (un gestionnaire de mots de passe, un dépôt chiffré avec SOPS), jamais dans un dossier partagé.</string>
+    <string name="secrets_bundle_confirm">Choisir où enregistrer</string>
+    <string name="secrets_bundle_auth">Exporter les secrets de %1$s</string>
+    <string name="secrets_bundle_saved">secrets.yaml enregistré. Utilisez-le avec talosctl gen config --with-secrets.</string>
+    <string name="secrets_bundle_failed">Le bundle de secrets n\'a pas été exporté : %1$s</string>
+    <string name="secrets_bundle_open_failed">Le fichier choisi ne peut pas être écrit.</string>
+    <string name="secrets_bundle_new_cluster_help">Gardez une copie des secrets du cluster (secrets.yaml) pour générer ses configs sur un ordinateur avec talosctl, ou avant de perdre son unique control plane.</string>
 </resources>

@@ -39,6 +39,15 @@ Part of the [Ichor documentation](../README.md#documentation).
   for it). A run that stops before the config is sent leaves the machine untouched and offers to
   remove the stored entry; after it, the install goes on and the entry is kept. Refused in screenshot
   mode and on the demo.
+- **Exporting the secrets bundle (a control plane's menu, or the new cluster's last step):** the
+  cluster's `secrets.yaml` (its CAs, keys and tokens, as `talosctl gen secrets` writes it) rebuilt
+  from that control plane's config, for `talosctl gen config --with-secrets` on a computer. A
+  warning says it is the cluster's root of trust and belongs in an encrypted place, then the app
+  lock (when on) asks again; the system "Save to…" picker is its only destination, and the app never writes
+  it anywhere else (Android reads it only once a file is picked and writes it straight there).
+  `os:admin`, control planes only; refused on a worker, on Omni (its nodes hold no
+  secrets to export), on the demo and in privacy mode. Each export is in the activity log (the
+  node only).
 - **Creating a new cluster at Hetzner (Add a cluster → New Talos cluster → A server at Hetzner):**
   billable: a server (by the started hour) and an IPv4 Primary IP (from its creation), so the cost
   of both shows first and the cluster's name is typed to confirm. With a Read & Write token, every

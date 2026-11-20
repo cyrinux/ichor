@@ -3,8 +3,10 @@ package name.levis.ichor.ui.node
 import name.levis.ichor.R
 import name.levis.ichor.model.ContextSummary
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NodeMenuTest {
@@ -102,6 +104,15 @@ class NodeMenuTest {
         )
         assertEquals(listOf(NodeMenuEntry.CAPTURES), byTransport[NodeTransport.LOCAL])
         assertEquals(NodeMenuEntry.entries.size - 6, byTransport[NodeTransport.TALOS]?.size)
+    }
+
+    @Test
+    fun theSecretsBundleIsOfferedOnAControlPlaneToAnAdminOnly() {
+        assertTrue(NodeMenuEntry.SECRETS_BUNDLE in nodeMenuEntries(admin, nodeRole = "controlplane"))
+        assertFalse(NodeMenuEntry.SECRETS_BUNDLE in nodeMenuEntries(admin, nodeRole = "worker"))
+        assertFalse(NodeMenuEntry.SECRETS_BUNDLE in nodeMenuEntries(null, nodeRole = "controlplane"))
+        // Only the control-plane entry leaves a worker's menu.
+        assertEquals(nodeMenuEntries(admin) - NodeMenuEntry.SECRETS_BUNDLE, nodeMenuEntries(admin, nodeRole = "worker"))
     }
 
     @Test

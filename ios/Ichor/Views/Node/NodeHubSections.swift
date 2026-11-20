@@ -241,12 +241,19 @@ struct NodeOperateSection: View {
     @Binding var open: NodeHubScreen?
     @Binding var showingReset: Bool
     @Binding var showingCordon: Bool
+    /// A control plane: its config holds the cluster's secrets, which it can export.
+    var controlPlane = false
+    @Binding var showingSecrets: Bool
 
     @Environment(AppModel.self) private var model
     @Environment(NodesStore.self) private var nodes
 
+    private var canExportSecrets: Bool { controlPlane && model.allows(.issueConfig) }
+
     var body: some View {
-        if model.allows(.machineConfig) || model.allows(.upgrade) || model.allows(.workloads) || model.allows(.reset) {
+        if model.allows(.machineConfig) || model.allows(.upgrade) || model.allows(.workloads) || model.allows(.reset)
+            || canExportSecrets
+        {
             Section("Operate") {
                 if model.allows(.machineConfig) {
                     NodeHubButton(
@@ -272,6 +279,12 @@ struct NodeOperateSection: View {
                         showingReset = true
                     }
                     .disabled(maintenanceRunning)
+                }
+                // The cluster's secrets.yaml: a warning, then the exporter (os:admin, not on Omni).
+                if canExportSecrets {
+                    NodeHubButton(title: String(localized: "Export secrets bundle"), systemImage: "key") {
+                        showingSecrets = true
+                    }
                 }
                 // Cordon and drain go through the Kubernetes API (os:admin, like the workloads).
                 if model.allows(.workloads) {

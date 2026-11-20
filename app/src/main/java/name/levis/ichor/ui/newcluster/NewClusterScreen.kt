@@ -28,6 +28,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import name.levis.ichor.ui.secretsbundle.rememberSecretsBundleExport
+import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.asString
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -282,6 +285,23 @@ private fun DraftCard(draft: NewClusterDraft) {
     }
 }
 
+/** The cluster just made: its secrets.yaml, read back from its control plane, once the user asks. */
+@Composable
+private fun SecretsBundleOffer(run: JoinRunState, name: String) {
+    val app = LocalContext.current.applicationContext as TalosApp
+    var message by remember { mutableStateOf<UiText?>(null) }
+    val export = rememberSecretsBundleExport(
+        clusterName = name,
+        fetch = { app.machineConfigRepository.secretsBundle(run.context, run.address) },
+        onResult = { message = it },
+    )
+    MutedText(stringResource(R.string.secrets_bundle_new_cluster_help))
+    IchorOutlinedButton(onClick = export, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.node_menu_secrets_bundle))
+    }
+    message?.let { MutedText(it.asString()) }
+}
+
 /**
  * The followed run; a run that failed before the cluster existed offers to remove the stored
  * entry it leaves (at Hetzner: once the talosconfig was stored, until etcd was bootstrapped).
@@ -296,6 +316,9 @@ private fun RunSection(run: JoinRunState, vm: NewClusterViewModel, onOpenCluster
     val name = run.request.newCluster?.name ?: run.request.hetznerCluster?.name.orEmpty()
     SectionTitle(stringResource(R.string.new_cluster_step_run))
     JoinRunView(run = run, onStop = joins::stop, onOpenNode = onOpenCluster, onClose = joins::dismiss)
+    if (run.finished && run.error == null && run.address.isNotEmpty() && run.request.address != DEMO_MACHINE) {
+        SecretsBundleOffer(run, name)
+    }
     if (run.finished && run.error != null && !sent && stored && run.request.address != DEMO_MACHINE) {
         MutedText(stringResource(R.string.new_cluster_remove_help))
         IchorOutlinedButton(onClick = { vm.removeEntry(name) {} }, modifier = Modifier.fillMaxWidth()) {

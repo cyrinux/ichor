@@ -6606,4 +6606,13 @@
     <string name="bastion_problem_auth">SSH 跳板机拒绝了用户、密钥或密码。</string>
     <string name="bastion_problem_key">无法读取私钥：请检查私钥及其密码短语。</string>
     <string name="bastion_problem_forward">SSH 跳板机无法连接到 API 服务器：它必须允许到该服务器的 TCP 转发。</string>
+    <string name="node_menu_secrets_bundle">导出密钥包</string>
+    <string name="secrets_bundle_confirm_title">导出密钥包？</string>
+    <string name="secrets_bundle_confirm_body">secrets.yaml 包含“%1$s”的所有 CA、密钥和令牌：持有它的人可以接管集群，只有重建集群才能撤销。请只保存到加密的位置（密码管理器、用 SOPS 加密的仓库），切勿保存到共享文件夹。</string>
+    <string name="secrets_bundle_confirm">选择保存位置</string>
+    <string name="secrets_bundle_auth">导出 %1$s 的密钥</string>
+    <string name="secrets_bundle_saved">secrets.yaml 已保存。请配合 talosctl gen config --with-secrets 使用。</string>
+    <string name="secrets_bundle_failed">密钥包未导出：%1$s</string>
+    <string name="secrets_bundle_open_failed">无法写入所选文件。</string>
+    <string name="secrets_bundle_new_cluster_help">保留一份集群密钥（secrets.yaml），以便在电脑上用 talosctl 生成其配置，或在唯一的控制平面丢失之前留底。</string>
 </resources>

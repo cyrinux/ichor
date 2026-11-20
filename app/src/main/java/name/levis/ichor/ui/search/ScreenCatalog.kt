@@ -120,7 +120,7 @@ private fun nodeScreens(cluster: ContextSummary, nodes: List<NodeOverview>): Lis
 
 /** The node menu entries [nodeMenuRoute] opens a screen for (the others are a confirmation). */
 private fun nodeMenuEntryHasScreen(entry: NodeMenuEntry): Boolean =
-    entry != NodeMenuEntry.RESET && entry != NodeMenuEntry.CORDON
+    entry != NodeMenuEntry.RESET && entry != NodeMenuEntry.CORDON && entry != NodeMenuEntry.SECRETS_BUNDLE
 
 /** [specs] as the Go core ranks them, every title resolved by [text] ("Settings → Alerts", "node-a → Hardware"). */
 fun screenEntries(specs: List<ScreenSpec>, text: (Int) -> String): List<ScreenEntry> = specs.map { spec ->

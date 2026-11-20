@@ -52,6 +52,20 @@ class MachineConfigRepository(go: GoCall) : GoRepository(go) {
     }
 
     /**
+     * The cluster's secrets bundle (secrets.yaml) rebuilt from control plane [node]'s config
+     * (os:admin). The cluster's root of trust: never cached, logged or written by this class.
+     */
+    suspend fun secretsBundle(node: String): String = call { cfg, ctx ->
+        Ichorgo.clusterSecretsBundle(cfg, ctx, node)
+    }
+
+    /** [secretsBundle] for the cluster of [context] whichever is on screen (a cluster just made). */
+    suspend fun secretsBundle(context: String, node: String): String {
+        val stored = configs.forCall(context)
+        return withContext(Dispatchers.IO) { Ichorgo.clusterSecretsBundle(stored.yaml, context, node) }
+    }
+
+    /**
      * Makes the Talos config schema of [node]'s version ready for [machineConfigDescribe]:
      * downloaded the first time a version is seen, then kept by the core. A schema that
      * cannot be had is not an error ([ConfigSchemaStatus.available] is false).
