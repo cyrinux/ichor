@@ -96,8 +96,8 @@ public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
     /// Where an Omni context's sign-in is kept (shared by an identity's clusters on one
     /// instance): kept and backed up with the cluster, see authStoreFingerprints.
     public let authKey: String?
-    /// Where a kubeconfig context's SSH bastion is kept in the auth store (with the cluster,
-    /// see authStoreFingerprints); nil when the core sends none.
+    /// Where the context's SSH bastion is kept in the auth store (with the cluster, see
+    /// authStoreFingerprints); nil when the core sends none (Omni, the demo).
     public let bastionKey: String?
 
     public var id: String { name }

@@ -6588,6 +6588,9 @@
     <string name="bastion_passphrase">パスフレーズ（鍵にある場合）</string>
     <string name="bastion_password">パスワード</string>
     <string name="bastion_keep_secret">空欄のままにすると保存済みのシークレットを使います</string>
+    <string name="bastion_scope_all">Talos API と Kubernetes</string>
+    <string name="bastion_scope_kube">Kubernetes のみ</string>
+    <string name="bastion_scope_help">Kubernetes のみ: この端末から Talos のエンドポイントには届き、Kubernetes API サーバーだけに届かない場合です。</string>
     <string name="bastion_check_host_key">ホスト鍵を確認</string>
     <string name="bastion_host_key">ホスト鍵</string>
     <string name="bastion_compare">信頼する前に踏み台自身の鍵と照合してください。</string>

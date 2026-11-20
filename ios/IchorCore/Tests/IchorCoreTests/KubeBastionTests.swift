@@ -39,13 +39,24 @@ final class KubeBastionTests: XCTestCase {
         XCTAssertEqual(fields.values, ["host": "bastion.example.net", "user": "jump", "password": " pw "])
         XCTAssertEqual(BastionFields(hostKey: "ssh-ed25519 AAAA").values, ["hostKey": "ssh-ed25519 AAAA"])
         XCTAssertEqual(try BastionFields(user: "jump").json(), #"{"user":"jump"}"#)
+        XCTAssertEqual(BastionFields(scope: KubeBastionInfo.scopeKube).values, ["scope": "kube"])
     }
 
-    func testOfferedOnlyForPlainKubeconfigClusters() {
+    func testATalosClusterCarriesItsScope() throws {
+        let info = try KubeBastionInfo.decode(#"{"configured":true,"unavailable":"","scope":"all"}"#)
+        XCTAssertTrue(info.talos)
+        XCTAssertEqual(info.scope, KubeBastionInfo.scopeAll)
+        XCTAssertFalse(try KubeBastionInfo.decode(#"{"configured":false,"unavailable":""}"#).talos)
+    }
+
+    func testOfferedForKubeconfigClustersWithoutProxyAndTalosClustersOffOmni() {
         let kube = ContextSummary(name: "prod", kind: ContextKind.kube, fingerprint: "k1")
         XCTAssertTrue(bastionOffered(kube, masked: false))
         XCTAssertFalse(bastionOffered(kube, masked: true))
-        XCTAssertFalse(bastionOffered(ContextSummary(name: "lab"), masked: false))
+        XCTAssertTrue(bastionOffered(ContextSummary(name: "lab"), masked: false))
+        XCTAssertFalse(bastionOffered(ContextSummary(name: "lab"), masked: true))
+        XCTAssertFalse(bastionOffered(ContextSummary(name: "prod", omni: true), masked: false))
+        XCTAssertFalse(bastionOffered(ContextSummary(name: "demo", demo: true), masked: false))
         XCTAssertFalse(
             bastionOffered(
                 ContextSummary(name: "p", kind: ContextKind.kube, proxyURL: "socks5://proxy.example.net:1080"),

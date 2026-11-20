@@ -54,12 +54,26 @@ class KubeBastionTest {
     }
 
     @Test
-    fun onlyAPlainKubeconfigClusterIsOffered() {
+    fun aKubeconfigClusterWithoutProxyAndATalosClusterOffOmniAreOffered() {
         val kube = ContextSummary("jump", kind = KIND_KUBE)
         assertTrue(bastionOffered(kube, masked = false))
         assertFalse(bastionOffered(kube, masked = true))
         assertFalse(bastionOffered(kube.copy(proxyURL = "socks5://127.0.0.1:1080"), masked = false))
         assertFalse(bastionOffered(kube.copy(demo = true), masked = false))
-        assertFalse(bastionOffered(ContextSummary("lab"), masked = false))
+        val talos = ContextSummary("lab")
+        assertTrue(bastionOffered(talos, masked = false))
+        assertFalse(bastionOffered(talos, masked = true))
+        assertFalse(bastionOffered(talos.copy(omni = true), masked = false))
+        assertFalse(bastionOffered(talos.copy(demo = true), masked = false))
+    }
+
+    @Test
+    fun aTalosClusterCarriesItsScope() {
+        val info = TalosJson.decodeFromString(KubeBastionInfo.serializer(), """{"configured":true,"unavailable":"","scope":"kube"}""")
+        assertTrue(info.talos)
+        assertEquals(KubeBastionInfo.SCOPE_KUBE, info.scope)
+        assertFalse(TalosJson.decodeFromString(KubeBastionInfo.serializer(), """{"configured":false,"unavailable":""}""").talos)
+        assertEquals("all", BastionFields(scope = KubeBastionInfo.SCOPE_ALL).toMap()["scope"])
+        assertFalse("scope" in BastionFields(host = "b").toMap())
     }
 }

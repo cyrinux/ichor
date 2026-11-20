@@ -31,16 +31,21 @@ class SignInKeysTest {
     }
 
     @Test
-    fun kubeClustersKeepTheirSshBastion() {
+    fun kubeAndTalosClustersKeepTheirSshBastion() {
         val contexts = listOf(
             ContextSummary("jump", fingerprint = "k1", kind = KIND_KUBE, bastionKey = "bastionk"),
-            // A Talos context's bastion comes later: nothing to keep for it yet.
+            // A Talos context keeps only its bastion: its certificate lives in the talosconfig.
             ContextSummary("lab", fingerprint = "t1", bastionKey = "bastiont"),
+            // The demo has none.
+            ContextSummary("demo", fingerprint = "t2", demo = true),
         )
 
         // Without it the store would prune the entry and the cluster would silently go direct.
-        assertEquals(listOf("k1", "bastionk"), signInKeys(contexts))
-        assertEquals(mapOf("bastionk" to "b"), restoredKubeAuth(mapOf("bastionk" to "b"), signInKeys(contexts)))
+        assertEquals(listOf("k1", "bastionk", "bastiont"), signInKeys(contexts))
+        assertEquals(
+            mapOf("bastionk" to "b", "bastiont" to "t"),
+            restoredKubeAuth(mapOf("bastionk" to "b", "bastiont" to "t"), signInKeys(contexts)),
+        )
     }
 
     @Test

@@ -6728,6 +6728,9 @@
     <string name="bastion_passphrase">Frase de contraseña (si la clave la tiene)</string>
     <string name="bastion_password">Contraseña</string>
     <string name="bastion_keep_secret">Deja los secretos vacíos para conservar los guardados</string>
+    <string name="bastion_scope_all">API de Talos y Kubernetes</string>
+    <string name="bastion_scope_kube">Solo Kubernetes</string>
+    <string name="bastion_scope_help">Solo Kubernetes: los endpoints de Talos son accesibles desde este teléfono, solo el servidor de API de Kubernetes no lo es.</string>
     <string name="bastion_check_host_key">Comprobar la clave del host</string>
     <string name="bastion_host_key">Clave del host</string>
     <string name="bastion_compare">Compárala con la del propio bastión antes de confiar en ella.</string>

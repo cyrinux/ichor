@@ -6990,6 +6990,9 @@
     <string name="bastion_passphrase">Парольная фраза (если есть у ключа)</string>
     <string name="bastion_password">Пароль</string>
     <string name="bastion_keep_secret">Оставьте секреты пустыми, чтобы сохранить текущие</string>
+    <string name="bastion_scope_all">Talos API и Kubernetes</string>
+    <string name="bastion_scope_kube">Только Kubernetes</string>
+    <string name="bastion_scope_help">Только Kubernetes: конечные точки Talos доступны с этого телефона, недоступен только API-сервер Kubernetes.</string>
     <string name="bastion_check_host_key">Проверить ключ хоста</string>
     <string name="bastion_host_key">Ключ хоста</string>
     <string name="bastion_compare">Сравните его с ключом самого бастиона, прежде чем доверять.</string>

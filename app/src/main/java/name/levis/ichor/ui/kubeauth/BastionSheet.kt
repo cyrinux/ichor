@@ -44,7 +44,8 @@ import name.levis.ichor.data.KubeBastionRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.BastionProblem
 import name.levis.ichor.model.KubeBastionHostKey
-import name.levis.ichor.model.isKube
+import name.levis.ichor.model.KubeBastionInfo
+import name.levis.ichor.model.bastionOffered
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
@@ -61,7 +62,8 @@ import name.levis.ichor.util.readBounded
 private const val MAX_PRIVATE_KEY_BYTES = 64 * 1024
 
 /**
- * The SSH bastion of the kubeconfig cluster [context]: host, user and a key or a password; the
+ * The SSH bastion of the cluster [context] (a kubeconfig cluster, or a Talos one with the choice
+ * of what goes through it): host, user and a key or a password; the
  * host key shown for the user to compare before it is trusted; when set, edit (empty secrets
  * kept), replace a changed host key, or remove. [problem] is what the screen that opened it hit.
  */
@@ -142,6 +144,7 @@ private fun BastionForm(state: BastionUiState, vm: BastionViewModel, onRemove: (
         SecretField(state.password, vm::password, stringResource(R.string.bastion_password), enabled)
     }
     if (state.configured) MutedText(stringResource(R.string.bastion_keep_secret))
+    if (state.info?.talos == true) ScopeChoice(state.scope, vm::scope, enabled)
     if (state.needsCheck) {
         state.checked?.let { CheckedKey(it) }
             ?: IchorOutlinedButton(onClick = vm::checkHostKey, enabled = state.canCheck) { Text(stringResource(R.string.bastion_check_host_key)) }
@@ -153,6 +156,26 @@ private fun BastionForm(state: BastionUiState, vm: BastionViewModel, onRemove: (
         if (state.configured) IchorTextButton(onClick = onRemove, enabled = enabled) { Text(stringResource(R.string.bastion_remove)) }
         if (state.busy) CircularProgressIndicator(Modifier.padding(start = 8.dp))
     }
+}
+
+/** A Talos cluster: whether its Talos API goes through the bastion too, or only Kubernetes. */
+@Composable
+private fun ScopeChoice(scope: String, onScope: (String) -> Unit, enabled: Boolean) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        IchorFilterChip(
+            selected = scope != KubeBastionInfo.SCOPE_KUBE,
+            onClick = { onScope(KubeBastionInfo.SCOPE_ALL) },
+            label = { Text(stringResource(R.string.bastion_scope_all)) },
+            enabled = enabled,
+        )
+        IchorFilterChip(
+            selected = scope == KubeBastionInfo.SCOPE_KUBE,
+            onClick = { onScope(KubeBastionInfo.SCOPE_KUBE) },
+            label = { Text(stringResource(R.string.bastion_scope_kube)) },
+            enabled = enabled,
+        )
+    }
+    MutedText(stringResource(R.string.bastion_scope_help))
 }
 
 /** The pinned key no longer matches: the old and the new fingerprints, then trust the new one. */
@@ -233,8 +256,8 @@ fun BastionAction(message: UiText, onChanged: () -> Unit) {
     if (message !is UiText.Bastion) return
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
-    // A kubeconfig cluster on screen: the only kind with a bastion for now.
-    val target = config?.activeSummary?.takeIf { it.isKube }?.name ?: return
+    // The cluster on screen, when it can have a bastion (not Omni, not the demo).
+    val target = config?.activeSummary?.takeIf { bastionOffered(it, masked = false) }?.name ?: return
     var open by remember { mutableStateOf(false) }
     IchorButton(onClick = { open = true }) { Text(stringResource(R.string.bastion_settings)) }
     if (open) {
