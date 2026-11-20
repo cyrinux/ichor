@@ -6588,6 +6588,9 @@
     <string name="bastion_passphrase">密码短语（如果密钥有）</string>
     <string name="bastion_password">密码</string>
     <string name="bastion_keep_secret">密钥留空即保留已保存的</string>
+    <string name="bastion_scope_all">Talos API 和 Kubernetes</string>
+    <string name="bastion_scope_kube">仅 Kubernetes</string>
+    <string name="bastion_scope_help">仅 Kubernetes：此手机可直接访问 Talos 端点，只有 Kubernetes API 服务器无法访问。</string>
     <string name="bastion_check_host_key">检查主机密钥</string>
     <string name="bastion_host_key">主机密钥</string>
     <string name="bastion_compare">信任前请与跳板机本身的密钥核对。</string>

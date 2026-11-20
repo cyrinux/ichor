@@ -2,8 +2,8 @@ import Foundation
 import Ichorgo
 import IchorCore
 
-/// The SSH bastion of a cluster added from a kubeconfig (see TalosClient for the conventions).
-/// `kube` is the stored kubeconfig, `context` a context of it. The core keeps the setting, key
+/// The SSH bastion of a cluster (see TalosClient for the conventions). `kube` is the stored
+/// config holding `context`: its kubeconfig, or the talosconfig. The core keeps the setting, key
 /// included, in the sealed auth store; the app only ever sees the fingerprint.
 extension TalosClient {
     /// The bastion of `context`, or why it cannot have one.

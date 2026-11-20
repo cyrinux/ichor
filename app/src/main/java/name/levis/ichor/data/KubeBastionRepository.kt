@@ -14,7 +14,7 @@ import name.levis.ichor.model.KubeBastionInfo
 import name.levis.ichorgo.Ichorgo
 
 /**
- * A kubeconfig cluster's SSH bastion, through the Go core: what is set, the host key a bastion
+ * A cluster's SSH bastion (a kubeconfig or a Talos cluster), through the Go core: what is set, the host key a bastion
  * presents, set (checked for real first) and remove. The core keeps the setting, key included,
  * in the sealed auth store under the context's bastionKey; the app only ever sees the
  * fingerprint.
@@ -29,7 +29,7 @@ class KubeBastionRepository(private val configs: ConfigRepository) {
 
     /** The bastion of the stored cluster [context], or why it cannot have one. */
     suspend fun info(context: String): KubeBastionInfo = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(KubeBastionInfo.serializer(), Ichorgo.kubeBastionInfo(kubeYaml(), context))
+        TalosJson.decodeFromString(KubeBastionInfo.serializer(), Ichorgo.kubeBastionInfo(yamlFor(context), context))
     }
 
     /** The host key the bastion at [host] (host or host:port) presents, without signing in. */
@@ -43,15 +43,17 @@ class KubeBastionRepository(private val configs: ConfigRepository) {
      */
     suspend fun set(context: String, fields: BastionFields): KubeBastionInfo = withContext(Dispatchers.IO) {
         val json = TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), fields.toMap())
-        TalosJson.decodeFromString(KubeBastionInfo.serializer(), Ichorgo.kubeSetBastion(kubeYaml(), context, json))
+        TalosJson.decodeFromString(KubeBastionInfo.serializer(), Ichorgo.kubeSetBastion(yamlFor(context), context, json))
             .also { _revision.update { rev -> rev + 1 } }
     }
 
     /** Forgets [context]'s bastion: it connects directly again. */
     suspend fun remove(context: String) = withContext(Dispatchers.IO) {
-        Ichorgo.kubeRemoveBastion(kubeYaml(), context)
+        Ichorgo.kubeRemoveBastion(yamlFor(context), context)
         _revision.update { it + 1 }
     }
 
-    private fun kubeYaml(): String = configs.config.value?.kubeYaml?.takeIf { it.isNotBlank() } ?: throw NoConfigException()
+    /** The stored config holding [context]: its kubeconfig or its talosconfig. */
+    private fun yamlFor(context: String): String =
+        configs.config.value?.yamlFor(context)?.takeIf { it.isNotBlank() } ?: throw NoConfigException()
 }

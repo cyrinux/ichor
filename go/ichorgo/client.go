@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cyrinux/ichor/go/internal/httpx"
 	"github.com/siderolabs/talos/pkg/machinery/client"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 )
@@ -35,6 +36,12 @@ type session struct {
 	authKey string
 	signing *omniSigning
 
+	// bastionKey is where a talosconfig context's SSH bastion is kept (set with or without
+	// one, so that setting one drops the direct session); bastion is the hop its gRPC dials
+	// go through (scope all), closed with the session.
+	bastionKey string
+	bastion    *httpx.BastionDialer
+
 	readyMu    sync.Mutex // see ready
 	isReady    bool
 	readyErr   error
@@ -60,7 +67,11 @@ func openSession(configYAML, contextName string) (*session, error) {
 	opts := []client.OptionFunc{client.WithConfigContext(cfgCtx)}
 	authKey := ""
 
-	var signing *omniSigning
+	var (
+		signing    *omniSigning
+		bastion    *httpx.BastionDialer
+		bastionKey string
+	)
 
 	if isOmni(cfgCtx) {
 		authKey = migrateOmniAuth(name, cfgCtx)
@@ -68,20 +79,39 @@ func openSession(configYAML, contextName string) (*session, error) {
 		if opts, signing, err = omniClientOptions(authKey, cfgCtx); err != nil {
 			return nil, err
 		}
+	} else {
+		bastionKey = kubeBastionKey(contextFingerprint(name, cfgCtx))
+
+		var dial client.OptionFunc
+		if bastion, dial, err = talosSessionBastion(bastionKey); err != nil {
+			return nil, err
+		}
+
+		if dial != nil {
+			opts = append(opts, dial)
+		}
 	}
 
 	// client.New only dials lazily, so no context is needed here.
 	c, err := client.New(context.Background(), opts...)
 	if err != nil {
+		if bastion != nil {
+			_ = bastion.Close() //nolint:errcheck
+		}
+
 		return nil, fmt.Errorf("create Talos client: %w", err)
 	}
 
-	return &session{client: c, context: cfgCtx, authKey: authKey, signing: signing}, nil
+	return &session{client: c, context: cfgCtx, authKey: authKey, signing: signing, bastionKey: bastionKey, bastion: bastion}, nil
 }
 
 func (s *session) Close() {
 	if s.client != nil {
 		_ = s.client.Close() //nolint:errcheck
+	}
+
+	if s.bastion != nil {
+		_ = s.bastion.Close() //nolint:errcheck
 	}
 
 	if s.onClose != nil {

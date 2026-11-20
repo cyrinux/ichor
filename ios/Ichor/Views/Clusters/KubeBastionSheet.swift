@@ -4,6 +4,7 @@ import SwiftUI
 /// What the bastion sheet acts on: a cluster added from a kubeconfig, and the problem the
 /// screen that opened it hit (a changed host key opens on the pin replacement).
 struct KubeBastionTarget: Identifiable, Equatable {
+    /// The stored config holding `context`: its kubeconfig, or the talosconfig.
     let kube: String
     let context: String
     var problem: BastionProblem?
@@ -11,7 +12,8 @@ struct KubeBastionTarget: Identifiable, Equatable {
     var id: String { context }
 }
 
-/// The SSH bastion of a kubeconfig cluster: host, user and a key or a password; the host key
+/// The SSH bastion of a cluster (a kubeconfig cluster, or a Talos one with the choice of what
+/// goes through it): host, user and a key or a password; the host key
 /// shown to compare before it is trusted; when set, edit (empty secrets kept), replace a changed
 /// host key, or remove. Secrets live in @State only while the sheet is open, never in scene
 /// storage, and are cleared when it closes.
@@ -28,6 +30,8 @@ struct KubeBastionSheet: View {
     @State private var privateKey = ""
     @State private var passphrase = ""
     @State private var password = ""
+    /// A Talos cluster's choice (KubeBastionInfo.scope); empty for a kubeconfig cluster.
+    @State private var scope = ""
     @State private var checked: KubeBastionHostKey?
     @State private var pinMismatch = false
     @State private var busy = false
@@ -128,6 +132,20 @@ struct KubeBastionSheet: View {
                 Text("Leave the secrets empty to keep the stored ones")
             }
         }
+        if info?.talos == true {
+            Section {
+                Picker("Through the bastion", selection: $scope) {
+                    Text("Talos API and Kubernetes").tag(KubeBastionInfo.scopeAll)
+                    Text("Kubernetes only").tag(KubeBastionInfo.scopeKube)
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            } footer: {
+                Text(
+                    "Kubernetes only: the Talos endpoints are reachable from this phone, only the Kubernetes API server is not."
+                )
+            }
+        }
         if needsCheck {
             Section("Host key") {
                 if let checked {
@@ -217,6 +235,7 @@ struct KubeBastionSheet: View {
             host = loaded.host
             user = loaded.user
             useKey = loaded.usesKey
+            scope = loaded.scope
             pinMismatch = target.problem == .hostKey
         } catch {
             self.error = bastionErrorText(error.localizedDescription)
@@ -235,7 +254,7 @@ struct KubeBastionSheet: View {
             privateKey: useKey ? privateKey.trimmingCharacters(in: .whitespacesAndNewlines) : "",
             passphrase: useKey ? passphrase : "",
             password: useKey ? "" : password,
-            hostKey: checked?.hostKey ?? "")
+            hostKey: checked?.hostKey ?? "", scope: scope)
         _ = try await TalosClient.setBastion(kube: target.kube, context: target.context, fields: fields)
         finish()
     }
@@ -323,11 +342,14 @@ extension BastionProblem {
 }
 
 extension AppModel {
-    /// The bastion sheet's target for `context`: a cluster added from a kubeconfig that can have
-    /// one (not the demo, no proxy-url, not in screenshot mode); nil otherwise.
+    /// The bastion sheet's target for `context`: a cluster that can have one (a kubeconfig
+    /// cluster without proxy-url, a Talos cluster not on Omni; not the demo, not in screenshot
+    /// mode); nil otherwise.
     func bastionTarget(for context: ContextSummary?, problem: BastionProblem? = nil) -> KubeBastionTarget? {
-        guard let context, let kubeYAML, bastionOffered(context, masked: labels.masked) else { return nil }
-        return KubeBastionTarget(kube: kubeYAML, context: context.name, problem: problem)
+        guard let context, bastionOffered(context, masked: labels.masked),
+            let config = context.isKube ? kubeYAML : yaml
+        else { return nil }
+        return KubeBastionTarget(kube: config, context: context.name, problem: problem)
     }
 }
 

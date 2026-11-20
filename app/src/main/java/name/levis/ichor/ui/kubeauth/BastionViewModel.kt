@@ -27,6 +27,8 @@ data class BastionUiState(
     val privateKey: String = "",
     val passphrase: String = "",
     val password: String = "",
+    /** A Talos cluster's choice ([KubeBastionInfo.scope]); "" for a kubeconfig cluster. */
+    val scope: String = "",
     /** The key the bastion presented, once checked: shown for the user to compare, then pinned. */
     val checked: KubeBastionHostKey? = null,
     /** The pinned key no longer matches: the sheet offers to replace it. */
@@ -69,7 +71,10 @@ class BastionViewModel(
             val info = runCatching { bastions.info(context) }
             _state.update { s ->
                 info.fold(
-                    onSuccess = { s.copy(loading = false, info = it, host = it.host, user = it.user, useKey = it.auth != KubeBastionInfo.AUTH_PASSWORD) },
+                    onSuccess = { s.copy(
+                            loading = false, info = it, host = it.host, user = it.user,
+                            useKey = it.auth != KubeBastionInfo.AUTH_PASSWORD, scope = it.scope,
+                        ) },
                     onFailure = { s.copy(loading = false, error = it.uiText()) },
                 )
             }
@@ -82,6 +87,7 @@ class BastionViewModel(
     fun privateKey(value: String) = _state.update { it.copy(privateKey = value, error = null) }
     fun passphrase(value: String) = _state.update { it.copy(passphrase = value) }
     fun password(value: String) = _state.update { it.copy(password = value, error = null) }
+    fun scope(value: String) = _state.update { it.copy(scope = value, error = null) }
 
     /** Reads the host key the bastion presents (the configured host when replacing the pin). */
     fun checkHostKey() = run { s ->
@@ -98,6 +104,7 @@ class BastionViewModel(
             passphrase = if (s.useKey) s.passphrase else "",
             password = if (s.useKey) "" else s.password,
             hostKey = s.checked?.hostKey.orEmpty(),
+            scope = s.scope,
         )
         bastions.set(context, fields)
         _state.update { it.copy(done = true) }

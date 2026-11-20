@@ -55,7 +55,7 @@ data class ContextSummary(
     val signIn: String = "",
     /** The kubeconfig's proxy-url as scheme://host:port (no credentials), "" without one. */
     val proxyURL: String = "",
-    /** Where a kubeconfig cluster's SSH bastion is kept in the auth store (set by the core), "" for others. */
+    /** Where the cluster's SSH bastion is kept in the auth store (set by the core), "" on Omni and the demo. */
     val bastionKey: String = "",
     /**
      * A Talos cluster's Kubernetes access: the fingerprint of the stored kubeconfig cluster its

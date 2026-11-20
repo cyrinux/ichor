@@ -112,7 +112,7 @@ func (c *sessionCache) openShared(key, configYAML, contextName string, op *sessi
 
 		if err == nil {
 			op.entry = &cacheEntry{session: s, inUse: 1 + op.waiters}
-			if c.forgotten[s.authKey] <= op.epoch {
+			if max(c.forgotten[s.authKey], c.forgotten[s.bastionKey]) <= op.epoch {
 				c.entries[key] = op.entry
 			}
 		}
@@ -161,8 +161,9 @@ func (c *sessionCache) release(key string, entry *cacheEntry) {
 	})
 }
 
-// forgetAuth drops the sessions signed with the sign-in kept under authKey, which changed:
-// the next call opens a new one. A session in use is closed when its last call ends.
+// forgetAuth drops the sessions signed with the sign-in kept under authKey, or going through
+// (or able to go through) the SSH bastion kept there, which changed: the next call opens a new
+// one. A session in use is closed when its last call ends.
 func (c *sessionCache) forgetAuth(authKey string) {
 	if authKey == "" {
 		return
@@ -175,7 +176,7 @@ func (c *sessionCache) forgetAuth(authKey string) {
 	c.forgotten[authKey] = c.epoch
 
 	for key, entry := range c.entries {
-		if entry.session.authKey != authKey {
+		if entry.session.authKey != authKey && entry.session.bastionKey != authKey {
 			continue
 		}
 

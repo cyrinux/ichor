@@ -47,11 +47,11 @@ const (
 const (
 	bastionUnavailableProxy = "proxy-url"
 	bastionUnavailableDemo  = "demo"
-	bastionUnavailableTalos = "not-kubeconfig"
+	bastionUnavailableOmni  = "omni"
 )
 
 // KubeBastionUnavailable starts the error of KubeSetBastion for a context that cannot have a
-// bastion; the reason follows (proxy-url, demo, not-kubeconfig).
+// bastion; the reason follows (proxy-url, demo, omni).
 const KubeBastionUnavailable = "kube-bastion-unavailable"
 
 // kubeBastionKey is the auth store key of a context's bastion: letters only (masking never
@@ -66,6 +66,9 @@ type bastionTarget struct {
 	// server is the kubeconfig's API server (host:port), what KubeSetBastion checks it reaches.
 	server      string
 	unavailable string
+	// talos is a talosconfig context: server is its first endpoint's Talos API, and the
+	// bastion has a scope (talos_bastion.go).
+	talos bool
 }
 
 func bastionContext(storedYAML, name string) (bastionTarget, error) {
@@ -74,7 +77,7 @@ func bastionContext(storedYAML, name string) (bastionTarget, error) {
 	}
 
 	if !isKubeconfig(storedYAML) {
-		return bastionTarget{unavailable: bastionUnavailableTalos}, nil
+		return talosBastionContext(storedYAML, name)
 	}
 
 	doc, err := loadKubeconfigDoc(storedYAML)
@@ -148,8 +151,11 @@ type kubeBastionInfo struct {
 	Auth               string `json:"auth,omitempty"`
 	HostKeyType        string `json:"hostKeyType,omitempty"`
 	HostKeyFingerprint string `json:"hostKeyFingerprint,omitempty"`
-	// Unavailable says why the context cannot have a bastion: proxy-url, demo, not-kubeconfig.
+	// Unavailable says why the context cannot have a bastion: proxy-url, demo, omni.
 	Unavailable string `json:"unavailable"`
+	// Scope is a talosconfig context's choice (talos_bastion.go): "all" or "kube"; "" for a
+	// kubeconfig context.
+	Scope string `json:"scope,omitempty"`
 }
 
 func describeBastion(c httpx.BastionConfig) kubeBastionInfo {
@@ -187,6 +193,10 @@ func KubeBastionInfo(storedYAML, contextName string) (out string, err error) {
 			described.Unavailable = t.unavailable
 			info = described
 		}
+	}
+
+	if t.talos {
+		info.Scope = loadBastionScope(t.key)
 	}
 
 	return toJSON(info)
@@ -234,10 +244,11 @@ func unmaskBastionHost(host string) string {
 }
 
 // KubeSetBastion sets the SSH bastion of the named stored context from bastionJSON (host, user,
-// privateKey, passphrase, password, hostKey), after checking it for real: the pinned host key,
-// the sign-in and a channel to the API server. With a bastion already set, an empty field keeps
-// the stored value (an edit without retyping the key; a new pin alone replaces the pin).
-// It returns the KubeBastionInfo JSON.
+// privateKey, passphrase, password, hostKey, and scope "all" or "kube" for a talosconfig
+// context), after checking it for real: the pinned host key, the sign-in and a channel to the
+// API server (the first Talos endpoint with scope all; none with scope kube). With a bastion
+// already set, an empty field keeps the stored value (an edit without retyping the key; a new
+// pin alone replaces the pin). It returns the KubeBastionInfo JSON.
 func KubeSetBastion(storedYAML, contextName, bastionJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -257,16 +268,53 @@ func KubeSetBastion(storedYAML, contextName, bastionJSON string) (out string, er
 		return "", err
 	}
 
-	if err := checkBastion(c, t.server); err != nil {
+	state := bastionState(c)
+	info := describeBastion(c)
+
+	if t.talos {
+		scope, err := bastionScopeFromJSON(bastionJSON, t.key)
+		if err != nil {
+			return "", err
+		}
+
+		if err := checkTalosBastion(c, scope, t.server); err != nil {
+			return "", err
+		}
+
+		state.Secrets[bastionScopeField], info.Scope = scope, scope
+	} else if err := checkBastion(c, t.server); err != nil {
 		return "", err
 	}
 
 	privacy.learnTarget(c.Host)
 	kubeAuth.forget(t.key)
-	kubeAuth.save(t.key, bastionState(c))
-	kubeClients.forgetConfig(storedYAML, contextName)
+	kubeAuth.save(t.key, state)
+	forgetBastionClients(storedYAML, contextName, t.key)
 
-	return toJSON(describeBastion(c))
+	return toJSON(info)
+}
+
+// bastionScopeFromJSON is the scope bastionJSON asks for, over the one stored under key.
+func bastionScopeFromJSON(bastionJSON, key string) (string, error) {
+	var in map[string]string
+	if err := json.Unmarshal([]byte(bastionJSON), &in); err != nil {
+		return "", fmt.Errorf("SSH bastion: %w", err)
+	}
+
+	stored := ""
+	if _, ok := loadBastion(key); ok {
+		stored = loadBastionScope(key)
+	}
+
+	return parseBastionScope(in[bastionScopeField], stored)
+}
+
+// forgetBastionClients drops the clients that use (or bypass) the bastion under key: the
+// context's Kubernetes clients, and the Talos sessions of a talosconfig context. The next
+// call opens them with the new setting.
+func forgetBastionClients(storedYAML, contextName, key string) {
+	kubeClients.forgetConfig(storedYAML, contextName)
+	sessions.forgetAuth(key)
 }
 
 // bastionFromJSON reads what the user entered over the bastion stored under key, and validates
@@ -367,7 +415,7 @@ func KubeRemoveBastion(storedYAML, contextName string) (err error) {
 		kubeAuth.forget(t.key)
 	}
 
-	kubeClients.forgetConfig(storedYAML, contextName)
+	forgetBastionClients(storedYAML, contextName, t.key)
 
 	return nil
 }
@@ -395,11 +443,16 @@ func (h *bastionHop) release() {
 // attachBastion gives creds the bastion stored for the context whose fingerprint this is, if
 // any; a proxy-url wins over it.
 func attachBastion(creds *kubeCredentials, fingerprint string) error {
-	if creds.proxy != nil {
+	return attachBastionKey(creds, kubeBastionKey(fingerprint))
+}
+
+// attachBastionKey is attachBastion for the bastion stored under key ("" for none).
+func attachBastionKey(creds *kubeCredentials, key string) error {
+	if creds.proxy != nil || key == "" {
 		return nil
 	}
 
-	c, ok := loadBastion(kubeBastionKey(fingerprint))
+	c, ok := loadBastion(key)
 	if !ok {
 		return nil
 	}

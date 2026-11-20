@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 // Mirrors go/ichorgo/kube_bastion.go (KubeBastionInfo, KubeBastionHostKey) and the codes of
 // go/internal/httpx/bastion.go.
 
-/** A kubeconfig cluster's SSH bastion as the core shows it: never a secret. */
+/** A cluster's SSH bastion as the core shows it: never a secret. */
 @Serializable
 data class KubeBastionInfo(
     val configured: Boolean = false,
@@ -17,14 +17,25 @@ data class KubeBastionInfo(
     val hostKeyType: String = "",
     /** The pinned host key as SHA256:…, what the user compared before trusting it. */
     val hostKeyFingerprint: String = "",
-    /** Why the cluster cannot have a bastion: proxy-url, demo, not-kubeconfig; "" when it can. */
+    /** Why the cluster cannot have a bastion: proxy-url, demo, omni; "" when it can. */
     val unavailable: String = "",
+    /** A Talos cluster's choice, [SCOPE_ALL] or [SCOPE_KUBE]; "" for a kubeconfig cluster. */
+    val scope: String = "",
 ) {
     val usesKey: Boolean get() = auth == AUTH_KEY
+
+    /** A Talos cluster: its Talos API may go through the bastion too (see [scope]). */
+    val talos: Boolean get() = scope.isNotEmpty()
 
     companion object {
         const val AUTH_KEY = "key"
         const val AUTH_PASSWORD = "password"
+
+        /** The Talos API and the Kubernetes API go through the bastion. */
+        const val SCOPE_ALL = "all"
+
+        /** Only the Kubernetes API goes through the bastion: the Talos endpoints are reachable. */
+        const val SCOPE_KUBE = "kube"
     }
 }
 
@@ -77,6 +88,8 @@ data class BastionFields(
     val password: String = "",
     /** A host key line from [KubeBastionHostKey.hostKey]: trusts (or replaces) the pin. */
     val hostKey: String = "",
+    /** A Talos cluster's [KubeBastionInfo.scope]; "" keeps the stored one. */
+    val scope: String = "",
 ) {
     /** The JSON object of non-empty fields KubeSetBastion takes. */
     fun toMap(): Map<String, String> = mapOf(
@@ -86,9 +99,13 @@ data class BastionFields(
         "passphrase" to passphrase,
         "password" to password,
         "hostKey" to hostKey,
+        "scope" to scope,
     ).filterValues { it.isNotEmpty() }
 }
 
-/** Whether [summary] may be given a bastion: a kubeconfig cluster, not the demo, without a proxy-url. */
+/**
+ * Whether [summary] may be given a bastion: a kubeconfig cluster without a proxy-url, or a Talos
+ * cluster not on Omni (its Kubernetes goes through Omni's proxy); never the demo.
+ */
 fun bastionOffered(summary: ContextSummary, masked: Boolean): Boolean =
-    summary.isKube && !summary.demo && !masked && summary.proxyURL.isEmpty()
+    !summary.demo && !masked && if (summary.isKube) summary.proxyURL.isEmpty() else !summary.omni

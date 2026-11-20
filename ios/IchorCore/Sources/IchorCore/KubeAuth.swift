@@ -527,7 +527,8 @@ public func keepKubeAccess(_ links: [String: String], talos: [String], kube: [St
 }
 
 /// The clusters whose states the auth store keeps (keyed by fingerprint): every cluster added
-/// from a kubeconfig, and the Talos clusters reached through Omni (their keys).
+/// from a kubeconfig, the Talos clusters reached through Omni (their keys), and the other Talos
+/// clusters' SSH bastions.
 public func authStoreFingerprints(talos: [ContextSummary], kube: [ContextSummary]) -> [String] {
     // A Teleport cluster also keeps its proxy's shared sign-in (authKey), any cluster its SSH
     // bastion (bastionKey).
@@ -537,6 +538,9 @@ public func authStoreFingerprints(talos: [ContextSummary], kube: [ContextSummary
     for context in talos where context.omni && !context.isKube {
         keys.append(context.fingerprint)
         if let authKey = context.authKey { keys.append(authKey) }
+    }
+    for context in talos where !context.omni && !context.isKube {
+        if let bastionKey = context.bastionKey { keys.append(bastionKey) }
     }
     var seen = Set<String>()
     return keys.filter { !$0.isEmpty && seen.insert($0).inserted }

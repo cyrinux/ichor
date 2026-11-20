@@ -131,6 +131,7 @@ func TestBuildTalosconfig(t *testing.T) {
 			Nodes:        src.Nodes,
 			Roles:        []string{"os:reader"},
 			CertNotAfter: notAfter.Unix(),
+			BastionKey:   got.Contexts[0].BastionKey, // covered by TestTalosSummaryCarriesTheBastionKey
 		}},
 	}
 

@@ -489,9 +489,10 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertEqual(authStoreFingerprints(talos: [], kube: []), [])
     }
 
-    func testAuthStoreKeepsKubeBastions() {
+    func testAuthStoreKeepsKubeAndTalosBastions() {
         let kube = [ContextSummary(name: "prod", kind: ContextKind.kube, fingerprint: "k1", bastionKey: "bastionk")]
-        let talos = [ContextSummary(name: "lab", fingerprint: "t1", bastionKey: "ignored")]
-        XCTAssertEqual(authStoreFingerprints(talos: talos, kube: kube), ["k1", "bastionk"])
+        let talos = [ContextSummary(name: "lab", fingerprint: "t1", bastionKey: "bastiont")]
+        XCTAssertEqual(authStoreFingerprints(talos: talos, kube: kube), ["k1", "bastionk", "bastiont"])
+        XCTAssertEqual(authStoreFingerprints(talos: [ContextSummary(name: "lab", fingerprint: "t1")], kube: []), [])
     }
 }

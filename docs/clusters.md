@@ -179,7 +179,17 @@ shown again. Every Kubernetes call of that cluster then goes through the bastion
 port-forwards included, and its row says "Through SSH bastion <host>". The bastion must allow
 TCP forwarding to the API server (`AllowTcpForwarding yes`). If its host key changes, nothing
 goes through until you compare and trust the new one (**Bastion settings** on the error). A
-cluster with its own `proxy-url` keeps the proxy; Talos clusters cannot use a bastion yet.
+cluster with its own `proxy-url` keeps the proxy.
+
+A Talos cluster gets the same entry, with one more choice. **Talos API and Kubernetes** (the
+default) sends the Talos API calls (port 50000 of its endpoints) and its Kubernetes API through
+the bastion: saving checks a connection to the first endpoint. **Kubernetes only** is for a
+cluster whose Talos endpoints this phone reaches but whose API server sits behind the bastion:
+the Talos calls stay direct, saving checks the sign-in only. Either way a changed host key
+stops what goes through the bastion until you trust the new one, and **Remove** goes back to
+direct connections. The one-off Talos connections (scanning an endpoint, inspecting a node to
+join, rotating the CA, creating a cluster) stay direct. A cluster on Omni or the demo has no
+bastion: Omni's own proxy carries its traffic.
 
 ### Example kubeconfigs: proxy, bastion, Teleport, Tailscale
 

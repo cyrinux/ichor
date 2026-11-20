@@ -1,10 +1,14 @@
 import Foundation
 
-/// The SSH bastion of a cluster added from a kubeconfig (the core's KubeBastionInfo): where it
-/// is and the fingerprint of its pinned host key; never the key or a password.
+/// The SSH bastion of a cluster (the core's KubeBastionInfo): where it is and the fingerprint of
+/// its pinned host key; never the key or a password.
 public struct KubeBastionInfo: Decodable, Equatable, Sendable {
     public static let authKey = "key"
     public static let authPassword = "password"
+    /// A Talos cluster's Talos API and Kubernetes API both go through the bastion.
+    public static let scopeAll = "all"
+    /// Only a Talos cluster's Kubernetes API goes through the bastion.
+    public static let scopeKube = "kube"
 
     public let configured: Bool
     public let host: String
@@ -13,12 +17,14 @@ public struct KubeBastionInfo: Decodable, Equatable, Sendable {
     public let auth: String
     public let hostKeyType: String
     public let hostKeyFingerprint: String
-    /// Why this cluster cannot have one: "proxy-url", "demo", "not-kubeconfig", empty otherwise.
+    /// Why this cluster cannot have one: "proxy-url", "demo", "omni", empty otherwise.
     public let unavailable: String
+    /// A Talos cluster's choice (scopeAll or scopeKube); empty for a kubeconfig cluster.
+    public let scope: String
 
     public init(
         configured: Bool = false, host: String = "", user: String = "", auth: String = "",
-        hostKeyType: String = "", hostKeyFingerprint: String = "", unavailable: String = ""
+        hostKeyType: String = "", hostKeyFingerprint: String = "", unavailable: String = "", scope: String = ""
     ) {
         self.configured = configured
         self.host = host
@@ -27,10 +33,11 @@ public struct KubeBastionInfo: Decodable, Equatable, Sendable {
         self.hostKeyType = hostKeyType
         self.hostKeyFingerprint = hostKeyFingerprint
         self.unavailable = unavailable
+        self.scope = scope
     }
 
     private enum CodingKeys: String, CodingKey {
-        case configured, host, user, auth, hostKeyType, hostKeyFingerprint, unavailable
+        case configured, host, user, auth, hostKeyType, hostKeyFingerprint, unavailable, scope
     }
 
     public init(from decoder: Decoder) throws {
@@ -42,7 +49,11 @@ public struct KubeBastionInfo: Decodable, Equatable, Sendable {
         hostKeyType = try c.decodeIfPresent(String.self, forKey: .hostKeyType) ?? ""
         hostKeyFingerprint = try c.decodeIfPresent(String.self, forKey: .hostKeyFingerprint) ?? ""
         unavailable = try c.decodeIfPresent(String.self, forKey: .unavailable) ?? ""
+        scope = try c.decodeIfPresent(String.self, forKey: .scope) ?? ""
     }
+
+    /// A Talos cluster: its Talos API may go through the bastion too (see scope).
+    public var talos: Bool { !scope.isEmpty }
 
     /// Signs in with a private key (the default for a new bastion).
     public var usesKey: Bool { auth != Self.authPassword }
@@ -119,10 +130,12 @@ public struct BastionFields: Equatable, Sendable {
     public var passphrase = ""
     public var password = ""
     public var hostKey = ""
+    /// A Talos cluster's scope; empty keeps the stored one.
+    public var scope = ""
 
     public init(
         host: String = "", user: String = "", privateKey: String = "", passphrase: String = "",
-        password: String = "", hostKey: String = ""
+        password: String = "", hostKey: String = "", scope: String = ""
     ) {
         self.host = host
         self.user = user
@@ -130,6 +143,7 @@ public struct BastionFields: Equatable, Sendable {
         self.passphrase = passphrase
         self.password = password
         self.hostKey = hostKey
+        self.scope = scope
     }
 
     public var values: [String: String] {
@@ -140,6 +154,7 @@ public struct BastionFields: Equatable, Sendable {
             "passphrase": passphrase,
             "password": password,
             "hostKey": hostKey,
+            "scope": scope,
         ]
         return all.filter { !$0.value.isEmpty }
     }
@@ -151,8 +166,10 @@ public struct BastionFields: Equatable, Sendable {
     }
 }
 
-/// Whether the cluster's menu offers a bastion: a kubeconfig cluster, not the demo, no
-/// proxy-url of its own (the core refuses both), not in screenshot mode.
+/// Whether the cluster's menu offers a bastion: a kubeconfig cluster without a proxy-url of its
+/// own, or a Talos cluster not on Omni (its Kubernetes goes through Omni's proxy); never the
+/// demo (the core refuses these), not in screenshot mode.
 public func bastionOffered(_ context: ContextSummary, masked: Bool) -> Bool {
-    context.isKube && !context.demo && !masked && (context.proxyURL ?? "").isEmpty
+    guard !context.demo && !masked else { return false }
+    return context.isKube ? (context.proxyURL ?? "").isEmpty : !context.omni
 }

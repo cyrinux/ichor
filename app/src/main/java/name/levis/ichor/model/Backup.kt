@@ -264,7 +264,7 @@ fun backupKubeAuth(fingerprints: List<String>, states: Map<String, String>, forB
 
 /**
  * The keys of the sign-ins [contexts] keep in the auth store: a kubeconfig cluster's
- * fingerprint and SSH bastion, an Omni cluster's auth key (one per identity and instance) and, from older
+ * fingerprint and SSH bastion, a Talos cluster's SSH bastion, an Omni cluster's auth key (one per identity and instance) and, from older
  * cores, its fingerprint (the core moves that sign-in to the auth key on first use).
  */
 fun signInKeys(contexts: List<ContextSummary>): List<String> = contexts.flatMap {
@@ -272,7 +272,8 @@ fun signInKeys(contexts: List<ContextSummary>): List<String> = contexts.flatMap 
         // A Teleport cluster also keeps its proxy's shared sign-in (authKey), any cluster its SSH bastion.
         it.isKube -> listOf(it.fingerprint, it.authKey, it.bastionKey)
         it.omni -> listOf(it.fingerprint, it.authKey)
-        else -> emptyList()
+        // A Talos cluster keeps only its SSH bastion there.
+        else -> listOf(it.bastionKey)
     }
 }.filter { it.isNotEmpty() }.distinct()
 
