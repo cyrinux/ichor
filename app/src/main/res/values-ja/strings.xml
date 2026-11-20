@@ -6606,4 +6606,13 @@
     <string name="bastion_problem_auth">SSH 踏み台がユーザー、鍵、またはパスワードを拒否しました。</string>
     <string name="bastion_problem_key">秘密鍵を読み取れません。鍵とパスフレーズを確認してください。</string>
     <string name="bastion_problem_forward">SSH 踏み台が API サーバーに接続しません。そこへの TCP 転送を許可する必要があります。</string>
+    <string name="node_menu_secrets_bundle">シークレットバンドルを書き出す</string>
+    <string name="secrets_bundle_confirm_title">シークレットバンドルを書き出しますか？</string>
+    <string name="secrets_bundle_confirm_body">secrets.yaml には「%1$s」のすべての CA、鍵、トークンが含まれます。これを持つ人はクラスターを乗っ取ることができ、取り消すにはクラスターを作り直すしかありません。暗号化された場所（パスワードマネージャー、SOPS で暗号化されたリポジトリ）にのみ保存し、共有フォルダーには保存しないでください。</string>
+    <string name="secrets_bundle_confirm">保存先を選ぶ</string>
+    <string name="secrets_bundle_auth">%1$s のシークレットを書き出す</string>
+    <string name="secrets_bundle_saved">secrets.yaml を保存しました。talosctl gen config --with-secrets で使用します。</string>
+    <string name="secrets_bundle_failed">シークレットバンドルは書き出されませんでした: %1$s</string>
+    <string name="secrets_bundle_open_failed">選んだファイルに書き込めません。</string>
+    <string name="secrets_bundle_new_cluster_help">クラスターのシークレット（secrets.yaml）のコピーを保管しておくと、コンピューターで talosctl を使って構成を作れます。唯一のコントロールプレーンを失う前の備えにもなります。</string>
 </resources>

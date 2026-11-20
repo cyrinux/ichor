@@ -7004,4 +7004,13 @@
     <string name="bastion_problem_auth">SSH-бастіон відхилив користувача, ключ або пароль.</string>
     <string name="bastion_problem_key">Не вдається прочитати приватний ключ: перевірте його та парольну фразу.</string>
     <string name="bastion_problem_forward">SSH-бастіон не підключається до API-сервера: він має дозволяти TCP-переадресацію до нього.</string>
+    <string name="node_menu_secrets_bundle">Експортувати набір секретів</string>
+    <string name="secrets_bundle_confirm_title">Експортувати набір секретів?</string>
+    <string name="secrets_bundle_confirm_body">secrets.yaml містить усі CA, ключі й токени «%1$s»: хто його має, може захопити кластер, і відкликати це можна лише перебудувавши кластер. Зберігайте його тільки в зашифрованому місці (менеджер паролів, репозиторій, зашифрований SOPS), ніколи не в спільній теці.</string>
+    <string name="secrets_bundle_confirm">Вибрати, куди зберегти</string>
+    <string name="secrets_bundle_auth">Експортувати секрети %1$s</string>
+    <string name="secrets_bundle_saved">secrets.yaml збережено. Використовуйте його з talosctl gen config --with-secrets.</string>
+    <string name="secrets_bundle_failed">Набір секретів не експортовано: %1$s</string>
+    <string name="secrets_bundle_open_failed">Не вдається записати вибраний файл.</string>
+    <string name="secrets_bundle_new_cluster_help">Збережіть копію секретів кластера (secrets.yaml), щоб створювати його конфігурації на комп\'ютері через talosctl, або на випадок втрати єдиного control plane.</string>
 </resources>

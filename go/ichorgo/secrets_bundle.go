@@ -19,7 +19,7 @@ import (
 
 var (
 	errSecretsPrivacy    = errors.New("turn privacy mode off to export the secrets bundle: it is the cluster's root of trust")
-	errSecretsOmni       = errors.New("Omni keeps this cluster's secrets: its configs on the nodes carry none to export")
+	errSecretsOmni       = errors.New("this cluster's secrets stay with Omni: its configs on the nodes carry none to export")
 	errSecretsWorker     = errors.New("a worker's config does not hold the cluster's secrets: pick a control plane")
 	errSecretsNoNode     = errors.New("pick the control plane whose config holds the secrets")
 	errSecretsIncomplete = errors.New("this node's config does not hold the cluster's CAs: pick a control plane")

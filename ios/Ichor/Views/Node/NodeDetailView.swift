@@ -19,6 +19,7 @@ struct NodeDetailView: View {
     /// The cordon / uncordon choice is shown (the node's current state is not known here).
     @State private var showingCordon = false
     @State private var showingReset = false
+    @State private var showingSecrets = false
     /// After a reset that wipes the system disk: also take the node out of the cluster?
     @State private var removalOffer: ContextNodeRemoval?
     /// The cluster's history over `period` (uptime strip); nil without one.
@@ -44,7 +45,8 @@ struct NodeDetailView: View {
             NodeTroubleshootSection(node: ref.address, open: $open)
             NodeOperateSection(
                 node: ref.address, hostname: ref.hostname, maintenanceRunning: maintenanceRunning, open: $open,
-                showingReset: $showingReset, showingCordon: $showingCordon)
+                showingReset: $showingReset, showingCordon: $showingCordon,
+                controlPlane: ref.role == "controlplane", showingSecrets: $showingSecrets)
             NodePowerSection(node: ref.address, powerAction: $powerAction)
         }
         .accessibilityIdentifier(SmokeID.nodeScreen)
@@ -90,6 +92,7 @@ struct NodeDetailView: View {
         } message: {
             Text("A cordoned node gets no new pods; the pods it runs stay. Uncordon it to schedule pods on it again.")
         }
+        .secretsBundleExport(isPresented: $showingSecrets, clusterName: model.activeContext, fetch: secretsFetch)
         .sheet(isPresented: $showingReset) {
             NodeResetSheet(node: ref.address, hostname: ref.hostname) { request in
                 showingReset = false
@@ -217,6 +220,16 @@ struct NodeDetailView: View {
     // As in the node row's long press.
     private func copyAddress() {
         UIPasteboard.general.string = ref.address
+    }
+
+    /// Reads the secrets bundle from this control plane, with the cluster on screen.
+    private var secretsFetch: @Sendable () async throws -> String {
+        let client = model.client
+        let node = ref.address
+        return {
+            guard let client else { throw CancellationError() }
+            return try await client.secretsBundle(node: node)
+        }
     }
 
     /// With the app lock on, destructive actions need a fresh Face ID / passcode check.

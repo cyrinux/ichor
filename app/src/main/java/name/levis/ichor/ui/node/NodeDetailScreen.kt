@@ -69,6 +69,7 @@ import name.levis.ichor.ui.components.rememberNodeState
 import name.levis.ichor.ui.overview.rememberWakeOnLan
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.history.NodeUptime
+import name.levis.ichor.ui.secretsbundle.rememberSecretsBundleExport
 import name.levis.ichor.ui.share.PinButton
 import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.ui.share.rememberShareLink
@@ -126,6 +127,11 @@ fun NodeDetailScreen(
     val maintenanceRunning = maintenance?.running == true
     val cordoned by app.maintenanceManager.cordoned.collectAsStateWithLifecycle()
     var confirmingCordon by remember { mutableStateOf(false) }
+    val exportSecrets = rememberSecretsBundleExport(
+        clusterName = config?.activeContext.orEmpty(),
+        fetch = { app.machineConfigRepository.secretsBundle(node) },
+        onResult = { message -> scope.launch { snackbar.showSnackbar(message.resolve(context), withDismissAction = true) } },
+    )
     var initialCordonShown by rememberSaveable { mutableStateOf(false) }
     if (!initialCordonShown && initialCordon) {
         initialCordonShown = true
@@ -250,7 +256,7 @@ fun NodeDetailScreen(
             )
         },
     ) { padding ->
-        val groups = nodeMenuGroups(config?.activeSummary)
+        val groups = nodeMenuGroups(config?.activeSummary, nodeRole = role)
         // Power actions only exist for configs whose role allows them.
         val powerActions = if (canPower) PowerAction.entries else emptyList()
         val jumps = nodeJumpSections(groups, power = powerActions.isNotEmpty(), wake = onWake != null)
@@ -294,6 +300,7 @@ fun NodeDetailScreen(
                             tab != null -> onTab(tab)
                             entry == NodeMenuEntry.CORDON -> confirmingCordon = true
                             entry == NodeMenuEntry.RESET -> confirmingReset = true
+                            entry == NodeMenuEntry.SECRETS_BUNDLE -> exportSecrets()
                             else -> onMenu(entry)
                         }
                     },

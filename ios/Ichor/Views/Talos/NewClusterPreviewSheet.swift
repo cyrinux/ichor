@@ -50,7 +50,14 @@ struct NewClusterRunSections: View {
     @Environment(AppModel.self) private var model
     @State private var confirmStop = false
     @State private var removeError: String?
+    @State private var showingSecrets = false
     private var job: JoinJob { .shared }
+
+    /// Reads the new cluster's secrets bundle from its control plane at `node`, through the stored context.
+    private func secretsFetch(node: String) -> @Sendable () async throws -> String {
+        let client = TalosClient(config: model.yaml ?? "", context: name)
+        return { try await client.secretsBundle(node: node) }
+    }
 
     private var atHetzner: Bool { request.hetznerCluster != nil }
 
@@ -114,6 +121,14 @@ struct NewClusterRunSections: View {
                 Image(systemName: "checkmark.seal.fill").foregroundStyle(.statusOK)
             }
             Button("Open the cluster") { job.clear() }
+            // The cluster's secrets.yaml, read back from the control plane just made.
+            Button("Export secrets bundle") { showingSecrets = true }
+                .secretsBundleExport(
+                    isPresented: $showingSecrets, clusterName: name, fetch: secretsFetch(node: address))
+            Text(
+                "Keep a copy of the cluster's secrets (secrets.yaml) to make its configs on a computer with talosctl, or before its only control plane is lost."
+            )
+            .font(.footnote).foregroundStyle(.secondary)
         case .failed(let error)?:
             Label {
                 Text(verbatim: error)

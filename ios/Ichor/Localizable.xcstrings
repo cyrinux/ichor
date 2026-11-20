@@ -1,6 +1,318 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Export secrets bundle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secrets-Bundle exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar el paquete de secretos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporter le bundle de secrets"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esporta il bundle dei segreti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати набір секретів"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导出密钥包" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "シークレットバンドルを書き出す" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Exportar o pacote de segredos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Экспортировать набор секретов" } }
+      }
+    },
+    "Export the secrets bundle?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secrets-Bundle exportieren?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Exportar el paquete de secretos?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporter le bundle de secrets ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esportare il bundle dei segreti?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати набір секретів?"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导出密钥包？" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "シークレットバンドルを書き出しますか？" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Exportar o pacote de segredos?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Экспортировать набор секретов?" } }
+      }
+    },
+    "secrets.yaml holds every CA, key and token of “%@”: whoever has it can take over the cluster, and only rebuilding the cluster revokes that. Save it only to an encrypted place (a password manager, a SOPS-encrypted repository), never to a shared folder." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "secrets.yaml enthält alle CAs, Schlüssel und Tokens von „%@“: Wer sie hat, kann den Cluster übernehmen, und nur ein Neuaufbau des Clusters widerruft das. Speichere sie nur an einem verschlüsselten Ort (einem Passwortmanager, einem mit SOPS verschlüsselten Repository), nie in einem geteilten Ordner."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "secrets.yaml contiene todas las CA, claves y tokens de «%@»: quien lo tenga puede tomar el control del clúster, y solo reconstruir el clúster lo revoca. Guárdalo solo en un lugar cifrado (un gestor de contraseñas, un repositorio cifrado con SOPS), nunca en una carpeta compartida."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "secrets.yaml contient toutes les CA, clés et jetons de « %@ » : qui le détient peut prendre le contrôle du cluster, et seule sa reconstruction le révoque. Enregistrez-le uniquement dans un endroit chiffré (un gestionnaire de mots de passe, un dépôt chiffré avec SOPS), jamais dans un dossier partagé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "secrets.yaml contiene tutte le CA, le chiavi e i token di «%@»: chi lo possiede può prendere il controllo del cluster, e solo ricostruire il cluster lo revoca. Salvalo solo in un posto cifrato (un gestore di password, un repository cifrato con SOPS), mai in una cartella condivisa."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "secrets.yaml містить усі CA, ключі й токени «%@»: хто його має, може захопити кластер, і відкликати це можна лише перебудувавши кластер. Зберігайте його тільки в зашифрованому місці (менеджер паролів, репозиторій, зашифрований SOPS), ніколи не в спільній теці."
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "secrets.yaml 包含“%@”的所有 CA、密钥和令牌：持有它的人可以接管集群，只有重建集群才能撤销。请只保存到加密的位置（密码管理器、用 SOPS 加密的仓库），切勿保存到共享文件夹。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "secrets.yaml には「%@」のすべての CA、鍵、トークンが含まれます。これを持つ人はクラスターを乗っ取ることができ、取り消すにはクラスターを作り直すしかありません。暗号化された場所（パスワードマネージャー、SOPS で暗号化されたリポジトリ）にのみ保存し、共有フォルダーには保存しないでください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "secrets.yaml contém todas as CAs, chaves e tokens de “%@”: quem tiver o arquivo pode assumir o cluster, e só reconstruir o cluster revoga isso. Salve-o apenas em um lugar criptografado (um gerenciador de senhas, um repositório criptografado com SOPS), nunca em uma pasta compartilhada." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "secrets.yaml содержит все CA, ключи и токены «%@»: тот, у кого он есть, может захватить кластер, и отозвать это можно только пересобрав кластер. Сохраняйте его только в зашифрованном месте (менеджер паролей, репозиторий, зашифрованный SOPS), никогда в общей папке." } }
+      }
+    },
+    "Choose where to save" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speicherort wählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir dónde guardar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir où enregistrer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli dove salvare"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вибрати, куди зберегти"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择保存位置" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "保存先を選ぶ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escolher onde salvar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выбрать, куда сохранить" } }
+      }
+    },
+    "Export the secrets of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secrets von %@ exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar los secretos de %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporter les secrets de %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esporta i segreti di %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати секрети %@"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导出 %@ 的密钥" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ のシークレットを書き出す" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Exportar os segredos de %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Экспортировать секреты %@" } }
+      }
+    },
+    "secrets.yaml saved. Use it with talosctl gen config --with-secrets." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "secrets.yaml gespeichert. Verwende sie mit talosctl gen config --with-secrets."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "secrets.yaml guardado. Úsalo con talosctl gen config --with-secrets."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "secrets.yaml enregistré. Utilisez-le avec talosctl gen config --with-secrets."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "secrets.yaml salvato. Usalo con talosctl gen config --with-secrets."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "secrets.yaml збережено. Використовуйте його з talosctl gen config --with-secrets."
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "secrets.yaml 已保存。请配合 talosctl gen config --with-secrets 使用。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "secrets.yaml を保存しました。talosctl gen config --with-secrets で使用します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "secrets.yaml salvo. Use-o com talosctl gen config --with-secrets." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "secrets.yaml сохранён. Используйте его с talosctl gen config --with-secrets." } }
+      }
+    },
+    "The secrets bundle was not exported: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Secrets-Bundle wurde nicht exportiert: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El paquete de secretos no se exportó: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le bundle de secrets n'a pas été exporté : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il bundle dei segreti non è stato esportato: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Набір секретів не експортовано: %@"
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "密钥包未导出：%@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "シークレットバンドルは書き出されませんでした: %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O pacote de segredos não foi exportado: %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Набор секретов не экспортирован: %@" } }
+      }
+    },
+    "Keep a copy of the cluster's secrets (secrets.yaml) to make its configs on a computer with talosctl, or before its only control plane is lost." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behalte eine Kopie der Secrets des Clusters (secrets.yaml), um seine Configs auf einem Computer mit talosctl zu erzeugen, oder bevor seine einzige Control Plane verloren geht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda una copia de los secretos del clúster (secrets.yaml) para generar sus configs en un ordenador con talosctl, o antes de perder su único control plane."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gardez une copie des secrets du cluster (secrets.yaml) pour générer ses configs sur un ordinateur avec talosctl, ou avant de perdre son unique control plane."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conserva una copia dei segreti del cluster (secrets.yaml) per generarne le config su un computer con talosctl, o prima di perdere il suo unico control plane."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережіть копію секретів кластера (secrets.yaml), щоб створювати його конфігурації на комп'ютері через talosctl, або на випадок втрати єдиного control plane."
+          }
+        },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保留一份集群密钥（secrets.yaml），以便在电脑上用 talosctl 生成其配置，或在唯一的控制平面丢失之前留底。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスターのシークレット（secrets.yaml）のコピーを保管しておくと、コンピューターで talosctl を使って構成を作れます。唯一のコントロールプレーンを失う前の備えにもなります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Guarde uma cópia dos segredos do cluster (secrets.yaml) para gerar as configs dele em um computador com talosctl, ou antes de perder seu único control plane." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сохраните копию секретов кластера (secrets.yaml), чтобы создавать его конфигурации на компьютере через talosctl, или на случай потери единственного control plane." } }
+      }
+    },
     "Through SSH bastion…" : {
       "extractionState" : "manual",
       "localizations" : {

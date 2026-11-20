@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Memory
@@ -101,7 +102,13 @@ enum class NodeMenuEntry(
     CORDON(NodeMenuGroup.OPERATE, R.string.node_menu_cordon, null, Feature.WORKLOADS),
     // The node's taints and labels through the Kubernetes API, like the cordon: os:admin.
     TAINTS_LABELS(NodeMenuGroup.OPERATE, R.string.node_meta_menu, null, Feature.WORKLOADS),
+    // The cluster's secrets.yaml from a control plane's config (os:admin, not on Omni): a
+    // warning and the "Save to…" picker on the node screen, no screen of its own.
+    SECRETS_BUNDLE(NodeMenuGroup.OPERATE, R.string.node_menu_secrets_bundle, null, Feature.ISSUE_CONFIG),
 }
+
+/** Entries only a control plane offers: a worker's config holds none of the cluster's secrets. */
+private val CONTROL_PLANE_ONLY = setOf(NodeMenuEntry.SECRETS_BUNDLE)
 
 internal val NodeMenuEntry.icon: ImageVector
     get() = when (this) {
@@ -130,6 +137,7 @@ internal val NodeMenuEntry.icon: ImageVector
         NodeMenuEntry.DRAIN -> Icons.AutoMirrored.Outlined.Logout
         NodeMenuEntry.CORDON -> Icons.Outlined.Block
         NodeMenuEntry.TAINTS_LABELS -> Icons.Outlined.Sell
+        NodeMenuEntry.SECRETS_BUNDLE -> Icons.Outlined.Key
     }
 
 /**
@@ -143,15 +151,23 @@ internal fun NodeMenuEntry.label(cordoned: Boolean?, kubePods: Boolean): Int = w
     else -> label
 }
 
-/** Entries the talosconfig's roles allow, in screen order. */
-fun nodeMenuEntries(summary: ContextSummary?): List<NodeMenuEntry> =
-    NodeMenuEntry.entries.filter { entry -> entry.role == null || summary?.allows(entry.role) == true }
+/**
+ * Entries the talosconfig's roles allow, in screen order. With the node's [nodeRole] known, the
+ * control-plane-only entries leave a worker's menu.
+ */
+fun nodeMenuEntries(summary: ContextSummary?, nodeRole: String? = null): List<NodeMenuEntry> =
+    NodeMenuEntry.entries.filter { entry ->
+        (entry.role == null || summary?.allows(entry.role) == true) &&
+            (nodeRole == null || nodeRole == CONTROL_PLANE_ROLE || entry !in CONTROL_PLANE_ONLY)
+    }
 
 /** The groups the roles leave an entry in, each with its entries, in screen order. */
-fun nodeMenuGroups(summary: ContextSummary?): List<Pair<NodeMenuGroup, List<NodeMenuEntry>>> =
+fun nodeMenuGroups(summary: ContextSummary?, nodeRole: String? = null): List<Pair<NodeMenuGroup, List<NodeMenuEntry>>> =
     NodeMenuGroup.entries.mapNotNull { group ->
-        nodeMenuEntries(summary).filter { it.group == group }.takeIf { it.isNotEmpty() }?.let { group to it }
+        nodeMenuEntries(summary, nodeRole).filter { it.group == group }.takeIf { it.isNotEmpty() }?.let { group to it }
     }
+
+private const val CONTROL_PLANE_ROLE = "controlplane"
 
 /**
  * How the entry reaches the node (see [NodeTransport]): the Kubernetes ones and the saved
@@ -168,5 +184,5 @@ val NodeMenuEntry.transport: NodeTransport
         NodeMenuEntry.KERNEL_LOG, NodeMenuEntry.EVENTS, NodeMenuEntry.NETWORK, NodeMenuEntry.HARDWARE,
         NodeMenuEntry.IMAGES, NodeMenuEntry.STORAGE, NodeMenuEntry.FILES, NodeMenuEntry.RESOURCES, NodeMenuEntry.DEBUG_SHELL,
         NodeMenuEntry.NET_TOOLS, NodeMenuEntry.CAPTURE, NodeMenuEntry.MACHINE_CONFIG, NodeMenuEntry.UPGRADE,
-        NodeMenuEntry.RESET -> NodeTransport.TALOS
+        NodeMenuEntry.RESET, NodeMenuEntry.SECRETS_BUNDLE -> NodeTransport.TALOS
     }
