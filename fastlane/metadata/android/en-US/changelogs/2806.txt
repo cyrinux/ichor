@@ -1,0 +1,4 @@
+• Talos clusters through the SSH bastion on Android and iOS
+• Talos clusters through the SSH bastion in the Go core
+• Export a cluster's secrets.yaml from a control plane on Android and iOS
+• Export a cluster's secrets bundle from a control plane in the Go core
