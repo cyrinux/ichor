@@ -1653,6 +1653,14 @@
     <string name="storage_section_disks">ディスク</string>
     <string name="storage_disks_empty">報告されたディスクはありません</string>
     <string name="storage_disk_unallocated">未割り当て</string>
+    <string name="storage_disk_wipe">このディスクを消去…</string>
+    <string name="storage_disk_wiping">消去中…</string>
+    <string name="storage_disk_wipe_title">%1$s を消去しますか？</string>
+    <string name="storage_disk_wipe_confirm">ディスクを消去</string>
+    <string name="storage_disk_wipe_text">このディスクの内容はすべて消去されます。ノードは動作を続けます。</string>
+    <string name="storage_disk_wipe_storage_note">ストレージシステム（Longhorn、Rook/Ceph、hostPath）がこのディスクに何を置いているかを Talos は知りません。何も使っていないことを確認してください。</string>
+    <string name="storage_disk_wipe_failed">%1$s を消去できませんでした：%2$s</string>
+    <string name="storage_disk_wipe_done">%1$s を消去しました</string>
     <string name="storage_disk_partition_n">パーティション %1$d</string>
     <string name="storage_disk_uuid">UUID %1$s</string>
     <string name="storage_disk_encryption_enabled">暗号化済み</string>

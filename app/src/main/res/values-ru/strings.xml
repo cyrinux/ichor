@@ -1821,6 +1821,14 @@
     <string name="storage_section_disks">Диски</string>
     <string name="storage_disks_empty">Нет данных о дисках</string>
     <string name="storage_disk_unallocated">Не распределено</string>
+    <string name="storage_disk_wipe">Стереть этот диск…</string>
+    <string name="storage_disk_wiping">Стирание…</string>
+    <string name="storage_disk_wipe_title">Стереть %1$s?</string>
+    <string name="storage_disk_wipe_confirm">Стереть диск</string>
+    <string name="storage_disk_wipe_text">Всё на этом диске будет стёрто. Узел продолжит работать.</string>
+    <string name="storage_disk_wipe_storage_note">Talos не знает, что система хранения (Longhorn, Rook/Ceph, hostPath) держит на этом диске: убедитесь, что его ничто не использует.</string>
+    <string name="storage_disk_wipe_failed">Не удалось стереть %1$s: %2$s</string>
+    <string name="storage_disk_wipe_done">%1$s стёрт</string>
     <string name="storage_disk_partition_n">Раздел %1$d</string>
     <string name="storage_disk_uuid">UUID %1$s</string>
     <string name="storage_disk_encryption_enabled">Зашифрован</string>

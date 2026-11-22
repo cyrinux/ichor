@@ -40,8 +40,30 @@ func demoDisks() diskLayoutList {
 
 	segments, unallocated := diskSegments(size, partitions)
 
-	return diskLayoutList{Supported: true, Disks: []diskLayout{{
-		Name: "nvme0n1", DevPath: "/dev/nvme0n1", Size: size, Type: "nvme", Transport: "nvme", Model: "Demo NVMe",
-		SystemDisk: true, Unallocated: unallocated, Partitions: partitions, Segments: segments,
-	}}}
+	return diskLayoutList{Supported: true, Disks: []diskLayout{
+		{
+			Name: "nvme0n1", DevPath: "/dev/nvme0n1", Size: size, Type: "nvme", Transport: "nvme", Model: "Demo NVMe",
+			SystemDisk: true, Unallocated: unallocated, Partitions: partitions, Segments: segments,
+		},
+		demoDataDisk(),
+	}}
+}
+
+// demoDataDisk is a spare data disk with a partition left by an old storage system: no Talos
+// volume and not mounted, so the demo offers "Wipe this disk…" on it.
+func demoDataDisk() diskLayout {
+	const size = 500 << 30
+
+	partitions := []diskPartition{{
+		Index: 1, DevPath: "/dev/sdb1", Label: "old-data", Offset: 1 << 20, Size: size - 2<<20, Filesystem: "ext4",
+		Encryption: encryptionUnknown, UUID: "33333333-0000-4000-8000-000000000001",
+		PartitionUUID: "44444444-0000-4000-8000-000000000001", PartitionType: "0fc63daf-8483-4772-8e79-3d69d8477de4",
+	}}
+
+	segments, unallocated := diskSegments(size, partitions)
+
+	return diskLayout{
+		Name: "sdb", DevPath: "/dev/sdb", Size: size, Type: "hdd", Transport: "sata", Model: "Demo HDD", Serial: "DEMO-HDD-0001",
+		Unallocated: unallocated, Partitions: partitions, Segments: segments,
+	}
 }

@@ -41,7 +41,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import androidx.compose.ui.platform.LocalContext
+import name.levis.ichor.TalosApp
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.DiskLayout
+import name.levis.ichor.model.Feature
+import name.levis.ichor.model.allows
+import name.levis.ichor.ui.KeyedActions
+import name.levis.ichor.ui.uiText
+import kotlinx.coroutines.flow.Flow
 import name.levis.ichor.ui.history.VolumeFillHistory
 import name.levis.ichor.model.DiskHealthReport
 import name.levis.ichor.model.DiskLayoutList
@@ -93,7 +103,25 @@ data class StorageState(
 )
 
 /** Disks, mounts, volumes, disk health and the disk usage explorer of one node, each loaded on its own. */
-class StorageViewModel(private val talos: TalosRepository, private val node: String) : ViewModel() {
+class StorageViewModel(
+    private val talos: TalosRepository,
+    private val node: String,
+    private val lifecycle: NodeLifecycleRepository? = null,
+) : ViewModel() {
+    private val wipes = KeyedActions<DiskWipeResult>(viewModelScope)
+
+    /** The disks being wiped, by name. */
+    val wiping: StateFlow<Set<String>> get() = wipes.busy
+    val wipeResults: Flow<DiskWipeResult> get() = wipes.results
+
+    /** Wipes [disk] (fast); the disks are read again after it. Never retried. */
+    fun wipe(disk: DiskLayout) {
+        val repo = lifecycle ?: return
+        wipes.launch(disk.name, { repo.wipeDisk(node, disk.name) }, { DiskWipeResult(disk.devPath, it.exceptionOrNull()?.uiText()) }) {
+            refresh()
+        }
+    }
+
     private val _state = MutableStateFlow(StorageState())
     val state: StateFlow<StorageState> = _state.asStateFlow()
     private var job: Job? = null
@@ -144,10 +172,21 @@ fun StorageScreen(
     node: String,
     hostname: String,
     onBack: () -> Unit,
-    vm: StorageViewModel = viewModel(key = "storage-$node", factory = factory { StorageViewModel(app.talosRepository, node) }),
+    vm: StorageViewModel = viewModel(
+        key = "storage-$node",
+        factory = factory { StorageViewModel(app.talosRepository, node, app.nodeLifecycleRepository) },
+    ),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val features = rememberNodeFeatures(node)
+    val talosApp = LocalContext.current.applicationContext as TalosApp
+    val config by talosApp.configRepository.config.collectAsStateWithLifecycle()
+    val wiping by vm.wiping.collectAsStateWithLifecycle()
+    DiskWipeToasts(vm.wipeResults)
+    // Wiping one disk: os:admin on a Talos 1.9+ node (unknown support keeps the button).
+    val wipe = DiskWipeControls(hostname, wiping, vm::wipe).takeIf {
+        config?.activeSummary?.allows(Feature.RESET) == true && features.support(TalosFeature.DISK_WIPE).supported
+    }
     LaunchedEffect(Unit) { vm.start() }
 
     IchorScaffold(
@@ -167,7 +206,7 @@ fun StorageScreen(
             LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 item(key = "disks") {
                     SectionCard(stringResource(R.string.storage_section_disks), features.support(TalosFeature.DISKS)) {
-                        SectionBody(state.disks) { DiskLayoutContent(it) }
+                        SectionBody(state.disks) { DiskLayoutContent(it, wipe) }
                     }
                 }
                 item(key = "mounts") {

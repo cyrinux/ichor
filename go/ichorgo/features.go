@@ -111,6 +111,8 @@ var featureRules = []featureRule{
 	// rpc Reset (machine.proto): v1.0.0; ResetRequest.mode and user_disks_to_wipe: first in
 	// v1.4.0.
 	{name: "reset", min: "v1.4", hint: "choosing what a reset wipes"},
+	// rpc BlockDeviceWipe (storage.proto, talosctl wipe disk): first in v1.9.0.
+	{name: "diskWipe", min: "v1.9", hint: "wiping one disk"},
 	// rpc MetaWrite, rpc MetaDelete (machine.proto) and MetaKeys.runtime.talos.dev: first in v1.4.0.
 	{name: "meta", min: "v1.4", hint: "the META partition API"},
 }

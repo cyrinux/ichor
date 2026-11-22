@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.BarSlice
 import name.levis.ichor.model.DiskLayout
+import name.levis.ichor.model.wipeable
 import name.levis.ichor.model.DiskLayoutList
 import name.levis.ichor.model.DiskSegment
 import name.levis.ichor.model.EncryptionState
@@ -83,19 +84,19 @@ private fun partitionColor(label: String?, index: Int): Color =
 
 /** Each disk of the node: its partition bar, legend and one row per partition. */
 @Composable
-internal fun DiskLayoutContent(list: DiskLayoutList) {
+internal fun DiskLayoutContent(list: DiskLayoutList, wipe: DiskWipeControls? = null) {
     when {
         !list.supported -> UnsupportedReason(list.reason)
         list.disks.isEmpty() -> InfoNotice(stringResource(R.string.storage_disks_empty))
         else -> list.disks.forEachIndexed { i, disk ->
             if (i > 0) HorizontalDivider(Modifier.padding(vertical = 4.dp))
-            DiskCard(disk)
+            DiskCard(disk, wipe)
         }
     }
 }
 
 @Composable
-private fun DiskCard(disk: DiskLayout) {
+private fun DiskCard(disk: DiskLayout, wipe: DiskWipeControls?) {
     val slices = remember(disk) { disk.barFractions() }
     val labels = disk.partitions.associate { it.index to segmentLabel(it) }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -105,6 +106,7 @@ private fun DiskCard(disk: DiskLayout) {
             Legend(disk, labels)
         }
         disk.partitions.forEach { PartitionRow(it, partitionColor(it.knownLabel(), it.index)) }
+        if (wipe != null && disk.wipeable) DiskWipeButton(disk, wipe)
     }
 }
 

@@ -1709,6 +1709,14 @@
     <string name="storage_section_disks">Discos</string>
     <string name="storage_disks_empty">Nenhum disco informado</string>
     <string name="storage_disk_unallocated">Não alocado</string>
+    <string name="storage_disk_wipe">Apagar este disco…</string>
+    <string name="storage_disk_wiping">Apagando…</string>
+    <string name="storage_disk_wipe_title">Apagar %1$s?</string>
+    <string name="storage_disk_wipe_confirm">Apagar o disco</string>
+    <string name="storage_disk_wipe_text">Tudo neste disco é apagado. O nó continua funcionando.</string>
+    <string name="storage_disk_wipe_storage_note">O Talos não sabe o que um sistema de armazenamento (Longhorn, Rook/Ceph, um hostPath) guarda neste disco: confirme que nada o usa.</string>
+    <string name="storage_disk_wipe_failed">Não foi possível apagar %1$s: %2$s</string>
+    <string name="storage_disk_wipe_done">%1$s apagado</string>
     <string name="storage_disk_partition_n">Partição %1$d</string>
     <string name="storage_disk_uuid">UUID %1$s</string>
     <string name="storage_disk_encryption_enabled">Criptografado</string>

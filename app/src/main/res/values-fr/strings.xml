@@ -1714,6 +1714,14 @@
     <string name="storage_section_disks">Disques</string>
     <string name="storage_disks_empty">Aucun disque signalé</string>
     <string name="storage_disk_unallocated">Non alloué</string>
+    <string name="storage_disk_wipe">Effacer ce disque…</string>
+    <string name="storage_disk_wiping">Effacement…</string>
+    <string name="storage_disk_wipe_title">Effacer %1$s ?</string>
+    <string name="storage_disk_wipe_confirm">Effacer le disque</string>
+    <string name="storage_disk_wipe_text">Tout ce qui se trouve sur ce disque est effacé. Le nœud continue de tourner.</string>
+    <string name="storage_disk_wipe_storage_note">Talos ne sait pas ce qu\'un système de stockage (Longhorn, Rook/Ceph, un hostPath) garde sur ce disque : assurez-vous que rien ne l\'utilise.</string>
+    <string name="storage_disk_wipe_failed">Impossible d\'effacer %1$s : %2$s</string>
+    <string name="storage_disk_wipe_done">%1$s effacé</string>
     <string name="storage_disk_partition_n">Partition %1$d</string>
     <string name="storage_disk_uuid">UUID %1$s</string>
     <string name="storage_disk_encryption_enabled">Chiffré</string>

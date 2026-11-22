@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -348,6 +349,21 @@ var nodeCommands = []command{
 		out, err = ichorgo.NodeDisks(e.cfg, e.context, flag.Arg(1))
 
 		return out, err
+	}},
+	{name: "disk-wipe", args: "NODE DEVICE [fast|zeroes] -yes", run: func(e env) (string, error) {
+		// disk-wipe: wipe one disk of the node (talosctl wipe disk). Destroys its data: refused
+		// without -yes. zeroes writes the whole disk and can take hours.
+		args := flag.Args()[1:]
+		if len(args) < 3 || len(args) > 4 || args[len(args)-1] != "-yes" {
+			return "", errors.New("disk-wipe NODE DEVICE [fast|zeroes] -yes: it erases the disk")
+		}
+
+		method := ""
+		if len(args) == 4 {
+			method = args[2]
+		}
+
+		return "wiped", ichorgo.NodeDiskWipe(e.cfg, e.context, args[0], args[1], method)
 	}},
 	{name: "usage", args: "NODE PATH DEPTH", run: func(e env) (out string, err error) {
 		depth, _ := strconv.Atoi(flag.Arg(3)) //nolint:errcheck

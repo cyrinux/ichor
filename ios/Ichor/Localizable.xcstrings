@@ -1,6 +1,90 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Wipe this disk…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Effacer ce disque…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Borrar este disco…" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diesen Datenträger löschen…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cancella questo disco…" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Стерти цей диск…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "擦除此磁盘…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このディスクを消去…" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Apagar este disco…" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Стереть этот диск…" } }
+      }
+    },
+    "Wiping…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Effacement…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Borrando…" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wird gelöscht…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cancellazione…" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Стирання…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在擦除…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "消去中…" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Apagando…" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Стирание…" } }
+      }
+    },
+    "Wipe %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Effacer %@ ?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Borrar %@?" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ löschen?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cancellare %@?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Стерти %@?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "擦除 %@？" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ を消去しますか？" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Apagar %@?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Стереть %@?" } }
+      }
+    },
+    "Wipe the disk" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Effacer le disque" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Borrar el disco" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Datenträger löschen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cancella il disco" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Стерти диск" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "擦除磁盘" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ディスクを消去" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Apagar o disco" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Стереть диск" } }
+      }
+    },
+    "Everything on this disk is erased. The node keeps running." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tout ce qui se trouve sur ce disque est effacé. Le nœud continue de tourner." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Se borra todo lo que hay en este disco. El nodo sigue funcionando." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alles auf diesem Datenträger wird gelöscht. Der Node läuft weiter." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutto ciò che c'è su questo disco viene cancellato. Il nodo continua a funzionare." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Усе на цьому диску буде стерто. Вузол продовжить працювати." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此磁盘上的所有内容都会被擦除。节点继续运行。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このディスクの内容はすべて消去されます。ノードは動作を続けます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tudo neste disco é apagado. O nó continua funcionando." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Всё на этом диске будет стёрто. Узел продолжит работать." } }
+      }
+    },
+    "Talos does not know what a storage system (Longhorn, Rook/Ceph, a hostPath) keeps on this disk: make sure nothing uses it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Talos ne sait pas ce qu'un système de stockage (Longhorn, Rook/Ceph, un hostPath) garde sur ce disque : assurez-vous que rien ne l'utilise." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Talos no sabe qué guarda un sistema de almacenamiento (Longhorn, Rook/Ceph, un hostPath) en este disco: asegúrate de que nada lo usa." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Talos weiß nicht, was ein Speichersystem (Longhorn, Rook/Ceph, ein hostPath) auf diesem Datenträger ablegt: Stellen Sie sicher, dass ihn nichts verwendet." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Talos non sa cosa un sistema di storage (Longhorn, Rook/Ceph, un hostPath) tiene su questo disco: assicurati che nulla lo usi." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Talos не знає, що система зберігання (Longhorn, Rook/Ceph, hostPath) тримає на цьому диску: переконайтеся, що його ніщо не використовує." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Talos 不知道存储系统（Longhorn、Rook/Ceph、hostPath）在此磁盘上保存了什么：请确认没有任何东西在使用它。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ストレージシステム（Longhorn、Rook/Ceph、hostPath）がこのディスクに何を置いているかを Talos は知りません。何も使っていないことを確認してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Talos não sabe o que um sistema de armazenamento (Longhorn, Rook/Ceph, um hostPath) guarda neste disco: confirme que nada o usa." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Talos не знает, что система хранения (Longhorn, Rook/Ceph, hostPath) держит на этом диске: убедитесь, что его ничто не использует." } }
+      }
+    },
     "Changing the size of %@" : {
       "extractionState" : "manual",
       "localizations" : {

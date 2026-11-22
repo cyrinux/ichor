@@ -25,6 +25,7 @@ import (
 	clusterapi "github.com/siderolabs/talos/pkg/machinery/api/cluster"
 	"github.com/siderolabs/talos/pkg/machinery/api/common"
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
+	storageapi "github.com/siderolabs/talos/pkg/machinery/api/storage"
 	timeapi "github.com/siderolabs/talos/pkg/machinery/api/time"
 	"github.com/siderolabs/talos/pkg/machinery/config/configloader"
 	"github.com/siderolabs/talos/pkg/machinery/config/generate/secrets"
@@ -63,7 +64,10 @@ type fakeTalos struct {
 	rebootErr        error
 	resets           []*machineapi.ResetRequest   // the Reset requests received, in order
 	restarts         []*machineapi.RestartRequest // the container Restart requests, in order
-	disarmErr        error
+	// wipes are the BlockDeviceWipe requests received, in order; wipeErr answers them instead.
+	wipes     []*storageapi.BlockDeviceWipeRequest
+	wipeErr   error
+	disarmErr error
 	// alarms are the active etcd alarms; a disarm clears them.
 	alarms    []*machineapi.EtcdMemberAlarm
 	defragErr map[string]error // node -> its defragmentation's error
@@ -332,6 +336,7 @@ func registerFakeTalos(s *grpc.Server, f *fakeTalos) {
 	clusterapi.RegisterClusterServiceServer(s, fakeTalosCluster{f: f})
 	cosiv1alpha1.RegisterStateServer(s, fakeTalosState{f: f})
 	timeapi.RegisterTimeServiceServer(s, fakeTalosTime{f: f})
+	storageapi.RegisterStorageServiceServer(s, fakeTalosStorage{f: f})
 }
 
 // serveCAPort is the loopback port the fake's cluster API (apid) listens on: production

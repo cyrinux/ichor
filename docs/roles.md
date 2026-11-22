@@ -53,6 +53,7 @@ reads those roles and explains up front when a feature needs more.
 | **Longhorn engine upgrade** | `Kubeconfig`, then the Kubernetes API: get volumes and settings, list engineimages and replicas, create `services/proxy` to the Longhorn manager | **`os:admin`** |
 | **Pair with ichor-relay** | `Kubeconfig`, then the Kubernetes API: list services, `get` on the Secret `ichor-relay` in the relay's namespace (its pairing token stays in the app's Go core), create `services/proxy` to the relay | **`os:admin`** |
 | **Node reset (`talosctl reset`)** | `Reset` | **`os:admin`** |
+| **Wipe one disk (`talosctl wipe disk`)** | `StorageService/BlockDeviceWipe` | **`os:admin`** |
 | **Boot a new machine: Image Factory ISO and iPXE links, `booter` command** | `Version`, COSI `MachineConfig` (the member's install image, for its schematic; with `os:reader` the default schematic is used, with a warning); on Omni, `GetMachineJoinConfig` for the join arguments (Omni's Operator role) | **`os:admin`** |
 | **Allocate a machine in Omni** | On Omni's own API: `MachineStatuses`, `MachineSets`, `MachineClasses` and `ClusterMachineStatuses` to read (Omni's Reader role), then one create of a `MachineSetNode` or one update of the `MachineSet`'s count (Omni's Operator role). A set that takes every matching machine needs no write | Omni's role |
 | **Make a Talos snapshot at Hetzner** | The template's version and its machine config, for the schematic (refused when it cannot be read); nothing of the cluster is written. At Hetzner, a project token with Read & Write | **`os:admin`** |

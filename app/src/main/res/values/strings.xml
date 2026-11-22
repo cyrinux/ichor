@@ -1714,6 +1714,14 @@
     <string name="storage_section_disks">Disks</string>
     <string name="storage_disks_empty">No disk reported</string>
     <string name="storage_disk_unallocated">Unallocated</string>
+    <string name="storage_disk_wipe">Wipe this disk…</string>
+    <string name="storage_disk_wiping">Wiping…</string>
+    <string name="storage_disk_wipe_title">Wipe %1$s?</string>
+    <string name="storage_disk_wipe_confirm">Wipe the disk</string>
+    <string name="storage_disk_wipe_text">Everything on this disk is erased. The node keeps running.</string>
+    <string name="storage_disk_wipe_storage_note">Talos does not know what a storage system (Longhorn, Rook/Ceph, a hostPath) keeps on this disk: make sure nothing uses it.</string>
+    <string name="storage_disk_wipe_failed">Could not wipe %1$s: %2$s</string>
+    <string name="storage_disk_wipe_done">%1$s wiped</string>
     <string name="storage_disk_partition_n">Partition %1$d</string>
     <string name="storage_disk_uuid">UUID %1$s</string>
     <string name="storage_disk_encryption_enabled">Encrypted</string>

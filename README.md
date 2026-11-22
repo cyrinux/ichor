@@ -33,7 +33,7 @@ tour** shows it again.
 - **Talos nodes:** status, services, resources, logs, events, etcd, live graphs, machine config
   with try mode, hardware (with the watchdog timer that reboots a stuck node, turned on from a config snippet), storage, KubeSpan (a red banner when a tunnel is down, also said on the home summary and in Cluster health), packet capture and a debug shell. Reboot, shut down
   or wake a node, upgrade Talos node by node or the whole cluster, upgrade Kubernetes, create a
-  new cluster from a machine booted from the Talos ISO or on a Hetzner server, add, replace, reset or wipe a node, recover etcd, rotate the Talos CA, export the cluster's `secrets.yaml`. Alerts when a node goes down, before it runs out of memory, or a KubeSpan tunnel between two
+  new cluster from a machine booted from the Talos ISO or on a Hetzner server, add, replace, reset or wipe a node (or one of its disks), recover etcd, rotate the Talos CA, export the cluster's `secrets.yaml`. Alerts when a node goes down, before it runs out of memory, or a KubeSpan tunnel between two
   nodes is down (on by default on Talos clusters), with quiet hours, a per-cluster
   minimum severity, a digest, flapping alerts folded into the digest, and critical alerts that
   repeat until acknowledged.

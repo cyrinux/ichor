@@ -1653,6 +1653,14 @@
     <string name="storage_section_disks">磁盘</string>
     <string name="storage_disks_empty">未报告任何磁盘</string>
     <string name="storage_disk_unallocated">未分配</string>
+    <string name="storage_disk_wipe">擦除此磁盘…</string>
+    <string name="storage_disk_wiping">正在擦除…</string>
+    <string name="storage_disk_wipe_title">擦除 %1$s？</string>
+    <string name="storage_disk_wipe_confirm">擦除磁盘</string>
+    <string name="storage_disk_wipe_text">此磁盘上的所有内容都会被擦除。节点继续运行。</string>
+    <string name="storage_disk_wipe_storage_note">Talos 不知道存储系统（Longhorn、Rook/Ceph、hostPath）在此磁盘上保存了什么：请确认没有任何东西在使用它。</string>
+    <string name="storage_disk_wipe_failed">无法擦除 %1$s：%2$s</string>
+    <string name="storage_disk_wipe_done">已擦除 %1$s</string>
     <string name="storage_disk_partition_n">分区 %1$d</string>
     <string name="storage_disk_uuid">UUID %1$s</string>
     <string name="storage_disk_encryption_enabled">已加密</string>

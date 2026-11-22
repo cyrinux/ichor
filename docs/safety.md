@@ -28,6 +28,15 @@ Part of the [Ichor documentation](../README.md#documentation).
   | Leave etcd first (`--graceful`, on by default) | Cordon, drain and leave etcd cleanly first. Off on a control plane, its etcd member stays behind: remove it from the etcd screen. |
   | Reboot after (`--reboot`, on by default) | Off, the node stays powered off once wiped. |
 
+- **Wiping one disk (Storage → a disk → Wipe this disk…, `os:admin`, Talos 1.9+):** like
+  `talosctl wipe disk --method fast`, the node keeps running. The button only shows on a disk
+  that is not the system disk, not read-only and has no partition holding a Talos volume or
+  mounted, and the Go core checks all of that again, on the disks read in the same call, before
+  sending anything. Talos then refuses a disk a volume uses. The dialog names the disk (path,
+  model, serial, size) and says that Talos does not know what Longhorn, Rook/Ceph or a hostPath
+  keeps on it; the node's hostname is typed to confirm. The activity log keeps one entry per
+  attempt; the demo cluster refuses it.
+
 - **Creating a new cluster (Add a cluster → New Talos cluster):** the phone makes the cluster's
   secrets (its CAs, keys and tokens) and keeps them in memory only, for 30 minutes at most; the
   preview hides them. Nothing is sent before the cluster's talosconfig is stored on the phone (sealed,

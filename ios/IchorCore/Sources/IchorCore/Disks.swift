@@ -228,3 +228,11 @@ public func barSlices(_ disk: DiskLayout, minFraction: Double = 0.015) -> [BarSl
         BarSlice(segment: segment, fraction: share < floor ? floor : share / bigTotal * room)
     }
 }
+
+extension DiskLayout {
+    /// A disk that may be wiped alone (Go: wipeableDisk): not the system disk, not read-only, and
+    /// no partition holding a Talos volume or mounted. The Go core checks it again before the call.
+    public var wipeable: Bool {
+        !systemDisk && !readonly && !partitions.contains { !$0.volumeId.isEmpty || !$0.mountedOn.isEmpty }
+    }
+}

@@ -1707,6 +1707,14 @@
     <string name="storage_section_disks">Datenträger</string>
     <string name="storage_disks_empty">Kein Datenträger gemeldet</string>
     <string name="storage_disk_unallocated">Nicht zugewiesen</string>
+    <string name="storage_disk_wipe">Diesen Datenträger löschen…</string>
+    <string name="storage_disk_wiping">Wird gelöscht…</string>
+    <string name="storage_disk_wipe_title">%1$s löschen?</string>
+    <string name="storage_disk_wipe_confirm">Datenträger löschen</string>
+    <string name="storage_disk_wipe_text">Alles auf diesem Datenträger wird gelöscht. Der Node läuft weiter.</string>
+    <string name="storage_disk_wipe_storage_note">Talos weiß nicht, was ein Speichersystem (Longhorn, Rook/Ceph, ein hostPath) auf diesem Datenträger ablegt: Stellen Sie sicher, dass ihn nichts verwendet.</string>
+    <string name="storage_disk_wipe_failed">%1$s konnte nicht gelöscht werden: %2$s</string>
+    <string name="storage_disk_wipe_done">%1$s gelöscht</string>
     <string name="storage_disk_partition_n">Partition %1$d</string>
     <string name="storage_disk_uuid">UUID %1$s</string>
     <string name="storage_disk_encryption_enabled">Verschlüsselt</string>

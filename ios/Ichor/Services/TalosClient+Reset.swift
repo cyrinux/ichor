@@ -19,6 +19,14 @@ extension TalosClient {
         }
     }
 
+    /// `talosctl wipe disk DEVICE --method fast` (os:admin, Talos 1.9+): the node keeps running.
+    /// Go refuses the system disk, a read-only disk and one holding a volume or a mount.
+    func wipeDisk(node: String, device: String) async throws {
+        try await Self.run { [config, context] error -> Void in
+            _ = IchorgoNodeDiskWipe(config, context, node, device, "fast", error)
+        }
+    }
+
     /// Whether node can leave this context, and whether it is also an endpoint. No network.
     func removalPlan(node: String) async throws -> ContextNodeRemoval {
         try await Self.json { [config, context] in
