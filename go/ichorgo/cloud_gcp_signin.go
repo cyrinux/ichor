@@ -71,6 +71,12 @@ func (c *gcpClient) mintUser(ctx context.Context) (string, time.Time, error) {
 	if err != nil {
 		var required *errSignInRequired
 		if errors.As(err, &required) {
+			if required.reason == gcpNativeRenewReason {
+				// The Android app's token ran out: the code and reason stay last in the message,
+				// for the app to renew silently and retry, as it does for GKE clusters.
+				return "", time.Time{}, fmt.Errorf("it has ended: %s: %w", c.renewHint(), err)
+			}
+
 			return "", time.Time{}, fmt.Errorf("it has ended: %s", c.renewHint())
 		}
 
@@ -146,7 +152,9 @@ var gcpSignInRun struct {
 
 // gcpSignInSecrets are the GKE fields of a sign-in kind: gcloud's client (no field), an OAuth
 // client of your own (gcpOAuthClientId, gcpOAuthClientSecret, gcpOAuthRedirectUrl), a workforce
-// login config (gcpLoginConfigJson), or the build's Google client on iOS.
+// login config (gcpLoginConfigJson), or the build's Google client: on iOS its marker, on Android
+// the token the app got from Google (gcpGoogleSignIn "android", gcpAccessToken,
+// gcpAccessTokenExpiry, gcpAccount).
 func gcpSignInSecrets(kind, secretsJSON string) (map[string]string, error) {
 	given := map[string]string{}
 	if strings.TrimSpace(secretsJSON) != "" {
@@ -172,8 +180,18 @@ func gcpSignInSecrets(kind, secretsJSON string) (map[string]string, error) {
 
 		return pick(given, gcpFieldLoginConfig), nil
 	case gcpSignInNative:
-		if platform, _ := registeredGoogleSignIn(); platform == googleSignInIOS {
+		switch platform, _ := registeredGoogleSignIn(); platform {
+		case googleSignInIOS:
 			return map[string]string{gcpFieldGoogleSignIn: googleSignInIOS}, nil
+		case googleSignInAndroid:
+			if given[gcpFieldAccessToken] == "" || given[gcpFieldAccessTokenExpiry] == "" {
+				return nil, errors.New("the Google sign-in gave no access token and expiry")
+			}
+
+			secrets := pick(given, gcpFieldAccessToken, gcpFieldAccessTokenExpiry, gcpFieldAccount)
+			secrets[gcpFieldGoogleSignIn] = googleSignInAndroid
+
+			return secrets, nil
 		}
 
 		return nil, errors.New("this build offers no native Google sign-in: use the browser sign-in")
@@ -184,12 +202,13 @@ func gcpSignInSecrets(kind, secretsJSON string) (map[string]string, error) {
 
 // GCPSignInChoices are the Google sign-ins this build offers for the create, in the order the
 // sheet shows them. JSON: ["native"?, "gcloud", "oauth", "workforce"]: native only where the
-// build carries its own Google client and Go runs the flow (iOS).
+// build carries its own Google client (iOS: Go runs the flow; Android's Play build: the app does,
+// then GCPSignInNative).
 func GCPSignInChoices() (out string, err error) {
 	defer maskResult(&out, &err)
 
 	choices := []string{gcpSignInGcloud, gcpSignInOAuth, gcpSignInWorkforce}
-	if platform, _ := registeredGoogleSignIn(); platform == googleSignInIOS {
+	if platform, _ := registeredGoogleSignIn(); platform == googleSignInIOS || platform == googleSignInAndroid {
 		choices = append([]string{gcpSignInNative}, choices...)
 	}
 
@@ -250,6 +269,41 @@ func GCPSignInCredential() (out string, err error) {
 		return "", errGCPSignInFirst
 	}
 
+	return gcpSignInResultOf(state, true)
+}
+
+// GCPSignInNative is GCPSignInCredential for the Android app's own "Sign in with Google" (Play
+// build): no browser run, the app hands over the token Google gave it (secretsJSON:
+// gcpGoogleSignIn "android", gcpAccessToken, gcpAccessTokenExpiry, gcpAccount). A function of its
+// own rather than GCPSignInStart("native"), which would need a listener and a run for a sign-in
+// that is already over. listProjects false skips the project list: a silent renewal only needs
+// the new credential, whose "googleSignIn" the app merges into the stored one. The same JSON as
+// GCPSignInCredential.
+func GCPSignInNative(secretsJSON string, listProjects bool) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	secrets, err := gcpSignInSecrets(gcpSignInNative, secretsJSON)
+	if err != nil {
+		return "", err
+	}
+
+	if secrets[gcpFieldGoogleSignIn] != googleSignInAndroid {
+		return "", errors.New("the native Google sign-in of this build runs through GCPSignInStart")
+	}
+
+	state, err := nativeSignInState(secrets)
+	if err != nil {
+		return "", err
+	}
+
+	state.Method = authGKE
+
+	return gcpSignInResultOf(state, listProjects)
+}
+
+// gcpSignInResultOf mints with a signed-in state and lists the projects the account sees (when
+// listProjects): the result the app picks the quota project from.
+func gcpSignInResultOf(state kubeAuthState, listProjects bool) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), gcpSignInTimeout)
 	defer cancel()
 
@@ -258,9 +312,15 @@ func GCPSignInCredential() (out string, err error) {
 		return "", err
 	}
 
-	ids, more, err := listGCPProjects(ctx, gkeAccount{token: token})
-	if err != nil {
-		return "", err
+	var (
+		ids  []string
+		more bool
+	)
+
+	if listProjects {
+		if ids, more, err = listGCPProjects(ctx, gkeAccount{token: token}); err != nil {
+			return "", err
+		}
 	}
 
 	projects := make([]gcpProject, 0, len(ids))

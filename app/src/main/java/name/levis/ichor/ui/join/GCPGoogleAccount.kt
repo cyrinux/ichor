@@ -18,12 +18,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
+import name.levis.ichor.data.GCPTokenRenewal
+import name.levis.ichor.data.GoogleAuthorization
+import name.levis.ichor.data.googleSignInSecrets
 import name.levis.ichor.data.SignInEvent
 import name.levis.ichor.model.GCPCheck
 import name.levis.ichor.model.GCPSignInKind
@@ -41,8 +46,18 @@ import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorFilterChip
 import name.levis.ichor.ui.design.IchorOutlinedButton
 import name.levis.ichor.ui.kubeauth.Waiting
+import name.levis.ichor.ui.kubeauth.rememberGoogleSignIn
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiStateOf
+
+/**
+ * The card's silent renewal of the Play build's "Sign in with Google" (see [GCPTokenRenewal]):
+ * Google asked without the user, the token turned into a credential without the project list.
+ */
+internal fun gcpTokenRenewal(app: TalosApp) = GCPTokenRenewal(
+    authorize = { app.googleNativeSignIn.authorize(app, silent = true) },
+    signIn = { secrets -> app.nodeLifecycleRepository.gcpSignInNative(secrets, listProjects = false).credential },
+)
 
 /** The OAuth client's other fields, as the GKE sign-in reads them. */
 private const val GCP_OAUTH_CLIENT_SECRET = "gcpOAuthClientSecret"
@@ -61,6 +76,7 @@ private sealed interface GoogleStep {
 /** The label and hint of a sign-in kind. */
 @StringRes
 private fun kindLabel(kind: String): Int = when (kind) {
+    GCPSignInKind.NATIVE -> R.string.kube_signin_option_google
     GCPSignInKind.OAUTH -> R.string.kube_signin_option_gcp_oauth
     GCPSignInKind.WORKFORCE -> R.string.kube_signin_option_gcp_workforce
     else -> R.string.kube_signin_option_gcp_gcloud
@@ -68,15 +84,17 @@ private fun kindLabel(kind: String): Int = when (kind) {
 
 @StringRes
 private fun kindHint(kind: String): Int = when (kind) {
+    GCPSignInKind.NATIVE -> R.string.kube_signin_google_hint
     GCPSignInKind.OAUTH -> R.string.kube_signin_gcp_oauth_hint
     GCPSignInKind.WORKFORCE -> R.string.kube_signin_gcp_workforce_config_hint
     else -> R.string.kube_signin_gcp_gcloud_hint
 }
 
 /**
- * The Google-account side of the account dialog: the sign-in kind (gcloud's client, an OAuth
- * client of your own, a workforce login config), the browser sign-in, the project the calls are
- * billed to, then the same test as a key. [onReady] gets the credential JSON to seal and its test
+ * The Google-account side of the account dialog: the sign-in kind (Google's own sign-in in the
+ * Play build, gcloud's client, an OAuth client of your own, a workforce login config), the sign-in
+ * (Google's picker, or the browser), the project the calls are billed to, then the same test as a
+ * key. [onReady] gets the credential JSON to seal and its test
  * once they pass, null meanwhile. The sign-in state stays in that JSON, never on screen.
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -84,6 +102,7 @@ private fun kindHint(kind: String): Int = when (kind) {
 internal fun GoogleAccountSide(vm: GCPCreateViewModel, onReady: (credential: String?, check: GCPCheck?) -> Unit) {
     val colors = LocalStatusColors.current
     val scope = rememberCoroutineScope()
+    val app = LocalContext.current.applicationContext as TalosApp
     var kinds by remember { mutableStateOf(GCPSignInKind.browser) }
     var kind by remember { mutableStateOf(GCPSignInKind.GCLOUD) }
     var clientId by remember { mutableStateOf("") }
@@ -93,11 +112,11 @@ internal fun GoogleAccountSide(vm: GCPCreateViewModel, onReady: (credential: Str
     var step by remember { mutableStateOf<GoogleStep>(GoogleStep.Form) }
     var signInJob by remember { mutableStateOf<Job?>(null) }
     LaunchedEffect(Unit) {
-        // Android offers the browser sign-ins only; "native" is the iOS build's.
-        val offered = runCatching { vm.signInChoices() }.getOrNull()?.filter { it in GCPSignInKind.browser }
+        // "native" (Google's own sign-in) comes first where the build has it: the Play build.
+        val offered = runCatching { vm.signInChoices() }.getOrNull()?.filter { it in GCPSignInKind.all }
         if (!offered.isNullOrEmpty()) {
             kinds = offered
-            if (kind !in offered) kind = offered.first()
+            kind = offered.first()
         }
     }
     // The sheet closed or the dialog switched to a key: the wait for the browser ends.
@@ -111,6 +130,18 @@ internal fun GoogleAccountSide(vm: GCPCreateViewModel, onReady: (credential: Str
             val tested = (check as? UiState.Loaded)?.data
             if (tested != null) onReady(tested.credential.ifBlank { credential }, tested)
             step = GoogleStep.Chosen(result, project.trim(), check)
+        }
+    }
+
+    /** What a sign-in got: the project pick, or its only project picked by itself. */
+    fun took(result: UiState<GCPSignInResult>) {
+        when (result) {
+            is UiState.Loaded -> {
+                val only = result.data.projects.singleOrNull()?.takeIf { !result.data.more }
+                if (only != null) choose(result.data, only.id) else step = GoogleStep.Projects(result.data)
+            }
+            is UiState.Failed -> step = GoogleStep.Failed(result.message)
+            else -> step = GoogleStep.Form
         }
     }
 
@@ -142,15 +173,19 @@ internal fun GoogleAccountSide(vm: GCPCreateViewModel, onReady: (credential: Str
                 return@launch
             }
             step = GoogleStep.Working
-            when (val result = uiStateOf { vm.signInCredential() }) {
-                is UiState.Loaded -> {
-                    // The only project the account sees is picked by itself.
-                    val only = result.data.projects.singleOrNull()?.takeIf { !result.data.more }
-                    if (only != null) choose(result.data, only.id) else step = GoogleStep.Projects(result.data)
-                }
-                is UiState.Failed -> step = GoogleStep.Failed(result.message)
-                else -> step = GoogleStep.Form
+            took(uiStateOf { vm.signInCredential() })
+        }
+    }
+
+    // Google's own sign-in (Play build): its token is the sign-in, no browser run.
+    val signInWithGoogle = rememberGoogleSignIn(app.googleNativeSignIn) { answer, failedText ->
+        when (answer) {
+            is GoogleAuthorization.Token -> {
+                step = GoogleStep.Working
+                scope.launch { took(uiStateOf { vm.signInNative(googleSignInSecrets(answer)) }) }
             }
+            is GoogleAuthorization.Failed -> step = GoogleStep.Failed(UiText.Raw(answer.message.ifBlank { failedText }))
+            is GoogleAuthorization.NeedsUser -> Unit
         }
     }
 
@@ -185,7 +220,14 @@ internal fun GoogleAccountSide(vm: GCPCreateViewModel, onReady: (credential: Str
                 GCPSignInKind.WORKFORCE -> loginConfig.isNotBlank()
                 else -> true
             }
-            IchorButton(onClick = ::signIn, enabled = ready, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.kube_signin_action)) }
+            if (kind == GCPSignInKind.NATIVE) {
+                IchorButton(onClick = {
+                    onReady(null, null)
+                    signInWithGoogle()
+                }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.kube_signin_option_google)) }
+            } else {
+                IchorButton(onClick = ::signIn, enabled = ready, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.kube_signin_action)) }
+            }
         }
         GoogleStep.Working -> LoadingBox()
         is GoogleStep.Browser -> Waiting(current.prompt, onCancel = {

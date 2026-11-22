@@ -662,7 +662,17 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     fun gcpImage(credentialJson: String, spec: GCPImageSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.gcpImage(credentialJson, TalosJson.encodeToString(GCPImageSpec.serializer(), spec), stop)
 
-    /** The Google sign-ins this build offers for the create, in the order shown ("native" never on Android). */
+    /**
+     * The credential of the Play build's own "Sign in with Google" ([secrets]: googleSignInSecrets
+     * of Google's token), and with [listProjects] the projects the account sees for the pick; no
+     * browser run. A silent renewal skips the list.
+     */
+    suspend fun gcpSignInNative(secrets: Map<String, String>, listProjects: Boolean): GCPSignInResult = withContext(Dispatchers.IO) {
+        val secretsJson = TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), secrets)
+        TalosJson.decodeFromString(GCPSignInResult.serializer(), Ichorgo.gcpSignInNative(secretsJson, listProjects))
+    }
+
+    /** The Google sign-ins this build offers for the create, in the order shown ("native" first in the Play build and on iOS). */
     suspend fun gcpSignInChoices(): List<String> = withContext(Dispatchers.IO) {
         TalosJson.decodeFromString(ListSerializer(String.serializer()), Ichorgo.gcpSignInChoices())
     }

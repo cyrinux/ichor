@@ -39,6 +39,7 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.CloudProviderStore
+import name.levis.ichor.data.GCPTokenRenewal
 import name.levis.ichor.data.JoinRequest
 import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.data.SignInEvent
@@ -86,7 +87,11 @@ import name.levis.ichor.ui.uiStateOf
  * The stored service account keys or Google sign-ins (one per project id, with the picked project
  * and zone) and what a VM can be created from. The key or sign-in never reaches the screen.
  */
-class GCPCreateViewModel(private val lifecycle: NodeLifecycleRepository, private val store: CloudProviderStore) : ViewModel() {
+class GCPCreateViewModel(
+    private val lifecycle: NodeLifecycleRepository,
+    private val store: CloudProviderStore,
+    private val renewal: GCPTokenRenewal,
+) : ViewModel() {
     private val _accounts = MutableStateFlow<List<String>>(emptyList())
     val accounts: StateFlow<List<String>> = _accounts.asStateFlow()
     private val _account = MutableStateFlow("")
@@ -139,8 +144,26 @@ class GCPCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
     /** The options, sealing again the Google sign-in the core renewed. */
     private suspend fun loadOptions(account: String): GCPOptions {
         if (account.isBlank()) return lifecycle.gcpOptions("")
-        return lifecycle.gcpOptions(credential(account)).also { sealRenewed(account, it.credential) }
+        return withRenewal(account) { lifecycle.gcpOptions(it) }.also { sealRenewed(account, it.credential) }
     }
+
+    /**
+     * Runs [call] with [account]'s stored credential; the Play build's "Sign in with Google" whose
+     * token ran out is renewed silently, sealed again and the call retried once.
+     */
+    private suspend fun <T> withRenewal(account: String, call: suspend (String) -> T): T =
+        renewal.withRenewal(credential(account), save = { seal(account, it) }, call = call)
+
+    private suspend fun seal(account: String, credential: String) {
+        withContext(Dispatchers.IO) { store.save(CloudProviderStore.GCP, account, credential) }
+    }
+
+    /**
+     * What a run (a create, an image) gets: [account]'s credential, its Google token renewed first
+     * when it would run out within minutes. Read only now, and handed to the run alone.
+     */
+    suspend fun runCredential(account: String): String =
+        if (account.isBlank()) "" else renewal.fresh(credential(account)) { seal(account, it) }
 
     /**
      * Seals the sign-in state the core renewed into the stored credential; "" is nothing to do.
@@ -160,6 +183,9 @@ class GCPCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
     }
 
     suspend fun signInCredential(): GCPSignInResult = lifecycle.gcpSignInCredential()
+
+    /** The credential and projects of Google's own sign-in (Play build), from its token's [secrets]. */
+    suspend fun signInNative(secrets: Map<String, String>): GCPSignInResult = lifecycle.gcpSignInNative(secrets, listProjects = true)
 
     /** Asks the Billing Catalog for [machineType] in [zone]; a failure (the demo has no key) is "price unavailable". */
     fun loadPrice(zone: String, machineType: String) {
@@ -204,7 +230,7 @@ class GCPCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
      */
     suspend fun prepareNetwork(spec: GCPNetworkSpec): GCPNetworkResult {
         val account = _account.value
-        return lifecycle.gcpNetworkPrepare(credential(account), spec).also {
+        return withRenewal(account) { lifecycle.gcpNetworkPrepare(it, spec) }.also {
             sealRenewed(account, it.credential)
             refresh()
         }
@@ -216,7 +242,15 @@ class GCPCreateViewModel(private val lifecycle: NodeLifecycleRepository, private
 
     suspend fun credential(account: String): String = withContext(Dispatchers.IO) { store.token(CloudProviderStore.GCP, account) }
 
-    suspend fun test(credentialJson: String): GCPCheck = lifecycle.gcpTest(credentialJson)
+    /**
+     * Tests a credential of the account dialog, not stored yet: a "Sign in with Google" token that
+     * ran out is renewed, and the renewed credential comes back as the check's to seal.
+     */
+    suspend fun test(credentialJson: String): GCPCheck {
+        var renewed = ""
+        val check = renewal.withRenewal(credentialJson, save = { renewed = it }) { lifecycle.gcpTest(it) }
+        return if (check.credential.isBlank() && renewed.isNotBlank()) check.copy(credential = renewed) else check
+    }
 
     suspend fun role(project: String): String = lifecycle.gcpRole(project)
 
@@ -251,7 +285,7 @@ fun GCPCreateCard(
     labelsJson: String,
     demo: Boolean,
     onAllocate: (() -> Unit)? = null,
-    vm: GCPCreateViewModel = viewModel(key = "gcp-create", factory = factory { GCPCreateViewModel(app.nodeLifecycleRepository, app.cloudProviderStore) }),
+    vm: GCPCreateViewModel = viewModel(key = "gcp-create", factory = factory { GCPCreateViewModel(app.nodeLifecycleRepository, app.cloudProviderStore, gcpTokenRenewal(app)) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val run by app.joinManager.current.collectAsStateWithLifecycle()
@@ -313,7 +347,7 @@ fun GCPCreateCard(
                     onPrepareNetwork = if (demo || account.isBlank()) null else vm::prepareNetwork,
                 ) { request ->
                     // The key is read only now, and goes to the run alone.
-                    scope.launch { app.joinManager.start(request, if (account.isBlank()) "" else vm.credential(account)) }
+                    scope.launch { app.joinManager.start(request, vm.runCredential(account)) }
                 }
             }
         }
@@ -331,7 +365,7 @@ fun GCPCreateCard(
                     staticAddress = "", gcpImage = spec,
                 )
                 // The key is read only now, and goes to the run alone.
-                scope.launch { app.joinManager.start(request, vm.credential(account)) }
+                scope.launch { app.joinManager.start(request, vm.runCredential(account)) }
             },
             onDismiss = { imageFor = null },
         )
