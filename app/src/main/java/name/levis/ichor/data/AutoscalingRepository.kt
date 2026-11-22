@@ -6,6 +6,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import name.levis.ichor.model.AutoscalingReport
+import name.levis.ichor.model.NodeGroupUpdate
 import name.levis.ichor.model.NodeGroupsReport
 import name.levis.ichorgo.Ichorgo
 
@@ -46,5 +47,20 @@ class AutoscalingRepository(private val configs: ConfigRepository, private val k
     suspend fun setHpaBounds(namespace: String, name: String, min: Int, max: Int) = withContext(Dispatchers.IO) {
         val target = kubeServers.targetFor(configs.forCall())
         Ichorgo.kubeSetHPABounds(target.yaml, target.context, target.server, namespace, name, min.toLong(), max.toLong())
+    }
+
+    /** Changes the EKS managed node group's size; the update AWS starts for it. */
+    suspend fun scaleNodeGroup(group: String, desired: Int, min: Int, max: Int): NodeGroupUpdate = withContext(Dispatchers.IO) {
+        val target = kubeServers.targetFor(configs.forCall())
+        TalosJson.decodeFromString(
+            NodeGroupUpdate.serializer(),
+            Ichorgo.kubeNodeGroupScale(target.yaml, target.context, target.server, group, desired.toLong(), min.toLong(), max.toLong()),
+        )
+    }
+
+    /** The update [id] of [group], as AWS reports it now. */
+    suspend fun nodeGroupUpdate(group: String, id: String): NodeGroupUpdate = withContext(Dispatchers.IO) {
+        val target = kubeServers.targetFor(configs.forCall())
+        TalosJson.decodeFromString(NodeGroupUpdate.serializer(), Ichorgo.kubeNodeGroupUpdate(target.yaml, target.context, target.server, group, id))
     }
 }

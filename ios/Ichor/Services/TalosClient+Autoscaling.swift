@@ -40,4 +40,20 @@ extension TalosClient {
             _ = IchorgoKubeSetHPABounds(config, context, kubeServer, namespace, name, min, max, error)
         }
     }
+
+    /// Changes the EKS managed node group's size; the update AWS starts for it.
+    func scaleNodeGroup(group: String, desired: Int, min: Int, max: Int) async throws -> NodeGroupUpdate {
+        try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeNodeGroupScale(config, context, kubeServer, group, desired, min, max, $0)
+        }
+    }
+
+    /// The update `id` of `group`, as AWS reports it now.
+    func nodeGroupUpdate(group: String, id: String) async throws -> NodeGroupUpdate {
+        try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeNodeGroupUpdate(config, context, kubeServer, group, id, $0)
+        }
+    }
 }

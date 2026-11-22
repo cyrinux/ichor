@@ -14,7 +14,7 @@ struct AutoscalingDetailSheets: View {
         case .scaledJob(let row): ScaledJobSheet(row: row)
         case .vpa(let row): VpaSheet(row: row)
         case .pool(let row, let claims): NodePoolSheet(row: row, claims: claims)
-        case .nodeGroup(let row): NodeGroupDetailSheet(row: row)
+        case .nodeGroup(let row): NodeGroupDetailSheet(row: row, onChanged: onChanged)
         }
     }
 }

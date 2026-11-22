@@ -67,7 +67,7 @@ fun NodeGroupRowItem(row: ManagedNodeGroupRow, onClick: () -> Unit) {
 
 /** Every field of one managed node group, and AWS' health issues with the resources they name. */
 @Composable
-fun NodeGroupSheet(row: ManagedNodeGroupRow, onDismiss: () -> Unit) {
+fun NodeGroupSheet(row: ManagedNodeGroupRow, onDismiss: () -> Unit, scaling: NodeGroupScaling? = null) {
     Sheet(onDismiss) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(row.name, style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f, fill = false))
@@ -85,6 +85,7 @@ fun NodeGroupSheet(row: ManagedNodeGroupRow, onDismiss: () -> Unit) {
         if (row.instanceTypes.isNotEmpty()) InfoRow(stringResource(R.string.autoscaling_nodegroup_instance_types), row.instanceTypes.joinToString(", "), mono = true)
         if (row.diskSize > 0) InfoRow(stringResource(R.string.autoscaling_nodegroup_disk), stringResource(R.string.autoscaling_nodegroup_disk_size, row.diskSize.toString()))
         if (row.created > 0) MutedText(timeAgo(row.created))
+        scaling?.let { NodeGroupScaleSection(row, it) }
 
         SectionTitle(stringResource(R.string.autoscaling_nodegroup_issues))
         if (row.issues.isEmpty()) MutedText(stringResource(R.string.autoscaling_none))

@@ -38,6 +38,11 @@ final class ContractTests: XCTestCase {
             XCTAssertTrue($0.groups[0].atMax)
             XCTAssertEqual($0.groups[0].issues.first?.code, "AsgInstanceLaunchFailures")
         },
+        "kube-nodegroup-update": ContractTests.row(NodeGroupUpdate.self) {
+            XCTAssertEqual($0.status, "Failed")
+            XCTAssertEqual($0.failure, "Could not launch On-Demand Instances")
+            XCTAssertEqual($0.errors.first?.resourceIds, ["eks-system-asg"])
+        },
         "node-files": ContractTests.row(NodeDirListing.self) {
             XCTAssertEqual($0.entries.map(\.type), ["dir", "file", "link"])
             XCTAssertEqual($0.entries.last?.target, "/var/log/pods")

@@ -61,4 +61,36 @@ final class AutoscalingNodeGroupsTests: XCTestCase {
         XCTAssertEqual(report.filtered(namespace: nil, query: "g6").nodeGroups.groups.map(\.name), ["gpu"])
         XCTAssertEqual(report.filtered(namespace: "shop", query: "").nodeGroups.groups.count, 2)
     }
+
+    func testNodeGroupSizeProblemsMirrorTheGoRefusals() {
+        XCTAssertEqual(nodeGroupSizeProblem(desired: 1, min: -1, max: 3), .minNegative)
+        XCTAssertEqual(nodeGroupSizeProblem(desired: 0, min: 0, max: 0), .maxTooLow)
+        XCTAssertEqual(nodeGroupSizeProblem(desired: 3, min: 4, max: 3), .minAboveMax)
+        XCTAssertEqual(nodeGroupSizeProblem(desired: 1, min: 2, max: 4), .desiredOutside)
+        XCTAssertEqual(nodeGroupSizeProblem(desired: 5, min: 2, max: 4), .desiredOutside)
+        XCTAssertNil(nodeGroupSizeProblem(desired: 0, min: 0, max: 4))
+        XCTAssertNil(nodeGroupSizeProblem(desired: 4, min: 2, max: 4))
+    }
+
+    func testNodeGroupUpdateStatus() {
+        XCTAssertTrue(NodeGroupUpdate(id: "u", status: "InProgress").inProgress)
+        XCTAssertNil(NodeGroupUpdate(id: "u", status: "InProgress").failure)
+        XCTAssertNil(NodeGroupUpdate(id: "u", status: "Successful").failure)
+        let issue = NodeGroupIssue(code: "X", message: "no capacity")
+        let failed = NodeGroupUpdate(id: "u", status: "Failed", errors: [issue])
+        XCTAssertEqual(failed.failure, "no capacity")
+        // No error message: the status itself says it ended.
+        XCTAssertEqual(NodeGroupUpdate(id: "u", status: "Cancelled").failure, "Cancelled")
+        let lost = NodeGroupUpdate(id: "u", status: "InProgress").unreadable("timeout")
+        XCTAssertTrue(lost.unreadable)
+        XCTAssertEqual(lost.failure, "timeout")
+        XCTAssertEqual(lost.id, "u")
+    }
+
+    func testOnlyActiveOrDegradedGroupsChangeSize() {
+        XCTAssertTrue(ManagedNodeGroupRow(name: "a", status: "ACTIVE").canChangeSize)
+        XCTAssertTrue(ManagedNodeGroupRow(name: "b", status: "DEGRADED", atMax: true).canChangeSize)
+        XCTAssertFalse(ManagedNodeGroupRow(name: "c", status: "UPDATING", updating: true).canChangeSize)
+        XCTAssertFalse(ManagedNodeGroupRow(name: "d", status: "CREATING").canChangeSize)
+    }
 }

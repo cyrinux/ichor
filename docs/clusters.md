@@ -290,7 +290,9 @@ type, instance types, the cluster's nodes in each group, and AWS' health issues.
 read with the cluster's own sign-in (access keys or IAM Identity Center, then the kubeconfig's
 `--role-arn`), which needs `eks:ListNodegroups` and `eks:DescribeNodegroup` on the cluster on
 top of what adding it asked for. A role without them shows which action is missing; the rest
-of the screen is unaffected. Read-only for now.
+of the screen is unaffected. Changing a group's size from the phone also needs
+`eks:UpdateNodegroupConfig` and `eks:DescribeUpdate`, only for that: a role without them still
+reads the groups, and the size change says which action is missing.
 
 | Kubeconfig user | What the app does |
 |---|---|
