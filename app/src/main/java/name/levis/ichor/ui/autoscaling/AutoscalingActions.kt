@@ -20,13 +20,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import name.levis.ichor.R
 import name.levis.ichor.data.AutoscalingRepository
 import name.levis.ichor.model.HpaRow
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.model.MAX_SCALE_REPLICAS
+import name.levis.ichor.model.ManagedNodeGroupRow
+import name.levis.ichor.model.NODE_GROUP_UPDATE_UNREADABLE
+import name.levis.ichor.model.NodeGroupIssue
+import name.levis.ichor.model.NodeGroupUpdate
 import name.levis.ichor.model.SCALED_OBJECT_HOLD
 import name.levis.ichor.model.SCALED_OBJECT_RESUME
 import name.levis.ichor.model.ScaledObjectRow
@@ -34,6 +42,7 @@ import name.levis.ichor.model.kedaOwned
 import name.levis.ichor.model.scaleNeedsTypedName
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.MutedText
@@ -44,7 +53,10 @@ import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.uiText
 
 /** What an autoscaling action did. */
-enum class AutoscalingAction { PAUSE, HOLD, RESUME, BOUNDS }
+enum class AutoscalingAction { PAUSE, HOLD, RESUME, BOUNDS, GROUP_SIZE }
+
+/** How often an open node group sheet reads the update AWS runs. */
+private const val NODE_GROUP_POLL_MS = 10_000L
 
 /** Outcome of [action] on the object [name], shown once. */
 data class AutoscalingActionResult(val name: String, val action: AutoscalingAction, val error: UiText?)
@@ -52,6 +64,7 @@ data class AutoscalingActionResult(val name: String, val action: AutoscalingActi
 /** Keys of the rows with an action in flight. */
 val HpaRow.actionKey: String get() = "hpa/$key"
 val ScaledObjectRow.actionKey: String get() = "so/$key"
+val ManagedNodeGroupRow.actionKey: String get() = "ng/$key"
 
 /** Pause, hold and resume a ScaledObject, and set an HPA's bounds, run in [scope] (a ViewModel's); [onChanged] reads the report again after one. */
 class AutoscalingActions(
@@ -62,6 +75,11 @@ class AutoscalingActions(
     private val actions = KeyedActions<AutoscalingActionResult>(scope)
     val busy: StateFlow<Set<String>> get() = actions.busy
     val results: Flow<AutoscalingActionResult> get() = actions.results
+
+    private val _groupUpdates = MutableStateFlow<Map<String, NodeGroupUpdate>>(emptyMap())
+
+    /** The last update each node group's size change started, by group name, as last read. */
+    val groupUpdates: StateFlow<Map<String, NodeGroupUpdate>> = _groupUpdates.asStateFlow()
 
     /** [replicas] ≥ 0 pauses at that count; [SCALED_OBJECT_HOLD] holds, [SCALED_OBJECT_RESUME] resumes. */
     fun pause(row: ScaledObjectRow, replicas: Int) {
@@ -84,6 +102,37 @@ class AutoscalingActions(
             { AutoscalingActionResult(row.name, AutoscalingAction.BOUNDS, it.exceptionOrNull()?.uiText()) },
         ) { onChanged() }
     }
+
+    /** Changes the node group's size; the report read again shows it updating. Never retried. */
+    fun scaleNodeGroup(row: ManagedNodeGroupRow, desired: Int, min: Int, max: Int) {
+        actions.launch(
+            row.actionKey,
+            {
+                autoscaling.scaleNodeGroup(row.name, desired, min, max).also { u -> _groupUpdates.update { it + (row.name to u) } }
+            },
+            { AutoscalingActionResult(row.name, AutoscalingAction.GROUP_SIZE, it.exceptionOrNull()?.uiText()) },
+        ) { onChanged() }
+    }
+
+    /**
+     * Reads [group]'s update every 10 s while it is in progress and the caller (the open sheet)
+     * runs; its end reads the report again. A failed read ends it with the reason.
+     */
+    suspend fun followGroupUpdate(group: String) {
+        while (true) {
+            val current = _groupUpdates.value[group]?.takeIf { it.inProgress } ?: return
+            delay(NODE_GROUP_POLL_MS)
+            val read = cancellableCatching { autoscaling.nodeGroupUpdate(group, current.id) }
+            val next = read.getOrElse { e ->
+                current.copy(status = NODE_GROUP_UPDATE_UNREADABLE, errors = listOf(NodeGroupIssue(message = e.message.orEmpty())))
+            }
+            _groupUpdates.update { it + (group to next) }
+            if (!next.inProgress) {
+                onChanged()
+                return
+            }
+        }
+    }
 }
 
 @Composable
@@ -95,6 +144,7 @@ fun AutoscalingActionToasts(results: Flow<AutoscalingActionResult>) = ResultToas
                 AutoscalingAction.HOLD -> R.string.autoscaling_hold_done
                 AutoscalingAction.RESUME -> R.string.autoscaling_resume_done
                 AutoscalingAction.BOUNDS -> R.string.autoscaling_bounds_done
+                AutoscalingAction.GROUP_SIZE -> R.string.autoscaling_nodegroup_scale_started
             },
             r.name,
         )

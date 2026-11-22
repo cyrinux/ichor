@@ -1,6 +1,259 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Changing the size of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Modification de la taille de %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cambiando el tamaño de %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Größe von %@ wird geändert" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modifica della dimensione di %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Змінюється розмір %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在更改 %@ 的大小" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ のサイズを変更しています" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alterando o tamanho de %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Изменяется размер %@" } }
+      }
+    },
+    "Change size…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Modifier la taille…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cambiar tamaño…" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Größe ändern…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modifica dimensione…" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Змінити розмір…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更改大小…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サイズを変更…" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alterar tamanho…" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Изменить размер…" } }
+      }
+    },
+    "Only an active or degraded group can change its size: wait for this one to finish." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Seul un groupe actif ou dégradé peut changer de taille : attendez que celui-ci ait terminé." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Solo un grupo activo o degradado puede cambiar de tamaño: espera a que este termine." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nur eine aktive oder beeinträchtigte Gruppe kann ihre Größe ändern: Warten Sie, bis diese fertig ist." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Solo un gruppo attivo o degradato può cambiare dimensione: attendi che questo finisca." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Змінити розмір може лише активна або деградована група: дочекайтеся, поки ця завершить." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "只有处于活动或降级状态的组才能更改大小：请等待此组完成。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サイズを変更できるのはアクティブまたは劣化状態のグループだけです。このグループの完了を待ってください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Só um grupo ativo ou degradado pode mudar de tamanho: espere este terminar." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Изменить размер может только активная или деградированная группа: дождитесь, пока эта завершит." } }
+      }
+    },
+    "Update in progress: AWS is changing the group's size." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mise à jour en cours : AWS modifie la taille du groupe." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualización en curso: AWS está cambiando el tamaño del grupo." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisierung läuft: AWS ändert die Größe der Gruppe." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiornamento in corso: AWS sta modificando la dimensione del gruppo." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оновлення триває: AWS змінює розмір групи." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新进行中：AWS 正在更改该组的大小。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新中：AWS がグループのサイズを変更しています。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualização em andamento: a AWS está alterando o tamanho do grupo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Идёт обновление: AWS меняет размер группы." } }
+      }
+    },
+    "Update finished: the group has its new size." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mise à jour terminée : le groupe a sa nouvelle taille." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualización terminada: el grupo tiene su nuevo tamaño." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisierung abgeschlossen: Die Gruppe hat ihre neue Größe." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiornamento completato: il gruppo ha la nuova dimensione." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оновлення завершено: група має новий розмір." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新完成：该组已是新的大小。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新完了：グループは新しいサイズになりました。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualização concluída: o grupo está com o novo tamanho." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновление завершено: у группы новый размер." } }
+      }
+    },
+    "The update did not finish: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La mise à jour n'a pas abouti : %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La actualización no terminó: %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Aktualisierung wurde nicht abgeschlossen: %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'aggiornamento non è terminato: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оновлення не завершилося: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新未完成：%@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新は完了しませんでした：%@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A atualização não terminou: %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновление не завершилось: %@" } }
+      }
+    },
+    "Could not follow the update: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Impossible de suivre la mise à jour : %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudo seguir la actualización: %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Aktualisierung konnte nicht verfolgt werden: %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impossibile seguire l'aggiornamento: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не вдалося стежити за оновленням: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法跟踪更新：%@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新を追跡できませんでした：%@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não foi possível acompanhar a atualização: %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не удалось следить за обновлением: %@" } }
+      }
+    },
+    "Change the size of %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Modifier la taille de %@ ?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Cambiar el tamaño de %@?" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Größe von %@ ändern?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modificare la dimensione di %@?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Змінити розмір %@?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更改 %@ 的大小？" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ のサイズを変更しますか？" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alterar o tamanho de %@?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Изменить размер %@?" } }
+      }
+    },
+    "Change size" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Modifier la taille" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cambiar tamaño" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Größe ändern" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modifica dimensione" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Змінити розмір" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更改大小" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サイズを変更" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alterar tamanho" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Изменить размер" } }
+      }
+    },
+    "Desired %@, minimum %@, maximum %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Desired %1$@, minimum %2$@, maximum %3$@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Souhaitée %1$@, minimum %2$@, maximum %3$@." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Deseado %1$@, mínimo %2$@, máximo %3$@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gewünscht %1$@, Minimum %2$@, Maximum %3$@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Desiderata %1$@, minimo %2$@, massimo %3$@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Бажаний %1$@, мінімум %2$@, максимум %3$@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "期望 %1$@，最小 %2$@，最大 %3$@。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "希望 %1$@、最小 %2$@、最大 %3$@。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Desejado %1$@, mínimo %2$@, máximo %3$@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Желаемый %1$@, минимум %2$@, максимум %3$@." } }
+      }
+    },
+    "Scaling down removes nodes: their pods are evicted. AWS picks which nodes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réduire la taille supprime des nœuds : leurs pods sont évincés. AWS choisit lesquels." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Reducir el tamaño elimina nodos: sus pods se desalojan. AWS elige cuáles." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verkleinern entfernt Nodes: Ihre Pods werden verdrängt. AWS wählt, welche Nodes." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ridurre la dimensione rimuove nodi: i loro pod vengono espulsi. AWS sceglie quali." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зменшення видаляє вузли: їхні поди витісняються. Які саме, вирішує AWS." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "缩容会移除节点：其上的 Pod 会被驱逐。由 AWS 选择移除哪些节点。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "縮小するとノードが削除され、その Pod は退避されます。どのノードかは AWS が選びます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Reduzir remove nós: os pods deles são despejados. A AWS escolhe quais nós." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Уменьшение удаляет узлы: их поды вытесняются. Какие именно, выбирает AWS." } }
+      }
+    },
+    "Size of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Taille de %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tamaño de %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Größe von %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dimensione di %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Розмір %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 的大小" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ のサイズ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Tamanho de %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Размер %@" } }
+      }
+    },
+    "An autoscaler that manages this group may change its desired size back." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Un autoscaler qui gère ce groupe peut remettre sa taille souhaitée." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Un autoescalador que gestione este grupo puede volver a cambiar su tamaño deseado." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein Autoscaler, der diese Gruppe verwaltet, kann die gewünschte Größe wieder zurücksetzen." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Un autoscaler che gestisce questo gruppo può ripristinarne la dimensione desiderata." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Автомасштабувальник, що керує цією групою, може повернути її бажаний розмір." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "管理此组的自动扩缩器可能会把期望大小改回去。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このグループを管理するオートスケーラーが希望サイズを元に戻すことがあります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Um autoescalador que gerencie este grupo pode voltar a alterar o tamanho desejado." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Автомасштабировщик, управляющий этой группой, может вернуть её желаемый размер." } }
+      }
+    },
+    "Next" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Suivant" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Siguiente" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Weiter" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avanti" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Далі" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下一步" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "次へ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Próximo" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Далее" } }
+      }
+    },
+    "The minimum size must be 0 or more." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La taille minimale doit être de 0 ou plus." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El tamaño mínimo debe ser 0 o más." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Mindestgröße muss 0 oder mehr sein." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "La dimensione minima deve essere 0 o più." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Мінімальний розмір має бути 0 або більше." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最小大小必须为 0 或以上。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最小サイズは 0 以上にしてください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O tamanho mínimo deve ser 0 ou mais." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Минимальный размер должен быть 0 или больше." } }
+      }
+    },
+    "The maximum size must be at least 1." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La taille maximale doit être d'au moins 1." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El tamaño máximo debe ser al menos 1." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Höchstgröße muss mindestens 1 sein." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "La dimensione massima deve essere almeno 1." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Максимальний розмір має бути щонайменше 1." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最大大小必须至少为 1。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最大サイズは 1 以上にしてください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O tamanho máximo deve ser pelo menos 1." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Максимальный размер должен быть не меньше 1." } }
+      }
+    },
+    "The minimum size must not be above the maximum." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La taille minimale ne doit pas dépasser la maximale." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El tamaño mínimo no debe superar el máximo." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Mindestgröße darf die Höchstgröße nicht überschreiten." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "La dimensione minima non deve superare la massima." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Мінімальний розмір не може перевищувати максимальний." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最小大小不能大于最大大小。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最小サイズは最大サイズを超えないようにしてください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O tamanho mínimo não pode passar do máximo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Минимальный размер не должен превышать максимальный." } }
+      }
+    },
+    "The desired size must be between the minimum and the maximum." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La taille souhaitée doit être comprise entre le minimum et le maximum." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El tamaño deseado debe estar entre el mínimo y el máximo." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die gewünschte Größe muss zwischen Minimum und Maximum liegen." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "La dimensione desiderata deve essere tra il minimo e il massimo." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Бажаний розмір має бути між мінімумом і максимумом." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "期望大小必须介于最小值和最大值之间。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "希望サイズは最小と最大の間にしてください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O tamanho desejado deve estar entre o mínimo e o máximo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Желаемый размер должен быть между минимумом и максимумом." } }
+      }
+    },
     "Create the Instance at Scaleway" : {
       "extractionState" : "manual",
       "localizations" : {

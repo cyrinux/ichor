@@ -327,6 +327,16 @@ Part of the [Ichor documentation](../README.md#documentation).
   ScaledObject's name typed, like a scale to 0. Each button is off, with the reason, when the credentials may not patch
   that kind; the activity log keeps every change; the demo cluster refuses them.
 
+- **EKS node group size (Kubernetes → Autoscaling → a node group → Change size…):** the new
+  desired, minimum and maximum sizes are checked before any call (minimum 0 or more, maximum
+  at least 1, minimum not above maximum, desired between them), then the group's name is typed
+  to confirm. Scaling down removes nodes AWS picks, and their pods are evicted: the dialog says
+  so. A group already updating is refused. The call uses the cluster's own AWS sign-in; AWS'
+  refusal (`eks:UpdateNodegroupConfig`) is the only gate, since no Kubernetes verb is involved.
+  A request that got no answer is never retried (it may have been applied). The activity log
+  keeps one entry per attempt (group and sizes, never the credentials); the demo cluster
+  refuses it.
+
 - **META keys (node menu → Machine config → META, `os:admin`):**
   - **What they are:** the boot-time values Talos reads before the machine config, such as the
     network config of a metal node (0x0a). This is the last-resort fix for a node that cannot boot

@@ -15,12 +15,17 @@ type fakeEKSNodeGroups struct {
 	mu     sync.Mutex
 	calls  []string
 	forbid map[string]bool
+	// posts are the bodies of the update-config calls; postStatus answers them when set
+	// (else an update id); updates are the DescribeUpdate answers by update id.
+	posts      []string
+	postStatus int
+	updates    map[string]string
 }
 
 func newFakeEKSNodeGroups(t *testing.T, key string, forbid ...string) *fakeEKSNodeGroups {
 	t.Helper()
 
-	f := &fakeEKSNodeGroups{forbid: map[string]bool{}}
+	f := &fakeEKSNodeGroups{forbid: map[string]bool{}, updates: map[string]string{}}
 	for _, p := range forbid {
 		f.forbid[p] = true
 	}
@@ -43,6 +48,10 @@ func newFakeEKSNodeGroups(t *testing.T, key string, forbid ...string) *fakeEKSNo
 			w.WriteHeader(http.StatusForbidden)
 			_, _ = io.WriteString(w, `{"message":"User is not authorized to perform: eks:Something"}`)
 
+			return
+		}
+
+		if f.answerUpdates(w, r, path) {
 			return
 		}
 
@@ -74,6 +83,43 @@ func newFakeEKSNodeGroups(t *testing.T, key string, forbid ...string) *fakeEKSNo
 	t.Cleanup(func() { eksEndpoint = old })
 
 	return f
+}
+
+// answerUpdates answers UpdateNodegroupConfig and DescribeUpdate; false for any other call.
+func (f *fakeEKSNodeGroups) answerUpdates(w http.ResponseWriter, r *http.Request, path string) bool {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	if r.Method == http.MethodPost && strings.HasSuffix(path, "/update-config") {
+		body, _ := io.ReadAll(r.Body)
+		f.posts = append(f.posts, string(body))
+
+		if f.postStatus != 0 {
+			w.WriteHeader(f.postStatus)
+			_, _ = io.WriteString(w, `{"message":"Nodegroup cannot be updated as it is currently not in Active State"}`)
+
+			return true
+		}
+
+		_, _ = io.WriteString(w, `{"update":{"id":"0f4c2a8e-update","status":"InProgress","type":"ConfigUpdate","errors":[]}}`)
+
+		return true
+	}
+
+	if id, ok := strings.CutPrefix(path, "clusters/prod/updates/"); ok {
+		answer, found := f.updates[id]
+		if !found || r.URL.Query().Get("nodegroupName") == "" {
+			http.NotFound(w, r)
+
+			return true
+		}
+
+		_, _ = io.WriteString(w, answer)
+
+		return true
+	}
+
+	return false
 }
 
 func (f *fakeEKSNodeGroups) callCount() int {

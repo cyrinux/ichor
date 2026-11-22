@@ -44,6 +44,7 @@ import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubeTopPods
 import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.NetMap
+import name.levis.ichor.model.NodeGroupUpdate
 import name.levis.ichor.model.NodeGroupsReport
 import name.levis.ichor.model.LogEntry
 import name.levis.ichor.model.OnCallIncidents
@@ -70,6 +71,11 @@ class ContractTest {
             assertEquals(listOf("gpu", "system"), it.groups.map { g -> g.name })
             assertTrue(it.groups[0].atMax)
             assertEquals("AsgInstanceLaunchFailures", it.groups[0].issues.first().code)
+        },
+        "kube-nodegroup-update" to Row(NodeGroupUpdate.serializer()) {
+            assertEquals("Failed", it.status)
+            assertEquals("Could not launch On-Demand Instances", it.failure)
+            assertEquals(listOf("eks-system-asg"), it.errors.first().resourceIds)
         },
         "node-files" to Row(NodeDirListing.serializer()) {
             assertEquals(listOf("dir", "file", "link"), it.entries.map { e -> e.type })

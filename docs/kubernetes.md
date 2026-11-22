@@ -640,7 +640,9 @@ limit?" in two taps:
   minimum and maximum, Kubernetes version and AMI release, capacity type, instance types, the
   cluster's nodes in it, and AWS' health issues. A group at its maximum, with a health issue or
   not ACTIVE is listed under Needs attention. Read with the cluster's own AWS sign-in
-  ([IAM actions](clusters.md)); not shown on other clusters.
+  ([IAM actions](clusters.md)); not shown on other clusters. **Change size…** on a group sets its
+  desired, minimum and maximum size after its name is typed, then follows the update AWS runs
+  until it ends.
 
 A group the cluster does not run (KEDA, VPA, Karpenter) collapses to one "not installed" line;
 credentials that cannot read one group show the reason in that group's header only.

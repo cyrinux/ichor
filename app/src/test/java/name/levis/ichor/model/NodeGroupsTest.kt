@@ -48,4 +48,34 @@ class NodeGroupsTest {
         // Cluster-level: a namespace filter keeps every group.
         assertEquals(3, report.filtered("shop", "").nodeGroups.groups.size)
     }
+
+    @Test
+    fun sizeProblemsMirrorTheGoRefusals() {
+        assertEquals(NodeGroupSizeProblem.MIN_NEGATIVE, nodeGroupSizeProblem(1, -1, 3))
+        assertEquals(NodeGroupSizeProblem.MAX_TOO_LOW, nodeGroupSizeProblem(0, 0, 0))
+        assertEquals(NodeGroupSizeProblem.MIN_ABOVE_MAX, nodeGroupSizeProblem(3, 4, 3))
+        assertEquals(NodeGroupSizeProblem.DESIRED_OUTSIDE, nodeGroupSizeProblem(1, 2, 4))
+        assertEquals(NodeGroupSizeProblem.DESIRED_OUTSIDE, nodeGroupSizeProblem(5, 2, 4))
+        assertEquals(null, nodeGroupSizeProblem(0, 0, 4))
+        assertEquals(null, nodeGroupSizeProblem(4, 2, 4))
+    }
+
+    @Test
+    fun updateStatusMapping() {
+        assertTrue(NodeGroupUpdate(id = "u", status = NODE_GROUP_UPDATE_IN_PROGRESS).inProgress)
+        assertEquals(null, NodeGroupUpdate(id = "u", status = NODE_GROUP_UPDATE_IN_PROGRESS).failure)
+        assertEquals(null, NodeGroupUpdate(id = "u", status = NODE_GROUP_UPDATE_SUCCESSFUL).failure)
+        val failed = NodeGroupUpdate(id = "u", status = "Failed", errors = listOf(NodeGroupIssue(code = "X", message = "no capacity")))
+        assertEquals("no capacity", failed.failure)
+        // No error message: the status itself says it ended.
+        assertEquals("Cancelled", NodeGroupUpdate(id = "u", status = "Cancelled").failure)
+    }
+
+    @Test
+    fun onlyActiveOrDegradedGroupsChangeSize() {
+        assertTrue(ManagedNodeGroupRow(name = "a", status = NODE_GROUP_ACTIVE).canChangeSize)
+        assertTrue(ManagedNodeGroupRow(name = "b", status = NODE_GROUP_DEGRADED, atMax = true).canChangeSize)
+        assertFalse(ManagedNodeGroupRow(name = "c", status = "UPDATING", updating = true).canChangeSize)
+        assertFalse(ManagedNodeGroupRow(name = "d", status = "CREATING").canChangeSize)
+    }
 }

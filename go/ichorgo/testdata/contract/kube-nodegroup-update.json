@@ -1,0 +1,14 @@
+{
+  "errors": [
+    {
+      "code": "AsgInstanceLaunchFailures",
+      "message": "Could not launch On-Demand Instances",
+      "resourceIds": [
+        "eks-system-asg"
+      ]
+    }
+  ],
+  "id": "0f4c2a8e-update",
+  "status": "Failed",
+  "type": "ConfigUpdate"
+}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -622,6 +623,30 @@ var dataCommands = []command{
 		// kube-nodegroups: the EKS managed node groups, with the cluster's own AWS sign-in
 		// (read-only; installed false on a cluster that does not sign in through EKS).
 		return ichorgo.KubeNodeGroups(e.cfg, e.context, e.kubeServer)
+	}},
+	{name: "kube-nodegroup-scale", args: "GROUP DESIRED MIN MAX -yes", run: func(e env) (string, error) {
+		// kube-nodegroup-scale: change an EKS managed node group's size. Mutates the cluster's
+		// AWS account: refused without -yes.
+		if flag.NArg() != 6 || flag.Arg(5) != "-yes" {
+			return "", errors.New("kube-nodegroup-scale GROUP DESIRED MIN MAX -yes: it changes a real node group")
+		}
+
+		sizes := make([]int, 3)
+
+		for i := range sizes {
+			n, err := strconv.Atoi(flag.Arg(2 + i))
+			if err != nil {
+				return "", err
+			}
+
+			sizes[i] = n
+		}
+
+		return ichorgo.KubeNodeGroupScale(e.cfg, e.context, e.kubeServer, flag.Arg(1), sizes[0], sizes[1], sizes[2])
+	}},
+	{name: "kube-nodegroup-update", args: "GROUP UPDATE_ID", run: func(e env) (string, error) {
+		// kube-nodegroup-update: an EKS node group update's status (read-only).
+		return ichorgo.KubeNodeGroupUpdate(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
 	}},
 	{name: "hubble", args: "[SECONDS] [all|drops] [NAMESPACE [POD]]", run: func(e env) (out string, err error) {
 		// hubble [SECONDS] [all|drops] [NAMESPACE [POD]]: read-only exec in the cilium agents.

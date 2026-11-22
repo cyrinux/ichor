@@ -44,6 +44,13 @@ struct NodeGroupRowView: View {
 /// Every field of one managed node group, and AWS' health issues with the resources they name.
 struct NodeGroupDetailSheet: View {
     let row: ManagedNodeGroupRow
+    /// Reads the report again: after a size change starts and when its update ends.
+    var onChanged: () async -> Void = {}
+
+    @Environment(AppModel.self) private var model
+    @State private var scaling = false
+    /// The update the last size change started, as last read; followed while the sheet is open.
+    @State private var update: NodeGroupUpdate?
 
     var body: some View {
         AutoscalingSheetShell {
@@ -70,6 +77,7 @@ struct NodeGroupDetailSheet: View {
                     field("Disk", NodeGroupText.disk(row.diskSize))
                 }
             }
+            sizeSection
             Section("Health issues") {
                 if row.issues.isEmpty {
                     Text("none").foregroundStyle(.secondary)
@@ -87,6 +95,62 @@ struct NodeGroupDetailSheet: View {
                     }
                 }
             }
+        }
+    }
+
+    /// "Change size…" and the update it started: in progress, done, or why it failed.
+    private var sizeSection: some View {
+        Section("Size") {
+            Button("Change size…") { scaling = true }
+                .disabled(!row.canChangeSize || update?.inProgress == true)
+            if !row.canChangeSize {
+                Text("Only an active or degraded group can change its size: wait for this one to finish.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+            if let update {
+                updateRow(update)
+                    // On a row, not the Section: a List gives a Section's modifiers to each row.
+                    .task(id: update.id) { await follow() }
+            }
+        }
+        .sheet(isPresented: $scaling) {
+            NodeGroupScaleSheet(row: row) { started in
+                update = started
+                await onChanged()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func updateRow(_ update: NodeGroupUpdate) -> some View {
+        if update.inProgress {
+            Label("Update in progress: AWS is changing the group's size.", systemImage: "arrow.triangle.2.circlepath")
+                .font(.footnote)
+        } else if update.successful {
+            Text("Update finished: the group has its new size.").font(.footnote).foregroundStyle(.secondary)
+        } else {
+            let failure = update.failure ?? ""
+            Text(
+                update.unreadable
+                    ? String(localized: "Could not follow the update: \(failure)")
+                    : String(localized: "The update did not finish: \(failure)")
+            )
+            .font(.footnote).foregroundStyle(Color.statusBad)
+        }
+    }
+
+    /// Reads the update every 10 s while it is in progress and the sheet is open; its end reads
+    /// the report again. A failed read ends it with the reason.
+    private func follow() async {
+        while let current = update, current.inProgress, let client = model.client {
+            try? await Task.sleep(for: .seconds(10))
+            if Task.isCancelled { return }
+            do {
+                update = try await client.nodeGroupUpdate(group: row.name, id: current.id)
+            } catch {
+                update = current.unreadable(error.localizedDescription)
+            }
+            if update?.inProgress != true { await onChanged() }
         }
     }
 

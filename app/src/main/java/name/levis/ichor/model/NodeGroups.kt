@@ -71,3 +71,50 @@ fun NodeGroupsReport.filtered(query: String): NodeGroupsReport {
         },
     )
 }
+
+// Mirrors go/ichorgo/kube_nodegroups_eks_scale.go: a group's size changed from the phone
+// (UpdateNodegroupConfig) and the update AWS runs for it (DescribeUpdate).
+
+/** AWS' statuses of an update; anything but in progress is the end of it. */
+const val NODE_GROUP_UPDATE_IN_PROGRESS = "InProgress"
+const val NODE_GROUP_UPDATE_SUCCESSFUL = "Successful"
+
+/** The app's own status of an update it could not read any more (the error says why). */
+const val NODE_GROUP_UPDATE_UNREADABLE = "Unreadable"
+
+/** The largest size the dialog offers (EKS' own limit per group is set by quota). */
+const val NODE_GROUP_MAX_SIZE = 450
+
+/** EKS' status of a group whose instances do not all launch: its size may still change. */
+const val NODE_GROUP_DEGRADED = "DEGRADED"
+
+/** The update AWS runs on a group: InProgress, Failed, Cancelled or Successful, and why it failed. */
+@Serializable
+data class NodeGroupUpdate(
+    val id: String = "",
+    val status: String = "",
+    val type: String = "",
+    val errors: List<NodeGroupIssue> = emptyList(),
+) {
+    val inProgress: Boolean get() = status == NODE_GROUP_UPDATE_IN_PROGRESS
+    val successful: Boolean get() = status == NODE_GROUP_UPDATE_SUCCESSFUL
+
+    /** Why it failed, was cancelled or could not be read: the first error's message, else the status. */
+    val failure: String?
+        get() = if (inProgress || successful) null else errors.firstOrNull()?.message.orEmpty().ifEmpty { status }
+}
+
+/** Why a desired / minimum / maximum size is refused before any call (Go: validateNodeGroupSize). */
+enum class NodeGroupSizeProblem { MIN_NEGATIVE, MAX_TOO_LOW, MIN_ABOVE_MAX, DESIRED_OUTSIDE }
+
+fun nodeGroupSizeProblem(desired: Int, min: Int, max: Int): NodeGroupSizeProblem? = when {
+    min < 0 -> NodeGroupSizeProblem.MIN_NEGATIVE
+    max < 1 -> NodeGroupSizeProblem.MAX_TOO_LOW
+    min > max -> NodeGroupSizeProblem.MIN_ABOVE_MAX
+    desired !in min..max -> NodeGroupSizeProblem.DESIRED_OUTSIDE
+    else -> null
+}
+
+/** Active or degraded: a group already updating (or being created or deleted) may not change its size. */
+val ManagedNodeGroupRow.canChangeSize: Boolean
+    get() = !updating && (status == NODE_GROUP_ACTIVE || status == NODE_GROUP_DEGRADED)

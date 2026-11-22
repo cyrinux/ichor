@@ -110,6 +110,7 @@ fun AutoscalingScreen(
     var open by remember { mutableStateOf<Open?>(null) }
     val loaded = (state as? UiState.Loaded)?.data
     val busy by vm.actions.busy.collectAsStateWithLifecycle()
+    val groupUpdates by vm.actions.groupUpdates.collectAsStateWithLifecycle()
     AutoscalingActionToasts(vm.actions.results)
 
     loaded?.let { report ->
@@ -138,7 +139,19 @@ fun AutoscalingScreen(
             is Open.ScaledJob -> ScaledJobSheet(o.row, onDismiss = { open = null })
             is Open.Vpa -> VpaSheet(o.row, onDismiss = { open = null }, onObject = { open = null; onObject(it) })
             is Open.Pool -> NodePoolSheet(o.row, o.claims, onDismiss = { open = null }, onObject = { open = null; onObject(it) })
-            is Open.NodeGroup -> NodeGroupSheet(report.nodeGroups.groups.firstOrNull { it.key == o.row.key } ?: o.row, onDismiss = { open = null })
+            is Open.NodeGroup -> {
+                val row = report.nodeGroups.groups.firstOrNull { it.key == o.row.key } ?: o.row
+                NodeGroupSheet(
+                    row,
+                    onDismiss = { open = null },
+                    scaling = NodeGroupScaling(
+                        update = groupUpdates[row.name],
+                        busy = row.actionKey in busy,
+                        onScale = { desired, min, max -> vm.actions.scaleNodeGroup(row, desired, min, max) },
+                        onFollow = { vm.actions.followGroupUpdate(row.name) },
+                    ),
+                )
+            }
             null -> {}
         }
     }

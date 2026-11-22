@@ -40,6 +40,15 @@ var contractFixtures = []struct {
 	{"kube-cronjobs", func() any { return kubeCronJobList{CronJobs: demoCronJobs(contractNow)} }},
 	{"kube-nodes", func() any { return demoEKSNodes() }},
 	{"kube-nodegroups", func() any { return demoNodeGroups(contractNow) }},
+	{"kube-nodegroup-update", func() any {
+		return nodeGroupUpdate{
+			ID: "0f4c2a8e-update", Status: "Failed", Type: "ConfigUpdate",
+			Errors: []nodeGroupIssue{{
+				Code: "AsgInstanceLaunchFailures", Message: "Could not launch On-Demand Instances",
+				ResourceIDs: []string{"eks-system-asg"},
+			}},
+		}
+	}},
 	// A node directory with each entry type (fixed times: the demo's follow the clock).
 	{"node-files", func() any {
 		return buildNodeDirListing("/var/log", []*machineapi.FileInfo{
