@@ -6618,4 +6618,27 @@
     <string name="secrets_bundle_failed">シークレットバンドルは書き出されませんでした: %1$s</string>
     <string name="secrets_bundle_open_failed">選んだファイルに書き込めません。</string>
     <string name="secrets_bundle_new_cluster_help">クラスターのシークレット（secrets.yaml）のコピーを保管しておくと、コンピューターで talosctl を使って構成を作れます。唯一のコントロールプレーンを失う前の備えにもなります。</string>
+    <string name="scaleway_title">Scaleway でインスタンスを作成</string>
+    <string name="scaleway_howto">1. コピーするメンバーを選び、新しいノードのホスト名とインストールディスクを指定します。\n2. API キーを追加し、Ichor が表示する IAM ポリシーをそのアプリケーションに付与します。\n3. Scaleway 用の Talos イメージをコンピューターからプロジェクトに一度アップロードします。\n4. ゾーン、Talos イメージ、タイプ、セキュリティグループを選んで作成します。Ichor は先に費用を表示し、ノードが参加するまで追跡します。</string>
+    <string name="scaleway_howto_omni">1. API キーを追加し、Ichor が表示する IAM ポリシーをそのアプリケーションに付与します。\n2. Scaleway 用の Talos イメージをコンピューターからプロジェクトに一度アップロードします。\n3. インスタンスに名前を付け、ゾーン、Talos イメージ、タイプ、セキュリティグループを選びます。\n4. 作成します。Ichor は先に費用を表示し、マシンが Omni に現れるまで追跡します。クラスターに割り当ててください。</string>
+    <string name="scaleway_add_key">Scaleway API キーを追加</string>
+    <string name="scaleway_remove">このキーを削除</string>
+    <string name="scaleway_key_warning">API キーのシークレットは、取り消されるまで IAM ポリシーが許可する操作を実行できます。このデバイスに封印して保存され、バックアップには含まれません。</string>
+    <string name="scaleway_policy_hint">Scaleway でこの IAM ポリシーをキーのアプリケーションに付与してください。1 つのプロジェクトに対する Instances と Block Storage の権限セットです。</string>
+    <string name="scaleway_access_key">アクセスキー</string>
+    <string name="scaleway_secret_key">シークレットキー</string>
+    <string name="scaleway_project">プロジェクト ID</string>
+    <string name="scaleway_project_hint">空欄ならキーのデフォルトプロジェクトです。</string>
+    <string name="scaleway_check_ok">プロジェクト %1$s でインスタンスを作成できます。</string>
+    <string name="scaleway_check_no">インスタンスを作成できません。ポリシーの権限セットを付与してください。</string>
+    <string name="scaleway_check_unknown">プロジェクト %1$s にサインインしました。インスタンスを作成できるかは実行時にわかります。</string>
+    <string name="scaleway_zone">ゾーン</string>
+    <string name="scaleway_type">タイプ</string>
+    <string name="scaleway_arch_hint">%1$s イメージを起動できるタイプのみ表示しています。</string>
+    <string name="scaleway_block_only">%1$s · Block Storage</string>
+    <string name="scaleway_security_group">セキュリティグループ</string>
+    <string name="scaleway_cost_unknown">価格を取得できません。Scaleway の料金表を確認してください。</string>
+    <string name="scaleway_confirm_title">Scaleway に %1$s を作成しますか?</string>
+    <string name="scaleway_confirm_body">課金対象のインスタンス (%2$s の %1$s) とデータボリュームを作成します。ユーザーデータはクラスターのシークレットまたは Omni の参加トークンとともに Scaleway に送られます。実行が失敗するとインスタンスとそのボリュームは削除されます。</string>
+    <string name="scaleway_stop_body">%1$s はボリュームごと Scaleway で削除されます。すでに応答した control plane は残ります。先にその etcd メンバーを削除する必要があります。</string>
 </resources>

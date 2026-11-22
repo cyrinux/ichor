@@ -7016,4 +7016,27 @@
     <string name="secrets_bundle_failed">Набір секретів не експортовано: %1$s</string>
     <string name="secrets_bundle_open_failed">Не вдається записати вибраний файл.</string>
     <string name="secrets_bundle_new_cluster_help">Збережіть копію секретів кластера (secrets.yaml), щоб створювати його конфігурації на комп\'ютері через talosctl, або на випадок втрати єдиного control plane.</string>
+    <string name="scaleway_title">Створити інстанс у Scaleway</string>
+    <string name="scaleway_howto">1. Виберіть учасника для копіювання, потім ім\'я хоста й диск встановлення нового вузла.\n2. Додайте API-ключ і прикріпіть до його застосунку політику IAM, яку показує Ichor.\n3. Один раз завантажте образ Talos для Scaleway у проєкт з комп\'ютера.\n4. Виберіть зону, образ Talos, тип і групу безпеки, потім створіть його: Ichor спершу показує вартість і стежить, доки вузол не приєднається.</string>
+    <string name="scaleway_howto_omni">1. Додайте API-ключ і прикріпіть до його застосунку політику IAM, яку показує Ichor.\n2. Один раз завантажте образ Talos для Scaleway у проєкт з комп\'ютера.\n3. Назвіть інстанс, потім виберіть зону, образ Talos, тип і групу безпеки.\n4. Створіть його: Ichor спершу показує вартість, потім стежить, доки машина не з\'явиться в Omni. Призначте її кластеру.</string>
+    <string name="scaleway_add_key">Додати API-ключ Scaleway</string>
+    <string name="scaleway_remove">Вилучити цей ключ</string>
+    <string name="scaleway_key_warning">Секрет API-ключа може робити те, що дозволяє його політика IAM, доки ключ не відкликано. Він лишається запечатаним на цьому пристрої й не потрапляє до резервних копій.</string>
+    <string name="scaleway_policy_hint">Прикріпіть цю політику IAM до застосунку ключа в Scaleway: набори дозволів Instances і Block Storage на одному проєкті.</string>
+    <string name="scaleway_access_key">Ключ доступу</string>
+    <string name="scaleway_secret_key">Секретний ключ</string>
+    <string name="scaleway_project">ID проєкту</string>
+    <string name="scaleway_project_hint">Порожньо для типового проєкту ключа.</string>
+    <string name="scaleway_check_ok">Він може створювати інстанси в проєкті %1$s.</string>
+    <string name="scaleway_check_no">Він не може створювати інстанси: прикріпіть набори дозволів політики.</string>
+    <string name="scaleway_check_unknown">Вхід у проєкт %1$s виконано. Чи може він створювати інстанси, буде видно під час спроби.</string>
+    <string name="scaleway_zone">Зона</string>
+    <string name="scaleway_type">Тип</string>
+    <string name="scaleway_arch_hint">Показано лише типи, що завантажують образ %1$s.</string>
+    <string name="scaleway_block_only">%1$s · Block Storage</string>
+    <string name="scaleway_security_group">Група безпеки</string>
+    <string name="scaleway_cost_unknown">Ціна недоступна: дивіться прайс-лист Scaleway.</string>
+    <string name="scaleway_confirm_title">Створити %1$s у Scaleway?</string>
+    <string name="scaleway_confirm_body">Це створює платний інстанс (%1$s у %2$s) і том даних. Його дані користувача йдуть до Scaleway разом із секретами кластера або токеном приєднання Omni. Невдалий запуск видаляє інстанс і його томи.</string>
+    <string name="scaleway_stop_body">%1$s видаляється в Scaleway разом із томами. Control plane, що вже відповів, зберігається: спершу треба вилучити його учасника etcd.</string>
 </resources>

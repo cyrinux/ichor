@@ -31,6 +31,7 @@ import name.levis.ichor.model.JoinProgress
 import name.levis.ichor.model.MadeImage
 import name.levis.ichor.model.OVHCreateSpec
 import name.levis.ichor.model.OmniAllocateSpec
+import name.levis.ichor.model.ScalewayCreateSpec
 import name.levis.ichor.ui.FollowedRun
 
 /** What the user confirmed for the new node: the maintenance [address] and step 2's choices. */
@@ -53,6 +54,8 @@ data class JoinRequest(
     val azure: AzureCreateSpec? = null,
     /** A Compute Engine VM to create at Google Cloud for the node, likewise. */
     val gcp: GCPCreateSpec? = null,
+    /** An Instance to create at Scaleway for the node, likewise. */
+    val scaleway: ScalewayCreateSpec? = null,
     /** The cloud machine joins Omni, not the cluster directly. */
     val omni: Boolean = false,
     /** No node at all: a throwaway server becomes a Talos snapshot ([hostname] only labels the run). */
@@ -85,7 +88,8 @@ data class JoinRequest(
 
     /** A machine to create at a cloud provider. */
     val cloud: Boolean
-        get() = hetzner != null || ovh != null || aws != null || azure != null || gcp != null || hetznerCluster != null
+        get() = hetzner != null || ovh != null || aws != null || azure != null || gcp != null || scaleway != null ||
+            hetznerCluster != null
 
     /** What the run makes when it makes a Talos image instead of a node; null for a node. */
     val imageKind: ImageRunKind?
@@ -178,6 +182,7 @@ class JoinManager(
                     ?: request.aws?.let { lifecycle.awsCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.azure?.let { lifecycle.azureCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: request.gcp?.let { lifecycle.gcpCreate(providerToken, it, stopped.filter { s -> s }) }
+                    ?: request.scaleway?.let { lifecycle.scalewayCreate(providerToken, it, stopped.filter { s -> s }) }
                     ?: lifecycle.joinNode(request.address, request.template, request.role, request.hostname, request.disk, request.staticAddress, request.replacing, stopped.filter { it })
                 events
                     .collect { event ->

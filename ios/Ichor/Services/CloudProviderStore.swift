@@ -13,6 +13,8 @@ enum CloudProviderStore {
     static let azure = "azure"
     /// Keyed by the service account key's project id; the value is the credential JSON (key, project, zone).
     static let gcp = "gcp"
+    /// Keyed by the label the person gives; the value is the API key's credential JSON, zone included.
+    static let scaleway = "scaleway"
 
     /// The projects with a token, sorted.
     static func projects(provider: String) -> [String] {

@@ -190,6 +190,11 @@ fun BootMediaScreen(
                             if (omni) OmniLabelsCard(labelsVm)
                             CloudUserDataCard(omni = omni, omniLabelsJson = labelsJson, create = chosen, onAllocate = onAllocate)
                         }
+                        CloudProvider.SCALEWAY -> {
+                            Text(stringResource(if (omni) R.string.scaleway_howto_omni else R.string.scaleway_howto), style = MaterialTheme.typography.bodyMedium)
+                            if (omni) OmniLabelsCard(labelsVm)
+                            CloudUserDataCard(omni = omni, omniLabelsJson = labelsJson, create = chosen, onAllocate = onAllocate)
+                        }
                         // A server at a cloud provider boots its own image and reads the config as user data.
                         else -> {
                             if (omni) OmniLabelsCard(labelsVm)

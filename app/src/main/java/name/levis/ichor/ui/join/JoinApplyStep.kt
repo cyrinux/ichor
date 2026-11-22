@@ -221,6 +221,7 @@ internal fun JoinRunView(run: JoinRunState, onStop: () -> Unit, onOpenNode: (() 
                     run.request.aws != null -> R.string.aws_stop_body
                     run.request.azure != null -> R.string.azure_stop_body
                     run.request.gcp != null -> R.string.gcp_stop_body
+                    run.request.scaleway != null -> R.string.scaleway_stop_body
                     cloud -> R.string.hetzner_stop_body
                     else -> R.string.join_run_stop_body
                 },

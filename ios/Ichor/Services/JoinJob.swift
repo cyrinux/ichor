@@ -162,6 +162,7 @@ final class JoinJob {
         if let spec = request.aws { return client.startAWSCreate(spec, credential: providerToken) }
         if let spec = request.azure { return client.startAzureCreate(spec, credential: providerToken) }
         if let spec = request.gcp { return client.startGCPCreate(spec, credential: providerToken) }
+        if let spec = request.scaleway { return client.startScalewayCreate(spec, credential: providerToken) }
         return client.startNodeJoin(request)
     }
 

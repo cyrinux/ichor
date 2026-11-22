@@ -6758,4 +6758,27 @@
     <string name="secrets_bundle_failed">El paquete de secretos no se exportó: %1$s</string>
     <string name="secrets_bundle_open_failed">No se puede escribir el archivo elegido.</string>
     <string name="secrets_bundle_new_cluster_help">Guarda una copia de los secretos del clúster (secrets.yaml) para generar sus configs en un ordenador con talosctl, o antes de perder su único control plane.</string>
+    <string name="scaleway_title">Crear la instancia en Scaleway</string>
+    <string name="scaleway_howto">1. Elige un miembro que copiar y luego el nombre de host y el disco de instalación del nuevo nodo.\n2. Añade una clave de API y asocia a su aplicación la política IAM que muestra Ichor.\n3. Sube una vez la imagen de Talos para Scaleway al proyecto, desde un ordenador.\n4. Elige una zona, la imagen de Talos, un tipo y un grupo de seguridad, y créala: Ichor muestra primero el coste y la sigue hasta que el nodo se une.</string>
+    <string name="scaleway_howto_omni">1. Añade una clave de API y asocia a su aplicación la política IAM que muestra Ichor.\n2. Sube una vez la imagen de Talos para Scaleway al proyecto, desde un ordenador.\n3. Pon nombre a la instancia y elige una zona, la imagen de Talos, un tipo y un grupo de seguridad.\n4. Créala: Ichor muestra primero el coste y la sigue hasta que la máquina aparece en Omni. Asígnala al clúster.</string>
+    <string name="scaleway_add_key">Añadir una clave de API de Scaleway</string>
+    <string name="scaleway_remove">Quitar esta clave</string>
+    <string name="scaleway_key_warning">El secreto de una clave de API puede hacer lo que permite su política IAM hasta que se revoque. Queda sellado en este dispositivo y no está en las copias de seguridad.</string>
+    <string name="scaleway_policy_hint">Asocia esta política IAM a la aplicación de la clave en Scaleway: los conjuntos de permisos de Instances y Block Storage, en un solo proyecto.</string>
+    <string name="scaleway_access_key">Clave de acceso</string>
+    <string name="scaleway_secret_key">Clave secreta</string>
+    <string name="scaleway_project">ID del proyecto</string>
+    <string name="scaleway_project_hint">Vacío para el proyecto predeterminado de la clave.</string>
+    <string name="scaleway_check_ok">Puede crear instancias en el proyecto %1$s.</string>
+    <string name="scaleway_check_no">No puede crear instancias: asocia los conjuntos de permisos de la política.</string>
+    <string name="scaleway_check_unknown">Conectado al proyecto %1$s. Si puede crear instancias se verá al intentarlo.</string>
+    <string name="scaleway_zone">Zona</string>
+    <string name="scaleway_type">Tipo</string>
+    <string name="scaleway_arch_hint">Solo se listan los tipos que arrancan una imagen %1$s.</string>
+    <string name="scaleway_block_only">%1$s · Block Storage</string>
+    <string name="scaleway_security_group">Grupo de seguridad</string>
+    <string name="scaleway_cost_unknown">Precio no disponible: consulta la lista de precios de Scaleway.</string>
+    <string name="scaleway_confirm_title">¿Crear %1$s en Scaleway?</string>
+    <string name="scaleway_confirm_body">Esto crea una instancia de pago (%1$s en %2$s) y un volumen de datos. Sus datos de usuario van a Scaleway con los secretos del clúster o el token de unión de Omni. Una ejecución fallida borra la instancia y sus volúmenes.</string>
+    <string name="scaleway_stop_body">%1$s se borra en Scaleway con sus volúmenes. Un control plane que ya respondió se conserva: primero debe irse su miembro de etcd.</string>
 </resources>

@@ -58,5 +58,7 @@ class CloudProviderStore(private val file: SealedValue) {
         const val AZURE = "azure"
         /** Keyed by the service account key's project id; the value is the credential JSON (key, project, zone). */
         const val GCP = "gcp"
+        /** Keyed by the label the person gives; the value is the API key's credential JSON, zone included. */
+        const val SCALEWAY = "scaleway"
     }
 }

@@ -85,6 +85,11 @@ var contractFixtures = []struct {
 	{"helm-release", contractHelmRelease},
 	{"helm-rollback-plan", contractHelmRollbackPlan},
 	{"helm-rollback-progress", contractHelmRollbackProgress},
+	// The Scaleway create card: the demo's options, and a key's test with invented ids.
+	{"scaleway-options", func() any { return demoScalewayOptions() }},
+	{"scaleway-test", func() any {
+		return scwTestResult{Project: "11111111-1111-1111-1111-111111111111", Zone: scwDefaultZone, CanCreate: true, Checked: true, Account: "SCWEXAMPLEACCESSKEY0"}
+	}},
 	{"update-proposal-plan", contractUpdatePlan},
 	{"diag-entries", contractDiagEntries},
 	// A coloured logfmt line: clean fields and its spans.

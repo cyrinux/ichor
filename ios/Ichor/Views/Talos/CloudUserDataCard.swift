@@ -71,6 +71,10 @@ struct CloudUserDataCard: View {
                 OVHCreateSection(
                     omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
                     labels: omni ? omniLabels : "", path: $path)
+            case .scaleway:
+                ScalewayCreateSection(
+                    omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
+                    labels: omni ? omniLabels : "", path: $path)
             default:
                 HetznerCreateSection(
                     omni: omni, template: template?.node ?? "", role: role, hostname: name, disk: installDisk,
