@@ -56,7 +56,7 @@ var demoWorkloads = []struct {
 		{"redis", "docker.io/library/redis:8.2"},
 	}},
 	{3, "default", "uptime-kuma-0", [][2]string{{"app", "docker.io/louislam/uptime-kuma:latest"}}},
-	{4, "demo", "hello-ichor", [][2]string{{"web", "nginx:1.27"}}},
+	{4, "demo", "hello-ichor-7d9c5-fghij", [][2]string{{"web", "nginx:1.27"}}},
 	{3, "networking", "whoami-6d4f-p2x8k", [][2]string{{"whoami", "docker.io/traefik/whoami"}}},
 	{3, "tools", "it-backup-5c8d-rx2k9", [][2]string{{"backup", "registry.example.com/internal/nightly-backup:2025.10"}}},
 }

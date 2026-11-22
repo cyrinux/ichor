@@ -126,7 +126,7 @@ func TestKubeNodePodsPageArgs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(page.Pods) != 3 || !page.Complete {
+	if len(page.Pods) != 8 || !page.Complete {
 		t.Fatalf("demo page %s", out)
 	}
 

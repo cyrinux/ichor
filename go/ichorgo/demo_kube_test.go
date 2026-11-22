@@ -3,7 +3,9 @@ package ichorgo
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
+	"time"
 )
 
 func demoKubeconfigForTest(t *testing.T) string {
@@ -246,5 +248,66 @@ func TestTalosDemoUnchangedByKubeDemo(t *testing.T) {
 
 	if name, err := KubeNodeName(yaml, "", "192.0.2.20"); err != nil || name == "" {
 		t.Fatalf("Talos demo node name: %q %v", name, err)
+	}
+}
+
+// TestDemoPodNamesAreListed: every pod the other demo data links to (a PostgreSQL instance, a
+// Garage instance, an app of the Apps sheet) is a pod of demoPods in the same namespace, so the
+// link opens its logs instead of an empty screen.
+func TestDemoPodNamesAreListed(t *testing.T) {
+	listed := map[string]kubePod{}
+	for _, p := range demoPods() {
+		listed[p.Namespace+"/"+p.Name] = p
+	}
+
+	services := demoDataServices(time.Now())
+
+	type link struct{ from, namespace, pod string }
+
+	var links []link
+
+	for _, c := range services.CNPG.Clusters {
+		for _, p := range c.InstancePods {
+			links = append(links, link{"cnpg " + c.Name, c.Namespace, p.Name})
+		}
+	}
+
+	for _, g := range services.Garage.Instances {
+		links = append(links, link{"garage " + g.Name, g.Namespace, g.Pod})
+	}
+
+	// The Apps sheet rows the demo covers; the other inventory rows stay inventory-only.
+	inventory := map[string]bool{}
+	for _, w := range demoWorkloads {
+		inventory[w.namespace+"/"+w.pod] = true
+	}
+
+	for _, key := range []string{"demo/hello-ichor-7d9c5-fghij", "home/home-assistant-0"} {
+		if !inventory[key] {
+			t.Errorf("the Apps sheet no longer lists %s: update the covered rows", key)
+		}
+
+		ns, name, _ := strings.Cut(key, "/")
+		links = append(links, link{"apps", ns, name})
+	}
+
+	if len(links) < 15 {
+		t.Fatalf("only %d linked pods: the demo data lost its CloudNativePG or Garage pods", len(links))
+	}
+
+	for _, l := range links {
+		if _, ok := listed[l.namespace+"/"+l.pod]; !ok {
+			t.Errorf("%s links to %s/%s, which demoPods does not list", l.from, l.namespace, l.pod)
+		}
+	}
+
+	// A CloudNativePG instance pod agrees with the PostgreSQL list on where it runs.
+	for _, c := range services.CNPG.Clusters {
+		for _, p := range c.InstancePods {
+			got := listed[c.Namespace+"/"+p.Name]
+			if got.Node != p.Node || got.Status != p.Phase {
+				t.Errorf("%s: demoPods has %s on %q, the PostgreSQL list %s on %q", p.Name, got.Status, got.Node, p.Phase, p.Node)
+			}
+		}
 	}
 }

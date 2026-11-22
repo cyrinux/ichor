@@ -36,6 +36,9 @@ var demoPodUsage = map[string]kubeTopPod{
 	"postgres-0":              {CPU: 0.18, Memory: 410 << 20, CPURequest: 0.25, CPULimit: 1, MemoryRequest: 512 << 20, MemoryLimit: 1 << 30},
 	"coredns-5c6b7-aaaaa":     {CPU: 0.006, Memory: 18 << 20, CPURequest: 0.1, MemoryRequest: 70 << 20, MemoryLimit: 170 << 20},
 	"coredns-5c6b7-bbbbb":     {CPU: 0.005, Memory: 17 << 20, CPURequest: 0.1, MemoryRequest: 70 << 20, MemoryLimit: 170 << 20},
+	"home-assistant-0":        {CPU: 0.09, Memory: 380 << 20, CPURequest: 0.1, MemoryRequest: 256 << 20, MemoryLimit: 1 << 30},
+	"garage-4kq7z":            {CPU: 0.04, Memory: 120 << 20, CPURequest: 0.1, MemoryRequest: 128 << 20, MemoryLimit: 512 << 20},
+	"garage-archive-0":        {CPU: 0.02, Memory: 90 << 20, CPURequest: 0.1, MemoryRequest: 128 << 20, MemoryLimit: 512 << 20},
 }
 
 func demoTopPods(namespace string) func() kubeTopPods {
@@ -43,6 +46,11 @@ func demoTopPods(namespace string) func() kubeTopPods {
 		out := kubeTopPods{Available: true, BoundsRead: namespace != "", Pods: []kubeTopPod{}}
 
 		for _, p := range inNamespace(demoPods(), namespace, func(p kubePod) string { return p.Namespace }) {
+			if p.Node == "" {
+				// A pod waiting unscheduled runs nothing, so metrics-server has no usage for it.
+				continue
+			}
+
 			t, ok := demoPodUsage[p.Name]
 			if !ok {
 				t = kubeTopPod{CPU: 0.001, Memory: 8 << 20}

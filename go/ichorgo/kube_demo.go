@@ -1,6 +1,9 @@
 package ichorgo
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // demoKubeWorkloads are the Kubernetes workloads of the built-in demo cluster.
 func demoKubeWorkloads() []kubeWorkload {
@@ -58,7 +61,7 @@ func demoPods() []kubePod {
 		}
 	}
 
-	return []kubePod{
+	pods := []kubePod{
 		pod("demo", "hello-ichor-7d9c5-abcde", "Running", "demo-worker-1", "ReplicaSet/hello-ichor-7d9c5", "nginx:1.27", 1, 0),
 		pod("demo", "hello-ichor-7d9c5-fghij", "Running", "demo-worker-2", "ReplicaSet/hello-ichor-7d9c5", "nginx:1.27", 1, 0),
 		pod("demo", "hello-ichor-7d9c5-klmno", "Running", "demo-worker-1", "ReplicaSet/hello-ichor-7d9c5", "nginx:1.27", 1, 0),
@@ -68,5 +71,42 @@ func demoPods() []kubePod {
 		demoWithSidecar(pod("demo", "postgres-0", "Running", "demo-worker-2", "StatefulSet/postgres", "postgres:17", 1, 0), "quay.io/prometheuscommunity/postgres-exporter:v0.17.1"),
 		pod("kube-system", "coredns-5c6b7-aaaaa", "Running", "demo-cp-1", "ReplicaSet/coredns-5c6b7", "registry.k8s.io/coredns/coredns:v1.12.0", 1, 0),
 		pod("kube-system", "coredns-5c6b7-bbbbb", "Running", "demo-cp-2", "ReplicaSet/coredns-5c6b7", "registry.k8s.io/coredns/coredns:v1.12.0", 1, 0),
+		pod("home", "home-assistant-0", "Running", "demo-worker-2", "StatefulSet/home-assistant", "ghcr.io/home-assistant/home-assistant:2025.10.1", 1, 0),
+		pod("garage", "garage-4kq7z", "Running", "demo-worker-1", "StatefulSet/garage", "dxflrs/garage:v2.3.0", 1, 0),
+		pod("garage-archive", "garage-archive-0", "Running", "demo-worker-2", "StatefulSet/garage-archive", "dxflrs/garage:v2.3.0", 1, 0),
 	}
+
+	return append(pods, demoCnpgPods(pod)...)
+}
+
+// demoCnpgInstances are the demo CloudNativePG clusters' instances, ready or not, in the order
+// demoDataServices lists them: the pods the PostgreSQL list links to.
+var demoCnpgInstances = []struct {
+	cluster string
+	ready   []bool
+}{
+	{"orders-db", []bool{false, false}},
+	{"app-db", []bool{true, true, false}},
+	{"wiki-db", []bool{true, true}},
+	{"dns-db", []bool{true, true, true}},
+	{"auth-db", []bool{true, true, true}},
+}
+
+// demoCnpgPods are the CloudNativePG instance pods: a ready one runs on demo-worker-<n>, one
+// that is not ready waits unscheduled (Pending), as the PostgreSQL list shows them.
+func demoCnpgPods(pod func(ns, name, status, node, owner, image string, ready, restarts int) kubePod) []kubePod {
+	var out []kubePod
+
+	for _, c := range demoCnpgInstances {
+		for i, ready := range c.ready {
+			name, status, node, r := fmt.Sprintf("%s-%d", c.cluster, i+1), "Pending", "", 0
+			if ready {
+				status, node, r = "Running", fmt.Sprintf("demo-worker-%d", i+1), 1
+			}
+
+			out = append(out, pod("demo", name, status, node, "Cluster/"+c.cluster, "ghcr.io/cloudnative-pg/postgresql:17.6", r, 0))
+		}
+	}
+
+	return out
 }
