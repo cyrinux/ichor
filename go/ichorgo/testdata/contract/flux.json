@@ -114,6 +114,23 @@
           "restarts": 0,
           "status": "ImagePullBackOff",
           "waiting": "failed to pull and unpack image \"docker.io/library/nginx:1.28\": failed to copy: httpReadSeeker: failed open: unexpected status code https://registry-1.docker.io/v2/library/nginx/manifests/sha256:4f1c: 429 Too Many Requests - Server message: toomanyrequests: You have reached your unauthenticated pull rate limit."
+        },
+        {
+          "containerNames": null,
+          "containers": 1,
+          "created": 1767323045000,
+          "healthy": false,
+          "images": [
+            "ghcr.io/cloudnative-pg/postgresql:17.6"
+          ],
+          "lastTermination": "",
+          "name": "orders-db-1",
+          "namespace": "demo",
+          "node": "",
+          "owner": "Cluster/orders-db",
+          "ready": 0,
+          "restarts": 0,
+          "status": "Pending"
         }
       ]
     },
