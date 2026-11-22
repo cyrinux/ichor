@@ -261,6 +261,21 @@ val CheckupFinding.level: CheckupSeverity
 /** "namespace/name", or the name alone for what has no namespace. */
 val CheckupFinding.subject: String get() = if (namespace.isEmpty()) name else "$namespace/$name"
 
+/** The finding kinds about one pod: their namespace and name open its logs and actions. */
+val POD_FINDING_KINDS: Set<String> = setOf(
+    CheckupKind.POD_CRASH_LOOP,
+    CheckupKind.POD_IMAGE_PULL,
+    CheckupKind.POD_UNSCHEDULABLE,
+    CheckupKind.POD_STUCK_STARTING,
+    CheckupKind.POD_NOT_READY,
+    CheckupKind.POD_FAILED,
+    CheckupKind.POD_OOM_KILLED,
+)
+
+/** The pod (namespace, name) a pod finding is about; null for any other finding or a blank side. */
+val CheckupFinding.podTarget: Pair<String, String>?
+    get() = if (kind in POD_FINDING_KINDS && namespace.isNotBlank() && name.isNotBlank()) namespace to name else null
+
 /** The sections worth showing: what the cluster does not run is left out. */
 val CheckupReport.shownSections: List<CheckupSection> get() = sections.filter { it.state != CheckupStatus.ABSENT }
 

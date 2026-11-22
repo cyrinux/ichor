@@ -100,7 +100,9 @@ on, the debug shell; a tap does what it did.
 
 A pod named on another screen (an Argo CD or Flux app, the network map, the Apps sheet,
 CloudNativePG and Garage instances, a volume's pods, the image scan report, a network policy's
-pods and a dropped flow's peer, …) opens here with its log sheet: the Pods
+pods and a dropped flow's peer, a Kubernetes event about a pod, a checkup finding about a pod —
+crash loop, image pull, unschedulable, stuck starting, not ready, failed, OOM killed — …) opens
+here with its log sheet: the Pods
 tab, scoped to its namespace and searched for its name, with the actions above one tap away. On
 Android a Flux app's pod row and an Apps sheet's pod row open the pod; the node stays one tap
 away on the row's trailing button. The Android object screen of a pod (resource browser) has

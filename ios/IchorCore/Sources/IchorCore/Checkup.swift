@@ -201,6 +201,19 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
     /// "namespace/name", or the name alone for what has no namespace.
     public var subject: String { namespace.isEmpty ? name : "\(namespace)/\(name)" }
 
+    /// The finding kinds about one pod: their namespace and name open its logs and actions.
+    public static let podKinds: Set<CheckupKind> = [
+        .podCrashLoop, .podImagePull, .podUnschedulable, .podStuckStarting, .podNotReady, .podFailed, .podOOMKilled,
+    ]
+
+    /// The pod a pod finding is about; nil for any other finding or a blank namespace or name.
+    public var podRef: PodRef? {
+        guard let kind, Self.podKinds.contains(kind) else { return nil }
+        let blank = { (s: String) in s.trimmingCharacters(in: .whitespaces).isEmpty }
+        guard !blank(namespace), !blank(name) else { return nil }
+        return PodRef(namespace: namespace, name: name)
+    }
+
     /// What a background alert names: the subject, else (a plugin finding about no object) the
     /// finding's title.
     var alertSubject: String { subject.isEmpty ? plugin?.headline ?? "" : subject }

@@ -26,6 +26,10 @@ data class KubeEventObject(
     val ref: KubeObjectRef?
         get() = if (resource.isEmpty() || version.isEmpty() || name.isEmpty()) null else
             KubeObjectRef(group, version, resource, kind, if (namespaced) namespace else "", name, editable = true)
+
+    /** The pod (namespace, name) when this is one, to open its logs and actions; null for any other kind. */
+    val podTarget: Pair<String, String>?
+        get() = if (kind == "Pod" && namespace.isNotBlank() && name.isNotBlank()) namespace to name else null
 }
 
 /** Event objects of one object, reason and type coalesced into one row (kubeEventRow). */

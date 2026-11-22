@@ -218,4 +218,29 @@ final class CheckupTests: XCTestCase {
         XCTAssertEqual(section.findings[1].detail, "paperless.lan, *.lan")
         XCTAssertEqual(r.alertIssues["certificates|routeCertExpiring|default/vaultwarden-tls"], "warning")
     }
+
+    func testPodFindingsNameTheirPod() throws {
+        let r = try report()
+        let workloads = r.sections[0].findings
+        XCTAssertEqual(workloads[0].podRef, PodRef(namespace: "shop", name: "web-1"))
+        XCTAssertEqual(workloads[1].podRef, PodRef(namespace: "shop", name: "cache-0"))
+        XCTAssertEqual(workloads[2].podRef, PodRef(namespace: "shop", name: "old"))
+        // A kind this version does not know, an event or a node is not a pod finding.
+        XCTAssertNil(workloads[3].podRef)
+        XCTAssertNil(r.sections[1].findings[0].podRef)
+        XCTAssertNil(r.sections[2].findings[0].podRef)
+        XCTAssertEqual(CheckupFinding.podKinds.count, 7)
+    }
+
+    func testAPodFindingWithABlankSideNamesNoPod() throws {
+        let r = try TalosJSON.decode(
+            CheckupReport.self,
+            from: #"""
+                {"status":"warning","sections":[{"id":"workloads","status":"warning","checked":2,"findings":[
+                  {"kind":"podImagePull","severity":"warning","name":"web-1"},
+                  {"kind":"podNotReady","severity":"warning","namespace":"shop","name":" "},
+                  {"kind":"jobFailed","severity":"warning","namespace":"shop","name":"migrate"}]}]}
+                """#)
+        XCTAssertEqual(r.sections[0].findings.map(\.podRef), [nil, nil, nil])
+    }
 }

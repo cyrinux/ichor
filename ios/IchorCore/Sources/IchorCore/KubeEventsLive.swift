@@ -55,6 +55,13 @@ public struct LiveKubeEventObject: Codable, Hashable, Sendable {
         return KubeAPIResource(group: group, version: version, resource: resource, kind: kind, namespaced: namespaced)
     }
 
+    /// The pod when this is one, to open its logs and actions; nil for any other kind.
+    public var podRef: PodRef? {
+        let blank = { (s: String) in s.trimmingCharacters(in: .whitespaces).isEmpty }
+        guard kind == "Pod", !blank(namespace), !blank(name) else { return nil }
+        return PodRef(namespace: namespace, name: name)
+    }
+
     /// "Pod shop/web-1", or "Node worker-1" for a cluster-scoped one.
     public var label: String {
         let path = objectNamespace.isEmpty ? name : "\(objectNamespace)/\(name)"

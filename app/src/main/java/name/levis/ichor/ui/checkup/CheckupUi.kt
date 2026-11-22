@@ -59,7 +59,8 @@ private const val LIST_PREVIEW = 6
 /**
  * One problem: what it is about, what happens, Kubernetes' own words and what to do, and
  * [onDelete] when the checkup can remove it (a namespace a network test left behind). A
- * plugin's finding names its plugin; [onOpen] opens where it leads (the plugin's screen).
+ * plugin's finding names its plugin; [onOpen] opens where it leads (the plugin's screen, a pod
+ * finding's pod), [openLabel] says so to accessibility ("Open" by default).
  * [onExplain]: "Explain with AI", when the optional AI diagnosis is on.
  */
 @Composable
@@ -68,6 +69,7 @@ fun FindingCard(
     now: Long,
     onDelete: (() -> Unit)? = null,
     onOpen: (() -> Unit)? = null,
+    openLabel: String? = null,
     onExplain: (() -> Unit)? = null,
 ) {
     val colors = LocalStatusColors.current
@@ -78,8 +80,8 @@ fun FindingCard(
     }
     val plugin = f.kind == CheckupKind.PLUGIN
     val title = checkupTitle(f, now)
-    val openLabel = stringResource(R.string.common_open)
-    val tap = if (onOpen != null) Modifier.clickable(role = Role.Button, onClickLabel = openLabel, onClick = onOpen) else Modifier
+    val clickLabel = openLabel ?: stringResource(R.string.common_open)
+    val tap = if (onOpen != null) Modifier.clickable(role = Role.Button, onClickLabel = clickLabel, onClick = onOpen) else Modifier
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = tint.copy(alpha = 0.07f)) {
         Row(tap.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
