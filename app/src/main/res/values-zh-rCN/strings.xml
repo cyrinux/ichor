@@ -4761,7 +4761,9 @@
     <string name="cp_replace_state_skipped">已跳过</string>
     <string name="cp_replace_state_blocked">已阻塞</string>
     <string name="cp_replace_power_off">旧节点没有响应，因此无法从这里重置：如果它仍在运行，请自行关机。</string>
-    <string name="cp_replace_boot_body">用 Talos 镜像启动新机器（维护模式），然后在电脑上为其应用 %1$s 的机器配置。从手机加入节点的功能将在以后提供。</string>
+    <string name="cp_replace_boot_body">用 Talos 镜像启动新机器（维护模式），然后从这部手机将其加入：“添加节点”会以 %1$s 为模板、沿用旧主机名并开启替换。</string>
+    <string name="cp_replace_join_here">从这部手机加入新节点</string>
+    <string name="cp_replace_or_laptop">或者从电脑：用 talosctl 将 %1$s 的机器配置应用到该机器。</string>
     <string name="cp_replace_open_template">打开模板配置</string>
     <string name="cp_replace_copy_command">复制命令</string>
     <string name="cp_replace_wait_start">开始等待</string>

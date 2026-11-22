@@ -347,6 +347,48 @@ func TestStartNodeJoinReplacingATakenHostname(t *testing.T) {
 	}
 }
 
+// Step 4 of Replace a control plane: the failed member is already out of etcd, discovery still
+// lists its hostname at its old address, and the new control plane takes that hostname. The join
+// is accepted and waits for the new etcd member, as any control plane join does.
+func TestStartNodeJoinReplacingARemovedControlPlane(t *testing.T) {
+	f, cfg, address := joinCluster(t, machine.TypeControlPlane)
+	installAfterApply(t, f, machine.TypeControlPlane)
+
+	dead := cluster.NewMember(cluster.NamespaceName, "worker-3")
+	dead.TypedSpec().Hostname = "worker-3"
+	dead.TypedSpec().MachineType = machine.TypeControlPlane
+	dead.TypedSpec().Addresses = []netip.Addr{netip.MustParseAddr("192.0.2.30")}
+	f.put(joinTemplateNode, dead)
+
+	f.mu.Lock()
+	f.etcdDown = map[string]bool{joinNewNode: true}
+	f.mu.Unlock()
+
+	go func() {
+		time.Sleep(5 * joinStepDelay)
+		f.mu.Lock()
+		delete(f.etcdDown, joinNewNode)
+		f.mu.Unlock()
+	}()
+
+	rec := newJoinRecorder()
+	startJoinReplacing(cfg, address, joinRoleControlPlane, true, rec, time.Minute)
+
+	node, errMessage, events := rec.wait(t)
+	if errMessage != "" || node != joinNewNode {
+		t.Fatalf("got %q, %q; want joined at %s (events %+v)", node, errMessage, joinNewNode, events)
+	}
+
+	if !slices.ContainsFunc(events, func(e joinProgress) bool { return strings.Contains(e.Message, "replacing the worker-3") }) {
+		t.Errorf("the replaced member is not said: %+v", events)
+	}
+
+	if !slices.ContainsFunc(events, func(e joinProgress) bool { return strings.Contains(e.Message, "etcd member") }) ||
+		len(f.called("EtcdStatus "+joinNewNode)) == 0 {
+		t.Errorf("the new etcd member was not waited for: %+v", events)
+	}
+}
+
 func TestRediscoveredSkipsKnownAndReplacedNodes(t *testing.T) {
 	member := func(host, addr string) clusterMember {
 		return clusterMember{hostname: host, addresses: []netip.Addr{netip.MustParseAddr(addr)}}

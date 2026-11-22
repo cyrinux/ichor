@@ -231,6 +231,8 @@ enum Route: Hashable {
     case k8sUpgrade
     /// "Add a node…": a node in maintenance mode, booted from the Talos ISO.
     case joinNode
+    /// Add a node preset by Replace a control plane: template, the old host name, Replacing on.
+    case joinNodePreset(JoinPreset)
     /// Step 0 of Add a node (and all of it on Omni): where the new node comes from, nil asks.
     case bootMedia(AddNodePath?)
     case omniAllocate
@@ -381,16 +383,6 @@ struct NodeRef: Hashable {
     let role: String
 }
 
-extension Route {
-    /// The node a share link opens, on its hub or on one of its tabs; nil for any other screen.
-    var nodeRef: NodeRef? {
-        switch self {
-        case .node(let ref), .nodeTab(let ref, _): ref
-        default: nil
-        }
-    }
-}
-
 struct MainNavigation: View {
     @Environment(AppModel.self) private var model
     @Environment(LockStore.self) private var lockStore
@@ -507,6 +499,7 @@ struct MainNavigation: View {
         case .clusterUpgrade(let version): ClusterUpgradePlanView(initialVersion: version)
         case .k8sUpgrade: K8sUpgradePlanView()
         case .joinNode: AddNodeEntryView(path: $path)
+        case .joinNodePreset(let preset): AddNodeEntryView(path: $path, preset: preset)
         case .bootMedia(let chosen): BootMediaView(path: $path, chosen: chosen)
         case .omniAllocate: OmniAllocateView()
         case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)

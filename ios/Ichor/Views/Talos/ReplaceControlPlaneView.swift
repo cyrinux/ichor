@@ -129,13 +129,21 @@ struct ReplaceControlPlaneView: View {
     private func bootRows(_ plan: CpReplacePlan) -> some View {
         if !plan.template.node.isEmpty {
             let name = plan.template.hostname.isEmpty ? plan.template.node : plan.template.hostname
-            Text(
-                String(
-                    localized:
-                        "Boot the new machine from a Talos image (maintenance mode), then apply the machine config of \(name) to it from a laptop. Joining a node from the phone comes later."
+            // Omni joins its machines itself: no join from the phone there.
+            if model.activeSummary?.omni != true {
+                Text(
+                    String(
+                        localized:
+                            "Boot the new machine from a Talos image (maintenance mode), then join it from this phone: Add a node opens with \(name) as the template, the old host name and Replacing on."
+                    )
                 )
-            )
-            .font(.footnote).foregroundStyle(.secondary)
+                .font(.footnote).foregroundStyle(.secondary)
+                NavigationLink(value: Route.joinNodePreset(joinPreset(plan))) {
+                    Text("Join the new node from this phone")
+                }
+            }
+            Text(String(localized: "Or from a laptop: apply the machine config of \(name) to it with talosctl."))
+                .font(.footnote).foregroundStyle(.secondary)
             Text(verbatim: applyConfigCommand).font(.caption.monospaced()).textSelection(.enabled)
             NavigationLink {
                 MachineConfigView(node: plan.template.node, hostname: name)
@@ -144,6 +152,13 @@ struct ReplaceControlPlaneView: View {
             }
             Button("Copy the command") { UIPasteboard.general.string = applyConfigCommand }
         }
+    }
+
+    /// Add a node with this replacement: the healthy control plane, the failed member's host name.
+    private func joinPreset(_ plan: CpReplacePlan) -> JoinPreset {
+        JoinPreset(
+            template: plan.template.node, hostname: plan.member.hostname.isEmpty ? hostname : plan.member.hostname,
+            replacing: true)
     }
 
     @ViewBuilder

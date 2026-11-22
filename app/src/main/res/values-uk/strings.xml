@@ -5132,7 +5132,9 @@
     <string name="cp_replace_state_skipped">Пропущено</string>
     <string name="cp_replace_state_blocked">Заблоковано</string>
     <string name="cp_replace_power_off">Старий вузол не відповідає, тому його не можна скинути звідси: вимкніть його самі, якщо він ще працює.</string>
-    <string name="cp_replace_boot_body">Завантажте нову машину з образу Talos (режим обслуговування), потім застосуйте до неї конфігурацію машини %1$s з ноутбука. Приєднання вузла з телефона з\'явиться пізніше.</string>
+    <string name="cp_replace_boot_body">Завантажте нову машину з образу Talos (режим обслуговування), потім приєднайте її з цього телефона: «Додати вузол» відкриється з %1$s як шаблоном, старим іменем хоста й увімкненою заміною.</string>
+    <string name="cp_replace_join_here">Приєднати новий вузол з цього телефона</string>
+    <string name="cp_replace_or_laptop">Або з ноутбука: застосуйте до неї конфігурацію машини %1$s за допомогою talosctl.</string>
     <string name="cp_replace_open_template">Відкрити шаблонну конфігурацію</string>
     <string name="cp_replace_copy_command">Скопіювати команду</string>
     <string name="cp_replace_wait_start">Почати очікування</string>

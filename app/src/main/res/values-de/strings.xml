@@ -4882,7 +4882,9 @@
     <string name="cp_replace_state_skipped">Übersprungen</string>
     <string name="cp_replace_state_blocked">Blockiert</string>
     <string name="cp_replace_power_off">Der alte Node antwortet nicht und kann daher nicht von hier zurückgesetzt werden: Schalten Sie ihn selbst aus, falls er noch läuft.</string>
-    <string name="cp_replace_boot_body">Starten Sie die neue Maschine mit einem Talos-Image (Wartungsmodus) und wenden Sie dann die Maschinenkonfiguration von %1$s von einem Laptop aus an. Einen Node vom Telefon aus beitreten zu lassen, kommt später.</string>
+    <string name="cp_replace_boot_body">Starten Sie die neue Maschine mit einem Talos-Image (Wartungsmodus) und lassen Sie sie dann von diesem Telefon aus beitreten: Node hinzufügen öffnet sich mit %1$s als Vorlage, dem alten Hostnamen und aktiviertem Ersetzen.</string>
+    <string name="cp_replace_join_here">Neuen Node von diesem Telefon aus beitreten lassen</string>
+    <string name="cp_replace_or_laptop">Oder von einem Laptop aus: Wenden Sie die Maschinenkonfiguration von %1$s mit talosctl an.</string>
     <string name="cp_replace_open_template">Vorlagenkonfiguration öffnen</string>
     <string name="cp_replace_copy_command">Befehl kopieren</string>
     <string name="cp_replace_wait_start">Warten starten</string>

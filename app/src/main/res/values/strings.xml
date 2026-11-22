@@ -4892,7 +4892,9 @@
     <string name="cp_replace_state_skipped">Skipped</string>
     <string name="cp_replace_state_blocked">Blocked</string>
     <string name="cp_replace_power_off">The old node does not answer, so it cannot be reset from here: power it off yourself if it still runs.</string>
-    <string name="cp_replace_boot_body">Boot the new machine from a Talos image (maintenance mode), then apply the machine config of %1$s to it from a laptop. Joining a node from the phone comes later.</string>
+    <string name="cp_replace_boot_body">Boot the new machine from a Talos image (maintenance mode), then join it from this phone: Add a node opens with %1$s as the template, the old host name and Replacing on.</string>
+    <string name="cp_replace_join_here">Join the new node from this phone</string>
+    <string name="cp_replace_or_laptop">Or from a laptop: apply the machine config of %1$s to it with talosctl.</string>
     <string name="cp_replace_open_template">Open the template config</string>
     <string name="cp_replace_copy_command">Copy the command</string>
     <string name="cp_replace_wait_start">Start waiting</string>

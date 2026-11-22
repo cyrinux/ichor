@@ -73460,43 +73460,46 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Старый узел не отвечает, поэтому его нельзя сбросить отсюда: выключите его сами, если он ещё работает." } }
       }
     },
-    "Boot the new machine from a Talos image (maintenance mode), then apply the machine config of %@ to it from a laptop. Joining a node from the phone comes later." : {
+    "Boot the new machine from a Talos image (maintenance mode), then join it from this phone: Add a node opens with %@ as the template, the old host name and Replacing on." : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Démarrez la nouvelle machine sur une image Talos (mode maintenance), puis appliquez-lui la configuration machine de %@ depuis un ordinateur. Rejoindre un nœud depuis le téléphone viendra plus tard."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arranca la nueva máquina con una imagen de Talos (modo mantenimiento) y aplícale la configuración de máquina de %@ desde un portátil. Unir un nodo desde el teléfono llegará más adelante."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Starten Sie die neue Maschine mit einem Talos-Image (Wartungsmodus) und wenden Sie dann die Maschinenkonfiguration von %@ von einem Laptop aus an. Einen Node vom Telefon aus beitreten zu lassen, kommt später."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Avvia la nuova macchina da un'immagine Talos (modalità manutenzione), poi applicale la configurazione macchina di %@ da un portatile. L'aggiunta di un nodo dal telefono arriverà più avanti."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Завантажте нову машину з образу Talos (режим обслуговування), потім застосуйте до неї конфігурацію машини %@ з ноутбука. Приєднання вузла з телефона з'явиться пізніше."
-          }
-        },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "用 Talos 镜像启动新机器（维护模式），然后从电脑将 %@ 的机器配置应用到该机器。从手机加入节点的功能将在之后推出。" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "新しいマシンを Talos イメージから起動し（メンテナンスモード）、ノートパソコンから %@ のマシン構成を適用してください。スマートフォンからのノード参加は今後対応予定です。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Inicialize a nova máquina a partir de uma imagem do Talos (modo de manutenção) e depois aplique nela a configuração da máquina de %@ a partir de um notebook. O ingresso de um nó pelo celular virá depois." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Загрузите новую машину с образа Talos (режим обслуживания), затем примените к ней конфигурацию машины %@ с ноутбука. Присоединение узла с телефона появится позже." } }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Démarrez la nouvelle machine sur une image Talos (mode maintenance), puis faites-la rejoindre le cluster depuis ce téléphone : Ajouter un nœud s'ouvre avec %@ comme modèle, l'ancien nom d'hôte et Remplacement activé." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Arranca la nueva máquina con una imagen de Talos (modo mantenimiento) y únela desde este teléfono: Añadir un nodo se abre con %@ como plantilla, el nombre de host anterior y Sustitución activada." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Starten Sie die neue Maschine mit einem Talos-Image (Wartungsmodus) und lassen Sie sie dann von diesem Telefon aus beitreten: Node hinzufügen öffnet sich mit %@ als Vorlage, dem alten Hostnamen und aktiviertem Ersetzen." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvia la nuova macchina da un'immagine Talos (modalità manutenzione), poi aggiungila da questo telefono: Aggiungi un nodo si apre con %@ come modello, il vecchio nome host e Sostituzione attiva." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Завантажте нову машину з образу Talos (режим обслуговування), потім приєднайте її з цього телефона: «Додати вузол» відкриється з %@ як шаблоном, старим іменем хоста й увімкненою заміною." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "用 Talos 镜像启动新机器（维护模式），然后从这部手机将其加入：“添加节点”会以 %@ 为模板、沿用旧主机名并开启替换。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "新しいマシンを Talos イメージから起動し（メンテナンスモード）、このスマートフォンから参加させます。「ノードを追加」が %@ をテンプレートに、元のホスト名と置き換えをオンにした状態で開きます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Inicialize a nova máquina a partir de uma imagem do Talos (modo de manutenção) e depois faça-a entrar por este celular: Adicionar um nó abre com %@ como modelo, o nome de host antigo e Substituição ativada." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Загрузите новую машину с образа Talos (режим обслуживания), затем присоедините её с этого телефона: «Добавить узел» откроется с %@ в качестве шаблона, старым именем хоста и включённой заменой." } }
+      }
+    },
+    "Join the new node from this phone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Faire rejoindre le nouveau nœud depuis ce téléphone" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Unir el nuevo nodo desde este teléfono" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Neuen Node von diesem Telefon aus beitreten lassen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi il nuovo nodo da questo telefono" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Приєднати новий вузол з цього телефона" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "从这部手机加入新节点" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このスマートフォンから新しいノードを参加させる" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Fazer o novo nó entrar por este celular" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Присоединить новый узел с этого телефона" } }
+      }
+    },
+    "Or from a laptop: apply the machine config of %@ to it with talosctl." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ou depuis un ordinateur : appliquez-lui la configuration machine de %@ avec talosctl." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "O desde un portátil: aplícale la configuración de máquina de %@ con talosctl." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Oder von einem Laptop aus: Wenden Sie die Maschinenkonfiguration von %@ mit talosctl an." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Oppure da un portatile: applicale la configurazione macchina di %@ con talosctl." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Або з ноутбука: застосуйте до неї конфігурацію машини %@ за допомогою talosctl." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "或者从电脑：用 talosctl 将 %@ 的机器配置应用到该机器。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "またはノートパソコンから：talosctl で %@ のマシン構成を適用します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ou a partir de um notebook: aplique nela a configuração da máquina de %@ com talosctl." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Или с ноутбука: примените к ней конфигурацию машины %@ с помощью talosctl." } }
       }
     },
     "Open the template config" : {

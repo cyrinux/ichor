@@ -63,6 +63,23 @@ data class JoinConfigForm(
     val complete: Boolean get() = template.isNotBlank() && hostname.isNotBlank() && disk.isNotBlank()
 }
 
+/**
+ * Add a node opened from Replace a control plane: the healthy control plane whose config the new
+ * node copies ([template], its address), the failed member's host name, and Replacing on.
+ */
+data class JoinPreset(val template: String = "", val hostname: String = "", val replacing: Boolean = false)
+
+/**
+ * The form once [preset] is applied to the listed [members]: its template member picked (its role
+ * is the new node's) and its host name filled in. Null when there is no preset, or its template is
+ * not among the members (the person picks one as usual).
+ */
+fun presetForm(form: JoinConfigForm, preset: JoinPreset, members: List<NodeOverview>): JoinConfigForm? {
+    if (preset.template.isBlank()) return null
+    val node = members.firstOrNull { it.node == preset.template } ?: return null
+    return form.copy(template = node.node, role = joinRole(node.role), hostname = preset.hostname.trim().ifBlank { form.hostname })
+}
+
 /** Step 2 of adding a node: a member's config made the new node's, previewed with its secrets hidden. */
 class JoinConfigViewModel(private val talos: TalosRepository, private val lifecycle: NodeLifecycleRepository) : ViewModel() {
     private val _members = MutableStateFlow<UiState<List<NodeOverview>>>(UiState.Loading)
@@ -73,13 +90,33 @@ class JoinConfigViewModel(private val talos: TalosRepository, private val lifecy
     val preview: StateFlow<UiState<JoinConfigPreview>?> = _preview.asStateFlow()
     private var previewing: Job? = null
 
+    /** The preset not applied yet: applied once, when the members are listed. */
+    private var pendingPreset: JoinPreset? = null
+
     init {
         loadMembers()
     }
 
     fun loadMembers() {
         _members.value = UiState.Loading
-        viewModelScope.launch { _members.value = uiStateOf { talos.overview().nodes } }
+        viewModelScope.launch {
+            _members.value = uiStateOf { talos.overview().nodes }
+            applyPreset()
+        }
+    }
+
+    /** Starts the form from [preset] (Replace a control plane); the person can still change it. */
+    fun preset(preset: JoinPreset) {
+        if (preset.template.isBlank()) return
+        pendingPreset = preset
+        applyPreset()
+    }
+
+    private fun applyPreset() {
+        val preset = pendingPreset ?: return
+        val members = (_members.value as? UiState.Loaded)?.data ?: return
+        pendingPreset = null
+        presetForm(_form.value, preset, members)?.let { preset -> edit { preset } }
     }
 
     /** Picks [node] as the template: its role is the new node's, and the host name follows it unless typed. */

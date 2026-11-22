@@ -4887,7 +4887,9 @@
     <string name="cp_replace_state_skipped">Ignorado</string>
     <string name="cp_replace_state_blocked">Bloqueado</string>
     <string name="cp_replace_power_off">O nó antigo não responde, então não pode ser redefinido daqui: desligue-o você mesmo se ainda estiver em execução.</string>
-    <string name="cp_replace_boot_body">Inicialize a nova máquina a partir de uma imagem do Talos (modo de manutenção) e aplique a ela a configuração da máquina de %1$s a partir de um notebook. Adicionar um nó pelo telefone virá depois.</string>
+    <string name="cp_replace_boot_body">Inicialize a nova máquina a partir de uma imagem do Talos (modo de manutenção) e depois faça-a entrar por este celular: Adicionar um nó abre com %1$s como modelo, o nome de host antigo e Substituição ativada.</string>
+    <string name="cp_replace_join_here">Fazer o novo nó entrar por este celular</string>
+    <string name="cp_replace_or_laptop">Ou a partir de um notebook: aplique nela a configuração da máquina de %1$s com talosctl.</string>
     <string name="cp_replace_open_template">Abrir a configuração modelo</string>
     <string name="cp_replace_copy_command">Copiar o comando</string>
     <string name="cp_replace_wait_start">Começar a aguardar</string>

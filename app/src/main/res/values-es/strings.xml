@@ -4891,7 +4891,9 @@
     <string name="cp_replace_state_skipped">Omitido</string>
     <string name="cp_replace_state_blocked">Bloqueado</string>
     <string name="cp_replace_power_off">El nodo antiguo no responde, así que no se puede restablecer desde aquí: apágalo tú mismo si sigue en marcha.</string>
-    <string name="cp_replace_boot_body">Arranca la nueva máquina con una imagen de Talos (modo mantenimiento) y aplícale la configuración de máquina de %1$s desde un portátil. Unir un nodo desde el teléfono llegará más adelante.</string>
+    <string name="cp_replace_boot_body">Arranca la nueva máquina con una imagen de Talos (modo mantenimiento) y únela desde este teléfono: Añadir un nodo se abre con %1$s como plantilla, el nombre de host anterior y Sustitución activada.</string>
+    <string name="cp_replace_join_here">Unir el nuevo nodo desde este teléfono</string>
+    <string name="cp_replace_or_laptop">O desde un portátil: aplícale la configuración de máquina de %1$s con talosctl.</string>
     <string name="cp_replace_open_template">Abrir la configuración de plantilla</string>
     <string name="cp_replace_copy_command">Copiar el comando</string>
     <string name="cp_replace_wait_start">Empezar a esperar</string>

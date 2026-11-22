@@ -4761,7 +4761,9 @@
     <string name="cp_replace_state_skipped">スキップ</string>
     <string name="cp_replace_state_blocked">ブロック中</string>
     <string name="cp_replace_power_off">古いノードが応答しないため、ここからリセットできません。まだ動作している場合は手動で電源を切ってください。</string>
-    <string name="cp_replace_boot_body">新しいマシンを Talos イメージ（メンテナンスモード）から起動し、ノート PC から %1$s のマシン構成を適用してください。スマートフォンからのノード参加は今後対応予定です。</string>
+    <string name="cp_replace_boot_body">新しいマシンを Talos イメージから起動し（メンテナンスモード）、このスマートフォンから参加させます。「ノードを追加」が %1$s をテンプレートに、元のホスト名と置き換えをオンにした状態で開きます。</string>
+    <string name="cp_replace_join_here">このスマートフォンから新しいノードを参加させる</string>
+    <string name="cp_replace_or_laptop">またはノートパソコンから：talosctl で %1$s のマシン構成を適用します。</string>
     <string name="cp_replace_open_template">テンプレート構成を開く</string>
     <string name="cp_replace_copy_command">コマンドをコピー</string>
     <string name="cp_replace_wait_start">待機を開始</string>

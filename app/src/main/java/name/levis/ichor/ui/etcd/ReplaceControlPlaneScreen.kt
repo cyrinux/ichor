@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
@@ -36,11 +37,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.APPLY_CONFIG_COMMAND
 import name.levis.ichor.model.CpReplacePlan
 import name.levis.ichor.model.CpStep
@@ -86,6 +89,8 @@ fun ReplaceControlPlaneScreen(
     hostname: String,
     onBack: () -> Unit,
     onOpenConfig: (addr: String, host: String) -> Unit,
+    /** Add a node, preset with the template control plane's address and the failed member's host name. */
+    onJoinNode: (template: String, hostname: String) -> Unit,
     vm: ReplaceControlPlaneViewModel = viewModel(factory = factory { ReplaceControlPlaneViewModel(app.nodeLifecycleRepository, memberId, node) }),
 ) {
     val context = LocalContext.current
@@ -102,6 +107,15 @@ fun ReplaceControlPlaneScreen(
     var confirmRemove by remember { mutableStateOf(false) }
     var confirmReset by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
+    // Back from Add a node (step 4): the plan again, so step 5 shows the new member.
+    var left by remember { mutableStateOf(false) }
+    LifecycleResumeEffect(Unit) {
+        if (left) vm.refresh()
+        onPauseOrDispose { left = true }
+    }
+    // Omni joins its machines itself: no join from the phone there.
+    val config by talosApp.configRepository.config.collectAsStateWithLifecycle()
+    val omni = config?.activeSummary?.omni == true
     LaunchedEffect(resetState) {
         when (val s = resetState) {
             ResetState.Done -> {
@@ -155,6 +169,9 @@ fun ReplaceControlPlaneScreen(
                         onDismissRemove = vm::dismissRemoval,
                         onReset = { confirmReset = true },
                         onOpenConfig = { onOpenConfig(s.data.template.node, s.data.template.hostname) },
+                        onJoinNode = if (omni) null else {
+                            { onJoinNode(s.data.template.node, s.data.member.hostname.ifBlank { hostname }) }
+                        },
                         onCopyCommand = { copyToClipboard(context, "talosctl", APPLY_CONFIG_COMMAND) },
                         onWait = vm::startWait,
                         onStopWait = vm::stopWait,
@@ -202,6 +219,8 @@ private data class StepActions(
     val onDismissRemove: () -> Unit,
     val onReset: () -> Unit,
     val onOpenConfig: () -> Unit,
+    /** Add a node with this replacement preset; null on Omni. */
+    val onJoinNode: (() -> Unit)?,
     val onCopyCommand: () -> Unit,
     val onWait: () -> Unit,
     val onStopWait: () -> Unit,
@@ -251,7 +270,12 @@ private fun ReplaceSteps(
         item {
             StepCard(plan, CpStep.BOOT_NEW_NODE, 4, R.string.cp_replace_step_boot) {
                 if (plan.template.node.isNotBlank()) {
-                    MutedText(stringResource(R.string.cp_replace_boot_body, plan.template.hostname.ifBlank { plan.template.node }))
+                    val template = plan.template.hostname.ifBlank { plan.template.node }
+                    actions.onJoinNode?.let { join ->
+                        MutedText(stringResource(R.string.cp_replace_boot_body, template))
+                        IchorButton(onClick = join, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.cp_replace_join_here)) }
+                    }
+                    MutedText(stringResource(R.string.cp_replace_or_laptop, template))
                     Text(APPLY_CONFIG_COMMAND, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         IchorOutlinedButton(onClick = actions.onOpenConfig) { Text(stringResource(R.string.cp_replace_open_template)) }
