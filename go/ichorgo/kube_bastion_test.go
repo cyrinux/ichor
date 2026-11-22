@@ -41,6 +41,25 @@ type testBastion struct {
 	conns []net.Conn
 }
 
+// bastionCountWait bounds how long settledCount waits for the fake bastion's goroutine.
+const bastionCountWait = 5 * time.Second
+
+// settledCount waits until counter reaches want, then returns it, or returns its value once
+// bastionCountWait has passed. The fake bastion counts in its own goroutine, after the SSH
+// handshake or the channel confirmation the client already returned from, so a read right
+// after the client call can come before the increment.
+func settledCount(counter *atomic.Int32, want int32) int32 {
+	deadline := time.Now().Add(bastionCountWait)
+	for {
+		n := counter.Load()
+		if n >= want || time.Now().After(deadline) {
+			return n
+		}
+
+		time.Sleep(time.Millisecond)
+	}
+}
+
 func newTestBastion(t *testing.T, clientPK ssh.PublicKey) *testBastion {
 	t.Helper()
 
@@ -364,12 +383,12 @@ func TestBastionCarriesRESTAndStreams(t *testing.T) {
 	}
 
 	// The SSH connection of KubeSetBastion's check, then the client's: two, whatever the dials.
-	if n := f.bastion.handshakes.Load(); n != 2 {
+	if n := settledCount(&f.bastion.handshakes, 2); n != 2 {
 		t.Errorf("%d SSH connections, want 2", n)
 	}
 
-	if f.bastion.forwards.Load() < 4 {
-		t.Errorf("%d forwarded connections, want at least 4", f.bastion.forwards.Load())
+	if n := settledCount(&f.bastion.forwards, 4); n < 4 {
+		t.Errorf("%d forwarded connections, want at least 4", n)
 	}
 }
 
