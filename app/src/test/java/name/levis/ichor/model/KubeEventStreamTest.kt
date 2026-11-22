@@ -146,4 +146,17 @@ class KubeEventStreamTest {
         assertNull(KubeEventObject("Widget", "example.com/v1", "example.com", "v1", "", true, "shop", "w").ref)
         assertNull(KubeEventObject().ref)
     }
+
+    @Test
+    fun podTargetOnlyForAPodWithANamespaceAndAName() {
+        assertEquals("shop" to "web-1", KubeEventObject("Pod", "v1", "", "v1", "pods", true, "shop", "web-1").podTarget)
+        // Another kind keeps its object screen.
+        assertNull(KubeEventObject("ReplicaSet", "apps/v1", "apps", "v1", "replicasets", true, "shop", "web").podTarget)
+        assertNull(KubeEventObject("Node", "v1", "", "v1", "nodes", false, "", "worker-1").podTarget)
+        // A blank side opens nothing.
+        assertNull(KubeEventObject("Pod", "v1", "", "v1", "pods", true, "", "web-1").podTarget)
+        assertNull(KubeEventObject("Pod", "v1", "", "v1", "pods", true, "shop", " ").podTarget)
+        // Discovery need not know the resource: the pod opens all the same.
+        assertEquals("shop" to "web-1", KubeEventObject(kind = "Pod", namespace = "shop", name = "web-1").podTarget)
+    }
 }

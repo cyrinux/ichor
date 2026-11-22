@@ -115,7 +115,12 @@ struct KubeLiveEventsView: View {
                 }
                 Section {
                     ForEach(shown) { event in
-                        if let resource = event.regarding.apiResource {
+                        // An event about a pod opens the pod (its logs and actions); others their object.
+                        if let pod = event.regarding.podRef {
+                            PodLink(namespace: pod.namespace, name: pod.name) {
+                                LiveKubeEventRow(event: event, now: now)
+                            }
+                        } else if let resource = event.regarding.apiResource {
                             NavigationLink {
                                 KubeObjectView(
                                     resource: resource, namespace: event.regarding.objectNamespace,

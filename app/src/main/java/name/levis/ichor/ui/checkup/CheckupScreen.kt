@@ -69,7 +69,9 @@ import name.levis.ichor.model.count
 import name.levis.ichor.model.level
 import name.levis.ichor.model.shownSections
 import name.levis.ichor.model.state
+import name.levis.ichor.model.podTarget
 import name.levis.ichor.model.verdict
+import name.levis.ichor.ui.nav.LocalOpenPod
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
@@ -360,13 +362,15 @@ private fun SectionBody(
     if (section.findings.isEmpty() && section.error.isEmpty()) {
         MutedText(stringResource(R.string.checkup_nothing_in, section.checked.toString()))
     }
+    val openPod = LocalOpenPod.current
     section.findings.forEach { f ->
         val title = checkupTitle(f, now)
         FindingCard(
             f,
             now,
             onDelete = if (f.kind == CheckupKind.NETPERF_LEFTOVER) ({ onDeleteLeftover(f.name) }) else null,
-            onOpen = if (f.kind == CheckupKind.PLUGIN && f.plugin.isNotEmpty()) ({ links.onOpenPlugin(f.plugin) }) else null,
+            onOpen = findingOpen(f, links, openPod),
+            openLabel = if (openPod != null && f.podTarget != null) stringResource(R.string.pod_open) else null,
             // A note says nothing is wrong: only a warning or a critical finding has something to explain.
             onExplain = onExplain?.takeIf { f.level != CheckupSeverity.INFO }?.let { explain -> { explain(f, title) } },
         )
@@ -396,4 +400,11 @@ private fun SectionBody(
             IchorTextButton(onClick = links.onOpenClusterLifecycle) { Text(stringResource(R.string.checkup_open_cluster_lifecycle)) }
         }
     }
+}
+
+/** Where a finding leads: a plugin's screen, or a pod finding's pod (its logs and actions). */
+private fun findingOpen(f: CheckupFinding, links: CheckupLinks, openPod: ((String, String) -> Unit)?): (() -> Unit)? {
+    if (f.kind == CheckupKind.PLUGIN && f.plugin.isNotEmpty()) return { links.onOpenPlugin(f.plugin) }
+    val pod = f.podTarget ?: return null
+    return openPod?.let { open -> { open(pod.first, pod.second) } }
 }

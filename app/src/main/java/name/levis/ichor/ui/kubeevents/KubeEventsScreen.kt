@@ -41,9 +41,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.KubeEventObject
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.kubeEventsText
 import name.levis.ichor.model.matching
+import name.levis.ichor.ui.nav.LocalOpenPod
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.CardListPadding
@@ -81,6 +83,7 @@ fun KubeEventsScreen(
     val app = LocalContext.current.applicationContext as TalosApp
     val context = LocalContext.current
     val state by vm.state.collectAsStateWithLifecycle()
+    val openPod = LocalOpenPod.current
     val namespaces: NamespacesViewModel = viewModel(factory = factory { NamespacesViewModel(app.kubeRepository) })
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
     val control = rememberKubeScope(app, namespaces, mask.enabled)
@@ -158,7 +161,7 @@ fun KubeEventsScreen(
                 // Newest first in one card, no group titles.
                 else -> LazyColumn(rest.fillMaxSize(), contentPadding = CardListPadding) {
                     cardRows(shown, key = { it.key }) { e ->
-                        KubeEventItem(e, now, showNamespace = namespace == null, onClick = e.regarding.ref?.let { ref -> { onObject(ref) } })
+                        KubeEventItem(e, now, showNamespace = namespace == null, onClick = eventTap(e.regarding, openPod, onObject))
                     }
                 }
             }
@@ -176,4 +179,18 @@ private fun PausedBar(pending: Int, onResume: () -> Unit) {
         )
         IchorTextButton(onClick = onResume) { Text(stringResource(R.string.kube_events_resume)) }
     }
+}
+
+/**
+ * A row's tap: an event about a pod opens the pod (its logs and actions, [openPod]) where a pod
+ * can be opened; any other object its object screen ([onObject]) when its kind is known.
+ */
+private fun eventTap(
+    regarding: KubeEventObject,
+    openPod: ((String, String) -> Unit)?,
+    onObject: (KubeObjectRef) -> Unit,
+): (() -> Unit)? {
+    val pod = regarding.podTarget
+    if (pod != null && openPod != null) return { openPod(pod.first, pod.second) }
+    return regarding.ref?.let { ref -> { onObject(ref) } }
 }

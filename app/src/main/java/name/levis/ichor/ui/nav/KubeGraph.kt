@@ -183,7 +183,11 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             )
         }
     }
-    composable(Routes.KUBE_EVENTS) { KubeEventsScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
+    composable(Routes.KUBE_EVENTS) {
+        CompositionLocalProvider(LocalOpenPod provides nav::openPod) {
+            KubeEventsScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject)
+        }
+    }
     composable(Routes.NETWORK_POLICIES) {
         CompositionLocalProvider(LocalOpenPod provides nav::openPod) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
     }
@@ -215,20 +219,22 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
     composable(Routes.AUDIT) { AuditScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.CHECKUP) {
         val scope = rememberCoroutineScope()
-        CheckupScreen(
-            onBack = { nav.popBackStack() },
-            onOpenRelease = { ns, name -> nav.navigate(KubeBrowserRoutes.helmRelease(ns, name)) },
-            onOpenMonitoring = { nav.navigate(Routes.metrics(METRICS_TAB_MONITORING)) },
-            onOpenCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
-            onOpenLoadBalancing = { nav.navigate(KubeBrowserRoutes.LOAD_BALANCING) },
-            onOpenPolicies = { nav.navigate(Routes.POLICIES) },
-            onOpenTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
-            onOpenClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
-            // Its tab in Data services or its own screen, as its tile leads (a cached detection).
-            onOpenPlugin = { id ->
-                scope.launch { nav.navigate(pluginRouteFor(app.pluginRepository, id) ?: KubeBrowserRoutes.plugin(id)) }
-            },
-        )
+        CompositionLocalProvider(LocalOpenPod provides nav::openPod) {
+            CheckupScreen(
+                onBack = { nav.popBackStack() },
+                onOpenRelease = { ns, name -> nav.navigate(KubeBrowserRoutes.helmRelease(ns, name)) },
+                onOpenMonitoring = { nav.navigate(Routes.metrics(METRICS_TAB_MONITORING)) },
+                onOpenCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
+                onOpenLoadBalancing = { nav.navigate(KubeBrowserRoutes.LOAD_BALANCING) },
+                onOpenPolicies = { nav.navigate(Routes.POLICIES) },
+                onOpenTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
+                onOpenClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
+                // Its tab in Data services or its own screen, as its tile leads (a cached detection).
+                onOpenPlugin = { id ->
+                    scope.launch { nav.navigate(pluginRouteFor(app.pluginRepository, id) ?: KubeBrowserRoutes.plugin(id)) }
+                },
+            )
+        }
     }
     composable(Routes.KUBE_CAPACITY) {
         CapacityScreen(onBack = { nav.popBackStack() }, onScale = { nav.navigate(KubeBrowserRoutes.obj(it, openScale = true)) })

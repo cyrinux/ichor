@@ -16,6 +16,8 @@ struct CheckupView: View {
     @State private var message: String?
     /// How far the first read got, while there is nothing else to show.
     @State private var progress: ReadProgress?
+    /// The pod a pod finding's "Open pod" asked for: pushed (its logs and actions) once set.
+    @State private var openPod: KubeFocus?
 
     var body: some View {
         LoadStateView(state: state, retry: load, progress: progress, stepLabel: Self.stepLabel) { report in
@@ -26,7 +28,10 @@ struct CheckupView: View {
                     ForEach(report.shownSections) { section in
                         Section {
                             DisclosureGroup(isExpanded: expanded(section.id)) {
-                                CheckupSectionBody(section: section, report: report, now: now) { confirmDelete = $0 }
+                                CheckupSectionBody(
+                                    section: section, report: report, now: now,
+                                    onOpenPod: { openPod = .pod(namespace: $0.namespace, name: $0.name) }
+                                ) { confirmDelete = $0 }
                             } label: {
                                 CheckupSectionLabel(section: section)
                             }
@@ -53,6 +58,7 @@ struct CheckupView: View {
             Text(verbatim: CheckupText.checkupDeleteNamespaceText)
         }
         .messageAlert($message)
+        .podDestination($openPod)
         .navigationTitle(Text(verbatim: CheckupText.checkupTitle))
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -207,6 +213,8 @@ private struct CheckupSectionBody: View {
     let section: CheckupSection
     let report: CheckupReport
     let now: Int64
+    /// Opens the pod a pod finding is about.
+    let onOpenPod: (PodRef) -> Void
     /// Asks to delete a namespace a network test left behind.
     let onDeleteLeftover: (String) -> Void
 
@@ -224,7 +232,8 @@ private struct CheckupSectionBody: View {
             } else {
                 CheckupFindingRow(
                     finding: finding, now: now,
-                    onDelete: finding.kind == .netperfLeftover ? { onDeleteLeftover(finding.name) } : nil)
+                    onDelete: finding.kind == .netperfLeftover ? { onDeleteLeftover(finding.name) } : nil,
+                    onOpenPod: finding.podRef.map { pod in { onOpenPod(pod) } })
             }
         }
         if section.truncated > 0 {
@@ -301,12 +310,14 @@ private struct CheckupSectionBody: View {
 }
 
 /// One problem: what it is about, what happens, Kubernetes' own words and what to do, and
-/// `onDelete` when the checkup can remove it (a namespace a network test left behind), and
-/// "Explain with AI" for a warning or a critical one when the optional AI diagnosis is on.
+/// `onDelete` when the checkup can remove it (a namespace a network test left behind),
+/// `onOpenPod` for a pod finding (its logs and actions), and "Explain with AI" for a warning or
+/// a critical one when the optional AI diagnosis is on.
 private struct CheckupFindingRow: View {
     let finding: CheckupFinding
     let now: Int64
     var onDelete: (() -> Void)?
+    var onOpenPod: (() -> Void)?
 
     @Environment(AISettings.self) private var ai
     @State private var explaining = false
@@ -333,6 +344,11 @@ private struct CheckupFindingRow: View {
                 }
                 if let onDelete {
                     Button("Delete", role: .destructive, action: onDelete)
+                        .font(.callout)
+                        .buttonStyle(.borderless)
+                }
+                if let onOpenPod {
+                    Button("Open pod", action: onOpenPod)
                         .font(.callout)
                         .buttonStyle(.borderless)
                 }

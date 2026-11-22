@@ -155,4 +155,17 @@ final class KubeEventsLiveTests: XCTestCase {
             """)
         XCTAssertEqual(kubeEventsShareText([]), "")
     }
+
+    func testOnlyAPodWithANamespaceAndANameIsAPodRef() {
+        let pod = LiveKubeEventObject(kind: "Pod", resource: "pods", namespace: "shop", name: "web-1")
+        XCTAssertEqual(pod.podRef, PodRef(namespace: "shop", name: "web-1"))
+        // Discovery need not know the resource: the pod opens all the same.
+        XCTAssertEqual(LiveKubeEventObject(kind: "Pod", namespace: "shop", name: "web-1").podRef, pod.podRef)
+        let replicaSet = LiveKubeEventObject(
+            kind: "ReplicaSet", apiVersion: "apps/v1", group: "apps", resource: "replicasets", namespace: "shop",
+            name: "web")
+        XCTAssertNil(replicaSet.podRef)
+        XCTAssertNil(LiveKubeEventObject(kind: "Node", resource: "nodes", namespaced: false, name: "worker-1").podRef)
+        XCTAssertNil(LiveKubeEventObject(kind: "Pod", resource: "pods", name: "web-1").podRef)
+    }
 }
