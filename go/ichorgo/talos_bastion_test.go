@@ -106,7 +106,7 @@ func TestTalosBastionScopeAllCarriesTalosAndKubernetes(t *testing.T) {
 	}
 
 	// The check opened one channel to the first endpoint.
-	checked := f.bastion.forwards.Load()
+	checked := settledCount(&f.bastion.forwards, 1)
 	if checked != 1 {
 		t.Fatalf("the check forwarded %d channels, want 1", checked)
 	}
@@ -115,7 +115,7 @@ func TestTalosBastionScopeAllCarriesTalosAndKubernetes(t *testing.T) {
 		t.Fatalf("Talos call through the bastion: %v", err)
 	}
 
-	afterTalos := f.bastion.forwards.Load()
+	afterTalos := settledCount(&f.bastion.forwards, checked+1)
 	if afterTalos <= checked {
 		t.Fatal("the Talos call did not go through the bastion")
 	}
@@ -125,7 +125,7 @@ func TestTalosBastionScopeAllCarriesTalosAndKubernetes(t *testing.T) {
 		t.Fatalf("Kubernetes call through the bastion: %v", err)
 	}
 
-	if f.bastion.forwards.Load() <= afterTalos {
+	if settledCount(&f.bastion.forwards, afterTalos+1) <= afterTalos {
 		t.Error("the Kubernetes call did not go through the bastion")
 	}
 
@@ -143,8 +143,8 @@ func TestTalosBastionScopeKubeLeavesTalosDirect(t *testing.T) {
 	}
 
 	// Scope kube checks the sign-in only: no channel.
-	if n := f.bastion.forwards.Load(); n != 0 || f.bastion.handshakes.Load() != 1 {
-		t.Fatalf("the check forwarded %d channels in %d handshakes", n, f.bastion.handshakes.Load())
+	if n, h := f.bastion.forwards.Load(), settledCount(&f.bastion.handshakes, 1); n != 0 || h != 1 {
+		t.Fatalf("the check forwarded %d channels in %d handshakes", n, h)
 	}
 
 	if err := f.talosRead(); err != nil {
@@ -159,7 +159,7 @@ func TestTalosBastionScopeKubeLeavesTalosDirect(t *testing.T) {
 		t.Fatalf("Kubernetes call through the bastion: %v", err)
 	}
 
-	if f.bastion.forwards.Load() == 0 {
+	if settledCount(&f.bastion.forwards, 1) == 0 {
 		t.Error("the Kubernetes call did not go through the bastion")
 	}
 
