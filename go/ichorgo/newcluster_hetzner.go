@@ -228,10 +228,20 @@ type hetznerNewCluster struct {
 	bootstrapped bool
 	// created is called once the server exists (tests serve the node then).
 	created func(*hetznerNewCluster)
+	// deadline makes the run's context; nil is context.WithTimeout. Tests set one that
+	// expires on a fake's event instead of on the wall clock.
+	deadline func(timeout time.Duration) (context.Context, context.CancelFunc)
 }
 
 func (r *hetznerNewCluster) start(timeout time.Duration) *JoinRun {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	newContext := r.deadline
+	if newContext == nil {
+		newContext = func(timeout time.Duration) (context.Context, context.CancelFunc) {
+			return context.WithTimeout(context.Background(), timeout)
+		}
+	}
+
+	ctx, cancel := newContext(timeout)
 
 	go func() {
 		defer cancel()
