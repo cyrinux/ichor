@@ -67,6 +67,9 @@ import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.OVHCheck
 import name.levis.ichor.model.OVHCreateSpec
 import name.levis.ichor.model.OVHOptions
+import name.levis.ichor.model.ScalewayCheck
+import name.levis.ichor.model.ScalewayCreateSpec
+import name.levis.ichor.model.ScalewayOptions
 import name.levis.ichor.model.JoinConfigPreview
 import name.levis.ichor.model.NewClusterDraft
 import name.levis.ichor.model.NewClusterSpec
@@ -477,6 +480,23 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** See [TalosStreams.ovhCreate]. */
     fun ovhCreate(credentialJson: String, spec: OVHCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.ovhCreate(credentialJson, TalosJson.encodeToString(OVHCreateSpec.serializer(), spec), stop)
+
+    /** Whose Scaleway API key this is and whether it may create Instances. Creates nothing. */
+    suspend fun scalewayTest(credentialJson: String): ScalewayCheck = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(ScalewayCheck.serializer(), Ichorgo.scalewayTest(credentialJson))
+    }
+
+    /** Zones, types, images and security groups of the key's zone ([credentialJson] may be empty on the demo). */
+    suspend fun scalewayOptions(credentialJson: String): ScalewayOptions = call { cfg, ctx ->
+        TalosJson.decodeFromString(ScalewayOptions.serializer(), Ichorgo.scalewayOptions(cfg, ctx, credentialJson))
+    }
+
+    /** The IAM policy to attach to the key's application, on [project] when known. */
+    suspend fun scalewayPolicy(project: String): String = withContext(Dispatchers.IO) { Ichorgo.scalewayPolicy(project) }
+
+    /** See [TalosStreams.scalewayCreate]. */
+    fun scalewayCreate(credentialJson: String, spec: ScalewayCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.scalewayCreate(credentialJson, TalosJson.encodeToString(ScalewayCreateSpec.serializer(), spec), stop)
 
     /** Whose AWS keys these are and whether they may run instances (a dry run). Creates nothing. */
     suspend fun awsTest(credentialJson: String): AWSCheck = withContext(Dispatchers.IO) {

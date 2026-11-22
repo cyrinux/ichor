@@ -131,6 +131,8 @@ public struct JoinRequest: Equatable, Sendable {
     public let azure: AzureCreateSpec?
     /// A Compute Engine VM to create at Google Cloud for the node, likewise.
     public let gcp: GCPCreateSpec?
+    /// An Instance to create at Scaleway for the node, likewise.
+    public let scaleway: ScalewayCreateSpec?
     /// The cloud machine joins Omni, not the cluster directly.
     public let omni: Bool
     /// No node at all: a throwaway server becomes a Talos snapshot (`hostname` only labels the run).
@@ -152,7 +154,7 @@ public struct JoinRequest: Equatable, Sendable {
         address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
         replacing: Bool = false, hetzner: HetznerCreateSpec? = nil, ovh: OVHCreateSpec? = nil,
         aws: AWSCreateSpec? = nil, azure: AzureCreateSpec? = nil,
-        gcp: GCPCreateSpec? = nil, omni: Bool = false,
+        gcp: GCPCreateSpec? = nil, scaleway: ScalewayCreateSpec? = nil, omni: Bool = false,
         snapshot: HetznerSnapshotSpec? = nil, awsImage: AWSImageSpec? = nil, azureImage: AzureImageSpec? = nil,
         gcpImage: GCPImageSpec? = nil, omniAllocate: OmniAllocateSpec? = nil, newCluster: NewClusterStart? = nil,
         hetznerCluster: HetznerNewClusterSpec? = nil
@@ -176,6 +178,7 @@ public struct JoinRequest: Equatable, Sendable {
         self.aws = aws
         self.azure = azure
         self.gcp = gcp
+        self.scaleway = scaleway
         self.omni = omni
     }
 
@@ -191,7 +194,8 @@ public struct JoinRequest: Equatable, Sendable {
 
     /// A machine to create at a cloud provider.
     public var cloud: Bool {
-        hetzner != nil || ovh != nil || aws != nil || azure != nil || gcp != nil || hetznerCluster != nil
+        hetzner != nil || ovh != nil || aws != nil || azure != nil || gcp != nil || scaleway != nil
+            || hetznerCluster != nil
     }
 
     /// The cluster this run makes, when it makes one (from a machine, or at Hetzner).
@@ -215,8 +219,8 @@ public struct JoinRequest: Equatable, Sendable {
         JoinRequest(
             address: address, template: template, role: role, hostname: hostname, disk: disk,
             staticAddress: staticAddress, replacing: on, hetzner: hetzner, ovh: ovh, aws: aws, azure: azure, gcp: gcp,
-            omni: omni, snapshot: snapshot, awsImage: awsImage, azureImage: azureImage, gcpImage: gcpImage,
-            omniAllocate: omniAllocate, newCluster: newCluster, hetznerCluster: hetznerCluster)
+            scaleway: scaleway, omni: omni, snapshot: snapshot, awsImage: awsImage, azureImage: azureImage,
+            gcpImage: gcpImage, omniAllocate: omniAllocate, newCluster: newCluster, hetznerCluster: hetznerCluster)
     }
 }
 

@@ -142,6 +142,7 @@ struct BootMediaView: View {
         case .gcp: gcpSections
         case .hetzner: hetznerSections
         case .ovhcloud: ovhSections
+        case .scaleway: scalewaySections
         // A server at a cloud provider boots its own image and reads the config as user data.
         case .some(let other):
             if omni { OmniLabelsSection(labelsJSON: $omniLabels) }
@@ -228,6 +229,22 @@ struct BootMediaView: View {
         }
         if omni { OmniLabelsSection(labelsJSON: $omniLabels) }
         CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .ovhcloud, imagePlatform: nil, path: $path)
+    }
+
+    @ViewBuilder private var scalewaySections: some View {
+        Section {
+            if omni {
+                Text(
+                    "1. Add an API key and attach the IAM policy Ichor prints to its application.\n2. Upload the Talos image for Scaleway to the project once, from a computer.\n3. Name the Instance, then pick a zone, the Talos image, a type and a security group.\n4. Create it: Ichor shows the cost first, then follows it until the machine appears in Omni. Allocate it to the cluster."
+                )
+            } else {
+                Text(
+                    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add an API key and attach the IAM policy Ichor prints to its application.\n3. Upload the Talos image for Scaleway to the project once, from a computer.\n4. Pick a zone, the Talos image, a type and a security group, then create it: Ichor shows the cost first and follows it until the node joins."
+                )
+            }
+        }
+        if omni { OmniLabelsSection(labelsJSON: $omniLabels) }
+        CloudUserDataCard(omni: omni, omniLabels: omniLabels, create: .scaleway, imagePlatform: nil, path: $path)
     }
 
     @ViewBuilder private var machineSections: some View {

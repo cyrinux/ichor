@@ -367,8 +367,21 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     download the Image Factory's `openstack-<arch>.raw.xz`, unpack it, then
     `openstack image create --disk-format raw --file openstack-amd64.raw talos`. The secret stays
     sealed on the device and is not in backups. Other OpenStack hosts use **Another provider** and
-    paste the user data; Scaleway Elastic Metal and Dedibox are not supported. Elsewhere the app
-    calls no provider API.
+    paste the user data. Elsewhere the app calls no provider API.
+  - **At Scaleway, from the phone (Add a node… → A server at a cloud provider → Scaleway):** add an
+    API key (access key, secret key and, optionally, the project id; the app prints the IAM policy to
+    attach to the key's application, the Instances and Block Storage permission sets on one project,
+    and Test says whether it may create), then pick a zone, a Talos image the project holds (Talos
+    images first), a type of that image's architecture (the ones without local storage get their
+    data volume on Block Storage) and a security group (the project's default is picked); the hourly
+    price before tax shows before you type the host name to confirm. The app creates the Instance
+    with the user data and a data volume for EPHEMERAL, follows it until it runs, then follows the
+    node until it joins, or until the machine appears in Omni. A failed or stopped run deletes the
+    Instance, its volumes and its flexible IP, with the same control-plane exception as Hetzner; see
+    [safety](safety.md). The Talos image is uploaded once from a computer, as the Talos guide for
+    Scaleway shows. On a plain Talos cluster the security group must let the phone reach TCP 50000
+    (and 6443 on a control plane). The secret key stays sealed on the device and is not in backups.
+    Scaleway Elastic Metal and Dedibox are not supported.
   - **At AWS EC2, from the phone (Add a node… → A server at a cloud provider → AWS):** add access
     keys (and a session token, from `aws sts get-session-token` or the SSO portal, if they are
     temporary) and their region; the app prints the IAM policy to give their user, only the calls

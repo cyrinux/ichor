@@ -322,6 +322,10 @@ internal class TalosStreams(private val configs: ConfigRepository) {
     fun ovhCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
         hetznerRun(stop) { yaml, context, listener -> Ichorgo.startOVHCreate(yaml, context, credentialJson, specJson, listener) }
 
+    /** Creates a Scaleway Instance and follows it (StartScalewayCreate). As for [hetznerCreate], only [stop] cancels. */
+    fun scalewayCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startScalewayCreate(yaml, context, credentialJson, specJson, listener) }
+
     /** Creates an AWS EC2 instance and follows it (StartAWSCreate). As for [hetznerCreate], only [stop] cancels: it terminates the instance. */
     fun awsCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
         hetznerRun(stop) { yaml, context, listener -> Ichorgo.startAWSCreate(yaml, context, credentialJson, specJson, listener) }

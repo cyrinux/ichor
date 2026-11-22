@@ -6748,4 +6748,27 @@
     <string name="secrets_bundle_failed">Das Secrets-Bundle wurde nicht exportiert: %1$s</string>
     <string name="secrets_bundle_open_failed">Die gewählte Datei kann nicht geschrieben werden.</string>
     <string name="secrets_bundle_new_cluster_help">Behalte eine Kopie der Secrets des Clusters (secrets.yaml), um seine Configs auf einem Computer mit talosctl zu erzeugen, oder bevor seine einzige Control Plane verloren geht.</string>
+    <string name="scaleway_title">Die Instanz bei Scaleway erstellen</string>
+    <string name="scaleway_howto">1. Wähle ein Mitglied zum Kopieren, dann Hostname und Installationsdatenträger des neuen Nodes.\n2. Füge einen API-Schlüssel hinzu und hänge die IAM-Richtlinie, die Ichor anzeigt, an seine Anwendung.\n3. Lade das Talos-Image für Scaleway einmal von einem Computer in das Projekt hoch.\n4. Wähle eine Zone, das Talos-Image, einen Typ und eine Sicherheitsgruppe und erstelle sie: Ichor zeigt zuerst die Kosten und verfolgt sie, bis der Node beitritt.</string>
+    <string name="scaleway_howto_omni">1. Füge einen API-Schlüssel hinzu und hänge die IAM-Richtlinie, die Ichor anzeigt, an seine Anwendung.\n2. Lade das Talos-Image für Scaleway einmal von einem Computer in das Projekt hoch.\n3. Benenne die Instanz und wähle eine Zone, das Talos-Image, einen Typ und eine Sicherheitsgruppe.\n4. Erstelle sie: Ichor zeigt zuerst die Kosten und verfolgt sie, bis die Maschine in Omni erscheint. Weise sie dem Cluster zu.</string>
+    <string name="scaleway_add_key">Scaleway-API-Schlüssel hinzufügen</string>
+    <string name="scaleway_remove">Diesen Schlüssel entfernen</string>
+    <string name="scaleway_key_warning">Das Secret eines API-Schlüssels kann bis zu seinem Widerruf tun, was seine IAM-Richtlinie erlaubt. Es bleibt versiegelt auf diesem Gerät und ist nicht in Backups.</string>
+    <string name="scaleway_policy_hint">Hänge diese IAM-Richtlinie bei Scaleway an die Anwendung des Schlüssels: die Berechtigungssätze für Instances und Block Storage, auf einem Projekt.</string>
+    <string name="scaleway_access_key">Zugriffsschlüssel</string>
+    <string name="scaleway_secret_key">Geheimer Schlüssel</string>
+    <string name="scaleway_project">Projekt-ID</string>
+    <string name="scaleway_project_hint">Leer für das Standardprojekt des Schlüssels.</string>
+    <string name="scaleway_check_ok">Er darf Instanzen im Projekt %1$s erstellen.</string>
+    <string name="scaleway_check_no">Er darf keine Instanzen erstellen: Hänge die Berechtigungssätze der Richtlinie an.</string>
+    <string name="scaleway_check_unknown">Im Projekt %1$s angemeldet. Ob er Instanzen erstellen darf, zeigt sich beim Versuch.</string>
+    <string name="scaleway_zone">Zone</string>
+    <string name="scaleway_type">Typ</string>
+    <string name="scaleway_arch_hint">Nur die Typen, die ein %1$s-Image starten, sind aufgeführt.</string>
+    <string name="scaleway_block_only">%1$s · Block Storage</string>
+    <string name="scaleway_security_group">Sicherheitsgruppe</string>
+    <string name="scaleway_cost_unknown">Preis nicht verfügbar: siehe die Preisliste von Scaleway.</string>
+    <string name="scaleway_confirm_title">%1$s bei Scaleway erstellen?</string>
+    <string name="scaleway_confirm_body">Das erstellt eine kostenpflichtige Instanz (%1$s in %2$s) und ein Datenvolume. Ihre Benutzerdaten gehen mit den Secrets des Clusters oder dem Join-Token von Omni an Scaleway. Ein fehlgeschlagener Lauf löscht die Instanz und ihre Volumes.</string>
+    <string name="scaleway_stop_body">%1$s wird bei Scaleway mit seinen Volumes gelöscht. Eine Control Plane, die schon geantwortet hat, bleibt erhalten: Zuerst muss ihr etcd-Mitglied entfernt werden.</string>
 </resources>

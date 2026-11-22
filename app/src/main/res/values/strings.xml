@@ -6764,4 +6764,27 @@
     <string name="secrets_bundle_failed">The secrets bundle was not exported: %1$s</string>
     <string name="secrets_bundle_open_failed">The chosen file cannot be written.</string>
     <string name="secrets_bundle_new_cluster_help">Keep a copy of the cluster\'s secrets (secrets.yaml) to make its configs on a computer with talosctl, or before its only control plane is lost.</string>
+    <string name="scaleway_title">Create the Instance at Scaleway</string>
+    <string name="scaleway_howto">1. Pick a member to copy, then the new node\'s host name and install disk.\n2. Add an API key and attach the IAM policy Ichor prints to its application.\n3. Upload the Talos image for Scaleway to the project once, from a computer.\n4. Pick a zone, the Talos image, a type and a security group, then create it: Ichor shows the cost first and follows it until the node joins.</string>
+    <string name="scaleway_howto_omni">1. Add an API key and attach the IAM policy Ichor prints to its application.\n2. Upload the Talos image for Scaleway to the project once, from a computer.\n3. Name the Instance, then pick a zone, the Talos image, a type and a security group.\n4. Create it: Ichor shows the cost first, then follows it until the machine appears in Omni. Allocate it to the cluster.</string>
+    <string name="scaleway_add_key">Add a Scaleway API key</string>
+    <string name="scaleway_remove">Remove this key</string>
+    <string name="scaleway_key_warning">An API key\'s secret can do what its IAM policy allows until it is revoked. It stays sealed on this device and is not in backups.</string>
+    <string name="scaleway_policy_hint">Attach this IAM policy to the API key\'s application at Scaleway: the Instances and Block Storage permission sets, on one project.</string>
+    <string name="scaleway_access_key">Access key</string>
+    <string name="scaleway_secret_key">Secret key</string>
+    <string name="scaleway_project">Project ID</string>
+    <string name="scaleway_project_hint">Empty for the key\'s default project.</string>
+    <string name="scaleway_check_ok">It may create Instances in project %1$s.</string>
+    <string name="scaleway_check_no">It may not create Instances: attach the policy\'s permission sets.</string>
+    <string name="scaleway_check_unknown">Signed in to project %1$s. Whether it may create Instances shows when it tries.</string>
+    <string name="scaleway_zone">Zone</string>
+    <string name="scaleway_type">Type</string>
+    <string name="scaleway_arch_hint">Only the types that boot a %1$s image are listed.</string>
+    <string name="scaleway_block_only">%1$s · Block Storage</string>
+    <string name="scaleway_security_group">Security group</string>
+    <string name="scaleway_cost_unknown">Price unavailable: see Scaleway\'s price list.</string>
+    <string name="scaleway_confirm_title">Create %1$s at Scaleway?</string>
+    <string name="scaleway_confirm_body">This creates a billable Instance (%1$s in %2$s) and a data volume. Its user data goes to Scaleway with the cluster\'s secrets or Omni\'s join token. A failed run deletes the Instance and its volumes.</string>
+    <string name="scaleway_stop_body">%1$s is deleted at Scaleway with its volumes. A control plane that already answered is kept: its etcd member must go first.</string>
 </resources>

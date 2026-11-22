@@ -177,6 +177,7 @@ fun CloudUserDataCard(
         CloudProvider.AWS -> AWSCreateCard(form.takeUnless { omni }, labels, demo, onAllocate)
         CloudProvider.AZURE -> AzureCreateCard(form.takeUnless { omni }, labels, demo, onAllocate)
         CloudProvider.GCP -> GCPCreateCard(form.takeUnless { omni }, labels, demo, onAllocate)
+        CloudProvider.SCALEWAY -> ScalewayCreateCard(form.takeUnless { omni }, labels, demo, onAllocate)
         else -> Unit
     }
 }

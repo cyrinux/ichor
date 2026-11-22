@@ -96,8 +96,10 @@ Part of the [Ichor documentation](../README.md#documentation).
   the one instance it created, by id, when it fails or is stopped, except a control plane that
   already answered. A create that gets no clear answer deletes nothing, because another instance may
   carry the same name: the message says to check the project, where it may stay billed.
-- **Creating an Instance at Scaleway (Go core and the probe's `scaleway create`, `-yes` only; the
-  app's card comes next):** billable. It makes a flexible routed IPv4, then an Instance from a
+- **Creating an Instance at Scaleway (Add a node… → A server at a cloud provider → Scaleway; the
+  probe's `scaleway create` runs only with `-yes`):** billable, so the hourly price before tax shows
+  first and the host name is typed to confirm. The card offers only the types of the Talos image's
+  architecture, and a key that may not create cannot be saved. It makes a flexible routed IPv4, then an Instance from a
   Talos image of the project with a second volume for EPHEMERAL (local storage when the type has
   room, else Block Storage), writes the node's config as the `cloud-init` user data while the
   Instance is stopped, and powers it on; both carry the run's `ichor-run` tag. The API key's secret
