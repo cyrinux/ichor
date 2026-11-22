@@ -53,12 +53,30 @@ data class GCPSignInResult(
     val more: Boolean = false,
 )
 
-/** The browser Google sign-ins (Ichorgo.gcpSignInChoices); "native" is the iOS build's own and never shown here. */
+/**
+ * The Google sign-ins (Ichorgo.gcpSignInChoices): the browser ones, and [NATIVE], Google's own
+ * sign-in in the Play build (the app gets the token and hands it to Ichorgo.gcpSignInNative).
+ */
 object GCPSignInKind {
+    const val NATIVE = "native"
     const val GCLOUD = "gcloud"
     const val OAUTH = "oauth"
     const val WORKFORCE = "workforce"
     val browser = listOf(GCLOUD, OAUTH, WORKFORCE)
+    val all = listOf(NATIVE) + browser
+}
+
+/**
+ * Whether [credential] (JSON) is the Play build's "Sign in with Google", whose token the app
+ * renews itself, and when that token runs out (unix seconds, 0 when unknown). Null for a key or a
+ * browser sign-in.
+ */
+fun gcpNativeTokenExpiry(credential: String): Long? {
+    val state = runCatching { Json.parseToJsonElement(credential).jsonObject["googleSignIn"]?.jsonObject }.getOrNull() ?: return null
+    val secrets = state["secrets"] as? JsonObject
+    if ((secrets?.get(GCP_GOOGLE_SIGN_IN) as? JsonPrimitive)?.content != "android") return null
+    val session = state["session"] as? JsonObject
+    return (session?.get("bearerExpiry") as? JsonPrimitive)?.content?.toLongOrNull() ?: 0L
 }
 
 /** [credential] (JSON) with [fields] set, edited in place: the sign-in state it holds stays as it is. Null when it is not a JSON object. */

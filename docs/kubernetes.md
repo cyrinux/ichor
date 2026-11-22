@@ -475,9 +475,11 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     with `gcloud projects add-iam-policy-binding PROJECT_ID --member
     serviceAccount:SERVICE_ACCOUNT_EMAIL --role projects/PROJECT_ID/roles/ichorNodeCreator`.
     Or **sign in with your Google account** instead, with the sign-ins GKE uses: gcloud's own
-    client in the browser, an OAuth client of your own, a workforce login config, or, on iOS
-    builds that carry one, the app's own "Sign in with Google" (on Android the native button is
-    not offered here yet). Then pick the project the calls are billed to (the quota project):
+    client in the browser, an OAuth client of your own, a workforce login config, or
+    **Sign in with Google** (Play build and iOS), listed first where the build offers it. On
+    Android that sign-in gives the app an access token of about an hour, which it renews
+    silently (on Test, on the options, and before a create or an image run); if Google asks for
+    the account again, the card says to sign in again. Then pick the project the calls are billed to (the quota project):
     grant the printed role to your account (`--member user:YOUR_EMAIL`), and the account needs
     `serviceusage.services.use` on that project (Service Usage Consumer), else Test names the
     project it may not use. A session from gcloud's client ends after 7 days while Google keeps
