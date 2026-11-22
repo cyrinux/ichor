@@ -208,7 +208,15 @@ internal object Routes {
     const val UPGRADE = "upgrade?addr={addr}&host={host}&version={version}"
     const val CLUSTER_UPGRADE = "clusterupgrade?version={version}"
     const val K8S_UPGRADE = "k8supgrade"
+    /** Add a node; navigating to it plainly opens it without a preset ([JOIN_NODE_PRESET] is its pattern). */
     const val JOIN_NODE = "joinnode"
+
+    /** Add a node's destination: an optional preset from Replace a control plane (see [joinNode]). */
+    const val JOIN_NODE_PRESET = "joinnode?template={template}&host={host}&replacing={replacing}"
+
+    /** Add a node with the [template] member's address, the [host] name and Replacing preset. */
+    fun joinNode(template: String, host: String, replacing: Boolean) =
+        "joinnode?template=${Uri.encode(template)}&host=${Uri.encode(host)}&replacing=$replacing"
     const val NEW_CLUSTER = "newcluster"
     const val BOOT_MEDIA = "bootmedia?path={path}"
     const val OMNI_ALLOCATE = "omniallocate"

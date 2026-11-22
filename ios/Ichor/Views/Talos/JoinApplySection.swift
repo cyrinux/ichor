@@ -6,6 +6,8 @@ import IchorCore
 /// `request` is nil until steps 1 and 2 are done. Sections of JoinNodeView's list.
 struct JoinApplySection: View {
     let request: JoinRequest?
+    /// The host name Replacing starts on for (Replace a control plane's), "" for none.
+    var replacingHost = ""
     let onOpenNode: (NodeRef) -> Void
 
     @Environment(AppModel.self) private var model
@@ -32,6 +34,9 @@ struct JoinApplySection: View {
                 Text("3. Apply it and follow the node until it joins the cluster")
             }
             .task(id: request?.role) { await loadWarnings() }
+            .onChange(of: request?.hostname, initial: true) { _, host in
+                replacing = !replacingHost.isEmpty && host == replacingHost
+            }
             .sheet(isPresented: $confirming) {
                 if let request {
                     HostnameConfirmationSheet(

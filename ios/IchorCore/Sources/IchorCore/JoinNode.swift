@@ -99,6 +99,30 @@ public func suggestedHostname(role: String, hostnames: [String]) -> String {
     return "\(joinRole(role))-\(n)"
 }
 
+/// Add a node opened from Replace a control plane: the healthy control plane whose config the new
+/// node copies (`template`, its address), the failed member's host name, and Replacing on.
+public struct JoinPreset: Hashable, Sendable {
+    public let template: String
+    public let hostname: String
+    public let replacing: Bool
+
+    public init(template: String, hostname: String, replacing: Bool) {
+        self.template = template
+        self.hostname = hostname
+        self.replacing = replacing
+    }
+
+    /// The template member among `members` (by its address) and the host name to start with: the
+    /// preset's, else the one typed. Nil when the template is not listed (the person picks one).
+    public func start(
+        members: [NodeOverview], typedHostname: String
+    ) -> (template: NodeOverview, hostname: String)? {
+        guard !template.isEmpty, let node = members.first(where: { $0.node == template }) else { return nil }
+        let name = hostname.trimmingCharacters(in: .whitespaces)
+        return (node, name.isEmpty ? typedHostname : name)
+    }
+}
+
 /// The disks a config can install to: writable ones, by their device path.
 public func installDisks(_ disks: [DiskInfo]) -> [String] {
     disks.filter { !$0.readonly && !$0.devPath.isEmpty }.map(\.devPath)

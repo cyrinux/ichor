@@ -4891,7 +4891,9 @@
     <string name="cp_replace_state_skipped">Ignoré</string>
     <string name="cp_replace_state_blocked">Bloqué</string>
     <string name="cp_replace_power_off">L\'ancien nœud ne répond pas et ne peut donc pas être réinitialisé d\'ici : éteignez-le vous-même s\'il tourne encore.</string>
-    <string name="cp_replace_boot_body">Démarrez la nouvelle machine sur une image Talos (mode maintenance), puis appliquez-lui la configuration machine de %1$s depuis un ordinateur. Rejoindre un nœud depuis le téléphone viendra plus tard.</string>
+    <string name="cp_replace_boot_body">Démarrez la nouvelle machine sur une image Talos (mode maintenance), puis faites-la rejoindre le cluster depuis ce téléphone : Ajouter un nœud s\'ouvre avec %1$s comme modèle, l\'ancien nom d\'hôte et Remplacement activé.</string>
+    <string name="cp_replace_join_here">Faire rejoindre le nouveau nœud depuis ce téléphone</string>
+    <string name="cp_replace_or_laptop">Ou depuis un ordinateur : appliquez-lui la configuration machine de %1$s avec talosctl.</string>
     <string name="cp_replace_open_template">Ouvrir la configuration modèle</string>
     <string name="cp_replace_copy_command">Copier la commande</string>
     <string name="cp_replace_wait_start">Commencer l\'attente</string>

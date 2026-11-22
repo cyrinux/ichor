@@ -8,6 +8,8 @@ struct JoinConfigSection: View {
     let disks: [String]
     /// The choices behind the shown preview (address left empty), nil while there is none.
     @Binding var configured: JoinRequest?
+    /// From Replace a control plane: the template and host name to start with, applied once.
+    var preset: JoinPreset?
 
     @Environment(AppModel.self) private var model
     @State private var members: LoadState<[NodeOverview]> = .loading
@@ -17,6 +19,7 @@ struct JoinConfigSection: View {
     @State private var address = ""
     @State private var preview: LoadState<JoinConfigPreview>?
     @State private var request = 0
+    @State private var presetApplied = false
 
     var body: some View {
         Section {
@@ -168,6 +171,19 @@ struct JoinConfigSection: View {
         guard let client = model.client else { return }
         members = .loading
         members = await LoadState.from { try await client.overview().nodes }
+        applyPreset()
+    }
+
+    /// The preset's template member and host name, once the members are listed; then the person
+    /// can change both.
+    private func applyPreset() {
+        guard !presetApplied, let preset, case .loaded(let nodes, _, _) = members,
+            let start = preset.start(members: nodes, typedHostname: hostname)
+        else { return }
+        presetApplied = true
+        template = start.template
+        hostname = start.hostname
+        stale()
     }
 
     /// Only the latest preview's answer is shown: an older, slower one is dropped.

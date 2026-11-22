@@ -138,4 +138,25 @@ final class JoinNodeTests: XCTestCase {
         let done = joinTimeline([JoinProgress(phase: "applying"), JoinProgress(phase: "done")], finished: true)
         XCTAssertTrue(done.allSatisfy { $0.state == .done })
     }
+
+    /// Replace a control plane's preset: the template member by its address, the old host name, or
+    /// the one typed when the preset has none; nothing for a template that is not listed.
+    func testJoinPresetPicksTheTemplateByAddress() {
+        let members = [
+            NodeOverview(node: "192.0.2.11", hostname: "cp-1", reachable: true, role: "controlplane"),
+            NodeOverview(node: "192.0.2.12", hostname: "worker-1", reachable: true, role: "worker"),
+        ]
+        let preset = JoinPreset(template: "192.0.2.11", hostname: "cp-3", replacing: true)
+        let start = preset.start(members: members, typedHostname: "")
+        XCTAssertEqual(start?.template.hostname, "cp-1")
+        XCTAssertEqual(start?.hostname, "cp-3")
+        XCTAssertEqual(joinRole(start?.template.role ?? ""), "controlplane")
+
+        let unnamed = JoinPreset(template: "192.0.2.11", hostname: " ", replacing: false)
+        XCTAssertEqual(unnamed.start(members: members, typedHostname: "typed")?.hostname, "typed")
+        let unknown = JoinPreset(template: "192.0.2.99", hostname: "cp-3", replacing: true)
+        XCTAssertNil(unknown.start(members: members, typedHostname: ""))
+        let none = JoinPreset(template: "", hostname: "", replacing: false)
+        XCTAssertNil(none.start(members: members, typedHostname: ""))
+    }
 }

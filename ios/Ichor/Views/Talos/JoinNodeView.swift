@@ -4,13 +4,15 @@ import IchorCore
 /// Omni joins the machine itself: Add a node is only its boot media there.
 struct AddNodeEntryView: View {
     @Binding var path: [Route]
+    /// From Replace a control plane: what the form starts with.
+    var preset: JoinPreset?
     @Environment(AppModel.self) private var model
 
     var body: some View {
         if model.activeSummary?.omni == true {
             BootMediaView(path: $path, chosen: nil)
         } else {
-            JoinNodeView(path: $path)
+            JoinNodeView(path: $path, preset: preset)
         }
     }
 }
@@ -21,6 +23,7 @@ struct AddNodeEntryView: View {
 /// member's (JoinConfigSection); then send it and follow the node until it joins (JoinApplySection).
 struct JoinNodeView: View {
     @Binding var path: [Route]
+    var preset: JoinPreset?
     @Environment(AppModel.self) private var model
     @State private var address = ""
     @State private var inspection: LoadState<MaintenanceInspection>?
@@ -72,8 +75,8 @@ struct JoinNodeView: View {
                     inspectionSections(node)
                 }
             }
-            JoinConfigSection(disks: newNodeDisks, configured: $configured)
-            JoinApplySection(request: joinRequest) { ref in
+            JoinConfigSection(disks: newNodeDisks, configured: $configured, preset: preset)
+            JoinApplySection(request: joinRequest, replacingHost: replacingHost) { ref in
                 path.removeLast()
                 path.append(.node(ref))
             }
@@ -97,6 +100,12 @@ struct JoinNodeView: View {
         return JoinRequest(
             address: node.address, template: c.template, role: c.role, hostname: c.hostname,
             disk: c.disk, staticAddress: c.staticAddress)
+    }
+
+    /// The host name Replacing starts on for: the preset's when it asks for it.
+    private var replacingHost: String {
+        guard let preset, preset.replacing else { return "" }
+        return preset.hostname
     }
 
     /// The writable disks of the inspected node, for step 2.

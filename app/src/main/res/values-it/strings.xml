@@ -4891,7 +4891,9 @@
     <string name="cp_replace_state_skipped">Saltato</string>
     <string name="cp_replace_state_blocked">Bloccato</string>
     <string name="cp_replace_power_off">Il vecchio nodo non risponde, quindi non può essere reimpostato da qui: spegnilo tu se è ancora acceso.</string>
-    <string name="cp_replace_boot_body">Avvia la nuova macchina da un\'immagine Talos (modalità manutenzione), poi applicale la configurazione macchina di %1$s da un portatile. L\'aggiunta di un nodo dal telefono arriverà più avanti.</string>
+    <string name="cp_replace_boot_body">Avvia la nuova macchina da un\'immagine Talos (modalità manutenzione), poi aggiungila da questo telefono: Aggiungi un nodo si apre con %1$s come modello, il vecchio nome host e Sostituzione attiva.</string>
+    <string name="cp_replace_join_here">Aggiungi il nuovo nodo da questo telefono</string>
+    <string name="cp_replace_or_laptop">Oppure da un portatile: applicale la configurazione macchina di %1$s con talosctl.</string>
     <string name="cp_replace_open_template">Apri la configurazione modello</string>
     <string name="cp_replace_copy_command">Copia il comando</string>
     <string name="cp_replace_wait_start">Inizia ad attendere</string>

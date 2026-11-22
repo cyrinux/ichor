@@ -49,7 +49,12 @@ import name.levis.ichor.ui.upgrade.TimelineRow
  * is null until steps 1 and 2 are done (a node in maintenance mode, a valid config).
  */
 @Composable
-fun JoinApplyStep(request: JoinRequest?, onOpenNode: (address: String, hostname: String, role: String) -> Unit) {
+fun JoinApplyStep(
+    request: JoinRequest?,
+    onOpenNode: (address: String, hostname: String, role: String) -> Unit,
+    /** The host name Replacing starts on for (Replace a control plane's), "" for none. */
+    replacingHost: String = "",
+) {
     val app = LocalContext.current.applicationContext as TalosApp
     val run by app.joinManager.current.collectAsStateWithLifecycle()
     SectionTitle(stringResource(R.string.join_node_step_apply))
@@ -63,7 +68,7 @@ fun JoinApplyStep(request: JoinRequest?, onOpenNode: (address: String, hostname:
             onClose = app.joinManager::dismiss,
         )
         request == null -> MutedText(stringResource(R.string.join_apply_waiting))
-        else -> JoinSummary(request) { app.joinManager.start(it) }
+        else -> JoinSummary(request, replacingHost) { app.joinManager.start(it) }
     }
 }
 
@@ -86,12 +91,12 @@ internal fun rememberAuthenticated(): (hostname: String, action: () -> Unit) -> 
 }
 
 @Composable
-private fun JoinSummary(request: JoinRequest, onJoin: (JoinRequest) -> Unit) {
+private fun JoinSummary(request: JoinRequest, replacingHost: String, onJoin: (JoinRequest) -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
     var warnings by remember(request.role) { mutableStateOf<List<String>>(emptyList()) }
     var confirm by remember { mutableStateOf(false) }
-    var replacing by remember(request.hostname) { mutableStateOf(false) }
+    var replacing by remember(request.hostname) { mutableStateOf(replacingHost.isNotBlank() && request.hostname == replacingHost) }
     LaunchedEffect(request.role) {
         warnings = runCatching { app.nodeLifecycleRepository.nodeJoinWarnings(request.role) }.getOrDefault(emptyList())
     }

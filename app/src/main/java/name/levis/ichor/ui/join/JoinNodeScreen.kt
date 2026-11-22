@@ -20,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTopAppBar
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -103,6 +104,8 @@ fun JoinNodeScreen(
     onOpenNode: (address: String, hostname: String, role: String) -> Unit,
     /** A server to create at a cloud, or a machine to boot: what gets it there. */
     onPath: (AddNodePath) -> Unit,
+    /** From Replace a control plane: the template, host name and Replacing to start with. */
+    preset: JoinPreset = JoinPreset(),
     vm: JoinNodeViewModel = viewModel(key = "join-node", factory = factory { JoinNodeViewModel(app.nodeLifecycleRepository) }),
     configVm: JoinConfigViewModel = viewModel(key = "join-config", factory = factory { JoinConfigViewModel(app.talosRepository, app.nodeLifecycleRepository) }),
 ) {
@@ -110,6 +113,7 @@ fun JoinNodeScreen(
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val address by vm.address.collectAsStateWithLifecycle()
     val inspection by vm.inspection.collectAsStateWithLifecycle()
+    LaunchedEffect(preset) { configVm.preset(preset) }
     IchorScaffold(
         topBar = {
             IchorTopAppBar(
@@ -142,7 +146,7 @@ fun JoinNodeScreen(
             val request = node?.takeIf { form.complete && preview is UiState.Loaded && joinDiskFits(form.disk, it) }?.let {
                 JoinRequest(it.address, form.template, form.role, form.hostname, form.disk, form.address)
             }
-            JoinApplyStep(request, onOpenNode)
+            JoinApplyStep(request, onOpenNode, replacingHost = preset.hostname.takeIf { preset.replacing }.orEmpty())
         }
     }
 }

@@ -46,6 +46,7 @@ import name.levis.ichor.ui.upgrade.ClusterUpgradeScreen
 import name.levis.ichor.ui.upgrade.K8sUpgradeScreen
 import name.levis.ichor.ui.join.AddNodePath
 import name.levis.ichor.ui.join.BootMediaScreen
+import name.levis.ichor.ui.join.JoinPreset
 import name.levis.ichor.ui.join.JoinNodeScreen
 import name.levis.ichor.ui.join.OmniAllocateScreen
 import name.levis.ichor.ui.maintenance.MaintenanceScreen
@@ -239,7 +240,14 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
         NetToolsScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
     }
     composable(Routes.K8S_UPGRADE) { K8sUpgradeScreen(onBack = { nav.popBackStack() }) }
-    composable(Routes.JOIN_NODE) {
+    composable(
+        Routes.JOIN_NODE_PRESET,
+        arguments = listOf(
+            navArgument("template") { type = NavType.StringType; defaultValue = "" },
+            navArgument("host") { type = NavType.StringType; defaultValue = "" },
+            navArgument("replacing") { type = NavType.BoolType; defaultValue = false },
+        ),
+    ) { entry ->
         // Omni joins the machine itself: Add a node is only its boot media there.
         if (app.configRepository.config.value?.activeSummary?.omni == true) {
             BootMediaScreen(
@@ -249,6 +257,11 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             )
         } else {
             JoinNodeScreen(
+                preset = JoinPreset(
+                    template = entry.arguments?.getString("template").orEmpty(),
+                    hostname = entry.arguments?.getString("host").orEmpty(),
+                    replacing = entry.arguments?.getBoolean("replacing") == true,
+                ),
                 onBack = { nav.popBackStack() },
                 onOpenNode = { addr, hostname, role ->
                     nav.popBackStack()
@@ -274,7 +287,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             onAddNode = if (omni) null else {
                 {
                     // Back to Add a node when it opened this screen, else a new one.
-                    if (!nav.popBackStack(Routes.JOIN_NODE, inclusive = false)) nav.navigate(Routes.JOIN_NODE)
+                    if (!nav.popBackStack(Routes.JOIN_NODE_PRESET, inclusive = false)) nav.navigate(Routes.JOIN_NODE)
                 }
             },
         )
@@ -415,6 +428,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             hostname = entry.arguments?.getString("host").orEmpty(),
             onBack = { nav.popBackStack() },
             onOpenConfig = { addr, host -> nav.navigate(Routes.machineConfig(addr, host)) },
+            onJoinNode = { template, host -> nav.navigate(Routes.joinNode(template, host, replacing = true)) },
         )
     }
     composable(Routes.HEALTH) {

@@ -75,10 +75,14 @@ Part of the [Ichor documentation](../README.md#documentation).
   3. **Reset the old node:** the reset sheet, without `--graceful` (the member already left).
      A node that no longer answers is skipped: power it off yourself. So is an address that a
      current member now uses (a replacement that took the old IP).
-  4. **Boot the new node:** by hand for now. Boot it from a Talos image, open the machine config
-     of a healthy control plane (secrets revealed only after the app lock), save it as
-     `controlplane.yaml`, then run `talosctl apply-config --insecure -n <new-node-ip> -f controlplane.yaml`
-     from a laptop.
+  4. **Boot the new node:** boot it from a Talos image (maintenance mode), then join it from the
+     phone: "Join the new node from this phone" opens Add a node with the healthy control plane
+     as the template, the old host name and Replacing on (only from this screen), and the usual
+     typed host name, app lock and follow-up until its etcd member is healthy. Or by hand from a
+     laptop: open the machine config of a healthy control plane (secrets revealed only after the
+     app lock), save it as `controlplane.yaml`, then run
+     `talosctl apply-config --insecure -n <new-node-ip> -f controlplane.yaml`. On Omni, Omni
+     joins the machine itself: only the laptop way is shown.
   5. **Wait for the new member:** the screen polls etcd until a new healthy voting member joins.
 
 - **Making a Talos snapshot at Hetzner (Create the server at Hetzner → Make a Talos snapshot):**

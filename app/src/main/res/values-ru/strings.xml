@@ -5136,7 +5136,9 @@
     <string name="cp_replace_state_skipped">Пропущено</string>
     <string name="cp_replace_state_blocked">Заблокировано</string>
     <string name="cp_replace_power_off">Старый узел не отвечает, поэтому его нельзя сбросить отсюда: выключите его сами, если он ещё работает.</string>
-    <string name="cp_replace_boot_body">Загрузите новую машину с образа Talos (режим обслуживания), затем примените к ней конфигурацию машины %1$s с ноутбука. Подключение узла с телефона появится позже.</string>
+    <string name="cp_replace_boot_body">Загрузите новую машину с образа Talos (режим обслуживания), затем присоедините её с этого телефона: «Добавить узел» откроется с %1$s в качестве шаблона, старым именем хоста и включённой заменой.</string>
+    <string name="cp_replace_join_here">Присоединить новый узел с этого телефона</string>
+    <string name="cp_replace_or_laptop">Или с ноутбука: примените к ней конфигурацию машины %1$s с помощью talosctl.</string>
     <string name="cp_replace_open_template">Открыть шаблон конфигурации</string>
     <string name="cp_replace_copy_command">Копировать команду</string>
     <string name="cp_replace_wait_start">Начать ожидание</string>
