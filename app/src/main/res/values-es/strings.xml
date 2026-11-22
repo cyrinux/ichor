@@ -1714,6 +1714,14 @@
     <string name="storage_section_disks">Discos</string>
     <string name="storage_disks_empty">Ningún disco</string>
     <string name="storage_disk_unallocated">Sin asignar</string>
+    <string name="storage_disk_wipe">Borrar este disco…</string>
+    <string name="storage_disk_wiping">Borrando…</string>
+    <string name="storage_disk_wipe_title">¿Borrar %1$s?</string>
+    <string name="storage_disk_wipe_confirm">Borrar el disco</string>
+    <string name="storage_disk_wipe_text">Se borra todo lo que hay en este disco. El nodo sigue funcionando.</string>
+    <string name="storage_disk_wipe_storage_note">Talos no sabe qué guarda un sistema de almacenamiento (Longhorn, Rook/Ceph, un hostPath) en este disco: asegúrate de que nada lo usa.</string>
+    <string name="storage_disk_wipe_failed">No se pudo borrar %1$s: %2$s</string>
+    <string name="storage_disk_wipe_done">%1$s borrado</string>
     <string name="storage_disk_partition_n">Partición %1$d</string>
     <string name="storage_disk_uuid">UUID %1$s</string>
     <string name="storage_disk_encryption_enabled">Cifrado</string>

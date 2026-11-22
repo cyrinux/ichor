@@ -32,7 +32,7 @@ struct StorageView: View {
 
     var body: some View {
         List {
-            DiskLayoutSection(state: disks, support: nodes.support(.disks, node: node))
+            DiskLayoutSection(state: disks, support: nodes.support(.disks, node: node), wipe: diskWipe)
             Section("Mounts") {
                 SectionStateView(state: mounts) { loaded in
                     let shown = listedMounts(loaded.mounts, showAll: showAllMounts)
@@ -98,6 +98,21 @@ struct StorageView: View {
             let cluster = model.activeSummary.map(monitorClusterKey) ?? ""
             history = await HistoryStore.query(cluster: cluster, period: .week)
             forecast = await HistoryStore.forecast(cluster: cluster)
+        }
+    }
+
+    /// Wiping one disk: os:admin on a Talos 1.9+ node (unknown support keeps the button).
+    private var diskWipe: DiskWipe? {
+        guard model.allows(.reset), nodes.support(.diskWipe, node: node).supported else { return nil }
+        return DiskWipe(hostname: hostname) { disk in
+            guard let client = model.client else { return nil }
+            do {
+                try await client.wipeDisk(node: node, device: disk.name)
+                await loadDisks()
+                return nil
+            } catch {
+                return error.localizedDescription
+            }
         }
     }
 

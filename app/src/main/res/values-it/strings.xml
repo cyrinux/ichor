@@ -1714,6 +1714,14 @@
     <string name="storage_section_disks">Dischi</string>
     <string name="storage_disks_empty">Nessun disco segnalato</string>
     <string name="storage_disk_unallocated">Non allocato</string>
+    <string name="storage_disk_wipe">Cancella questo disco…</string>
+    <string name="storage_disk_wiping">Cancellazione…</string>
+    <string name="storage_disk_wipe_title">Cancellare %1$s?</string>
+    <string name="storage_disk_wipe_confirm">Cancella il disco</string>
+    <string name="storage_disk_wipe_text">Tutto ciò che c\'è su questo disco viene cancellato. Il nodo continua a funzionare.</string>
+    <string name="storage_disk_wipe_storage_note">Talos non sa cosa un sistema di storage (Longhorn, Rook/Ceph, un hostPath) tiene su questo disco: assicurati che nulla lo usi.</string>
+    <string name="storage_disk_wipe_failed">Impossibile cancellare %1$s: %2$s</string>
+    <string name="storage_disk_wipe_done">%1$s cancellato</string>
     <string name="storage_disk_partition_n">Partizione %1$d</string>
     <string name="storage_disk_uuid">UUID %1$s</string>
     <string name="storage_disk_encryption_enabled">Cifrato</string>

@@ -101,3 +101,10 @@ fun DiskLayout.barFractions(minFraction: Float = 0.015f): List<BarSlice> {
         BarSlice(segment, fraction.toFloat())
     }
 }
+
+/**
+ * A disk that may be wiped alone (Go: wipeableDisk): not the system disk, not read-only, and no
+ * partition holding a Talos volume or mounted. The Go core checks it again before the call.
+ */
+val DiskLayout.wipeable: Boolean
+    get() = !systemDisk && !readonly && partitions.none { it.volumeId.isNotEmpty() || it.mountedOn.isNotEmpty() }

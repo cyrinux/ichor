@@ -246,6 +246,12 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
         Ichorgo.nodeReset(cfg, ctx, node, request.wipe.wire, request.graceful, request.reboot)
     }
 
+    /**
+     * `talosctl wipe disk [device] --method fast` on [node] (os:admin, Talos 1.9+): the node keeps
+     * running. Refused for the system disk, a read-only disk and one holding a volume or a mount.
+     */
+    suspend fun wipeDisk(node: String, device: String) = call { cfg, ctx -> Ichorgo.nodeDiskWipe(cfg, ctx, node, device, "fast") }
+
     /** `talosctl rollback`: [node] reboots into the Talos it ran before its last upgrade (os:admin). */
     suspend fun rollback(node: String) = call { cfg, ctx -> Ichorgo.rollback(cfg, ctx, node) }
 

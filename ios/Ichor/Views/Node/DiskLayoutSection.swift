@@ -7,6 +7,8 @@ import IchorCore
 struct DiskLayoutSection: View {
     let state: LoadState<NodeDisks>
     let support: FeatureSupport
+    /// Wiping one disk; nil on a node or role that may not.
+    var wipe: DiskWipe?
 
     var body: some View {
         Section("Disks") {
@@ -21,11 +23,18 @@ struct DiskLayoutSection: View {
                     } else if list.disks.isEmpty {
                         Text("No disk reported").font(.footnote).foregroundStyle(.secondary)
                     }
-                    ForEach(list.supported ? list.disks : []) { DiskCard(disk: $0) }
+                    ForEach(list.supported ? list.disks : []) { DiskCard(disk: $0, wipe: wipe) }
                 }
             }
         }
     }
+}
+
+/// Wiping one disk from the Storage screen: the node's hostname typed to confirm, and the wipe,
+/// which answers the error to show, or nil once done (the disks then read again).
+struct DiskWipe {
+    let hostname: String
+    let onWipe: (DiskLayout) async -> String?
 }
 
 /// The usual Talos partitions keep their colour on every disk (same palette as Android).
@@ -63,6 +72,11 @@ private func partitionLabel(_ partition: DiskPartition) -> String {
 
 private struct DiskCard: View {
     let disk: DiskLayout
+    let wipe: DiskWipe?
+
+    @State private var confirming = false
+    @State private var wiping = false
+    @State private var failure: String?
 
     var body: some View {
         let slices = barSlices(disk)
@@ -75,8 +89,51 @@ private struct DiskCard: View {
                 legend(labels)
             }
             ForEach(disk.partitions) { PartitionRow(partition: $0) }
+            if let wipe, disk.wipeable {
+                wipeButton(wipe)
+            }
         }
         .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private func wipeButton(_ wipe: DiskWipe) -> some View {
+        Button(role: .destructive) {
+            confirming = true
+        } label: {
+            HStack {
+                if wiping { ProgressView() }
+                Text(wiping ? String(localized: "Wiping…") : String(localized: "Wipe this disk…"))
+            }
+        }
+        .buttonStyle(.bordered)
+        .disabled(wiping)
+        .sheet(isPresented: $confirming) {
+            HostnameConfirmationSheet(
+                title: String(localized: "Wipe \(disk.devPath)?"),
+                message: [
+                    [disk.devPath, disk.model, disk.serial, formatBytes(disk.size)].filter { !$0.isEmpty }
+                        .joined(separator: "  ·  "),
+                    String(localized: "Everything on this disk is erased. The node keeps running."),
+                    String(
+                        localized:
+                            "Talos does not know what a storage system (Longhorn, Rook/Ceph, a hostPath) keeps on this disk: make sure nothing uses it."
+                    ),
+                ].joined(separator: "\n\n"),
+                hostname: wipe.hostname,
+                actionTitle: String(localized: "Wipe the disk")
+            ) {
+                confirming = false
+                Task {
+                    wiping = true
+                    failure = await wipe.onWipe(disk)
+                    wiping = false
+                }
+            }
+        }
+        if let failure {
+            Text(verbatim: failure).font(.footnote).foregroundStyle(Color.statusBad).textSelection(.enabled)
+        }
     }
 
     private var header: some View {

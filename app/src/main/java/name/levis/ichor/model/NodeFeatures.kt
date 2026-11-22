@@ -54,6 +54,7 @@ enum class TalosFeature(val key: String) {
     MACHINE_CONFIG("machineConfig"),
     DEBUG_SHELL("debugShell"),
     RESET("reset"),
+    DISK_WIPE("diskWipe"),
     META("meta"),
     WATCHDOG("watchdog"),
 }

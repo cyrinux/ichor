@@ -79,50 +79,61 @@ func NodeDisks(configYAML, contextName, node string) (out string, err error) {
 	}
 
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		known, err := s.hasResourceType(ctx, node, block.DiscoveredVolumeType)
+		list, err := readNodeDisks(ctx, s, node)
 		if err != nil {
-			return "", s.friendlyErr(node, err)
+			return "", err
 		}
 
-		if !known {
-			return toJSON(diskLayoutList{
-				Reason: notAvailableOn(s.nodeVersion(ctx, node)) + ": needs Talos " + featureMinVersion("disks") + " or newer",
-				Disks:  []diskLayout{},
-			})
-		}
-
-		disks, err := safe.StateListAll[*block.Disk](ctx, s.client.COSI)
-		if err != nil {
-			return "", s.friendlyErr(node, err)
-		}
-
-		discovered, err := safe.StateListAll[*block.DiscoveredVolume](ctx, s.client.COSI)
-		if err != nil {
-			return "", s.friendlyErr(node, err)
-		}
-
-		// Best effort: without volume statuses every partition's encryption is unknown,
-		// without mount statuses (before 1.10) mountedOn is empty.
-		var (
-			volumes    []*block.VolumeStatus
-			mounts     []*block.MountStatus
-			systemDisk string
-		)
-
-		if list, err := safe.StateListAll[*block.VolumeStatus](ctx, s.client.COSI); err == nil {
-			volumes = safe.ToSlice(list, identity)
-		}
-
-		if list, err := safe.StateListAll[*block.MountStatus](ctx, s.client.COSI); err == nil {
-			mounts = safe.ToSlice(list, identity)
-		}
-
-		if sd, err := safe.StateGetByID[*block.SystemDisk](ctx, s.client.COSI, block.SystemDiskID); err == nil {
-			systemDisk = sd.TypedSpec().DiskID
-		}
-
-		return toJSON(buildDisks(safe.ToSlice(disks, identity), safe.ToSlice(discovered, identity), volumes, mounts, systemDisk))
+		return toJSON(list)
 	})
+}
+
+// readNodeDisks reads node's disks (ctx targets it); an answer without the resources (Talos
+// before 1.8) is unsupported with the reason.
+func readNodeDisks(ctx context.Context, s *session, node string) (diskLayoutList, error) {
+	known, err := s.hasResourceType(ctx, node, block.DiscoveredVolumeType)
+	if err != nil {
+		return diskLayoutList{}, s.friendlyErr(node, err)
+	}
+
+	if !known {
+		return diskLayoutList{
+			Reason: notAvailableOn(s.nodeVersion(ctx, node)) + ": needs Talos " + featureMinVersion("disks") + " or newer",
+			Disks:  []diskLayout{},
+		}, nil
+	}
+
+	disks, err := safe.StateListAll[*block.Disk](ctx, s.client.COSI)
+	if err != nil {
+		return diskLayoutList{}, s.friendlyErr(node, err)
+	}
+
+	discovered, err := safe.StateListAll[*block.DiscoveredVolume](ctx, s.client.COSI)
+	if err != nil {
+		return diskLayoutList{}, s.friendlyErr(node, err)
+	}
+
+	// Best effort: without volume statuses every partition's encryption is unknown,
+	// without mount statuses (before 1.10) mountedOn is empty.
+	var (
+		volumes    []*block.VolumeStatus
+		mounts     []*block.MountStatus
+		systemDisk string
+	)
+
+	if list, err := safe.StateListAll[*block.VolumeStatus](ctx, s.client.COSI); err == nil {
+		volumes = safe.ToSlice(list, identity)
+	}
+
+	if list, err := safe.StateListAll[*block.MountStatus](ctx, s.client.COSI); err == nil {
+		mounts = safe.ToSlice(list, identity)
+	}
+
+	if sd, err := safe.StateGetByID[*block.SystemDisk](ctx, s.client.COSI, block.SystemDiskID); err == nil {
+		systemDisk = sd.TypedSpec().DiskID
+	}
+
+	return buildDisks(safe.ToSlice(disks, identity), safe.ToSlice(discovered, identity), volumes, mounts, systemDisk), nil
 }
 
 // buildDisks joins each physical disk to its partitions (block.DiscoveredVolume) and the

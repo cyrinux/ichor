@@ -92,4 +92,18 @@ final class DisksTests: XCTestCase {
         XCTAssertEqual(new.transport, "sata")
         XCTAssertTrue(new.systemDisk)
     }
+
+    /// Go's wipeableDisk: a data disk with a stray partition, not the system disk, a read-only
+    /// disk, or one with a partition holding a Talos volume or mounted.
+    func testWipeableDisks() {
+        let stray = DiskPartition(index: 1, devPath: "/dev/sdb1", label: "old-data")
+        XCTAssertTrue(DiskLayout(name: "sdb", partitions: [stray]).wipeable)
+        XCTAssertTrue(DiskLayout(name: "sdc").wipeable)
+        XCTAssertFalse(DiskLayout(name: "sda", systemDisk: true).wipeable)
+        XCTAssertFalse(DiskLayout(name: "sdd", readonly: true).wipeable)
+        let volume = DiskPartition(index: 1, devPath: "/dev/sde1", volumeId: "u-data")
+        XCTAssertFalse(DiskLayout(name: "sde", partitions: [volume]).wipeable)
+        let mounted = DiskPartition(index: 1, devPath: "/dev/sdf1", mountedOn: "/var/mnt/data")
+        XCTAssertFalse(DiskLayout(name: "sdf", partitions: [mounted]).wipeable)
+    }
 }
