@@ -11,6 +11,9 @@ import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.AmAlerts
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.CheckupReport
+import name.levis.ichor.model.ScalewayCheck
+import name.levis.ichor.model.ScalewayOptions
+import name.levis.ichor.model.defaultSecurityGroup
 import name.levis.ichor.model.NodeDirListing
 import name.levis.ichor.model.NodeFileText
 import name.levis.ichor.model.ClusterOverview
@@ -106,6 +109,12 @@ class ContractTest {
             assertTrue(it.force && !it.canRun)
         },
         "helm-rollback-progress" to Row(HelmRollbackFollowProgress.serializer()) { assertEquals(HelmRollbackPhase.RUNNING, it.phase); assertEquals(2, it.total) },
+        "scaleway-options" to Row(ScalewayOptions.serializer()) {
+            assertTrue(it.images.first().talos)
+            assertEquals("demo-sg", it.defaultSecurityGroup?.id)
+            assertTrue(it.types.any { t -> t.blockOnly })
+        },
+        "scaleway-test" to Row(ScalewayCheck.serializer()) { assertTrue(it.canCreate && it.checked) },
     )
 
     /** Every default written out, so the re-encoded object names every key the model reads. */

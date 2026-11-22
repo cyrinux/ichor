@@ -104,6 +104,11 @@ final class ContractTests: XCTestCase {
         "helm-rollback-progress": ContractTests.row(HelmRollbackFollowProgress.self) {
             XCTAssertEqual($0.phase, "Running"); XCTAssertEqual($0.total, 2)
         },
+        "scaleway-options": ContractTests.row(ScalewayOptions.self) {
+            XCTAssertEqual($0.imagesTalosFirst.first?.talos, true)
+            XCTAssertEqual($0.defaultSecurityGroup?.id, "demo-sg")
+        },
+        "scaleway-test": ContractTests.row(ScalewayCheck.self) { XCTAssertTrue($0.canCreate && $0.checked) },
     ]
 
     /// go/ichorgo/testdata/contract, from where `swift test` (ios/IchorCore) or test-linux.sh
