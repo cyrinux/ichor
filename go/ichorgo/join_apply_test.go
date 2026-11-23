@@ -22,6 +22,9 @@ const (
 	joinTemplateNode = "192.0.2.11"
 	joinNewNode      = "192.0.2.20"
 	joinPollInterval = 10 * time.Millisecond
+	// joinWaitLimit only stops a test whose run hangs: a loaded CI runner can take seconds
+	// where a laptop takes milliseconds, and no test relies on it firing.
+	joinWaitLimit = 2 * time.Minute
 	// joinStepDelay is how long the fake node stays in each state: several polls.
 	joinStepDelay = 80 * time.Millisecond
 )
@@ -59,7 +62,7 @@ func (r *joinRecorder) wait(t *testing.T) (address, errMessage string, events []
 		}
 
 		return d[0], d[1], events
-	case <-time.After(10 * time.Second):
+	case <-time.After(joinWaitLimit):
 		t.Fatal("the join did not end")
 	}
 

@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -148,6 +149,47 @@ func hetznerNewClusterSpecJSON(edit func(*hetznerNewClusterSpec)) string {
 	return string(b)
 }
 
+// eventDeadline is a run context the test expires when the fake reaches a given state, so a
+// "not ready within" path never depends on how fast a loaded runner gets there.
+type eventDeadline struct {
+	done chan struct{}
+	once sync.Once
+	mu   sync.Mutex
+	err  error
+}
+
+func newEventDeadline() *eventDeadline { return &eventDeadline{done: make(chan struct{})} }
+
+func (d *eventDeadline) Deadline() (time.Time, bool) { return time.Time{}, false }
+func (d *eventDeadline) Done() <-chan struct{}       { return d.done }
+func (d *eventDeadline) Value(any) any               { return nil }
+
+func (d *eventDeadline) Err() error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	return d.err
+}
+
+func (d *eventDeadline) end(err error) {
+	d.once.Do(func() {
+		d.mu.Lock()
+		d.err = err
+		d.mu.Unlock()
+		close(d.done)
+	})
+}
+
+// expire ends the run as its deadline would.
+func (d *eventDeadline) expire() { d.end(context.DeadlineExceeded) }
+
+// use makes r run on d (Cancel still cancels).
+func (d *eventDeadline) use(r *hetznerNewCluster) {
+	r.deadline = func(time.Duration) (context.Context, context.CancelFunc) {
+		return d, func() { d.end(context.Canceled) }
+	}
+}
+
 // hetznerNewClusterRun is a run whose server boots into a fake apid: up tells whether it
 // answers at all, kube whether its Kubernetes API does.
 func hetznerNewClusterRun(t *testing.T, specJSON string, rec JoinListener, up, kube bool) (*hetznerNewCluster, *fakeTalos) {
@@ -157,7 +199,7 @@ func hetznerNewClusterRun(t *testing.T, specJSON string, rec JoinListener, up, k
 
 	r := &hetznerNewCluster{
 		tokenJSON: hetznerTestToken, listener: maskedJoinListener{rec},
-		poll: joinPollInterval, interval: joinPollInterval, cleanupFor: 5 * time.Second,
+		poll: joinPollInterval, interval: joinPollInterval, cleanupFor: time.Minute,
 	}
 
 	if err := json.Unmarshal([]byte(specJSON), &r.spec); err != nil {
@@ -358,7 +400,12 @@ func TestHetznerNewClusterNeverBootsDeletesBoth(t *testing.T) {
 
 	rec := newJoinRecorder()
 	r, f := hetznerNewClusterRun(t, hetznerNewClusterSpecJSON(nil), rec, false, false)
-	r.start(2 * time.Second)
+
+	// The deadline passes once the server exists: both are then this run's to delete.
+	deadline := newEventDeadline()
+	deadline.use(r)
+	r.created = func(*hetznerNewCluster) { deadline.expire() }
+	r.start(time.Minute)
 
 	_, errMessage, _ := rec.wait(t)
 	if !strings.Contains(errMessage, "was not ready within") || !strings.Contains(errMessage, "are deleted") {
@@ -380,8 +427,17 @@ func TestHetznerNewClusterKeptAfterBootstrap(t *testing.T) {
 	startFakeHetznerCluster(t, fh)
 
 	rec := newJoinRecorder()
-	r, _ := hetznerNewClusterRun(t, hetznerNewClusterSpecJSON(nil), rec, true, false)
-	r.start(3 * time.Second)
+	r, f := hetznerNewClusterRun(t, hetznerNewClusterSpecJSON(nil), rec, true, false)
+
+	// The deadline passes at the first Kubeconfig call, which comes only after the bootstrap.
+	deadline := newEventDeadline()
+	deadline.use(r)
+	f.trace = func(method, _ string) {
+		if method == "Kubeconfig" {
+			deadline.expire()
+		}
+	}
+	r.start(time.Minute)
 
 	_, errMessage, _ := rec.wait(t)
 	if !strings.Contains(errMessage, "is kept") || !strings.Contains(errMessage, "server 4711") {
