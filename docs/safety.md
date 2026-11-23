@@ -123,6 +123,24 @@ Part of the [Ichor documentation](../README.md#documentation).
   flexible IP, which outlive the Instance. A create without a clear answer is looked for by the
   run's tag and deleted. The one case that needs the console is a delete that fails: the message
   names the zone and the ids still there, billed until they are deleted.
+- **Making a Talos image at Scaleway (from the Go core and the probe for now):** billable, so the
+  estimate gives the helper's type and hourly price before tax first (Scaleway's API has no
+  snapshot price: the estimate says so), and the probe's `scaleway image` runs only with `-yes`.
+  Nothing of the cluster is touched: the schematic comes from the template's machine config, and a
+  template whose config cannot be read is refused. Before any write the run checks the key's right
+  to create, the marketplace's Ubuntu image and a type for the architecture in the zone, and that
+  no image of the project already has the name. It creates a flexible routed IPv4 and one
+  throwaway Ubuntu Instance with two Block Storage volumes (its root and an empty 10 GB one), all
+  tagged `ichor-run`; the Instance downloads the Image Factory's image itself (the phone moves no
+  image bytes), writes it to the empty volume, writes `OK` or the failure to its own user data
+  key `ichor-image` through the metadata service and halts. The run reads that key and takes no
+  snapshot without `OK`, powers the Instance off, snapshots the volume (Block Storage) and creates
+  the image from the snapshot, both tagged `talos`, `ichor-managed`, `schematic=`, `version=` and
+  `arch=`. It deletes the Instance, both volumes and the IP on every path, and an unfinished image
+  or snapshot when it fails or is stopped; a create without a clear answer is looked for by the
+  run's tag. A finished image and its snapshot stay, the snapshot billed per GB-month until you
+  delete them. The one case that needs the Scaleway console is a delete that fails: the message
+  names the zone and the ids still there.
 - **Creating an instance at AWS EC2 (Add a node… → A server at a cloud provider → AWS):**
   billable, so the hourly price shows first when the Price List answers, the host name is typed to
   confirm, and Stop asks once more (the instance is billed until it is terminated); the probe's

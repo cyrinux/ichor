@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -128,6 +129,7 @@ type scwCreate struct {
 
 	dataType string // the EPHEMERAL volume's type
 	dataSize int64  // its size, bytes
+	dataName string // its name; "" for <hostname>-ephemeral
 	runID    string
 
 	ipID, ipAddress string
@@ -394,7 +396,7 @@ func (h *scwCreate) createServer(ctx context.Context, tags []string) error {
 		"name": h.spec.Hostname, "commercial_type": h.spec.Type, "image": h.spec.ImageID, "project": h.client.project,
 		"tags": tags, "routed_ip_enabled": true, "public_ips": []string{h.ipID}, "boot_type": "local",
 		"volumes": map[string]any{
-			"1": map[string]any{"name": h.spec.Hostname + "-ephemeral", "size": h.dataSize, "volume_type": h.dataType},
+			"1": map[string]any{"name": cmp.Or(h.dataName, h.spec.Hostname+"-ephemeral"), "size": h.dataSize, "volume_type": h.dataType},
 		},
 	}
 

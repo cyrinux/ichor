@@ -129,7 +129,7 @@ func (h *scwCreate) deleteServer(ctx context.Context) error {
 func (h *scwCreate) deleteVolume(ctx context.Context, v *scwVolume) error {
 	path := h.client.path("/volumes/" + url.PathEscape(v.id))
 	if v.kind == scwVolumeBlock {
-		path = "/block/v1alpha1/zones/" + h.client.zone + "/volumes/" + url.PathEscape(v.id)
+		path = h.client.blockPath("/volumes/" + url.PathEscape(v.id))
 	}
 
 	if err := h.deleteGone(ctx, path); err != nil {

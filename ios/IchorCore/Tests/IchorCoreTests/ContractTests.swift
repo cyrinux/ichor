@@ -114,6 +114,12 @@ final class ContractTests: XCTestCase {
             XCTAssertEqual($0.defaultSecurityGroup?.id, "demo-sg")
         },
         "scaleway-test": ContractTests.row(ScalewayCheck.self) { XCTAssertTrue($0.canCreate && $0.checked) },
+        "scaleway-image-estimate": ContractTests.row(ScalewayImageCost.self) {
+            XCTAssertEqual($0.type, "DEV1-S"); XCTAssertEqual($0.snapshotGB, 10)
+        },
+        "scaleway-image-result": ContractTests.row(ScalewayImageResult.self) {
+            XCTAssertEqual($0.arch, "amd64"); XCTAssertEqual($0.sizeGB, 10)
+        },
     ]
 
     /// go/ichorgo/testdata/contract, from where `swift test` (ios/IchorCore) or test-linux.sh
