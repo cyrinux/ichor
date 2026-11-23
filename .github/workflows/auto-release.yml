@@ -4,15 +4,25 @@ name: Auto-release
 # `just release-tag auto` does by hand: the version is bumped from the conventional commits
 # (scripts/next-version.py: breaking -> major, feat -> minor, fix/perf -> patch), the tag is
 # annotated with the changelog, and Google Play's notes are committed as with --yes. chore,
-# ci, docs, test and refactor commits alone release nothing. Only a commit whose Android and
-# iOS builds passed is tagged; otherwise the next run tries again.
+# ci, docs, test and refactor commits alone release nothing.
+#
+# Only a commit whose Android and iOS builds passed is tagged. The gate job reads both
+# workflows' latest push run on the commit (scripts/release-gate.py): both green -> tag; one
+# failed on its first attempt (a stalled simulator, a network blip) -> re-run its failed jobs
+# and let a later run read the result, three runs a day; one failed again -> no tag, and this
+# run fails naming the workflow; still running -> the next run looks again. The gate holds
+# actions: write for the re-run and no key; the tag job holds the key and no write token.
 #
 # The rulesets keep GITHUB_TOKEN off main and v* tags, so the notes commit and the tag are
 # pushed with a deploy key allowed past them (`just auto-release-setup`); a tag pushed that
 # way starts release.yml, which builds and publishes it.
 on:
   schedule:
-    - cron: "17 5 * * *" # daily, 05:17 UTC
+    # 05:17 UTC tags or re-runs; the two later runs read a re-run's result the same day.
+    # After a tag (or with nothing to release) next-version.py ends them early.
+    - cron: "17 5 * * *"
+    - cron: "17 8 * * *"
+    - cron: "17 11 * * *"
   # Run by hand, e.g. from the GitHub mobile app (repo > Actions > Auto-release > Run workflow):
   # `bump` forces a release of that size even with only chore/docs/... commits since the tag.
   workflow_dispatch:
@@ -23,7 +33,7 @@ on:
         options: [auto, patch, minor, major]
         default: auto
       dry_run:
-        description: Only print the version that would be tagged
+        description: Only print the version and the CI decision; tag and re-run nothing
         type: boolean
         default: false
 
@@ -35,28 +45,23 @@ permissions:
   contents: read
 
 jobs:
-  tag:
+  gate:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    environment: auto-release # RELEASE_DEPLOY_KEY, main only
     permissions:
-      contents: read # pushes go through the deploy key
-      actions: read # CI runs of the commit
+      contents: read
+      actions: write # gh run rerun of a failed first attempt
     env:
       GH_TOKEN: ${{ github.token }}
-      DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_KEY }}
+    outputs:
+      ok: ${{ steps.ci.outputs.ok }}
+      version: ${{ steps.next.outputs.version }}
+      head: ${{ steps.next.outputs.head }}
     steps:
-      - name: Check the deploy key
-        if: env.DEPLOY_KEY == ''
-        run: echo "::notice::RELEASE_DEPLOY_KEY is not set (just auto-release-setup); only a dry run is possible."
-
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
           fetch-depth: 0 # tags and history to bump from
-          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }} # empty: HTTPS with GITHUB_TOKEN, read only
-          # Neither the key nor the token stays in .git/config; the push step below sets the
-          # key up for itself.
           persist-credentials: false
 
       - name: Next version
@@ -73,6 +78,7 @@ jobs:
             echo "::notice::Nothing to release since v$(jq -r .current <<<"$result") (bump: $BUMP)."
           fi
           echo "version=$next" >>"$GITHUB_OUTPUT"
+          echo "head=$(git rev-parse HEAD)" >>"$GITHUB_OUTPUT"
 
       # The commit's own CI must be green: the tag ships what android.yml and ios.yml built.
       # They skip website-only commits (their paths-ignore), so the check goes to main's last
@@ -80,24 +86,90 @@ jobs:
       - name: Check CI on the commit
         id: ci
         if: steps.next.outputs.version != ''
+        env:
+          DRY_RUN: ${{ inputs.dry_run || false }}
         run: |
           sha="$(git log --first-parent -1 --format=%H HEAD -- . \
             ':!docs' ':!docs-i18n' ':!scripts/site-i18n.py' ':!scripts/site-reference.py' ':!.github/workflows/pages.yml')"
-          ok=true
+          runs='{}'
           for workflow in android.yml ios.yml; do
-            conclusion="$(gh run list --workflow "$workflow" --commit "$sha" --event push --limit 1 \
-              --json conclusion --jq '.[0].conclusion // "missing"')"
-            echo "$workflow on ${sha:0:12}: ${conclusion:-in progress}"
-            [[ "$conclusion" == success ]] || ok=false
+            latest="$(gh run list --workflow "$workflow" --commit "$sha" --event push --limit 1 \
+              --json databaseId,conclusion,status,attempt,workflowName)"
+            runs="$(jq -c --arg w "$workflow" --argjson r "$latest" '. + {($w): $r}' <<<"$runs")"
           done
-          if [[ "$ok" != true ]]; then
-            echo "::warning::CI has not passed on ${sha:0:12} yet; not releasing today."
+          gate="$(python3 -I scripts/release-gate.py <<<"$runs")"
+          echo "$gate"
+          decision="$(jq -r .decision <<<"$gate")"
+          reason="$(jq -r .reason <<<"$gate")"
+          echo "ok=$([[ "$decision" == release ]] && echo true || echo false)" >>"$GITHUB_OUTPUT"
+          case "$decision" in
+            release)
+              echo "CI passed on ${sha:0:12}: $reason" ;;
+            wait)
+              echo "::warning::CI has not passed on ${sha:0:12} yet ($reason); the next run looks again." ;;
+            rerun)
+              for id in $(jq -r '.rerun[]' <<<"$gate"); do
+                workflow="$(jq -r --argjson id "$id" 'to_entries[] | select(.value[0].databaseId == $id) | .key' <<<"$runs")"
+                if [[ "$DRY_RUN" == true ]]; then
+                  echo "::notice::Dry run: would re-run the failed jobs of $workflow on ${sha:0:12} (run $id)."
+                else
+                  gh run rerun "$id" --failed
+                  echo "::notice::Re-running the failed jobs of $workflow on ${sha:0:12}; the next scheduled run reads the result."
+                fi
+              done ;;
+            blocked)
+              for id in $(jq -r '.blocked[]' <<<"$gate"); do
+                echo "::error::Not releasing ${sha:0:12}: $reason. $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$id"
+              done
+              exit 1 ;;
+            *)
+              echo "::error::Unknown gate decision: $gate"
+              exit 1 ;;
+          esac
+
+  tag:
+    needs: gate
+    runs-on: ubuntu-latest
+    if: needs.gate.outputs.ok == 'true' && !inputs.dry_run
+    environment: auto-release # RELEASE_DEPLOY_KEY, main only
+    permissions:
+      contents: read # pushes go through the deploy key
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_KEY }}
+    steps:
+      - name: Check the deploy key
+        if: env.DEPLOY_KEY == ''
+        run: echo "::notice::RELEASE_DEPLOY_KEY is not set (just auto-release-setup); nothing is tagged."
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: env.DEPLOY_KEY != ''
+        with:
+          ref: main
+          fetch-depth: 0 # tags and history for the changelog
+          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
+          # Neither the key nor the token stays in .git/config; the push step below sets the
+          # key up for itself.
+          persist-credentials: false
+
+      # The gate read CI for the main it checked out; a commit that landed since is unchecked.
+      - name: Main is the gated commit
+        id: same
+        if: env.DEPLOY_KEY != ''
+        env:
+          GATED: ${{ needs.gate.outputs.head }}
+        run: |
+          if [[ "$(git rev-parse HEAD)" == "$GATED" ]]; then
+            echo "ok=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "::warning::main moved since the gate (${GATED:0:12} -> $(git rev-parse --short=12 HEAD)); the next run retries."
+            echo "ok=false" >>"$GITHUB_OUTPUT"
           fi
-          echo "ok=$ok" >>"$GITHUB_OUTPUT"
 
       # From the Ubuntu archive rather than a third-party action, as this job holds the key.
       - name: Install just
-        if: steps.ci.outputs.ok == 'true' && !inputs.dry_run && env.DEPLOY_KEY != ''
+        if: steps.same.outputs.ok == 'true'
         run: sudo apt-get update -q && sudo apt-get install -y -q just
 
       # --yes commits the drafted Play notes ("docs: Google Play release notes for vX.Y.Z")
@@ -105,9 +177,9 @@ jobs:
       # already ran in CI, hence ICHOR_RELEASE_SKIP_GATE. --atomic: if main moved since the
       # checkout, neither the commit nor the tag lands, and the next run retries.
       - name: Commit the Play notes, tag and push
-        if: steps.ci.outputs.ok == 'true' && !inputs.dry_run && env.DEPLOY_KEY != ''
+        if: steps.same.outputs.ok == 'true'
         env:
-          VERSION: ${{ steps.next.outputs.version }}
+          VERSION: ${{ needs.gate.outputs.version }}
           ICHOR_RELEASE_SKIP_GATE: "1"
         run: |
           # The deploy key for `git fetch` in release-tag and the push, and GitHub's host
