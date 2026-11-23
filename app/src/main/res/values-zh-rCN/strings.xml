@@ -6670,4 +6670,8 @@
     <string name="scaleway_confirm_title">在 Scaleway 创建 %1$s？</string>
     <string name="scaleway_confirm_body">这会创建一个收费实例（%2$s 中的 %1$s）和一个数据卷。其用户数据会连同集群的密钥或 Omni 的加入令牌发送到 Scaleway。失败的运行会删除该实例及其卷。</string>
     <string name="scaleway_stop_body">%1$s 及其卷将在 Scaleway 被删除。已经响应的 control plane 会保留：必须先移除它的 etcd 成员。</string>
+    <string name="scaleway_network_guided">为节点创建安全组(推荐)</string>
+    <string name="scaleway_network_created">已创建安全组 %1$s。</string>
+    <string name="scaleway_network_rule_member">来自 %1$s (%2$s) 的所有流量</string>
+    <string name="scaleway_network_hint">Ichor 在此可用区只创建一次安全组 ichor-nodes 并重复使用。没有规则允许的流量都会被丢弃:允许集群每个成员公网地址的所有协议,以及在不使用 Omni 的 Talos 上来自此手机当天地址的 TCP 50000。不会对整个互联网开放任何端口,该安全组会被保留。</string>
 </resources>

@@ -6800,4 +6800,8 @@
     <string name="scaleway_confirm_title">%1$s bei Scaleway erstellen?</string>
     <string name="scaleway_confirm_body">Das erstellt eine kostenpflichtige Instanz (%1$s in %2$s) und ein Datenvolume. Ihre Benutzerdaten gehen mit den Secrets des Clusters oder dem Join-Token von Omni an Scaleway. Ein fehlgeschlagener Lauf löscht die Instanz und ihre Volumes.</string>
     <string name="scaleway_stop_body">%1$s wird bei Scaleway mit seinen Volumes gelöscht. Eine Control Plane, die schon geantwortet hat, bleibt erhalten: Zuerst muss ihr etcd-Mitglied entfernt werden.</string>
+    <string name="scaleway_network_guided">Eine Sicherheitsgruppe für die Nodes anlegen (empfohlen)</string>
+    <string name="scaleway_network_created">Sicherheitsgruppe %1$s angelegt.</string>
+    <string name="scaleway_network_rule_member">Gesamter Verkehr von %1$s (%2$s)</string>
+    <string name="scaleway_network_hint">Ichor legt die Sicherheitsgruppe ichor-nodes einmal in dieser Zone an und verwendet sie wieder. Sie verwirft, was keine Regel zulässt: alle Protokolle von der öffentlichen Adresse jedes Cluster-Mitglieds und, bei reinem Talos, TCP 50000 von der heutigen Adresse dieses Telefons. Nichts wird für alle geöffnet, und die Gruppe bleibt erhalten.</string>
 </resources>

@@ -69,6 +69,8 @@ import name.levis.ichor.model.OVHCreateSpec
 import name.levis.ichor.model.OVHOptions
 import name.levis.ichor.model.ScalewayCheck
 import name.levis.ichor.model.ScalewayCreateSpec
+import name.levis.ichor.model.ScalewayNetwork
+import name.levis.ichor.model.ScalewayNetworkSpec
 import name.levis.ichor.model.ScalewayOptions
 import name.levis.ichor.model.JoinConfigPreview
 import name.levis.ichor.model.NewClusterDraft
@@ -495,6 +497,16 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** Zones, types, images and security groups of the key's zone ([credentialJson] may be empty on the demo). */
     suspend fun scalewayOptions(credentialJson: String): ScalewayOptions = call { cfg, ctx ->
         TalosJson.decodeFromString(ScalewayOptions.serializer(), Ichorgo.scalewayOptions(cfg, ctx, credentialJson))
+    }
+
+    /**
+     * Finds or makes the guided security group ichor-nodes in the spec's zone, opened to nothing
+     * but the cluster's members and (plain Talos) this phone on port 50000. Writes at Scaleway;
+     * refused in the demo.
+     */
+    suspend fun scalewayNetworkPrepare(credentialJson: String, spec: ScalewayNetworkSpec): ScalewayNetwork = call { cfg, ctx ->
+        val specJson = TalosJson.encodeToString(ScalewayNetworkSpec.serializer(), spec)
+        TalosJson.decodeFromString(ScalewayNetwork.serializer(), Ichorgo.scalewayNetworkPrepare(cfg, ctx, credentialJson, specJson))
     }
 
     /** The IAM policy to attach to the key's application, on [project] when known. */

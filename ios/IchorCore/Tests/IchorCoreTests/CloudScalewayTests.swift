@@ -38,6 +38,43 @@ final class CloudScalewayTests: XCTestCase {
         XCTAssertEqual(try options().defaultSecurityGroup?.id, "sg-default")
     }
 
+    func testTheManagedGroupIsPreselected() throws {
+        let json = #"""
+            {"securityGroups":[{"id":"sg-default","name":"Default security group","default":true},
+                               {"id":"sg-nodes","name":"ichor-nodes","managed":true}],
+             "groupWarning":"Plain Talos: check port 50000"}
+            """#
+        let value = try JSONDecoder().decode(ScalewayOptions.self, from: Data(json.utf8))
+        XCTAssertEqual(value.defaultSecurityGroup?.id, "sg-nodes")
+        XCTAssertEqual(value.groupWarning, "Plain Talos: check port 50000")
+        XCTAssertEqual(try options().groupWarning, "")
+    }
+
+    // ScalewayNetworkPrepare's shape (go/ichorgo/cloud_scaleway_network.go), with documentation addresses.
+    func testDecodesTheGuidedSecurityGroup() throws {
+        let json = #"""
+            {"securityGroupId":"sg-nodes","name":"ichor-nodes","created":false,"phoneIp":"203.0.113.7",
+             "rules":[{"protocol":"all","port":0,"source":"198.51.100.10/32","description":"cp-1"},
+                      {"protocol":"tcp","port":50000,"source":"203.0.113.7/32","description":"this phone"},
+                      {"protocol":"tcp","port":50000,"source":"203.0.113.9/32"},
+                      {"protocol":"udp","port":51820,"source":"192.0.2.0/24"}],
+             "warnings":null}
+            """#
+        let network = try JSONDecoder().decode(ScalewayNetwork.self, from: Data(json.utf8))
+        XCTAssertEqual(network.securityGroupId, "sg-nodes")
+        XCTAssertTrue(network.warnings.isEmpty)
+        let rules = network.rules
+        XCTAssertTrue(rules[0].isMember && !rules[0].isPhone(network.phoneIp))
+        XCTAssertTrue(rules[1].isPhone(network.phoneIp) && !rules[1].isMember)
+        // An older address of the phone is a plain rule: listed, never removed.
+        XCTAssertFalse(rules[2].isPhone(network.phoneIp) || rules[2].isMember)
+        XCTAssertEqual(rules[3].plain, "udp/51820 ← 192.0.2.0/24")
+        let spec = try JSONEncoder().encode(ScalewayNetworkSpec(zone: "nl-ams-1", role: "worker", omni: true))
+        let decoded = try JSONSerialization.jsonObject(with: spec) as? [String: Any]
+        XCTAssertEqual(decoded?["zone"] as? String, "nl-ams-1")
+        XCTAssertEqual(decoded?["omni"] as? Bool, true)
+    }
+
     func testCostLine() throws {
         let value = try options()
         XCTAssertEqual(value.types[0].hourlyPrice, "0.0099 EUR")

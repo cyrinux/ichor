@@ -6816,4 +6816,8 @@
     <string name="scaleway_confirm_title">Create %1$s at Scaleway?</string>
     <string name="scaleway_confirm_body">This creates a billable Instance (%1$s in %2$s) and a data volume. Its user data goes to Scaleway with the cluster\'s secrets or Omni\'s join token. A failed run deletes the Instance and its volumes.</string>
     <string name="scaleway_stop_body">%1$s is deleted at Scaleway with its volumes. A control plane that already answered is kept: its etcd member must go first.</string>
+    <string name="scaleway_network_guided">Make a security group for the nodes (recommended)</string>
+    <string name="scaleway_network_created">Made the security group %1$s.</string>
+    <string name="scaleway_network_rule_member">All traffic from %1$s (%2$s)</string>
+    <string name="scaleway_network_hint">Ichor makes the security group ichor-nodes once in this zone and reuses it. It drops what no rule lets in: every protocol from each cluster member\'s public address and, on plain Talos, TCP 50000 from this phone\'s address of the day. Nothing is opened to the world, and the group is kept.</string>
 </resources>

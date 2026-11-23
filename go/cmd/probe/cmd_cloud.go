@@ -73,7 +73,7 @@ var cloudCommands = []command{
 
 		return "", errors.New("usage: ovh test|options|policy|create …")
 	}},
-	{name: "scaleway", args: "test|options|policy|image-estimate ARCH [ZONE]|image TEMPLATE [ARCH] [ZONE] -yes|create TEMPLATE ROLE HOSTNAME DISK ZONE TYPE IMAGE_ID -yes", run: func(e env) (string, error) {
+	{name: "scaleway", args: "test|options|policy|image-estimate ARCH [ZONE]|image TEMPLATE [ARCH] [ZONE] -yes|create TEMPLATE ROLE HOSTNAME DISK ZONE TYPE IMAGE_ID -yes|network ROLE ZONE [-omni] -yes", run: func(e env) (string, error) {
 		credJSON, err := json.Marshal(map[string]string{
 			"accessKey": os.Getenv("SCW_ACCESS_KEY"), "secretKey": os.Getenv("SCW_SECRET_KEY"),
 			"project": os.Getenv("SCW_DEFAULT_PROJECT_ID"), "zone": os.Getenv("SCW_DEFAULT_ZONE"),
@@ -95,6 +95,8 @@ var cloudCommands = []command{
 			return scalewayImage(e, string(credJSON))
 		case "create":
 			return scalewayCreate(e, string(credJSON))
+		case "network":
+			return scalewayNetwork(e, string(credJSON))
 		}
 
 		return "", errors.New("usage: scaleway test|options|policy|create …")
@@ -623,6 +625,23 @@ func scalewayImage(e env, credJSON string) (string, error) {
 	ichorgo.StartScalewayImage(e.cfg, e.context, credJSON, string(spec), j)
 
 	return "done: " + <-j.done, nil
+}
+
+// scalewayNetwork makes (or reuses) the ichor-nodes security group in ZONE and lets in the
+// cluster's members and, unless -omni, this machine on TCP 50000: it changes the project
+// (nothing billable), so scratch projects only, never in CI, and only with -yes.
+func scalewayNetwork(e env, credJSON string) (string, error) {
+	omni := flag.NArg() == 6 && flag.Arg(4) == "-omni"
+	if flag.Arg(flag.NArg()-1) != "-yes" || (flag.NArg() != 5 && !omni) {
+		return "", errors.New("usage: scaleway network ROLE ZONE [-omni] -yes (creates a security group and adds rules to it)")
+	}
+
+	spec, err := json.Marshal(map[string]any{"role": flag.Arg(2), "zone": flag.Arg(3), "omni": omni})
+	if err != nil {
+		return "", err
+	}
+
+	return ichorgo.ScalewayNetworkPrepare(e.cfg, e.context, credJSON, string(spec))
 }
 
 // scalewayCreate creates a billable Instance: scratch projects only, and only with -yes.

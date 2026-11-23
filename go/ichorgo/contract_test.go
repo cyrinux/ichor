@@ -113,6 +113,17 @@ var contractFixtures = []struct {
 			Schematic: "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba", SizeGB: scwImageVolumeGB,
 		}
 	}},
+	// The Scaleway guided security group (invented ids and documentation addresses).
+	{"scaleway-network", func() any {
+		return scwNetworkResult{
+			SecurityGroupID: "55555555-5555-5555-5555-555555555555", Name: scwNetworkGroup, Created: true, PhoneIP: "203.0.113.7",
+			Rules: []scwNetworkRule{
+				{Protocol: "all", Source: "198.51.100.10/32", Description: "cp-1"},
+				{Protocol: "tcp", Port: awsTalosAPIPort, Source: "203.0.113.7/32", Description: "this phone"},
+			},
+			Warnings: []string{"the member worker-2 has no public IPv4 (only 10.0.0.12): the new node will not see it as a source, so the group does not let it in"},
+		}
+	}},
 	{"update-proposal-plan", contractUpdatePlan},
 	{"diag-entries", contractDiagEntries},
 	// A coloured logfmt line: clean fields and its spans.

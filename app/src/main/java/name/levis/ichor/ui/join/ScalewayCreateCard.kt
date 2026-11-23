@@ -41,6 +41,8 @@ import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.ScalewayCheck
 import name.levis.ichor.model.ScalewayCreateSpec
 import name.levis.ichor.model.ScalewayCredential
+import name.levis.ichor.model.ScalewayNetwork
+import name.levis.ichor.model.ScalewayNetworkSpec
 import name.levis.ichor.model.ScalewayOptions
 import name.levis.ichor.model.defaultSecurityGroup
 import name.levis.ichor.model.hourlyPrice
@@ -110,6 +112,20 @@ class ScalewayCreateViewModel(private val lifecycle: NodeLifecycleRepository, pr
             _options.value = uiStateOf { lifecycle.scalewayOptions(if (account.isBlank()) "" else credential(account)) }
         }
     }
+
+    /** The options again without the loading state, so the form keeps its picks; a failure keeps the old ones. */
+    private fun refresh() {
+        val account = _account.value
+        if (account.isBlank()) return
+        viewModelScope.launch {
+            val state = uiStateOf { lifecycle.scalewayOptions(credential(account)) }
+            if (state is UiState.Loaded) _options.value = state
+        }
+    }
+
+    /** The guided security group (writes at Scaleway), then the options again so the group is listed. */
+    suspend fun prepareNetwork(spec: ScalewayNetworkSpec): ScalewayNetwork =
+        lifecycle.scalewayNetworkPrepare(credential(_account.value), spec).also { refresh() }
 
     /** The stored key, in the picked zone when one is picked. */
     suspend fun credential(account: String): String {
@@ -196,7 +212,10 @@ fun ScalewayCreateCard(
                 is UiState.Failed -> ErrorBox(state.message, vm::reload)
                 is UiState.Loaded -> {
                     val shownZone = zone.ifBlank { state.data.zone }
-                    ScalewayInstanceForm(state.data, shownZone, vm::pickZone, form, labelsJson, busy = current?.running == true) { request ->
+                    ScalewayInstanceForm(
+                        state.data, shownZone, vm::pickZone, form, labelsJson, busy = current?.running == true,
+                        onPrepareNetwork = if (demo || account.isBlank()) null else vm::prepareNetwork,
+                    ) { request ->
                         // The key is read only now, and goes to the run alone.
                         scope.launch { app.joinManager.start(request, if (account.isBlank()) "" else vm.credential(account)) }
                     }
@@ -217,6 +236,8 @@ private fun ScalewayInstanceForm(
     form: JoinConfigForm?,
     labelsJson: String,
     busy: Boolean,
+    /** The guided security group; null where it cannot run (the demo, no key). */
+    onPrepareNetwork: (suspend (ScalewayNetworkSpec) -> ScalewayNetwork)?,
     onCreate: (JoinRequest) -> Unit,
 ) {
     val colors = LocalStatusColors.current
@@ -267,6 +288,11 @@ private fun ScalewayInstanceForm(
             )
         }
     }
+    if (onPrepareNetwork != null) {
+        ScalewayGuidedNetwork(zone, omni = form == null, role = form?.role.orEmpty(), enabled = !busy, prepare = onPrepareNetwork) { network ->
+            groupId = network.securityGroupId
+        }
+    }
     if (options.securityGroups.isNotEmpty()) {
         Text(stringResource(R.string.scaleway_security_group), style = MaterialTheme.typography.labelLarge)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -275,6 +301,8 @@ private fun ScalewayInstanceForm(
             }
         }
     }
+    // The managed group already lets this phone in; any other must be checked by hand (plain Talos).
+    if (form != null && group?.managed != true && options.groupWarning.isNotBlank()) InfoNotice(options.groupWarning)
     type?.let {
         Text(
             it.hourlyPrice?.let { price -> stringResource(R.string.ovh_cost, price) } ?: stringResource(R.string.scaleway_cost_unknown),

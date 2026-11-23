@@ -14,6 +14,7 @@ import name.levis.ichor.model.CheckupReport
 import name.levis.ichor.model.ScalewayCheck
 import name.levis.ichor.model.ScalewayImageCost
 import name.levis.ichor.model.ScalewayImageResult
+import name.levis.ichor.model.ScalewayNetwork
 import name.levis.ichor.model.ScalewayOptions
 import name.levis.ichor.model.defaultSecurityGroup
 import name.levis.ichor.model.NodeDirListing
@@ -125,6 +126,10 @@ class ContractTest {
         "scaleway-test" to Row(ScalewayCheck.serializer()) { assertTrue(it.canCreate && it.checked) },
         "scaleway-image-estimate" to Row(ScalewayImageCost.serializer()) { assertEquals("DEV1-S", it.type); assertEquals(10, it.snapshotGB) },
         "scaleway-image-result" to Row(ScalewayImageResult.serializer()) { assertEquals("amd64", it.arch); assertEquals(10, it.sizeGB) },
+        "scaleway-network" to Row(ScalewayNetwork.serializer()) {
+            assertTrue(it.created)
+            assertTrue(it.rules[0].isMember && it.rules[1].isPhone(it.phoneIp))
+        },
     )
 
     /** Every default written out, so the re-encoded object names every key the model reads. */

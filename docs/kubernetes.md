@@ -373,14 +373,21 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     attach to the key's application, the Instances and Block Storage permission sets on one project,
     and Test says whether it may create), then pick a zone, a Talos image the project holds (Talos
     images first), a type of that image's architecture (the ones without local storage get their
-    data volume on Block Storage) and a security group (the project's default is picked); the hourly
+    data volume on Block Storage) and a security group (`ichor-nodes` once the app made it, else the
+    project's default, is picked); the hourly
     price before tax shows before you type the host name to confirm. The app creates the Instance
     with the user data and a data volume for EPHEMERAL, follows it until it runs, then follows the
     node until it joins, or until the machine appears in Omni. A failed or stopped run deletes the
     Instance, its volumes and its flexible IP, with the same control-plane exception as Hetzner; see
     [safety](safety.md). The Talos image is uploaded once from a computer, as the Talos guide for
-    Scaleway shows. On a plain Talos cluster the security group must let the phone reach TCP 50000
-    (and 6443 on a control plane). The secret key stays sealed on the device and is not in backups.
+    Scaleway shows. The project's default security group lets everything in, so above the picker
+    **Make a security group for the nodes** makes one group `ichor-nodes` in the zone (tagged
+    `ichor-managed`, stateful, inbound dropped unless a rule lets it in) or reuses it, and lets in
+    only every protocol from each cluster member's public IPv4 and, on plain Talos, TCP 50000 from
+    this phone's address of the day; the card lists the rules (and says which member has no public
+    address) before you create, then picks the group. With any other group on a plain Talos cluster,
+    that group must let the phone reach TCP 50000 (and 6443 on a control plane). The secret key
+    stays sealed on the device and is not in backups.
     Scaleway Elastic Metal and Dedibox are not supported.
   - **At AWS EC2, from the phone (Add a node… → A server at a cloud provider → AWS):** add access
     keys (and a session token, from `aws sts get-session-token` or the SSO portal, if they are

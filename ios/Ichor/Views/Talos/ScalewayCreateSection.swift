@@ -144,6 +144,13 @@ struct ScalewayCreateSection: View {
             Text("Only the types that boot a \(chosenImage.arch) image are listed.")
                 .font(.footnote).foregroundStyle(.secondary)
         }
+        if !demo && !account.isEmpty {
+            ScalewayGuidedNetworkRows(
+                zone: shownZone, omni: omni, role: role, credential: credential, disabled: job.isActive
+            ) { network in
+                Task { await refreshOptions(selecting: network.securityGroupId) }
+            }
+        }
         if !value.securityGroups.isEmpty {
             Picker("Security group", selection: $group) {
                 ForEach(value.securityGroups) { Text(verbatim: $0.name).tag(ScalewaySecurityGroup?.some($0)) }
@@ -155,6 +162,10 @@ struct ScalewayCreateSection: View {
         // A type of another architecture than the image is not offered: it no longer counts.
         let chosenType = types.first { $0.name == type?.name }
         let chosenGroup = value.securityGroups.first { $0.id == group?.id } ?? value.defaultSecurityGroup
+        // The managed group already lets this phone in; any other must be checked by hand.
+        if !omni, chosenGroup?.managed != true, !value.groupWarning.isEmpty {
+            Text(verbatim: value.groupWarning).font(.footnote).foregroundStyle(.secondary)
+        }
         if let chosenType {
             Group {
                 if let hourly = chosenType.hourlyPrice {
@@ -293,6 +304,17 @@ struct ScalewayCreateSection: View {
         let credential = self.credential
         options = .loading
         options = await LoadState.from { try await client.scalewayOptions(credential: credential) }
+    }
+
+    /// The options again without the loading state, so the form keeps its picks, with the guided
+    /// group `id` picked once it is listed; a failure keeps the old options.
+    private func refreshOptions(selecting id: String) async {
+        guard let client = model.client else { return }
+        let credential = self.credential
+        let result = await LoadState.from { try await client.scalewayOptions(credential: credential) }
+        guard case .loaded(let value, _, _) = result else { return }
+        options = result
+        if let made = value.securityGroups.first(where: { $0.id == id }) { group = made }
     }
 
     /// Face ID / passcode first when the app lock is on, then the run.

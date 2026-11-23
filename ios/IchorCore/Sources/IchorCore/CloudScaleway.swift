@@ -1,6 +1,7 @@
 import Foundation
 
-// Mirrors go/ichorgo/cloud_scaleway.go, cloud_scaleway_create.go and cloud_scaleway_image.go.
+// Mirrors go/ichorgo/cloud_scaleway.go, cloud_scaleway_create.go, cloud_scaleway_image.go and
+// cloud_scaleway_network.go.
 
 /// An API key, sealed on the device; what the core gets per call. `zone` "" is fr-par-1.
 public struct ScalewayCredential: Codable, Equatable, Sendable {
@@ -53,7 +54,7 @@ public struct ScalewayCheck: Decodable, Equatable, Sendable {
 }
 
 /// What an Instance can be created from in `zone`; prices before tax. `warnings` are the core's,
-/// worded in English.
+/// worded in English; `groupWarning` too, shown unless the picked group is the managed one.
 public struct ScalewayOptions: Decodable, Equatable, Sendable {
     public let project: String
     public let zone: String
@@ -61,9 +62,12 @@ public struct ScalewayOptions: Decodable, Equatable, Sendable {
     public let types: [ScalewayType]
     public let images: [ScalewayImage]
     public let securityGroups: [ScalewaySecurityGroup]
+    public let groupWarning: String
     public let warnings: [String]
 
-    private enum CodingKeys: String, CodingKey { case project, zone, zones, types, images, securityGroups, warnings }
+    private enum CodingKeys: String, CodingKey {
+        case project, zone, zones, types, images, securityGroups, groupWarning, warnings
+    }
 
     // Go encodes empty (nil) slices as null.
     public init(from decoder: Decoder) throws {
@@ -74,6 +78,7 @@ public struct ScalewayOptions: Decodable, Equatable, Sendable {
         types = try c.field(.types, [])
         images = try c.field(.images, [])
         securityGroups = try c.field(.securityGroups, [])
+        groupWarning = try c.field(.groupWarning, "")
         warnings = try c.field(.warnings, [])
     }
 
@@ -86,9 +91,10 @@ public struct ScalewayOptions: Decodable, Equatable, Sendable {
         return types.filter { $0.arch == image.arch }
     }
 
-    /// The project's default security group, else the first one; nil when the zone lists none.
+    /// The managed group (ichor-nodes), else the project's default one, else the first; nil when
+    /// the zone lists none.
     public var defaultSecurityGroup: ScalewaySecurityGroup? {
-        securityGroups.first(where: \.isDefault) ?? securityGroups.first
+        securityGroups.first(where: \.managed) ?? securityGroups.first(where: \.isDefault) ?? securityGroups.first
     }
 }
 
@@ -147,13 +153,15 @@ public struct ScalewayImage: Decodable, Equatable, Hashable, Identifiable, Senda
     }
 }
 
+/// A security group; `managed` when the app made it (the guided ichor-nodes).
 public struct ScalewaySecurityGroup: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let id: String
     public let name: String
     public let isDefault: Bool
+    public let managed: Bool
 
     private enum CodingKeys: String, CodingKey {
-        case id, name
+        case id, name, managed
         case isDefault = "default"
     }
 
@@ -162,7 +170,78 @@ public struct ScalewaySecurityGroup: Decodable, Equatable, Hashable, Identifiabl
         id = try c.field(.id, "")
         name = try c.field(.name, "")
         isDefault = try c.field(.isDefault, false)
+        managed = try c.field(.managed, false)
     }
+}
+
+/// ScalewayNetworkPrepare's specJSON: the zone, the role and whether the cluster is Omni (no port
+/// 50000 then).
+public struct ScalewayNetworkSpec: Encodable, Equatable, Sendable {
+    public let zone: String
+    public let role: String
+    public let omni: Bool
+
+    public init(zone: String, role: String, omni: Bool) {
+        self.zone = zone
+        self.role = role
+        self.omni = omni
+    }
+}
+
+/// The guided security group ichor-nodes, `created` by this call or reused, with its inbound rules
+/// as they are now. `phoneIp` is the address port 50000 was opened to, "" on Omni or when it could
+/// not be learned (a warning says so). `warnings` are the core's, worded in English.
+public struct ScalewayNetwork: Decodable, Equatable, Sendable {
+    public let securityGroupId: String
+    public let name: String
+    public let created: Bool
+    public let phoneIp: String
+    public let rules: [ScalewayNetworkRule]
+    public let warnings: [String]
+
+    private enum CodingKeys: String, CodingKey { case securityGroupId, name, created, phoneIp, rules, warnings }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        securityGroupId = try c.field(.securityGroupId, "")
+        name = try c.field(.name, "")
+        created = try c.field(.created, false)
+        phoneIp = try c.field(.phoneIp, "")
+        rules = try c.field(.rules, [])
+        warnings = try c.field(.warnings, [])
+    }
+}
+
+/// One inbound rule: `protocol` all or tcp (udp, icmp on one added by hand), `port` 0 for every
+/// port, `source` a CIDR; `description` the member's hostname, "this phone" or "".
+public struct ScalewayNetworkRule: Decodable, Equatable, Hashable, Sendable {
+    public let `protocol`: String
+    public let port: Int
+    public let source: String
+    public let description: String
+
+    private enum CodingKeys: String, CodingKey { case `protocol`, port, source, description }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        `protocol` = try c.field(.protocol, "")
+        port = try c.field(.port, 0)
+        source = try c.field(.source, "")
+        description = try c.field(.description, "")
+    }
+
+    /// Port 50000 opened to `phoneIp` by this call or an earlier one from the same address.
+    public func isPhone(_ phoneIp: String) -> Bool {
+        !phoneIp.isEmpty && `protocol` == "tcp" && port == 50000 && source == "\(phoneIp)/32"
+    }
+
+    /// Every protocol from one member, named by its hostname.
+    public var isMember: Bool {
+        `protocol` == "all" && port == 0 && !description.isEmpty && description != "this phone"
+    }
+
+    /// A rule the app did not word: "tcp/443 ← 198.51.100.0/24".
+    public var plain: String { "\(`protocol`)\(port == 0 ? "" : "/\(port)") ← \(source)" }
 }
 
 /// StartScalewayCreate's specJSON. Never holds the key.
