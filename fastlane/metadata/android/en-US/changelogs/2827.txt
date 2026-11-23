@@ -1,0 +1,8 @@
+• Wipe one disk of a Talos node from its Storage screen
+• Change an EKS managed node group's size from the phone
+• Join the replacement control plane from the phone
+• Sign in with Google on Android for the Google Cloud create card
+• Create a Scaleway Instance for a new node from the phone
+• A Kubernetes event or a checkup finding about a pod opens its logs and actions
+• Drive the Hetzner new-cluster test deadlines from the fake
+• Wait for the fake SSH bastion's counters in the bastion tests
