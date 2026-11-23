@@ -5,8 +5,9 @@
 #   2. the core Swift package tests;
 #   3. the Xcode project (XcodeGen) and the app.
 #
-#   scripts/ios-build.sh test   # core tests + simulator build + demo smoke walk, a stalled
-#                               # test retried once (CI on every push)
+#   scripts/ios-build.sh test   # core tests + simulator build + demo smoke walk on a booted
+#                               # simulator, a failed test retried once, a run that only stalled
+#                               # the simulator run again after a reboot (CI on every push)
 #   scripts/ios-build.sh screenshots  # the demo walk in both appearances (scripts/ios-screenshots.sh next)
 #   scripts/ios-build.sh store-screenshots  # the App Store walk in ten languages on a 6.9" iPhone
 #                               # (scripts/ios-store-screenshots.sh next)
@@ -159,19 +160,46 @@ case "$MODE" in
     # image's models change. Signed ad hoc, not unsigned: an unsigned app has no keychain
     # entitlement in the simulator, so storing the demo's config fails
     # (errSecMissingEntitlement, -34018); the simulator needs no team or profile for it. The
-    # unsigned build stays checked by `ipa`. The result bundle is build/ui-tests.xcresult
-    # (uploaded by ios.yml on failure). No parallel testing, and a test is retried once, as in
-    # `screenshots`: a busy runner can stall the simulator ("Timed out while acquiring background
-    # assertion"), and one stall would fail the push run that the daily release waits for; a
-    # test that fails twice still fails the run.
+    # unsigned build stays checked by `ipa`. No parallel testing, and a test is retried once, as
+    # in `screenshots`; a test that fails twice fails the run.
+    # The simulator is booted before the tests, so the first one does not launch into a booting
+    # device. A busy runner can still stall it ("Timed out while acquiring background
+    # assertion"), and from then on every launch on it times out, so the per-test retry cannot
+    # help and one stall would fail the push run the daily release waits for. When every failure
+    # of the run is that stall (or DemoWalk's "simulator stall:"), the simulator is shut down,
+    # booted again, and the suite runs once more; any other failure, or a second failed run,
+    # fails the step. The last run's result bundle is build/ui-tests.xcresult, a stalled first
+    # run's is kept as build/ui-tests-stalled.xcresult (ios.yml uploads both on failure).
     sim=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ { print $2; exit }')
     [[ -n "$sim" ]] || { echo "no iPhone simulator available" >&2; exit 1; }
     adhoc=(CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER=)
     xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug -destination "id=$sim" build-for-testing
-    rm -rf build/ui-tests.xcresult
-    xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug -destination "id=$sim" \
-      -parallel-testing-enabled NO -retry-tests-on-failure -test-iterations 2 \
-      -only-testing:IchorUITests -resultBundlePath build/ui-tests.xcresult test-without-building
+    xcrun simctl bootstatus "$sim" -b
+    ui_tests() {
+      rm -rf build/ui-tests.xcresult
+      xcodebuild "${common[@]}" "${adhoc[@]}" -configuration Debug -destination "id=$sim" \
+        -parallel-testing-enabled NO -retry-tests-on-failure -test-iterations 2 \
+        -only-testing:IchorUITests -resultBundlePath build/ui-tests.xcresult test-without-building \
+        2>&1 | tee build/ui-tests.log
+    }
+    if ui_tests; then
+      echo "smoke walk: passed on the first run"
+    else
+      failures=$(command grep -cE ': error: -\[' build/ui-tests.log || true)
+      stalls=$(command grep -E ': error: -\[' build/ui-tests.log |
+        command grep -cE 'Timed out while acquiring background assertion|simulator stall:' || true)
+      if [[ "$failures" -eq 0 || "$stalls" -ne "$failures" ]]; then
+        echo "smoke walk: failed, $stalls of $failures failures are simulator stalls: no second run" >&2
+        exit 1
+      fi
+      echo "smoke walk: all $failures failures are simulator stalls, rebooting it for a second run" >&2
+      rm -rf build/ui-tests-stalled.xcresult
+      mv build/ui-tests.xcresult build/ui-tests-stalled.xcresult
+      xcrun simctl shutdown "$sim" || true
+      xcrun simctl bootstatus "$sim" -b
+      ui_tests
+      echo "smoke walk: passed on the second run, after a simulator stall"
+    fi
     ;;
   screenshots)
     # The screenshot walk (IchorUITests/DemoScreenshotTests) in each appearance, from one build:
