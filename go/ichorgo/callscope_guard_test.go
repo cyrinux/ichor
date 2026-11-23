@@ -38,6 +38,7 @@ var delegatedRuns = map[string]string{
 	"StartAWSImage":              "startCloudImageRun",
 	"StartAzureImage":            "startCloudImageRun",
 	"StartGCPImage":              "startCloudImageRun",
+	"StartScalewayImage":         "startCloudImageRun",
 	"StartNodeJoin":              "nodeJoin.start",
 	"StartOmniAllocate":          "omniAllocate.start",
 	"StartRunbook":               "startRunbook",

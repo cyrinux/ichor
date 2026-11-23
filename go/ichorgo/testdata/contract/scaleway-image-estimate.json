@@ -1,0 +1,8 @@
+{
+  "currency": "EUR",
+  "hourly": "0.0099",
+  "minutes": 10,
+  "note": "Scaleway's API gives no snapshot price: the 10 GB Block Storage snapshot is billed per GB-month until it is deleted",
+  "snapshotGB": 10,
+  "type": "DEV1-S"
+}

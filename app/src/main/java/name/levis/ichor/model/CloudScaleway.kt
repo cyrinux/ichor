@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/ichorgo/cloud_scaleway.go and cloud_scaleway_create.go.
+// Mirrors go/ichorgo/cloud_scaleway.go, cloud_scaleway_create.go and cloud_scaleway_image.go.
 
 /** An API key, sealed on the device; what the core gets per call. [zone] "" is fr-par-1. */
 @Serializable
@@ -78,6 +78,29 @@ data class ScalewayCreateSpec(
     val installDisk: String = "",
     /** On Omni, the labels to sign into the join token (omniLabelsJson); "" for none. */
     val labelsJson: String = "",
+)
+
+/** What a finished Talos image run at Scaleway reports. */
+@Serializable
+data class ScalewayImageResult(
+    override val imageId: String = "",
+    val snapshotId: String = "",
+    override val name: String = "",
+    val arch: String = "",
+    val talosVersion: String = "",
+    val schematic: String = "",
+    val sizeGB: Int = 0,
+) : MadeImage
+
+/** The cost line of an image run: the helper's [type] and [hourly] price before tax; [note] is the core's. */
+@Serializable
+data class ScalewayImageCost(
+    val type: String = "",
+    val hourly: String = "",
+    val minutes: Int = 0,
+    val currency: String = "",
+    val snapshotGB: Int = 0,
+    val note: String = "",
 )
 
 /** The same key in another zone: options are read per zone. */

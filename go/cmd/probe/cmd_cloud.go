@@ -73,7 +73,7 @@ var cloudCommands = []command{
 
 		return "", errors.New("usage: ovh test|options|policy|create …")
 	}},
-	{name: "scaleway", args: "test|options|policy|create TEMPLATE ROLE HOSTNAME DISK ZONE TYPE IMAGE_ID -yes", run: func(e env) (string, error) {
+	{name: "scaleway", args: "test|options|policy|image-estimate ARCH [ZONE]|image TEMPLATE [ARCH] [ZONE] -yes|create TEMPLATE ROLE HOSTNAME DISK ZONE TYPE IMAGE_ID -yes", run: func(e env) (string, error) {
 		credJSON, err := json.Marshal(map[string]string{
 			"accessKey": os.Getenv("SCW_ACCESS_KEY"), "secretKey": os.Getenv("SCW_SECRET_KEY"),
 			"project": os.Getenv("SCW_DEFAULT_PROJECT_ID"), "zone": os.Getenv("SCW_DEFAULT_ZONE"),
@@ -89,6 +89,10 @@ var cloudCommands = []command{
 			return ichorgo.ScalewayOptions(e.cfg, e.context, string(credJSON))
 		case "policy":
 			return ichorgo.ScalewayPolicy(os.Getenv("SCW_DEFAULT_PROJECT_ID")), nil
+		case "image-estimate":
+			return ichorgo.ScalewayImageEstimate(string(credJSON), flag.Arg(2), flag.Arg(3))
+		case "image":
+			return scalewayImage(e, string(credJSON))
 		case "create":
 			return scalewayCreate(e, string(credJSON))
 		}
@@ -589,6 +593,34 @@ func ovhCreate(e env, credJSON string) (string, error) {
 
 	j := joinProbe{done: make(chan string, 1)}
 	ichorgo.StartOVHCreate(e.cfg, e.context, credJSON, string(spec), j)
+
+	return "done: " + <-j.done, nil
+}
+
+// scalewayImage makes a billable Talos image with a throwaway helper Instance: scratch projects
+// only, and only with -yes as the last argument. ARCH and ZONE may be left out.
+func scalewayImage(e env, credJSON string) (string, error) {
+	n := flag.NArg()
+	if n < 4 || n > 6 || flag.Arg(n-1) != "-yes" {
+		return "", errors.New("usage: scaleway image TEMPLATE [ARCH] [ZONE] -yes (runs a billable Instance and keeps a snapshot and an image)")
+	}
+
+	arch, zone := "", ""
+	if n >= 5 {
+		arch = flag.Arg(3)
+	}
+
+	if n == 6 {
+		zone = flag.Arg(4)
+	}
+
+	spec, err := json.Marshal(map[string]string{"templateNode": flag.Arg(2), "arch": arch, "zone": zone})
+	if err != nil {
+		return "", err
+	}
+
+	j := joinProbe{done: make(chan string, 1)}
+	ichorgo.StartScalewayImage(e.cfg, e.context, credJSON, string(spec), j)
 
 	return "done: " + <-j.done, nil
 }

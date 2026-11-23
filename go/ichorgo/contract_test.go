@@ -99,6 +99,20 @@ var contractFixtures = []struct {
 	{"scaleway-test", func() any {
 		return scwTestResult{Project: "11111111-1111-1111-1111-111111111111", Zone: scwDefaultZone, CanCreate: true, Checked: true, Account: "SCWEXAMPLEACCESSKEY0"}
 	}},
+	// The Scaleway image run: its estimate and the result OnDone gets (invented ids).
+	{"scaleway-image-estimate", func() any {
+		return scwImageCost{
+			Type: "DEV1-S", Hourly: "0.0099", Minutes: scwImageMinutes, Currency: "EUR", SnapshotGB: scwImageVolumeGB,
+			Note: "Scaleway's API gives no snapshot price: the 10 GB Block Storage snapshot is billed per GB-month until it is deleted",
+		}
+	}},
+	{"scaleway-image-result", func() any {
+		return scwImageResult{
+			ImageID: "33333333-3333-3333-3333-333333333333", SnapshotID: "44444444-4444-4444-4444-444444444444",
+			Name: "talos-" + demoTalosVersion + "-scaleway-amd64-376567988ad3", Arch: bootArchAMD64, TalosVersion: demoTalosVersion,
+			Schematic: "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba", SizeGB: scwImageVolumeGB,
+		}
+	}},
 	{"update-proposal-plan", contractUpdatePlan},
 	{"diag-entries", contractDiagEntries},
 	// A coloured logfmt line: clean fields and its spans.

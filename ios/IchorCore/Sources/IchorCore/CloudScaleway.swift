@@ -1,6 +1,6 @@
 import Foundation
 
-// Mirrors go/ichorgo/cloud_scaleway.go and cloud_scaleway_create.go.
+// Mirrors go/ichorgo/cloud_scaleway.go, cloud_scaleway_create.go and cloud_scaleway_image.go.
 
 /// An API key, sealed on the device; what the core gets per call. `zone` "" is fr-par-1.
 public struct ScalewayCredential: Codable, Equatable, Sendable {
@@ -192,5 +192,55 @@ public struct ScalewayCreateSpec: Encodable, Equatable, Sendable {
         self.templateNode = templateNode
         self.installDisk = installDisk
         self.labelsJson = labelsJson
+    }
+}
+
+/// What a finished Talos image run at Scaleway reports.
+public struct ScalewayImageResult: Decodable, Equatable, Sendable {
+    public let imageId: String
+    public let snapshotId: String
+    public let name: String
+    public let arch: String
+    public let talosVersion: String
+    public let schematic: String
+    public let sizeGB: Int
+
+    /// Its id to pick it and its name to say so.
+    public var made: MadeImage { MadeImage(id: imageId, name: name) }
+
+    private enum CodingKeys: String, CodingKey { case imageId, snapshotId, name, arch, talosVersion, schematic, sizeGB }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        imageId = try c.field(.imageId, "")
+        snapshotId = try c.field(.snapshotId, "")
+        name = try c.field(.name, "")
+        arch = try c.field(.arch, "")
+        talosVersion = try c.field(.talosVersion, "")
+        schematic = try c.field(.schematic, "")
+        sizeGB = try c.field(.sizeGB, 0)
+    }
+}
+
+/// The cost line of an image run: the helper's `type` and `hourly` price before tax; `note` says
+/// the snapshot's price is not in the API.
+public struct ScalewayImageCost: Decodable, Equatable, Sendable {
+    public let type: String
+    public let hourly: String
+    public let minutes: Int
+    public let currency: String
+    public let snapshotGB: Int
+    public let note: String
+
+    private enum CodingKeys: String, CodingKey { case type, hourly, minutes, currency, snapshotGB, note }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        type = try c.field(.type, "")
+        hourly = try c.field(.hourly, "")
+        minutes = try c.field(.minutes, 0)
+        currency = try c.field(.currency, "")
+        snapshotGB = try c.field(.snapshotGB, 0)
+        note = try c.field(.note, "")
     }
 }

@@ -181,6 +181,12 @@ func (c *scwClient) send(ctx context.Context, method, path, contentType string, 
 		return &scwError{status: resp.StatusCode, message: cmp.Or(e.Message, http.StatusText(resp.StatusCode))}
 	}
 
+	if raw, ok := out.(*[]byte); ok {
+		*raw = data
+
+		return nil
+	}
+
 	if out == nil || len(data) == 0 {
 		return nil
 	}
@@ -276,8 +282,9 @@ func ScalewayTest(credJSON string) (out string, err error) {
 }
 
 // ScalewayPolicy is the IAM policy to attach to the key's application: the Instance permission
-// sets on one project ("" prints a placeholder), and Block Storage for the data volume of a type
-// without local storage. The person creates it at Scaleway (console or POST /iam/v1alpha1/policies).
+// sets on one project ("" prints a placeholder; InstancesFullAccess covers images too), and Block
+// Storage for the data volume of a type without local storage and for the image run's helper
+// volumes and snapshot. The person creates it at Scaleway (console or POST /iam/v1alpha1/policies).
 func ScalewayPolicy(project string) string {
 	project = cmp.Or(strings.TrimSpace(project), "PROJECT_ID")
 

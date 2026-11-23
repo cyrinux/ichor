@@ -35,6 +35,8 @@ type fakeScaleway struct {
 	userDataFails bool // the user data PATCH answers 500
 	locked        bool
 	onRunning     func()
+	// extra answers first: the image run's calls (cloud_scaleway_image_test.go).
+	extra func(w http.ResponseWriter, r *http.Request) bool
 
 	writes      []string
 	serverBody  map[string]any
@@ -74,6 +76,10 @@ func (f *fakeScaleway) handle(w http.ResponseWriter, r *http.Request) {
 
 	path, server := r.URL.Path, scwZonePath+"/servers/"+scwTestServer
 
+	if f.extra != nil && f.extra(w, r) {
+		return
+	}
+
 	switch {
 	case r.Method == http.MethodGet && path == scwZonePath+"/products/servers":
 		fmt.Fprint(w, `{"servers":{
@@ -97,7 +103,7 @@ func (f *fakeScaleway) handle(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{"ips":[{"id":%q,"address":%q}]}`, scwTestIP, joinNewNode)
 	case r.Method == http.MethodDelete && path == scwZonePath+"/ips/"+scwTestIP:
 		f.writes = append(f.writes, "delete ip")
-	case r.Method == http.MethodDelete && (strings.HasPrefix(path, scwZonePath+"/volumes/") || strings.HasPrefix(path, "/block/v1alpha1/zones/fr-par-1/volumes/")):
+	case r.Method == http.MethodDelete && (strings.HasPrefix(path, scwZonePath+"/volumes/") || strings.HasPrefix(path, "/block/v1/zones/fr-par-1/volumes/")):
 		f.writes = append(f.writes, "delete "+path[strings.LastIndexByte(path, '/')+1:])
 	case strings.HasPrefix(path, server) && f.state != "" && f.state != "gone":
 		f.server(w, r, strings.TrimPrefix(path, server))
@@ -212,7 +218,7 @@ func (f *fakeScaleway) server(w http.ResponseWriter, r *http.Request, rest strin
 		_ = json.NewDecoder(r.Body).Decode(&body)
 		f.writes = append(f.writes, body.Action)
 
-		f.state = map[string]string{"poweron": "starting", "terminate": "gone"}[body.Action]
+		f.state = map[string]string{"poweron": "starting", "poweroff": scwStateStopped, "terminate": "gone"}[body.Action]
 		fmt.Fprint(w, `{"task":{"id":"task-1","status":"pending"}}`)
 	case r.Method == http.MethodDelete && rest == "":
 		f.writes = append(f.writes, "delete server")
