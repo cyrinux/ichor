@@ -324,6 +324,11 @@ enum BackgroundMonitor {
         // The pull requests opened from the phone: their states are kept even with alerts off,
         // so turning them on does not tell old merges.
         let proposals = await checkProposals(contexts: contexts.filter { !$0.needsEndpoint }, now: now)
+        // The relays of the paired clusters that answered learn their quiet hours when those changed
+        // (a rule, the phone's time zone): the ntfy app shows their pushes, alerts on or off.
+        for job in jobs where answered.contains(job.key) {
+            await RelayQuietSync.run(client: job.client, fingerprint: job.context.fingerprint)
+        }
         guard alertsEnabled else { return }
         // One rules decision over every cluster's alerts, pull requests and sign-ins (postAll).
         let names = UserDefaults.standard.dictionary(forKey: "clusterNames") as? [String: String] ?? [:]

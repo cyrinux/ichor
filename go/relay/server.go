@@ -153,6 +153,7 @@ func (r *Relay) Handler() http.Handler {
 	})
 	mux.HandleFunc("GET /v1/pairing", r.pairing(r.handlePairing))
 	mux.HandleFunc("PUT /v1/devices", r.pairing(r.handlePutDevice))
+	mux.HandleFunc("PUT /v1/devices/{id}/quiet", r.pairing(r.handlePutQuiet))
 	mux.HandleFunc("DELETE /v1/devices/{id}", r.pairing(r.handleDeleteDevice))
 	mux.HandleFunc("POST /alertmanager", r.handleWebhook)
 
@@ -200,6 +201,44 @@ func (r *Relay) handlePutDevice(w http.ResponseWriter, req *http.Request) {
 		writeError(w, http.StatusInternalServerError, "could not save the device")
 	default:
 		r.log.Info("device paired", "device", device.ID, "platform", device.Platform)
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// handlePutQuiet sets a device's quiet hours ({start,end,tz,exceptCritical}); start == end
+// clears them. An unknown device is a 404 with a JSON error, which a relay too old for this
+// route does not answer (its 404 is the mux's plain text): the phone tells them apart.
+func (r *Relay) handlePutQuiet(w http.ResponseWriter, req *http.Request) {
+	id := req.PathValue("id")
+
+	var quiet QuietHours
+	if status, msg := decodeBody(w, req, maxDeviceBody, &quiet); status != 0 {
+		writeError(w, status, msg)
+
+		return
+	}
+
+	window, err := quiet.Window()
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "quiet hours: "+err.Error())
+
+		return
+	}
+
+	var set *QuietHours
+	if window != nil {
+		set = &quiet
+	}
+
+	err = r.store.Update(req.Context(), func(s *State) error { return setDeviceQuiet(s, id, set) })
+	switch {
+	case errors.Is(err, errUnknownDevice):
+		writeError(w, http.StatusNotFound, "unknown device")
+	case err != nil:
+		r.log.Error("save quiet hours", "device", id, "err", err)
+		writeError(w, http.StatusInternalServerError, "could not save the quiet hours")
+	default:
+		r.log.Info("quiet hours set", "device", id, "on", set != nil)
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -281,8 +320,16 @@ func (r *Relay) deliver(d delivery) {
 		return // removed since the webhook
 	}
 
-	alerts := r.dedupe.claim(device.ID, d.alerts)
+	claimed := r.dedupe.claim(device.ID, d.alerts)
+	if len(claimed) == 0 {
+		return
+	}
+
+	// After the claim: an alert held back by the quiet hours is dropped, not sent when they end.
+	alerts := quietAlerts(device.Quiet, claimed, r.now())
 	if len(alerts) == 0 {
+		r.log.Info("muted, quiet hours", "device", device.ID, "alerts", len(claimed))
+
 		return
 	}
 

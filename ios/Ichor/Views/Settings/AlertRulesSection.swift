@@ -90,5 +90,9 @@ struct AlertRulesSection: View {
         AlertRulesStore.save(next)
         rules = next
         FreezeReminders.applyQuietHours()
+        // The cluster on screen's relay learns it now; the others at their next background check.
+        if let client = model.client, let fingerprint = model.activeSummary?.fingerprint {
+            Task { await RelayQuietSync.run(client: client, fingerprint: fingerprint) }
+        }
     }
 }

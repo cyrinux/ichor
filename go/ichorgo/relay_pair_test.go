@@ -364,3 +364,88 @@ func TestRelayDeviceID(t *testing.T) {
 		t.Error("the cluster or the endpoint does not change it")
 	}
 }
+
+func TestRelaySetQuiet(t *testing.T) {
+	withDataDir(t)
+	withAuditClock(t, time.Now())
+
+	f, headers := relayTestAPI(t, true)
+	cfg := f.kubeconfigFor(f.URL)
+	route := "PUT " + relayTestProxy + "/v1/devices/0123456789abcdef/quiet"
+	night := `{"start":"23:00","end":"07:00","tz":"Europe/Paris","exceptCritical":true}`
+
+	// A relay without the route: the mux's plain 404, which is an answer and not an error.
+	f.answerWith(route, http.StatusNotFound, "404 page not found\n")
+
+	out, err := RelaySetQuiet(cfg, "admin@test", "", relayTestSource, "0123456789abcdef", night)
+	if err != nil || out != `{"applied":false}` {
+		t.Fatalf("old relay: %s %v", out, err)
+	}
+
+	f.answerWith(route, http.StatusNotFound, `{"error":"unknown device"}`)
+
+	if _, err := RelaySetQuiet(cfg, "admin@test", "", relayTestSource, "0123456789abcdef", night); err == nil || !strings.Contains(err.Error(), "unknown device") {
+		t.Fatalf("unknown device: %v", err)
+	}
+
+	f.answerWith(route, http.StatusNoContent, "")
+
+	out, err = RelaySetQuiet(cfg, "admin@test", "", relayTestSource, " 0123456789abcdef ", night)
+	if err != nil || out != `{"applied":true}` {
+		t.Fatalf("set: %s %v", out, err)
+	}
+
+	var put fakeKubeRequest
+	for _, r := range f.recorded() {
+		if r.method == http.MethodPut {
+			put = r
+		}
+	}
+
+	if put.body != night || put.contentType != "application/json" {
+		t.Errorf("put %+v", put)
+	}
+
+	if h := headers(); len(h) != 3 || h[2] != relayTestToken {
+		t.Errorf("pairing headers %q", h)
+	}
+
+	// Clearing is start == end, both empty included.
+	if out, err := RelaySetQuiet(cfg, "admin@test", "", relayTestSource, "0123456789abcdef", `{}`); err != nil || out != `{"applied":true}` {
+		t.Errorf("clear: %s %v", out, err)
+	}
+
+	sent := len(f.recorded())
+
+	for name, c := range map[string][2]string{
+		"a path in the id": {"../secrets", night},
+		"not JSON":         {"0123456789abcdef", `night`},
+		"an unknown field": {"0123456789abcdef", `{"from":"23:00"}`},
+		"no zone":          {"0123456789abcdef", `{"start":"23:00","end":"07:00"}`},
+		"a bad time":       {"0123456789abcdef", `{"start":"25:00","end":"07:00","tz":"UTC"}`},
+	} {
+		if _, err := RelaySetQuiet(cfg, "admin@test", "", relayTestSource, c[0], c[1]); err == nil {
+			t.Errorf("%s: accepted", name)
+		}
+	}
+
+	if len(f.recorded()) != sent {
+		t.Error("refused quiet hours reached the cluster")
+	}
+
+	entries := readAudit(t, "", "")
+	// Newest first: the five refusals, the clearing, then the window set.
+	if len(entries) < 7 || entries[6].Action != "relay-quiet" || entries[6].Params != "device=0123456789abcdef on=true" || entries[6].Outcome != auditOK ||
+		entries[5].Params != "device=0123456789abcdef on=false" || entries[0].Outcome != auditFailed {
+		t.Errorf("audit %+v", entries)
+	}
+
+	demo, err := DemoConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := RelaySetQuiet(demo, "", "", relayTestSource, "0123456789abcdef", night); !errors.Is(err, errDemoUnavailable) {
+		t.Errorf("demo: %v", err)
+	}
+}

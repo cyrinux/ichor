@@ -226,6 +226,61 @@ func RelayUnregister(configYAML, contextName, kubeServer, sourceJSON, id string)
 	return err
 }
 
+// RelaySetQuiet tells the relay at sourceJSON the quiet hours of the device id (see
+// RelayRegister): quietJSON is the cluster's window as the alert rules store it
+// ({start,end,tz,exceptCritical}, the zone filled in), and start == end, both empty included,
+// clears it. Inside them the relay sends the device nothing, or its critical alerts only. It is
+// for a device whose notifications the app does not post itself (ntfy); the app asks again
+// whenever the window it wants is not the one the relay last took. Returns {"applied":true},
+// or {"applied":false} when the relay is too old to hold quiet hours. Refused in the demo.
+func RelaySetQuiet(configYAML, contextName, kubeServer, sourceJSON, id, quietJSON string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName = unmaskContext(configYAML, contextName)
+	src, srcErr := parseRelaySource(sourceJSON)
+	id = strings.TrimSpace(id)
+
+	var quiet relay.QuietHours
+
+	dec := json.NewDecoder(strings.NewReader(quietJSON))
+	dec.DisallowUnknownFields()
+	quietErr := dec.Decode(&quiet)
+
+	window, windowErr := quiet.Window()
+
+	defer recordAction(&err, configYAML, contextName, relayAuditAction(kubeServer, "relay-quiet", src, fmt.Sprintf("device=%s on=%t", id, window != nil)))
+
+	switch {
+	case srcErr != nil:
+		return "", srcErr
+	case !relayDeviceIDPattern.MatchString(id):
+		return "", errors.New("not a device id")
+	case quietErr != nil:
+		return "", errors.New("invalid quiet hours")
+	case windowErr != nil:
+		return "", fmt.Errorf("quiet hours: %w", windowErr)
+	case isDemoContext(configYAML, contextName):
+		return "", errDemoUnavailable
+	}
+
+	body, err := json.Marshal(quiet)
+	if err != nil {
+		return "", fmt.Errorf("encode quiet hours: %w", err)
+	}
+
+	_, err = relayCall(kubeTarget{configYAML, contextName, kubeServer}, src, http.MethodPut, "/v1/devices/"+url.PathEscape(id)+"/quiet", body)
+	if errors.Is(err, errRelayNoRoute) {
+		// Not an error to report or to audit as failed: the relay answers nothing there yet.
+		return toJSON(map[string]bool{"applied": false})
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return toJSON(map[string]bool{"applied": true})
+}
+
 // relayDevice completes and checks a device the app sent: the id, the cluster's fingerprint
 // (sent back in every payload) and, for ntfy, the link to the cluster's Alerts screen.
 func relayDevice(configYAML, contextName string, d relay.Device) (relay.Device, error) {
@@ -325,6 +380,10 @@ func parseRelaySource(sourceJSON string) (promSource, error) {
 	return src, nil
 }
 
+// errRelayNoRoute is the relay answering 404 without its JSON error: it has no such route, so
+// it is older than what was asked of it. Worded as relayErrorMessage words any bare status.
+var errRelayNoRoute = errors.New("HTTP 404")
+
 // relayAuditAction describes a pairing change, on the relay's Service.
 func relayAuditAction(kubeServer, action string, src promSource, params string) auditAction {
 	return auditAction{Server: kubeServer, Action: action, Namespace: src.Namespace, Object: "Service/" + src.Service, Params: params}
@@ -373,6 +432,9 @@ func relayCall(target kubeTarget, src promSource, method, path string, body []by
 		return nil, err
 	case status == http.StatusUnauthorized:
 		return nil, errRelayToken
+	case status == http.StatusNotFound && !json.Valid(answer):
+		// The mux's plain "404 page not found", not the relay's own {error}: no such route.
+		return nil, fmt.Errorf("%s: the relay refused: %w", src.label(), errRelayNoRoute)
 	case status/100 != 2:
 		return nil, fmt.Errorf("%s: the relay refused: %s", src.label(), relayErrorMessage(status, answer))
 	}

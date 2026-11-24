@@ -42,18 +42,21 @@ const PayloadVersion = 1
 // Device is one paired phone. ID is chosen by the phone; Cluster is the phone's fingerprint of
 // the cluster, opaque to the relay and sent back in every Payload. Click (ntfy) is the deep
 // link opened when the notification is tapped; Verbose (ntfy) adds the alerts' summaries to
-// the plain-text message.
+// the plain-text message. Quiet is the phone's quiet hours, set apart from the pairing (PUT
+// /v1/devices/{id}/quiet) and kept when it pairs again: inside them the relay sends the device
+// nothing, or its critical alerts only. A phone that filters what it receives itself sets none.
 type Device struct {
-	ID        string `json:"id"`
-	Platform  string `json:"platform"`
-	Endpoint  string `json:"endpoint"`
-	P256DH    string `json:"p256dh,omitempty"`
-	Auth      string `json:"auth,omitempty"`
-	Cluster   string `json:"cluster,omitempty"`
-	Label     string `json:"label,omitempty"`
-	Click     string `json:"click,omitempty"`
-	Verbose   bool   `json:"verbose,omitempty"`
-	CreatedAt int64  `json:"createdAt"`
+	ID        string      `json:"id"`
+	Platform  string      `json:"platform"`
+	Endpoint  string      `json:"endpoint"`
+	P256DH    string      `json:"p256dh,omitempty"`
+	Auth      string      `json:"auth,omitempty"`
+	Cluster   string      `json:"cluster,omitempty"`
+	Label     string      `json:"label,omitempty"`
+	Click     string      `json:"click,omitempty"`
+	Verbose   bool        `json:"verbose,omitempty"`
+	CreatedAt int64       `json:"createdAt"`
+	Quiet     *QuietHours `json:"quiet,omitempty"`
 }
 
 // Payload is what a UnifiedPush device decrypts. Times are unix ms. Truncated is set when the

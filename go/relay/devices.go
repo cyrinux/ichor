@@ -131,11 +131,31 @@ func findDevice(s State, id string) (Device, bool) {
 	return s.Devices[i], true
 }
 
-// upsertDevice adds or replaces d, keeping the first pairing's CreatedAt.
+// errUnknownDevice is a change to a device that is not paired (any more).
+var errUnknownDevice = errors.New("unknown device")
+
+// setDeviceQuiet sets the quiet hours of the device id, nil for none; errUnchanged when they
+// are already those.
+func setDeviceQuiet(s *State, id string, quiet *QuietHours) error {
+	i := slices.IndexFunc(s.Devices, func(d Device) bool { return d.ID == id })
+	switch {
+	case i < 0:
+		return errUnknownDevice
+	case (quiet == nil) == (s.Devices[i].Quiet == nil) && (quiet == nil || *quiet == *s.Devices[i].Quiet):
+		return errUnchanged
+	}
+
+	s.Devices[i].Quiet = quiet
+
+	return nil
+}
+
+// upsertDevice adds or replaces d, keeping the first pairing's CreatedAt and the quiet hours,
+// which a pairing never carries.
 func upsertDevice(s *State, d Device, now time.Time) error {
 	i := slices.IndexFunc(s.Devices, func(x Device) bool { return x.ID == d.ID })
 	if i >= 0 {
-		d.CreatedAt = s.Devices[i].CreatedAt
+		d.CreatedAt, d.Quiet = s.Devices[i].CreatedAt, s.Devices[i].Quiet
 		s.Devices[i] = d
 
 		return nil
@@ -145,7 +165,7 @@ func upsertDevice(s *State, d Device, now time.Time) error {
 		return errTooManyDevices
 	}
 
-	d.CreatedAt = now.UnixMilli()
+	d.CreatedAt, d.Quiet = now.UnixMilli(), nil
 	s.Devices = append(s.Devices, d)
 
 	return nil

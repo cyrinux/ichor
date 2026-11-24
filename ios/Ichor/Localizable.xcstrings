@@ -7747,6 +7747,20 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подключено · %@" } }
       }
     },
+    "Update ichor-relay in the cluster for its pushes to respect quiet hours." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisiere ichor-relay im Cluster, damit seine Pushes die Ruhezeiten einhalten." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualiza ichor-relay en el clúster para que sus notificaciones respeten las horas de silencio." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mettez à jour ichor-relay dans le cluster pour que ses notifications respectent les heures calmes." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiorna ichor-relay nel cluster perché le sue notifiche rispettino le ore di silenzio." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оновіть ichor-relay у кластері, щоб його сповіщення враховували тихі години." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请更新集群中的 ichor-relay，使其推送遵守免打扰时段。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クラスタの ichor-relay を更新すると、そのプッシュがおやすみ時間に従います。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualize o ichor-relay no cluster para que seus pushes respeitem o horário de silêncio." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновите ichor-relay в кластере, чтобы его уведомления учитывали тихие часы." } }
+      }
+    },
     "Alerts from the cluster's ichor-relay, shown at once by the ntfy app." : {
       "extractionState" : "manual",
       "localizations" : {

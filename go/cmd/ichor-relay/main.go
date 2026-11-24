@@ -21,7 +21,8 @@
 //	                 over https, a proxy inside the cluster); link-local, unspecified and multicast
 //	                 addresses (the cloud metadata service) are refused whatever the setting
 //
-// Endpoints: GET /healthz; GET /v1/pairing, PUT /v1/devices and DELETE /v1/devices/{id} with the
+// Endpoints: GET /healthz; GET /v1/pairing, PUT /v1/devices, PUT /v1/devices/{id}/quiet (the
+// quiet hours inside which a device is sent nothing) and DELETE /v1/devices/{id} with the
 // X-Ichor-Pairing header (reached through the API server's service proxy); POST /alertmanager
 // with "Authorization: Bearer <webhookToken>". Logs carry device IDs and HTTP statuses, never a
 // token, a push endpoint or a label.
