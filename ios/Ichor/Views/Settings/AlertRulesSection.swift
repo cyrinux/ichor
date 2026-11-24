@@ -89,5 +89,6 @@ struct AlertRulesSection: View {
     private func save(_ next: AlertRules) {
         AlertRulesStore.save(next)
         rules = next
+        FreezeReminders.applyQuietHours()
     }
 }

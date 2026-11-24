@@ -378,3 +378,42 @@ func TestAlertRulesProbeSamples(t *testing.T) {
 		t.Errorf("samples: %+v", got)
 	}
 }
+
+func TestAlertRulesQuietUntil(t *testing.T) {
+	rules := `{
+		"default":{"quietHours":{"start":"23:00","end":"07:00","tz":"Europe/Paris","exceptCritical":true}},
+		"clusters":{
+			"` + rulesStaging + `":{"quietHours":{"start":"12:00","end":"14:00","tz":"UTC"}},
+			"` + rulesLab + `":{"quietHours":{"start":"","end":""}}
+		}}`
+
+	cases := []struct {
+		name, rules, cluster, at, until string
+	}{
+		{"the default's night, over midnight", rules, rulesProd, "2026-06-01T21:30:00Z", "2026-06-02T05:00:00Z"},
+		{"the default's morning", rules, rulesProd, "2026-06-02T04:59:00Z", "2026-06-02T05:00:00Z"},
+		{"the window's end is outside", rules, rulesProd, "2026-06-02T05:00:00Z", ""},
+		{"by day", rules, rulesProd, "2026-06-01T12:00:00Z", ""},
+		{"a cluster's own window", rules, rulesStaging, "2026-06-01T12:30:00Z", "2026-06-01T14:00:00Z"},
+		{"not the default's any more", rules, rulesStaging, "2026-06-01T21:30:00Z", ""},
+		{"a cluster that turned it off", rules, rulesLab, "2026-06-01T21:30:00Z", ""},
+		{"the spring DST night", rules, rulesProd, "2026-03-28T22:30:00Z", "2026-03-29T05:00:00Z"},
+		{"no rules", ``, rulesProd, "2026-06-01T21:30:00Z", ""},
+		{"no quiet hours", `{"default":{"digest":true}}`, rulesProd, "2026-06-01T21:30:00Z", ""},
+		{"rules without a zone are refused: never quiet", `{"default":{"quietHours":{"start":"23:00","end":"07:00"}}}`, rulesProd, "2026-06-01T23:30:00Z", ""},
+		{"not JSON", `{`, rulesProd, "2026-06-01T23:30:00Z", ""},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			var want int64
+			if c.until != "" {
+				want = rulesAt(t, c.until)
+			}
+
+			if got := AlertRulesQuietUntil(c.rules, c.cluster, rulesAt(t, c.at)); got != want {
+				t.Errorf("until = %d, want %d", got, want)
+			}
+		})
+	}
+}
