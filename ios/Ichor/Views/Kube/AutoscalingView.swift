@@ -17,7 +17,7 @@ struct AutoscalingView: View {
         case scaledJob(ScaledJobRow)
         case vpa(VpaRow)
         case pool(NodePoolRow, claims: [NodeClaimRow])
-        case nodeGroup(ManagedNodeGroupRow, clusterVersion: String)
+        case nodeGroup(ManagedNodeGroupRow, clusterVersion: String, gke: Bool)
         case controlPlane(EksUpgradePlan)
 
         var id: String {
@@ -27,7 +27,7 @@ struct AutoscalingView: View {
             case .scaledJob(let row): "sj/" + row.id
             case .vpa(let row): "vpa/" + row.id
             case .pool(let row, _): "pool/" + row.id
-            case .nodeGroup(let row, _): "ng/" + row.id
+            case .nodeGroup(let row, _, _): "ng/" + row.id
             case .controlPlane: "eks/control-plane"
             }
         }
@@ -99,7 +99,7 @@ struct AutoscalingView: View {
                     }
                 }
             }
-            // Only on a cluster that signs in through EKS: elsewhere there is nothing to say.
+            // Only on a cluster that signs in through EKS or GKE: elsewhere there is nothing to say.
             if view.nodeGroups.installed {
                 nodeGroupsSection(view.nodeGroups, plan: view.eksUpgrade)
             }
@@ -122,8 +122,8 @@ struct AutoscalingView: View {
             + view.nodeGroups.groups
     }
 
-    /// The EKS managed node groups, with the permission or AWS error line above them and the
-    /// control plane's row first.
+    /// The EKS managed node groups or GKE node pools, with the permission or provider error line
+    /// above them and the EKS control plane's row first.
     private func nodeGroupsSection(_ report: NodeGroupsReport, plan: EksUpgradePlan) -> some View {
         Section {
             let error = NodeGroupText.error(report)
@@ -139,13 +139,13 @@ struct AutoscalingView: View {
             }
             ForEach(report.groups) { row in
                 Button {
-                    selected = .nodeGroup(row, clusterVersion: report.clusterVersion)
+                    selected = .nodeGroup(row, clusterVersion: report.clusterVersion, gke: report.gke)
                 } label: {
                     NodeGroupRowView(row: row)
                 }
             }
         } header: {
-            Text("Node pools (EKS)")
+            Text(verbatim: NodeGroupText.title(gke: report.gke))
         }
     }
 
@@ -161,7 +161,7 @@ struct AutoscalingView: View {
                 Button {
                     select(problem, in: view, claims: claims)
                 } label: {
-                    ProblemRow(problem: problem)
+                    ProblemRow(problem: problem, gke: view.nodeGroups.gke)
                 }
             }
         } header: {
@@ -191,7 +191,9 @@ struct AutoscalingView: View {
             }
         case .nodeGroups:
             if let row = view.nodeGroups.groups.first(where: { $0.id == problem.key }) {
-                selected = .nodeGroup(row, clusterVersion: view.nodeGroups.clusterVersion)
+                selected = .nodeGroup(
+                    row, clusterVersion: view.nodeGroups.clusterVersion, gke: view.nodeGroups.gke
+                )
             }
         case .unknown:
             break
@@ -242,6 +244,8 @@ struct AutoscalingView: View {
 /// One "Needs attention" row: the group it came from, its name and its state.
 private struct ProblemRow: View {
     let problem: AutoscalingProblem
+    /// The node pools are GKE's: their group is titled so.
+    var gke = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -267,7 +271,7 @@ private struct ProblemRow: View {
         case .keda: "KEDA"
         case .vpa: "Vertical (VPA)"
         case .karpenter: "Node pools (Karpenter)"
-        case .nodeGroups: "Node pools (EKS)"
+        case .nodeGroups: NodeGroupText.title(gke: gke)
         case .unknown: ""
         }
     }

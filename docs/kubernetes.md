@@ -675,6 +675,13 @@ limit?" in two taps:
   sheet reads its status every 30 s while it is open, and a moment when the API server does not
   answer is not taken for a failure. Closing the app does not stop it: the next plan finds the
   running update again and the sheet goes on following it.
+- **Node pools (GKE):** on a GKE cluster, each node pool's node count against its autoscaling
+  bounds (or "Autoscaling off"), Kubernetes version, machine type, image type, spot or
+  on-demand, status, and Google's error message when it has one. Read-only: no size change or
+  upgrade from the phone. A pool at its maximum, with an error or not RUNNING is listed under
+  Needs attention. Read with the cluster's own Google sign-in ([permission](clusters.md)); the
+  cluster is found in its project by the API server address, so one reached through a proxy or
+  another address says "not found in project".
 
 A group the cluster does not run (KEDA, VPA, Karpenter) collapses to one "not installed" line;
 credentials that cannot read one group show the reason in that group's header only.

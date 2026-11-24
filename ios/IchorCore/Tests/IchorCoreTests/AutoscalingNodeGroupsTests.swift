@@ -125,4 +125,30 @@ final class AutoscalingNodeGroupsTests: XCTestCase {
         XCTAssertEqual(failed.podEvictionFailure?.resourceIds, ["ip-1"])
         XCTAssertNil(NodeGroupUpdate(id: "u", status: "Failed", type: "ConfigUpdate").podEvictionFailure)
     }
+
+    func testDecodesAGKEReportWithAPoolWithoutAutoscaling() throws {
+        let json = """
+            {"provider":"gke","installed":true,"region":"europe-west1","cluster":"web","error":"","forbidden":"",
+             "clusterVersion":"1.34.1-gke.1200000",
+             "groups":[
+              {"name":"fixed","status":"ERROR","desired":1,"min":0,"max":0,"version":"1.34.1-gke.1200000",
+               "amiType":"COS_CONTAINERD","capacityType":"SPOT","instanceTypes":["c3-standard-4"],"nodes":1,
+               "issues":[{"code":"GCE_QUOTA_EXCEEDED","message":"Quota CPUS exceeded","resourceIds":[]}]},
+              {"name":"zonal","status":"RUNNING","desired":2,"min":1,"max":2,"nodes":2,"atMax":true}
+             ]}
+            """
+        let report = try JSONDecoder().decode(NodeGroupsReport.self, from: Data(json.utf8))
+        XCTAssertTrue(report.gke)
+        XCTAssertFalse(demo.gke)
+        let fixed = report.groups[0]
+        let zonal = report.groups[1]
+        XCTAssertTrue(fixed.autoscalingOff)
+        XCTAssertEqual(fixed.state, .notReady)
+        XCTAssertEqual(fixed.issues.first?.code, "GCE_QUOTA_EXCEEDED")
+        XCTAssertFalse(zonal.autoscalingOff)
+        XCTAssertEqual(zonal.state, .atMax)
+        // RUNNING is GKE's healthy status: only the maximum flags the zonal pool.
+        let calm = ManagedNodeGroupRow(name: "zonal", status: ManagedNodeGroupRow.running, min: 1, max: 2)
+        XCTAssertFalse(calm.needsAttention)
+    }
 }

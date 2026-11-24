@@ -5225,6 +5225,10 @@
     <string name="autoscaling_section_vpa">垂直扩缩（VPA）</string>
     <string name="autoscaling_section_karpenter">节点池（Karpenter）</string>
     <string name="autoscaling_section_nodegroups">节点池（EKS）</string>
+    <string name="autoscaling_section_nodegroups_gke">节点池（GKE）</string>
+    <string name="autoscaling_nodegroup_forbidden_account">此账号不允许 %1$s</string>
+    <string name="autoscaling_nodegroup_image_type">镜像类型</string>
+    <string name="autoscaling_nodegroup_autoscaling_off">自动扩缩已关闭</string>
     <string name="autoscaling_nodegroup_forbidden">此角色不允许 %1$s</string>
     <string name="autoscaling_nodegroup_size">%1$s（%2$s–%3$s）</string>
     <string name="autoscaling_nodegroup_status">状态</string>

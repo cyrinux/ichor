@@ -41,7 +41,7 @@ tour** shows it again.
   StatefulSets and DaemonSets (the pod template diff first) and a Deployment's pause, pods, logs and shells, a browser of every object with
   summary, YAML, scale and delete, Jobs, Services and load balancing, storage, autoscaling
   (Karpenter pools and EKS managed node groups included, resized and upgraded from the phone,
-  and the EKS control plane upgraded one minor at a time),
+  the EKS control plane upgraded one minor at a time, and GKE node pools listed),
   policies, virtual machines, capacity, live events and Alertmanager (acknowledge or resolve the
   PagerDuty or Grafana IRM incident from the alert), with RBAC checked before you tap. Clusters come from a kubeconfig or a cloud account: EKS, GKE, AKS, DigitalOcean,
   Rancher, Omni, OIDC, Teleport, also behind the kubeconfig's `proxy-url` (HTTP or SOCKS5) or an SSH bastion with a pinned host key. The `?` on the add screen says what each way in needs: a cloud

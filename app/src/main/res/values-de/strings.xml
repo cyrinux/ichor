@@ -5348,6 +5348,10 @@
     <string name="autoscaling_section_vpa">Vertikal (VPA)</string>
     <string name="autoscaling_section_karpenter">Node-Pools (Karpenter)</string>
     <string name="autoscaling_section_nodegroups">Node-Pools (EKS)</string>
+    <string name="autoscaling_section_nodegroups_gke">Node-Pools (GKE)</string>
+    <string name="autoscaling_nodegroup_forbidden_account">%1$s ist für dieses Konto nicht erlaubt</string>
+    <string name="autoscaling_nodegroup_image_type">Image-Typ</string>
+    <string name="autoscaling_nodegroup_autoscaling_off">Autoscaling aus</string>
     <string name="autoscaling_nodegroup_forbidden">%1$s ist für diese Rolle nicht erlaubt</string>
     <string name="autoscaling_nodegroup_size">%1$s von %2$s–%3$s</string>
     <string name="autoscaling_nodegroup_status">Status</string>

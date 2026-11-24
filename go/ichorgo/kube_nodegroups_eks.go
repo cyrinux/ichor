@@ -12,8 +12,8 @@ import (
 )
 
 // The cloud node pools of a cluster, read from the provider's API with the credentials of
-// the cluster's own sign-in. EKS managed node groups first; other providers fill the same
-// report with their own provider name.
+// the cluster's own sign-in: EKS managed node groups here, GKE node pools in
+// kube_nodegroups_gke.go; other providers fill the same report with their own provider name.
 
 const (
 	nodeGroupsProviderEKS = "eks"
@@ -100,10 +100,10 @@ type eksNodegroup struct {
 	CreatedAt float64 `json:"createdAt"`
 }
 
-// KubeNodeGroups reads the cluster's cloud node pools (EKS managed node groups) with the
-// credentials of the cluster's own sign-in: {"provider","installed","region","cluster",
-// "error","forbidden","groups"} (see nodeGroupsReport). A cluster that does not sign in
-// through EKS answers installed false without any call to AWS. kubeServer: see KubePods.
+// KubeNodeGroups reads the cluster's cloud node pools (EKS managed node groups, GKE node
+// pools) with the credentials of the cluster's own sign-in: {"provider","installed","region",
+// "cluster","error","forbidden","groups"} (see nodeGroupsReport). A cluster that does not sign
+// in through EKS or GKE answers installed false without any cloud call. kubeServer: see KubePods.
 func KubeNodeGroups(configYAML, contextName, kubeServer string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -120,8 +120,14 @@ func readNodeGroups(ctx context.Context, k *kubeClient) (nodeGroupsReport, error
 		return noNodeGroups(), nil
 	}
 
-	m, ok := k.tokens.method.(*eksMethod)
-	if !ok {
+	var m *eksMethod
+
+	switch method := k.tokens.method.(type) {
+	case *eksMethod:
+		m = method
+	case gkeMethod:
+		return readGKENodePools(ctx, k), nil
+	default:
 		return noNodeGroups(), nil
 	}
 
