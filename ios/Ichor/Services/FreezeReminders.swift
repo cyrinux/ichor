@@ -4,12 +4,13 @@ import UserNotifications
 
 /// A local notification 5 minutes before an Ichor freeze ends, with "+1 h". Scheduled from the
 /// freezes the app last read: Argo CD ends the freeze on its own, the reminder only says so.
+/// Not scheduled inside the cluster's quiet hours (the alert rules).
 @MainActor
 enum FreezeReminders {
     nonisolated static let category = "argo-freeze"
     nonisolated static let extendAction = "extend"
     private static let prefix = "argo-freeze|"
-    private static let lead: TimeInterval = 5 * 60
+    nonisolated private static let lead: TimeInterval = 5 * 60
 
     /// What was last scheduled per cluster, so the 2 s polling during a sync does not reschedule.
     private static var scheduled: [String: Set<String>] = [:]
@@ -20,18 +21,29 @@ enum FreezeReminders {
         guard !cluster.isEmpty else { return }
         let nowMs = now.epochMillis
         let running = status.runningIchorFreezes.filter { $0.window.endsAt > nowMs }
-        let signature = Set(running.map { "\(identifier(cluster, $0))@\($0.window.endsAt)" })
+        // Scheduled ahead, so the quiet hours are asked about the time each one would fire.
+        let rules = AlertRulesStore.load()
+        let quiet = Set(
+            running.filter {
+                TalosClient.quietUntil(rules: rules, cluster: cluster, at: fireDate(endsAt: $0.window.endsAt)) != nil
+            }.map { identifier(cluster, $0) })
+        // The quiet ones are named in the signature: changed rules schedule again at the next load.
+        let signature = Set(
+            running.map {
+                let id = identifier(cluster, $0)
+                return "\(id)@\($0.window.endsAt)" + (quiet.contains(id) ? "|quiet" : "")
+            })
         guard scheduled[cluster] != signature else { return }
         scheduled[cluster] = signature
         let center = UNUserNotificationCenter.current()
-        let keep = Set(running.map { identifier(cluster, $0) })
+        let keep = Set(running.map { identifier(cluster, $0) }).subtracting(quiet)
         let clusterPrefix = prefix + cluster + "|"
         // @Sendable: called on a queue of the system's, so it must not inherit the main actor.
         center.getPendingNotificationRequests { @Sendable requests in
             let gone = requests.map(\.identifier).filter { $0.hasPrefix(clusterPrefix) && !keep.contains($0) }
             UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: gone)
         }
-        for pw in running {
+        for pw in running where !quiet.contains(identifier(cluster, pw)) {
             // Already inside the lead time: its pending reminder (if any) stays as it is.
             guard let fireIn = freezeReminderDelay(endsAt: pw.window.endsAt, lead: lead, now: now) else { continue }
             let request = UNNotificationRequest(
@@ -39,6 +51,30 @@ enum FreezeReminders {
                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: fireIn, repeats: false))
             center.add(request)
         }
+    }
+
+    /// Drops the pending reminders the quiet hours now cover, once the alert rules changed (the
+    /// ones they no longer cover come back at the next load of the freezes).
+    static func applyQuietHours() {
+        let rules = AlertRulesStore.load()
+        let all = prefix
+        // @Sendable: called on a queue of the system's, so it must not inherit the main actor.
+        UNUserNotificationCenter.current().getPendingNotificationRequests { @Sendable requests in
+            let quiet = requests.filter { request in
+                guard request.identifier.hasPrefix(all),
+                    let freeze = FreezeExtendRequest(userInfo: request.content.userInfo)
+                else { return false }
+                let fire = fireDate(endsAt: freeze.end)
+                return TalosClient.quietUntil(rules: rules, cluster: freeze.cluster, at: fire) != nil
+            }
+            let ids = quiet.map(\.identifier)
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
+        }
+    }
+
+    /// When the reminder of a freeze ending at `endsAt` (unix ms) fires.
+    nonisolated private static func fireDate(endsAt: Int64) -> Date {
+        Date(epochMillis: endsAt).addingTimeInterval(-lead)
     }
 
     /// One per freeze: two freezes of a project ending together each get their reminder.

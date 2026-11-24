@@ -122,8 +122,10 @@ the app). Then **Settings → Alerts**: turn on **Alertmanager alerts**, which s
 several distributors installed, Ichor asks which one to receive through; the row then says
 **Paired · via** that distributor. Messages are encrypted for the phone (RFC 8291) before they
 leave the relay, so the distributor's push server sees nothing readable, and Ichor shows them
-as its own alert notifications. If the row says to update your distributor, the one installed
-cannot decrypt the relay's messages.
+as its own alert notifications, under the alert rules like the ones of the background check: a
+push inside the cluster's quiet hours or below its minimum severity is not shown, and the
+"Since you last looked" card says why. If the row says to update your distributor, the one
+installed cannot decrypt the relay's messages.
 
 **iOS.** UnifiedPush does not exist on iOS, so the relay publishes to a topic on an ntfy server
 and the ntfy app shows the notification. Install the ntfy app, then **Settings → Alerts → Push

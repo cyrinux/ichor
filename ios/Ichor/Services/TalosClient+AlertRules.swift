@@ -12,4 +12,16 @@ extension TalosClient {
         let millis = Int64((now.timeIntervalSince1970 * 1000).rounded())
         return try await Self.json { IchorgoAlertRulesApply(request.rules, request.alerts, millis, $0) }
     }
+
+    /// For what is not an alert (a freeze reminder): the end of the quiet hours `cluster` (its
+    /// fingerprint) is in at `at` under `rules`, nil outside them, without any, or when Go
+    /// refuses the rules. Decided by the Go core (AlertRulesQuietUntil) with no cluster call:
+    /// quick enough to ask from any thread.
+    static func quietUntil(rules: AlertRules, cluster: String, at: Date) -> Date? {
+        guard rules != .none,
+            let request = try? alertRulesRequest(rules: rules, alerts: [], zone: TimeZone.current.identifier)
+        else { return nil }
+        let until = IchorgoAlertRulesQuietUntil(request.rules, cluster, at.epochMillis)
+        return until > 0 ? Date(epochMillis: until) : nil
+    }
 }

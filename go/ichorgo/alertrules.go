@@ -213,6 +213,36 @@ func AlertRulesApply(rulesJSON, alertsJSON string, nowMillis int64) (out string,
 	return toJSON(applyAlertRules(resolved, alerts, time.UnixMilli(nowMillis)))
 }
 
+// AlertRulesQuietUntil answers, for what is not an alert (a reminder the app posts or
+// schedules itself): the end, in unix ms, of the quiet hours the cluster's rule (its override
+// over the default of rulesJSON, see AlertRulesApply) is in at atMillis, or 0 outside them or
+// without any. Such a notification is never critical, so exceptCritical does not let it
+// through. Rules AlertRulesApply would refuse answer 0 as well: like an alert, a reminder is
+// never dropped because the rules could not be read.
+func AlertRulesQuietUntil(rulesJSON, cluster string, atMillis int64) int64 {
+	rules, err := decodeAlertRules(rulesJSON)
+	if err != nil {
+		return 0
+	}
+
+	resolved, err := resolveAlertRules(rules, []alertIn{{Cluster: cluster}})
+	if err != nil {
+		return 0
+	}
+
+	quiet := resolved[cluster].quiet
+	if quiet == nil {
+		return 0
+	}
+
+	end := quiet.quietUntil(time.UnixMilli(atMillis))
+	if end.IsZero() {
+		return 0
+	}
+
+	return end.UnixMilli()
+}
+
 func decodeAlertRules(rulesJSON string) (alertRules, error) {
 	var rules alertRules
 

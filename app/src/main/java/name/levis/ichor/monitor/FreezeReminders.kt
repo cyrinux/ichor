@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit
 
 // A notification 5 minutes before an Ichor freeze ends, with "+1 h". Scheduled from the freezes
 // the app last read (WorkManager, no polling): Argo CD ends the freeze on its own, the reminder
-// only says so.
+// only says so. Not posted inside the cluster's quiet hours (the alert rules).
 
 private const val TAG_PREFIX = "argo-freeze-reminder|"
 private const val LEAD_MILLIS = 5 * 60_000L
@@ -101,7 +101,7 @@ private fun reminderData(cluster: String, pw: ProjectWindow): Data = workDataOf(
 class FreezeReminderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val end = inputData.getLong(KEY_END, 0)
-        if (end <= System.currentTimeMillis() || !stillRunning()) return Result.success()
+        if (end <= System.currentTimeMillis() || !stillRunning() || quiet()) return Result.success()
         val res = AppLocale.wrap(applicationContext)
         val project = inputData.getString(KEY_PROJECT).orEmpty()
         val scope = inputData.getString(KEY_SCOPE).orEmpty()
@@ -119,6 +119,13 @@ class FreezeReminderWorker(context: Context, params: WorkerParameters) : Corouti
             addAction(0, res.getString(R.string.argo_freeze_extend_hour), extend)
         }
         return Result.success()
+    }
+
+    /** Whether the cluster's quiet hours hold the reminder back. */
+    private suspend fun quiet(): Boolean {
+        val app = applicationContext as TalosApp
+        val cluster = inputData.getString(KEY_CLUSTER).orEmpty()
+        return app.alertRulesRepository.quietUntil(app.monitorStore.alertRules.value, cluster, System.currentTimeMillis()) > 0
     }
 
     /** False when the freeze was ended or changed meanwhile; true when that cannot be told (another cluster, offline). */

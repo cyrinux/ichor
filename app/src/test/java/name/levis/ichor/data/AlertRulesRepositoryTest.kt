@@ -45,4 +45,24 @@ class AlertRulesRepositoryTest {
         val repository = AlertRulesRepository(apply = { _, _, _ -> throw IllegalStateException("alert rule default: quiet hours: start \"7\": want HH:MM") }, zone = { "UTC" })
         assertThrows(IllegalStateException::class.java) { runBlocking { repository.decide(AlertRules.NONE, alerts, 0) } }
     }
+
+    @Test
+    fun aReminderAsksWithThePhoneZoneAndNoRulesAskNothing() = runBlocking {
+        var sent: Triple<String, String, Long>? = null
+        val repository = AlertRulesRepository(
+            zone = { "Europe/Paris" },
+            quiet = { rules, cluster, at ->
+                sent = Triple(rules, cluster, at)
+                99L
+            },
+        )
+        assertEquals(0L, repository.quietUntil(AlertRules.NONE, "fp", 42))
+        assertEquals(null, sent)
+        val rules = AlertRules(default = AlertRule(quietHours = QuietHours("23:00", "07:00", exceptCritical = true)))
+        assertEquals(99L, repository.quietUntil(rules, "fp", 42))
+        assertEquals(
+            Triple("""{"default":{"quietHours":{"start":"23:00","end":"07:00","tz":"Europe/Paris","exceptCritical":true}}}""", "fp", 42L),
+            sent,
+        )
+    }
 }

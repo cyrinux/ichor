@@ -7,6 +7,9 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.GoCall
 import name.levis.ichor.data.RelayRepository
+import name.levis.ichor.model.AlertDecisions
+import name.levis.ichor.model.AlertInput
+import name.levis.ichor.model.AlertRules
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.RelayDevice
@@ -72,9 +75,11 @@ fun retainRelayPairs(app: TalosApp, fingerprints: List<String>) {
 
 /**
  * Posts what the relay pushed for [fingerprint] like the poller would: only while the user wants
- * background and Alertmanager alerts and this cluster's push, the snoozed alerts left out.
+ * background and Alertmanager alerts and this cluster's push, under the alert rules (quiet hours,
+ * minimum severity), the snoozed alerts left out. The ones the rules muted are recorded for
+ * "Since you last looked".
  */
-fun postRelayPush(app: TalosApp, fingerprint: String, payload: RelayPayload, now: Long = System.currentTimeMillis()) {
+suspend fun postRelayPush(app: TalosApp, fingerprint: String, payload: RelayPayload, now: Long = System.currentTimeMillis()) {
     val monitor = app.monitorStore
     val pair = app.relayStore.read(fingerprint)
     if (!pair.enabled || payload.cluster != fingerprint) return
@@ -84,12 +89,31 @@ fun postRelayPush(app: TalosApp, fingerprint: String, payload: RelayPayload, now
     val label = context?.let { relayLabel(app, it) }
     val hide = app.appLock.enabled.value
     val canPage = app.onCallStore.read(fingerprint).isSet
-    relayAlerts(payload).filterNot { app.alertSnoozes.isSnoozed(fingerprint, it.key, now) }.forEach { alert ->
+    val alerts = relayAlerts(payload)
+    val inputs = relayInputs(fingerprint, alerts) { app.alertSnoozes.isSnoozed(fingerprint, it, now) }
+    val plan = relayPlan(alerts, inputs, relayDecisions(app, inputs, now))
+    plan.post.forEach { alert ->
         val actions = alert.actions(canWake = false, canReboot = false, canAcknowledgePage = alert.kind == AlertKind.AM_FIRING && canPage)
         postAlert(app, alert, hideOnLockScreen = hide, clusterId = context?.clusterId, actions = actions, fingerprint = fingerprint, cluster = label)
     }
+    plan.muted.forEach { app.alertMutes.record(fingerprint, it.alert.key, AlertMute(it.reason, it.until, now)) }
+    // The alerts left out are the less severe ones: when none of the kept ones was posted, they would not be either.
     val omitted = relayOmitted(payload)
-    if (omitted > 0) postRelayOmitted(app, fingerprint, label, omitted)
+    if (omitted > 0 && plan.post.isNotEmpty()) postRelayOmitted(app, fingerprint, label, omitted)
+}
+
+/** Go's decisions over a push's [inputs]; null without rules or when they could not be applied (every alert is then posted). */
+private suspend fun relayDecisions(app: TalosApp, inputs: List<AlertInput>, now: Long): AlertDecisions? {
+    val rules = app.monitorStore.alertRules.value
+    if (rules == AlertRules.NONE || inputs.isEmpty()) return null
+    return try {
+        app.alertRulesRepository.decide(rules, inputs, now)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Log.w(TAG, "alert rules not applied, posting every alert: ${e.message}")
+        null
+    }
 }
 
 /** "N more alerts in Alertmanager" once a push left some out; a tap opens the app. */
