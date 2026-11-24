@@ -1,0 +1,7 @@
+• Upgrade an EKS node group from the phone
+• Mark the Scaleway image that matches the cluster's image
+• Make a Talos image at Scaleway from the phone
+• A guided Scaleway security group for a new node, open only to the nodes and the phone
+• Make a Talos image for the cluster's schematic at Scaleway from the Go core
+• Wrap the node group upgrade strings for swift-format
+• Reboot a stalled simulator and rerun the iOS smoke walk once
