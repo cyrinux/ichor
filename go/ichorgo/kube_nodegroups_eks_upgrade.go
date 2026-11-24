@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -107,17 +106,9 @@ func upgradeEKSNodeGroup(ctx context.Context, k *kubeClient, group, version stri
 
 // eksClusterVersion is the Kubernetes version of m's control plane (DescribeCluster), "1.34".
 func eksClusterVersion(ctx context.Context, m *eksMethod, creds awsCredentials) (string, error) {
-	var answer struct {
-		Cluster struct {
-			Version string `json:"version"`
-		} `json:"cluster"`
-	}
+	cluster, err := eksDescribeCluster(ctx, m, creds)
 
-	if err := eksCall(ctx, m, creds, http.MethodGet, "/clusters/"+url.PathEscape(m.cluster), nil, nil, &answer); err != nil {
-		return "", err
-	}
-
-	return answer.Cluster.Version, nil
+	return cluster.Version, err
 }
 
 // withClusterVersion sets the report's control plane version and marks the groups whose

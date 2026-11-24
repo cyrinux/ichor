@@ -1,0 +1,24 @@
+{
+  "blockers": [
+    "node groups are behind the current version: upgrade them first"
+  ],
+  "cluster": "ichor-demo",
+  "error": "",
+  "forbidden": "",
+  "groups": [
+    "gpu",
+    "system"
+  ],
+  "groupsBehind": [
+    "gpu"
+  ],
+  "installed": true,
+  "next": "1.35",
+  "nextKnown": true,
+  "platformVersion": "eks.9",
+  "region": "eu-west-1",
+  "status": "ACTIVE",
+  "supportEnds": 1767323045000,
+  "updating": null,
+  "version": "1.34"
+}

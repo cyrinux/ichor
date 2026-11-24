@@ -33,6 +33,8 @@ data class AutoscalingReport(
     @SerialName("workloadsTruncated") val workloadsTruncated: Boolean = false,
     /** The cloud's node pools (EKS managed node groups): a call of its own, attached by the repository. */
     @Transient val nodeGroups: NodeGroupsReport = NodeGroupsReport(),
+    /** The EKS control plane's upgrade plan: a call of its own, attached by the repository. */
+    @Transient val eksUpgrade: EksUpgradePlan = EksUpgradePlan(),
 )
 
 /** What every group says about itself before its rows. */

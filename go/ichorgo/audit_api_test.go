@@ -19,7 +19,7 @@ var auditedEntryPoints = []string{
 	"AlertmanagerExpire", "AlertmanagerSilence",
 	"EtcdAlarmDisarm", "EtcdDefragment", "EtcdForfeitLeadership", "EtcdRemoveMember", "GitForgePropose",
 	"KubeArgoAction", "KubeArgoFreeze", "KubeCNPGBackup", "KubeCertManagerRenew", "KubeCordon",
-	"KubeDeletePod", "KubeFluxAction", "KubeGarageRepairBlocks", "KubeGarageSetTranquility",
+	"KubeDeletePod", "KubeEKSUpgrade", "KubeFluxAction", "KubeGarageRepairBlocks", "KubeGarageSetTranquility",
 	"KubeHelmRollback", "KubeLonghornAction", "KubeNodeCordon", "KubeNodeGroupScale", "KubeNodeGroupUpgrade", "KubeNodeMetaApply", "KubeObjectUpdate",
 	"KubeRollbackWorkload", "KubeRolloutPause", "KubeRolloutRestart", "KubeScale", "KubeSuspendCronJob",
 	"KubeTriggerCronJob", "NetPerfDeleteNamespace", "NodeDiskWipe", "NodeMetaApply", "Reboot", "Rollback", "ServiceAction", "Shutdown", "StartClusterUpgrade", "StartConfigApply", "StartConfigApplyMulti", "StartConfigTry",

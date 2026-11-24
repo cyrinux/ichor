@@ -393,6 +393,15 @@ Part of the [Ichor documentation](../README.md#documentation).
   request that got no answer is never retried. The activity log keeps one entry per attempt
   (group, version and force, never the credentials); the demo cluster refuses it.
 
+- **EKS control plane upgrade (Kubernetes → Autoscaling → Control plane → Upgrade…):** it
+  cannot be undone or cancelled, so the sheet shows the plan first and says so, and the
+  confirmation asks for the cluster's name and repeats it. Only the plan's next minor is sent:
+  any other version, a cluster that is not active, an update already running, or node groups
+  still behind the current version are refused before AWS is called. AWS' refusal
+  (`eks:UpdateClusterVersion`) is the last gate; a request that got no answer is never retried.
+  The activity log keeps one entry per attempt (`upgrade-eks-control-plane`, the cluster and the
+  version, never the credentials); the demo cluster refuses it.
+
 - **META keys (node menu → Machine config → META, `os:admin`):**
   - **What they are:** the boot-time values Talos reads before the machine config, such as the
     network config of a metal node (0x0a). This is the last-resort fix for a node that cannot boot

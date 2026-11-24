@@ -16,6 +16,7 @@ struct AutoscalingDetailSheets: View {
         case .pool(let row, let claims): NodePoolSheet(row: row, claims: claims)
         case .nodeGroup(let row, let clusterVersion):
             NodeGroupDetailSheet(row: row, clusterVersion: clusterVersion, onChanged: onChanged)
+        case .controlPlane(let plan): EksUpgradeSheet(plan: plan, onChanged: onChanged)
         }
     }
 }
