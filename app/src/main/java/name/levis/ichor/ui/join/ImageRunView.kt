@@ -30,7 +30,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.upgrade.TimelineRow
 
 /**
- * The followed image run (a Hetzner snapshot, an AWS AMI, an Azure or a Compute Engine image): its steps with the
+ * The followed image run (a Hetzner snapshot, an AWS AMI, an Azure, a Compute Engine or a Scaleway image): its steps with the
  * command's last line, Stop, then the result.
  */
 @Composable
@@ -104,6 +104,12 @@ internal fun ImageRunKind.label(phase: JoinPhase): Int = when (this) {
         JoinPhase.CLEANUP -> R.string.azure_phase_cleanup
         else -> phase.label
     }
+    ImageRunKind.SCALEWAY_IMAGE -> when (phase) {
+        JoinPhase.CREATING -> R.string.scaleway_phase_helper
+        JoinPhase.REGISTER -> R.string.scaleway_phase_image
+        JoinPhase.CLEANUP -> R.string.scaleway_phase_cleanup
+        else -> phase.label
+    }
 }
 
 @get:StringRes
@@ -112,6 +118,7 @@ private val ImageRunKind.stopHint: Int
         ImageRunKind.HETZNER_SNAPSHOT -> R.string.hetzner_snapshot_stop_hint
         ImageRunKind.AWS_AMI -> R.string.aws_image_stop_hint
         ImageRunKind.AZURE_IMAGE, ImageRunKind.GCP_IMAGE -> R.string.azure_image_stop_hint
+        ImageRunKind.SCALEWAY_IMAGE -> R.string.scaleway_image_stop_hint
     }
 
 @get:StringRes
@@ -120,6 +127,7 @@ private val ImageRunKind.stopBody: Int
         ImageRunKind.HETZNER_SNAPSHOT -> R.string.hetzner_snapshot_stop_body
         ImageRunKind.AWS_AMI -> R.string.aws_image_stop_body
         ImageRunKind.AZURE_IMAGE, ImageRunKind.GCP_IMAGE -> R.string.azure_image_stop_body
+        ImageRunKind.SCALEWAY_IMAGE -> R.string.scaleway_image_stop_body
     }
 
 /** "Snapshot %1$s is ready…", with [madeName] as its argument. */
@@ -128,11 +136,11 @@ internal val ImageRunKind.done: Int
     get() = when (this) {
         ImageRunKind.HETZNER_SNAPSHOT -> R.string.hetzner_snapshot_done
         ImageRunKind.AWS_AMI -> R.string.aws_image_done
-        ImageRunKind.AZURE_IMAGE, ImageRunKind.GCP_IMAGE -> R.string.azure_image_done
+        ImageRunKind.AZURE_IMAGE, ImageRunKind.GCP_IMAGE, ImageRunKind.SCALEWAY_IMAGE -> R.string.azure_image_done
     }
 
 /** What the finished run made, as [done] names it. */
 internal fun ImageRunKind.madeName(run: JoinRunState): String = when (this) {
     ImageRunKind.HETZNER_SNAPSHOT -> run.snapshotResult?.description.orEmpty()
-    ImageRunKind.AWS_AMI, ImageRunKind.AZURE_IMAGE, ImageRunKind.GCP_IMAGE -> run.madeImage?.name.orEmpty()
+    ImageRunKind.AWS_AMI, ImageRunKind.AZURE_IMAGE, ImageRunKind.GCP_IMAGE, ImageRunKind.SCALEWAY_IMAGE -> run.madeImage?.name.orEmpty()
 }

@@ -19,6 +19,8 @@ import name.levis.ichor.model.AzureImageSpec
 import name.levis.ichor.model.GCPImageResult
 import name.levis.ichor.model.GCPImageSpec
 import name.levis.ichor.model.HetznerSnapshotSpec
+import name.levis.ichor.model.ScalewayImageResult
+import name.levis.ichor.model.ScalewayImageSpec
 import name.levis.ichor.data.K8sUpgradeRunState
 import name.levis.ichor.data.MaintenanceRunState
 import name.levis.ichor.data.UpgradeRunState
@@ -216,6 +218,18 @@ class OperationPresenterTest {
         val made = run.copy(finished = true, madeImage = GCPImageResult(image = "talos-v1-12-0-gcp-amd64", selfLink = "https://example.test/i"))
         assertEquals(res(R.string.azure_image_notification_done), JoinPresenter.done(made).title)
         assertEquals(res(R.string.azure_image_done, "talos-v1-12-0-gcp-amd64"), JoinPresenter.done(made).text)
+    }
+
+    @Test
+    fun aScalewayImageRunIsNotNamedLikeANode() {
+        val spec = ScalewayImageSpec(arch = "amd64", zone = "fr-par-1")
+        val run = JoinRunState(JoinRequest("", "", "", "Talos amd64", "", "", scalewayImage = spec), "lab")
+        assertEquals(res(R.string.azure_image_notification_title), JoinPresenter.progress(run).title)
+        assertEquals(res(R.string.scaleway_phase_helper), JoinPresenter.progress(run).text)
+        assertEquals(res(R.string.azure_image_notification_failed), JoinPresenter.failedTitle(run))
+        val made = run.copy(finished = true, madeImage = ScalewayImageResult(imageId = "img-new", name = "talos-v1.12.0-scaleway-amd64"))
+        assertEquals(res(R.string.azure_image_notification_done), JoinPresenter.done(made).title)
+        assertEquals(res(R.string.azure_image_done, "talos-v1.12.0-scaleway-amd64"), JoinPresenter.done(made).text)
     }
 
     @Test

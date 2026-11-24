@@ -235,11 +235,11 @@ struct BootMediaView: View {
         Section {
             if omni {
                 Text(
-                    "1. Add an API key and attach the IAM policy Ichor prints to its application.\n2. Upload the Talos image for Scaleway to the project once, from a computer.\n3. Name the Instance, then pick a zone, the Talos image, a type and a security group.\n4. Create it: Ichor shows the cost first, then follows it until the machine appears in Omni. Allocate it to the cluster."
+                    "1. Add an API key and attach the IAM policy Ichor prints to its application.\n2. Make the Talos image once from the Scaleway card, or upload one from a computer.\n3. Name the Instance, then pick a zone, the Talos image, a type and a security group.\n4. Create it: Ichor shows the cost first, then follows it until the machine appears in Omni. Allocate it to the cluster."
                 )
             } else {
                 Text(
-                    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add an API key and attach the IAM policy Ichor prints to its application.\n3. Upload the Talos image for Scaleway to the project once, from a computer.\n4. Pick a zone, the Talos image, a type and a security group, then create it: Ichor shows the cost first and follows it until the node joins."
+                    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add an API key and attach the IAM policy Ichor prints to its application.\n3. Make the Talos image once from the Scaleway card, or upload one from a computer.\n4. Pick a zone, the Talos image, a type and a security group, then create it: Ichor shows the cost first and follows it until the node joins."
                 )
             }
         }

@@ -167,6 +167,8 @@ public struct JoinRequest: Equatable, Sendable {
     public let azureImage: AzureImageSpec?
     /// No node either: a throwaway Compute Engine VM's data disk becomes a Talos image.
     public let gcpImage: GCPImageSpec?
+    /// No node either: a throwaway Scaleway Instance's volume, snapshotted, becomes a Talos image.
+    public let scalewayImage: ScalewayImageSpec?
     /// A machine of Omni to put in the cluster (`hostname` and `role` are the machine's and the set's).
     public let omniAllocate: OmniAllocateSpec?
     /// No cluster yet: the machine at `address` becomes the first control plane of this one.
@@ -180,8 +182,8 @@ public struct JoinRequest: Equatable, Sendable {
         aws: AWSCreateSpec? = nil, azure: AzureCreateSpec? = nil,
         gcp: GCPCreateSpec? = nil, scaleway: ScalewayCreateSpec? = nil, omni: Bool = false,
         snapshot: HetznerSnapshotSpec? = nil, awsImage: AWSImageSpec? = nil, azureImage: AzureImageSpec? = nil,
-        gcpImage: GCPImageSpec? = nil, omniAllocate: OmniAllocateSpec? = nil, newCluster: NewClusterStart? = nil,
-        hetznerCluster: HetznerNewClusterSpec? = nil
+        gcpImage: GCPImageSpec? = nil, scalewayImage: ScalewayImageSpec? = nil, omniAllocate: OmniAllocateSpec? = nil,
+        newCluster: NewClusterStart? = nil, hetznerCluster: HetznerNewClusterSpec? = nil
     ) {
         self.newCluster = newCluster
         self.hetznerCluster = hetznerCluster
@@ -189,6 +191,7 @@ public struct JoinRequest: Equatable, Sendable {
         self.awsImage = awsImage
         self.azureImage = azureImage
         self.gcpImage = gcpImage
+        self.scalewayImage = scalewayImage
         self.snapshot = snapshot
         self.address = address
         self.template = template
@@ -231,11 +234,12 @@ public struct JoinRequest: Equatable, Sendable {
         if awsImage != nil { return .awsAMI }
         if azureImage != nil { return .azureImage }
         if gcpImage != nil { return .gcpImage }
+        if scalewayImage != nil { return .scalewayImage }
         return nil
     }
 
-    /// No node at all: the run makes a Talos image (a Hetzner snapshot, an AWS AMI, an Azure or a
-    /// Compute Engine image).
+    /// No node at all: the run makes a Talos image (a Hetzner snapshot, an AWS AMI, an Azure, a
+    /// Compute Engine or a Scaleway image).
     public var imageRun: Bool { imageKind != nil }
 
     /// The same request, replacing (or not) the member already named `hostname`.
@@ -244,18 +248,20 @@ public struct JoinRequest: Equatable, Sendable {
             address: address, template: template, role: role, hostname: hostname, disk: disk,
             staticAddress: staticAddress, replacing: on, hetzner: hetzner, ovh: ovh, aws: aws, azure: azure, gcp: gcp,
             scaleway: scaleway, omni: omni, snapshot: snapshot, awsImage: awsImage, azureImage: azureImage,
-            gcpImage: gcpImage, omniAllocate: omniAllocate, newCluster: newCluster, hetznerCluster: hetznerCluster)
+            gcpImage: gcpImage, scalewayImage: scalewayImage, omniAllocate: omniAllocate, newCluster: newCluster,
+            hetznerCluster: hetznerCluster)
     }
 }
 
 /// What a run with no node makes: a Talos image at a cloud provider, with that run's steps.
 public enum ImageRunKind: Sendable {
-    case hetznerSnapshot, awsAMI, azureImage, gcpImage
+    case hetznerSnapshot, awsAMI, azureImage, gcpImage, scalewayImage
 
     public var phases: [JoinPhase] {
         switch self {
         case .hetznerSnapshot: JoinPhase.snapshotRun
-        case .awsAMI: JoinPhase.awsImageRun
+        // A Scaleway helper's volume is snapshotted, then the image registered: AWS's steps.
+        case .awsAMI, .scalewayImage: JoinPhase.awsImageRun
         case .azureImage: JoinPhase.imageRun
         case .gcpImage: JoinPhase.gcpImageRun
         }

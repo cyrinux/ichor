@@ -6648,8 +6648,8 @@
     <string name="secrets_bundle_open_failed">選んだファイルに書き込めません。</string>
     <string name="secrets_bundle_new_cluster_help">クラスターのシークレット（secrets.yaml）のコピーを保管しておくと、コンピューターで talosctl を使って構成を作れます。唯一のコントロールプレーンを失う前の備えにもなります。</string>
     <string name="scaleway_title">Scaleway でインスタンスを作成</string>
-    <string name="scaleway_howto">1. コピーするメンバーを選び、新しいノードのホスト名とインストールディスクを指定します。\n2. API キーを追加し、Ichor が表示する IAM ポリシーをそのアプリケーションに付与します。\n3. Scaleway 用の Talos イメージをコンピューターからプロジェクトに一度アップロードします。\n4. ゾーン、Talos イメージ、タイプ、セキュリティグループを選んで作成します。Ichor は先に費用を表示し、ノードが参加するまで追跡します。</string>
-    <string name="scaleway_howto_omni">1. API キーを追加し、Ichor が表示する IAM ポリシーをそのアプリケーションに付与します。\n2. Scaleway 用の Talos イメージをコンピューターからプロジェクトに一度アップロードします。\n3. インスタンスに名前を付け、ゾーン、Talos イメージ、タイプ、セキュリティグループを選びます。\n4. 作成します。Ichor は先に費用を表示し、マシンが Omni に現れるまで追跡します。クラスターに割り当ててください。</string>
+    <string name="scaleway_howto">1. コピーするメンバーを選び、新しいノードのホスト名とインストールディスクを指定します。\n2. API キーを追加し、Ichor が表示する IAM ポリシーをそのアプリケーションに付与します。\n3. Scaleway カードから Talos イメージを一度作成するか、コンピューターからアップロードします。\n4. ゾーン、Talos イメージ、タイプ、セキュリティグループを選んで作成します。Ichor は先に費用を表示し、ノードが参加するまで追跡します。</string>
+    <string name="scaleway_howto_omni">1. API キーを追加し、Ichor が表示する IAM ポリシーをそのアプリケーションに付与します。\n2. Scaleway カードから Talos イメージを一度作成するか、コンピューターからアップロードします。\n3. インスタンスに名前を付け、ゾーン、Talos イメージ、タイプ、セキュリティグループを選びます。\n4. 作成します。Ichor は先に費用を表示し、マシンが Omni に現れるまで追跡します。クラスターに割り当ててください。</string>
     <string name="scaleway_add_key">Scaleway API キーを追加</string>
     <string name="scaleway_remove">このキーを削除</string>
     <string name="scaleway_key_warning">API キーのシークレットは、取り消されるまで IAM ポリシーが許可する操作を実行できます。このデバイスに封印して保存され、バックアップには含まれません。</string>
@@ -6670,6 +6670,16 @@
     <string name="scaleway_confirm_title">Scaleway に %1$s を作成しますか?</string>
     <string name="scaleway_confirm_body">課金対象のインスタンス (%2$s の %1$s) とデータボリュームを作成します。ユーザーデータはクラスターのシークレットまたは Omni の参加トークンとともに Scaleway に送られます。実行が失敗するとインスタンスとそのボリュームは削除されます。</string>
     <string name="scaleway_stop_body">%1$s はボリュームごと Scaleway で削除されます。すでに応答した control plane は残ります。先にその etcd メンバーを削除する必要があります。</string>
+    <string name="scaleway_image_missing">このゾーンには %1$s 用の Talos イメージがまだありません。Ichor がこのクラスターのイメージから作成できます。</string>
+    <string name="scaleway_image_intro">Ichor は空の Block Storage ボリュームを付けた使い捨ての Ubuntu インスタンスを起動し、このクラスターの Talos イメージを書き込みます。続いてボリュームのスナップショットを取り、そこからイメージを作成し、インスタンスとそのボリューム、IP を削除します。イメージとスナップショットは残ります。クラスターには何も変更を加えません。約 10 分かかります。</string>
+    <string name="scaleway_image_place">イメージはキーのプロジェクトのゾーン %1$s に作成されます。</string>
+    <string name="scaleway_image_cost">%2$s を約 %1$d 分 (%3$s/h)、その後削除するまで %4$d GB のスナップショットに Scaleway から 1 GB あたりの月額料金 (税抜)</string>
+    <string name="scaleway_image_cost_unknown">%2$s を約 %1$d 分、その後削除するまで %3$d GB のスナップショットに Scaleway から 1 GB あたりの月額料金。価格不明: Scaleway の料金表を参照してください。</string>
+    <string name="scaleway_phase_helper">補助インスタンスを起動</string>
+    <string name="scaleway_phase_image">スナップショットからイメージを作成</string>
+    <string name="scaleway_phase_cleanup">補助インスタンスとそのボリューム、IP を削除</string>
+    <string name="scaleway_image_stop_hint">停止すると補助インスタンスとそのボリューム、IP が削除されます。</string>
+    <string name="scaleway_image_stop_body">実行を停止します。削除されるまで課金される補助インスタンスは、そのボリュームと IP とともに削除され、未完成のスナップショットやイメージも削除されます。</string>
     <string name="scaleway_network_guided">ノード用のセキュリティグループを作成(推奨)</string>
     <string name="scaleway_network_created">セキュリティグループ %1$s を作成しました。</string>
     <string name="scaleway_network_rule_member">%1$s (%2$s) からのすべての通信</string>

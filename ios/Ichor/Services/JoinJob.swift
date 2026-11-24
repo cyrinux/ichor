@@ -106,6 +106,9 @@ final class JoinJob {
                     } else if request.gcpImage != nil {
                         let made = try? JSONDecoder().decode(GCPImageResult.self, from: Data(address.utf8))
                         if let made { result = .imageMade(made.made) }
+                    } else if request.scalewayImage != nil {
+                        let made = try? JSONDecoder().decode(ScalewayImageResult.self, from: Data(address.utf8))
+                        if let made { result = .imageMade(made.made) }
                     } else if !address.isEmpty {
                         result = .joined(address)
                     } else if request.omni {
@@ -157,6 +160,7 @@ final class JoinJob {
         if let spec = request.awsImage { return client.startAWSImage(spec, credential: providerToken) }
         if let spec = request.azureImage { return client.startAzureImage(spec, credential: providerToken) }
         if let spec = request.gcpImage { return client.startGCPImage(spec, credential: providerToken) }
+        if let spec = request.scalewayImage { return client.startScalewayImage(spec, credential: providerToken) }
         if let spec = request.hetzner { return client.startHetznerCreate(spec, token: providerToken) }
         if let spec = request.ovh { return client.startOVHCreate(spec, credential: providerToken) }
         if let spec = request.aws { return client.startAWSCreate(spec, credential: providerToken) }

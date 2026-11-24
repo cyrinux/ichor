@@ -69,6 +69,8 @@ import name.levis.ichor.model.OVHCreateSpec
 import name.levis.ichor.model.OVHOptions
 import name.levis.ichor.model.ScalewayCheck
 import name.levis.ichor.model.ScalewayCreateSpec
+import name.levis.ichor.model.ScalewayImageCost
+import name.levis.ichor.model.ScalewayImageSpec
 import name.levis.ichor.model.ScalewayNetwork
 import name.levis.ichor.model.ScalewayNetworkSpec
 import name.levis.ichor.model.ScalewayOptions
@@ -515,6 +517,15 @@ class NodeLifecycleRepository(go: GoCall) : GoRepository(go) {
     /** See [TalosStreams.scalewayCreate]. */
     fun scalewayCreate(credentialJson: String, spec: ScalewayCreateSpec, stop: Flow<Any>): Flow<JoinEvent> =
         streams.scalewayCreate(credentialJson, TalosJson.encodeToString(ScalewayCreateSpec.serializer(), spec), stop)
+
+    /** The cost line of a Scaleway image run. Creates nothing. */
+    suspend fun scalewayImageEstimate(credentialJson: String, arch: String, zone: String): ScalewayImageCost = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(ScalewayImageCost.serializer(), Ichorgo.scalewayImageEstimate(credentialJson, arch, zone))
+    }
+
+    /** See [TalosStreams.scalewayImage]. */
+    fun scalewayImage(credentialJson: String, spec: ScalewayImageSpec, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.scalewayImage(credentialJson, TalosJson.encodeToString(ScalewayImageSpec.serializer(), spec), stop)
 
     /** Whose AWS keys these are and whether they may run instances (a dry run). Creates nothing. */
     suspend fun awsTest(credentialJson: String): AWSCheck = withContext(Dispatchers.IO) {

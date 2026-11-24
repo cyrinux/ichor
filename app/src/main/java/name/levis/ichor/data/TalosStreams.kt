@@ -326,6 +326,14 @@ internal class TalosStreams(private val configs: ConfigRepository) {
     fun scalewayCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
         hetznerRun(stop) { yaml, context, listener -> Ichorgo.startScalewayCreate(yaml, context, credentialJson, specJson, listener) }
 
+    /**
+     * Makes a Talos image with a throwaway Scaleway Instance (StartScalewayImage). Done's address is
+     * the result JSON. As for [hetznerCreate], only [stop] cancels: it deletes the helper with its
+     * volumes and IP, and an unfinished snapshot or image.
+     */
+    fun scalewayImage(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
+        hetznerRun(stop) { yaml, context, listener -> Ichorgo.startScalewayImage(yaml, context, credentialJson, specJson, listener) }
+
     /** Creates an AWS EC2 instance and follows it (StartAWSCreate). As for [hetznerCreate], only [stop] cancels: it terminates the instance. */
     fun awsCreate(credentialJson: String, specJson: String, stop: Flow<Any>): Flow<JoinEvent> =
         hetznerRun(stop) { yaml, context, listener -> Ichorgo.startAWSCreate(yaml, context, credentialJson, specJson, listener) }

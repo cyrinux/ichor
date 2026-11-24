@@ -379,8 +379,15 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     with the user data and a data volume for EPHEMERAL, follows it until it runs, then follows the
     node until it joins, or until the machine appears in Omni. A failed or stopped run deletes the
     Instance, its volumes and its flexible IP, with the same control-plane exception as Hetzner; see
-    [safety](safety.md). The Talos image is uploaded once from a computer, as the Talos guide for
-    Scaleway shows. The project's default security group lets everything in, so above the picker
+    [safety](safety.md). A zone with no Talos image of the cluster's architecture gets one from the
+    app itself (**Make a Talos image**, also offered as "Make another Talos image"): the sheet shows
+    the helper's type, its hourly price before tax and the minutes it runs, and says the 10 GB
+    snapshot behind the image is then billed by Scaleway per GB-month. A throwaway Ubuntu Instance
+    with an empty Block Storage volume writes the Image Factory's image for your Talos version and
+    schematic to it; the app snapshots the volume, makes the image from the snapshot, deletes the
+    Instance, its volumes and its IP, and picks the new image on the card. Stop deletes the same,
+    and an unfinished snapshot or image. Uploading the image from a computer, as the Talos guide for
+    Scaleway shows, still works. The project's default security group lets everything in, so above the picker
     **Make a security group for the nodes** makes one group `ichor-nodes` in the zone (tagged
     `ichor-managed`, stateful, inbound dropped unless a rule lets it in) or reuses it, and lets in
     only every protocol from each cluster member's public IPv4 and, on plain Talos, TCP 50000 from

@@ -148,9 +148,12 @@ enum class ImageRunKind(val phases: List<JoinPhase>) {
     AWS_AMI(JoinPhase.awsImageRun),
     AZURE_IMAGE(JoinPhase.imageRun),
     GCP_IMAGE(JoinPhase.gcpImageRun),
+
+    /** A throwaway Scaleway Instance's Block Storage volume, snapshotted, becomes the image: AWS's steps. */
+    SCALEWAY_IMAGE(JoinPhase.awsImageRun),
 }
 
-/** An image an image run made (an AMI, an Azure managed image, a Compute Engine image): its id to pick it, its name to say so. */
+/** An image an image run made (an AMI, an Azure, a Compute Engine or a Scaleway image): its id to pick it, its name to say so. */
 interface MadeImage {
     val imageId: String
     val name: String
