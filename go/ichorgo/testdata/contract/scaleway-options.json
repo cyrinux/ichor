@@ -1,4 +1,5 @@
 {
+  "groupWarning": "Plain Talos: the node's security group must let the phone reach TCP 50000 (and 6443 on a control plane)",
   "images": [
     {
       "arch": "x86_64",
@@ -13,6 +14,7 @@
     {
       "default": true,
       "id": "demo-sg",
+      "managed": false,
       "name": "Default security group"
     }
   ],

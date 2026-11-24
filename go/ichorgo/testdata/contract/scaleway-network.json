@@ -1,0 +1,23 @@
+{
+  "created": true,
+  "name": "ichor-nodes",
+  "phoneIp": "203.0.113.7",
+  "rules": [
+    {
+      "description": "cp-1",
+      "port": 0,
+      "protocol": "all",
+      "source": "198.51.100.10/32"
+    },
+    {
+      "description": "this phone",
+      "port": 50000,
+      "protocol": "tcp",
+      "source": "203.0.113.7/32"
+    }
+  ],
+  "securityGroupId": "55555555-5555-5555-5555-555555555555",
+  "warnings": [
+    "the member worker-2 has no public IPv4 (only 10.0.0.12): the new node will not see it as a source, so the group does not let it in"
+  ]
+}

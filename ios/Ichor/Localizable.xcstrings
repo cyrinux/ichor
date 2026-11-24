@@ -7531,6 +7531,63 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复用安全组 %@。" } }
       }
     },
+    "Make a security group for the nodes (recommended)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eine Sicherheitsgruppe für die Nodes anlegen (empfohlen)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear un grupo de seguridad para los nodos (recomendado)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer un groupe de sécurité pour les nœuds (recommandé)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crea un gruppo di sicurezza per i nodi (consigliato)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノード用のセキュリティグループを作成(推奨)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar um grupo de segurança para os nós (recomendado)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать группу безопасности для узлов (рекомендуется)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити групу безпеки для вузлів (рекомендовано)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为节点创建安全组(推荐)" } }
+      }
+    },
+    "Made the security group %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sicherheitsgruppe %@ angelegt." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Se creó el grupo de seguridad %@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Groupe de sécurité %@ créé." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Gruppo di sicurezza %@ creato." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "セキュリティグループ %@ を作成しました。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Grupo de segurança %@ criado." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создана группа безопасности %@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створено групу безпеки %@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已创建安全组 %@。" } }
+      }
+    },
+    "All traffic from %@ (%@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All traffic from %1$@ (%2$@)" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gesamter Verkehr von %1$@ (%2$@)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Todo el tráfico desde %1$@ (%2$@)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tout le trafic venant de %1$@ (%2$@)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutto il traffico da %1$@ (%2$@)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ (%2$@) からのすべての通信" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Todo o tráfego de %1$@ (%2$@)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Весь трафик от %1$@ (%2$@)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Увесь трафік від %1$@ (%2$@)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "来自 %1$@ (%2$@) 的所有流量" } }
+      }
+    },
+    "Ichor makes the security group ichor-nodes once in this zone and reuses it. It drops what no rule lets in: every protocol from each cluster member's public address and, on plain Talos, TCP 50000 from this phone's address of the day. Nothing is opened to the world, and the group is kept." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor legt die Sicherheitsgruppe ichor-nodes einmal in dieser Zone an und verwendet sie wieder. Sie verwirft, was keine Regel zulässt: alle Protokolle von der öffentlichen Adresse jedes Cluster-Mitglieds und, bei reinem Talos, TCP 50000 von der heutigen Adresse dieses Telefons. Nichts wird für alle geöffnet, und die Gruppe bleibt erhalten." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea una vez el grupo de seguridad ichor-nodes en esta zona y lo reutiliza. Bloquea lo que ninguna regla permite: todos los protocolos desde la dirección pública de cada miembro del clúster y, en Talos sin Omni, TCP 50000 desde la dirección de hoy de este teléfono. Nada se abre al mundo y el grupo se conserva." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crée une fois le groupe de sécurité ichor-nodes dans cette zone et le réutilise. Il bloque ce qu'aucune règle n'autorise : tous les protocoles depuis l'adresse publique de chaque membre du cluster et, sur Talos sans Omni, TCP 50000 depuis l'adresse du jour de ce téléphone. Rien n'est ouvert au monde, et le groupe est conservé." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor crea una volta il gruppo di sicurezza ichor-nodes in questa zona e lo riutilizza. Blocca ciò che nessuna regola consente: tutti i protocolli dall'indirizzo pubblico di ogni membro del cluster e, su Talos senza Omni, TCP 50000 dall'indirizzo di oggi di questo telefono. Nulla viene aperto al mondo e il gruppo viene mantenuto." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor はこのゾーンにセキュリティグループ ichor-nodes を一度だけ作成し、再利用します。どのルールも許可しない通信は破棄されます。許可されるのは、クラスタの各メンバーのパブリックアドレスからのすべてのプロトコルと、Omni なしの Talos ではこの電話の現在のアドレスからの TCP 50000 です。インターネット全体には何も開かれず、グループは残ります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor cria uma vez o grupo de segurança ichor-nodes nesta zona e o reutiliza. Ele bloqueia o que nenhuma regra libera: todos os protocolos a partir do endereço público de cada membro do cluster e, no Talos sem Omni, TCP 50000 a partir do endereço de hoje deste telefone. Nada fica aberto para o mundo, e o grupo é mantido." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor один раз создаёт группу безопасности ichor-nodes в этой зоне и использует её повторно. Она отбрасывает всё, что не разрешено правилом: все протоколы с публичного адреса каждого участника кластера и, для Talos без Omni, TCP 50000 с сегодняшнего адреса этого телефона. Ничего не открыто для всего мира, а группа сохраняется." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor один раз створює групу безпеки ichor-nodes у цій зоні й використовує її повторно. Вона відкидає все, що не дозволяє жодне правило: усі протоколи з публічної адреси кожного учасника кластера та, для Talos без Omni, TCP 50000 з сьогоднішньої адреси цього телефона. Нічого не відкрито для всього світу, а група зберігається." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 在此可用区只创建一次安全组 ichor-nodes 并重复使用。没有规则允许的流量都会被丢弃:允许集群每个成员公网地址的所有协议,以及在不使用 Omni 的 Talos 上来自此手机当天地址的 TCP 50000。不会对整个互联网开放任何端口,该安全组会被保留。" } }
+      }
+    },
     "All traffic from the group itself" : {
       "extractionState" : "manual",
       "localizations" : {

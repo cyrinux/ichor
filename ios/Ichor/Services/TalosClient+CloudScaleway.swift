@@ -17,6 +17,16 @@ extension TalosClient {
         }
     }
 
+    /// Finds or makes the guided security group ichor-nodes in the spec's zone, opened to nothing
+    /// but the cluster's members and (plain Talos) this phone on port 50000. Writes at Scaleway;
+    /// refused in the demo.
+    func scalewayNetworkPrepare(credential: String, spec: ScalewayNetworkSpec) async throws -> ScalewayNetwork {
+        let specJSON = (try? JSONEncoder().encode(spec)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+        return try await Self.json { [config, context] in
+            IchorgoScalewayNetworkPrepare(config, context, credential, specJSON, $0)
+        }
+    }
+
     /// The IAM policy to attach to the key's application, on `project` when known.
     static func scalewayPolicy(project: String) -> String {
         IchorgoScalewayPolicy(project)

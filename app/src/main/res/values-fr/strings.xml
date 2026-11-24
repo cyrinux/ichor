@@ -6810,4 +6810,8 @@
     <string name="scaleway_confirm_title">Créer %1$s chez Scaleway ?</string>
     <string name="scaleway_confirm_body">Cela crée une instance facturée (%1$s dans %2$s) et un volume de données. Ses données utilisateur partent chez Scaleway avec les secrets du cluster ou le jeton d\'adhésion d\'Omni. Une exécution qui échoue supprime l\'instance et ses volumes.</string>
     <string name="scaleway_stop_body">%1$s est supprimé chez Scaleway avec ses volumes. Un control plane qui a déjà répondu est conservé : son membre etcd doit d\'abord être retiré.</string>
+    <string name="scaleway_network_guided">Créer un groupe de sécurité pour les nœuds (recommandé)</string>
+    <string name="scaleway_network_created">Groupe de sécurité %1$s créé.</string>
+    <string name="scaleway_network_rule_member">Tout le trafic venant de %1$s (%2$s)</string>
+    <string name="scaleway_network_hint">Ichor crée une fois le groupe de sécurité ichor-nodes dans cette zone et le réutilise. Il bloque ce qu\'aucune règle n\'autorise : tous les protocoles depuis l\'adresse publique de chaque membre du cluster et, sur Talos sans Omni, TCP 50000 depuis l\'adresse du jour de ce téléphone. Rien n\'est ouvert au monde, et le groupe est conservé.</string>
 </resources>

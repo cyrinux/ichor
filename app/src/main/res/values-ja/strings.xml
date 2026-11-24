@@ -6670,4 +6670,8 @@
     <string name="scaleway_confirm_title">Scaleway に %1$s を作成しますか?</string>
     <string name="scaleway_confirm_body">課金対象のインスタンス (%2$s の %1$s) とデータボリュームを作成します。ユーザーデータはクラスターのシークレットまたは Omni の参加トークンとともに Scaleway に送られます。実行が失敗するとインスタンスとそのボリュームは削除されます。</string>
     <string name="scaleway_stop_body">%1$s はボリュームごと Scaleway で削除されます。すでに応答した control plane は残ります。先にその etcd メンバーを削除する必要があります。</string>
+    <string name="scaleway_network_guided">ノード用のセキュリティグループを作成(推奨)</string>
+    <string name="scaleway_network_created">セキュリティグループ %1$s を作成しました。</string>
+    <string name="scaleway_network_rule_member">%1$s (%2$s) からのすべての通信</string>
+    <string name="scaleway_network_hint">Ichor はこのゾーンにセキュリティグループ ichor-nodes を一度だけ作成し、再利用します。どのルールも許可しない通信は破棄されます。許可されるのは、クラスタの各メンバーのパブリックアドレスからのすべてのプロトコルと、Omni なしの Talos ではこの電話の現在のアドレスからの TCP 50000 です。インターネット全体には何も開かれず、グループは残ります。</string>
 </resources>

@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/ichorgo/cloud_scaleway.go, cloud_scaleway_create.go and cloud_scaleway_image.go.
+// Mirrors go/ichorgo/cloud_scaleway.go, cloud_scaleway_create.go, cloud_scaleway_image.go and cloud_scaleway_network.go.
 
 /** An API key, sealed on the device; what the core gets per call. [zone] "" is fr-par-1. */
 @Serializable
@@ -23,7 +23,10 @@ data class ScalewayCheck(
     val account: String = "",
 )
 
-/** What an Instance can be created from in [zone]; prices before tax. [warnings] are the core's, worded in English. */
+/**
+ * What an Instance can be created from in [zone]; prices before tax. [warnings] are the core's,
+ * worded in English; [groupWarning] too, shown unless the picked group is the managed one.
+ */
 @Serializable
 data class ScalewayOptions(
     val project: String = "",
@@ -32,6 +35,7 @@ data class ScalewayOptions(
     val types: List<ScalewayType> = emptyList(),
     val images: List<ScalewayImage> = emptyList(),
     val securityGroups: List<ScalewaySecurityGroup> = emptyList(),
+    val groupWarning: String = "",
     val warnings: List<String> = emptyList(),
 )
 
@@ -57,12 +61,58 @@ data class ScalewayImage(
     val talos: Boolean = false,
 )
 
+/** A security group; [managed] when the app made it (the guided ichor-nodes). */
 @Serializable
 data class ScalewaySecurityGroup(
     val id: String = "",
     val name: String = "",
     val default: Boolean = false,
+    val managed: Boolean = false,
 )
+
+/** ScalewayNetworkPrepare's specJSON: the zone, the role and whether the cluster is Omni (no port 50000 then). */
+@Serializable
+data class ScalewayNetworkSpec(val zone: String, val role: String, val omni: Boolean)
+
+/**
+ * The guided security group ichor-nodes, [created] by this call or reused, with its inbound
+ * rules as they are now. [phoneIp] is the address port 50000 was opened to, "" on Omni or when
+ * it could not be learned (a warning says so). [warnings] are the core's, worded in English.
+ */
+@Serializable
+data class ScalewayNetwork(
+    val securityGroupId: String = "",
+    val name: String = "",
+    val created: Boolean = false,
+    val phoneIp: String = "",
+    val rules: List<ScalewayNetworkRule> = emptyList(),
+    val warnings: List<String> = emptyList(),
+)
+
+/**
+ * One inbound rule: [protocol] all or tcp (udp, icmp on one added by hand), [port] 0 for every
+ * port, [source] a CIDR; [description] the member's hostname, "this phone" or "".
+ */
+@Serializable
+data class ScalewayNetworkRule(
+    val protocol: String = "",
+    val port: Int = 0,
+    val source: String = "",
+    val description: String = "",
+) {
+    /** Port 50000 opened to [phoneIp] by this call or an earlier one from the same address. */
+    fun isPhone(phoneIp: String): Boolean = phoneIp.isNotBlank() && protocol == "tcp" && port == 50000 && source == "$phoneIp/32"
+
+    /** Every protocol from one member, named by its hostname. */
+    val isMember: Boolean get() = protocol == "all" && port == 0 && description.isNotBlank() && description != PHONE
+
+    /** A rule the app did not word: "tcp/443 ← 198.51.100.0/24". */
+    val plain: String get() = "$protocol${if (port == 0) "" else "/$port"} ← $source"
+
+    private companion object {
+        const val PHONE = "this phone"
+    }
+}
 
 /** StartScalewayCreate's specJSON. Never holds the key. */
 @Serializable
@@ -113,9 +163,9 @@ val ScalewayOptions.imagesTalosFirst: List<ScalewayImage> get() = images.sortedB
 fun ScalewayOptions.typesFor(image: ScalewayImage?): List<ScalewayType> =
     if (image == null || image.arch.isBlank()) types else types.filter { it.arch == image.arch }
 
-/** The project's default security group, else the first one; null when the zone lists none. */
+/** The managed group (ichor-nodes), else the project's default one, else the first; null when the zone lists none. */
 val ScalewayOptions.defaultSecurityGroup: ScalewaySecurityGroup?
-    get() = securityGroups.firstOrNull { it.default } ?: securityGroups.firstOrNull()
+    get() = securityGroups.firstOrNull { it.managed } ?: securityGroups.firstOrNull { it.default } ?: securityGroups.firstOrNull()
 
 /** "0.0099 EUR": the hourly price before tax; null when the core has none. */
 val ScalewayType.hourlyPrice: String?

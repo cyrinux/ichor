@@ -7068,4 +7068,8 @@
     <string name="scaleway_confirm_title">Створити %1$s у Scaleway?</string>
     <string name="scaleway_confirm_body">Це створює платний інстанс (%1$s у %2$s) і том даних. Його дані користувача йдуть до Scaleway разом із секретами кластера або токеном приєднання Omni. Невдалий запуск видаляє інстанс і його томи.</string>
     <string name="scaleway_stop_body">%1$s видаляється в Scaleway разом із томами. Control plane, що вже відповів, зберігається: спершу треба вилучити його учасника etcd.</string>
+    <string name="scaleway_network_guided">Створити групу безпеки для вузлів (рекомендовано)</string>
+    <string name="scaleway_network_created">Створено групу безпеки %1$s.</string>
+    <string name="scaleway_network_rule_member">Увесь трафік від %1$s (%2$s)</string>
+    <string name="scaleway_network_hint">Ichor один раз створює групу безпеки ichor-nodes у цій зоні й використовує її повторно. Вона відкидає все, що не дозволяє жодне правило: усі протоколи з публічної адреси кожного учасника кластера та, для Talos без Omni, TCP 50000 з сьогоднішньої адреси цього телефона. Нічого не відкрито для всього світу, а група зберігається.</string>
 </resources>

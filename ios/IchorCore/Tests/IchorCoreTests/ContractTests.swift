@@ -120,6 +120,9 @@ final class ContractTests: XCTestCase {
         "scaleway-image-result": ContractTests.row(ScalewayImageResult.self) {
             XCTAssertEqual($0.arch, "amd64"); XCTAssertEqual($0.sizeGB, 10)
         },
+        "scaleway-network": ContractTests.row(ScalewayNetwork.self) {
+            XCTAssertTrue($0.created); XCTAssertTrue($0.rules[0].isMember && $0.rules[1].isPhone($0.phoneIp))
+        },
     ]
 
     /// go/ichorgo/testdata/contract, from where `swift test` (ios/IchorCore) or test-linux.sh

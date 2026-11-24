@@ -34,6 +34,9 @@ const (
 
 	scwVolumeLocal = "l_ssd"
 	scwVolumeBlock = "sbs_volume"
+
+	// scwGroupWarning goes under any group but the managed one, which already lets the phone in.
+	scwGroupWarning = "Plain Talos: the node's security group must let the phone reach TCP 50000 (and 6443 on a control plane)"
 )
 
 var (
@@ -310,7 +313,9 @@ type scwOptions struct {
 	Types          []scwType          `json:"types"`
 	Images         []scwImage         `json:"images"`
 	SecurityGroups []scwSecurityGroup `json:"securityGroups"`
-	Warnings       []string           `json:"warnings"`
+	// GroupWarning is shown under the group picker unless the picked group is the managed one.
+	GroupWarning string   `json:"groupWarning"`
+	Warnings     []string `json:"warnings"`
 }
 
 type scwType struct {
@@ -332,10 +337,13 @@ type scwImage struct {
 	Talos  bool   `json:"talos"`
 }
 
+// scwSecurityGroup is one of the project's groups; Managed: the app made it
+// (ScalewayNetworkPrepare's ichor-nodes), the apps preselect it.
 type scwSecurityGroup struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
 	Default bool   `json:"default"`
+	Managed bool   `json:"managed"`
 }
 
 // The API's objects, as far as they are read.
@@ -374,7 +382,7 @@ func (i scwAPIImage) talos() bool {
 // the project's images (Talos first) and security groups. The demo context answers with samples,
 // without a key. JSON: {"project","zone","zones","types":[{"name","arch","vcpus","ramGB",
 // "localDiskGB","hourly","currency","blockOnly"}],"images":[{"id","name","arch","sizeGB","talos"}],
-// "securityGroups":[{"id","name","default"}],"warnings"}; blockOnly types have no local storage
+// "securityGroups":[{"id","name","default","managed"}],"groupWarning","warnings"}; blockOnly types have no local storage
 // (the EPHEMERAL volume is then a Block Storage one).
 func ScalewayOptions(configYAML, contextName, credJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -421,11 +429,7 @@ func (c *scwClient) options(ctx context.Context) (scwOptions, error) {
 	}
 
 	var groups struct {
-		SecurityGroups []struct {
-			ID             string `json:"id"`
-			Name           string `json:"name"`
-			ProjectDefault bool   `json:"project_default"`
-		} `json:"security_groups"`
+		SecurityGroups []scwAPISecurityGroup `json:"security_groups"`
 	}
 
 	if err := c.do(ctx, http.MethodGet, c.path("/security_groups?per_page=100&"+c.projectQuery()), nil, &groups); err != nil {
@@ -435,11 +439,11 @@ func (c *scwClient) options(ctx context.Context) (scwOptions, error) {
 	options := scwOptions{
 		Project: c.project, Zone: c.zone, Zones: slices.Clone(scwZones),
 		Types: scwTypes(types), Images: scwImages(images), SecurityGroups: []scwSecurityGroup{},
-		Warnings: []string{"Plain Talos: the node's security group must let the phone reach TCP 50000 (and 6443 on a control plane)"},
+		GroupWarning: scwGroupWarning, Warnings: []string{},
 	}
 
 	for _, g := range groups.SecurityGroups {
-		options.SecurityGroups = append(options.SecurityGroups, scwSecurityGroup{ID: g.ID, Name: g.Name, Default: g.ProjectDefault})
+		options.SecurityGroups = append(options.SecurityGroups, scwSecurityGroup{ID: g.ID, Name: g.Name, Default: g.ProjectDefault, Managed: g.managed()})
 	}
 
 	if !slices.ContainsFunc(options.Images, func(i scwImage) bool { return i.Talos }) {
@@ -531,6 +535,7 @@ func demoScalewayOptions() scwOptions {
 			{ID: "demo-talos", Name: "talos " + demoTalosVersion + " scaleway", Arch: "x86_64", SizeGB: 10, Talos: true},
 		},
 		SecurityGroups: []scwSecurityGroup{{ID: "demo-sg", Name: "Default security group", Default: true}},
+		GroupWarning:   scwGroupWarning,
 		Warnings:       []string{},
 	}
 }

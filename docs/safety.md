@@ -123,6 +123,24 @@ Part of the [Ichor documentation](../README.md#documentation).
   flexible IP, which outlive the Instance. A create without a clear answer is looked for by the
   run's tag and deleted. The one case that needs the console is a delete that fails: the message
   names the zone and the ids still there, billed until they are deleted.
+- **The guided security group at Scaleway (Make a security group for the nodes):** not billable,
+  but it changes the project, so it runs only when tapped, and the probe's `scaleway network` only
+  with `-yes`; the demo refuses it. In the key's project and the picked zone it makes one security
+  group, `ichor-nodes`, tagged `ichor-managed`, stateful, with inbound traffic dropped unless a
+  rule lets it in and outbound open, never the project's default; or it reuses it. It adds only
+  inbound accept rules it lacks: every protocol from each current cluster member's public IPv4 as
+  a /32 (a Scaleway group cannot name itself as a source, so the members are listed through the
+  cluster's own discovery), and, on plain Talos, TCP 50000 from the phone's current public IPv4 as
+  a /32. A member with only private or overlay addresses gets no rule and a warning: the new node
+  would not see it come from them. With no member on a public address it writes nothing and says
+  so, since such a group would cut the new node off. It never opens anything to `0.0.0.0/0`, never
+  opens 6443, and never deletes a rule or the group: the group is not a run's resource and no
+  cleanup touches it. Members that left and the phone's older addresses keep their rules (the card
+  lists them; remove them at Scaleway from time to time). A group named `ichor-nodes` that the app
+  did not tag is used as it is and never changed, and a tagged one whose inbound policy is accept
+  is left so, with a warning. The printed policy already covers it (InstancesFullAccess); a key
+  without it is told to attach that policy. Recorded in the action log
+  (`scaleway-network-prepare`, with the zone and the group id).
 - **Making a Talos image at Scaleway (from the Go core and the probe for now):** billable, so the
   estimate gives the helper's type and hourly price before tax first (Scaleway's API has no
   snapshot price: the estimate says so), and the probe's `scaleway image` runs only with `-yes`.

@@ -56,6 +56,42 @@ class CloudScalewayTest {
     }
 
     @Test
+    fun theManagedGroupIsPreselected() {
+        val managed = ScalewaySecurityGroup(id = "sg-nodes", name = "ichor-nodes", managed = true)
+        assertEquals("sg-nodes", options.copy(securityGroups = options.securityGroups + managed).defaultSecurityGroup?.id)
+        val decoded = TalosJson.decodeFromString(
+            ScalewayOptions.serializer(),
+            """{"securityGroups":[{"id":"sg-nodes","name":"ichor-nodes","managed":true}],"groupWarning":"Plain Talos: check port 50000"}""",
+        )
+        assertTrue(decoded.securityGroups[0].managed)
+        assertEquals("Plain Talos: check port 50000", decoded.groupWarning)
+    }
+
+    @Test
+    fun decodesTheGuidedSecurityGroup() {
+        // ScalewayNetworkPrepare's shape (go/ichorgo/cloud_scaleway_network.go), with documentation addresses.
+        val network = TalosJson.decodeFromString(
+            ScalewayNetwork.serializer(),
+            """{"securityGroupId":"sg-nodes","name":"ichor-nodes","created":false,"phoneIp":"203.0.113.7",
+               "rules":[{"protocol":"all","port":0,"source":"198.51.100.10/32","description":"cp-1"},
+                        {"protocol":"tcp","port":50000,"source":"203.0.113.7/32","description":"this phone"},
+                        {"protocol":"tcp","port":50000,"source":"203.0.113.9/32"},
+                        {"protocol":"udp","port":51820,"source":"192.0.2.0/24"}],
+               "warnings":["the member worker-2 has no public IPv4"]}""",
+        )
+        assertEquals("sg-nodes", network.securityGroupId)
+        val (member, phone, older, other) = network.rules
+        assertTrue(member.isMember && !member.isPhone(network.phoneIp))
+        assertTrue(phone.isPhone(network.phoneIp) && !phone.isMember)
+        // An older address of the phone is a plain rule: listed, never removed.
+        assertTrue(!older.isPhone(network.phoneIp) && !older.isMember)
+        assertEquals("udp/51820 ← 192.0.2.0/24", other.plain)
+        assertEquals(1, network.warnings.size)
+        val spec = TalosJson.encodeToString(ScalewayNetworkSpec.serializer(), ScalewayNetworkSpec(zone = "nl-ams-1", role = "worker", omni = true))
+        assertEquals("""{"zone":"nl-ams-1","role":"worker","omni":true}""", spec)
+    }
+
+    @Test
     fun costLine() {
         assertEquals("0.0099 EUR", options.types[0].hourlyPrice)
         assertNull(options.types[2].hourlyPrice)
