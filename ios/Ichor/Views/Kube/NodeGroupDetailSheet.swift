@@ -182,7 +182,8 @@ struct NodeGroupDetailSheet: View {
         if let eviction = update.podEvictionFailure {
             let named = (eviction.resourceIds + [eviction.message]).filter { !$0.isEmpty }.joined(separator: ": ")
             return String(
-                localized: "A pod could not be evicted (\(named)). A disruption budget may block it: Force ignores budgets.")
+                localized:
+                    "A pod could not be evicted (\(named)). A disruption budget may block it: Force ignores budgets.")
         }
         let failure = update.failure ?? ""
         return update.unreadable

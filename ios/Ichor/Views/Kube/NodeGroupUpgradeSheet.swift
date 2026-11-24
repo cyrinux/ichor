@@ -49,7 +49,9 @@ struct NodeGroupUpgradeSheet: View {
                 Section {
                     Toggle("Force (ignore pod disruption budgets)", isOn: $force).disabled(applying)
                 } footer: {
-                    Text("Every node of the group is replaced, one at a time: its pods are evicted and start again on the new nodes.")
+                    Text(
+                        "Every node of the group is replaced, one at a time: its pods are evicted and start again on the new nodes."
+                    )
                 }
                 Section {
                     if let failure {
@@ -83,7 +85,9 @@ struct NodeGroupUpgradeSheet: View {
 
     private var confirmation: some View {
         let replace = String(
-            localized: "Every node of the group is replaced, one at a time: its pods are evicted and start again on the new nodes.")
+            localized:
+                "Every node of the group is replaced, one at a time: its pods are evicted and start again on the new nodes."
+        )
         let forced = String(
             localized: "Force is on: pods that a disruption budget protects are deleted if they cannot be evicted.")
         let lines = [choice.map(label) ?? "", replace, force ? forced : ""].filter { !$0.isEmpty }
