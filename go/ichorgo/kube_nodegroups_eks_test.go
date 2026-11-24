@@ -15,9 +15,11 @@ type fakeEKSNodeGroups struct {
 	mu     sync.Mutex
 	calls  []string
 	forbid map[string]bool
-	// posts are the bodies of the update-config calls; postStatus answers them when set
-	// (else an update id); updates are the DescribeUpdate answers by update id.
+	// posts are the bodies of the update-config and update-version calls, postPaths their
+	// paths; postStatus answers them when set (else an update id); updates are the
+	// DescribeUpdate answers by update id.
 	posts      []string
+	postPaths  []string
 	postStatus int
 	updates    map[string]string
 }
@@ -58,6 +60,8 @@ func newFakeEKSNodeGroups(t *testing.T, key string, forbid ...string) *fakeEKSNo
 		var file string
 
 		switch {
+		case path == "clusters/prod":
+			file = "cluster.json"
 		case path == "clusters/prod/node-groups" && r.URL.Query().Get("maxResults") != "100":
 			w.WriteHeader(http.StatusBadRequest)
 
@@ -85,14 +89,16 @@ func newFakeEKSNodeGroups(t *testing.T, key string, forbid ...string) *fakeEKSNo
 	return f
 }
 
-// answerUpdates answers UpdateNodegroupConfig and DescribeUpdate; false for any other call.
+// answerUpdates answers UpdateNodegroupConfig, UpdateNodegroupVersion and DescribeUpdate;
+// false for any other call.
 func (f *fakeEKSNodeGroups) answerUpdates(w http.ResponseWriter, r *http.Request, path string) bool {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	if r.Method == http.MethodPost && strings.HasSuffix(path, "/update-config") {
+	if r.Method == http.MethodPost && (strings.HasSuffix(path, "/update-config") || strings.HasSuffix(path, "/update-version")) {
 		body, _ := io.ReadAll(r.Body)
 		f.posts = append(f.posts, string(body))
+		f.postPaths = append(f.postPaths, path)
 
 		if f.postStatus != 0 {
 			w.WriteHeader(f.postStatus)
@@ -101,7 +107,12 @@ func (f *fakeEKSNodeGroups) answerUpdates(w http.ResponseWriter, r *http.Request
 			return true
 		}
 
-		_, _ = io.WriteString(w, `{"update":{"id":"0f4c2a8e-update","status":"InProgress","type":"ConfigUpdate","errors":[]}}`)
+		kind := "ConfigUpdate"
+		if strings.HasSuffix(path, "/update-version") {
+			kind = "VersionUpdate"
+		}
+
+		_, _ = io.WriteString(w, `{"update":{"id":"0f4c2a8e-update","status":"InProgress","type":"`+kind+`","errors":[]}}`)
 
 		return true
 	}
@@ -208,8 +219,12 @@ func TestKubeNodeGroupsEKS(t *testing.T) {
 		t.Fatalf("system %+v", system)
 	}
 
-	// list page 1, page 2, three describes
-	if n := fake.callCount(); n != 5 {
+	if r.ClusterVersion != "1.34" || !batch.Behind || spot.Behind || system.Behind {
+		t.Fatalf("cluster version %q, behind %v %v %v", r.ClusterVersion, batch.Behind, spot.Behind, system.Behind)
+	}
+
+	// list page 1, page 2, three describes, the cluster
+	if n := fake.callCount(); n != 6 {
 		t.Fatalf("%d AWS calls", n)
 	}
 }
@@ -310,7 +325,8 @@ func TestDemoNodeGroups(t *testing.T) {
 	}
 
 	gpu, system := r.Groups[0], r.Groups[1]
-	if gpu.Name != "gpu" || !gpu.AtMax || len(gpu.Issues) != 1 || gpu.Issues[0].Code != "AsgInstanceLaunchFailures" {
+	if gpu.Name != "gpu" || !gpu.AtMax || len(gpu.Issues) != 1 || gpu.Issues[0].Code != "AsgInstanceLaunchFailures" ||
+		!gpu.Behind || r.ClusterVersion != "1.34" || !kubeMinorBelow(gpu.Version, r.ClusterVersion) {
 		t.Fatalf("gpu %+v", gpu)
 	}
 
@@ -322,7 +338,7 @@ func TestDemoNodeGroups(t *testing.T) {
 		}
 	}
 
-	if system.Name != "system" || system.AtMax || len(system.Issues) != 0 || system.Nodes != pooled || pooled == 0 {
+	if system.Name != "system" || system.AtMax || len(system.Issues) != 0 || system.Nodes != pooled || pooled == 0 || system.Behind {
 		t.Fatalf("system %+v (demo nodes in the group: %d)", system, pooled)
 	}
 

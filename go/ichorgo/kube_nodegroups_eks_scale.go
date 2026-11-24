@@ -123,22 +123,10 @@ func scaleEKSNodeGroup(ctx context.Context, k *kubeClient, group string, desired
 		return nodeGroupUpdate{}, err
 	}
 
-	path := "/clusters/" + url.PathEscape(m.cluster) + "/node-groups/" + url.PathEscape(group)
+	path := eksNodeGroupPath(m, group)
 
-	var described struct {
-		Nodegroup eksNodegroup `json:"nodegroup"`
-	}
-
-	if err := eksCall(ctx, m, creds, http.MethodGet, path, nil, nil, &described); err != nil {
-		return nodeGroupUpdate{}, eksReadError(err, eksActionDescribeNodegroup)
-	}
-
-	// A degraded group (instances that do not launch) may still change its size: that is
-	// often why it is changed. One already changing may not.
-	if s := described.Nodegroup.Status; s == eksNodeGroupUpdating {
-		return nodeGroupUpdate{}, errors.New("the group is updating: wait for it to finish")
-	} else if s != "ACTIVE" && s != "DEGRADED" {
-		return nodeGroupUpdate{}, fmt.Errorf("the group is %s: only an active group can change its size", strings.ToLower(s))
+	if _, err := describeUpdatableNodeGroup(ctx, m, creds, path, "change its size"); err != nil {
+		return nodeGroupUpdate{}, err
 	}
 
 	body, err := json.Marshal(map[string]any{
@@ -154,15 +142,41 @@ func scaleEKSNodeGroup(ctx context.Context, k *kubeClient, group string, desired
 	}
 
 	if err := eksCall(ctx, m, creds, http.MethodPost, path+"/update-config", nil, body, &answer); err != nil {
-		return nodeGroupUpdate{}, eksScaleError(err)
+		return nodeGroupUpdate{}, eksUpdateError(err, eksActionUpdateNodegroupConfig)
 	}
 
 	return answer.Update.row(), nil
 }
 
-// eksScaleError words AWS' answer to UpdateNodegroupConfig; a POST that got none may have
-// been applied (kubeMutationError).
-func eksScaleError(err error) error {
+func eksNodeGroupPath(m *eksMethod, group string) string {
+	return "/clusters/" + url.PathEscape(m.cluster) + "/node-groups/" + url.PathEscape(group)
+}
+
+// describeUpdatableNodeGroup reads the group at path and refuses one AWS would not update:
+// what names the change in the refusal. A degraded group (instances that do not launch) may
+// still change: that is often why it is changed. One already changing may not.
+func describeUpdatableNodeGroup(ctx context.Context, m *eksMethod, creds awsCredentials, path, what string) (eksNodegroup, error) {
+	var described struct {
+		Nodegroup eksNodegroup `json:"nodegroup"`
+	}
+
+	if err := eksCall(ctx, m, creds, http.MethodGet, path, nil, nil, &described); err != nil {
+		return eksNodegroup{}, eksReadError(err, eksActionDescribeNodegroup)
+	}
+
+	if s := described.Nodegroup.Status; s == eksNodeGroupUpdating {
+		return eksNodegroup{}, errors.New("the group is updating: wait for it to finish")
+	} else if s != "ACTIVE" && s != "DEGRADED" {
+		return eksNodegroup{}, fmt.Errorf("the group is %s: only an active group can %s", strings.ToLower(s), what)
+	}
+
+	return described.Nodegroup, nil
+}
+
+// eksUpdateError words AWS' answer to a node group update (UpdateNodegroupConfig,
+// UpdateNodegroupVersion): a refusal names action; a POST that got none may have been
+// applied (kubeMutationError).
+func eksUpdateError(err error, action string) error {
 	var e *cloudHTTPError
 	if !errors.As(err, &e) {
 		return kubeMutationError(err)
@@ -170,7 +184,7 @@ func eksScaleError(err error) error {
 
 	switch e.status {
 	case http.StatusUnauthorized, http.StatusForbidden:
-		return errors.New(eksActionUpdateNodegroupConfig + " is not allowed for this role")
+		return errors.New(action + " is not allowed for this role")
 	case http.StatusConflict:
 		return errors.New("another update is running on this group")
 	default:

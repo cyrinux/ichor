@@ -1,11 +1,13 @@
 {
   "cluster": "ichor-demo",
+  "clusterVersion": "1.34",
   "error": "",
   "forbidden": "",
   "groups": [
     {
       "amiType": "AL2023_x86_64_NVIDIA",
       "atMax": true,
+      "behind": true,
       "capacityType": "ON_DEMAND",
       "created": 1767323045000,
       "desired": 2,
@@ -26,14 +28,15 @@
       "min": 0,
       "name": "gpu",
       "nodes": 0,
-      "releaseVersion": "1.34.1-20251016",
+      "releaseVersion": "1.33.5-20251016",
       "status": "DEGRADED",
       "updating": false,
-      "version": "1.34"
+      "version": "1.33"
     },
     {
       "amiType": "AL2023_x86_64_STANDARD",
       "atMax": false,
+      "behind": false,
       "capacityType": "ON_DEMAND",
       "created": 1767323045000,
       "desired": 3,

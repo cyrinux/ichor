@@ -14,10 +14,12 @@ public struct NodeGroupsReport: Decodable, Equatable, Hashable, Sendable {
     /// The AWS action the role may not call ("eks:ListNodegroups"), when that is the error.
     public let forbidden: String
     public let groups: [ManagedNodeGroupRow]
+    /// The control plane's Kubernetes version ("1.34"), empty when it could not be read.
+    public let clusterVersion: String
 
     public init(
         provider: String = "", installed: Bool = false, region: String = "", cluster: String = "",
-        error: String = "", forbidden: String = "", groups: [ManagedNodeGroupRow] = []
+        error: String = "", forbidden: String = "", groups: [ManagedNodeGroupRow] = [], clusterVersion: String = ""
     ) {
         self.provider = provider
         self.installed = installed
@@ -26,6 +28,7 @@ public struct NodeGroupsReport: Decodable, Equatable, Hashable, Sendable {
         self.error = error
         self.forbidden = forbidden
         self.groups = groups
+        self.clusterVersion = clusterVersion
     }
 
     public init(from decoder: Decoder) throws {
@@ -37,10 +40,11 @@ public struct NodeGroupsReport: Decodable, Equatable, Hashable, Sendable {
         error = try c.field(.error, "")
         forbidden = try c.field(.forbidden, "")
         groups = try c.field(.groups, [])
+        clusterVersion = try c.field(.clusterVersion, "")
     }
 
     private enum CodingKeys: String, CodingKey {
-        case provider, installed, region, cluster, error, forbidden, groups
+        case provider, installed, region, cluster, error, forbidden, groups, clusterVersion
     }
 
     /// The groups a search `query` keeps (name, version, capacity type, status, instance types).
@@ -54,7 +58,8 @@ public struct NodeGroupsReport: Decodable, Equatable, Hashable, Sendable {
                 ([g.name, g.version, g.capacityType, g.status] + g.instanceTypes).contains {
                     $0.localizedCaseInsensitiveContains(q)
                 }
-            })
+            },
+            clusterVersion: clusterVersion)
     }
 }
 
@@ -81,6 +86,8 @@ public struct ManagedNodeGroupRow: Decodable, Equatable, Hashable, Identifiable,
     public let updating: Bool
     /// Unix ms, 0 when unknown.
     public let created: Int64
+    /// Its Kubernetes version is a minor below the control plane's.
+    public let behind: Bool
 
     public var id: String { name }
     /// At its maximum, reporting a health issue, or not ACTIVE (creating, updating, degraded).
@@ -92,7 +99,7 @@ public struct ManagedNodeGroupRow: Decodable, Equatable, Hashable, Identifiable,
         name: String = "", status: String = "", desired: Int = 0, min: Int = 0, max: Int = 0,
         version: String = "", releaseVersion: String = "", amiType: String = "", capacityType: String = "",
         instanceTypes: [String] = [], diskSize: Int = 0, nodes: Int = 0, atMax: Bool = false,
-        issues: [NodeGroupIssue] = [], updating: Bool = false, created: Int64 = 0
+        issues: [NodeGroupIssue] = [], updating: Bool = false, created: Int64 = 0, behind: Bool = false
     ) {
         self.name = name
         self.status = status
@@ -110,6 +117,7 @@ public struct ManagedNodeGroupRow: Decodable, Equatable, Hashable, Identifiable,
         self.issues = issues
         self.updating = updating
         self.created = created
+        self.behind = behind
     }
 
     public init(from decoder: Decoder) throws {
@@ -130,11 +138,12 @@ public struct ManagedNodeGroupRow: Decodable, Equatable, Hashable, Identifiable,
         issues = try c.field(.issues, [])
         updating = try c.field(.updating, false)
         created = try c.field(.created, 0)
+        behind = try c.field(.behind, false)
     }
 
     private enum CodingKeys: String, CodingKey {
         case name, status, desired, min, max, version, releaseVersion, amiType, capacityType, instanceTypes
-        case diskSize, nodes, atMax, issues, updating, created
+        case diskSize, nodes, atMax, issues, updating, created, behind
     }
 }
 

@@ -149,6 +149,8 @@ fun AutoscalingScreen(
                         busy = row.actionKey in busy,
                         onScale = { desired, min, max -> vm.actions.scaleNodeGroup(row, desired, min, max) },
                         onFollow = { vm.actions.followGroupUpdate(row.name) },
+                        clusterVersion = report.nodeGroups.clusterVersion,
+                        onUpgrade = { version, force -> vm.actions.upgradeNodeGroup(row, version, force) },
                     ),
                 )
             }

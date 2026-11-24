@@ -93,4 +93,36 @@ final class AutoscalingNodeGroupsTests: XCTestCase {
         XCTAssertFalse(ManagedNodeGroupRow(name: "c", status: "UPDATING", updating: true).canChangeSize)
         XCTAssertFalse(ManagedNodeGroupRow(name: "d", status: "CREATING").canChangeSize)
     }
+
+    func testClusterVersionAndBehindDecodeWithDefaults() throws {
+        XCTAssertEqual(demo.clusterVersion, "")
+        XCTAssertFalse(demo.groups[0].behind)
+        let json = #"{"clusterVersion":"1.34","groups":[{"name":"gpu","version":"1.33","behind":true}]}"#
+        let report = try JSONDecoder().decode(NodeGroupsReport.self, from: Data(json.utf8))
+        XCTAssertEqual(report.clusterVersion, "1.34")
+        XCTAssertTrue(report.groups[0].behind)
+        XCTAssertEqual(report.filtered(query: "gpu").clusterVersion, "1.34")
+    }
+
+    func testUpgradeChoices() {
+        let behind = ManagedNodeGroupRow(name: "a", status: "ACTIVE", version: "1.33", behind: true)
+        XCTAssertEqual(behind.upgradeChoices(clusterVersion: "1.34"), [.kubernetes("1.34"), .latestImage])
+        XCTAssertEqual(behind.upgradeChoices(clusterVersion: "1.34").map(\.version), ["1.34", ""])
+        // The control plane's version unknown: only the node image.
+        XCTAssertEqual(behind.upgradeChoices(clusterVersion: ""), [.latestImage])
+        let current = ManagedNodeGroupRow(name: "b", status: "ACTIVE", version: "1.34")
+        XCTAssertEqual(current.upgradeChoices(clusterVersion: "1.34"), [.latestImage])
+        let custom = ManagedNodeGroupRow(name: "c", status: "ACTIVE", amiType: "CUSTOM", behind: true)
+        XCTAssertEqual(custom.upgradeChoices(clusterVersion: "1.34"), [.kubernetes("1.34")])
+        let updating = ManagedNodeGroupRow(name: "d", status: "UPDATING", updating: true, behind: true)
+        XCTAssertEqual(updating.upgradeChoices(clusterVersion: "1.34"), [])
+    }
+
+    func testPodEvictionFailureIsNamed() {
+        let eviction = NodeGroupIssue(code: "PodEvictionFailure", message: "Reached max retries", resourceIds: ["ip-1"])
+        let failed = NodeGroupUpdate(id: "v", status: "Failed", type: "VersionUpdate", errors: [eviction])
+        XCTAssertTrue(failed.versionUpdate)
+        XCTAssertEqual(failed.podEvictionFailure?.resourceIds, ["ip-1"])
+        XCTAssertNil(NodeGroupUpdate(id: "u", status: "Failed", type: "ConfigUpdate").podEvictionFailure)
+    }
 }

@@ -43,7 +43,10 @@ private fun NodeGroupBadge(row: ManagedNodeGroupRow) {
     }
 }
 
-/** Name, desired between its bounds, Kubernetes version, capacity type and the nodes it runs. */
+/**
+ * Name, desired between its bounds, Kubernetes version, capacity type and the nodes it runs;
+ * a group a minor behind its control plane says so.
+ */
 @Composable
 fun NodeGroupRowItem(row: ManagedNodeGroupRow, onClick: () -> Unit) {
     ResourceRow(
@@ -59,6 +62,7 @@ fun NodeGroupRowItem(row: ManagedNodeGroupRow, onClick: () -> Unit) {
         trailing = { NodeGroupBadge(row) },
         onClick = onClick,
     ) {
+        if (row.behind) Tag(stringResource(R.string.autoscaling_nodegroup_behind), LocalStatusColors.current.warn, Modifier)
         row.issues.firstOrNull()?.let {
             Text(it.message, style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.bad, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
@@ -85,7 +89,11 @@ fun NodeGroupSheet(row: ManagedNodeGroupRow, onDismiss: () -> Unit, scaling: Nod
         if (row.instanceTypes.isNotEmpty()) InfoRow(stringResource(R.string.autoscaling_nodegroup_instance_types), row.instanceTypes.joinToString(", "), mono = true)
         if (row.diskSize > 0) InfoRow(stringResource(R.string.autoscaling_nodegroup_disk), stringResource(R.string.autoscaling_nodegroup_disk_size, row.diskSize.toString()))
         if (row.created > 0) MutedText(timeAgo(row.created))
-        scaling?.let { NodeGroupScaleSection(row, it) }
+        scaling?.let {
+            NodeGroupScaleSection(row, it)
+            NodeGroupUpgradeSection(row, it)
+            NodeGroupUpdateStatus(it)
+        }
 
         SectionTitle(stringResource(R.string.autoscaling_nodegroup_issues))
         if (row.issues.isEmpty()) MutedText(stringResource(R.string.autoscaling_none))

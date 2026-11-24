@@ -1,6 +1,188 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "behind the control plane" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "en retard sur le control plane" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "por detrás del plano de control" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "hinter der Control Plane" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "indietro rispetto al control plane" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "コントロールプレーンより古い" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "atrás do control plane" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "отстаёт от control plane" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "відстає від панелі керування" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "落后于控制平面" } }
+      }
+    },
+    "Upgrade…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mettre à jour…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualizar…" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisieren…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiorna…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アップグレード…" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualizar…" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновить…" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оновити…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "升级…" } }
+      }
+    },
+    "Kubernetes %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@" } }
+      }
+    },
+    "Latest node image for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Dernière image de nœud pour %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Última imagen de nodo para %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Neuestes Node-Image für %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ultima immagine del nodo per %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ の最新ノードイメージ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Imagem de nó mais recente para %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Последний образ узла для %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Найновіший образ вузла для %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 的最新节点镜像" } }
+      }
+    },
+    "Every node of the group is replaced, one at a time: its pods are evicted and start again on the new nodes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Chaque nœud du groupe est remplacé, un par un : ses pods sont évincés et redémarrent sur les nouveaux nœuds." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cada nodo del grupo se sustituye, uno a uno: sus pods se desalojan y vuelven a arrancar en los nodos nuevos." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Jeder Node der Gruppe wird nacheinander ersetzt: Seine Pods werden verdrängt und starten auf den neuen Nodes neu." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ogni nodo del gruppo viene sostituito, uno alla volta: i suoi pod vengono espulsi e ripartono sui nuovi nodi." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "グループのすべてのノードが 1 台ずつ置き換えられます。その Pod は退避され、新しいノードで再起動します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cada nó do grupo é substituído, um de cada vez: seus pods são despejados e reiniciam nos novos nós." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Каждый узел группы заменяется по одному: его поды вытесняются и запускаются заново на новых узлах." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Кожен вузол групи замінюється по одному: його поди витісняються й запускаються знову на нових вузлах." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "组中的每个节点都会被逐个替换：其 Pod 会被驱逐，并在新节点上重新启动。" } }
+      }
+    },
+    "Force (ignore pod disruption budgets)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Forcer (ignorer les budgets de perturbation des pods)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Forzar (ignorar los presupuestos de interrupción de pods)" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erzwingen (Pod Disruption Budgets ignorieren)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Forza (ignora i pod disruption budget)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "強制（Pod Disruption Budget を無視）" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Forçar (ignorar os orçamentos de interrupção de pods)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Принудительно (игнорировать бюджеты прерывания подов)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Примусово (ігнорувати бюджети переривання подів)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "强制（忽略 Pod 中断预算）" } }
+      }
+    },
+    "Force is on: pods that a disruption budget protects are deleted if they cannot be evicted." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Forcer est activé : les pods protégés par un budget de perturbation sont supprimés s'ils ne peuvent pas être évincés." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Forzar está activado: los pods que protege un presupuesto de interrupción se eliminan si no se pueden desalojar." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erzwingen ist an: Pods, die ein Disruption Budget schützt, werden gelöscht, wenn sie nicht verdrängt werden können." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Forza è attivo: i pod protetti da un disruption budget vengono eliminati se non possono essere espulsi." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "強制がオンです：Disruption Budget で保護された Pod は、退避できない場合に削除されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Forçar está ativado: pods protegidos por um orçamento de interrupção são excluídos se não puderem ser despejados." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Принудительный режим включён: поды, защищённые бюджетом прерывания, удаляются, если их не удаётся вытеснить." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Примусово ввімкнено: поди, які захищає бюджет переривання, видаляються, якщо їх не вдається витіснити." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已开启强制：受中断预算保护的 Pod 如果无法驱逐，将被删除。" } }
+      }
+    },
+    "This group runs a custom AMI: its image changes through its launch template, not from here." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ce groupe utilise une AMI personnalisée : son image change via son modèle de lancement, pas d'ici." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este grupo usa una AMI personalizada: su imagen cambia a través de su plantilla de lanzamiento, no desde aquí." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diese Gruppe nutzt ein eigenes AMI: Ihr Image ändert sich über ihre Startvorlage, nicht von hier aus." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questo gruppo usa un'AMI personalizzata: la sua immagine cambia tramite il suo modello di avvio, non da qui." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このグループはカスタム AMI を使用しています。イメージはここではなく起動テンプレートで変更します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Este grupo usa uma AMI personalizada: sua imagem muda pelo modelo de execução, não por aqui." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Эта группа использует собственный AMI: её образ меняется через шаблон запуска, а не отсюда." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ця група використовує власний AMI: її образ змінюється через шаблон запуску, а не звідси." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此组使用自定义 AMI：其镜像通过启动模板更改，而不是在这里。" } }
+      }
+    },
+    "Only an active or degraded group can be upgraded: wait for this one to finish." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Seul un groupe actif ou dégradé peut être mis à jour : attendez que celui-ci ait terminé." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Solo se puede actualizar un grupo activo o degradado: espera a que este termine." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nur eine aktive oder beeinträchtigte Gruppe kann aktualisiert werden: Warten Sie, bis diese fertig ist." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Solo un gruppo attivo o degradato può essere aggiornato: attendi che questo abbia finito." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アップグレードできるのはアクティブまたは劣化状態のグループだけです。このグループの完了を待ってください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Só um grupo ativo ou degradado pode ser atualizado: aguarde este terminar." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновить можно только активную или деградированную группу: дождитесь, пока эта завершит." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оновити можна лише активну або деградовану групу: дочекайтеся, поки ця завершить." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "只有处于活动或降级状态的组才能升级：请等待此组完成。" } }
+      }
+    },
+    "Upgrading %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mise à jour de %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualizando %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ wird aktualisiert" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiornamento di %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ をアップグレード中" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualizando %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновление %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оновлення %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在升级 %@" } }
+      }
+    },
+    "Update in progress: AWS is replacing the group's nodes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mise à jour en cours : AWS remplace les nœuds du groupe." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualización en curso: AWS está sustituyendo los nodos del grupo." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisierung läuft: AWS ersetzt die Nodes der Gruppe." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiornamento in corso: AWS sta sostituendo i nodi del gruppo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新中：AWS がグループのノードを置き換えています。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualização em andamento: a AWS está substituindo os nós do grupo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Идёт обновление: AWS заменяет узлы группы." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оновлення триває: AWS замінює вузли групи." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在更新：AWS 正在替换组中的节点。" } }
+      }
+    },
+    "Update finished: the group's nodes have been replaced." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mise à jour terminée : les nœuds du groupe ont été remplacés." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualización terminada: los nodos del grupo se han sustituido." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisierung abgeschlossen: Die Nodes der Gruppe wurden ersetzt." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiornamento terminato: i nodi del gruppo sono stati sostituiti." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新完了：グループのノードが置き換えられました。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualização concluída: os nós do grupo foram substituídos." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновление завершено: узлы группы заменены." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оновлення завершено: вузли групи замінено." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新完成：组中的节点已被替换。" } }
+      }
+    },
+    "A pod could not be evicted (%@). A disruption budget may block it: Force ignores budgets." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Un pod n'a pas pu être évincé (%@). Un budget de perturbation le bloque peut-être : Forcer ignore les budgets." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudo desalojar un pod (%@). Puede que lo bloquee un presupuesto de interrupción: Forzar ignora los presupuestos." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein Pod konnte nicht verdrängt werden (%@). Ein Disruption Budget blockiert ihn vielleicht: Erzwingen ignoriert Budgets." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non è stato possibile espellere un pod (%@). Potrebbe bloccarlo un disruption budget: Forza ignora i budget." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Pod を退避できませんでした（%@）。Disruption Budget がブロックしている可能性があります。強制は Budget を無視します。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não foi possível despejar um pod (%@). Um orçamento de interrupção pode estar bloqueando: Forçar ignora os orçamentos." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не удалось вытеснить под (%@). Возможно, его блокирует бюджет прерывания: принудительный режим игнорирует бюджеты." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не вдалося витіснити под (%@). Можливо, його блокує бюджет переривання: «Примусово» ігнорує бюджети." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法驱逐某个 Pod（%@）。可能被中断预算阻止：强制会忽略预算。" } }
+      }
+    },
     "No Talos image of this cluster's image for %@ in this zone yet: Ichor can make one." : {
       "extractionState" : "manual",
       "localizations" : {

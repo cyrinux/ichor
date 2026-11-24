@@ -383,6 +383,16 @@ Part of the [Ichor documentation](../README.md#documentation).
   keeps one entry per attempt (group and sizes, never the credentials); the demo cluster
   refuses it.
 
+- **EKS node group upgrade (Kubernetes → Autoscaling → a node group → Upgrade…):** only two
+  targets are offered and accepted: the control plane's Kubernetes version (when the group is
+  behind it) or the latest node image of the group's own version; any other version is refused
+  before AWS is called, and AWS words its own version rules. The dialog and the typed-name
+  confirmation say that every node is replaced and its pods evicted. Force, which deletes pods a
+  disruption budget protects, is off by default and repeated in the confirmation. A group
+  already updating is refused. AWS' refusal (`eks:UpdateNodegroupVersion`) is the only gate; a
+  request that got no answer is never retried. The activity log keeps one entry per attempt
+  (group, version and force, never the credentials); the demo cluster refuses it.
+
 - **META keys (node menu → Machine config → META, `os:admin`):**
   - **What they are:** the boot-time values Talos reads before the machine config, such as the
     network config of a metal node (0x0a). This is the last-resort fix for a node that cannot boot

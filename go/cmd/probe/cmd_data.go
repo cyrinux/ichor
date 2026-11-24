@@ -644,6 +644,30 @@ var dataCommands = []command{
 
 		return ichorgo.KubeNodeGroupScale(e.cfg, e.context, e.kubeServer, flag.Arg(1), sizes[0], sizes[1], sizes[2])
 	}},
+	{name: "kube-nodegroup-upgrade", args: "GROUP [VERSION] [-force] -yes", run: func(e env) (string, error) {
+		// kube-nodegroup-upgrade: upgrade an EKS managed node group to the control plane's
+		// VERSION, or to the latest node image of its own without one. Replaces every node of
+		// the group: refused without -yes as the last argument.
+		args := flag.Args()[1:]
+		if len(args) < 2 || args[len(args)-1] != "-yes" {
+			return "", errors.New("kube-nodegroup-upgrade GROUP [VERSION] [-force] -yes: it replaces a real node group's nodes")
+		}
+
+		group, version, force := args[0], "", false
+
+		for _, a := range args[1 : len(args)-1] {
+			switch {
+			case a == "-force":
+				force = true
+			case version == "":
+				version = a
+			default:
+				return "", errors.New("kube-nodegroup-upgrade GROUP [VERSION] [-force] -yes")
+			}
+		}
+
+		return ichorgo.KubeNodeGroupUpgrade(e.cfg, e.context, e.kubeServer, group, version, force)
+	}},
 	{name: "kube-nodegroup-update", args: "GROUP UPDATE_ID", run: func(e env) (string, error) {
 		// kube-nodegroup-update: an EKS node group update's status (read-only).
 		return ichorgo.KubeNodeGroupUpdate(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
