@@ -5358,6 +5358,10 @@
     <string name="autoscaling_section_vpa">Vertical (VPA)</string>
     <string name="autoscaling_section_karpenter">Pools de nœuds (Karpenter)</string>
     <string name="autoscaling_section_nodegroups">Pools de nœuds (EKS)</string>
+    <string name="autoscaling_section_nodegroups_gke">Pools de nœuds (GKE)</string>
+    <string name="autoscaling_nodegroup_forbidden_account">%1$s n’est pas autorisé pour ce compte</string>
+    <string name="autoscaling_nodegroup_image_type">Type d’image</string>
+    <string name="autoscaling_nodegroup_autoscaling_off">Autoscaling désactivé</string>
     <string name="autoscaling_nodegroup_forbidden">%1$s n’est pas autorisé pour ce rôle</string>
     <string name="autoscaling_nodegroup_size">%1$s sur %2$s–%3$s</string>
     <string name="autoscaling_nodegroup_status">État</string>

@@ -1,11 +1,14 @@
 import Foundation
 
-// Mirrors go/ichorgo/kube_nodegroups_eks.go: a cluster's cloud node pools (EKS managed node
-// groups), read with the cluster's own AWS sign-in. installed false: not an EKS sign-in, the
-// Autoscaling screen hides the group.
+// Mirrors go/ichorgo/kube_nodegroups_eks.go and kube_nodegroups_gke.go: a cluster's cloud node
+// pools (EKS managed node groups, GKE node pools), read with the cluster's own AWS or Google
+// sign-in. installed false: neither sign-in, the Autoscaling screen hides the group.
 
 /// The cluster's managed node groups, or why they could not be read.
 public struct NodeGroupsReport: Decodable, Equatable, Hashable, Sendable {
+    /// GKE node pools: read-only, no size change or upgrade from the phone.
+    public static let gkeProvider = "gke"
+
     public let provider: String
     public let installed: Bool
     public let region: String
@@ -47,6 +50,9 @@ public struct NodeGroupsReport: Decodable, Equatable, Hashable, Sendable {
         case provider, installed, region, cluster, error, forbidden, groups, clusterVersion
     }
 
+    /// GKE pools: shown, never scaled or upgraded from here.
+    public var gke: Bool { provider == Self.gkeProvider }
+
     /// The groups a search `query` keeps (name, version, capacity type, status, instance types).
     public func filtered(query: String) -> NodeGroupsReport {
         let q = query.trimmingCharacters(in: .whitespaces)
@@ -67,6 +73,8 @@ public struct NodeGroupsReport: Decodable, Equatable, Hashable, Sendable {
 public struct ManagedNodeGroupRow: Decodable, Equatable, Hashable, Identifiable, Sendable {
     /// EKS' status of a group that is up and running.
     public static let active = "ACTIVE"
+    /// GKE's status of a pool that is up and running.
+    public static let running = "RUNNING"
 
     public let name: String
     public let status: String
@@ -90,8 +98,12 @@ public struct ManagedNodeGroupRow: Decodable, Equatable, Hashable, Identifiable,
     public let behind: Bool
 
     public var id: String { name }
-    /// At its maximum, reporting a health issue, or not ACTIVE (creating, updating, degraded).
-    public var needsAttention: Bool { atMax || !issues.isEmpty || status != Self.active }
+    /// At its maximum, reporting a health issue, or not ACTIVE / RUNNING (creating, updating, degraded).
+    public var needsAttention: Bool {
+        atMax || !issues.isEmpty || (status != Self.active && status != Self.running)
+    }
+    /// No bounds: a GKE pool without autoscaling (an EKS group always has a maximum of 1 or more).
+    public var autoscalingOff: Bool { max == 0 }
     /// The state the row shows: at its maximum, not ready, or fine.
     public var state: AutoscaleState { atMax ? .atMax : (needsAttention ? .notReady : .ok) }
 

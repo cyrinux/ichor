@@ -144,10 +144,13 @@ fun AutoscalingScreen(
             is Open.Pool -> NodePoolSheet(o.row, o.claims, onDismiss = { open = null }, onObject = { open = null; onObject(it) })
             is Open.NodeGroup -> {
                 val row = report.nodeGroups.groups.firstOrNull { it.key == o.row.key } ?: o.row
+                val gke = report.nodeGroups.gke
                 NodeGroupSheet(
                     row,
                     onDismiss = { open = null },
-                    scaling = NodeGroupScaling(
+                    gke = gke,
+                    // GKE pools are read-only: no size change or upgrade.
+                    scaling = if (gke) null else NodeGroupScaling(
                         update = groupUpdates[row.name],
                         busy = row.actionKey in busy,
                         onScale = { desired, min, max -> vm.actions.scaleNodeGroup(row, desired, min, max) },
@@ -239,7 +242,7 @@ private fun AutoscalingList(
             item(key = "attention-empty") { MutedText(stringResource(R.string.autoscaling_all_ok), GroupInset) }
         }
         cardRows(attention, key = { "p-" + it.group + "/" + it.key }) { problem ->
-            ProblemRow(problem) {
+            ProblemRow(problem, gke = view.nodeGroups.gke) {
                 when (problem.group) {
                     "hpa" -> view.hpa.items.firstOrNull { it.key == problem.key }?.let(::openHpa)
                     "keda" -> view.keda.scaledObjects.firstOrNull { it.key == problem.key }?.let(::openSo)
@@ -284,10 +287,10 @@ private fun AutoscalingList(
                 NodePoolRowItem(row, claimsOf[row.name].orEmpty().size, onClick = { openPool(row) })
             }
         }
-        // Only on a cluster that signs in through EKS: elsewhere there is nothing to say.
+        // Only on a cluster that signs in through EKS or GKE: elsewhere there is nothing to say.
         if (view.nodeGroups.installed) {
             item(key = "h-nodegroups", contentType = "cardGroupTitle") {
-                GroupHeader(stringResource(R.string.autoscaling_section_nodegroups), true, nodeGroupsError(view.nodeGroups), false)
+                GroupHeader(nodeGroupsTitle(view.nodeGroups.gke), true, nodeGroupsError(view.nodeGroups), false)
             }
             // One card: the control plane (null) first, then the groups.
             val rows: List<ManagedNodeGroupRow?> = (if (view.eksUpgrade.installed) listOf(null) else emptyList()) + view.nodeGroups.groups
@@ -326,7 +329,7 @@ private fun GroupHeader(title: String, installed: Boolean, error: String, trunca
 
 /** One "Needs attention" row: the group it came from, its name and its state. */
 @Composable
-private fun ProblemRow(problem: AutoscalingProblem, onClick: () -> Unit) {
+private fun ProblemRow(problem: AutoscalingProblem, gke: Boolean, onClick: () -> Unit) {
     Column(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -342,7 +345,7 @@ private fun ProblemRow(problem: AutoscalingProblem, onClick: () -> Unit) {
             )
             AutoscaleStateBadge(problem.state)
         }
-        MutedText(groupLabel(problem.group), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        MutedText(groupLabel(problem.group, gke), maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (problem.message.isNotEmpty()) {
             Text(problem.message, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
@@ -350,15 +353,13 @@ private fun ProblemRow(problem: AutoscalingProblem, onClick: () -> Unit) {
 }
 
 @Composable
-private fun groupLabel(group: String): String = stringResource(
-    when (group) {
-        "hpa" -> R.string.autoscaling_section_hpa
-        "keda" -> R.string.autoscaling_section_keda
-        "vpa" -> R.string.autoscaling_section_vpa
-        AUTOSCALING_GROUP_NODE_GROUPS -> R.string.autoscaling_section_nodegroups
-        else -> R.string.autoscaling_section_karpenter
-    },
-)
+private fun groupLabel(group: String, gke: Boolean): String = when (group) {
+    "hpa" -> stringResource(R.string.autoscaling_section_hpa)
+    "keda" -> stringResource(R.string.autoscaling_section_keda)
+    "vpa" -> stringResource(R.string.autoscaling_section_vpa)
+    AUTOSCALING_GROUP_NODE_GROUPS -> nodeGroupsTitle(gke)
+    else -> stringResource(R.string.autoscaling_section_karpenter)
+}
 
 /** Name, bounds "6 of 2–6", current/desired and the state. */
 @Composable

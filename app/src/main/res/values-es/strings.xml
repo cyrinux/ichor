@@ -5358,6 +5358,10 @@
     <string name="autoscaling_section_vpa">Vertical (VPA)</string>
     <string name="autoscaling_section_karpenter">Grupos de nodos (Karpenter)</string>
     <string name="autoscaling_section_nodegroups">Grupos de nodos (EKS)</string>
+    <string name="autoscaling_section_nodegroups_gke">Grupos de nodos (GKE)</string>
+    <string name="autoscaling_nodegroup_forbidden_account">%1$s no está permitido para esta cuenta</string>
+    <string name="autoscaling_nodegroup_image_type">Tipo de imagen</string>
+    <string name="autoscaling_nodegroup_autoscaling_off">Autoescalado desactivado</string>
     <string name="autoscaling_nodegroup_forbidden">%1$s no está permitido para este rol</string>
     <string name="autoscaling_nodegroup_size">%1$s de %2$s–%3$s</string>
     <string name="autoscaling_nodegroup_status">Estado</string>

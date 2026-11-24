@@ -1,12 +1,26 @@
 import SwiftUI
 import IchorCore
 
-/// The texts of the EKS node group rows and sheet.
+/// The texts of the EKS node group and GKE node pool rows and sheet.
 enum NodeGroupText {
-    /// The group header's error line: the AWS action the role may not call, or AWS' own words.
+    /// The group header's error line: the action the role (AWS) or account (Google) may not
+    /// call, or the provider's own words.
     static func error(_ report: NodeGroupsReport) -> String {
         guard !report.forbidden.isEmpty else { return report.error }
+        if report.gke {
+            return String(format: String(localized: "%@ is not allowed for this account"), report.forbidden)
+        }
         return String(format: String(localized: "%@ is not allowed for this role"), report.forbidden)
+    }
+
+    /// The section title: "Node pools (EKS)" or "Node pools (GKE)".
+    static func title(gke: Bool) -> String {
+        gke ? String(localized: "Node pools (GKE)") : String(localized: "Node pools (EKS)")
+    }
+
+    /// "3 of 1–6", or "Autoscaling off" for a GKE pool without bounds.
+    static func size(_ row: ManagedNodeGroupRow) -> String {
+        row.autoscalingOff ? String(localized: "Autoscaling off") : hpaBoundsText(row.desired, row.min, row.max)
     }
 
     /// "50 GiB".
@@ -28,7 +42,7 @@ struct NodeGroupRowView: View {
             }
             Text(
                 verbatim: [
-                    hpaBoundsText(row.desired, row.min, row.max), row.version, row.capacityType,
+                    NodeGroupText.size(row), row.version, row.capacityType,
                     AutoscaleText.poolNodes(String(row.nodes)),
                 ]
                 .filter { !$0.isEmpty }
@@ -45,9 +59,12 @@ struct NodeGroupRowView: View {
     }
 }
 
-/// Every field of one managed node group, and AWS' health issues with the resources they name.
+/// Every field of one managed node group, and the provider's health issues with the resources
+/// they name. A GKE pool says "Image type" and has no size change or upgrade.
 struct NodeGroupDetailSheet: View {
     let row: ManagedNodeGroupRow
+    /// A GKE node pool: read-only.
+    var gke = false
     /// The control plane's Kubernetes version: the upgrade a group behind it is offered.
     var clusterVersion = ""
     /// Reads the report again: after a size change or an upgrade starts and when its update ends.
@@ -64,7 +81,7 @@ struct NodeGroupDetailSheet: View {
         AutoscalingSheetShell {
             Section {
                 AutoscalingSheetHeader(name: row.name, line: nil, state: row.state) {
-                    Text(verbatim: hpaBoundsText(row.desired, row.min, row.max)).font(.callout)
+                    Text(verbatim: NodeGroupText.size(row)).font(.callout)
                     if row.created > 0 {
                         Text(verbatim: relativeTime(row.created)).font(.footnote).foregroundStyle(.secondary)
                     }
@@ -73,20 +90,28 @@ struct NodeGroupDetailSheet: View {
             Section {
                 field("Status", row.status)
                 field("Desired size", String(row.desired))
-                field("Minimum", String(row.min))
-                field("Maximum", String(row.max))
+                if !row.autoscalingOff {
+                    field("Minimum", String(row.min))
+                    field("Maximum", String(row.max))
+                }
                 field("Nodes in the cluster", String(row.nodes))
                 field("Kubernetes version", row.version)
                 field("AMI release", row.releaseVersion)
-                field("AMI type", row.amiType)
+                if gke {
+                    field("Image type", row.amiType)
+                } else {
+                    field("AMI type", row.amiType)
+                }
                 field("Capacity type", row.capacityType)
                 field("Instance types", row.instanceTypes.joined(separator: ", "))
                 if row.diskSize > 0 {
                     field("Disk", NodeGroupText.disk(row.diskSize))
                 }
             }
-            sizeSection
-            upgradeSection
+            if !gke {
+                sizeSection
+                upgradeSection
+            }
             if let update {
                 Section {
                     updateRow(update)

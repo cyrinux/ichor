@@ -300,6 +300,17 @@ latest node image is offered). The control plane row and its upgrade need `eks:D
 "availability not checked"), `eks:ListUpdates` and `eks:DescribeUpdate` (an upgrade already
 running, found again when the app is reopened), and `eks:UpdateClusterVersion` to start one.
 
+A GKE cluster lists its node pools the same way, read-only, under **Node pools (GKE)**: node
+count, autoscaling bounds (the totals, or the per-zone bounds times the pool's zones), Kubernetes
+version, machine type, image type, spot or on-demand, status and Google's error message. They
+are read with the cluster's own Google sign-in (service account, user credentials or the
+browser), which needs `container.clusters.list` on the project (in the predefined role
+Kubernetes Engine Cluster Viewer) and `list` on nodes in the cluster: a node's `providerID`
+names the project, and the cluster is the one whose endpoint (public, private or DNS) is the
+kubeconfig's API server address. An account without the permission shows which one is missing;
+the rest of the screen is unaffected. The node count is the nodes the cluster sees in each pool:
+the pool's own target size lives in its instance groups, which need another permission.
+
 | Kubeconfig user | What the app does |
 |---|---|
 | Client certificate, token (ServiceAccount) | Uses it as is |

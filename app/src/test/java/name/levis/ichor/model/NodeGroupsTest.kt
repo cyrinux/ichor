@@ -114,4 +114,27 @@ class NodeGroupsTest {
         assertEquals(listOf("ip-1"), failed.podEvictionFailure?.resourceIds)
         assertEquals(null, NodeGroupUpdate(id = "u", status = "Failed", type = "ConfigUpdate").podEvictionFailure)
     }
+
+    @Test
+    fun aGKEReportDecodesWithItsPoolWithoutAutoscaling() {
+        val report = TalosJson.decodeFromString(
+            NodeGroupsReport.serializer(),
+            """{"provider":"gke","installed":true,"region":"europe-west1","cluster":"web","error":"","forbidden":"",
+               "clusterVersion":"1.34.1-gke.1200000",
+               "groups":[{"name":"fixed","status":"ERROR","desired":1,"min":0,"max":0,"version":"1.34.1-gke.1200000",
+                 "amiType":"COS_CONTAINERD","capacityType":"SPOT","instanceTypes":["c3-standard-4"],"nodes":1,
+                 "issues":[{"code":"GCE_QUOTA_EXCEEDED","message":"Quota CPUS exceeded","resourceIds":[]}]},
+                 {"name":"zonal","status":"RUNNING","desired":2,"min":1,"max":2,"nodes":2,"atMax":true}]}""",
+        )
+        assertTrue(report.gke)
+        assertFalse(groups.gke)
+        val (fixed, zonal) = report.groups
+        assertTrue(fixed.autoscalingOff)
+        assertTrue(fixed.needsAttention)
+        assertEquals("GCE_QUOTA_EXCEEDED", fixed.issues.single().code)
+        assertFalse(zonal.autoscalingOff)
+        assertTrue(zonal.needsAttention)
+        // RUNNING is GKE's healthy status: only the maximum flags the zonal pool.
+        assertFalse(zonal.copy(atMax = false).needsAttention)
+    }
 }

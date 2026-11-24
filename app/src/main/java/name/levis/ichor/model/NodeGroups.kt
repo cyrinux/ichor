@@ -2,17 +2,23 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/ichorgo/kube_nodegroups_eks.go: a cluster's cloud node pools (EKS managed node
-// groups), read with the cluster's own AWS sign-in. installed false: not an EKS sign-in, the
-// Autoscaling screen hides the group.
+// Mirrors go/ichorgo/kube_nodegroups_eks.go and kube_nodegroups_gke.go: a cluster's cloud node
+// pools (EKS managed node groups, GKE node pools), read with the cluster's own AWS or Google
+// sign-in. installed false: neither sign-in, the Autoscaling screen hides the group.
 
 const val NODE_GROUPS_EKS = "eks"
+
+/** GKE node pools: read-only, no size change or upgrade from the phone. */
+const val NODE_GROUPS_GKE = "gke"
 
 /** The group key the "Needs attention" rows of a managed node group carry. */
 const val AUTOSCALING_GROUP_NODE_GROUPS = "nodegroups"
 
 /** EKS' status of a group that is up and running; anything else needs attention. */
 const val NODE_GROUP_ACTIVE = "ACTIVE"
+
+/** GKE's status of a pool that is up and running. */
+const val NODE_GROUP_RUNNING = "RUNNING"
 
 @Serializable
 data class NodeGroupsReport(
@@ -26,7 +32,10 @@ data class NodeGroupsReport(
     val groups: List<ManagedNodeGroupRow> = emptyList(),
     /** The control plane's Kubernetes version ("1.34"), empty when it could not be read. */
     val clusterVersion: String = "",
-)
+) {
+    /** GKE pools: shown, never scaled or upgraded from here. */
+    val gke: Boolean get() = provider == NODE_GROUPS_GKE
+}
 
 /** One managed node group: its size against its bounds, version, capacity and AWS' health issues. */
 @Serializable
@@ -54,8 +63,11 @@ data class ManagedNodeGroupRow(
 ) {
     val key: String get() = name
 
-    /** At its maximum, reporting a health issue, or not ACTIVE (creating, updating, degraded). */
-    val needsAttention: Boolean get() = atMax || issues.isNotEmpty() || status != NODE_GROUP_ACTIVE
+    /** At its maximum, reporting a health issue, or not ACTIVE / RUNNING (creating, updating, degraded). */
+    val needsAttention: Boolean get() = atMax || issues.isNotEmpty() || (status != NODE_GROUP_ACTIVE && status != NODE_GROUP_RUNNING)
+
+    /** No bounds: a GKE pool without autoscaling (an EKS group always has a maximum of 1 or more). */
+    val autoscalingOff: Boolean get() = max == 0
 }
 
 @Serializable

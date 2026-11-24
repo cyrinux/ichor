@@ -28,10 +28,27 @@ import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
 
-/** The group header's error line: the AWS action the role may not call, or AWS' own words. */
+/** The group header's error line: the action the role (AWS) or account (Google) may not call, or the provider's own words. */
 @Composable
-fun nodeGroupsError(report: NodeGroupsReport): String =
-    if (report.forbidden.isNotEmpty()) stringResource(R.string.autoscaling_nodegroup_forbidden, report.forbidden) else report.error
+fun nodeGroupsError(report: NodeGroupsReport): String = when {
+    report.forbidden.isEmpty() -> report.error
+    report.gke -> stringResource(R.string.autoscaling_nodegroup_forbidden_account, report.forbidden)
+    else -> stringResource(R.string.autoscaling_nodegroup_forbidden, report.forbidden)
+}
+
+/** The section title: "Node pools (EKS)" or "Node pools (GKE)". */
+@Composable
+fun nodeGroupsTitle(gke: Boolean): String =
+    stringResource(if (gke) R.string.autoscaling_section_nodegroups_gke else R.string.autoscaling_section_nodegroups)
+
+/** "3 of 1–6", or "Autoscaling off" for a GKE pool without bounds. */
+@Composable
+private fun nodeGroupSize(row: ManagedNodeGroupRow): String =
+    if (row.autoscalingOff) {
+        stringResource(R.string.autoscaling_nodegroup_autoscaling_off)
+    } else {
+        stringResource(R.string.autoscaling_nodegroup_size, row.desired.toString(), row.min.toString(), row.max.toString())
+    }
 
 /** "at max" in the warning colour, else ok / not ready from EKS' status. */
 @Composable
@@ -54,7 +71,7 @@ fun NodeGroupRowItem(row: ManagedNodeGroupRow, onClick: () -> Unit) {
         title = row.name,
         modifier = Modifier.padding(horizontal = 16.dp),
         subtitle = listOf(
-            stringResource(R.string.autoscaling_nodegroup_size, row.desired.toString(), row.min.toString(), row.max.toString()),
+            nodeGroupSize(row),
             row.version,
             row.capacityType,
             stringResource(R.string.autoscaling_pool_nodes, row.nodes.toString()),
@@ -69,9 +86,12 @@ fun NodeGroupRowItem(row: ManagedNodeGroupRow, onClick: () -> Unit) {
     }
 }
 
-/** Every field of one managed node group, and AWS' health issues with the resources they name. */
+/**
+ * Every field of one managed node group, and the provider's health issues with the resources they
+ * name. A GKE pool ([gke]) says "Image type" and comes without [scaling].
+ */
 @Composable
-fun NodeGroupSheet(row: ManagedNodeGroupRow, onDismiss: () -> Unit, scaling: NodeGroupScaling? = null) {
+fun NodeGroupSheet(row: ManagedNodeGroupRow, onDismiss: () -> Unit, scaling: NodeGroupScaling? = null, gke: Boolean = false) {
     Sheet(onDismiss) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(row.name, style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f, fill = false))
@@ -79,12 +99,18 @@ fun NodeGroupSheet(row: ManagedNodeGroupRow, onDismiss: () -> Unit, scaling: Nod
         }
         InfoRow(stringResource(R.string.autoscaling_nodegroup_status), row.status)
         InfoRow(stringResource(R.string.autoscaling_nodegroup_desired), row.desired.toString())
-        InfoRow(stringResource(R.string.autoscaling_nodegroup_minimum), row.min.toString())
-        InfoRow(stringResource(R.string.autoscaling_nodegroup_maximum), row.max.toString())
+        if (row.autoscalingOff) {
+            MutedText(stringResource(R.string.autoscaling_nodegroup_autoscaling_off))
+        } else {
+            InfoRow(stringResource(R.string.autoscaling_nodegroup_minimum), row.min.toString())
+            InfoRow(stringResource(R.string.autoscaling_nodegroup_maximum), row.max.toString())
+        }
         InfoRow(stringResource(R.string.autoscaling_nodegroup_nodes), row.nodes.toString())
         InfoRow(stringResource(R.string.autoscaling_nodegroup_version), row.version)
         if (row.releaseVersion.isNotEmpty()) InfoRow(stringResource(R.string.autoscaling_nodegroup_ami_release), row.releaseVersion)
-        if (row.amiType.isNotEmpty()) InfoRow(stringResource(R.string.autoscaling_nodegroup_ami_type), row.amiType)
+        if (row.amiType.isNotEmpty()) {
+            InfoRow(stringResource(if (gke) R.string.autoscaling_nodegroup_image_type else R.string.autoscaling_nodegroup_ami_type), row.amiType)
+        }
         if (row.capacityType.isNotEmpty()) InfoRow(stringResource(R.string.autoscaling_nodegroup_capacity_type), row.capacityType)
         if (row.instanceTypes.isNotEmpty()) InfoRow(stringResource(R.string.autoscaling_nodegroup_instance_types), row.instanceTypes.joinToString(", "), mono = true)
         if (row.diskSize > 0) InfoRow(stringResource(R.string.autoscaling_nodegroup_disk), stringResource(R.string.autoscaling_nodegroup_disk_size, row.diskSize.toString()))

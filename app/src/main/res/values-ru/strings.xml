@@ -5603,6 +5603,10 @@
     <string name="autoscaling_section_vpa">Вертикальное (VPA)</string>
     <string name="autoscaling_section_karpenter">Пулы узлов (Karpenter)</string>
     <string name="autoscaling_section_nodegroups">Пулы узлов (EKS)</string>
+    <string name="autoscaling_section_nodegroups_gke">Пулы узлов (GKE)</string>
+    <string name="autoscaling_nodegroup_forbidden_account">%1$s не разрешено для этой учётной записи</string>
+    <string name="autoscaling_nodegroup_image_type">Тип образа</string>
+    <string name="autoscaling_nodegroup_autoscaling_off">Автомасштабирование выключено</string>
     <string name="autoscaling_nodegroup_forbidden">%1$s не разрешено для этой роли</string>
     <string name="autoscaling_nodegroup_size">%1$s из %2$s–%3$s</string>
     <string name="autoscaling_nodegroup_status">Статус</string>

@@ -620,8 +620,9 @@ var dataCommands = []command{
 		return out, err
 	}},
 	{name: "kube-nodegroups", args: "", run: func(e env) (string, error) {
-		// kube-nodegroups: the EKS managed node groups, with the cluster's own AWS sign-in
-		// (read-only; installed false on a cluster that does not sign in through EKS).
+		// kube-nodegroups: the EKS managed node groups or GKE node pools, with the cluster's
+		// own AWS or Google sign-in (read-only; installed false on a cluster that signs in
+		// through neither).
 		return ichorgo.KubeNodeGroups(e.cfg, e.context, e.kubeServer)
 	}},
 	{name: "kube-nodegroup-scale", args: "GROUP DESIRED MIN MAX -yes", run: func(e env) (string, error) {
