@@ -28,6 +28,7 @@ struct ScalewayCreateSection: View {
     @State private var omniName = ""
     @State private var confirming = false
     @State private var adding = false
+    @State private var makingImage = false
     @State private var confirmStop = false
     @State private var authError: String?
     private var job: JoinJob { .shared }
@@ -75,6 +76,12 @@ struct ScalewayCreateSection: View {
                 ScalewayKeySheet { added in
                     reloadAccounts()
                     pick(added)
+                }
+            }
+            if job.request?.scalewayImage != nil {
+                ImageRunSections { outcome in
+                    guard case .imageMade(let made)? = outcome else { return }
+                    Task { await imageClosed(made) }
                 }
             }
             if let options { optionsSection(options) }
@@ -126,12 +133,17 @@ struct ScalewayCreateSection: View {
         ForEach(value.warnings, id: \.self) { warning in
             Text(verbatim: warning).font(.footnote).foregroundStyle(.secondary)
         }
+        // The image is made for the picked type's architecture, else the picked image's, else the zone's first.
+        let makeArch = ScalewayArch.normalized(type?.arch ?? image?.arch ?? "")
+        let noTalosImage = !value.hasTalosImage(arch: makeArch)
+        if noTalosImage { makeImageRows(value, zone: shownZone, arch: makeArch, missing: true) }
         Picker("Talos image", selection: $image) {
             Text(verbatim: "—").tag(ScalewayImage?.none)
             ForEach(value.imagesTalosFirst) { option in
                 Text(verbatim: "\(option.name) · \(option.arch)").tag(ScalewayImage?.some(option))
             }
         }
+        if !noTalosImage { makeImageRows(value, zone: shownZone, arch: makeArch, missing: false) }
         let chosenImage = value.images.first { $0.id == image?.id }
         let types = value.types(for: chosenImage)
         Picker("Type", selection: $type) {
@@ -180,6 +192,36 @@ struct ScalewayCreateSection: View {
             Text(verbatim: authError).foregroundStyle(.statusBad)
         }
         createButton(zone: shownZone, type: chosenType, image: chosenImage, group: chosenGroup)
+    }
+
+    /// "Make a Talos image" first when no Talos image of `arch` is listed, "Make another" after the
+    /// picker otherwise. The demo opens the sheet too: the core refuses its run.
+    @ViewBuilder
+    private func makeImageRows(_ value: ScalewayOptions, zone: String, arch: String, missing: Bool) -> some View {
+        let shownArch = arch.isEmpty ? (value.imageArches.first ?? "") : arch
+        if demo || !account.isEmpty {
+            // No Talos image at all: the core's warning above already says so.
+            if missing, value.hasTalosImage(arch: "") {
+                Text("No Talos image for \(shownArch) in this zone yet: Ichor can make one of this cluster's image.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+            Group {
+                if missing {
+                    Button("Make a Talos image") { makingImage = true }
+                } else {
+                    Button("Make another Talos image") { makingImage = true }
+                }
+            }
+            .disabled(job.isActive || shownArch.isEmpty)
+            .sheet(isPresented: $makingImage) {
+                ScalewayImageSheet(
+                    zone: zone, arches: value.imageArches, arch: shownArch, template: omni ? "" : template,
+                    credential: credential, demo: demo
+                ) { spec in
+                    startImage(spec)
+                }
+            }
+        }
     }
 
     private func typeLabel(_ option: ScalewayType) -> Text {
@@ -315,6 +357,24 @@ struct ScalewayCreateSection: View {
         guard case .loaded(let value, _, _) = result else { return }
         options = result
         if let made = value.securityGroups.first(where: { $0.id == id }) { group = made }
+    }
+
+    /// The helper Instance's run: followed like a join, with no node to add at its end.
+    private func startImage(_ spec: ScalewayImageSpec) {
+        guard let client = model.client else { return }
+        let request = JoinRequest(
+            address: "", template: spec.templateNode, role: "", hostname: "Talos \(spec.arch)", disk: "",
+            staticAddress: "", scalewayImage: spec)
+        job.start(client: client, request: request, providerToken: credential) { _ in }
+    }
+
+    /// The zone's images again, with the new one picked (and a type of its architecture).
+    private func imageClosed(_ made: MadeImage) async {
+        await refreshOptions(selecting: group?.id ?? "")
+        guard case .loaded(let value, _, _) = options, let picked = value.images.first(where: { $0.id == made.id })
+        else { return }
+        if let type, ScalewayArch.normalized(type.arch) != ScalewayArch.normalized(picked.arch) { self.type = nil }
+        image = picked
     }
 
     /// Face ID / passcode first when the app lock is on, then the run.

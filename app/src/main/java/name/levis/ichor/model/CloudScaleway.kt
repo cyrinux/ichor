@@ -130,6 +130,19 @@ data class ScalewayCreateSpec(
     val labelsJson: String = "",
 )
 
+/** StartScalewayImage's specJSON. The image's URL comes from the template, never from here. */
+@Serializable
+data class ScalewayImageSpec(
+    val templateNode: String = "",
+    /** amd64 or arm64 (the core also reads x86_64). */
+    val arch: String,
+    val zone: String,
+    /** "" for the core's cheapest type of the architecture that boots the helper. */
+    val type: String = "",
+    /** "" for talos-<version>-scaleway-<arch>-<schematic12>. */
+    val name: String = "",
+)
+
 /** What a finished Talos image run at Scaleway reports. */
 @Serializable
 data class ScalewayImageResult(
@@ -166,6 +179,21 @@ fun ScalewayOptions.typesFor(image: ScalewayImage?): List<ScalewayType> =
 /** The managed group (ichor-nodes), else the project's default one, else the first; null when the zone lists none. */
 val ScalewayOptions.defaultSecurityGroup: ScalewaySecurityGroup?
     get() = securityGroups.firstOrNull { it.managed } ?: securityGroups.firstOrNull { it.default } ?: securityGroups.firstOrNull()
+
+/** "amd64" or "arm64" for Scaleway's "x86_64" / "arm64" (and the image run's own names). */
+fun scalewayArch(arch: String): String = when (val a = arch.trim().lowercase()) {
+    "x86_64", "x86-64", "amd64" -> "amd64"
+    "arm64", "aarch64" -> "arm64"
+    else -> a
+}
+
+/** The architectures an image can be made for: those of the zone's types, amd64 first. */
+val ScalewayOptions.imageArches: List<String>
+    get() = types.map { scalewayArch(it.arch) }.filter { it.isNotBlank() }.distinct().sortedBy { it != "amd64" }
+
+/** A Talos image of [arch] is listed ([arch] "" for any architecture). */
+fun ScalewayOptions.hasTalosImage(arch: String): Boolean =
+    images.any { it.talos && (arch.isBlank() || scalewayArch(it.arch) == scalewayArch(arch)) }
 
 /** "0.0099 EUR": the hourly price before tax; null when the core has none. */
 val ScalewayType.hourlyPrice: String?

@@ -1,6 +1,148 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "No Talos image for %@ in this zone yet: Ichor can make one of this cluster's image." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pas encore d'image Talos pour %@ dans cette zone : Ichor peut en créer une de l'image de ce cluster." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aún no hay imagen de Talos para %@ en esta zona: Ichor puede crear una de la imagen de este clúster." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch kein Talos-Image für %@ in dieser Zone: Ichor kann eines aus dem Image dieses Clusters erstellen." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ancora nessuna immagine Talos per %@ in questa zona: Ichor può crearne una dall'immagine di questo cluster." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このゾーンには %@ 用の Talos イメージがまだありません。Ichor がこのクラスターのイメージから作成できます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ainda não há imagem do Talos para %@ nesta zona: o Ichor pode criar uma da imagem deste cluster." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В этой зоне пока нет образа Talos для %@: Ichor может создать его из образа этого кластера." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "У цій зоні ще немає образу Talos для %@: Ichor може створити його з образу цього кластера." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此区域还没有 %@ 的 Talos 镜像：Ichor 可以用此集群的镜像创建一个。" } }
+      }
+    },
+    "Ichor starts a throwaway Ubuntu Instance with an empty Block Storage volume and writes this cluster's Talos image to it. It then snapshots the volume, makes an image from the snapshot, and deletes the Instance, its volumes and its IP. The image and its snapshot are kept. Nothing of the cluster is touched. It takes about ten minutes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ichor démarre une instance Ubuntu jetable avec un volume Block Storage vide et y écrit l'image Talos de ce cluster. Il prend ensuite un snapshot du volume, crée une image à partir du snapshot, puis supprime l'instance, ses volumes et son IP. L'image et son snapshot sont conservés. Rien du cluster n'est touché. Cela prend une dizaine de minutes." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ichor inicia una instancia Ubuntu desechable con un volumen Block Storage vacío y escribe en él la imagen de Talos de este clúster. Después toma un snapshot del volumen, crea una imagen a partir del snapshot y borra la instancia, sus volúmenes y su IP. La imagen y su snapshot se conservan. No se toca nada del clúster. Tarda unos diez minutos." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ichor startet eine Wegwerf-Ubuntu-Instanz mit einem leeren Block-Storage-Volume und schreibt das Talos-Image dieses Clusters darauf. Danach erstellt es einen Snapshot des Volumes, macht daraus ein Image und löscht die Instanz, ihre Volumes und ihre IP. Das Image und sein Snapshot bleiben erhalten. Am Cluster wird nichts verändert. Das dauert etwa zehn Minuten." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ichor avvia un'istanza Ubuntu usa e getta con un volume Block Storage vuoto e vi scrive l'immagine Talos di questo cluster. Poi fa uno snapshot del volume, crea un'immagine dallo snapshot ed elimina l'istanza, i suoi volumi e il suo IP. L'immagine e il suo snapshot restano. Nulla del cluster viene toccato. Ci vogliono circa dieci minuti." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Ichor は空の Block Storage ボリュームを付けた使い捨ての Ubuntu インスタンスを起動し、このクラスターの Talos イメージを書き込みます。続いてボリュームのスナップショットを取り、そこからイメージを作成し、インスタンスとそのボリューム、IP を削除します。イメージとスナップショットは残ります。クラスターには何も変更を加えません。約 10 分かかります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Ichor inicia uma instância Ubuntu descartável com um volume Block Storage vazio e grava nele a imagem do Talos deste cluster. Depois tira um snapshot do volume, cria uma imagem a partir do snapshot e exclui a instância, seus volumes e seu IP. A imagem e o snapshot são mantidos. Nada do cluster é alterado. Leva cerca de dez minutos." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ichor запускает одноразовый инстанс Ubuntu с пустым томом Block Storage и записывает на него образ Talos этого кластера. Затем делает снимок тома, создаёт из него образ и удаляет инстанс, его тома и IP. Образ и его снимок сохраняются. Кластер не затрагивается. Это занимает около десяти минут." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Ichor запускає одноразовий інстанс Ubuntu з порожнім томом Block Storage і записує на нього образ Talos цього кластера. Потім робить знімок тому, створює з нього образ і видаляє інстанс, його томи та IP. Образ і його знімок зберігаються. Кластер не зачіпається. Це займає близько десяти хвилин." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Ichor 启动一个带空 Block Storage 卷的一次性 Ubuntu 实例，把此集群的 Talos 镜像写入该卷。随后为卷创建快照，用快照创建镜像，并删除实例及其卷和 IP。镜像及其快照会保留。不会改动集群。大约需要十分钟。" } }
+      }
+    },
+    "The image goes in the key's project, in zone %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'image va dans le projet de la clé, dans la zone %@." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La imagen va al proyecto de la clave, en la zona %@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Image kommt in das Projekt des Schlüssels, in der Zone %@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'immagine va nel progetto della chiave, nella zona %@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "イメージはキーのプロジェクトのゾーン %@ に作成されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A imagem vai para o projeto da chave, na zona %@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Образ создаётся в проекте ключа, в зоне %@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Образ створюється в проєкті ключа, у зоні %@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "镜像位于该密钥的项目中，区域 %@。" } }
+      }
+    },
+    "About %lld minutes of %@ (%@/h), then the %lld GB snapshot is billed by Scaleway per GB per month until you delete it, before tax" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About %1$lld minutes of %2$@ (%3$@/h), then the %4$lld GB snapshot is billed by Scaleway per GB per month until you delete it, before tax" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Environ %1$lld minutes de %2$@ (%3$@/h), puis le snapshot de %4$lld Go est facturé par Scaleway par Go par mois jusqu'à ce que vous le supprimiez, hors taxes" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Unos %1$lld minutos de %2$@ (%3$@/h), y luego Scaleway factura el snapshot de %4$lld GB por GB al mes hasta que lo borres, sin impuestos" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Etwa %1$lld Minuten %2$@ (%3$@/h), danach berechnet Scaleway den Snapshot von %4$lld GB pro GB und Monat, bis du ihn löschst, vor Steuern" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Circa %1$lld minuti di %2$@ (%3$@/h), poi Scaleway fattura lo snapshot da %4$lld GB per GB al mese finché non lo elimini, tasse escluse" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ を約 %1$lld 分 (%3$@/h)、その後削除するまで %4$lld GB のスナップショットに Scaleway から 1 GB あたりの月額料金 (税抜)" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cerca de %1$lld minutos de %2$@ (%3$@/h), depois a Scaleway cobra o snapshot de %4$lld GB por GB por mês até você excluí-lo, sem impostos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Около %1$lld минут %2$@ (%3$@/ч), затем Scaleway берёт плату за снимок %4$lld ГБ за ГБ в месяц, пока вы его не удалите, без налогов" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Близько %1$lld хвилин %2$@ (%3$@/год), потім Scaleway стягує плату за знімок %4$lld ГБ за ГБ на місяць, доки ви його не видалите, без податків" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "约 %1$lld 分钟 %2$@ (%3$@/小时)，之后 Scaleway 按每 GB 每月对 %4$lld GB 快照计费，直到你删除它，不含税" } }
+      }
+    },
+    "About %lld minutes of %@, then the %lld GB snapshot is billed by Scaleway per GB per month until you delete it. Price unavailable: see Scaleway's price list." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About %1$lld minutes of %2$@, then the %3$lld GB snapshot is billed by Scaleway per GB per month until you delete it. Price unavailable: see Scaleway's price list." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Environ %1$lld minutes de %2$@, puis le snapshot de %3$lld Go est facturé par Scaleway par Go par mois jusqu'à ce que vous le supprimiez. Prix indisponible : voir la grille tarifaire de Scaleway." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Unos %1$lld minutos de %2$@, y luego Scaleway factura el snapshot de %3$lld GB por GB al mes hasta que lo borres. Precio no disponible: consulta la lista de precios de Scaleway." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Etwa %1$lld Minuten %2$@, danach berechnet Scaleway den Snapshot von %3$lld GB pro GB und Monat, bis du ihn löschst. Preis nicht verfügbar: siehe die Preisliste von Scaleway." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Circa %1$lld minuti di %2$@, poi Scaleway fattura lo snapshot da %3$lld GB per GB al mese finché non lo elimini. Prezzo non disponibile: vedi il listino di Scaleway." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ を約 %1$lld 分、その後削除するまで %3$lld GB のスナップショットに Scaleway から 1 GB あたりの月額料金。価格不明: Scaleway の料金表を参照してください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Cerca de %1$lld minutos de %2$@, depois a Scaleway cobra o snapshot de %3$lld GB por GB por mês até você excluí-lo. Preço indisponível: veja a tabela de preços da Scaleway." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Около %1$lld минут %2$@, затем Scaleway берёт плату за снимок %3$lld ГБ за ГБ в месяц, пока вы его не удалите. Цена недоступна: см. прайс-лист Scaleway." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Близько %1$lld хвилин %2$@, потім Scaleway стягує плату за знімок %3$lld ГБ за ГБ на місяць, доки ви його не видалите. Ціна недоступна: див. прайс-лист Scaleway." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "约 %1$lld 分钟 %2$@，之后 Scaleway 按每 GB 每月对 %3$lld GB 快照计费，直到你删除它。价格不可用：请查看 Scaleway 的价格表。" } }
+      }
+    },
+    "Start the helper Instance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Démarrer l'instance auxiliaire" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar la instancia auxiliar" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hilfsinstanz starten" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avviare l'istanza ausiliaria" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "補助インスタンスを起動" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar a instância auxiliar" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запустить вспомогательный инстанс" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Запустити допоміжний інстанс" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启动辅助实例" } }
+      }
+    },
+    "Make the image from the snapshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer l'image à partir du snapshot" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear la imagen a partir del snapshot" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Image aus dem Snapshot erstellen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Creare l'immagine dallo snapshot" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "スナップショットからイメージを作成" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Criar a imagem a partir do snapshot" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Создать образ из снимка" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Створити образ зі знімка" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "用快照创建镜像" } }
+      }
+    },
+    "Delete the helper Instance, its volumes and its IP" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer l'instance auxiliaire, ses volumes et son IP" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Borrar la instancia auxiliar, sus volúmenes y su IP" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hilfsinstanz, ihre Volumes und ihre IP löschen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Eliminare l'istanza ausiliaria, i suoi volumi e il suo IP" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "補助インスタンスとそのボリューム、IP を削除" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Excluir a instância auxiliar, seus volumes e seu IP" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить вспомогательный инстанс, его тома и IP" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Видалити допоміжний інстанс, його томи та IP" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除辅助实例及其卷和 IP" } }
+      }
+    },
+    "Stopping deletes the helper Instance with its volumes and its IP." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'arrêt supprime l'instance auxiliaire avec ses volumes et son IP." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detener borra la instancia auxiliar con sus volúmenes y su IP." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Beim Stoppen wird die Hilfsinstanz mit ihren Volumes und ihrer IP gelöscht." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'arresto elimina l'istanza ausiliaria con i suoi volumi e il suo IP." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "停止すると補助インスタンスとそのボリューム、IP が削除されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Parar exclui a instância auxiliar com seus volumes e seu IP." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Остановка удаляет вспомогательный инстанс вместе с его томами и IP." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Зупинка видаляє допоміжний інстанс разом з його томами та IP." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "停止会删除辅助实例及其卷和 IP。" } }
+      }
+    },
+    "The run stops. The helper Instance, billed until it is deleted, is deleted with its volumes and its IP, and an unfinished snapshot or image too." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'exécution s'arrête. L'instance auxiliaire, facturée jusqu'à sa suppression, est supprimée avec ses volumes et son IP, ainsi qu'un snapshot ou une image inachevés." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La ejecución se detiene. La instancia auxiliar, facturada hasta que se borra, se borra con sus volúmenes y su IP, y también un snapshot o una imagen sin terminar." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Lauf stoppt. Die Hilfsinstanz, die bis zum Löschen berechnet wird, wird mit ihren Volumes und ihrer IP gelöscht, ebenso ein unfertiger Snapshot oder ein unfertiges Image." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'esecuzione si ferma. L'istanza ausiliaria, fatturata finché non viene eliminata, viene eliminata con i suoi volumi e il suo IP, e anche uno snapshot o un'immagine incompleti." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "実行を停止します。削除されるまで課金される補助インスタンスは、そのボリュームと IP とともに削除され、未完成のスナップショットやイメージも削除されます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A execução para. A instância auxiliar, cobrada até ser excluída, é excluída com seus volumes e seu IP, e também um snapshot ou uma imagem inacabados." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Запуск останавливается. Вспомогательный инстанс, оплачиваемый до удаления, удаляется вместе с томами и IP, как и незавершённый снимок или образ." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Запуск зупиняється. Допоміжний інстанс, що оплачується до видалення, видаляється разом з томами та IP, як і незавершений знімок чи образ." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "运行停止。辅助实例在删除前持续计费，它会连同其卷和 IP 一起删除，未完成的快照或镜像也会删除。" } }
+      }
+    },
     "Wipe this disk…" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -397,120 +539,120 @@
         }
       }
     },
-    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add an API key and attach the IAM policy Ichor prints to its application.\n3. Upload the Talos image for Scaleway to the project once, from a computer.\n4. Pick a zone, the Talos image, a type and a security group, then create it: Ichor shows the cost first and follows it until the node joins." : {
+    "1. Pick a member to copy, then the new node's host name and install disk.\n2. Add an API key and attach the IAM policy Ichor prints to its application.\n3. Make the Talos image once from the Scaleway card, or upload one from a computer.\n4. Pick a zone, the Talos image, a type and a security group, then create it: Ichor shows the cost first and follows it until the node joins." : {
       "extractionState" : "manual",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Choisissez un membre à copier, puis le nom d'hôte et le disque d'installation du nouveau nœud.\n2. Ajoutez une clé d'API et attachez à son application la politique IAM qu'Ichor affiche.\n3. Téléversez une fois l'image Talos pour Scaleway dans le projet, depuis un ordinateur.\n4. Choisissez une zone, l'image Talos, un type et un groupe de sécurité, puis créez-la : Ichor montre d'abord le coût et la suit jusqu'à ce que le nœud rejoigne le cluster."
+            "value" : "1. Choisissez un membre à copier, puis le nom d'hôte et le disque d'installation du nouveau nœud.\n2. Ajoutez une clé d'API et attachez à son application la politique IAM qu'Ichor affiche.\n3. Créez une fois l'image Talos depuis la carte Scaleway, ou téléversez-en une depuis un ordinateur.\n4. Choisissez une zone, l'image Talos, un type et un groupe de sécurité, puis créez-la : Ichor montre d'abord le coût et la suit jusqu'à ce que le nœud rejoigne le cluster."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Elige un miembro que copiar y luego el nombre de host y el disco de instalación del nuevo nodo.\n2. Añade una clave de API y asocia a su aplicación la política IAM que muestra Ichor.\n3. Sube una vez la imagen de Talos para Scaleway al proyecto, desde un ordenador.\n4. Elige una zona, la imagen de Talos, un tipo y un grupo de seguridad, y créala: Ichor muestra primero el coste y la sigue hasta que el nodo se une."
+            "value" : "1. Elige un miembro que copiar y luego el nombre de host y el disco de instalación del nuevo nodo.\n2. Añade una clave de API y asocia a su aplicación la política IAM que muestra Ichor.\n3. Crea una vez la imagen de Talos desde la tarjeta de Scaleway, o sube una desde un ordenador.\n4. Elige una zona, la imagen de Talos, un tipo y un grupo de seguridad, y créala: Ichor muestra primero el coste y la sigue hasta que el nodo se une."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Wähle ein Mitglied zum Kopieren, dann Hostname und Installationsdatenträger des neuen Nodes.\n2. Füge einen API-Schlüssel hinzu und hänge die IAM-Richtlinie, die Ichor anzeigt, an seine Anwendung.\n3. Lade das Talos-Image für Scaleway einmal von einem Computer in das Projekt hoch.\n4. Wähle eine Zone, das Talos-Image, einen Typ und eine Sicherheitsgruppe und erstelle sie: Ichor zeigt zuerst die Kosten und verfolgt sie, bis der Node beitritt."
+            "value" : "1. Wähle ein Mitglied zum Kopieren, dann Hostname und Installationsdatenträger des neuen Nodes.\n2. Füge einen API-Schlüssel hinzu und hänge die IAM-Richtlinie, die Ichor anzeigt, an seine Anwendung.\n3. Erstelle das Talos-Image einmal über die Scaleway-Karte oder lade eines von einem Computer hoch.\n4. Wähle eine Zone, das Talos-Image, einen Typ und eine Sicherheitsgruppe und erstelle sie: Ichor zeigt zuerst die Kosten und verfolgt sie, bis der Node beitritt."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Scegli un membro da copiare, poi il nome host e il disco di installazione del nuovo nodo.\n2. Aggiungi una chiave API e associa alla sua applicazione la policy IAM che Ichor mostra.\n3. Carica una volta l'immagine Talos per Scaleway nel progetto, da un computer.\n4. Scegli una zona, l'immagine Talos, un tipo e un gruppo di sicurezza, poi creala: Ichor mostra prima il costo e la segue finché il nodo si unisce."
+            "value" : "1. Scegli un membro da copiare, poi il nome host e il disco di installazione del nuovo nodo.\n2. Aggiungi una chiave API e associa alla sua applicazione la policy IAM che Ichor mostra.\n3. Crea una volta l'immagine Talos dalla scheda Scaleway, o caricane una da un computer.\n4. Scegli una zona, l'immagine Talos, un tipo e un gruppo di sicurezza, poi creala: Ichor mostra prima il costo e la segue finché il nodo si unisce."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Виберіть учасника для копіювання, потім ім'я хоста й диск встановлення нового вузла.\n2. Додайте API-ключ і прикріпіть до його застосунку політику IAM, яку показує Ichor.\n3. Один раз завантажте образ Talos для Scaleway у проєкт з комп'ютера.\n4. Виберіть зону, образ Talos, тип і групу безпеки, потім створіть його: Ichor спершу показує вартість і стежить, доки вузол не приєднається."
+            "value" : "1. Виберіть учасника для копіювання, потім ім'я хоста й диск встановлення нового вузла.\n2. Додайте API-ключ і прикріпіть до його застосунку політику IAM, яку показує Ichor.\n3. Один раз створіть образ Talos у картці Scaleway або завантажте його з комп'ютера.\n4. Виберіть зону, образ Talos, тип і групу безпеки, потім створіть його: Ichor спершу показує вартість і стежить, доки вузол не приєднається."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. 选择一个要复制的成员，然后填写新节点的主机名和安装磁盘。\n2. 添加一个 API 密钥，并将 Ichor 显示的 IAM 策略附加到它的应用。\n3. 从电脑把 Scaleway 的 Talos 镜像上传到项目一次。\n4. 选择区域、Talos 镜像、类型和安全组，然后创建：Ichor 先显示费用，并跟踪到节点加入为止。"
+            "value" : "1. 选择一个要复制的成员，然后填写新节点的主机名和安装磁盘。\n2. 添加一个 API 密钥，并将 Ichor 显示的 IAM 策略附加到它的应用。\n3. 在 Scaleway 卡片中创建一次 Talos 镜像，或从电脑上传一个。\n4. 选择区域、Talos 镜像、类型和安全组，然后创建：Ichor 先显示费用，并跟踪到节点加入为止。"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. コピーするメンバーを選び、新しいノードのホスト名とインストールディスクを指定します。\n2. API キーを追加し、Ichor が表示する IAM ポリシーをそのアプリケーションに付与します。\n3. Scaleway 用の Talos イメージをコンピューターからプロジェクトに一度アップロードします。\n4. ゾーン、Talos イメージ、タイプ、セキュリティグループを選んで作成します。Ichor は先に費用を表示し、ノードが参加するまで追跡します。"
+            "value" : "1. コピーするメンバーを選び、新しいノードのホスト名とインストールディスクを指定します。\n2. API キーを追加し、Ichor が表示する IAM ポリシーをそのアプリケーションに付与します。\n3. Scaleway カードから Talos イメージを一度作成するか、コンピューターからアップロードします。\n4. ゾーン、Talos イメージ、タイプ、セキュリティグループを選んで作成します。Ichor は先に費用を表示し、ノードが参加するまで追跡します。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Escolha um membro para copiar e depois o nome de host e o disco de instalação do novo nó.\n2. Adicione uma chave de API e anexe à aplicação dela a política IAM que o Ichor mostra.\n3. Envie uma vez a imagem do Talos para a Scaleway ao projeto, a partir de um computador.\n4. Escolha uma zona, a imagem do Talos, um tipo e um grupo de segurança e crie: o Ichor mostra o custo primeiro e acompanha até o nó entrar."
+            "value" : "1. Escolha um membro para copiar e depois o nome de host e o disco de instalação do novo nó.\n2. Adicione uma chave de API e anexe à aplicação dela a política IAM que o Ichor mostra.\n3. Crie uma vez a imagem do Talos pelo cartão da Scaleway, ou envie uma a partir de um computador.\n4. Escolha uma zona, a imagem do Talos, um tipo e um grupo de segurança e crie: o Ichor mostra o custo primeiro e acompanha até o nó entrar."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Выберите участника для копирования, затем имя хоста и диск установки нового узла.\n2. Добавьте API-ключ и прикрепите к его приложению политику IAM, которую показывает Ichor.\n3. Один раз загрузите образ Talos для Scaleway в проект с компьютера.\n4. Выберите зону, образ Talos, тип и группу безопасности, затем создайте его: Ichor сначала показывает стоимость и следит, пока узел не присоединится."
+            "value" : "1. Выберите участника для копирования, затем имя хоста и диск установки нового узла.\n2. Добавьте API-ключ и прикрепите к его приложению политику IAM, которую показывает Ichor.\n3. Один раз создайте образ Talos в карточке Scaleway или загрузите его с компьютера.\n4. Выберите зону, образ Talos, тип и группу безопасности, затем создайте его: Ichor сначала показывает стоимость и следит, пока узел не присоединится."
           }
         }
       }
     },
-    "1. Add an API key and attach the IAM policy Ichor prints to its application.\n2. Upload the Talos image for Scaleway to the project once, from a computer.\n3. Name the Instance, then pick a zone, the Talos image, a type and a security group.\n4. Create it: Ichor shows the cost first, then follows it until the machine appears in Omni. Allocate it to the cluster." : {
+    "1. Add an API key and attach the IAM policy Ichor prints to its application.\n2. Make the Talos image once from the Scaleway card, or upload one from a computer.\n3. Name the Instance, then pick a zone, the Talos image, a type and a security group.\n4. Create it: Ichor shows the cost first, then follows it until the machine appears in Omni. Allocate it to the cluster." : {
       "extractionState" : "manual",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Ajoutez une clé d'API et attachez à son application la politique IAM qu'Ichor affiche.\n2. Téléversez une fois l'image Talos pour Scaleway dans le projet, depuis un ordinateur.\n3. Nommez l'instance, puis choisissez une zone, l'image Talos, un type et un groupe de sécurité.\n4. Créez-la : Ichor montre d'abord le coût, puis la suit jusqu'à ce que la machine apparaisse dans Omni. Allouez-la au cluster."
+            "value" : "1. Ajoutez une clé d'API et attachez à son application la politique IAM qu'Ichor affiche.\n2. Créez une fois l'image Talos depuis la carte Scaleway, ou téléversez-en une depuis un ordinateur.\n3. Nommez l'instance, puis choisissez une zone, l'image Talos, un type et un groupe de sécurité.\n4. Créez-la : Ichor montre d'abord le coût, puis la suit jusqu'à ce que la machine apparaisse dans Omni. Allouez-la au cluster."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Añade una clave de API y asocia a su aplicación la política IAM que muestra Ichor.\n2. Sube una vez la imagen de Talos para Scaleway al proyecto, desde un ordenador.\n3. Pon nombre a la instancia y elige una zona, la imagen de Talos, un tipo y un grupo de seguridad.\n4. Créala: Ichor muestra primero el coste y la sigue hasta que la máquina aparece en Omni. Asígnala al clúster."
+            "value" : "1. Añade una clave de API y asocia a su aplicación la política IAM que muestra Ichor.\n2. Crea una vez la imagen de Talos desde la tarjeta de Scaleway, o sube una desde un ordenador.\n3. Pon nombre a la instancia y elige una zona, la imagen de Talos, un tipo y un grupo de seguridad.\n4. Créala: Ichor muestra primero el coste y la sigue hasta que la máquina aparece en Omni. Asígnala al clúster."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Füge einen API-Schlüssel hinzu und hänge die IAM-Richtlinie, die Ichor anzeigt, an seine Anwendung.\n2. Lade das Talos-Image für Scaleway einmal von einem Computer in das Projekt hoch.\n3. Benenne die Instanz und wähle eine Zone, das Talos-Image, einen Typ und eine Sicherheitsgruppe.\n4. Erstelle sie: Ichor zeigt zuerst die Kosten und verfolgt sie, bis die Maschine in Omni erscheint. Weise sie dem Cluster zu."
+            "value" : "1. Füge einen API-Schlüssel hinzu und hänge die IAM-Richtlinie, die Ichor anzeigt, an seine Anwendung.\n2. Erstelle das Talos-Image einmal über die Scaleway-Karte oder lade eines von einem Computer hoch.\n3. Benenne die Instanz und wähle eine Zone, das Talos-Image, einen Typ und eine Sicherheitsgruppe.\n4. Erstelle sie: Ichor zeigt zuerst die Kosten und verfolgt sie, bis die Maschine in Omni erscheint. Weise sie dem Cluster zu."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Aggiungi una chiave API e associa alla sua applicazione la policy IAM che Ichor mostra.\n2. Carica una volta l'immagine Talos per Scaleway nel progetto, da un computer.\n3. Dai un nome all'istanza, poi scegli una zona, l'immagine Talos, un tipo e un gruppo di sicurezza.\n4. Creala: Ichor mostra prima il costo, poi la segue finché la macchina compare in Omni. Assegnala al cluster."
+            "value" : "1. Aggiungi una chiave API e associa alla sua applicazione la policy IAM che Ichor mostra.\n2. Crea una volta l'immagine Talos dalla scheda Scaleway, o caricane una da un computer.\n3. Dai un nome all'istanza, poi scegli una zona, l'immagine Talos, un tipo e un gruppo di sicurezza.\n4. Creala: Ichor mostra prima il costo, poi la segue finché la macchina compare in Omni. Assegnala al cluster."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Додайте API-ключ і прикріпіть до його застосунку політику IAM, яку показує Ichor.\n2. Один раз завантажте образ Talos для Scaleway у проєкт з комп'ютера.\n3. Назвіть інстанс, потім виберіть зону, образ Talos, тип і групу безпеки.\n4. Створіть його: Ichor спершу показує вартість, потім стежить, доки машина не з'явиться в Omni. Призначте її кластеру."
+            "value" : "1. Додайте API-ключ і прикріпіть до його застосунку політику IAM, яку показує Ichor.\n2. Один раз створіть образ Talos у картці Scaleway або завантажте його з комп'ютера.\n3. Назвіть інстанс, потім виберіть зону, образ Talos, тип і групу безпеки.\n4. Створіть його: Ichor спершу показує вартість, потім стежить, доки машина не з'явиться в Omni. Призначте її кластеру."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. 添加一个 API 密钥，并将 Ichor 显示的 IAM 策略附加到它的应用。\n2. 从电脑把 Scaleway 的 Talos 镜像上传到项目一次。\n3. 为实例命名，然后选择区域、Talos 镜像、类型和安全组。\n4. 创建：Ichor 先显示费用，然后跟踪到机器出现在 Omni 中为止。将其分配给集群。"
+            "value" : "1. 添加一个 API 密钥，并将 Ichor 显示的 IAM 策略附加到它的应用。\n2. 在 Scaleway 卡片中创建一次 Talos 镜像，或从电脑上传一个。\n3. 为实例命名，然后选择区域、Talos 镜像、类型和安全组。\n4. 创建：Ichor 先显示费用，然后跟踪到机器出现在 Omni 中为止。将其分配给集群。"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. API キーを追加し、Ichor が表示する IAM ポリシーをそのアプリケーションに付与します。\n2. Scaleway 用の Talos イメージをコンピューターからプロジェクトに一度アップロードします。\n3. インスタンスに名前を付け、ゾーン、Talos イメージ、タイプ、セキュリティグループを選びます。\n4. 作成します。Ichor は先に費用を表示し、マシンが Omni に現れるまで追跡します。クラスターに割り当ててください。"
+            "value" : "1. API キーを追加し、Ichor が表示する IAM ポリシーをそのアプリケーションに付与します。\n2. Scaleway カードから Talos イメージを一度作成するか、コンピューターからアップロードします。\n3. インスタンスに名前を付け、ゾーン、Talos イメージ、タイプ、セキュリティグループを選びます。\n4. 作成します。Ichor は先に費用を表示し、マシンが Omni に現れるまで追跡します。クラスターに割り当ててください。"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Adicione uma chave de API e anexe à aplicação dela a política IAM que o Ichor mostra.\n2. Envie uma vez a imagem do Talos para a Scaleway ao projeto, a partir de um computador.\n3. Dê um nome à instância e escolha uma zona, a imagem do Talos, um tipo e um grupo de segurança.\n4. Crie: o Ichor mostra o custo primeiro e acompanha até a máquina aparecer no Omni. Aloque-a ao cluster."
+            "value" : "1. Adicione uma chave de API e anexe à aplicação dela a política IAM que o Ichor mostra.\n2. Crie uma vez a imagem do Talos pelo cartão da Scaleway, ou envie uma a partir de um computador.\n3. Dê um nome à instância e escolha uma zona, a imagem do Talos, um tipo e um grupo de segurança.\n4. Crie: o Ichor mostra o custo primeiro e acompanha até a máquina aparecer no Omni. Aloque-a ao cluster."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Добавьте API-ключ и прикрепите к его приложению политику IAM, которую показывает Ichor.\n2. Один раз загрузите образ Talos для Scaleway в проект с компьютера.\n3. Назовите инстанс, затем выберите зону, образ Talos, тип и группу безопасности.\n4. Создайте его: Ichor сначала показывает стоимость, затем следит, пока машина не появится в Omni. Назначьте её кластеру."
+            "value" : "1. Добавьте API-ключ и прикрепите к его приложению политику IAM, которую показывает Ichor.\n2. Один раз создайте образ Talos в карточке Scaleway или загрузите его с компьютера.\n3. Назовите инстанс, затем выберите зону, образ Talos, тип и группу безопасности.\n4. Создайте его: Ichor сначала показывает стоимость, затем следит, пока машина не появится в Omni. Назначьте её кластеру."
           }
         }
       }

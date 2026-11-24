@@ -42,4 +42,23 @@ extension TalosClient {
             IchorgoStartScalewayCreate(config, context, credential, specJSON, bridge)
         }
     }
+
+    /// The cost line of an image run. Creates nothing.
+    static func scalewayImageEstimate(
+        credential: String, arch: String, zone: String
+    ) async throws -> ScalewayImageCost {
+        try await json { IchorgoScalewayImageEstimate(credential, arch, zone, $0) }
+    }
+
+    /// Makes a Talos image with a throwaway Instance (StartScalewayImage): `done`'s address is the
+    /// result JSON. `stop` deletes the helper with its volumes and IP, and an unfinished snapshot or
+    /// image, and so only `stop` stops it, as above.
+    func startScalewayImage(
+        _ spec: ScalewayImageSpec, credential: String
+    ) -> (events: AsyncStream<JoinEvent>, stop: @Sendable () -> Void) {
+        let specJSON = (try? JSONEncoder().encode(spec)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+        return hetznerRun { [config, context] bridge in
+            IchorgoStartScalewayImage(config, context, credential, specJSON, bridge)
+        }
+    }
 }

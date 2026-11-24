@@ -1,7 +1,9 @@
 package name.levis.ichor.model
 
+import name.levis.ichor.data.JoinRequest
 import name.levis.ichor.data.TalosJson
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -106,5 +108,55 @@ class CloudScalewayTest {
         val credential = ScalewayCredential("SCWEXAMPLEKEY", "secret", "p", "fr-par-1").inZone("pl-waw-1")
         assertEquals("pl-waw-1", credential.zone)
         assertEquals("secret", credential.secretKey)
+    }
+
+    @Test
+    fun theImageSpecUsesTheCoresNames() {
+        val spec = ScalewayImageSpec(templateNode = "10.0.0.2", arch = "arm64", zone = "nl-ams-1")
+        assertEquals(
+            """{"templateNode":"10.0.0.2","arch":"arm64","zone":"nl-ams-1"}""",
+            TalosJson.encodeToString(ScalewayImageSpec.serializer(), spec),
+        )
+    }
+
+    @Test
+    fun theImageResultAndItsCostDecode() {
+        val result = TalosJson.decodeFromString(
+            ScalewayImageResult.serializer(),
+            """{"imageId":"00000000-0000-4000-8000-0000000000aa","snapshotId":"s","name":"talos-v1.12.0-scaleway-amd64-0123456789ab",
+               "arch":"amd64","talosVersion":"v1.12.0","schematic":"0123","sizeGB":10}""",
+        )
+        val made: MadeImage = result
+        assertEquals("00000000-0000-4000-8000-0000000000aa", made.imageId)
+        assertEquals("talos-v1.12.0-scaleway-amd64-0123456789ab", made.name)
+        val cost = TalosJson.decodeFromString(
+            ScalewayImageCost.serializer(),
+            """{"type":"DEV1-S","hourly":"0.0099","minutes":10,"currency":"EUR","snapshotGB":10,"note":"n"}""",
+        )
+        assertEquals("DEV1-S", cost.type)
+        assertEquals(10, cost.snapshotGB)
+        assertEquals("", TalosJson.decodeFromString(ScalewayImageCost.serializer(), """{"type":"COPARM1-2C-8G"}""").hourly)
+    }
+
+    @Test
+    fun theImageArchitecturesAndTheTalosImageOfEach() {
+        assertEquals("amd64", scalewayArch("x86_64"))
+        assertEquals("arm64", scalewayArch("aarch64"))
+        assertEquals(listOf("amd64", "arm64"), options.imageArches)
+        assertTrue(options.hasTalosImage("amd64"))
+        assertTrue(options.hasTalosImage("x86_64"))
+        assertTrue(options.hasTalosImage(""))
+        assertFalse(options.hasTalosImage("arm64"))
+        assertFalse(options.copy(images = options.images.filterNot { it.talos }).hasTalosImage(""))
+    }
+
+    @Test
+    fun anImageRunHasItsOwnSteps() {
+        val spec = ScalewayImageSpec(arch = "amd64", zone = "fr-par-1")
+        val request = JoinRequest(address = "", template = "", role = "", hostname = "Talos amd64", disk = "", staticAddress = "", scalewayImage = spec)
+        assertEquals(ImageRunKind.SCALEWAY_IMAGE, request.imageKind)
+        assertEquals(listOf(JoinPhase.CREATING, JoinPhase.WRITING, JoinPhase.SNAPSHOT, JoinPhase.REGISTER, JoinPhase.CLEANUP, JoinPhase.DONE), request.phases)
+        assertTrue(request.imageRun)
+        assertFalse(request.cloud)
     }
 }

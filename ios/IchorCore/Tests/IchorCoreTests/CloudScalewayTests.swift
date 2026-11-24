@@ -113,4 +113,56 @@ final class CloudScalewayTests: XCTestCase {
         XCTAssertEqual(omni.phases, JoinPhase.cloudOmniRun)
         XCTAssertEqual(omni.withReplacing(true).scaleway, spec)
     }
+
+    func testTheImageSpecUsesTheCoresNames() throws {
+        let spec = ScalewayImageSpec(templateNode: "10.0.0.2", arch: "arm64", zone: "nl-ams-1")
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(spec)) as? [String: Any])
+        XCTAssertEqual(object["templateNode"] as? String, "10.0.0.2")
+        XCTAssertEqual(object["arch"] as? String, "arm64")
+        XCTAssertEqual(object["zone"] as? String, "nl-ams-1")
+        XCTAssertEqual(object["type"] as? String, "")
+        XCTAssertEqual(object["name"] as? String, "")
+    }
+
+    func testTheImageResultAndItsCostDecode() throws {
+        let json = #"""
+            {"imageId":"00000000-0000-4000-8000-0000000000aa","snapshotId":"s",
+             "name":"talos-v1.12.0-scaleway-amd64-0123456789ab","arch":"amd64","talosVersion":"v1.12.0",
+             "schematic":"0123","sizeGB":10}
+            """#
+        let result = try JSONDecoder().decode(ScalewayImageResult.self, from: Data(json.utf8))
+        XCTAssertEqual(
+            result.made,
+            MadeImage(id: "00000000-0000-4000-8000-0000000000aa", name: "talos-v1.12.0-scaleway-amd64-0123456789ab"))
+        let cost = try JSONDecoder().decode(
+            ScalewayImageCost.self,
+            from: Data(#"{"type":"DEV1-S","hourly":"0.0099","minutes":10,"currency":"EUR","snapshotGB":10}"#.utf8))
+        XCTAssertEqual(cost.type, "DEV1-S")
+        XCTAssertEqual(cost.snapshotGB, 10)
+        XCTAssertEqual(cost.note, "")
+    }
+
+    func testTheImageArchitecturesAndTheTalosImageOfEach() throws {
+        let value = try options()
+        XCTAssertEqual(ScalewayArch.normalized("x86_64"), "amd64")
+        XCTAssertEqual(ScalewayArch.normalized("aarch64"), "arm64")
+        XCTAssertEqual(value.imageArches, ["amd64", "arm64"])
+        XCTAssertTrue(value.hasTalosImage(arch: "amd64"))
+        XCTAssertTrue(value.hasTalosImage(arch: "x86_64"))
+        XCTAssertTrue(value.hasTalosImage(arch: ""))
+        XCTAssertFalse(value.hasTalosImage(arch: "arm64"))
+    }
+
+    func testAnImageRunHasItsOwnSteps() {
+        let spec = ScalewayImageSpec(arch: "amd64", zone: "fr-par-1")
+        let request = JoinRequest(
+            address: "", template: "", role: "", hostname: "Talos amd64", disk: "", staticAddress: "",
+            scalewayImage: spec)
+        XCTAssertEqual(request.imageKind, .scalewayImage)
+        XCTAssertEqual(request.phases, [.creating, .writing, .snapshot, .register, .cleanup, .done])
+        XCTAssertTrue(request.imageRun)
+        XCTAssertFalse(request.cloud)
+        XCTAssertEqual(request.withReplacing(true).scalewayImage, spec)
+    }
 }

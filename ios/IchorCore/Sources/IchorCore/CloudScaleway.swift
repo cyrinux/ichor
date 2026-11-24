@@ -96,6 +96,34 @@ public struct ScalewayOptions: Decodable, Equatable, Sendable {
     public var defaultSecurityGroup: ScalewaySecurityGroup? {
         securityGroups.first(where: \.managed) ?? securityGroups.first(where: \.isDefault) ?? securityGroups.first
     }
+
+    /// The architectures an image can be made for: those of the zone's types, amd64 first.
+    public var imageArches: [String] {
+        var seen: [String] = []
+        for type in types {
+            let arch = ScalewayArch.normalized(type.arch)
+            if !arch.isEmpty, !seen.contains(arch) { seen.append(arch) }
+        }
+        return seen.filter { $0 == "amd64" } + seen.filter { $0 != "amd64" }
+    }
+
+    /// A Talos image of `arch` is listed (`arch` "" for any architecture).
+    public func hasTalosImage(arch: String) -> Bool {
+        let wanted = ScalewayArch.normalized(arch)
+        return images.contains { $0.talos && (wanted.isEmpty || ScalewayArch.normalized($0.arch) == wanted) }
+    }
+}
+
+public enum ScalewayArch {
+    /// "amd64" or "arm64" for Scaleway's "x86_64" / "arm64" (and the image run's own names).
+    public static func normalized(_ arch: String) -> String {
+        let a = arch.trimmingCharacters(in: .whitespaces).lowercased()
+        switch a {
+        case "x86_64", "x86-64", "amd64": return "amd64"
+        case "arm64", "aarch64": return "arm64"
+        default: return a
+        }
+    }
 }
 
 /// A server type; `blockOnly` when it has no local storage (the data volume is Block Storage).
@@ -271,6 +299,26 @@ public struct ScalewayCreateSpec: Encodable, Equatable, Sendable {
         self.templateNode = templateNode
         self.installDisk = installDisk
         self.labelsJson = labelsJson
+    }
+}
+
+/// StartScalewayImage's specJSON. The image's URL comes from the template, never from here.
+public struct ScalewayImageSpec: Encodable, Equatable, Sendable {
+    public let templateNode: String
+    /// amd64 or arm64 (the core also reads x86_64).
+    public let arch: String
+    public let zone: String
+    /// "" for the core's cheapest type of the architecture that boots the helper.
+    public let type: String
+    /// "" for talos-<version>-scaleway-<arch>-<schematic12>.
+    public let name: String
+
+    public init(templateNode: String = "", arch: String, zone: String, type: String = "", name: String = "") {
+        self.templateNode = templateNode
+        self.arch = arch
+        self.zone = zone
+        self.type = type
+        self.name = name
     }
 }
 

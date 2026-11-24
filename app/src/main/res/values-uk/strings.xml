@@ -7046,8 +7046,8 @@
     <string name="secrets_bundle_open_failed">Не вдається записати вибраний файл.</string>
     <string name="secrets_bundle_new_cluster_help">Збережіть копію секретів кластера (secrets.yaml), щоб створювати його конфігурації на комп\'ютері через talosctl, або на випадок втрати єдиного control plane.</string>
     <string name="scaleway_title">Створити інстанс у Scaleway</string>
-    <string name="scaleway_howto">1. Виберіть учасника для копіювання, потім ім\'я хоста й диск встановлення нового вузла.\n2. Додайте API-ключ і прикріпіть до його застосунку політику IAM, яку показує Ichor.\n3. Один раз завантажте образ Talos для Scaleway у проєкт з комп\'ютера.\n4. Виберіть зону, образ Talos, тип і групу безпеки, потім створіть його: Ichor спершу показує вартість і стежить, доки вузол не приєднається.</string>
-    <string name="scaleway_howto_omni">1. Додайте API-ключ і прикріпіть до його застосунку політику IAM, яку показує Ichor.\n2. Один раз завантажте образ Talos для Scaleway у проєкт з комп\'ютера.\n3. Назвіть інстанс, потім виберіть зону, образ Talos, тип і групу безпеки.\n4. Створіть його: Ichor спершу показує вартість, потім стежить, доки машина не з\'явиться в Omni. Призначте її кластеру.</string>
+    <string name="scaleway_howto">1. Виберіть учасника для копіювання, потім ім\'я хоста й диск встановлення нового вузла.\n2. Додайте API-ключ і прикріпіть до його застосунку політику IAM, яку показує Ichor.\n3. Один раз створіть образ Talos у картці Scaleway або завантажте його з комп\'ютера.\n4. Виберіть зону, образ Talos, тип і групу безпеки, потім створіть його: Ichor спершу показує вартість і стежить, доки вузол не приєднається.</string>
+    <string name="scaleway_howto_omni">1. Додайте API-ключ і прикріпіть до його застосунку політику IAM, яку показує Ichor.\n2. Один раз створіть образ Talos у картці Scaleway або завантажте його з комп\'ютера.\n3. Назвіть інстанс, потім виберіть зону, образ Talos, тип і групу безпеки.\n4. Створіть його: Ichor спершу показує вартість, потім стежить, доки машина не з\'явиться в Omni. Призначте її кластеру.</string>
     <string name="scaleway_add_key">Додати API-ключ Scaleway</string>
     <string name="scaleway_remove">Вилучити цей ключ</string>
     <string name="scaleway_key_warning">Секрет API-ключа може робити те, що дозволяє його політика IAM, доки ключ не відкликано. Він лишається запечатаним на цьому пристрої й не потрапляє до резервних копій.</string>
@@ -7068,6 +7068,16 @@
     <string name="scaleway_confirm_title">Створити %1$s у Scaleway?</string>
     <string name="scaleway_confirm_body">Це створює платний інстанс (%1$s у %2$s) і том даних. Його дані користувача йдуть до Scaleway разом із секретами кластера або токеном приєднання Omni. Невдалий запуск видаляє інстанс і його томи.</string>
     <string name="scaleway_stop_body">%1$s видаляється в Scaleway разом із томами. Control plane, що вже відповів, зберігається: спершу треба вилучити його учасника etcd.</string>
+    <string name="scaleway_image_missing">У цій зоні ще немає образу Talos для %1$s: Ichor може створити його з образу цього кластера.</string>
+    <string name="scaleway_image_intro">Ichor запускає одноразовий інстанс Ubuntu з порожнім томом Block Storage і записує на нього образ Talos цього кластера. Потім робить знімок тому, створює з нього образ і видаляє інстанс, його томи та IP. Образ і його знімок зберігаються. Кластер не зачіпається. Це займає близько десяти хвилин.</string>
+    <string name="scaleway_image_place">Образ створюється в проєкті ключа, у зоні %1$s.</string>
+    <string name="scaleway_image_cost">Близько %1$d хвилин %2$s (%3$s/год), потім Scaleway стягує плату за знімок %4$d ГБ за ГБ на місяць, доки ви його не видалите, без податків</string>
+    <string name="scaleway_image_cost_unknown">Близько %1$d хвилин %2$s, потім Scaleway стягує плату за знімок %3$d ГБ за ГБ на місяць, доки ви його не видалите. Ціна недоступна: див. прайс-лист Scaleway.</string>
+    <string name="scaleway_phase_helper">Запустити допоміжний інстанс</string>
+    <string name="scaleway_phase_image">Створити образ зі знімка</string>
+    <string name="scaleway_phase_cleanup">Видалити допоміжний інстанс, його томи та IP</string>
+    <string name="scaleway_image_stop_hint">Зупинка видаляє допоміжний інстанс разом з його томами та IP.</string>
+    <string name="scaleway_image_stop_body">Запуск зупиняється. Допоміжний інстанс, що оплачується до видалення, видаляється разом з томами та IP, як і незавершений знімок чи образ.</string>
     <string name="scaleway_network_guided">Створити групу безпеки для вузлів (рекомендовано)</string>
     <string name="scaleway_network_created">Створено групу безпеки %1$s.</string>
     <string name="scaleway_network_rule_member">Увесь трафік від %1$s (%2$s)</string>

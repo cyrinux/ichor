@@ -141,9 +141,10 @@ Part of the [Ichor documentation](../README.md#documentation).
   is left so, with a warning. The printed policy already covers it (InstancesFullAccess); a key
   without it is told to attach that policy. Recorded in the action log
   (`scaleway-network-prepare`, with the zone and the group id).
-- **Making a Talos image at Scaleway (from the Go core and the probe for now):** billable, so the
-  estimate gives the helper's type and hourly price before tax first (Scaleway's API has no
-  snapshot price: the estimate says so), and the probe's `scaleway image` runs only with `-yes`.
+- **Making a Talos image at Scaleway (the Scaleway card's Make a Talos image; the probe's
+  `scaleway image`):** billable, so the sheet shows the helper's type and hourly price before tax
+  first (Scaleway's API has no snapshot price: the sheet says the snapshot is then billed per
+  GB-month), the run starts only from its confirmation, and the probe runs only with `-yes`.
   Nothing of the cluster is touched: the schematic comes from the template's machine config, and a
   template whose config cannot be read is refused. Before any write the run checks the key's right
   to create, the marketplace's Ubuntu image and a type for the architecture in the zone, and that

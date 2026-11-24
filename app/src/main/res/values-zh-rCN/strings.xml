@@ -6648,8 +6648,8 @@
     <string name="secrets_bundle_open_failed">无法写入所选文件。</string>
     <string name="secrets_bundle_new_cluster_help">保留一份集群密钥（secrets.yaml），以便在电脑上用 talosctl 生成其配置，或在唯一的控制平面丢失之前留底。</string>
     <string name="scaleway_title">在 Scaleway 创建实例</string>
-    <string name="scaleway_howto">1. 选择一个要复制的成员，然后填写新节点的主机名和安装磁盘。\n2. 添加一个 API 密钥，并将 Ichor 显示的 IAM 策略附加到它的应用。\n3. 从电脑把 Scaleway 的 Talos 镜像上传到项目一次。\n4. 选择区域、Talos 镜像、类型和安全组，然后创建：Ichor 先显示费用，并跟踪到节点加入为止。</string>
-    <string name="scaleway_howto_omni">1. 添加一个 API 密钥，并将 Ichor 显示的 IAM 策略附加到它的应用。\n2. 从电脑把 Scaleway 的 Talos 镜像上传到项目一次。\n3. 为实例命名，然后选择区域、Talos 镜像、类型和安全组。\n4. 创建：Ichor 先显示费用，然后跟踪到机器出现在 Omni 中为止。将其分配给集群。</string>
+    <string name="scaleway_howto">1. 选择一个要复制的成员，然后填写新节点的主机名和安装磁盘。\n2. 添加一个 API 密钥，并将 Ichor 显示的 IAM 策略附加到它的应用。\n3. 在 Scaleway 卡片中创建一次 Talos 镜像，或从电脑上传一个。\n4. 选择区域、Talos 镜像、类型和安全组，然后创建：Ichor 先显示费用，并跟踪到节点加入为止。</string>
+    <string name="scaleway_howto_omni">1. 添加一个 API 密钥，并将 Ichor 显示的 IAM 策略附加到它的应用。\n2. 在 Scaleway 卡片中创建一次 Talos 镜像，或从电脑上传一个。\n3. 为实例命名，然后选择区域、Talos 镜像、类型和安全组。\n4. 创建：Ichor 先显示费用，然后跟踪到机器出现在 Omni 中为止。将其分配给集群。</string>
     <string name="scaleway_add_key">添加 Scaleway API 密钥</string>
     <string name="scaleway_remove">移除此密钥</string>
     <string name="scaleway_key_warning">API 密钥的秘密密钥在被吊销前可以执行其 IAM 策略允许的操作。它密封保存在此设备上，不在备份中。</string>
@@ -6670,6 +6670,16 @@
     <string name="scaleway_confirm_title">在 Scaleway 创建 %1$s？</string>
     <string name="scaleway_confirm_body">这会创建一个收费实例（%2$s 中的 %1$s）和一个数据卷。其用户数据会连同集群的密钥或 Omni 的加入令牌发送到 Scaleway。失败的运行会删除该实例及其卷。</string>
     <string name="scaleway_stop_body">%1$s 及其卷将在 Scaleway 被删除。已经响应的 control plane 会保留：必须先移除它的 etcd 成员。</string>
+    <string name="scaleway_image_missing">此区域还没有 %1$s 的 Talos 镜像：Ichor 可以用此集群的镜像创建一个。</string>
+    <string name="scaleway_image_intro">Ichor 启动一个带空 Block Storage 卷的一次性 Ubuntu 实例，把此集群的 Talos 镜像写入该卷。随后为卷创建快照，用快照创建镜像，并删除实例及其卷和 IP。镜像及其快照会保留。不会改动集群。大约需要十分钟。</string>
+    <string name="scaleway_image_place">镜像位于该密钥的项目中，区域 %1$s。</string>
+    <string name="scaleway_image_cost">约 %1$d 分钟 %2$s (%3$s/小时)，之后 Scaleway 按每 GB 每月对 %4$d GB 快照计费，直到你删除它，不含税</string>
+    <string name="scaleway_image_cost_unknown">约 %1$d 分钟 %2$s，之后 Scaleway 按每 GB 每月对 %3$d GB 快照计费，直到你删除它。价格不可用：请查看 Scaleway 的价格表。</string>
+    <string name="scaleway_phase_helper">启动辅助实例</string>
+    <string name="scaleway_phase_image">用快照创建镜像</string>
+    <string name="scaleway_phase_cleanup">删除辅助实例及其卷和 IP</string>
+    <string name="scaleway_image_stop_hint">停止会删除辅助实例及其卷和 IP。</string>
+    <string name="scaleway_image_stop_body">运行停止。辅助实例在删除前持续计费，它会连同其卷和 IP 一起删除，未完成的快照或镜像也会删除。</string>
     <string name="scaleway_network_guided">为节点创建安全组(推荐)</string>
     <string name="scaleway_network_created">已创建安全组 %1$s。</string>
     <string name="scaleway_network_rule_member">来自 %1$s (%2$s) 的所有流量</string>

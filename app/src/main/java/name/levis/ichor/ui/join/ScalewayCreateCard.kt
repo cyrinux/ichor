@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.join
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -41,13 +42,17 @@ import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.ScalewayCheck
 import name.levis.ichor.model.ScalewayCreateSpec
 import name.levis.ichor.model.ScalewayCredential
+import name.levis.ichor.model.ScalewayImageCost
 import name.levis.ichor.model.ScalewayNetwork
 import name.levis.ichor.model.ScalewayNetworkSpec
 import name.levis.ichor.model.ScalewayOptions
 import name.levis.ichor.model.defaultSecurityGroup
+import name.levis.ichor.model.hasTalosImage
 import name.levis.ichor.model.hourlyPrice
+import name.levis.ichor.model.imageArches
 import name.levis.ichor.model.imagesTalosFirst
 import name.levis.ichor.model.inZone
+import name.levis.ichor.model.scalewayArch
 import name.levis.ichor.model.typesFor
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
@@ -114,7 +119,7 @@ class ScalewayCreateViewModel(private val lifecycle: NodeLifecycleRepository, pr
     }
 
     /** The options again without the loading state, so the form keeps its picks; a failure keeps the old ones. */
-    private fun refresh() {
+    fun refresh() {
         val account = _account.value
         if (account.isBlank()) return
         viewModelScope.launch {
@@ -126,6 +131,10 @@ class ScalewayCreateViewModel(private val lifecycle: NodeLifecycleRepository, pr
     /** The guided security group (writes at Scaleway), then the options again so the group is listed. */
     suspend fun prepareNetwork(spec: ScalewayNetworkSpec): ScalewayNetwork =
         lifecycle.scalewayNetworkPrepare(credential(_account.value), spec).also { refresh() }
+
+    /** The cost line of an image run in [zone]. Creates nothing. */
+    suspend fun estimate(arch: String, zone: String): ScalewayImageCost =
+        lifecycle.scalewayImageEstimate(credential(_account.value), arch, zone)
 
     /** The stored key, in the picked zone when one is picked. */
     suspend fun credential(account: String): String {
@@ -184,6 +193,8 @@ fun ScalewayCreateCard(
     val options by vm.options.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var adding by remember { mutableStateOf(false) }
+    var imageFor by remember { mutableStateOf<ScalewayImageAsk?>(null) }
+    var madeImage by rememberSaveable { mutableStateOf("") }
     LaunchedEffect(demo) { vm.load(demo) }
 
     SectionCard(stringResource(R.string.scaleway_title)) {
@@ -191,6 +202,13 @@ fun ScalewayCreateCard(
         if (current?.request?.scaleway != null) {
             JoinRunView(current, onStop = app.joinManager::stop, onOpenNode = null, onClose = app.joinManager::dismiss, onAllocate = onAllocate)
         } else {
+            if (current?.request?.scalewayImage != null) {
+                ImageRunView(current, onStop = app.joinManager::stop) {
+                    madeImage = current.madeImage?.imageId ?: madeImage
+                    app.joinManager.dismiss()
+                    vm.refresh()
+                }
+            }
             if (demo) {
                 InfoNotice(stringResource(R.string.hetzner_demo))
             } else {
@@ -215,6 +233,9 @@ fun ScalewayCreateCard(
                     ScalewayInstanceForm(
                         state.data, shownZone, vm::pickZone, form, labelsJson, busy = current?.running == true,
                         onPrepareNetwork = if (demo || account.isBlank()) null else vm::prepareNetwork,
+                        // The demo opens the sheet too: the core refuses its run.
+                        onMakeImage = if (!demo && account.isBlank()) null else { ask -> imageFor = ask },
+                        madeImage = madeImage,
                     ) { request ->
                         // The key is read only now, and goes to the run alone.
                         scope.launch { app.joinManager.start(request, if (account.isBlank()) "" else vm.credential(account)) }
@@ -224,6 +245,24 @@ fun ScalewayCreateCard(
         }
     }
     if (adding) ScalewayKeyDialog(vm) { adding = false }
+    imageFor?.let { ask ->
+        ScalewayImageSheet(
+            ask = ask,
+            template = form?.template.orEmpty(),
+            demo = demo,
+            estimate = vm::estimate,
+            onStart = { spec ->
+                imageFor = null
+                val request = JoinRequest(
+                    address = "", template = spec.templateNode, role = "", hostname = "Talos ${spec.arch}", disk = "",
+                    staticAddress = "", scalewayImage = spec,
+                )
+                // The key is read only now, and goes to the run alone.
+                scope.launch { app.joinManager.start(request, if (account.isBlank()) "" else vm.credential(account)) }
+            },
+            onDismiss = { imageFor = null },
+        )
+    }
 }
 
 /** The zone, image, type and security group pickers, the cost line and the confirmed Create. */
@@ -238,6 +277,10 @@ private fun ScalewayInstanceForm(
     busy: Boolean,
     /** The guided security group; null where it cannot run (the demo, no key). */
     onPrepareNetwork: (suspend (ScalewayNetworkSpec) -> ScalewayNetwork)?,
+    /** Opens the image sheet; null where it cannot run (no key outside the demo). */
+    onMakeImage: ((ScalewayImageAsk) -> Unit)?,
+    /** The id of the image the last run made: picked once it is listed. */
+    madeImage: String,
     onCreate: (JoinRequest) -> Unit,
 ) {
     val colors = LocalStatusColors.current
@@ -254,6 +297,12 @@ private fun ScalewayInstanceForm(
     val type = types.firstOrNull { it.name == typeName }
     val group = options.securityGroups.firstOrNull { it.id == groupId } ?: options.defaultSecurityGroup
     val hostname = form?.hostname?.trim() ?: omniName.trim()
+    LaunchedEffect(madeImage, options) {
+        val made = options.images.firstOrNull { it.id == madeImage } ?: return@LaunchedEffect
+        // Made for another architecture than the picked type's: its types are listed again.
+        if (options.types.firstOrNull { it.name == typeName }?.arch?.let(::scalewayArch) != scalewayArch(made.arch)) typeName = ""
+        imageId = made.id
+    }
 
     if (form == null) {
         OutlinedTextField(
@@ -271,10 +320,22 @@ private fun ScalewayInstanceForm(
     }
     options.warnings.forEach { InfoNotice(it) }
     Text(stringResource(R.string.ovh_image), style = MaterialTheme.typography.labelLarge)
+    // The image is made for the picked type's architecture, else the picked image's, else the zone's first.
+    val makeArch = scalewayArch(options.types.firstOrNull { it.name == typeName }?.arch ?: image?.arch.orEmpty())
+    val noTalosImage = !options.hasTalosImage(makeArch)
+    val ask = ScalewayImageAsk(zone, options.imageArches,makeArch.ifBlank { options.imageArches.firstOrNull().orEmpty() })
+    if (onMakeImage != null && noTalosImage) {
+        // No Talos image at all: the core's warning above already says so.
+        if (options.hasTalosImage("")) InfoNotice(stringResource(R.string.scaleway_image_missing, ask.arch))
+        MakeImageButton(R.string.gcp_make_image, enabled = !busy && ask.arch.isNotBlank()) { onMakeImage(ask) }
+    }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         images.forEach { i ->
             IchorFilterChip(selected = i.id == imageId, onClick = { imageId = i.id }, label = { Text("${i.name} · ${i.arch}") })
         }
+    }
+    if (onMakeImage != null && !noTalosImage) {
+        MakeImageButton(R.string.azure_image_make_another, enabled = !busy && ask.arch.isNotBlank()) { onMakeImage(ask) }
     }
     Text(stringResource(R.string.scaleway_type), style = MaterialTheme.typography.labelLarge)
     if (image != null) MutedText(stringResource(R.string.scaleway_arch_hint, image.arch))
@@ -342,4 +403,10 @@ private fun ScalewayInstanceForm(
             Text(stringResource(R.string.scaleway_confirm_body, type.name, zone), style = MaterialTheme.typography.bodyMedium)
         }
     }
+}
+
+/** "Make a Talos image" (no Talos image listed) or "Make another Talos image". */
+@Composable
+private fun MakeImageButton(@StringRes label: Int, enabled: Boolean, onClick: () -> Unit) {
+    IchorOutlinedButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(stringResource(label)) }
 }

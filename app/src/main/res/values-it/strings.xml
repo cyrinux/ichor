@@ -6788,8 +6788,8 @@
     <string name="secrets_bundle_open_failed">Il file scelto non può essere scritto.</string>
     <string name="secrets_bundle_new_cluster_help">Conserva una copia dei segreti del cluster (secrets.yaml) per generarne le config su un computer con talosctl, o prima di perdere il suo unico control plane.</string>
     <string name="scaleway_title">Crea l\'istanza su Scaleway</string>
-    <string name="scaleway_howto">1. Scegli un membro da copiare, poi il nome host e il disco di installazione del nuovo nodo.\n2. Aggiungi una chiave API e associa alla sua applicazione la policy IAM che Ichor mostra.\n3. Carica una volta l\'immagine Talos per Scaleway nel progetto, da un computer.\n4. Scegli una zona, l\'immagine Talos, un tipo e un gruppo di sicurezza, poi creala: Ichor mostra prima il costo e la segue finché il nodo si unisce.</string>
-    <string name="scaleway_howto_omni">1. Aggiungi una chiave API e associa alla sua applicazione la policy IAM che Ichor mostra.\n2. Carica una volta l\'immagine Talos per Scaleway nel progetto, da un computer.\n3. Dai un nome all\'istanza, poi scegli una zona, l\'immagine Talos, un tipo e un gruppo di sicurezza.\n4. Creala: Ichor mostra prima il costo, poi la segue finché la macchina compare in Omni. Assegnala al cluster.</string>
+    <string name="scaleway_howto">1. Scegli un membro da copiare, poi il nome host e il disco di installazione del nuovo nodo.\n2. Aggiungi una chiave API e associa alla sua applicazione la policy IAM che Ichor mostra.\n3. Crea una volta l\'immagine Talos dalla scheda Scaleway, o caricane una da un computer.\n4. Scegli una zona, l\'immagine Talos, un tipo e un gruppo di sicurezza, poi creala: Ichor mostra prima il costo e la segue finché il nodo si unisce.</string>
+    <string name="scaleway_howto_omni">1. Aggiungi una chiave API e associa alla sua applicazione la policy IAM che Ichor mostra.\n2. Crea una volta l\'immagine Talos dalla scheda Scaleway, o caricane una da un computer.\n3. Dai un nome all\'istanza, poi scegli una zona, l\'immagine Talos, un tipo e un gruppo di sicurezza.\n4. Creala: Ichor mostra prima il costo, poi la segue finché la macchina compare in Omni. Assegnala al cluster.</string>
     <string name="scaleway_add_key">Aggiungi una chiave API Scaleway</string>
     <string name="scaleway_remove">Rimuovi questa chiave</string>
     <string name="scaleway_key_warning">Il segreto di una chiave API può fare ciò che la sua policy IAM consente finché non viene revocata. Resta sigillato su questo dispositivo e non è nei backup.</string>
@@ -6810,6 +6810,16 @@
     <string name="scaleway_confirm_title">Creare %1$s su Scaleway?</string>
     <string name="scaleway_confirm_body">Questo crea un\'istanza a pagamento (%1$s in %2$s) e un volume dati. I suoi dati utente vanno a Scaleway con i segreti del cluster o il token di join di Omni. Un\'esecuzione fallita elimina l\'istanza e i suoi volumi.</string>
     <string name="scaleway_stop_body">%1$s viene eliminato su Scaleway con i suoi volumi. Un control plane che ha già risposto viene mantenuto: prima va rimosso il suo membro etcd.</string>
+    <string name="scaleway_image_missing">Ancora nessuna immagine Talos per %1$s in questa zona: Ichor può crearne una dall\'immagine di questo cluster.</string>
+    <string name="scaleway_image_intro">Ichor avvia un\'istanza Ubuntu usa e getta con un volume Block Storage vuoto e vi scrive l\'immagine Talos di questo cluster. Poi fa uno snapshot del volume, crea un\'immagine dallo snapshot ed elimina l\'istanza, i suoi volumi e il suo IP. L\'immagine e il suo snapshot restano. Nulla del cluster viene toccato. Ci vogliono circa dieci minuti.</string>
+    <string name="scaleway_image_place">L\'immagine va nel progetto della chiave, nella zona %1$s.</string>
+    <string name="scaleway_image_cost">Circa %1$d minuti di %2$s (%3$s/h), poi Scaleway fattura lo snapshot da %4$d GB per GB al mese finché non lo elimini, tasse escluse</string>
+    <string name="scaleway_image_cost_unknown">Circa %1$d minuti di %2$s, poi Scaleway fattura lo snapshot da %3$d GB per GB al mese finché non lo elimini. Prezzo non disponibile: vedi il listino di Scaleway.</string>
+    <string name="scaleway_phase_helper">Avviare l\'istanza ausiliaria</string>
+    <string name="scaleway_phase_image">Creare l\'immagine dallo snapshot</string>
+    <string name="scaleway_phase_cleanup">Eliminare l\'istanza ausiliaria, i suoi volumi e il suo IP</string>
+    <string name="scaleway_image_stop_hint">L\'arresto elimina l\'istanza ausiliaria con i suoi volumi e il suo IP.</string>
+    <string name="scaleway_image_stop_body">L\'esecuzione si ferma. L\'istanza ausiliaria, fatturata finché non viene eliminata, viene eliminata con i suoi volumi e il suo IP, e anche uno snapshot o un\'immagine incompleti.</string>
     <string name="scaleway_network_guided">Crea un gruppo di sicurezza per i nodi (consigliato)</string>
     <string name="scaleway_network_created">Gruppo di sicurezza %1$s creato.</string>
     <string name="scaleway_network_rule_member">Tutto il traffico da %1$s (%2$s)</string>

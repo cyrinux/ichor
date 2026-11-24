@@ -30,10 +30,10 @@ Part of the [Ichor documentation](../README.md#documentation).
   makes the secrets for it, stores the talosconfig, creates the server with the config as its
   user data and bootstraps it. Workers then come from Add a node → Hetzner. See [Safety](safety.md).
 - **Add a node at a cloud provider:** create the server for a new Talos or Omni node at Hetzner
-  Cloud, OVHcloud, AWS EC2, Azure or Google Cloud Compute Engine from the phone, with the price
-  shown first and the host name typed to confirm, then follow it until it joins (or appears in
-  Omni). The Talos image comes from the phone too: a Hetzner snapshot, an AWS AMI, an Azure
-  managed image or a Compute Engine image of the cluster's own image, made by a throwaway server
+  Cloud, OVHcloud, AWS EC2, Azure, Google Cloud Compute Engine or Scaleway from the phone, with
+  the price shown first and the host name typed to confirm, then follow it until it joins (or
+  appears in Omni). The Talos image comes from the phone too: a Hetzner snapshot, an AWS AMI, an
+  Azure managed image, a Compute Engine image or a Scaleway image of the cluster's own image, made by a throwaway server
   that is deleted afterwards, with its cost shown first. See [Kubernetes](kubernetes.md) and [Safety](safety.md).
 - **Kubernetes:** list Deployments, StatefulSets and DaemonSets with their rollout state and
   restart one with a rolling update (`kubectl rollout restart`), then follow it live with its

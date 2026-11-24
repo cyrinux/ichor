@@ -447,7 +447,7 @@ func (c *scwClient) options(ctx context.Context) (scwOptions, error) {
 	}
 
 	if !slices.ContainsFunc(options.Images, func(i scwImage) bool { return i.Talos }) {
-		options.Warnings = append(options.Warnings, "This project holds no Talos image in "+c.zone+": upload one once per the Talos guide; making one from the phone is the next step")
+		options.Warnings = append(options.Warnings, "This project holds no Talos image in "+c.zone+": make one from the phone (Make a Talos image), or upload one once per the Talos guide")
 	}
 
 	return options, nil
