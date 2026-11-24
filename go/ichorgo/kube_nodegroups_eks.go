@@ -39,6 +39,9 @@ type nodeGroupsReport struct {
 	Error     string             `json:"error"`
 	Forbidden string             `json:"forbidden"`
 	Groups    []managedNodeGroup `json:"groups"`
+	// ClusterVersion is the control plane's Kubernetes version ("1.34"), "" when it could
+	// not be read.
+	ClusterVersion string `json:"clusterVersion"`
 }
 
 // managedNodeGroup is one pool as the provider describes it. Nodes is how many of the
@@ -59,6 +62,8 @@ type managedNodeGroup struct {
 	AtMax          bool             `json:"atMax"`
 	Issues         []nodeGroupIssue `json:"issues"`
 	Updating       bool             `json:"updating"`
+	// Behind is true when Version is a minor below the control plane's.
+	Behind bool `json:"behind"`
 	// Created is unix ms, 0 when unknown.
 	Created int64 `json:"created"`
 }
@@ -137,6 +142,11 @@ func readNodeGroups(ctx context.Context, k *kubeClient) (nodeGroupsReport, error
 		report.Error = forbidden + " is not allowed for this role"
 	case err != nil:
 		report.Error = err.Error()
+	}
+
+	if len(report.Groups) > 0 {
+		clusterVersion, _ := eksClusterVersion(ctx, m, creds) //nolint:errcheck // a bonus, see withClusterVersion
+		report = withClusterVersion(report, clusterVersion)
 	}
 
 	// The node counts are a bonus: a role that may not list nodes still sees the groups.
@@ -333,7 +343,7 @@ func nodeGroupRow(g eksNodegroup, name string) managedNodeGroup {
 
 // demoNodeGroupsFor is the demo's node groups: on the Kubernetes demo (an EKS cluster) the
 // "system" group its first nodes carry and a "gpu" group stuck at its maximum because its
-// instances do not launch; none on the Talos demo.
+// instances do not launch, one minor behind the control plane; none on the Talos demo.
 func demoNodeGroupsFor(target kubeTarget) func() nodeGroupsReport {
 	return func() nodeGroupsReport {
 		if !isKubeconfig(target.config) {
@@ -356,12 +366,12 @@ func demoNodeGroups(now time.Time) nodeGroupsReport {
 	}
 
 	return nodeGroupsReport{
-		Provider: nodeGroupsProviderEKS, Installed: true, Region: "eu-west-1", Cluster: "ichor-demo",
+		Provider: nodeGroupsProviderEKS, Installed: true, Region: "eu-west-1", Cluster: "ichor-demo", ClusterVersion: "1.34",
 		Groups: []managedNodeGroup{
 			{
-				Name: "gpu", Status: "DEGRADED", Desired: 2, Min: 0, Max: 2, Version: "1.34",
-				ReleaseVersion: "1.34.1-20251016", AMIType: "AL2023_x86_64_NVIDIA", CapacityType: "ON_DEMAND",
-				InstanceTypes: []string{"g6.xlarge"}, DiskSize: 100, Nodes: 0, AtMax: true,
+				Name: "gpu", Status: "DEGRADED", Desired: 2, Min: 0, Max: 2, Version: "1.33",
+				ReleaseVersion: "1.33.5-20251016", AMIType: "AL2023_x86_64_NVIDIA", CapacityType: "ON_DEMAND",
+				InstanceTypes: []string{"g6.xlarge"}, DiskSize: 100, Nodes: 0, AtMax: true, Behind: true,
 				Issues: []nodeGroupIssue{{
 					Code:        "AsgInstanceLaunchFailures",
 					Message:     "Could not launch On-Demand Instances. InsufficientInstanceCapacity - We currently do not have sufficient g6.xlarge capacity in the Availability Zone you requested.",

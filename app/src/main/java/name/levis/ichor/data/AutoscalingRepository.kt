@@ -58,6 +58,19 @@ class AutoscalingRepository(private val configs: ConfigRepository, private val k
         )
     }
 
+    /**
+     * Upgrades the EKS managed node group to the control plane's [version], or to the latest
+     * node image of its own when [version] is empty; [force] ignores pod disruption budgets.
+     * The update AWS starts for it.
+     */
+    suspend fun nodeGroupUpgrade(group: String, version: String, force: Boolean): NodeGroupUpdate = withContext(Dispatchers.IO) {
+        val target = kubeServers.targetFor(configs.forCall())
+        TalosJson.decodeFromString(
+            NodeGroupUpdate.serializer(),
+            Ichorgo.kubeNodeGroupUpgrade(target.yaml, target.context, target.server, group, version, force),
+        )
+    }
+
     /** The update [id] of [group], as AWS reports it now. */
     suspend fun nodeGroupUpdate(group: String, id: String): NodeGroupUpdate = withContext(Dispatchers.IO) {
         val target = kubeServers.targetFor(configs.forCall())

@@ -37,6 +37,8 @@ final class ContractTests: XCTestCase {
             XCTAssertEqual($0.groups.map(\.name), ["gpu", "system"])
             XCTAssertTrue($0.groups[0].atMax)
             XCTAssertEqual($0.groups[0].issues.first?.code, "AsgInstanceLaunchFailures")
+            XCTAssertEqual($0.clusterVersion, "1.34")
+            XCTAssertEqual($0.groups.map(\.behind), [true, false])
         },
         "kube-nodegroup-update": ContractTests.row(NodeGroupUpdate.self) {
             XCTAssertEqual($0.status, "Failed")

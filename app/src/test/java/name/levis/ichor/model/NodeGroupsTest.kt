@@ -78,4 +78,40 @@ class NodeGroupsTest {
         assertFalse(ManagedNodeGroupRow(name = "c", status = "UPDATING", updating = true).canChangeSize)
         assertFalse(ManagedNodeGroupRow(name = "d", status = "CREATING").canChangeSize)
     }
+
+    @Test
+    fun clusterVersionAndBehindDecodeWithDefaults() {
+        val old = TalosJson.decodeFromString(NodeGroupsReport.serializer(), """{"groups":[{"name":"a"}]}""")
+        assertEquals("", old.clusterVersion)
+        assertFalse(old.groups.single().behind)
+        val report = TalosJson.decodeFromString(
+            NodeGroupsReport.serializer(),
+            """{"clusterVersion":"1.34","groups":[{"name":"gpu","version":"1.33","behind":true}]}""",
+        )
+        assertEquals("1.34", report.clusterVersion)
+        assertTrue(report.groups.single().behind)
+    }
+
+    @Test
+    fun upgradeChoices() {
+        val behind = ManagedNodeGroupRow(name = "a", status = NODE_GROUP_ACTIVE, version = "1.33", behind = true)
+        assertEquals(listOf(NodeGroupUpgradeChoice.Kubernetes("1.34"), NodeGroupUpgradeChoice.LatestImage), behind.upgradeChoices("1.34"))
+        assertEquals(listOf("1.34", ""), behind.upgradeChoices("1.34").map { it.version })
+        // The control plane's version unknown: only the node image.
+        assertEquals(listOf(NodeGroupUpgradeChoice.LatestImage), behind.upgradeChoices(""))
+        val current = ManagedNodeGroupRow(name = "b", status = NODE_GROUP_ACTIVE, version = "1.34")
+        assertEquals(listOf(NodeGroupUpgradeChoice.LatestImage), current.upgradeChoices("1.34"))
+        val custom = ManagedNodeGroupRow(name = "c", status = NODE_GROUP_ACTIVE, amiType = NODE_GROUP_AMI_CUSTOM, behind = true)
+        assertEquals(listOf(NodeGroupUpgradeChoice.Kubernetes("1.34")), custom.upgradeChoices("1.34"))
+        assertTrue(groups.groups[1].copy(behind = true).upgradeChoices("1.34").isEmpty())
+    }
+
+    @Test
+    fun aPodEvictionFailureIsNamed() {
+        val eviction = NodeGroupIssue(NODE_GROUP_POD_EVICTION_FAILURE, "Reached max retries", listOf("ip-1"))
+        val failed = NodeGroupUpdate(id = "v", status = "Failed", type = NODE_GROUP_UPDATE_VERSION, errors = listOf(eviction))
+        assertTrue(failed.versionUpdate)
+        assertEquals(listOf("ip-1"), failed.podEvictionFailure?.resourceIds)
+        assertEquals(null, NodeGroupUpdate(id = "u", status = "Failed", type = "ConfigUpdate").podEvictionFailure)
+    }
 }

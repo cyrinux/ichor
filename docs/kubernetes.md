@@ -656,7 +656,14 @@ limit?" in two taps:
   not ACTIVE is listed under Needs attention. Read with the cluster's own AWS sign-in
   ([IAM actions](clusters.md)); not shown on other clusters. **Change size…** on a group sets its
   desired, minimum and maximum size after its name is typed, then follows the update AWS runs
-  until it ends.
+  until it ends. A group one minor behind the control plane carries a "behind the control
+  plane" badge; **Upgrade…** on its sheet moves it to the control plane's Kubernetes version, or
+  to the latest node image (AMI release) of its own version. AWS replaces every node of the
+  group one at a time and evicts its pods; **Force** (off by default) deletes the pods a
+  disruption budget protects when they cannot be evicted. The group's name is typed to confirm,
+  and the update is followed like a size change: a pod AWS could not evict is named. A group with
+  a custom AMI gets no node image choice (its image changes through its launch template), and a
+  group that is updating gets none.
 
 A group the cluster does not run (KEDA, VPA, Karpenter) collapses to one "not installed" line;
 credentials that cannot read one group show the reason in that group's header only.

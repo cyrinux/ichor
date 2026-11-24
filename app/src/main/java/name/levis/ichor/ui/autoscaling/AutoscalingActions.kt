@@ -53,7 +53,7 @@ import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.uiText
 
 /** What an autoscaling action did. */
-enum class AutoscalingAction { PAUSE, HOLD, RESUME, BOUNDS, GROUP_SIZE }
+enum class AutoscalingAction { PAUSE, HOLD, RESUME, BOUNDS, GROUP_SIZE, GROUP_UPGRADE }
 
 /** How often an open node group sheet reads the update AWS runs. */
 private const val NODE_GROUP_POLL_MS = 10_000L
@@ -78,7 +78,7 @@ class AutoscalingActions(
 
     private val _groupUpdates = MutableStateFlow<Map<String, NodeGroupUpdate>>(emptyMap())
 
-    /** The last update each node group's size change started, by group name, as last read. */
+    /** The last update each node group's size change or upgrade started, by group name, as last read. */
     val groupUpdates: StateFlow<Map<String, NodeGroupUpdate>> = _groupUpdates.asStateFlow()
 
     /** [replicas] ≥ 0 pauses at that count; [SCALED_OBJECT_HOLD] holds, [SCALED_OBJECT_RESUME] resumes. */
@@ -114,6 +114,17 @@ class AutoscalingActions(
         ) { onChanged() }
     }
 
+    /** Upgrades the node group ([version] empty: the latest node image of its own); followed like a size change. Never retried. */
+    fun upgradeNodeGroup(row: ManagedNodeGroupRow, version: String, force: Boolean) {
+        actions.launch(
+            row.actionKey,
+            {
+                autoscaling.nodeGroupUpgrade(row.name, version, force).also { u -> _groupUpdates.update { it + (row.name to u) } }
+            },
+            { AutoscalingActionResult(row.name, AutoscalingAction.GROUP_UPGRADE, it.exceptionOrNull()?.uiText()) },
+        ) { onChanged() }
+    }
+
     /**
      * Reads [group]'s update every 10 s while it is in progress and the caller (the open sheet)
      * runs; its end reads the report again. A failed read ends it with the reason.
@@ -145,6 +156,7 @@ fun AutoscalingActionToasts(results: Flow<AutoscalingActionResult>) = ResultToas
                 AutoscalingAction.RESUME -> R.string.autoscaling_resume_done
                 AutoscalingAction.BOUNDS -> R.string.autoscaling_bounds_done
                 AutoscalingAction.GROUP_SIZE -> R.string.autoscaling_nodegroup_scale_started
+                AutoscalingAction.GROUP_UPGRADE -> R.string.autoscaling_nodegroup_upgrade_started
             },
             r.name,
         )

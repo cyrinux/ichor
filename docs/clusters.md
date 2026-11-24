@@ -292,7 +292,10 @@ read with the cluster's own sign-in (access keys or IAM Identity Center, then th
 top of what adding it asked for. A role without them shows which action is missing; the rest
 of the screen is unaffected. Changing a group's size from the phone also needs
 `eks:UpdateNodegroupConfig` and `eks:DescribeUpdate`, only for that: a role without them still
-reads the groups, and the size change says which action is missing.
+reads the groups, and the size change says which action is missing. Upgrading a group needs
+`eks:UpdateNodegroupVersion` and `eks:DescribeUpdate`, plus `eks:DescribeCluster` for the
+control plane's version (without it the groups are listed, none is marked behind, and only the
+latest node image is offered).
 
 | Kubeconfig user | What the app does |
 |---|---|

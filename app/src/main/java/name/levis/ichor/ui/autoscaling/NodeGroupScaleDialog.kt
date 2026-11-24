@@ -22,6 +22,8 @@ import name.levis.ichor.model.NodeGroupSizeProblem
 import name.levis.ichor.model.NodeGroupUpdate
 import name.levis.ichor.model.canChangeSize
 import name.levis.ichor.model.nodeGroupSizeProblem
+import name.levis.ichor.model.podEvictionFailure
+import name.levis.ichor.model.versionUpdate
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.design.IchorAlertDialog
@@ -31,50 +33,33 @@ import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
- * A node group's size change: the update it started ([update], null before one), whether one
- * is being sent, how to send one, and [onFollow], which reads the update while it runs (the
- * sheet runs it while open).
+ * A node group's size change and upgrade: the update the last one started ([update], null
+ * before one), whether one is being sent, how to send one, and [onFollow], which reads the
+ * update while it runs (the sheet runs it while open). [clusterVersion] is the control plane's.
  */
 data class NodeGroupScaling(
     val update: NodeGroupUpdate?,
     val busy: Boolean,
     val onScale: (desired: Int, min: Int, max: Int) -> Unit,
     val onFollow: suspend () -> Unit,
+    val clusterVersion: String = "",
+    val onUpgrade: (version: String, force: Boolean) -> Unit = { _, _ -> },
 )
 
 /**
- * "Change size…" and the update it started: in progress (read every 10 s while the sheet is
- * open), done, or why it failed. AWS' refusal is the only gate: no Kubernetes verb is involved.
+ * "Change size…", then the typed name. AWS' refusal is the only gate: no Kubernetes verb is
+ * involved. The update it starts is shown by [NodeGroupUpdateStatus].
  */
 @Composable
 fun NodeGroupScaleSection(row: ManagedNodeGroupRow, scaling: NodeGroupScaling) {
     var editing by remember { mutableStateOf(false) }
     var confirming by remember { mutableStateOf<Triple<Int, Int, Int>?>(null) }
-    val update = scaling.update
 
     SectionTitle(stringResource(R.string.autoscaling_nodegroup_size_section))
-    IchorOutlinedButton(onClick = { editing = true }, enabled = row.canChangeSize && !scaling.busy && update?.inProgress != true) {
+    IchorOutlinedButton(onClick = { editing = true }, enabled = row.canChangeSize && !scaling.busy && scaling.update?.inProgress != true) {
         Text(stringResource(R.string.autoscaling_nodegroup_change_size))
     }
     if (!row.canChangeSize) MutedText(stringResource(R.string.autoscaling_nodegroup_size_updating))
-
-    update?.let { u ->
-        // Keyed on the update and its status: a new one restarts the read, its end stops it.
-        LaunchedEffect(u.id, u.inProgress) { if (u.inProgress) scaling.onFollow() }
-        when {
-            u.inProgress -> MutedText(stringResource(R.string.autoscaling_nodegroup_update_running))
-            u.successful -> MutedText(stringResource(R.string.autoscaling_nodegroup_update_done))
-            else -> Text(
-                stringResource(
-                    if (u.status == NODE_GROUP_UPDATE_UNREADABLE) R.string.autoscaling_nodegroup_update_unreadable
-                    else R.string.autoscaling_nodegroup_update_failed,
-                    u.failure.orEmpty(),
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = LocalStatusColors.current.bad,
-            )
-        }
-    }
 
     if (editing) {
         NodeGroupScaleDialog(
@@ -139,6 +124,41 @@ private fun NodeGroupScaleDialog(row: ManagedNodeGroupRow, onNext: (Int, Int, In
         },
         dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
+}
+
+/**
+ * The update a size change or an upgrade started: in progress (read every 10 s while the sheet
+ * is open), done, or why it failed; a pod AWS could not evict is named.
+ */
+@Composable
+fun NodeGroupUpdateStatus(scaling: NodeGroupScaling) {
+    val u = scaling.update ?: return
+    // Keyed on the update and its status: a new one restarts the read, its end stops it.
+    LaunchedEffect(u.id, u.inProgress) { if (u.inProgress) scaling.onFollow() }
+    val eviction = u.podEvictionFailure
+    when {
+        u.inProgress -> MutedText(
+            stringResource(if (u.versionUpdate) R.string.autoscaling_nodegroup_upgrade_running else R.string.autoscaling_nodegroup_update_running),
+        )
+        u.successful -> MutedText(
+            stringResource(if (u.versionUpdate) R.string.autoscaling_nodegroup_upgrade_done else R.string.autoscaling_nodegroup_update_done),
+        )
+        else -> Text(
+            when {
+                eviction != null -> stringResource(
+                    R.string.autoscaling_nodegroup_upgrade_eviction_failed,
+                    (eviction.resourceIds + eviction.message).filter { it.isNotEmpty() }.joinToString(": "),
+                )
+                else -> stringResource(
+                    if (u.status == NODE_GROUP_UPDATE_UNREADABLE) R.string.autoscaling_nodegroup_update_unreadable
+                    else R.string.autoscaling_nodegroup_update_failed,
+                    u.failure.orEmpty(),
+                )
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = LocalStatusColors.current.bad,
+        )
+    }
 }
 
 private fun NodeGroupSizeProblem.message(): Int = when (this) {

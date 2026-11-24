@@ -76,6 +76,8 @@ class ContractTest {
             assertEquals(listOf("gpu", "system"), it.groups.map { g -> g.name })
             assertTrue(it.groups[0].atMax)
             assertEquals("AsgInstanceLaunchFailures", it.groups[0].issues.first().code)
+            assertEquals("1.34", it.clusterVersion)
+            assertEquals(listOf(true, false), it.groups.map { g -> g.behind })
         },
         "kube-nodegroup-update" to Row(NodeGroupUpdate.serializer()) {
             assertEquals("Failed", it.status)

@@ -49,6 +49,16 @@ extension TalosClient {
         }
     }
 
+    /// Upgrades the EKS managed node group to the control plane's `version`, or to the latest
+    /// node image of its own when `version` is empty; `force` ignores pod disruption budgets.
+    /// The update AWS starts for it.
+    func nodeGroupUpgrade(group: String, version: String, force: Bool) async throws -> NodeGroupUpdate {
+        try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeNodeGroupUpgrade(config, context, kubeServer, group, version, force, $0)
+        }
+    }
+
     /// The update `id` of `group`, as AWS reports it now.
     func nodeGroupUpdate(group: String, id: String) async throws -> NodeGroupUpdate {
         try await Self.json {

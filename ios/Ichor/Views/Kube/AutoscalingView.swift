@@ -17,7 +17,7 @@ struct AutoscalingView: View {
         case scaledJob(ScaledJobRow)
         case vpa(VpaRow)
         case pool(NodePoolRow, claims: [NodeClaimRow])
-        case nodeGroup(ManagedNodeGroupRow)
+        case nodeGroup(ManagedNodeGroupRow, clusterVersion: String)
 
         var id: String {
             switch self {
@@ -26,7 +26,7 @@ struct AutoscalingView: View {
             case .scaledJob(let row): "sj/" + row.id
             case .vpa(let row): "vpa/" + row.id
             case .pool(let row, _): "pool/" + row.id
-            case .nodeGroup(let row): "ng/" + row.id
+            case .nodeGroup(let row, _): "ng/" + row.id
             }
         }
     }
@@ -129,7 +129,7 @@ struct AutoscalingView: View {
             }
             ForEach(report.groups) { row in
                 Button {
-                    selected = .nodeGroup(row)
+                    selected = .nodeGroup(row, clusterVersion: report.clusterVersion)
                 } label: {
                     NodeGroupRowView(row: row)
                 }
@@ -180,7 +180,9 @@ struct AutoscalingView: View {
                 selected = .pool(pool, claims: claims[pool.name] ?? [])
             }
         case .nodeGroups:
-            if let row = view.nodeGroups.groups.first(where: { $0.id == problem.key }) { selected = .nodeGroup(row) }
+            if let row = view.nodeGroups.groups.first(where: { $0.id == problem.key }) {
+                selected = .nodeGroup(row, clusterVersion: view.nodeGroups.clusterVersion)
+            }
         case .unknown:
             break
         }

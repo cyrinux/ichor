@@ -13,7 +13,8 @@ enum NodeGroupText {
     static func disk(_ gib: Int) -> String { String(localized: "\(gib) GiB") }
 }
 
-/// Name, desired between its bounds, Kubernetes version, capacity type and the nodes it runs.
+/// Name, desired between its bounds, Kubernetes version, capacity type and the nodes it runs;
+/// a group a minor behind its control plane says so.
 struct NodeGroupRowView: View {
     let row: ManagedNodeGroupRow
 
@@ -34,6 +35,9 @@ struct NodeGroupRowView: View {
                 .joined(separator: "  ·  ")
             )
             .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            if row.behind {
+                Text("behind the control plane").font(.caption2.weight(.semibold)).foregroundStyle(Color.statusWarn)
+            }
             if let issue = row.issues.first {
                 Text(verbatim: issue.message).font(.caption).foregroundStyle(Color.statusBad).lineLimit(2)
             }
@@ -44,12 +48,16 @@ struct NodeGroupRowView: View {
 /// Every field of one managed node group, and AWS' health issues with the resources they name.
 struct NodeGroupDetailSheet: View {
     let row: ManagedNodeGroupRow
-    /// Reads the report again: after a size change starts and when its update ends.
+    /// The control plane's Kubernetes version: the upgrade a group behind it is offered.
+    var clusterVersion = ""
+    /// Reads the report again: after a size change or an upgrade starts and when its update ends.
     var onChanged: () async -> Void = {}
 
     @Environment(AppModel.self) private var model
     @State private var scaling = false
-    /// The update the last size change started, as last read; followed while the sheet is open.
+    @State private var upgrading = false
+    /// The update the last size change or upgrade started, as last read; followed while the
+    /// sheet is open.
     @State private var update: NodeGroupUpdate?
 
     var body: some View {
@@ -78,6 +86,14 @@ struct NodeGroupDetailSheet: View {
                 }
             }
             sizeSection
+            upgradeSection
+            if let update {
+                Section {
+                    updateRow(update)
+                        // On a row, not the Section: a List gives a Section's modifiers to each row.
+                        .task(id: update.id) { await follow() }
+                }
+            }
             Section("Health issues") {
                 if row.issues.isEmpty {
                     Text("none").foregroundStyle(.secondary)
@@ -98,7 +114,7 @@ struct NodeGroupDetailSheet: View {
         }
     }
 
-    /// "Change size…" and the update it started: in progress, done, or why it failed.
+    /// "Change size…"; the update it starts is shown below the upgrade.
     private var sizeSection: some View {
         Section("Size") {
             Button("Change size…") { scaling = true }
@@ -106,11 +122,6 @@ struct NodeGroupDetailSheet: View {
             if !row.canChangeSize {
                 Text("Only an active or degraded group can change its size: wait for this one to finish.")
                     .font(.footnote).foregroundStyle(.secondary)
-            }
-            if let update {
-                updateRow(update)
-                    // On a row, not the Section: a List gives a Section's modifiers to each row.
-                    .task(id: update.id) { await follow() }
             }
         }
         .sheet(isPresented: $scaling) {
@@ -121,22 +132,62 @@ struct NodeGroupDetailSheet: View {
         }
     }
 
+    /// "Upgrade…": the control plane's version or the latest node image; nothing while the
+    /// group updates, and no node image for a custom AMI.
+    private var upgradeSection: some View {
+        let choices = row.upgradeChoices(clusterVersion: clusterVersion)
+        return Section("Upgrade") {
+            Button("Upgrade…") { upgrading = true }
+                .disabled(choices.isEmpty || update?.inProgress == true)
+            if !row.canChangeSize {
+                Text("Only an active or degraded group can be upgraded: wait for this one to finish.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            } else if row.customAMI {
+                Text("This group runs a custom AMI: its image changes through its launch template, not from here.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+        }
+        .sheet(isPresented: $upgrading) {
+            NodeGroupUpgradeSheet(row: row, choices: choices) { started in
+                update = started
+                await onChanged()
+            }
+        }
+    }
+
     @ViewBuilder
     private func updateRow(_ update: NodeGroupUpdate) -> some View {
         if update.inProgress {
-            Label("Update in progress: AWS is changing the group's size.", systemImage: "arrow.triangle.2.circlepath")
-                .font(.footnote)
-        } else if update.successful {
-            Text("Update finished: the group has its new size.").font(.footnote).foregroundStyle(.secondary)
-        } else {
-            let failure = update.failure ?? ""
-            Text(
-                update.unreadable
-                    ? String(localized: "Could not follow the update: \(failure)")
-                    : String(localized: "The update did not finish: \(failure)")
+            Label(
+                update.versionUpdate
+                    ? "Update in progress: AWS is replacing the group's nodes."
+                    : "Update in progress: AWS is changing the group's size.",
+                systemImage: "arrow.triangle.2.circlepath"
             )
-            .font(.footnote).foregroundStyle(Color.statusBad)
+            .font(.footnote)
+        } else if update.successful {
+            Text(
+                update.versionUpdate
+                    ? "Update finished: the group's nodes have been replaced."
+                    : "Update finished: the group has its new size."
+            )
+            .font(.footnote).foregroundStyle(.secondary)
+        } else {
+            Text(Self.failureText(update)).font(.footnote).foregroundStyle(Color.statusBad)
         }
+    }
+
+    /// Why the update ended: the pod AWS could not evict, named, or AWS' own words.
+    private static func failureText(_ update: NodeGroupUpdate) -> String {
+        if let eviction = update.podEvictionFailure {
+            let named = (eviction.resourceIds + [eviction.message]).filter { !$0.isEmpty }.joined(separator: ": ")
+            return String(
+                localized: "A pod could not be evicted (\(named)). A disruption budget may block it: Force ignores budgets.")
+        }
+        let failure = update.failure ?? ""
+        return update.unreadable
+            ? String(localized: "Could not follow the update: \(failure)")
+            : String(localized: "The update did not finish: \(failure)")
     }
 
     /// Reads the update every 10 s while it is in progress and the sheet is open; its end reads

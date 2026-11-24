@@ -24,6 +24,8 @@ data class NodeGroupsReport(
     /** The AWS action the role may not call ("eks:ListNodegroups"), when that is the error. */
     val forbidden: String = "",
     val groups: List<ManagedNodeGroupRow> = emptyList(),
+    /** The control plane's Kubernetes version ("1.34"), empty when it could not be read. */
+    val clusterVersion: String = "",
 )
 
 /** One managed node group: its size against its bounds, version, capacity and AWS' health issues. */
@@ -47,6 +49,8 @@ data class ManagedNodeGroupRow(
     val updating: Boolean = false,
     /** Unix ms, 0 when unknown. */
     val created: Long = 0,
+    /** Its Kubernetes version is a minor below the control plane's. */
+    val behind: Boolean = false,
 ) {
     val key: String get() = name
 
@@ -118,3 +122,47 @@ fun nodeGroupSizeProblem(desired: Int, min: Int, max: Int): NodeGroupSizeProblem
 /** Active or degraded: a group already updating (or being created or deleted) may not change its size. */
 val ManagedNodeGroupRow.canChangeSize: Boolean
     get() = !updating && (status == NODE_GROUP_ACTIVE || status == NODE_GROUP_DEGRADED)
+
+// Mirrors go/ichorgo/kube_nodegroups_eks_upgrade.go: a group upgraded from the phone
+// (UpdateNodegroupVersion), followed like a size change.
+
+/** AWS' type of an update that replaces the group's nodes (a size change is a ConfigUpdate). */
+const val NODE_GROUP_UPDATE_VERSION = "VersionUpdate"
+
+/** The update error of a pod AWS could not evict while it replaced a node. */
+const val NODE_GROUP_POD_EVICTION_FAILURE = "PodEvictionFailure"
+
+/** The AMI type of a group with its own image: it changes through its launch template, not here. */
+const val NODE_GROUP_AMI_CUSTOM = "CUSTOM"
+
+/** What an upgrade does: the control plane's Kubernetes [version], or the latest node image of the group's own (version ""). */
+sealed interface NodeGroupUpgradeChoice {
+    val version: String
+
+    data class Kubernetes(override val version: String) : NodeGroupUpgradeChoice
+    data object LatestImage : NodeGroupUpgradeChoice {
+        override val version: String = ""
+    }
+}
+
+/** A custom AMI: no "latest node image" for it. */
+val ManagedNodeGroupRow.customAmi: Boolean get() = amiType == NODE_GROUP_AMI_CUSTOM
+
+/**
+ * The upgrades the group's sheet offers: the control plane's version when the group is behind it,
+ * and the latest node image unless the AMI is custom; none while the group may not change.
+ */
+fun ManagedNodeGroupRow.upgradeChoices(clusterVersion: String): List<NodeGroupUpgradeChoice> {
+    if (!canChangeSize) return emptyList()
+    return listOfNotNull(
+        NodeGroupUpgradeChoice.Kubernetes(clusterVersion).takeIf { behind && clusterVersion.isNotEmpty() },
+        NodeGroupUpgradeChoice.LatestImage.takeIf { !customAmi },
+    )
+}
+
+/** The pod eviction AWS gave up on, when that is why the update failed. */
+val NodeGroupUpdate.podEvictionFailure: NodeGroupIssue?
+    get() = errors.firstOrNull { it.code == NODE_GROUP_POD_EVICTION_FAILURE }
+
+/** The update replaces the group's nodes (an upgrade), rather than changing its size. */
+val NodeGroupUpdate.versionUpdate: Boolean get() = type == NODE_GROUP_UPDATE_VERSION
