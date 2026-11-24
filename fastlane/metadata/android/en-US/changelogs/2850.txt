@@ -1,0 +1,2 @@
+• GKE node pools on the Autoscaling screen, read with the cluster's own Google sign-in
+• Upgrade an EKS control plane one minor from the phone
