@@ -46,6 +46,7 @@ import name.levis.ichor.model.AUTOSCALING_GROUP_NODE_GROUPS
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.ManagedNodeGroupRow
 import name.levis.ichor.model.NodeClaimRow
+import name.levis.ichor.model.NodeGroupUpdate
 import name.levis.ichor.model.NodePoolRow
 import name.levis.ichor.model.ScaledJobRow
 import name.levis.ichor.model.ScaledObjectRow
@@ -91,6 +92,7 @@ private sealed interface Open {
     data class Vpa(val row: VpaRow) : Open
     data class Pool(val row: NodePoolRow, val claims: List<NodeClaimRow>) : Open
     data class NodeGroup(val row: ManagedNodeGroupRow) : Open
+    data object ControlPlane : Open
 }
 
 /**
@@ -111,6 +113,7 @@ fun AutoscalingScreen(
     val loaded = (state as? UiState.Loaded)?.data
     val busy by vm.actions.busy.collectAsStateWithLifecycle()
     val groupUpdates by vm.actions.groupUpdates.collectAsStateWithLifecycle()
+    val controlPlaneUpdate by vm.actions.controlPlaneUpdate.collectAsStateWithLifecycle()
     AutoscalingActionToasts(vm.actions.results)
 
     loaded?.let { report ->
@@ -154,6 +157,19 @@ fun AutoscalingScreen(
                     ),
                 )
             }
+            Open.ControlPlane -> {
+                val plan = report.eksUpgrade
+                EksUpgradeSheet(
+                    EksUpgradeControl(
+                        plan = plan,
+                        update = controlPlaneUpdate,
+                        busy = EKS_CONTROL_PLANE_KEY in busy,
+                        onUpgrade = { version -> vm.actions.upgradeControlPlane(plan.cluster, version) },
+                        onFollow = { vm.actions.followControlPlaneUpdate(plan.updating) },
+                    ),
+                    onDismiss = { open = null },
+                )
+            }
             null -> {}
         }
     }
@@ -168,7 +184,10 @@ fun AutoscalingScreen(
         },
     ) { padding ->
         Loaded(state, vm::refresh, Modifier.pageContent(padding)) { report ->
-            AutoscalingList(report, namespace, query, onNamespace = { namespace = it }, onQuery = { query = it }, onOpen = { open = it })
+            AutoscalingList(
+                report, namespace, query, controlPlaneUpdate,
+                onNamespace = { namespace = it }, onQuery = { query = it }, onOpen = { open = it },
+            )
         }
     }
 }
@@ -178,6 +197,7 @@ private fun AutoscalingList(
     report: AutoscalingReport,
     namespace: String?,
     query: String,
+    controlPlaneUpdate: NodeGroupUpdate?,
     onNamespace: (String?) -> Unit,
     onQuery: (String) -> Unit,
     onOpen: (Open?) -> Unit,
@@ -269,8 +289,14 @@ private fun AutoscalingList(
             item(key = "h-nodegroups", contentType = "cardGroupTitle") {
                 GroupHeader(stringResource(R.string.autoscaling_section_nodegroups), true, nodeGroupsError(view.nodeGroups), false)
             }
-            cardRows(view.nodeGroups.groups, key = { "ng-" + it.key }) { row ->
-                NodeGroupRowItem(row, onClick = { openNodeGroup(row) })
+            // One card: the control plane (null) first, then the groups.
+            val rows: List<ManagedNodeGroupRow?> = (if (view.eksUpgrade.installed) listOf(null) else emptyList()) + view.nodeGroups.groups
+            cardRows(rows, key = { it?.let { row -> "ng-" + row.key } ?: "eks-control-plane" }) { row ->
+                if (row == null) {
+                    EksControlPlaneRow(view.eksUpgrade, controlPlaneUpdate, onClick = { onOpen(Open.ControlPlane) })
+                } else {
+                    NodeGroupRowItem(row, onClick = { openNodeGroup(row) })
+                }
             }
         }
 

@@ -1,6 +1,250 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Kubernetes %@ · upgrade: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · upgrade: %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · mise à jour : %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · actualización: %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · Upgrade: %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · aggiornamento: %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · оновлення: %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · アップグレード: %2$@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · atualização: %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · обновление: %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · 升级：%2$@" } }
+      }
+    },
+    "Kubernetes %@ · upgrade to %@ available" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · upgrade to %2$@ available" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · mise à jour vers %2$@ disponible" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · actualización a %2$@ disponible" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · Upgrade auf %2$@ verfügbar" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · aggiornamento a %2$@ disponibile" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · доступне оновлення до %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · %2$@ へのアップグレードが利用可能" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · atualização para %2$@ disponível" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · доступно обновление до %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · 可升级到 %2$@" } }
+      }
+    },
+    "Kubernetes %@ · %@ next (availability not checked)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · %2$@ next (availability not checked)" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · %2$@ ensuite (disponibilité non vérifiée)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · después %2$@ (disponibilidad no comprobada)" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · als Nächstes %2$@ (Verfügbarkeit nicht geprüft)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · poi %2$@ (disponibilità non verificata)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · далі %2$@ (доступність не перевірено)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · 次は %2$@（提供状況は未確認）" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · depois %2$@ (disponibilidade não verificada)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · далее %2$@ (доступность не проверена)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %1$@ · 下一版本 %2$@（未检查可用性）" } }
+      }
+    },
+    "Kubernetes %@ · up to date" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@ · à jour" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@ · actualizado" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@ · aktuell" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@ · aggiornato" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@ · актуальний" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@ · 最新" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@ · atualizado" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@ · актуально" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Kubernetes %@ · 最新" } }
+      }
+    },
+    "upgrading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "mise à jour" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "actualizando" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Upgrade läuft" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "aggiornamento" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "оновлюється" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アップグレード中" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "atualizando" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "обновляется" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "升级中" } }
+      }
+    },
+    "upgrade available" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "mise à jour disponible" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "actualización disponible" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Upgrade verfügbar" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "aggiornamento disponibile" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "доступне оновлення" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アップグレード可能" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "atualização disponível" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "доступно обновление" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可升级" } }
+      }
+    },
+    "Platform version" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Version de plateforme" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Versión de plataforma" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Plattformversion" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Versione della piattaforma" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Версія платформи" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プラットフォームバージョン" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Versão da plataforma" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Версия платформы" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "平台版本" } }
+      }
+    },
+    "Next version" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Version suivante" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Siguiente versión" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nächste Version" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Versione successiva" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Наступна версія" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "次のバージョン" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Próxima versão" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Следующая версия" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下一版本" } }
+      }
+    },
+    "End of standard support" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Fin du support standard" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Fin del soporte estándar" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ende des Standard-Supports" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Fine del supporto standard" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Кінець стандартної підтримки" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "標準サポート終了日" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Fim do suporte padrão" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Конец стандартной поддержки" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "标准支持结束" } }
+      }
+    },
+    "Blockers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Blocages" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Bloqueos" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Blocker" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Blocchi" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Блокери" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ブロッカー" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Bloqueios" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Блокеры" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "阻碍因素" } }
+      }
+    },
+    "This takes 20 to 40 minutes and cannot be undone or cancelled." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cela prend 20 à 40 minutes et ne peut être ni annulé ni défait." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tarda de 20 a 40 minutos y no se puede deshacer ni cancelar." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das dauert 20 bis 40 Minuten und kann weder rückgängig gemacht noch abgebrochen werden." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Richiede da 20 a 40 minuti e non può essere annullato né interrotto." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Це триває від 20 до 40 хвилин, і це не можна ні скасувати, ні відкотити." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "20〜40 分かかり、元に戻すことも中止することもできません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Leva de 20 a 40 minutos e não pode ser desfeito nem cancelado." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Это занимает от 20 до 40 минут, и это нельзя ни отменить, ни откатить." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此操作需要 20 到 40 分钟，且无法撤销或取消。" } }
+      }
+    },
+    "Then upgrade each node group to %@ from its sheet: %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Then upgrade each node group to %1$@ from its sheet: %2$@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mettez ensuite à jour chaque groupe de nœuds vers %1$@ depuis sa fiche : %2$@." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Después, actualiza cada grupo de nodos a %1$@ desde su ficha: %2$@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisiere danach jede Node-Gruppe über ihr Blatt auf %1$@: %2$@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Poi aggiorna ogni gruppo di nodi a %1$@ dalla sua scheda: %2$@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Потім оновіть кожну групу вузлів до %1$@ з її картки: %2$@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "その後、各ノードグループをそのシートから %1$@ にアップグレードしてください: %2$@。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Depois, atualize cada grupo de nós para %1$@ pela sua ficha: %2$@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Затем обновите каждую группу узлов до %1$@ из её карточки: %2$@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "然后从各节点组的详情页将其升级到 %1$@：%2$@。" } }
+      }
+    },
+    "Upgrade %@ to Kubernetes %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Upgrade %1$@ to Kubernetes %2$@?" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mettre à jour %1$@ vers Kubernetes %2$@ ?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Actualizar %1$@ a Kubernetes %2$@?" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ auf Kubernetes %2$@ aktualisieren?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiornare %1$@ a Kubernetes %2$@?" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оновити %1$@ до Kubernetes %2$@?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ を Kubernetes %2$@ にアップグレードしますか？" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualizar %1$@ para Kubernetes %2$@?" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновить %1$@ до Kubernetes %2$@?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将 %1$@ 升级到 Kubernetes %2$@？" } }
+      }
+    },
+    "The control plane goes from Kubernetes %@ to %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The control plane goes from Kubernetes %1$@ to %2$@." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le control plane passe de Kubernetes %1$@ à %2$@." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El plano de control pasa de Kubernetes %1$@ a %2$@." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Control Plane wechselt von Kubernetes %1$@ auf %2$@." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il control plane passa da Kubernetes %1$@ a %2$@." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Control plane переходить з Kubernetes %1$@ на %2$@." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "コントロールプレーンは Kubernetes %1$@ から %2$@ になります。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O control plane passa do Kubernetes %1$@ para %2$@." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Control plane переходит с Kubernetes %1$@ на %2$@." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "控制平面将从 Kubernetes %1$@ 升级到 %2$@。" } }
+      }
+    },
+    "%@ (availability not checked)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ (disponibilité non vérifiée)" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ (disponibilidad no comprobada)" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ (Verfügbarkeit nicht geprüft)" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ (disponibilità non verificata)" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ (доступність не перевірено)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@（提供状況は未確認）" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%@ (disponibilidade não verificada)" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%@ (доступность не проверена)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@（未检查可用性）" } }
+      }
+    },
+    "Upgrade in progress: AWS is upgrading the control plane. The app can be closed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mise à jour en cours : AWS met à jour le control plane. L'app peut être fermée." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualización en curso: AWS está actualizando el plano de control. Puedes cerrar la app." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Upgrade läuft: AWS aktualisiert die Control Plane. Die App kann geschlossen werden." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiornamento in corso: AWS sta aggiornando il control plane. L'app può essere chiusa." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оновлення триває: AWS оновлює control plane. Застосунок можна закрити." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アップグレード中: AWS がコントロールプレーンをアップグレードしています。アプリを閉じても構いません。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualização em andamento: a AWS está atualizando o control plane. O app pode ser fechado." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Идёт обновление: AWS обновляет control plane. Приложение можно закрыть." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "升级进行中：AWS 正在升级控制平面。可以关闭应用。" } }
+      }
+    },
+    "Upgrade finished: the control plane runs the new version." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mise à jour terminée : le control plane exécute la nouvelle version." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualización terminada: el plano de control ejecuta la nueva versión." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Upgrade abgeschlossen: Die Control Plane läuft mit der neuen Version." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiornamento terminato: il control plane esegue la nuova versione." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оновлення завершено: control plane працює на новій версії." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アップグレード完了: コントロールプレーンは新しいバージョンで動作しています。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualização concluída: o control plane executa a nova versão." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновление завершено: control plane работает на новой версии." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "升级完成：控制平面已运行新版本。" } }
+      }
+    },
     "behind the control plane" : {
       "extractionState" : "manual",
       "localizations" : {

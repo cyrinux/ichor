@@ -18,6 +18,7 @@ struct AutoscalingView: View {
         case vpa(VpaRow)
         case pool(NodePoolRow, claims: [NodeClaimRow])
         case nodeGroup(ManagedNodeGroupRow, clusterVersion: String)
+        case controlPlane(EksUpgradePlan)
 
         var id: String {
             switch self {
@@ -27,6 +28,7 @@ struct AutoscalingView: View {
             case .vpa(let row): "vpa/" + row.id
             case .pool(let row, _): "pool/" + row.id
             case .nodeGroup(let row, _): "ng/" + row.id
+            case .controlPlane: "eks/control-plane"
             }
         }
     }
@@ -99,7 +101,7 @@ struct AutoscalingView: View {
             }
             // Only on a cluster that signs in through EKS: elsewhere there is nothing to say.
             if view.nodeGroups.installed {
-                nodeGroupsSection(view.nodeGroups)
+                nodeGroupsSection(view.nodeGroups, plan: view.eksUpgrade)
             }
         }
         .overlay {
@@ -120,12 +122,20 @@ struct AutoscalingView: View {
             + view.nodeGroups.groups
     }
 
-    /// The EKS managed node groups, with the permission or AWS error line above them.
-    private func nodeGroupsSection(_ report: NodeGroupsReport) -> some View {
+    /// The EKS managed node groups, with the permission or AWS error line above them and the
+    /// control plane's row first.
+    private func nodeGroupsSection(_ report: NodeGroupsReport, plan: EksUpgradePlan) -> some View {
         Section {
             let error = NodeGroupText.error(report)
             if !error.isEmpty {
                 Text(AutoscaleText.groupError(error)).font(.footnote).foregroundStyle(Color.statusBad)
+            }
+            if plan.installed {
+                Button {
+                    selected = .controlPlane(plan)
+                } label: {
+                    EksControlPlaneRowView(plan: plan)
+                }
             }
             ForEach(report.groups) { row in
                 Button {
@@ -216,6 +226,8 @@ struct AutoscalingView: View {
             return report.hpa.items.first { $0.id == row.id }.map(Selection.hpa) ?? selection
         case .scaledObject(let row):
             return report.keda.scaledObjects.first { $0.id == row.id }.map(Selection.scaledObject) ?? selection
+        case .controlPlane:
+            return report.eksUpgrade.installed ? .controlPlane(report.eksUpgrade) : selection
         default:
             return selection
         }

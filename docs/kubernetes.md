@@ -664,6 +664,17 @@ limit?" in two taps:
   and the update is followed like a size change: a pod AWS could not evict is named. A group with
   a custom AMI gets no node image choice (its image changes through its launch template), and a
   group that is updating gets none.
+- **Control plane (EKS):** the first row of "Node pools (EKS)" shows the control plane's
+  Kubernetes version and what comes next: "upgrade to 1.35 available", "up to date", or the
+  upgrade running with its status. Its sheet is the plan before anything starts: the current and
+  next version (EKS upgrades one minor at a time), the end of standard support when AWS says it,
+  the blockers (the cluster is not active, an update is already running, node groups are still
+  behind the current version), the sentence "This takes 20 to 40 minutes and cannot be undone or
+  cancelled", and the node groups to upgrade afterwards from their own sheets. **Upgrade…**
+  starts only without a blocker, after the cluster's name is typed. AWS runs the upgrade; the
+  sheet reads its status every 30 s while it is open, and a moment when the API server does not
+  answer is not taken for a failure. Closing the app does not stop it: the next plan finds the
+  running update again and the sheet goes on following it.
 
 A group the cluster does not run (KEDA, VPA, Karpenter) collapses to one "not installed" line;
 credentials that cannot read one group show the reason in that group's header only.

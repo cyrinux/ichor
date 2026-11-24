@@ -230,17 +230,7 @@ func KubeNodeGroupUpdate(configYAML, contextName, kubeServer, group, updateID st
 			return nodeGroupUpdate{}, err
 		}
 
-		path := "/clusters/" + url.PathEscape(m.cluster) + "/updates/" + url.PathEscape(updateID)
-
-		var answer struct {
-			Update eksUpdate `json:"update"`
-		}
-
-		if err := eksCall(ctx, m, creds, http.MethodGet, path, url.Values{"nodegroupName": {group}}, nil, &answer); err != nil {
-			return nodeGroupUpdate{}, eksReadError(err, eksActionDescribeUpdate)
-		}
-
-		return answer.Update.row(), nil
+		return describeEKSUpdate(ctx, m, creds, updateID, group)
 	})
 }
 

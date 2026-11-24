@@ -51,9 +51,13 @@ import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.NetMap
 import name.levis.ichor.model.NodeGroupUpdate
 import name.levis.ichor.model.NodeGroupsReport
+import name.levis.ichor.model.EksUpgradePlan
+import name.levis.ichor.model.EksUpgradeState
+import name.levis.ichor.model.state
 import name.levis.ichor.model.LogEntry
 import name.levis.ichor.model.OnCallIncidents
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -78,6 +82,17 @@ class ContractTest {
             assertEquals("AsgInstanceLaunchFailures", it.groups[0].issues.first().code)
             assertEquals("1.34", it.clusterVersion)
             assertEquals(listOf(true, false), it.groups.map { g -> g.behind })
+        },
+        "eks-upgrade-plan" to Row(EksUpgradePlan.serializer()) {
+            assertEquals("1.35", it.next)
+            assertTrue(it.nextKnown)
+            assertEquals(listOf("gpu"), it.groupsBehind)
+            assertEquals(null, it.updating)
+            assertFalse(it.canUpgrade)
+        },
+        "eks-upgrade-plan-running" to Row(EksUpgradePlan.serializer()) {
+            assertEquals("c-run", it.updating?.id)
+            assertEquals(EksUpgradeState.RUNNING, it.state(null))
         },
         "kube-nodegroup-update" to Row(NodeGroupUpdate.serializer()) {
             assertEquals("Failed", it.status)

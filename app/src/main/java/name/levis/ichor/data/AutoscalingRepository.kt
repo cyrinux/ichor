@@ -6,6 +6,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import name.levis.ichor.model.AutoscalingReport
+import name.levis.ichor.model.EksUpgradePlan
 import name.levis.ichor.model.NodeGroupUpdate
 import name.levis.ichor.model.NodeGroupsReport
 import name.levis.ichorgo.Ichorgo
@@ -15,11 +16,39 @@ class AutoscalingRepository(private val configs: ConfigRepository, private val k
     /** Every autoscaler's rows with their states, the per-workload index, and the cloud's node groups. */
     suspend fun autoscaling(): AutoscalingReport = coroutineScope {
         val groups = async { nodeGroups() }
+        val plan = async { eksUpgradePlan() }
         val report = withContext(Dispatchers.IO) {
             val target = kubeServers.targetFor(configs.forCall())
             TalosJson.decodeFromString(AutoscalingReport.serializer(), Ichorgo.kubeAutoscaling(target.yaml, target.context, target.server))
         }
-        report.copy(nodeGroups = groups.await())
+        report.copy(nodeGroups = groups.await(), eksUpgrade = plan.await())
+    }
+
+    /**
+     * What upgrading the EKS control plane one minor would do. A failed read is the plan's error
+     * line (shown only on an EKS cluster): the rest of the screen does not depend on AWS.
+     */
+    suspend fun eksUpgradePlan(): EksUpgradePlan = withContext(Dispatchers.IO) {
+        try {
+            val target = kubeServers.targetFor(configs.forCall())
+            TalosJson.decodeFromString(EksUpgradePlan.serializer(), Ichorgo.kubeEKSUpgradePlan(target.yaml, target.context, target.server))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            EksUpgradePlan(error = e.message.orEmpty())
+        }
+    }
+
+    /** Upgrades the EKS control plane to [version], the plan's next minor; the update AWS starts. Cannot be undone. */
+    suspend fun eksUpgrade(version: String): NodeGroupUpdate = withContext(Dispatchers.IO) {
+        val target = kubeServers.targetFor(configs.forCall())
+        TalosJson.decodeFromString(NodeGroupUpdate.serializer(), Ichorgo.kubeEKSUpgrade(target.yaml, target.context, target.server, version))
+    }
+
+    /** The cluster-level update [id] (a control plane upgrade), as AWS reports it now. */
+    suspend fun eksUpdate(id: String): NodeGroupUpdate = withContext(Dispatchers.IO) {
+        val target = kubeServers.targetFor(configs.forCall())
+        TalosJson.decodeFromString(NodeGroupUpdate.serializer(), Ichorgo.kubeEKSUpdate(target.yaml, target.context, target.server, id))
     }
 
     /**

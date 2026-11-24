@@ -40,6 +40,17 @@ final class ContractTests: XCTestCase {
             XCTAssertEqual($0.clusterVersion, "1.34")
             XCTAssertEqual($0.groups.map(\.behind), [true, false])
         },
+        "eks-upgrade-plan": ContractTests.row(EksUpgradePlan.self) {
+            XCTAssertEqual($0.next, "1.35")
+            XCTAssertTrue($0.nextKnown)
+            XCTAssertEqual($0.groupsBehind, ["gpu"])
+            XCTAssertNil($0.updating)
+            XCTAssertFalse($0.canUpgrade)
+        },
+        "eks-upgrade-plan-running": ContractTests.row(EksUpgradePlan.self) {
+            XCTAssertEqual($0.updating?.id, "c-run")
+            XCTAssertEqual($0.state(update: nil), .running)
+        },
         "kube-nodegroup-update": ContractTests.row(NodeGroupUpdate.self) {
             XCTAssertEqual($0.status, "Failed")
             XCTAssertEqual($0.failure, "Could not launch On-Demand Instances")

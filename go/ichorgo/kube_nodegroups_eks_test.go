@@ -22,12 +22,18 @@ type fakeEKSNodeGroups struct {
 	postPaths  []string
 	postStatus int
 	updates    map[string]string
+	// cluster replaces cluster.json when set; clusterUpdates are the cluster-level
+	// DescribeUpdate answers by id (no nodegroupName), listed by ListUpdates in
+	// clusterUpdateIDs order.
+	cluster          string
+	clusterUpdates   map[string]string
+	clusterUpdateIDs []string
 }
 
 func newFakeEKSNodeGroups(t *testing.T, key string, forbid ...string) *fakeEKSNodeGroups {
 	t.Helper()
 
-	f := &fakeEKSNodeGroups{forbid: map[string]bool{}, updates: map[string]string{}}
+	f := &fakeEKSNodeGroups{forbid: map[string]bool{}, updates: map[string]string{}, clusterUpdates: map[string]string{}}
 	for _, p := range forbid {
 		f.forbid[p] = true
 	}
@@ -60,8 +66,14 @@ func newFakeEKSNodeGroups(t *testing.T, key string, forbid ...string) *fakeEKSNo
 		var file string
 
 		switch {
+		case path == "clusters/prod" && f.cluster != "":
+			_, _ = io.WriteString(w, f.cluster)
+
+			return
 		case path == "clusters/prod":
 			file = "cluster.json"
+		case path == "cluster-versions" && r.URL.Query().Get("clusterType") == "eks":
+			file = "cluster-versions.json"
 		case path == "clusters/prod/node-groups" && r.URL.Query().Get("maxResults") != "100":
 			w.WriteHeader(http.StatusBadRequest)
 
@@ -95,7 +107,15 @@ func (f *fakeEKSNodeGroups) answerUpdates(w http.ResponseWriter, r *http.Request
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	if r.Method == http.MethodPost && (strings.HasSuffix(path, "/update-config") || strings.HasSuffix(path, "/update-version")) {
+	if path == "clusters/prod/updates" && r.Method == http.MethodGet {
+		ids, _ := json.Marshal(f.clusterUpdateIDs)
+		_, _ = io.WriteString(w, `{"updateIds":`+string(ids)+`}`)
+
+		return true
+	}
+
+	cluster := path == "clusters/prod/updates"
+	if r.Method == http.MethodPost && (cluster || strings.HasSuffix(path, "/update-config") || strings.HasSuffix(path, "/update-version")) {
 		body, _ := io.ReadAll(r.Body)
 		f.posts = append(f.posts, string(body))
 		f.postPaths = append(f.postPaths, path)
@@ -108,7 +128,7 @@ func (f *fakeEKSNodeGroups) answerUpdates(w http.ResponseWriter, r *http.Request
 		}
 
 		kind := "ConfigUpdate"
-		if strings.HasSuffix(path, "/update-version") {
+		if cluster || strings.HasSuffix(path, "/update-version") {
 			kind = "VersionUpdate"
 		}
 
@@ -118,8 +138,13 @@ func (f *fakeEKSNodeGroups) answerUpdates(w http.ResponseWriter, r *http.Request
 	}
 
 	if id, ok := strings.CutPrefix(path, "clusters/prod/updates/"); ok {
-		answer, found := f.updates[id]
-		if !found || r.URL.Query().Get("nodegroupName") == "" {
+		answers := f.updates
+		if r.URL.Query().Get("nodegroupName") == "" {
+			answers = f.clusterUpdates
+		}
+
+		answer, found := answers[id]
+		if !found {
 			http.NotFound(w, r)
 
 			return true

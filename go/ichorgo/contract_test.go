@@ -40,6 +40,17 @@ var contractFixtures = []struct {
 	{"kube-cronjobs", func() any { return kubeCronJobList{CronJobs: demoCronJobs(contractNow)} }},
 	{"kube-nodes", func() any { return demoEKSNodes() }},
 	{"kube-nodegroups", func() any { return demoNodeGroups(contractNow) }},
+	// The control plane upgrade plan: the demo's, and one with the update in progress.
+	{"eks-upgrade-plan", func() any { return demoEKSUpgradePlan(contractNow) }},
+	{"eks-upgrade-plan-running", func() any {
+		p := noEKSUpgradePlan()
+		p.Installed, p.Cluster, p.Region, p.Version, p.Status, p.Next = true, "prod", "eu-west-3", "1.33", eksClusterUpdating, "1.34"
+		p.Updating = &nodeGroupUpdate{ID: "c-run", Status: eksUpdateRunning, Type: "VersionUpdate", Errors: []nodeGroupIssue{}}
+		p.Groups = []string{"system"}
+		p.Blockers = eksUpgradeBlockers(p)
+
+		return p
+	}},
 	{"kube-nodegroup-update", func() any {
 		return nodeGroupUpdate{
 			ID: "0f4c2a8e-update", Status: "Failed", Type: "ConfigUpdate",

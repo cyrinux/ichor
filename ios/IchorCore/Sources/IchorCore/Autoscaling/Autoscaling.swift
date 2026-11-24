@@ -39,11 +39,15 @@ public struct AutoscalingReport: Decodable, Equatable, Hashable, Sendable {
     /// The cloud's node pools (EKS managed node groups): a call of its own, attached by the
     /// client with `withNodeGroups(_:)`, never decoded from the autoscaling answer.
     public let nodeGroups: NodeGroupsReport
+    /// The EKS control plane's upgrade plan: a call of its own, attached with
+    /// `withNodeGroups(_:eksUpgrade:)`.
+    public let eksUpgrade: EksUpgradePlan
 
     public init(
         hpa: HpaGroup = HpaGroup(), keda: KedaGroup = KedaGroup(), vpa: VpaGroup = VpaGroup(),
         karpenter: KarpenterGroup = KarpenterGroup(), workloads: [AutoscaledWorkload] = [],
-        workloadsTruncated: Bool = false, nodeGroups: NodeGroupsReport = NodeGroupsReport()
+        workloadsTruncated: Bool = false, nodeGroups: NodeGroupsReport = NodeGroupsReport(),
+        eksUpgrade: EksUpgradePlan = EksUpgradePlan()
     ) {
         self.hpa = hpa
         self.keda = keda
@@ -52,6 +56,7 @@ public struct AutoscalingReport: Decodable, Equatable, Hashable, Sendable {
         self.workloads = workloads
         self.workloadsTruncated = workloadsTruncated
         self.nodeGroups = nodeGroups
+        self.eksUpgrade = eksUpgrade
     }
 
     public init(from decoder: Decoder) throws {
@@ -63,13 +68,16 @@ public struct AutoscalingReport: Decodable, Equatable, Hashable, Sendable {
         workloads = try c.field(.workloads, [])
         workloadsTruncated = try c.field(.workloadsTruncated, false)
         nodeGroups = NodeGroupsReport()
+        eksUpgrade = EksUpgradePlan()
     }
 
-    /// The same report with the cloud's node groups attached.
-    public func withNodeGroups(_ groups: NodeGroupsReport) -> AutoscalingReport {
+    /// The same report with the cloud's node groups (and the control plane's upgrade plan) attached.
+    public func withNodeGroups(
+        _ groups: NodeGroupsReport, eksUpgrade plan: EksUpgradePlan = EksUpgradePlan()
+    ) -> AutoscalingReport {
         AutoscalingReport(
             hpa: hpa, keda: keda, vpa: vpa, karpenter: karpenter, workloads: workloads,
-            workloadsTruncated: workloadsTruncated, nodeGroups: groups)
+            workloadsTruncated: workloadsTruncated, nodeGroups: groups, eksUpgrade: plan)
     }
 
     private enum CodingKeys: String, CodingKey { case hpa, keda, vpa, karpenter, workloads, workloadsTruncated }
@@ -115,6 +123,7 @@ public struct AutoscalingReport: Decodable, Equatable, Hashable, Sendable {
             workloads: workloads,
             workloadsTruncated: workloadsTruncated,
             nodeGroups: nodeGroups.filtered(query: q),
+            eksUpgrade: eksUpgrade,
         )
     }
 

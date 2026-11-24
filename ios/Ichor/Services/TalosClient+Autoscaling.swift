@@ -7,11 +7,42 @@ extension TalosClient {
     /// Every autoscaler's rows with their states, the per-workload index, and the cloud's node groups.
     func autoscaling() async throws -> AutoscalingReport {
         async let groups = nodeGroups()
+        async let plan = eksUpgradePlan()
         let report: AutoscalingReport = try await Self.json {
             [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeAutoscaling(config, context, kubeServer, $0)
         }
-        return report.withNodeGroups(await groups)
+        return report.withNodeGroups(await groups, eksUpgrade: await plan)
+    }
+
+    /// What upgrading the EKS control plane one minor would do. A failed read is the plan's
+    /// error line (shown only on an EKS cluster): the rest of the screen does not depend on AWS.
+    func eksUpgradePlan() async -> EksUpgradePlan {
+        do {
+            return try await Self.json {
+                [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+                IchorgoKubeEKSUpgradePlan(config, context, kubeServer, $0)
+            }
+        } catch {
+            return EksUpgradePlan(error: error.localizedDescription)
+        }
+    }
+
+    /// Upgrades the EKS control plane to `version`, the plan's next minor; the update AWS starts.
+    /// It cannot be undone or cancelled.
+    func eksUpgrade(version: String) async throws -> NodeGroupUpdate {
+        try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeEKSUpgrade(config, context, kubeServer, version, $0)
+        }
+    }
+
+    /// The cluster-level update `id` (a control plane upgrade), as AWS reports it now.
+    func eksUpdate(id: String) async throws -> NodeGroupUpdate {
+        try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeEKSUpdate(config, context, kubeServer, id, $0)
+        }
     }
 
     /// The cluster's EKS managed node groups, read with its own AWS sign-in. A failed read is

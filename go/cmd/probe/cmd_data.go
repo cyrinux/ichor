@@ -672,6 +672,23 @@ var dataCommands = []command{
 		// kube-nodegroup-update: an EKS node group update's status (read-only).
 		return ichorgo.KubeNodeGroupUpdate(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
 	}},
+	{name: "kube-eks-upgrade-plan", run: func(e env) (string, error) {
+		// kube-eks-upgrade-plan: what upgrading the EKS control plane one minor would do (read-only).
+		return ichorgo.KubeEKSUpgradePlan(e.cfg, e.context, e.kubeServer)
+	}},
+	{name: "kube-eks-upgrade", args: "VERSION -yes", run: func(e env) (string, error) {
+		// kube-eks-upgrade: upgrade the EKS control plane to VERSION, the plan's next minor. It
+		// cannot be undone or cancelled: refused without -yes as the last argument.
+		if flag.NArg() != 3 || flag.Arg(2) != "-yes" {
+			return "", errors.New("kube-eks-upgrade VERSION -yes: it upgrades a real control plane, irreversibly")
+		}
+
+		return ichorgo.KubeEKSUpgrade(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+	}},
+	{name: "kube-eks-update", args: "UPDATE_ID", run: func(e env) (string, error) {
+		// kube-eks-update: an EKS cluster update's status (read-only).
+		return ichorgo.KubeEKSUpdate(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+	}},
 	{name: "hubble", args: "[SECONDS] [all|drops] [NAMESPACE [POD]]", run: func(e env) (out string, err error) {
 		// hubble [SECONDS] [all|drops] [NAMESPACE [POD]]: read-only exec in the cilium agents.
 		out = hubbleRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))

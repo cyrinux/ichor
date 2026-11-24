@@ -53,10 +53,16 @@ import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.uiText
 
 /** What an autoscaling action did. */
-enum class AutoscalingAction { PAUSE, HOLD, RESUME, BOUNDS, GROUP_SIZE, GROUP_UPGRADE }
+enum class AutoscalingAction { PAUSE, HOLD, RESUME, BOUNDS, GROUP_SIZE, GROUP_UPGRADE, CONTROL_PLANE_UPGRADE }
 
 /** How often an open node group sheet reads the update AWS runs. */
 private const val NODE_GROUP_POLL_MS = 10_000L
+
+/** How often the open control plane sheet reads its upgrade (20 to 40 minutes in all). */
+private const val CONTROL_PLANE_POLL_MS = 30_000L
+
+/** The busy key of the control plane upgrade. */
+const val EKS_CONTROL_PLANE_KEY = "eks/control-plane"
 
 /** Outcome of [action] on the object [name], shown once. */
 data class AutoscalingActionResult(val name: String, val action: AutoscalingAction, val error: UiText?)
@@ -125,6 +131,40 @@ class AutoscalingActions(
         ) { onChanged() }
     }
 
+    private val _controlPlaneUpdate = MutableStateFlow<NodeGroupUpdate?>(null)
+
+    /** The control plane upgrade this screen started or found running, as last read; null before one. */
+    val controlPlaneUpdate: StateFlow<NodeGroupUpdate?> = _controlPlaneUpdate.asStateFlow()
+
+    /** Upgrades the EKS control plane to [version] (the plan's next minor). Cannot be undone; never retried. */
+    fun upgradeControlPlane(cluster: String, version: String) {
+        actions.launch(
+            EKS_CONTROL_PLANE_KEY,
+            { autoscaling.eksUpgrade(version).also { _controlPlaneUpdate.value = it } },
+            { AutoscalingActionResult(cluster, AutoscalingAction.CONTROL_PLANE_UPGRADE, it.exceptionOrNull()?.uiText()) },
+        ) { onChanged() }
+    }
+
+    /**
+     * Reads the control plane's update every 30 s while it is in progress and the caller (the
+     * open sheet) runs, starting from [found] (the plan's, when the app was reopened) unless this
+     * screen already follows one. A failed read is a moment the API is unreachable during the
+     * upgrade: it stays in progress and is read again. Its end reads the report again.
+     */
+    suspend fun followControlPlaneUpdate(found: NodeGroupUpdate?) {
+        if (_controlPlaneUpdate.value == null && found != null) _controlPlaneUpdate.value = found
+        while (true) {
+            val current = _controlPlaneUpdate.value?.takeIf { it.inProgress } ?: return
+            delay(CONTROL_PLANE_POLL_MS)
+            val next = cancellableCatching { autoscaling.eksUpdate(current.id) }.getOrNull() ?: continue
+            _controlPlaneUpdate.value = next
+            if (!next.inProgress) {
+                onChanged()
+                return
+            }
+        }
+    }
+
     /**
      * Reads [group]'s update every 10 s while it is in progress and the caller (the open sheet)
      * runs; its end reads the report again. A failed read ends it with the reason.
@@ -156,7 +196,7 @@ fun AutoscalingActionToasts(results: Flow<AutoscalingActionResult>) = ResultToas
                 AutoscalingAction.RESUME -> R.string.autoscaling_resume_done
                 AutoscalingAction.BOUNDS -> R.string.autoscaling_bounds_done
                 AutoscalingAction.GROUP_SIZE -> R.string.autoscaling_nodegroup_scale_started
-                AutoscalingAction.GROUP_UPGRADE -> R.string.autoscaling_nodegroup_upgrade_started
+                AutoscalingAction.GROUP_UPGRADE, AutoscalingAction.CONTROL_PLANE_UPGRADE -> R.string.autoscaling_nodegroup_upgrade_started
             },
             r.name,
         )

@@ -295,7 +295,10 @@ of the screen is unaffected. Changing a group's size from the phone also needs
 reads the groups, and the size change says which action is missing. Upgrading a group needs
 `eks:UpdateNodegroupVersion` and `eks:DescribeUpdate`, plus `eks:DescribeCluster` for the
 control plane's version (without it the groups are listed, none is marked behind, and only the
-latest node image is offered).
+latest node image is offered). The control plane row and its upgrade need `eks:DescribeCluster`,
+`eks:DescribeClusterVersions` (which versions EKS offers; without it the next minor is shown as
+"availability not checked"), `eks:ListUpdates` and `eks:DescribeUpdate` (an upgrade already
+running, found again when the app is reopened), and `eks:UpdateClusterVersion` to start one.
 
 | Kubeconfig user | What the app does |
 |---|---|
