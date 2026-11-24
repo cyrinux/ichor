@@ -306,6 +306,9 @@ func ScalewayPolicy(project string) string {
 }
 
 // scwOptions is what an Instance can be created from in one zone. Hourly is in EUR before tax.
+// TemplateVersion and TemplateSchematic are the template member's Talos version and schematic,
+// what an image must carry to be the cluster's image; "" when they cannot be read (a warning says
+// why).
 type scwOptions struct {
 	Project        string             `json:"project"`
 	Zone           string             `json:"zone"`
@@ -314,8 +317,10 @@ type scwOptions struct {
 	Images         []scwImage         `json:"images"`
 	SecurityGroups []scwSecurityGroup `json:"securityGroups"`
 	// GroupWarning is shown under the group picker unless the picked group is the managed one.
-	GroupWarning string   `json:"groupWarning"`
-	Warnings     []string `json:"warnings"`
+	GroupWarning      string   `json:"groupWarning"`
+	TemplateVersion   string   `json:"templateVersion"`
+	TemplateSchematic string   `json:"templateSchematic"`
+	Warnings          []string `json:"warnings"`
 }
 
 type scwType struct {
@@ -329,12 +334,17 @@ type scwType struct {
 	BlockOnly   bool   `json:"blockOnly"`
 }
 
+// scwImage is one of the project's images. TalosVersion and Schematic are its version= and
+// schematic= tags, which the image run sets ("" on an image without them); Schematic is the
+// schematic's first scwSchematicShown characters, as the tag holds it.
 type scwImage struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Arch   string `json:"arch"`
-	SizeGB int    `json:"sizeGB"`
-	Talos  bool   `json:"talos"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Arch         string `json:"arch"`
+	SizeGB       int    `json:"sizeGB"`
+	Talos        bool   `json:"talos"`
+	TalosVersion string `json:"talosVersion"`
+	Schematic    string `json:"schematic"`
 }
 
 // scwSecurityGroup is one of the project's groups; Managed: the app made it
@@ -378,12 +388,32 @@ func (i scwAPIImage) talos() bool {
 		slices.ContainsFunc(i.Tags, func(t string) bool { return strings.Contains(strings.ToLower(t), "talos") })
 }
 
+// tag is the value of the image's key=value tag, "" without one.
+func (i scwAPIImage) tag(key string) string {
+	for _, t := range i.Tags {
+		if value, ok := strings.CutPrefix(t, key+"="); ok {
+			return value
+		}
+	}
+
+	return ""
+}
+
+// scwTemplateWords end the warnings about the cluster's image at Scaleway.
+var scwTemplateWords = templateImageWords{
+	noVersion:   "no image is marked as the cluster's image",
+	noSchematic: "no image is marked as the cluster's image",
+}
+
 // ScalewayOptions lists, in the key's zone (credJSON's), the server types with their hourly price,
-// the project's images (Talos first) and security groups. The demo context answers with samples,
-// without a key. JSON: {"project","zone","zones","types":[{"name","arch","vcpus","ramGB",
-// "localDiskGB","hourly","currency","blockOnly"}],"images":[{"id","name","arch","sizeGB","talos"}],
-// "securityGroups":[{"id","name","default","managed"}],"groupWarning","warnings"}; blockOnly types have no local storage
-// (the EPHEMERAL volume is then a Block Storage one).
+// the project's images (Talos first) and security groups; with the template member's version and
+// schematic, which an image must carry to be the cluster's image (read with warnings, never an
+// error). The demo context answers with samples, without a key. JSON: {"project","zone","zones",
+// "types":[{"name","arch","vcpus","ramGB","localDiskGB","hourly","currency","blockOnly"}],
+// "images":[{"id","name","arch","sizeGB","talos","talosVersion","schematic"}],
+// "securityGroups":[{"id","name","default","managed"}],"groupWarning","templateVersion",
+// "templateSchematic","warnings"}; blockOnly types have no local storage (the EPHEMERAL volume is
+// then a Block Storage one).
 func ScalewayOptions(configYAML, contextName, credJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -398,6 +428,8 @@ func ScalewayOptions(configYAML, contextName, credJSON string) (out string, err 
 		return "", err
 	}
 
+	template, warnings := clusterTemplateImage(configYAML, contextName, scwTemplateWords)
+
 	ctx, cancel := context.WithTimeout(context.Background(), scwOptionsTimeout)
 	defer cancel()
 
@@ -405,6 +437,9 @@ func ScalewayOptions(configYAML, contextName, credJSON string) (out string, err 
 	if err != nil {
 		return "", err
 	}
+
+	options.TemplateVersion, options.TemplateSchematic = template.version, template.schematic
+	options.Warnings = append(warnings, options.Warnings...)
 
 	return toJSON(options)
 }
@@ -505,7 +540,10 @@ func scwImages(images []scwAPIImage) []scwImage {
 			continue
 		}
 
-		out = append(out, scwImage{ID: i.ID, Name: i.Name, Arch: i.Arch, SizeGB: int(i.RootVolume.Size / scwGB), Talos: i.talos()})
+		out = append(out, scwImage{
+			ID: i.ID, Name: i.Name, Arch: i.Arch, SizeGB: int(i.RootVolume.Size / scwGB), Talos: i.talos(),
+			TalosVersion: i.tag("version"), Schematic: i.tag("schematic"),
+		})
 	}
 
 	slices.SortStableFunc(out, func(a, b scwImage) int {
@@ -524,6 +562,8 @@ func scwImages(images []scwAPIImage) []scwImage {
 }
 
 func demoScalewayOptions() scwOptions {
+	const demoOlderTalosVersion = "v1.13.5"
+
 	return scwOptions{
 		Project: "11111111-1111-1111-1111-111111111111", Zone: scwDefaultZone, Zones: slices.Clone(scwZones),
 		Types: []scwType{
@@ -531,11 +571,20 @@ func demoScalewayOptions() scwOptions {
 			{Name: "DEV1-M", Arch: "x86_64", VCPUs: 3, RAMGB: 4, LocalDiskGB: 40, Hourly: "0.0198", Currency: "EUR"},
 			{Name: "COPARM1-2C-8G", Arch: "arm64", VCPUs: 2, RAMGB: 8, Hourly: "0.0426", Currency: "EUR", BlockOnly: true},
 		},
+		// The first image is the demo cluster's; the second, of an older Talos, is not.
 		Images: []scwImage{
-			{ID: "demo-talos", Name: "talos " + demoTalosVersion + " scaleway", Arch: "x86_64", SizeGB: 10, Talos: true},
+			{
+				ID: "demo-talos", Name: "talos-" + demoTalosVersion + "-scaleway-amd64-" + demoBootSchematic[:scwSchematicShown],
+				Arch: "x86_64", SizeGB: 10, Talos: true, TalosVersion: demoTalosVersion, Schematic: demoBootSchematic[:scwSchematicShown],
+			},
+			{
+				ID: "demo-talos-old", Name: "talos-" + demoOlderTalosVersion + "-scaleway-amd64-" + demoBootSchematic[:scwSchematicShown],
+				Arch: "x86_64", SizeGB: 10, Talos: true, TalosVersion: demoOlderTalosVersion, Schematic: demoBootSchematic[:scwSchematicShown],
+			},
 		},
-		SecurityGroups: []scwSecurityGroup{{ID: "demo-sg", Name: "Default security group", Default: true}},
-		GroupWarning:   scwGroupWarning,
-		Warnings:       []string{},
+		SecurityGroups:  []scwSecurityGroup{{ID: "demo-sg", Name: "Default security group", Default: true}},
+		GroupWarning:    scwGroupWarning,
+		TemplateVersion: demoTalosVersion, TemplateSchematic: demoBootSchematic,
+		Warnings: []string{},
 	}
 }

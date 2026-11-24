@@ -296,7 +296,8 @@ func TestScalewayImageHappyPath(t *testing.T) {
 
 	// The create card then lists the new image as a Talos one.
 	out, err := ScalewayOptions("", "", scwTestCred)
-	if o := decodeJSON[scwOptions](t, out, err); len(o.Images) != 1 || o.Images[0].ID != scwTestNewImage || !o.Images[0].Talos {
+	if o := decodeJSON[scwOptions](t, out, err); len(o.Images) != 1 || o.Images[0].ID != scwTestNewImage || !o.Images[0].Talos ||
+		o.Images[0].TalosVersion != "v1.14.2" || o.Images[0].Schematic != r.Schematic[:scwSchematicShown] {
 		t.Errorf("options images = %+v", o.Images)
 	}
 }

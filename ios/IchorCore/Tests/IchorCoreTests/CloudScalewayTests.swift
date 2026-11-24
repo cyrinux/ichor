@@ -154,6 +154,47 @@ final class CloudScalewayTests: XCTestCase {
         XCTAssertFalse(value.hasTalosImage(arch: "arm64"))
     }
 
+    // Images the image run tagged (version=, schematic= of 12 characters), and the cluster's image.
+    private func listed(template version: String, _ schematic: String, withRun: Bool = true) throws -> ScalewayOptions {
+        let run = """
+            {"id":"img-run","name":"run","arch":"x86_64","talos":true,"talosVersion":"v1.14.2",
+             "schematic":"376567988ad3"},
+            """
+        let json = """
+            {"types":[{"name":"DEV1-S","arch":"x86_64"},{"name":"COPARM1-2C-8G","arch":"arm64"}],
+             "images":[{"id":"img-ubuntu","name":"ubuntu","arch":"x86_64"},
+                       {"id":"img-old","name":"old","arch":"x86_64","talos":true,"talosVersion":"v1.13.5",
+                        "schematic":"376567988ad3"},
+                       \(withRun ? run : "")
+                       {"id":"img-hand","name":"talos by hand","arch":"x86_64","talos":true}],
+             "templateVersion":"\(version)","templateSchematic":"\(schematic)"}
+            """
+        return try JSONDecoder().decode(ScalewayOptions.self, from: Data(json.utf8))
+    }
+
+    func testTheClustersImageComesFirst() throws {
+        let schematic = "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba"
+        let value = try listed(template: "v1.14.2", schematic)
+        XCTAssertEqual(value.imagesTalosFirst.map(\.id), ["img-run", "img-old", "img-hand", "img-ubuntu"])
+        XCTAssertEqual(value.images.filter { $0.matches(value) }.map(\.id), ["img-run"])
+        XCTAssertTrue(value.hasClusterImage(arch: "amd64"))
+        XCTAssertFalse(value.hasClusterImage(arch: "arm64"))
+
+        // Only an older Talos: the make row comes first.
+        let older = try listed(template: "v1.14.2", schematic, withRun: false)
+        XCTAssertFalse(older.hasClusterImage(arch: "amd64"))
+        XCTAssertTrue(older.hasTalosImage(arch: "amd64"))
+
+        // Another schematic does not match either.
+        let other = try listed(template: "v1.14.2", String(repeating: "0", count: 64))
+        XCTAssertFalse(other.hasClusterImage(arch: "amd64"))
+
+        // A template that cannot be read: any Talos image of the architecture counts, as before.
+        let unread = try listed(template: "", "", withRun: false)
+        XCTAssertTrue(unread.hasClusterImage(arch: "amd64"))
+        XCTAssertEqual(unread.imagesTalosFirst.first?.id, "img-old")
+    }
+
     func testAnImageRunHasItsOwnSteps() {
         let spec = ScalewayImageSpec(arch: "amd64", zone: "fr-par-1")
         let request = JoinRequest(

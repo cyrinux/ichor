@@ -26,6 +26,7 @@ data class ScalewayCheck(
 /**
  * What an Instance can be created from in [zone]; prices before tax. [warnings] are the core's,
  * worded in English; [groupWarning] too, shown unless the picked group is the managed one.
+ * [templateVersion] and [templateSchematic] are the cluster's image, "" when they cannot be read.
  */
 @Serializable
 data class ScalewayOptions(
@@ -36,6 +37,8 @@ data class ScalewayOptions(
     val images: List<ScalewayImage> = emptyList(),
     val securityGroups: List<ScalewaySecurityGroup> = emptyList(),
     val groupWarning: String = "",
+    val templateVersion: String = "",
+    val templateSchematic: String = "",
     val warnings: List<String> = emptyList(),
 )
 
@@ -52,6 +55,10 @@ data class ScalewayType(
     val blockOnly: Boolean = false,
 )
 
+/**
+ * An image of the project. [talosVersion] and [schematic] are the image run's tags, "" on an image
+ * without them; [schematic] holds the schematic's first 12 characters only.
+ */
 @Serializable
 data class ScalewayImage(
     val id: String = "",
@@ -59,7 +66,14 @@ data class ScalewayImage(
     val arch: String = "",
     val sizeGB: Int = 0,
     val talos: Boolean = false,
-)
+    val talosVersion: String = "",
+    val schematic: String = "",
+) {
+    /** The cluster's image: same version, and the schematic it is tagged with starts the cluster's. */
+    fun matches(options: ScalewayOptions): Boolean =
+        options.templateVersion.isNotBlank() && options.templateSchematic.isNotBlank() && schematic.isNotBlank() &&
+            talosVersion == options.templateVersion && options.templateSchematic.startsWith(schematic)
+}
 
 /** A security group; [managed] when the app made it (the guided ichor-nodes). */
 @Serializable
@@ -169,8 +183,9 @@ data class ScalewayImageCost(
 /** The same key in another zone: options are read per zone. */
 fun ScalewayCredential.inZone(zone: String): ScalewayCredential = copy(zone = zone)
 
-/** The images, Talos ones first (in the core's order otherwise). */
-val ScalewayOptions.imagesTalosFirst: List<ScalewayImage> get() = images.sortedBy { !it.talos }
+/** The images: the cluster's image first, then the other Talos ones (in the core's order otherwise). */
+val ScalewayOptions.imagesTalosFirst: List<ScalewayImage>
+    get() = images.sortedWith(compareBy<ScalewayImage> { !it.matches(this) }.thenBy { !it.talos })
 
 /** The types an [image] can boot: those of its architecture; all of them before an image is picked. */
 fun ScalewayOptions.typesFor(image: ScalewayImage?): List<ScalewayType> =
@@ -194,6 +209,15 @@ val ScalewayOptions.imageArches: List<String>
 /** A Talos image of [arch] is listed ([arch] "" for any architecture). */
 fun ScalewayOptions.hasTalosImage(arch: String): Boolean =
     images.any { it.talos && (arch.isBlank() || scalewayArch(it.arch) == scalewayArch(arch)) }
+
+/**
+ * Whether [arch] has an image of the cluster's image. When the cluster's image cannot be read, any
+ * Talos image of [arch] counts, as nothing can be compared.
+ */
+fun ScalewayOptions.hasClusterImage(arch: String): Boolean {
+    if (templateVersion.isBlank() || templateSchematic.isBlank()) return hasTalosImage(arch)
+    return images.any { it.matches(this) && (arch.isBlank() || scalewayArch(it.arch) == scalewayArch(arch)) }
+}
 
 /** "0.0099 EUR": the hourly price before tax; null when the core has none. */
 val ScalewayType.hourlyPrice: String?

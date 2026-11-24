@@ -6800,7 +6800,7 @@
     <string name="scaleway_confirm_title">%1$s bei Scaleway erstellen?</string>
     <string name="scaleway_confirm_body">Das erstellt eine kostenpflichtige Instanz (%1$s in %2$s) und ein Datenvolume. Ihre Benutzerdaten gehen mit den Secrets des Clusters oder dem Join-Token von Omni an Scaleway. Ein fehlgeschlagener Lauf löscht die Instanz und ihre Volumes.</string>
     <string name="scaleway_stop_body">%1$s wird bei Scaleway mit seinen Volumes gelöscht. Eine Control Plane, die schon geantwortet hat, bleibt erhalten: Zuerst muss ihr etcd-Mitglied entfernt werden.</string>
-    <string name="scaleway_image_missing">Noch kein Talos-Image für %1$s in dieser Zone: Ichor kann eines aus dem Image dieses Clusters erstellen.</string>
+    <string name="scaleway_image_missing">Noch kein Talos-Image aus dem Image dieses Clusters für %1$s in dieser Zone: Ichor kann eines erstellen.</string>
     <string name="scaleway_image_intro">Ichor startet eine Wegwerf-Ubuntu-Instanz mit einem leeren Block-Storage-Volume und schreibt das Talos-Image dieses Clusters darauf. Danach erstellt es einen Snapshot des Volumes, macht daraus ein Image und löscht die Instanz, ihre Volumes und ihre IP. Das Image und sein Snapshot bleiben erhalten. Am Cluster wird nichts verändert. Das dauert etwa zehn Minuten.</string>
     <string name="scaleway_image_place">Das Image kommt in das Projekt des Schlüssels, in der Zone %1$s.</string>
     <string name="scaleway_image_cost">Etwa %1$d Minuten %2$s (%3$s/h), danach berechnet Scaleway den Snapshot von %4$d GB pro GB und Monat, bis du ihn löschst, vor Steuern</string>

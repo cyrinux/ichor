@@ -6816,7 +6816,7 @@
     <string name="scaleway_confirm_title">Create %1$s at Scaleway?</string>
     <string name="scaleway_confirm_body">This creates a billable Instance (%1$s in %2$s) and a data volume. Its user data goes to Scaleway with the cluster\'s secrets or Omni\'s join token. A failed run deletes the Instance and its volumes.</string>
     <string name="scaleway_stop_body">%1$s is deleted at Scaleway with its volumes. A control plane that already answered is kept: its etcd member must go first.</string>
-    <string name="scaleway_image_missing">No Talos image for %1$s in this zone yet: Ichor can make one of this cluster\'s image.</string>
+    <string name="scaleway_image_missing">No Talos image of this cluster\'s image for %1$s in this zone yet: Ichor can make one.</string>
     <string name="scaleway_image_intro">Ichor starts a throwaway Ubuntu Instance with an empty Block Storage volume and writes this cluster\'s Talos image to it. It then snapshots the volume, makes an image from the snapshot, and deletes the Instance, its volumes and its IP. The image and its snapshot are kept. Nothing of the cluster is touched. It takes about ten minutes.</string>
     <string name="scaleway_image_place">The image goes in the key\'s project, in zone %1$s.</string>
     <string name="scaleway_image_cost">About %1$d minutes of %2$s (%3$s/h), then the %4$d GB snapshot is billed by Scaleway per GB per month until you delete it, before tax</string>

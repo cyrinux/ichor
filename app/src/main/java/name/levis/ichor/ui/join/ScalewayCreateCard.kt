@@ -47,6 +47,7 @@ import name.levis.ichor.model.ScalewayNetwork
 import name.levis.ichor.model.ScalewayNetworkSpec
 import name.levis.ichor.model.ScalewayOptions
 import name.levis.ichor.model.defaultSecurityGroup
+import name.levis.ichor.model.hasClusterImage
 import name.levis.ichor.model.hasTalosImage
 import name.levis.ichor.model.hourlyPrice
 import name.levis.ichor.model.imageArches
@@ -322,19 +323,24 @@ private fun ScalewayInstanceForm(
     Text(stringResource(R.string.ovh_image), style = MaterialTheme.typography.labelLarge)
     // The image is made for the picked type's architecture, else the picked image's, else the zone's first.
     val makeArch = scalewayArch(options.types.firstOrNull { it.name == typeName }?.arch ?: image?.arch.orEmpty())
-    val noTalosImage = !options.hasTalosImage(makeArch)
+    val noClusterImage = !options.hasClusterImage(makeArch)
     val ask = ScalewayImageAsk(zone, options.imageArches,makeArch.ifBlank { options.imageArches.firstOrNull().orEmpty() })
-    if (onMakeImage != null && noTalosImage) {
+    if (onMakeImage != null && noClusterImage) {
         // No Talos image at all: the core's warning above already says so.
         if (options.hasTalosImage("")) InfoNotice(stringResource(R.string.scaleway_image_missing, ask.arch))
         MakeImageButton(R.string.gcp_make_image, enabled = !busy && ask.arch.isNotBlank()) { onMakeImage(ask) }
     }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         images.forEach { i ->
-            IchorFilterChip(selected = i.id == imageId, onClick = { imageId = i.id }, label = { Text("${i.name} · ${i.arch}") })
+            val name = "${i.name} · ${i.arch}"
+            IchorFilterChip(
+                selected = i.id == imageId,
+                onClick = { imageId = i.id },
+                label = { Text(if (i.matches(options)) stringResource(R.string.aws_image_matches, name) else name) },
+            )
         }
     }
-    if (onMakeImage != null && !noTalosImage) {
+    if (onMakeImage != null && !noClusterImage) {
         MakeImageButton(R.string.azure_image_make_another, enabled = !busy && ask.arch.isNotBlank()) { onMakeImage(ask) }
     }
     Text(stringResource(R.string.scaleway_type), style = MaterialTheme.typography.labelLarge)

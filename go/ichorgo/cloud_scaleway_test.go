@@ -335,6 +335,39 @@ func TestScalewayOptions(t *testing.T) {
 	}
 }
 
+func TestScwImagesReadTheRunsTags(t *testing.T) {
+	images := scwImages([]scwAPIImage{
+		{ID: "img-run", Name: "talos-v1.14.2-scaleway-amd64-376567988ad3", Arch: "x86_64", State: "available",
+			Tags: []string{"talos", "ichor-managed", "schematic=376567988ad3", "version=v1.14.2", "arch=amd64"}},
+		{ID: "img-hand", Name: "talos by hand", Arch: "x86_64", Tags: []string{"versioned", "schematic"}},
+	})
+
+	byID := map[string]scwImage{}
+	for _, i := range images {
+		byID[i.ID] = i
+	}
+
+	if r := byID["img-run"]; r.TalosVersion != "v1.14.2" || r.Schematic != "376567988ad3" || !r.Talos {
+		t.Errorf("run's image = %+v", r)
+	}
+
+	if h := byID["img-hand"]; h.TalosVersion != "" || h.Schematic != "" || !h.Talos {
+		t.Errorf("hand-made image = %+v", h)
+	}
+}
+
+func TestScalewayOptionsTemplateWarning(t *testing.T) {
+	startFakeScaleway(t, &fakeScaleway{})
+
+	out, err := ScalewayOptions("", "", scwTestCred)
+
+	o := decodeJSON[scwOptions](t, out, err)
+	if o.TemplateVersion != "" || o.TemplateSchematic != "" ||
+		!slices.ContainsFunc(o.Warnings, func(w string) bool { return strings.Contains(w, "no image is marked as the cluster's image") }) {
+		t.Errorf("template = %q %q, warnings = %v", o.TemplateVersion, o.TemplateSchematic, o.Warnings)
+	}
+}
+
 func TestScalewayPolicyNamesTheProject(t *testing.T) {
 	out := ScalewayPolicy(scwTestProject)
 	if !strings.Contains(out, scwTestProject) || !strings.Contains(out, "InstancesFullAccess") || !strings.Contains(out, "InstancesReadOnly") {
@@ -582,8 +615,18 @@ func TestScalewayDemo(t *testing.T) {
 	}
 
 	out, err := ScalewayOptions(cfg, "", "")
-	if o := decodeJSON[scwOptions](t, out, err); len(o.Types) == 0 || len(o.Images) == 0 || !o.Images[0].Talos {
+
+	o := decodeJSON[scwOptions](t, out, err)
+	if len(o.Types) == 0 || len(o.Images) != 2 || !o.Images[0].Talos {
 		t.Errorf("demo options = %+v", o)
+	}
+
+	// One sample image is the cluster's image: same version, and the schematic it is tagged with.
+	matching := slices.IndexFunc(o.Images, func(i scwImage) bool {
+		return i.TalosVersion == o.TemplateVersion && i.Schematic != "" && strings.HasPrefix(o.TemplateSchematic, i.Schematic)
+	})
+	if o.TemplateVersion != demoTalosVersion || o.TemplateSchematic != demoBootSchematic || matching != 0 {
+		t.Errorf("demo template = %q %q, images %+v", o.TemplateVersion, o.TemplateSchematic, o.Images)
 	}
 
 	rec := newJoinRecorder()

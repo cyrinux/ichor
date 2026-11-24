@@ -202,7 +202,7 @@ func AWSOptions(configYAML, contextName, credJSON string) (out string, err error
 		return "", err
 	}
 
-	template, warnings := awsClusterImage(configYAML, contextName)
+	template, warnings := clusterTemplateImage(configYAML, contextName, awsTemplateWords)
 
 	options, err := c.options(ctx, template.version)
 	if err != nil {
@@ -219,45 +219,8 @@ func AWSOptions(configYAML, contextName, credJSON string) (out string, err error
 
 const awsNoOfficialImage = "no official Talos AMI listed"
 
-// awsTemplateImage is the cluster's Talos version and the template member's schematic.
-type awsTemplateImage struct {
-	version, schematic string
-}
-
-// awsClusterImage reads the template member the way cloudImageMedia does, with warnings for what
-// cannot be read instead of an error.
-func awsClusterImage(configYAML, contextName string) (awsTemplateImage, []string) {
-	if strings.TrimSpace(configYAML) == "" {
-		return awsTemplateImage{}, []string{"no cluster given: " + awsNoOfficialImage}
-	}
-
-	src, err := withSession(configYAML, contextName, configPreviewTimeout, func(ctx context.Context, s *session) (bootSource, error) {
-		return readBootSource(ctx, s, "")
-	})
-
-	return awsTemplateImageOf(src, err)
-}
-
-// awsTemplateImageOf is what src says of the cluster's image. A member that cannot be read gives
-// neither; an install image that cannot be read gives the version only, so that no AMI is said to
-// match rather than one of the default schematic by mistake.
-func awsTemplateImageOf(src bootSource, err error) (awsTemplateImage, []string) {
-	media := bootMedia{}
-	if err == nil {
-		media, err = buildBootMedia(src, "", false)
-	}
-
-	if err != nil {
-		return awsTemplateImage{}, []string{"the cluster's Talos version cannot be read (" + friendlyError(err) + "): " + awsNoOfficialImage}
-	}
-
-	if src.imageErr != "" {
-		return awsTemplateImage{version: media.TalosVersion},
-			[]string{fmt.Sprintf("the install image of %s cannot be read (%s): no AMI is marked as the cluster's image", src.node, src.imageErr)}
-	}
-
-	return awsTemplateImage{version: media.TalosVersion, schematic: media.Schematic}, nil
-}
+// awsTemplateWords end the warnings about the cluster's image on AWS.
+var awsTemplateWords = templateImageWords{noVersion: awsNoOfficialImage, noSchematic: "no AMI is marked as the cluster's image"}
 
 func (c *awsClient) options(ctx context.Context, version string) (awsOptions, error) {
 	var regions struct {
