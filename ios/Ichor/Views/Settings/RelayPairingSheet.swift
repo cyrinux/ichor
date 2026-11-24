@@ -125,7 +125,9 @@ struct RelayPairingSheet: View {
             let id = try await client.relayRegister(source, device: device)
             let paired = RelayPairingRecord(deviceId: id, endpoint: endpoint, source: source, pairedAt: Date())
             try RelayStore.save(paired, for: fingerprint)
-            record = paired
+            // The relay keeps a device's quiet hours over a new pairing: say what they are now.
+            await RelayQuietSync.run(client: client, fingerprint: fingerprint, force: true)
+            record = RelayStore.read(fingerprint) ?? paired
         } catch {
             failure = error.localizedDescription
         }

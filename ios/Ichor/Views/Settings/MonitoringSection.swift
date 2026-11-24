@@ -318,6 +318,9 @@ struct MonitoringSection: View {
                         Text("Pairing is not available in the demo cluster.")
                     } else if let relayRecord {
                         Text("Paired · \(ntfyTopicLabel(relayRecord.endpoint))")
+                        if relayRecord.quietNeedsRelayUpdate {
+                            Text("Update ichor-relay in the cluster for its pushes to respect quiet hours.")
+                        }
                     } else {
                         Text("Alerts from the cluster's ichor-relay, shown at once by the ntfy app.")
                     }

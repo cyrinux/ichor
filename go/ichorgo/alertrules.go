@@ -9,6 +9,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/relay"
 )
 
 // Alert rules: the apps store quiet hours, a minimum severity and a digest switch, once as a
@@ -65,14 +67,10 @@ var alertCriticalKinds = []string{"unreachable", "node", "etcd"}
 // alertDigestKeys is how many alert keys a digest names.
 const alertDigestKeys = 5
 
-// alertQuietHours is a daily window, wall-clock time in an IANA zone. start == end (both empty
-// included) is no window: a cluster sets that to turn off the default's quiet hours.
-type alertQuietHours struct {
-	Start          string `json:"start"`
-	End            string `json:"end"`
-	TZ             string `json:"tz"`
-	ExceptCritical bool   `json:"exceptCritical"`
-}
+// alertQuietHours is a daily window, wall-clock time in an IANA zone (the relay's type: a
+// paired device carries the same). start == end (both empty included) is no window: a cluster
+// sets that to turn off the default's quiet hours.
+type alertQuietHours = relay.QuietHours
 
 // alertRule is one rule; an absent field (nil) takes the default rule's.
 type alertRule struct {
@@ -140,16 +138,9 @@ type alertRulesResult struct {
 	Digests   []alertDigestGroup `json:"digests"`
 }
 
-// quietWindow is a parsed quiet-hours window: minutes since midnight in loc.
-type quietWindow struct {
-	start, end     int
-	loc            *time.Location
-	exceptCritical bool
-}
-
 // resolvedRule is a cluster's rule with the default filled in and its window parsed.
 type resolvedRule struct {
-	quiet       *quietWindow
+	quiet       *relay.QuietWindow
 	minSeverity string
 	digest      bool
 	repeat      time.Duration
@@ -235,7 +226,7 @@ func AlertRulesQuietUntil(rulesJSON, cluster string, atMillis int64) int64 {
 		return 0
 	}
 
-	end := quiet.quietUntil(time.UnixMilli(atMillis))
+	end := quiet.Until(time.UnixMilli(atMillis))
 	if end.IsZero() {
 		return 0
 	}
@@ -355,7 +346,7 @@ func resolveAlertRule(name string, base, over alertRule) (resolvedRule, error) {
 	}
 
 	if merged.QuietHours != nil {
-		w, err := parseQuietWindow(*merged.QuietHours)
+		w, err := merged.QuietHours.Window()
 		if err != nil {
 			return out, fmt.Errorf("alert rule %s: quiet hours: %w", name, err)
 		}
@@ -364,66 +355,6 @@ func resolveAlertRule(name string, base, over alertRule) (resolvedRule, error) {
 	}
 
 	return out, nil
-}
-
-// parseQuietWindow parses a window; nil when start == end (no window).
-func parseQuietWindow(q alertQuietHours) (*quietWindow, error) {
-	if q.Start == q.End {
-		return nil, nil
-	}
-
-	start, err := parseClockMinutes(q.Start)
-	if err != nil {
-		return nil, fmt.Errorf("start %w", err)
-	}
-
-	end, err := parseClockMinutes(q.End)
-	if err != nil {
-		return nil, fmt.Errorf("end %w", err)
-	}
-
-	if q.TZ == "" {
-		return nil, errors.New("no time zone (pass the phone's IANA zone)")
-	}
-
-	loc, err := time.LoadLocation(q.TZ)
-	if err != nil || q.TZ == "Local" {
-		return nil, fmt.Errorf("time zone %q is not an IANA zone", q.TZ)
-	}
-
-	return &quietWindow{start: start, end: end, loc: loc, exceptCritical: q.ExceptCritical}, nil
-}
-
-// parseClockMinutes reads "HH:MM" (24 h) as minutes since midnight.
-func parseClockMinutes(s string) (int, error) {
-	t, err := time.Parse("15:04", s)
-	if err != nil || len(s) != len("15:04") {
-		return 0, fmt.Errorf("%q: want HH:MM", s)
-	}
-
-	return t.Hour()*60 + t.Minute(), nil
-}
-
-// quietUntil is the end of the window now falls in, or the zero time when it is outside.
-// It compares wall-clock minutes, so a DST day keeps the window at the same clock times.
-func (w quietWindow) quietUntil(now time.Time) time.Time {
-	local := now.In(w.loc)
-	mins := local.Hour()*60 + local.Minute()
-	y, m, d := local.Date()
-	endOn := func(day int) time.Time {
-		return time.Date(y, m, day, w.end/60, w.end%60, 0, 0, w.loc)
-	}
-
-	switch {
-	case w.start < w.end && mins >= w.start && mins < w.end:
-		return endOn(d)
-	case w.start > w.end && mins >= w.start:
-		return endOn(d + 1)
-	case w.start > w.end && mins < w.end:
-		return endOn(d)
-	default:
-		return time.Time{}
-	}
 }
 
 func applyAlertRules(rules map[string]resolvedRule, alerts []alertIn, now time.Time) alertRulesResult {
@@ -457,8 +388,8 @@ func decideAlert(rule resolvedRule, a alertIn, severity string, now time.Time) a
 	case rule.flapping(a, severity):
 		// The recovery too: the digest would otherwise say "recovered" for an alert it never posted.
 		d.Action, d.Reason, d.Flaps = alertDigest, alertReasonFlapping, a.Flaps
-	case rule.quiet != nil && !(rule.quiet.exceptCritical && severity == alertCritical):
-		if until := rule.quiet.quietUntil(now); !until.IsZero() {
+	case rule.quiet != nil && !(rule.quiet.ExceptCritical && severity == alertCritical):
+		if until := rule.quiet.Until(now); !until.IsZero() {
 			d.Action, d.Reason, d.Until = alertMute, alertReasonQuiet, until.UnixMilli()
 		}
 	}
@@ -500,8 +431,8 @@ func decideRepeat(rule resolvedRule, a alertIn, severity string, now time.Time) 
 		d.Reason = alertReasonRepeatOff
 	case a.Acknowledged:
 		d.Reason = alertReasonAcknowledged
-	case rule.quiet != nil && !rule.quiet.exceptCritical && !rule.quiet.quietUntil(now).IsZero():
-		d.Reason, d.Until = alertReasonQuiet, rule.quiet.quietUntil(now).UnixMilli()
+	case rule.quiet != nil && !rule.quiet.ExceptCritical && !rule.quiet.Until(now).IsZero():
+		d.Reason, d.Until = alertReasonQuiet, rule.quiet.Until(now).UnixMilli()
 	case now.Sub(last) < rule.repeat-alertRepeatSlack:
 		d.Reason = alertReasonNotDue
 	default:

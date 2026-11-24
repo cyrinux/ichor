@@ -46,17 +46,57 @@ public struct RelayDevice: Encodable, Equatable, Sendable {
 }
 
 /// A cluster paired with the relay from this phone, kept per cluster to show and unpair it.
+/// `quiet`: the quiet hours the relay last took for this device (nil: none asked yet, the relay
+/// holds none). `quietUnsupported`: the relay was too old to take them when last asked.
 public struct RelayPairingRecord: Codable, Equatable, Sendable {
     public let deviceId: String
     public let endpoint: String
     public let source: PromSource
     public let pairedAt: Date
+    public var quiet: QuietHours?
+    public var quietUnsupported: Bool?
 
-    public init(deviceId: String, endpoint: String, source: PromSource, pairedAt: Date) {
+    public init(
+        deviceId: String, endpoint: String, source: PromSource, pairedAt: Date, quiet: QuietHours? = nil,
+        quietUnsupported: Bool? = nil
+    ) {
         self.deviceId = deviceId
         self.endpoint = endpoint
         self.source = source
         self.pairedAt = pairedAt
+        self.quiet = quiet
+        self.quietUnsupported = quietUnsupported
+    }
+
+    /// The record once the relay was asked to hold `quiet`: `applied` false when it is too old to.
+    public func asked(quiet: QuietHours, applied: Bool) -> RelayPairingRecord {
+        var out = self
+        out.quiet = quiet
+        out.quietUnsupported = applied ? nil : true
+        return out
+    }
+
+    /// Whether the relay is to be told `wanted` (see AlertRules.relayQuietHours): it is not what
+    /// it last took. A relay too old for it is not asked again for the same window.
+    public func needsQuiet(_ wanted: QuietHours) -> Bool {
+        (quiet ?? .off) != wanted
+    }
+
+    /// Whether to say the relay must be updated: it could not take the quiet hours the rules set.
+    public var quietNeedsRelayUpdate: Bool {
+        quietUnsupported == true && !(quiet ?? .off).isOff
+    }
+}
+
+extension AlertRules {
+    /// The quiet hours the relay holds for the cluster `fingerprint`'s device: its override,
+    /// else the default's, with the phone's `zone` when it names none; `.off` for no window.
+    /// The ntfy app shows the relay's pushes, so the phone cannot hold them back itself.
+    public func relayQuietHours(_ fingerprint: String, zone: String) -> QuietHours {
+        guard var quiet = clusters[fingerprint]?.quietHours ?? self.default.quietHours, !quiet.isOff
+        else { return .off }
+        if quiet.tz.trimmingCharacters(in: .whitespaces).isEmpty { quiet.tz = zone }
+        return quiet
     }
 }
 

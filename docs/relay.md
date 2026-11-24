@@ -137,6 +137,15 @@ text** it also sees each alert's summary. Prefer your own ntfy server: one you h
 [`upstream-base-url`](https://docs.ntfy.sh/config/#ios-instant-notifications) set for the iOS
 app to deliver instantly. Tapping the notification opens Ichor on the cluster's Alerts screen.
 
+The ntfy app shows these notifications, so Ichor cannot hold them back as it does its own.
+The relay does it instead: Ichor tells it the cluster's quiet hours (Settings → Alerts → Rules,
+with the phone's time zone) after pairing and whenever they change, and inside them the relay
+sends this phone nothing, or only the critical alerts when the rule lets them through. Nothing
+is sent later for what was held back. The window is kept with the device in the relay's Secret
+(the `PUT /v1/devices/{id}/quiet` route, behind the pairing token). A relay older than this
+ignores quiet hours: the row then says to update it. An alert the relay held back still shows
+as muted in "Since you last looked" once a background check has seen it.
+
 ## An ntfy server in the cluster
 
 The relay pushes over https to public addresses only. For an ntfy server inside the cluster, set

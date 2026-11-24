@@ -33,6 +33,23 @@ extension TalosClient {
             _ = IchorgoRelayUnregister(config, context, kubeServer, sourceJSON, id, error)
         }
     }
+
+    /// Tells the relay at `source` the quiet hours of the device `id` (`.off` clears them); false
+    /// when the relay is too old to hold any.
+    func relaySetQuiet(_ source: PromSource, id: String, quiet: QuietHours) async throws -> Bool {
+        let sourceJSON = try TalosJSON.encode(source)
+        let quietJSON = try TalosJSON.encode(quiet)
+        let answer: RelayQuietAnswer = try await Self.json {
+            [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoRelaySetQuiet(config, context, kubeServer, sourceJSON, id, quietJSON, $0)
+        }
+        return answer.applied
+    }
+}
+
+/// RelaySetQuiet's answer.
+private struct RelayQuietAnswer: Decodable {
+    let applied: Bool
 }
 
 /// RelayRegister's answer.
