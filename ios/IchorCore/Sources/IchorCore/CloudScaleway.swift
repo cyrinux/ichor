@@ -55,6 +55,7 @@ public struct ScalewayCheck: Decodable, Equatable, Sendable {
 
 /// What an Instance can be created from in `zone`; prices before tax. `warnings` are the core's,
 /// worded in English; `groupWarning` too, shown unless the picked group is the managed one.
+/// `templateVersion` and `templateSchematic` are the cluster's image, "" when they cannot be read.
 public struct ScalewayOptions: Decodable, Equatable, Sendable {
     public let project: String
     public let zone: String
@@ -63,10 +64,13 @@ public struct ScalewayOptions: Decodable, Equatable, Sendable {
     public let images: [ScalewayImage]
     public let securityGroups: [ScalewaySecurityGroup]
     public let groupWarning: String
+    public let templateVersion: String
+    public let templateSchematic: String
     public let warnings: [String]
 
     private enum CodingKeys: String, CodingKey {
-        case project, zone, zones, types, images, securityGroups, groupWarning, warnings
+        case project, zone, zones, types, images, securityGroups, groupWarning, templateVersion, templateSchematic
+        case warnings
     }
 
     // Go encodes empty (nil) slices as null.
@@ -79,11 +83,17 @@ public struct ScalewayOptions: Decodable, Equatable, Sendable {
         images = try c.field(.images, [])
         securityGroups = try c.field(.securityGroups, [])
         groupWarning = try c.field(.groupWarning, "")
+        templateVersion = try c.field(.templateVersion, "")
+        templateSchematic = try c.field(.templateSchematic, "")
         warnings = try c.field(.warnings, [])
     }
 
-    /// The images, Talos ones first (in the core's order otherwise).
-    public var imagesTalosFirst: [ScalewayImage] { images.filter(\.talos) + images.filter { !$0.talos } }
+    /// The images: the cluster's image first, then the other Talos ones (in the core's order otherwise).
+    public var imagesTalosFirst: [ScalewayImage] {
+        let matching = images.filter { $0.matches(self) }
+        let others = images.filter { !$0.matches(self) }
+        return matching + others.filter(\.talos) + others.filter { !$0.talos }
+    }
 
     /// The types `image` can boot: those of its architecture; all of them before an image is picked.
     public func types(for image: ScalewayImage?) -> [ScalewayType] {
@@ -111,6 +121,14 @@ public struct ScalewayOptions: Decodable, Equatable, Sendable {
     public func hasTalosImage(arch: String) -> Bool {
         let wanted = ScalewayArch.normalized(arch)
         return images.contains { $0.talos && (wanted.isEmpty || ScalewayArch.normalized($0.arch) == wanted) }
+    }
+
+    /// Whether `arch` has an image of the cluster's image. When the cluster's image cannot be read,
+    /// any Talos image of `arch` counts, as nothing can be compared.
+    public func hasClusterImage(arch: String) -> Bool {
+        if templateVersion.isEmpty || templateSchematic.isEmpty { return hasTalosImage(arch: arch) }
+        let wanted = ScalewayArch.normalized(arch)
+        return images.contains { $0.matches(self) && (wanted.isEmpty || ScalewayArch.normalized($0.arch) == wanted) }
     }
 }
 
@@ -162,14 +180,18 @@ public struct ScalewayType: Decodable, Equatable, Hashable, Identifiable, Sendab
     }
 }
 
+/// An image of the project. `talosVersion` and `schematic` are the image run's tags, "" on an image
+/// without them; `schematic` holds the schematic's first 12 characters only.
 public struct ScalewayImage: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let id: String
     public let name: String
     public let arch: String
     public let sizeGB: Int
     public let talos: Bool
+    public let talosVersion: String
+    public let schematic: String
 
-    private enum CodingKeys: String, CodingKey { case id, name, arch, sizeGB, talos }
+    private enum CodingKeys: String, CodingKey { case id, name, arch, sizeGB, talos, talosVersion, schematic }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -178,6 +200,14 @@ public struct ScalewayImage: Decodable, Equatable, Hashable, Identifiable, Senda
         arch = try c.field(.arch, "")
         sizeGB = try c.field(.sizeGB, 0)
         talos = try c.field(.talos, false)
+        talosVersion = try c.field(.talosVersion, "")
+        schematic = try c.field(.schematic, "")
+    }
+
+    /// The cluster's image: same version, and the schematic it is tagged with starts the cluster's.
+    public func matches(_ options: ScalewayOptions) -> Bool {
+        !options.templateVersion.isEmpty && !options.templateSchematic.isEmpty && !schematic.isEmpty
+            && talosVersion == options.templateVersion && options.templateSchematic.hasPrefix(schematic)
     }
 }
 

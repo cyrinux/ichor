@@ -6810,7 +6810,7 @@
     <string name="scaleway_confirm_title">¿Crear %1$s en Scaleway?</string>
     <string name="scaleway_confirm_body">Esto crea una instancia de pago (%1$s en %2$s) y un volumen de datos. Sus datos de usuario van a Scaleway con los secretos del clúster o el token de unión de Omni. Una ejecución fallida borra la instancia y sus volúmenes.</string>
     <string name="scaleway_stop_body">%1$s se borra en Scaleway con sus volúmenes. Un control plane que ya respondió se conserva: primero debe irse su miembro de etcd.</string>
-    <string name="scaleway_image_missing">Aún no hay imagen de Talos para %1$s en esta zona: Ichor puede crear una de la imagen de este clúster.</string>
+    <string name="scaleway_image_missing">Aún no hay una imagen de Talos con la imagen de este clúster para %1$s en esta zona: Ichor puede crear una.</string>
     <string name="scaleway_image_intro">Ichor inicia una instancia Ubuntu desechable con un volumen Block Storage vacío y escribe en él la imagen de Talos de este clúster. Después toma un snapshot del volumen, crea una imagen a partir del snapshot y borra la instancia, sus volúmenes y su IP. La imagen y su snapshot se conservan. No se toca nada del clúster. Tarda unos diez minutos.</string>
     <string name="scaleway_image_place">La imagen va al proyecto de la clave, en la zona %1$s.</string>
     <string name="scaleway_image_cost">Unos %1$d minutos de %2$s (%3$s/h), y luego Scaleway factura el snapshot de %4$d GB por GB al mes hasta que lo borres, sin impuestos</string>

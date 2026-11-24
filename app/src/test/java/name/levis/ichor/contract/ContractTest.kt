@@ -17,6 +17,8 @@ import name.levis.ichor.model.ScalewayImageResult
 import name.levis.ichor.model.ScalewayNetwork
 import name.levis.ichor.model.ScalewayOptions
 import name.levis.ichor.model.defaultSecurityGroup
+import name.levis.ichor.model.hasClusterImage
+import name.levis.ichor.model.imagesTalosFirst
 import name.levis.ichor.model.NodeDirListing
 import name.levis.ichor.model.NodeFileText
 import name.levis.ichor.model.ClusterOverview
@@ -122,6 +124,8 @@ class ContractTest {
             assertTrue(it.images.first().talos)
             assertEquals("demo-sg", it.defaultSecurityGroup?.id)
             assertTrue(it.types.any { t -> t.blockOnly })
+            assertEquals("demo-talos", it.imagesTalosFirst.first { i -> i.matches(it) }.id)
+            assertTrue(it.hasClusterImage("amd64"))
         },
         "scaleway-test" to Row(ScalewayCheck.serializer()) { assertTrue(it.canCreate && it.checked) },
         "scaleway-image-estimate" to Row(ScalewayImageCost.serializer()) { assertEquals("DEV1-S", it.type); assertEquals(10, it.snapshotGB) },

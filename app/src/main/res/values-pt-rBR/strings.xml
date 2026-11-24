@@ -6805,7 +6805,7 @@
     <string name="scaleway_confirm_title">Criar %1$s na Scaleway?</string>
     <string name="scaleway_confirm_body">Isso cria uma instância cobrada (%1$s em %2$s) e um volume de dados. Os dados de usuário vão para a Scaleway com os segredos do cluster ou o token de entrada do Omni. Uma execução com falha exclui a instância e seus volumes.</string>
     <string name="scaleway_stop_body">%1$s é excluído na Scaleway com seus volumes. Um control plane que já respondeu é mantido: o membro etcd dele precisa sair primeiro.</string>
-    <string name="scaleway_image_missing">Ainda não há imagem do Talos para %1$s nesta zona: o Ichor pode criar uma da imagem deste cluster.</string>
+    <string name="scaleway_image_missing">Ainda não há imagem do Talos com a imagem deste cluster para %1$s nesta zona: o Ichor pode criar uma.</string>
     <string name="scaleway_image_intro">O Ichor inicia uma instância Ubuntu descartável com um volume Block Storage vazio e grava nele a imagem do Talos deste cluster. Depois tira um snapshot do volume, cria uma imagem a partir do snapshot e exclui a instância, seus volumes e seu IP. A imagem e o snapshot são mantidos. Nada do cluster é alterado. Leva cerca de dez minutos.</string>
     <string name="scaleway_image_place">A imagem vai para o projeto da chave, na zona %1$s.</string>
     <string name="scaleway_image_cost">Cerca de %1$d minutos de %2$s (%3$s/h), depois a Scaleway cobra o snapshot de %4$d GB por GB por mês até você excluí-lo, sem impostos</string>

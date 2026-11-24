@@ -1,18 +1,18 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "No Talos image for %@ in this zone yet: Ichor can make one of this cluster's image." : {
+    "No Talos image of this cluster's image for %@ in this zone yet: Ichor can make one." : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pas encore d'image Talos pour %@ dans cette zone : Ichor peut en créer une de l'image de ce cluster." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aún no hay imagen de Talos para %@ en esta zona: Ichor puede crear una de la imagen de este clúster." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch kein Talos-Image für %@ in dieser Zone: Ichor kann eines aus dem Image dieses Clusters erstellen." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ancora nessuna immagine Talos per %@ in questa zona: Ichor può crearne una dall'immagine di questo cluster." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このゾーンには %@ 用の Talos イメージがまだありません。Ichor がこのクラスターのイメージから作成できます。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ainda não há imagem do Talos para %@ nesta zona: o Ichor pode criar uma da imagem deste cluster." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В этой зоне пока нет образа Talos для %@: Ichor может создать его из образа этого кластера." } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "У цій зоні ще немає образу Talos для %@: Ichor може створити його з образу цього кластера." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此区域还没有 %@ 的 Talos 镜像：Ichor 可以用此集群的镜像创建一个。" } }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pas encore d'image Talos correspondant à l'image de ce cluster pour %@ dans cette zone : Ichor peut en créer une." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aún no hay una imagen de Talos con la imagen de este clúster para %@ en esta zona: Ichor puede crear una." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch kein Talos-Image aus dem Image dieses Clusters für %@ in dieser Zone: Ichor kann eines erstellen." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ancora nessuna immagine Talos dell'immagine di questo cluster per %@ in questa zona: Ichor può crearne una." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このゾーンには、このクラスターのイメージの %@ 用 Talos イメージがまだありません。Ichor で作成できます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ainda não há imagem do Talos com a imagem deste cluster para %@ nesta zona: o Ichor pode criar uma." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В этой зоне ещё нет образа Talos из образа этого кластера для %@: Ichor может его создать." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "У цій зоні ще немає образу Talos з образу цього кластера для %@: Ichor може його створити." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此区域还没有此集群镜像的 %@ Talos 镜像：Ichor 可以制作一个。" } }
       }
     },
     "Ichor starts a throwaway Ubuntu Instance with an empty Block Storage volume and writes this cluster's Talos image to it. It then snapshots the volume, makes an image from the snapshot, and deletes the Instance, its volumes and its IP. The image and its snapshot are kept. Nothing of the cluster is touched. It takes about ten minutes." : {

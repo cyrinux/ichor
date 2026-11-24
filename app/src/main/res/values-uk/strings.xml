@@ -7068,7 +7068,7 @@
     <string name="scaleway_confirm_title">Створити %1$s у Scaleway?</string>
     <string name="scaleway_confirm_body">Це створює платний інстанс (%1$s у %2$s) і том даних. Його дані користувача йдуть до Scaleway разом із секретами кластера або токеном приєднання Omni. Невдалий запуск видаляє інстанс і його томи.</string>
     <string name="scaleway_stop_body">%1$s видаляється в Scaleway разом із томами. Control plane, що вже відповів, зберігається: спершу треба вилучити його учасника etcd.</string>
-    <string name="scaleway_image_missing">У цій зоні ще немає образу Talos для %1$s: Ichor може створити його з образу цього кластера.</string>
+    <string name="scaleway_image_missing">У цій зоні ще немає образу Talos з образу цього кластера для %1$s: Ichor може його створити.</string>
     <string name="scaleway_image_intro">Ichor запускає одноразовий інстанс Ubuntu з порожнім томом Block Storage і записує на нього образ Talos цього кластера. Потім робить знімок тому, створює з нього образ і видаляє інстанс, його томи та IP. Образ і його знімок зберігаються. Кластер не зачіпається. Це займає близько десяти хвилин.</string>
     <string name="scaleway_image_place">Образ створюється в проєкті ключа, у зоні %1$s.</string>
     <string name="scaleway_image_cost">Близько %1$d хвилин %2$s (%3$s/год), потім Scaleway стягує плату за знімок %4$d ГБ за ГБ на місяць, доки ви його не видалите, без податків</string>

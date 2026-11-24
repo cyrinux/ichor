@@ -190,7 +190,7 @@ func TestAWSTemplateImage(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			img, warnings := awsTemplateImageOf(c.src, c.err)
+			img, warnings := templateImageOf(c.src, c.err, awsTemplateWords)
 			if img.version != c.wantVersion || img.schematic != c.wantSchematic {
 				t.Errorf("image = %+v, want %q %q", img, c.wantVersion, c.wantSchematic)
 			}

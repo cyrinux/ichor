@@ -6670,7 +6670,7 @@
     <string name="scaleway_confirm_title">在 Scaleway 创建 %1$s？</string>
     <string name="scaleway_confirm_body">这会创建一个收费实例（%2$s 中的 %1$s）和一个数据卷。其用户数据会连同集群的密钥或 Omni 的加入令牌发送到 Scaleway。失败的运行会删除该实例及其卷。</string>
     <string name="scaleway_stop_body">%1$s 及其卷将在 Scaleway 被删除。已经响应的 control plane 会保留：必须先移除它的 etcd 成员。</string>
-    <string name="scaleway_image_missing">此区域还没有 %1$s 的 Talos 镜像：Ichor 可以用此集群的镜像创建一个。</string>
+    <string name="scaleway_image_missing">此区域还没有此集群镜像的 %1$s Talos 镜像：Ichor 可以制作一个。</string>
     <string name="scaleway_image_intro">Ichor 启动一个带空 Block Storage 卷的一次性 Ubuntu 实例，把此集群的 Talos 镜像写入该卷。随后为卷创建快照，用快照创建镜像，并删除实例及其卷和 IP。镜像及其快照会保留。不会改动集群。大约需要十分钟。</string>
     <string name="scaleway_image_place">镜像位于该密钥的项目中，区域 %1$s。</string>
     <string name="scaleway_image_cost">约 %1$d 分钟 %2$s (%3$s/小时)，之后 Scaleway 按每 GB 每月对 %4$d GB 快照计费，直到你删除它，不含税</string>

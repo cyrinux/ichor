@@ -6670,7 +6670,7 @@
     <string name="scaleway_confirm_title">Scaleway に %1$s を作成しますか?</string>
     <string name="scaleway_confirm_body">課金対象のインスタンス (%2$s の %1$s) とデータボリュームを作成します。ユーザーデータはクラスターのシークレットまたは Omni の参加トークンとともに Scaleway に送られます。実行が失敗するとインスタンスとそのボリュームは削除されます。</string>
     <string name="scaleway_stop_body">%1$s はボリュームごと Scaleway で削除されます。すでに応答した control plane は残ります。先にその etcd メンバーを削除する必要があります。</string>
-    <string name="scaleway_image_missing">このゾーンには %1$s 用の Talos イメージがまだありません。Ichor がこのクラスターのイメージから作成できます。</string>
+    <string name="scaleway_image_missing">このゾーンには、このクラスターのイメージの %1$s 用 Talos イメージがまだありません。Ichor で作成できます。</string>
     <string name="scaleway_image_intro">Ichor は空の Block Storage ボリュームを付けた使い捨ての Ubuntu インスタンスを起動し、このクラスターの Talos イメージを書き込みます。続いてボリュームのスナップショットを取り、そこからイメージを作成し、インスタンスとそのボリューム、IP を削除します。イメージとスナップショットは残ります。クラスターには何も変更を加えません。約 10 分かかります。</string>
     <string name="scaleway_image_place">イメージはキーのプロジェクトのゾーン %1$s に作成されます。</string>
     <string name="scaleway_image_cost">%2$s を約 %1$d 分 (%3$s/h)、その後削除するまで %4$d GB のスナップショットに Scaleway から 1 GB あたりの月額料金 (税抜)</string>

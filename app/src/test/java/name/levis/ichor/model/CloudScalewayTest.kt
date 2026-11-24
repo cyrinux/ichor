@@ -151,6 +151,38 @@ class CloudScalewayTest {
     }
 
     @Test
+    fun theClustersImageComesFirst() {
+        val schematic = "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba"
+        val run = { id: String, version: String, arch: String ->
+            ScalewayImage(id = id, name = id, arch = arch, talos = true, talosVersion = version, schematic = schematic.take(12))
+        }
+        val listed = options.copy(
+            images = options.images + run("img-old", "v1.13.5", "x86_64") + run("img-run", "v1.14.2", "x86_64") +
+                run("img-arm", "v1.14.2", "arm64"),
+            templateVersion = "v1.14.2",
+            templateSchematic = schematic,
+        )
+        assertEquals("img-run", listed.imagesTalosFirst.first().id)
+        assertTrue(listed.images.first { it.id == "img-run" }.matches(listed))
+        assertFalse(listed.images.first { it.id == "img-old" }.matches(listed))
+        assertFalse(listed.images.first { it.id == "img-talos" }.matches(listed))
+        assertTrue(listed.hasClusterImage("amd64"))
+        assertTrue(listed.hasClusterImage("arm64"))
+
+        // Only an older Talos for amd64: the make row comes first.
+        val older = listed.copy(images = listed.images.filter { it.id != "img-run" })
+        assertFalse(older.hasClusterImage("amd64"))
+        assertTrue(older.hasTalosImage("amd64"))
+
+        // Another schematic does not match either.
+        assertFalse(listed.copy(templateSchematic = "0".repeat(64)).hasClusterImage("amd64"))
+
+        // A template that cannot be read: any Talos image of the architecture counts, as before.
+        assertTrue(older.copy(templateVersion = "", templateSchematic = "").hasClusterImage("amd64"))
+        assertFalse(options.hasClusterImage("arm64"))
+    }
+
+    @Test
     fun anImageRunHasItsOwnSteps() {
         val spec = ScalewayImageSpec(arch = "amd64", zone = "fr-par-1")
         val request = JoinRequest(address = "", template = "", role = "", hostname = "Talos amd64", disk = "", staticAddress = "", scalewayImage = spec)

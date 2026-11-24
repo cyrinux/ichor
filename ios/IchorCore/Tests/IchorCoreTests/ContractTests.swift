@@ -112,6 +112,9 @@ final class ContractTests: XCTestCase {
         "scaleway-options": ContractTests.row(ScalewayOptions.self) {
             XCTAssertEqual($0.imagesTalosFirst.first?.talos, true)
             XCTAssertEqual($0.defaultSecurityGroup?.id, "demo-sg")
+            let options = $0
+            XCTAssertEqual($0.imagesTalosFirst.first { $0.matches(options) }?.id, "demo-talos")
+            XCTAssertTrue($0.hasClusterImage(arch: "amd64"))
         },
         "scaleway-test": ContractTests.row(ScalewayCheck.self) { XCTAssertTrue($0.canCreate && $0.checked) },
         "scaleway-image-estimate": ContractTests.row(ScalewayImageCost.self) {

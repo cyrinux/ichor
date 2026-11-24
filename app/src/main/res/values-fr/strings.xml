@@ -6810,7 +6810,7 @@
     <string name="scaleway_confirm_title">Créer %1$s chez Scaleway ?</string>
     <string name="scaleway_confirm_body">Cela crée une instance facturée (%1$s dans %2$s) et un volume de données. Ses données utilisateur partent chez Scaleway avec les secrets du cluster ou le jeton d\'adhésion d\'Omni. Une exécution qui échoue supprime l\'instance et ses volumes.</string>
     <string name="scaleway_stop_body">%1$s est supprimé chez Scaleway avec ses volumes. Un control plane qui a déjà répondu est conservé : son membre etcd doit d\'abord être retiré.</string>
-    <string name="scaleway_image_missing">Pas encore d\'image Talos pour %1$s dans cette zone : Ichor peut en créer une de l\'image de ce cluster.</string>
+    <string name="scaleway_image_missing">Pas encore d\'image Talos correspondant à l\'image de ce cluster pour %1$s dans cette zone : Ichor peut en créer une.</string>
     <string name="scaleway_image_intro">Ichor démarre une instance Ubuntu jetable avec un volume Block Storage vide et y écrit l\'image Talos de ce cluster. Il prend ensuite un snapshot du volume, crée une image à partir du snapshot, puis supprime l\'instance, ses volumes et son IP. L\'image et son snapshot sont conservés. Rien du cluster n\'est touché. Cela prend une dizaine de minutes.</string>
     <string name="scaleway_image_place">L\'image va dans le projet de la clé, dans la zone %1$s.</string>
     <string name="scaleway_image_cost">Environ %1$d minutes de %2$s (%3$s/h), puis le snapshot de %4$d Go est facturé par Scaleway par Go par mois jusqu\'à ce que vous le supprimiez, hors taxes</string>

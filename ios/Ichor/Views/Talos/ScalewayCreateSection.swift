@@ -135,15 +135,15 @@ struct ScalewayCreateSection: View {
         }
         // The image is made for the picked type's architecture, else the picked image's, else the zone's first.
         let makeArch = ScalewayArch.normalized(type?.arch ?? image?.arch ?? "")
-        let noTalosImage = !value.hasTalosImage(arch: makeArch)
-        if noTalosImage { makeImageRows(value, zone: shownZone, arch: makeArch, missing: true) }
+        let noClusterImage = !value.hasClusterImage(arch: makeArch)
+        if noClusterImage { makeImageRows(value, zone: shownZone, arch: makeArch, missing: true) }
         Picker("Talos image", selection: $image) {
             Text(verbatim: "—").tag(ScalewayImage?.none)
             ForEach(value.imagesTalosFirst) { option in
-                Text(verbatim: "\(option.name) · \(option.arch)").tag(ScalewayImage?.some(option))
+                imageLabel(option, options: value).tag(ScalewayImage?.some(option))
             }
         }
-        if !noTalosImage { makeImageRows(value, zone: shownZone, arch: makeArch, missing: false) }
+        if !noClusterImage { makeImageRows(value, zone: shownZone, arch: makeArch, missing: false) }
         let chosenImage = value.images.first { $0.id == image?.id }
         let types = value.types(for: chosenImage)
         Picker("Type", selection: $type) {
@@ -194,15 +194,22 @@ struct ScalewayCreateSection: View {
         createButton(zone: shownZone, type: chosenType, image: chosenImage, group: chosenGroup)
     }
 
-    /// "Make a Talos image" first when no Talos image of `arch` is listed, "Make another" after the
-    /// picker otherwise. The demo opens the sheet too: the core refuses its run.
+    /// The image's name and architecture, marked when it is the cluster's image.
+    private func imageLabel(_ image: ScalewayImage, options: ScalewayOptions) -> Text {
+        let name = "\(image.name) · \(image.arch)"
+        return image.matches(options) ? Text("\(name) · matches the cluster's image") : Text(verbatim: name)
+    }
+
+    /// "Make a Talos image" first when no image of the cluster's image for `arch` is listed (no Talos
+    /// image of `arch` when that cannot be read), "Make another" after the picker otherwise. The demo
+    /// opens the sheet too: the core refuses its run.
     @ViewBuilder
     private func makeImageRows(_ value: ScalewayOptions, zone: String, arch: String, missing: Bool) -> some View {
         let shownArch = arch.isEmpty ? (value.imageArches.first ?? "") : arch
         if demo || !account.isEmpty {
             // No Talos image at all: the core's warning above already says so.
             if missing, value.hasTalosImage(arch: "") {
-                Text("No Talos image for \(shownArch) in this zone yet: Ichor can make one of this cluster's image.")
+                Text("No Talos image of this cluster's image for \(shownArch) in this zone yet: Ichor can make one.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
             Group {
