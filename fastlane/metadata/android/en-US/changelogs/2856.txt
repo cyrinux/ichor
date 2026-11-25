@@ -1,0 +1,2 @@
+• Ichor-relay holds a phone's pushes back during its quiet hours (iOS, ntfy)
+• Quiet hours also hold back relay pushes on Android and Argo CD freeze reminders
