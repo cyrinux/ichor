@@ -62,6 +62,30 @@ go run ./cmd/probe overview   # also: services NODE, resources NODE, logs NODE S
 go run ./cmd/probe -config ../talosconfig-phone overview   # test a role-limited config
 ```
 
+### Teleport fixture
+
+The Teleport sign-in's unit tests run against a fake proxy. `just teleport-up` starts the real
+thing: Teleport Community Edition (one container, the version pinned in
+`scripts/teleport-fixture.sh`) in front of a kind cluster registered as `sample-kube`, with two
+users signed by `tctl auth sign --format=kubernetes`, the certificates a browser sign-in would
+bring back. It needs Docker or Podman, kind and kubectl, and takes about two minutes the first
+time (images), seconds after. It prints the variables to export, then:
+
+```sh
+cd go && go test ./ichorgo -run TestTeleportLive -count=1 -v
+```
+
+The test reaches the cluster through the proxy with the certificate (namespaces, an exec in
+CoreDNS, a port-forward to its health port), checks that a one-minute certificate asks for a
+sign-in, and that a role with per-session MFA is refused in words. Without the variables it is
+skipped. `.teleport/tsh.kubeconfig` is the kubeconfig `tsh kube login --insecure` would write,
+for the app's import preview; `just probe -config .teleport/tsh.kubeconfig kube-signin` reads the
+proxy's ping and stops at "only signs local users in", as the fixture has no SSO connector.
+`just teleport-down` removes the container, the cluster and `.teleport/`.
+
+The SSO console sign-in itself is not covered: Community Edition's GitHub connector cannot
+point at a fake GitHub, so it stays a hand check against a real proxy with a GitHub OAuth app.
+
 ## Layouts in other languages
 
 Debug builds carry Android's pseudo-locales: in Developer options → Language, pick

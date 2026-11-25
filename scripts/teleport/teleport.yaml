@@ -1,0 +1,26 @@
+# Teleport Community Edition for the live checks (scripts/teleport-fixture.sh): one process
+# with the auth, proxy and Kubernetes services, the proxy multiplexed on 3080 (TLS routing, as
+# most proxies run), the kind cluster registered from its kubeconfig as "sample-kube".
+version: v3
+teleport:
+  nodename: teleport.local
+  data_dir: /var/lib/teleport
+  log:
+    output: stderr
+    severity: WARN
+auth_service:
+  enabled: true
+  cluster_name: teleport.local
+  proxy_listener_mode: multiplex
+ssh_service:
+  enabled: false
+proxy_service:
+  enabled: true
+  web_listen_addr: 0.0.0.0:3080
+  public_addr: localhost:3080
+kubernetes_service:
+  enabled: true
+  listen_addr: 0.0.0.0:3027
+  kubeconfig_file: /etc/teleport/kind.kubeconfig
+  labels:
+    env: sample

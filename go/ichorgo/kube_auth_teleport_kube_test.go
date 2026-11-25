@@ -30,6 +30,8 @@ type certAPI struct {
 	refuse string
 	// rejectAtHandshake refuses every client certificate, as the proxy does an expired one.
 	rejectAtHandshake atomic.Bool
+	// refuseVersion answers /version as Teleport 18 refuses it: plain text, HTTP 500.
+	refuseVersion atomic.Bool
 }
 
 func newCertAPI(t *testing.T) *certAPI {
@@ -39,6 +41,13 @@ func newCertAPI(t *testing.T) *certAPI {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
 		a.note(r)
+
+		if a.refuseVersion.Load() {
+			http.Error(w, "[00] access denied", http.StatusInternalServerError)
+
+			return
+		}
+
 		_, _ = io.WriteString(w, `{"gitVersion":"v1.31.0"}`)
 	})
 	mux.HandleFunc("/api/v1/nodes", func(w http.ResponseWriter, r *http.Request) {
@@ -314,6 +323,28 @@ func TestTeleportRefusalsReadAsSentences(t *testing.T) {
 	}
 }
 
+// The first call of a new client (its probe) is refused in the same words as the later ones:
+// Teleport 18 refuses /version with a plain-text 500, per-session MFA included.
+func TestTeleportRefusalWhenTheClientOpens(t *testing.T) {
+	withAuthStore(t)
+
+	f := newFakeTeleport(t, teleportGitHubPing)
+	api := newCertAPI(t)
+	cfg := teleportKubeconfigAt(f, api.Server, "")
+	t.Cleanup(func() { kubeClients.forgetConfig(cfg, teleportTestContext) })
+
+	if err := teleportSignIn(t, cfg, teleportBrowser{notAfter: time.Now().Add(time.Hour)}, f); err != "" {
+		t.Fatal(err)
+	}
+
+	api.refuseVersion.Store(true)
+
+	err := listNodes(cfg)
+	if err == nil || !strings.Contains(err.Error(), "per-session MFA") || strings.Contains(err.Error(), "500") {
+		t.Fatalf("refused when opening: %v", err)
+	}
+}
+
 func TestTeleportRefusalMapping(t *testing.T) {
 	m := &teleportMethod{proxy: "proxy.example.org:443", kubeCluster: "sample-kube"}
 	alpn := "kube-teleport-proxy-alpn.proxy.example.org"
@@ -334,6 +365,11 @@ func TestTeleportRefusalMapping(t *testing.T) {
 		{"not found", "", &kube.APIError{Code: 404, Message: `kubernetes cluster "x" not found`}, "no Kubernetes cluster named x"},
 		{"roles", "", &kube.APIError{Code: 403, Message: "[00] access denied"}, "roles grant no access"},
 		{"no roles", "", &kube.APIError{Code: 403, Message: "no roles grant access to it"}, "roles grant no access"},
+		// What Teleport 18 sends, per-session MFA included (seen against the fixture): a 403
+		// Status, and a plain-text 500 for /version.
+		{"real proxy", "", &kube.APIError{Code: 403, Reason: "Forbidden", Message: "[00] access denied"}, "per-session MFA"},
+		{"real proxy /version", "", &kube.APIError{Code: 500, Reason: "Internal Server Error", Message: "[00] access denied"}, "per-session MFA"},
+		{"other 500 stays", "", &kube.APIError{Code: 500, Reason: "Internal Server Error", Message: "etcdserver: request timed out"}, "500"},
 		{"kube rbac stays", "", &kube.APIError{Code: 403, Message: `nodes is forbidden: User "x" cannot list`}, "forbidden"},
 		{"expired", "", tls.AlertError(42), KubeSignInRequired},
 		{"expired stream", "", &websocket.DialError{Config: streamCfg, Err: errors.New("remote error: tls: expired certificate")}, KubeSignInRequired},

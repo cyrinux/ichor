@@ -261,6 +261,16 @@ browser again, and your identity provider usually skips the password. **Sign out
 Teleport proxy** removes every certificate of the proxy. Listing the clusters Teleport allows
 you is not available yet.
 
+What goes where: the sign-in calls go to the proxy's web port, and your identity provider's
+page opens in the browser. The Kubernetes requests then go to the proxy, as with `tsh`, which
+sees them and forwards them to the cluster. GitHub, OIDC and SAML connectors sign in (Community
+Edition has GitHub only); local users with a password do not, and neither does a proxy behind a
+load balancer that ends TLS (use the proxy's own address). Per-session MFA is not supported:
+Teleport refuses such a cluster with the same words as missing roles, so the app names both.
+The certificate and its key are sealed on the device and never in backups; signing out wipes
+them. Without the browser sign-in, `tsh proxy kube` on a computer or a `tctl auth sign`
+kubeconfig (above) still work.
+
 **Tailscale's Kubernetes API proxy.** With the
 [Tailscale operator](https://tailscale.com/kb/1437/kubernetes-operator-api-server-proxy)'s API
 server proxy in auth mode, the phone on the tailnet signs in with its Tailscale identity, and
@@ -425,6 +435,8 @@ and how long ago you signed in:
   A workforce identity session lasts what its pool allows (1 hour by default).
 - **OIDC (Keycloak, Dex, Entra ID…):** the provider's idle and maximum session times apply.
   Keycloak tells the app when the session ends, and the sign-in sheet shows it.
+- **Teleport:** the certificate lasts 12 hours by default; your Teleport administrator sets it
+  with the role's `max_session_ttl`. There is no refresh: renewing is a new browser sign-in.
 
 ## Omni clusters
 
