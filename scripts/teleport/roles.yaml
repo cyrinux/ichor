@@ -1,0 +1,36 @@
+# Roles of the fixture's two users: "live" reaches the kind cluster as an admin, "live-mfa"
+# the same with per-session MFA required, which the proxy refuses to a plain certificate.
+kind: role
+version: v7
+metadata:
+  name: kube-live
+spec:
+  allow:
+    kubernetes_labels:
+      "*": "*"
+    kubernetes_groups: ["system:masters"]
+    kubernetes_resources:
+      - kind: "*"
+        namespace: "*"
+        name: "*"
+        verbs: ["*"]
+  options:
+    max_session_ttl: 12h
+---
+kind: role
+version: v7
+metadata:
+  name: kube-mfa
+spec:
+  allow:
+    kubernetes_labels:
+      "*": "*"
+    kubernetes_groups: ["system:masters"]
+    kubernetes_resources:
+      - kind: "*"
+        namespace: "*"
+        name: "*"
+        verbs: ["*"]
+  options:
+    max_session_ttl: 12h
+    require_session_mfa: true

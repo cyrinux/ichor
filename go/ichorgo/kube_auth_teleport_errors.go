@@ -17,7 +17,7 @@ const (
 	teleportMFAMessage    = "MFA is required to access Kubernetes cluster"
 	teleportALPNPrefix    = "kube-teleport-proxy-alpn."
 	sentenceTeleportMFA   = "This cluster requires per-session MFA, which the phone cannot do yet. Ask your Teleport administrator, or use tsh proxy kube on a computer."
-	sentenceTeleportRoles = "Your Teleport roles grant no access to this Kubernetes cluster."
+	sentenceTeleportRoles = "Your Teleport roles grant no access to this Kubernetes cluster, or it requires per-session MFA, which the phone cannot do yet."
 	sentenceTeleportLB    = "The Teleport proxy did not answer as a Kubernetes endpoint (a load balancer in front of it may terminate TLS); use the proxy's own address."
 )
 
@@ -69,11 +69,15 @@ func (m *teleportMethod) refusal(err error, serverName string) error {
 // API server behind it (Kubernetes RBAC's "forbidden" stays as it is).
 func teleportAPISentence(apiErr *kubeAPIError) string {
 	msg := apiErr.Message
+	// A real proxy (v18) refuses with a 403 Status, but /version with a plain-text HTTP 500
+	// "[00] access denied" (its redacted refusal); per-session MFA comes as the same words.
+	forbidden := apiErr.Code == http.StatusForbidden || apiErr.Reason == "Forbidden" ||
+		(apiErr.Code == http.StatusInternalServerError && strings.HasPrefix(msg, "[00] access denied"))
 
 	switch {
-	case apiErr.Code == http.StatusForbidden && strings.Contains(msg, teleportMFAMessage):
+	case forbidden && strings.Contains(msg, teleportMFAMessage):
 		return sentenceTeleportMFA
-	case apiErr.Code == http.StatusForbidden &&
+	case forbidden &&
 		(strings.Contains(msg, "[00] access denied") || strings.HasPrefix(msg, "access denied") || strings.Contains(msg, "no roles grant access")):
 		return sentenceTeleportRoles
 	}

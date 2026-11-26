@@ -196,6 +196,15 @@ app-icons *args:
 test:
     cd go && go test ./...
 
+# A local Teleport proxy in front of a kind cluster for the Teleport live test (needs Docker or
+# Podman, kind and kubectl; see docs/build.md "Teleport fixture"). It prints the variables to export.
+teleport-up:
+    scripts/teleport-fixture.sh up
+
+# Removes the Teleport fixture: its container, the kind cluster and .teleport/.
+teleport-down:
+    scripts/teleport-fixture.sh down
+
 # The Go tests under the race detector (needs cgo; not on hosts whose ThreadSanitizer refuses
 # the address space, see build.sh's race_flag).
 test-race:

@@ -519,5 +519,11 @@ func openStoredKubeClient(target kubeTarget) (*kubeClient, error) {
 		return nil, err
 	}
 
-	return openKubeClientCreds(context.Background(), creds, nil, target.server)
+	k, err := openKubeClientCreds(context.Background(), creds, nil, target.server)
+	if m, ok := sc.method.(certificateMethod); ok && err != nil {
+		// The probe is the first call through the proxy: its refusal reads as the later ones do.
+		return nil, m.refusal(err, creds.tls.ServerName)
+	}
+
+	return k, err
 }
