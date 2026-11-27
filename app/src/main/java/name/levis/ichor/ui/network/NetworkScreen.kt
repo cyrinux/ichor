@@ -45,6 +45,9 @@ import name.levis.ichor.model.RouteInfo
 import name.levis.ichor.model.hiddenVirtualCount
 import name.levis.ichor.model.isDefault
 import name.levis.ichor.model.isUp
+import name.levis.ichor.model.LldpNeighbor
+import name.levis.ichor.model.neighborsByLink
+import name.levis.ichor.model.showsNeighbors
 import name.levis.ichor.model.visible
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
@@ -118,6 +121,7 @@ private fun InterfacesTab(
 private fun NetworkContent(network: NodeNetwork, showVirtual: Boolean, onShowVirtual: (Boolean) -> Unit) {
     val shown = remember(network, showVirtual) { network.visible(showVirtual) }
     val hidden = remember(network) { network.hiddenVirtualCount() }
+    val neighbors = remember(network) { network.neighborsByLink() }
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -132,7 +136,19 @@ private fun NetworkContent(network: NodeNetwork, showVirtual: Boolean, onShowVir
             Section(stringResource(R.string.network_links), network.errors[NetworkSection.LINKS], shown.links.isEmpty()) {
                 shown.links.forEachIndexed { i, link ->
                     if (i > 0) HorizontalDivider()
-                    LinkRow(link)
+                    LinkRow(link, neighbors[link.name].orEmpty())
+                }
+            }
+        }
+        // Talos 1.15+ only: hidden on older nodes and when no switch announces itself.
+        if (network.showsNeighbors) {
+            item {
+                Section(stringResource(R.string.network_neighbors), network.errors[NetworkSection.NEIGHBORS], network.neighbors.isEmpty()) {
+                    MutedText(stringResource(R.string.network_neighbors_hint))
+                    network.neighbors.forEachIndexed { i, neighbor ->
+                        if (i > 0) HorizontalDivider()
+                        NeighborRow(neighbor)
+                    }
                 }
             }
         }
@@ -183,7 +199,7 @@ private fun Mono(text: String) {
 }
 
 @Composable
-internal fun LinkRow(link: LinkInfo) {
+internal fun LinkRow(link: LinkInfo, neighbors: List<LldpNeighbor> = emptyList()) {
     val colors = LocalStatusColors.current
     Column(Modifier.padding(vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -196,6 +212,7 @@ internal fun LinkRow(link: LinkInfo) {
         if (link.hardwareAddr.isNotEmpty()) {
             Text(link.hardwareAddr, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        LinkNeighbors(neighbors)
     }
 }
 

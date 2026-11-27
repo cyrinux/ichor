@@ -1,28 +1,37 @@
 import Foundation
 
 /// A node's network state from the Go core (NodeNetwork); each section is best-effort and
-/// a failed one is named in `errors` (links, addresses, routes, resolvers, timeServers).
+/// a failed one is named in `errors` (links, addresses, routes, resolvers, timeServers, neighbors).
 public struct NodeNetwork: Decodable, Equatable, Sendable {
     public let links: [NetLink]
     public let addresses: [NetAddress]
     public let routes: [NetRoute]
     public let resolvers: [String]
     public let timeServers: [String]
+    /// What the switches announce over LLDP (Talos 1.15+).
+    public let neighbors: [LLDPNeighbor]
+    /// False on nodes older than Talos 1.15, which have no LLDP resource.
+    public let neighborsSupported: Bool
     public let errors: [String: String]
 
     public init(
         links: [NetLink] = [], addresses: [NetAddress] = [], routes: [NetRoute] = [],
-        resolvers: [String] = [], timeServers: [String] = [], errors: [String: String] = [:]
+        resolvers: [String] = [], timeServers: [String] = [], neighbors: [LLDPNeighbor] = [],
+        neighborsSupported: Bool = false, errors: [String: String] = [:]
     ) {
         self.links = links
         self.addresses = addresses
         self.routes = routes
         self.resolvers = resolvers
         self.timeServers = timeServers
+        self.neighbors = neighbors
+        self.neighborsSupported = neighborsSupported
         self.errors = errors
     }
 
-    private enum CodingKeys: String, CodingKey { case links, addresses, routes, resolvers, timeServers, errors }
+    private enum CodingKeys: String, CodingKey {
+        case links, addresses, routes, resolvers, timeServers, neighbors, neighborsSupported, errors
+    }
 
     // Go encodes empty (nil) slices and maps as null.
     public init(from decoder: Decoder) throws {
@@ -32,8 +41,89 @@ public struct NodeNetwork: Decodable, Equatable, Sendable {
         routes = try c.field(.routes, [])
         resolvers = try c.field(.resolvers, [])
         timeServers = try c.field(.timeServers, [])
+        neighbors = try c.field(.neighbors, [])
+        neighborsSupported = try c.field(.neighborsSupported, false)
         errors = try c.field(.errors, [:])
     }
+
+    /// The Network screen shows the neighbours when the node supports LLDP and either a switch
+    /// announced itself or the read failed.
+    public var showsNeighbors: Bool {
+        neighborsSupported && (!neighbors.isEmpty || errors["neighbors"] != nil)
+    }
+
+    /// The neighbours heard on `link`.
+    public func neighbors(on link: String) -> [LLDPNeighbor] {
+        neighbors.filter { $0.link == link }
+    }
+}
+
+/// One switch heard on `link` over LLDP. Every text comes from the network: show it, never
+/// make a link of it.
+public struct LLDPNeighbor: Decodable, Equatable, Hashable, Identifiable, Sendable {
+    public let link: String
+    public let chassisId: String
+    public let systemName: String
+    public let systemDescription: String
+    public let portId: String
+    public let portDescription: String
+    public let managementAddresses: [String]
+    public let vlans: [LLDPVLAN]
+
+    public var id: String { "\(link)/\(chassisId)/\(portId)" }
+    /// The switch's name, else its chassis id.
+    public var switchName: String { systemName.isEmpty ? chassisId : systemName }
+
+    public init(
+        link: String, chassisId: String = "", systemName: String = "", systemDescription: String = "",
+        portId: String = "", portDescription: String = "", managementAddresses: [String] = [], vlans: [LLDPVLAN] = []
+    ) {
+        self.link = link
+        self.chassisId = chassisId
+        self.systemName = systemName
+        self.systemDescription = systemDescription
+        self.portId = portId
+        self.portDescription = portDescription
+        self.managementAddresses = managementAddresses
+        self.vlans = vlans
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case link, chassisId, systemName, systemDescription, portId, portDescription, managementAddresses, vlans
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        link = try c.field(.link, "")
+        chassisId = try c.field(.chassisId, "")
+        systemName = try c.field(.systemName, "")
+        systemDescription = try c.field(.systemDescription, "")
+        portId = try c.field(.portId, "")
+        portDescription = try c.field(.portDescription, "")
+        managementAddresses = try c.field(.managementAddresses, [])
+        vlans = try c.field(.vlans, [])
+    }
+}
+
+public struct LLDPVLAN: Decodable, Equatable, Hashable, Sendable {
+    public let id: Int
+    public let name: String
+
+    public init(id: Int, name: String = "") {
+        self.id = id
+        self.name = name
+    }
+
+    private enum CodingKeys: String, CodingKey { case id, name }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.field(.id, 0)
+        name = try c.field(.name, "")
+    }
+
+    /// "30 servers", or just "30".
+    public var label: String { name.isEmpty ? "\(id)" : "\(id) \(name)" }
 }
 
 public struct NetLink: Decodable, Equatable, Identifiable, Sendable {

@@ -101,7 +101,7 @@ complications): it only works with the Google Play phone build
 | [Roles](docs/roles.md) | Which talosconfig role each feature needs |
 | [Adding clusters](docs/clusters.md) | Talosconfig for the phone, kubeconfig and cloud clusters, Omni, several clusters, share links, backup and restore |
 | [Kubernetes screens](docs/kubernetes.md) | Checkup, CronJobs, capacity, policies, autoscaling, virtual machines, Crossplane, Tailscale, Cluster API, image scans, Argo CD icons |
-| [Network](docs/network.md) | Node network tools, packet capture, network test |
+| [Network](docs/network.md) | Where each cable goes (LLDP neighbours, Talos 1.15), node network tools, packet capture, network test |
 | [Safety](docs/safety.md) | What protects the cluster and the phone; VPN, firewall and ACLs for reaching it |
 | [etcd](docs/etcd.md) | Snapshots, recovery, the NOSPACE fix |
 | [Cluster insights](docs/insights.md) | Drift, incident recorder, bottleneck metrics |

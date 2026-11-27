@@ -14,12 +14,16 @@ import (
 )
 
 type nodeNetwork struct {
-	Links       []linkInfo        `json:"links"`
-	Addresses   []addressInfo     `json:"addresses"`
-	Routes      []routeInfo       `json:"routes"`
-	Resolvers   []string          `json:"resolvers"`
-	TimeServers []string          `json:"timeServers"`
-	Errors      map[string]string `json:"errors"` // section -> error, for sections that failed
+	Links       []linkInfo    `json:"links"`
+	Addresses   []addressInfo `json:"addresses"`
+	Routes      []routeInfo   `json:"routes"`
+	Resolvers   []string      `json:"resolvers"`
+	TimeServers []string      `json:"timeServers"`
+	// Neighbors are what the switches announce over LLDP (Talos 1.15+, network_lldp.go);
+	// NeighborsSupported is false on older nodes, which have no such resource.
+	Neighbors          []lldpNeighbor    `json:"neighbors"`
+	NeighborsSupported bool              `json:"neighborsSupported"`
+	Errors             map[string]string `json:"errors"` // section -> error, for sections that failed
 }
 
 type linkInfo struct {
@@ -55,7 +59,8 @@ type routeInfo struct {
 var virtualLinkPrefixes = []string{"lxc", "cilium_", "cali", "tunl", "wireguard.cali", "flannel", "cni", "kube-ipvs", "vxlan", "genev_sys"}
 
 // NodeNetwork returns node's links, addresses, main-table routes, DNS resolvers and time
-// servers, like `talosctl get links/addresses/routes/resolvers/timeservers` (os:reader).
+// servers, like `talosctl get links/addresses/routes/resolvers/timeservers` (os:reader), plus
+// the LLDP neighbours on Talos 1.15+ (`talosctl get lldpneighborstatus`).
 // Each section is best-effort; only a total failure is an error.
 func NodeNetwork(configYAML, contextName, node string) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -70,7 +75,7 @@ func NodeNetwork(configYAML, contextName, node string) (out string, err error) {
 		st := s.client.COSI
 		out := nodeNetwork{
 			Links: []linkInfo{}, Addresses: []addressInfo{}, Routes: []routeInfo{},
-			Resolvers: []string{}, TimeServers: []string{}, Errors: map[string]string{},
+			Resolvers: []string{}, TimeServers: []string{}, Neighbors: []lldpNeighbor{}, Errors: map[string]string{},
 		}
 
 		if links, err := safe.StateListAll[*network.LinkStatus](ctx, st); err != nil {
@@ -110,6 +115,9 @@ func NodeNetwork(configYAML, contextName, node string) (out string, err error) {
 		if len(out.Errors) == 5 {
 			return "", fmt.Errorf("node %s: %s", node, out.Errors["links"])
 		}
+
+		// After the total-failure check: the neighbours are an extra, never the only section.
+		readNeighbors(ctx, s, node, &out)
 
 		return toJSON(out)
 	})

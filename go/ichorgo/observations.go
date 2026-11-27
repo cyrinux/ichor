@@ -76,7 +76,9 @@ func ClusterDriftSnapshot(configYAML, contextName string) (out string, err error
 			d.Errors["network"] = e.Error()
 		} else {
 			for k, v := range network.Errors {
-				d.Errors[k] = v
+				if k != "neighbors" { // not compared: what the switches announce is not node config
+					d.Errors[k] = v
+				}
 			}
 			if network.Errors["resolvers"] == "" {
 				d.Values["dns"] = sortedSetting(network.Resolvers)

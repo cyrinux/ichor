@@ -1354,6 +1354,12 @@
     <string name="network_metric">métrique %1$d</string>
     <string name="network_mtu">MTU %1$d</string>
     <string name="network_speed_mbit">%1$d Mb/s</string>
+    <string name="network_neighbors">Voisins</string>
+    <string name="network_neighbors_hint">Ce que les switchs annoncent par LLDP : le switch et le port au bout de chaque câble.</string>
+    <string name="network_neighbor_port">port %1$s</string>
+    <string name="network_neighbor_vlan">VLAN %1$s</string>
+    <string name="network_neighbor_management">gestion %1$s</string>
+    <string name="network_neighbor_copy">Copier les détails du voisin</string>
     <string name="connections_search">Filtrer par adresse, port, état ou processus</string>
     <string name="connections_listening">En écoute</string>
     <string name="connections_all">Toutes</string>

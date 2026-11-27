@@ -86,6 +86,10 @@ var featureRules = []featureRule{
 	// LinkStatuses/AddressStatuses/RouteStatuses/ResolverStatuses/TimeServerStatuses
 	// .net.talos.dev: v1.0.0, read through the COSI API.
 	{name: "network", min: oldestCOSI},
+	// LLDPNeighborStatuses.net.talos.dev: not in v1.14.0, first in v1.15 (pkg/machinery/
+	// resources/network/lldp_neighbor_status.go at v1.15.0-beta.1). NodeNetwork reports it as
+	// neighborsSupported; the apps read that rather than this row.
+	{name: "lldp", min: "v1.15", hint: "LLDP neighbours"},
 	// rpc Netstat (machine.proto): first in v1.4.0.
 	{name: "connections", min: "v1.4"},
 	// TimeService (api/time/time.proto): v1.0.0.
