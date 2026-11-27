@@ -18,9 +18,11 @@ data class MetaKey(
     val secret: Boolean = false,
     /** The API accepts a write or delete of this key. */
     val writable: Boolean = false,
+    /** Talos 1.15 replaced the secrets of [value] with REDACTED for this role (below os:admin). */
+    val redacted: Boolean = false,
 ) {
-    /** Only a writable text value can be edited as text. */
-    val editable: Boolean get() = writable && !binary && !secret
+    /** Only a writable text value can be edited as text; a redacted one would write REDACTED back. */
+    val editable: Boolean get() = writable && !binary && !secret && !redacted
 }
 
 @Serializable

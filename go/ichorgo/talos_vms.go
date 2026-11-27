@@ -21,7 +21,9 @@ import (
 //	  (unknown|pending|ready|error), error, addresses[] (CIDR), interfaces[{name,
 //	  hardwareAddr, ips[]}], observedGeneration
 //	VirtualMachineSpecs (ID: VM name): cpu.count, memory.size (bytes), powerState (wanted),
-//	  profile ("" = the builtin host profile)
+//	  profile ("" = the builtin host profile). Sensitive: os:reader and os:operator read it
+//	  only in the redacted form, which blanks cloudInit.{metaData,userData,networkConfig} to
+//	  REDACTED; none of those is read here, so a redacted spec reads like a full one.
 //	VirtualMachineDiskStatuses (ID: "<vm>/<disk>@<digest>"): virtualMachine, name, format,
 //	  readOnly, phase (unknown|notReady|ready|observationUnavailable), error, pool, volume,
 //	  size (bytes), blank
@@ -196,7 +198,13 @@ func readNodeVMs(ctx context.Context, s *session, node string) (nodeVMs, error) 
 
 	errs := map[string]string{}
 	list := func(section, resourceType string) []resource.Resource {
-		items, err := s.client.COSI.List(ctx, resource.NewMetadata(hypervisorNamespace, resourceType, "", resource.VersionUndefined))
+		listCtx := ctx
+		if resourceType == vmSpecType {
+			// Sensitive on 1.15: a role below os:admin reads the redacted form (see vmSpecType).
+			listCtx = acceptRedacted(ctx)
+		}
+
+		items, err := s.client.COSI.List(listCtx, resource.NewMetadata(hypervisorNamespace, resourceType, "", resource.VersionUndefined))
 		if err != nil {
 			errs[section] = s.friendly(node, err)
 

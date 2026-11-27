@@ -90,7 +90,11 @@ Notes:
   redacted. Sensitive types without a redacted form (such as the Kubernetes
   secrets) are still refused with "permission denied" below `os:admin`, and so
   are all sensitive types on Talos 1.14 and older. `os:admin` always gets the full resource.
-  The app never fills a redacted resource in from another read.
+  The app never fills a redacted resource in from another read. The META keys and the Talos
+  virtual machine specs ask for the redacted form too: a META value with secrets (the metal
+  network config, the STATE encryption config, the machine token) carries the same chip and
+  cannot be edited, and a VM keeps its CPU, memory and wanted power state (only its cloud-init
+  data is redacted).
 - **Roles combine:** an `os:operator` config can do everything an `os:reader` one can.
 - **Kubernetes access:** see [Kubernetes clusters without Talos](clusters.md#kubernetes-clusters-without-talos)
   to use your own kubeconfig identity instead of the admin kubeconfig (no `os:admin` needed).

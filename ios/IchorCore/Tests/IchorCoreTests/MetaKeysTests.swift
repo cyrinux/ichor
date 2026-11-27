@@ -14,6 +14,21 @@ final class MetaKeysTests: XCTestCase {
         XCTAssertTrue(list.loaded)
         XCTAssertEqual(list.keys.map(\.editable), [true, false, false])
         XCTAssertTrue(list.known.isEmpty)
+        XCTAssertFalse(list.keys.contains(where: \.redacted))
+    }
+
+    func testRedactedValueIsNotEditable() throws {
+        let list = try TalosJSON.decode(
+            MetaKeyList.self,
+            from: """
+                {"keys":[{"key":10,"hex":"0x0a","name":"metal network config",\
+                "value":"links:\\n    - wireguard:\\n        privateKey: REDACTED\\n","size":49,\
+                "binary":false,"secret":false,"writable":true,"redacted":true}],"loaded":true}
+                """)
+        let key = try XCTUnwrap(list.keys.first)
+        XCTAssertTrue(key.redacted)
+        XCTAssertTrue(key.writable)
+        XCTAssertFalse(key.editable)
     }
 
     func testTypedKeysAreHex() {

@@ -54,6 +54,9 @@ type metaKey struct {
 	Secret bool   `json:"secret"`
 	// Writable: the API accepts a write or delete of this key (meta.IsAPIWriteable).
 	Writable bool `json:"writable"`
+	// Redacted: a Talos 1.15 node replaced the secrets of the value with REDACTED, as the
+	// talosconfig role is below os:admin. Value and Size are those of the redacted form.
+	Redacted bool `json:"redacted,omitempty"`
 }
 
 type metaKeyList struct {
@@ -65,7 +68,9 @@ type metaKeyList struct {
 }
 
 // NodeMetaKeys lists the keys of node's META partition (os:reader; the secret ones without
-// their value): {"keys":[{key,hex,name,value,size,binary,secret,writable}],"loaded","known"}.
+// their value): {"keys":[{key,hex,name,value,size,binary,secret,writable,redacted}],"loaded",
+// "known"}. Talos 1.15 makes the keys sensitive: a role below os:admin reads them only in the
+// redacted form, which the list accepts, so the secrets of a key come back as REDACTED.
 func NodeMetaKeys(configYAML, contextName, node string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -76,7 +81,7 @@ func NodeMetaKeys(configYAML, contextName, node string) (out string, err error) 
 	}
 
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		keys, err := safe.StateListAll[*runtime.MetaKey](ctx, s.client.COSI)
+		keys, err := safe.StateListAll[*runtime.MetaKey](acceptRedacted(ctx), s.client.COSI)
 		if err != nil {
 			return "", s.friendlyErr(node, err)
 		}
@@ -89,7 +94,9 @@ func NodeMetaKeys(configYAML, contextName, node string) (out string, err error) 
 				continue
 			}
 
-			list.Keys = append(list.Keys, newMetaKey(int(tag), k.TypedSpec().Value))
+			key := newMetaKey(int(tag), k.TypedSpec().Value)
+			key.Redacted = isRedacted(k)
+			list.Keys = append(list.Keys, key)
 		}
 
 		loaded, err := safe.StateGetByID[*runtime.MetaLoaded](ctx, s.client.COSI, runtime.MetaLoadedID)
