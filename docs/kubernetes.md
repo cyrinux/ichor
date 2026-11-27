@@ -571,6 +571,12 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   **Pause** / **Resume** and **Abort** for a cluster upgrade, **Stop following** for what cannot be
   stopped, **Keep** / **Revert now** for a try. With the app lock on, Stop, Abort and Keep open the
   run's screen instead. Tapping the notification opens the run's screen.
+- **Live Updates (Android 16 and later):** the same notification is a Live Update: a chip in the
+  status bar with the count ("2/5", or a config try's countdown), the run at the top of the shade
+  and of the lock screen, and a bar with one segment per step (the nodes of a cluster upgrade),
+  with the same buttons. With the app lock on, the lock screen still names no node. With Live
+  Updates turned off for Ichor in Android's settings, the notification stays as on older Android,
+  and **Settings → Alerts** offers to turn them back on.
 - **Live Activities (iOS):** the same runs show on the Lock Screen and in the Dynamic Island: the
   step, a bar where the run counts, a config try's countdown, the same buttons, then the result
   (gone 15 minutes later). With the app lock on, the activity names no node, version or cluster.

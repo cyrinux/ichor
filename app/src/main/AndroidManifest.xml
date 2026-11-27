@@ -10,6 +10,9 @@
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Android 16+: a running operation shows as a Live Update (status-bar chip, top of the
+         shade and of the lock screen). A normal permission; the user can turn it off. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
     <!-- Keeps a debug shell open while the user is elsewhere, until they exit it, and follows
          a Talos upgrade to its end while the app is in the background. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />

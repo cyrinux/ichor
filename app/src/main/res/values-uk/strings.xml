@@ -623,6 +623,9 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Сповіщення</string>
     <string name="monitor_notifications_blocked">Сповіщення для цього застосунку заблоковано; дозвольте їх у налаштуваннях Android.</string>
+    <string name="live_updates_off_title">Live Updates вимкнено</string>
+    <string name="live_updates_off_desc">Оновлення, обслуговування та інші операції, що виконуються, можуть показувати поступ у значку рядка стану та вгорі екрана блокування. Дозвольте Live Updates для Ichor, щоб бачити їх там.</string>
+    <string name="live_updates_allow">Дозволити Live Updates</string>
     <string name="alerts_offer_title">Отримуйте сповіщення, коли вузол падає</string>
     <string name="alerts_offer_body">Ichor перевіряє ваші кластери у фоні й сповіщає, коли вузлу, API або тому потрібна увага. Ніщо не залишає телефон.</string>
     <string name="alerts_offer_turn_on">Увімкнути сповіщення</string>

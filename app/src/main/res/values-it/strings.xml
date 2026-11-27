@@ -574,6 +574,9 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Avvisi</string>
     <string name="monitor_notifications_blocked">Le notifiche sono bloccate per questa app; consentile nelle impostazioni di Android.</string>
+    <string name="live_updates_off_title">I Live Update sono disattivati</string>
+    <string name="live_updates_off_desc">Aggiornamenti, manutenzioni e altre operazioni in corso possono mostrare l\'avanzamento in un chip della barra di stato e in cima alla schermata di blocco. Consenti i Live Update per Ichor per vederli lì.</string>
+    <string name="live_updates_allow">Consenti i Live Update</string>
     <string name="alerts_offer_title">Ricevi un avviso quando un nodo cade</string>
     <string name="alerts_offer_body">Ichor controlla i tuoi cluster in background e ti avvisa quando un nodo, l’API o un volume richiedono attenzione. Nulla lascia il tuo telefono.</string>
     <string name="alerts_offer_turn_on">Attiva gli avvisi</string>

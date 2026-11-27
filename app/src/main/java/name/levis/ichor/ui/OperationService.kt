@@ -24,11 +24,13 @@ import name.levis.ichor.MainActivity
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.i18n.AppLocale
+import name.levis.ichor.ui.operations.LiveUpdate
 import name.levis.ichor.ui.operations.OperationAction
 import name.levis.ichor.ui.operations.OperationActionReceiver
 import name.levis.ichor.ui.operations.OperationKind
 import name.levis.ichor.ui.operations.OperationState
 import name.levis.ichor.ui.operations.followedOperations
+import name.levis.ichor.ui.operations.liveUpdateOf
 import name.levis.ichor.ui.operations.resolve
 
 private const val CHANNEL_ID = "operations"
@@ -142,6 +144,9 @@ class OperationService : Service() {
         // In screenshot mode, the generic title only, as on the lock screen: no node is named.
         val masked = masked()
         val text = if (masked) null else shown.text.resolve(res)
+        // Android 16 and later, when the user allows it: a Live Update (status-bar chip, top of
+        // the shade and of the lock screen) with a segmented bar. Otherwise the notification as before.
+        val live = if (canPromote()) liveUpdateOf(shown) else null
         val builder = baseNotification(if (masked) publicTitle else shown.title.resolve(res), state.kind)
             .setContentText(text)
             .setStyle(text?.let { NotificationCompat.BigTextStyle().bigText(it) })
@@ -150,14 +155,35 @@ class OperationService : Service() {
             .setOnlyAlertOnce(true)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-        shown.progress?.let { builder.setProgress(it.total, it.done, it.total == 0) }
+        if (live == null) shown.progress?.let { builder.setProgress(it.total, it.done, it.total == 0) }
         // The countdown ticks by itself.
         if (shown.countdownTo > 0) {
             builder.setWhen(shown.countdownTo).setShowWhen(true).setUsesChronometer(true).setChronometerCountDown(true)
         }
         shown.actions.forEach { builder.addAction(action(res, state.kind, it)) }
-        return lockScreenSafe(builder, publicTitle, state.kind)
+        live?.let { promote(builder, it) }
+        // The lock screen's version names no node either, but keeps the chip and the bar.
+        return lockScreenSafe(builder, publicTitle, state.kind) { public -> live?.let { promote(public.setOngoing(true), it) } ?: public }
     }
+
+    /** Asks for the Live Update: the chip's count and, where the run has one, the segmented bar. */
+    private fun promote(builder: NotificationCompat.Builder, live: LiveUpdate): NotificationCompat.Builder {
+        builder.setRequestPromotedOngoing(true)
+        live.chip?.let { builder.setShortCriticalText(it) }
+        if (live.hasBar) {
+            builder.setStyle(
+                NotificationCompat.ProgressStyle()
+                    .setProgressSegments(live.segments.map { NotificationCompat.ProgressStyle.Segment(it) })
+                    .setProgress(live.done)
+                    .setProgressIndeterminate(live.indeterminate),
+            )
+        }
+        return builder
+    }
+
+    /** Android 16 and later, with Live Updates allowed for the app (Settings → Notifications). */
+    private fun canPromote(): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA && NotificationManagerCompat.from(this).canPostPromotedNotifications()
 
     private fun resultNotification(state: OperationState): Notification {
         val res = AppLocale.wrap(this)
@@ -173,10 +199,15 @@ class OperationService : Service() {
     }
 
     // With the app lock on, the lock screen does not name the node.
-    private fun lockScreenSafe(builder: NotificationCompat.Builder, publicTitle: String, kind: OperationKind): Notification {
+    private fun lockScreenSafe(
+        builder: NotificationCompat.Builder,
+        publicTitle: String,
+        kind: OperationKind,
+        decorate: (NotificationCompat.Builder) -> NotificationCompat.Builder = { it },
+    ): Notification {
         if (appLocked()) {
             builder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                .setPublicVersion(baseNotification(publicTitle, kind).build())
+                .setPublicVersion(decorate(baseNotification(publicTitle, kind)).build())
         }
         return builder.build()
     }

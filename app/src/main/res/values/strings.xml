@@ -570,6 +570,9 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Alerts</string>
     <string name="monitor_notifications_blocked">Notifications are blocked for this app; allow them in Android settings.</string>
+    <string name="live_updates_off_title">Live Updates are off</string>
+    <string name="live_updates_off_desc">Running upgrades, maintenances and other operations can show their progress as a chip in the status bar and at the top of the lock screen. Allow Live Updates for Ichor to see them there.</string>
+    <string name="live_updates_allow">Allow Live Updates</string>
     <string name="alerts_offer_title">Get paged when a node goes down</string>
     <string name="alerts_offer_body">Ichor checks your clusters in the background and notifies you when a node, the API or a volume needs a look. Nothing leaves your phone.</string>
     <string name="alerts_offer_turn_on">Turn on alerts</string>
