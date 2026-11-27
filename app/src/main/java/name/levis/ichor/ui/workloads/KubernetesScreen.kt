@@ -56,6 +56,9 @@ import name.levis.ichor.ui.components.ActionBarActions
 import name.levis.ichor.ui.components.ActionBarEditor
 import name.levis.ichor.ui.components.SwipeTabPager
 import name.levis.ichor.ui.components.pageContent
+import name.levis.ichor.ui.components.ReadableTab
+import name.levis.ichor.ui.components.listDetailPageContent
+import name.levis.ichor.ui.components.rememberTwoPanes
 
 /** The network test's tab (its notification opens it). */
 const val NETPERF_TAB = 3
@@ -172,6 +175,8 @@ fun KubernetesScreen(
     var customizing by rememberSaveable { mutableStateOf(false) }
     val back = rememberPredictiveBack(enabled = customizing) { customizing = false }
     val share = rememberShareLink()
+    // On a tablet the Workloads tab shows the picked workload beside the list.
+    val twoPanes = rememberTwoPanes()
     // The pods tab's "Clean up dead pods", for the namespace listed.
     var sanitizing by rememberSaveable { mutableStateOf(false) }
     if (sanitizing) {
@@ -244,7 +249,7 @@ fun KubernetesScreen(
             ActionBarEditor(bar, kubernetesActionLook, app.uiPreferences::setKubernetesBar, Modifier.pageContent(padding).predictiveBackPreview(back), groups = kubernetesActionGroups)
             return@IchorScaffold
         }
-        Column(Modifier.pageContent(padding).fillMaxSize()) {
+        Column(Modifier.listDetailPageContent(padding, twoPanes).fillMaxSize()) {
             PrimaryScrollableTabRow(selectedTabIndex = tab, edgePadding = 0.dp) {
                 AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.workloads_title)) })
                 AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.pods_title)) })
@@ -252,21 +257,26 @@ fun KubernetesScreen(
                 AppTab(selected = tab == NETPERF_TAB, onClick = { tab = NETPERF_TAB }, text = { Text(stringResource(R.string.netperf_tab)) })
             }
             SwipeTabPager(KUBE_TABS, tab, onSelect = { tab = it }) { page ->
-                when (page) {
-                    0 -> WorkloadsTab(scope, query, onQuery = { query = it }, vm = workloads, focusKey = focusKey(page), onFocused = onFocused, onAutoscaling = onAutoscaling)
-                    1 -> PodsTab(
-                        scope,
-                        query,
-                        onQuery = { query = it },
-                        onFlows = if (hasFlows) ({ pod -> onFlows(pod.namespace, pod.name) }) else null,
-                        vm = pods,
-                        focusKey = focusKey(page),
-                        onFocused = onFocused,
-                        pullLinks = pullLinks,
-                        onCleanUp = { sanitizing = true },
-                    )
-                    2 -> CronJobsTab(scope, query, onQuery = { query = it }, vm = cronJobs, focusKey = focusKey(page), onFocused = onFocused)
-                    else -> NetPerfTab(netPerf)
+                if (page == 0) {
+                    WorkloadsTab(scope, query, onQuery = { query = it }, vm = workloads, focusKey = focusKey(page), onFocused = onFocused, onAutoscaling = onAutoscaling)
+                    return@SwipeTabPager
+                }
+                ReadableTab(twoPanes) {
+                    when (page) {
+                        1 -> PodsTab(
+                            scope,
+                            query,
+                            onQuery = { query = it },
+                            onFlows = if (hasFlows) ({ pod -> onFlows(pod.namespace, pod.name) }) else null,
+                            vm = pods,
+                            focusKey = focusKey(page),
+                            onFocused = onFocused,
+                            pullLinks = pullLinks,
+                            onCleanUp = { sanitizing = true },
+                        )
+                        2 -> CronJobsTab(scope, query, onQuery = { query = it }, vm = cronJobs, focusKey = focusKey(page), onFocused = onFocused)
+                        else -> NetPerfTab(netPerf)
+                    }
                 }
             }
         }

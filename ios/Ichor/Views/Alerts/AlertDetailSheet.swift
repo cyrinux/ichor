@@ -28,6 +28,10 @@ struct AlertDetailSheet: View {
     let onCallGrafana: Bool
     /// The Alertmanager the alert was read from (its JSON for Go), for "Explain with AI".
     let explainSource: String?
+    /// Set beside the alerts on an iPad split (`AdaptiveListDetail`): the detail is part of the
+    /// Alerts screen (no stack, title or Close of its own), and Silence… asks the screen for its
+    /// silence sheet through this.
+    let startSilence: (() -> Void)?
 
     @Environment(AISettings.self) private var ai
     @Environment(\.dismiss) private var dismiss
@@ -39,7 +43,7 @@ struct AlertDetailSheet: View {
         open: @escaping (Route) -> Void, silenced: @escaping () -> Void, silenceComment: String? = nil,
         incident: OnCallIncident? = nil, confidence: OnCallConfidence = .alertname,
         actOnIncident: @escaping (OnCallIncident, OnCallVerb) async -> String? = { _, _ in nil },
-        onCallGrafana: Bool = false, explainSource: String? = nil
+        onCallGrafana: Bool = false, explainSource: String? = nil, startSilence: (() -> Void)? = nil
     ) {
         self.alert = alert
         self.node = node
@@ -53,59 +57,78 @@ struct AlertDetailSheet: View {
         self.actOnIncident = actOnIncident
         self.onCallGrafana = onCallGrafana
         self.explainSource = explainSource
+        self.startSilence = startSilence
         _silencing = State(initialValue: silenceComment != nil)
     }
 
     var body: some View {
-        NavigationStack {
-            List {
-                summarySection
-                if let incident {
-                    OnCallIncidentSection(incident: incident, confidence: confidence, grafana: onCallGrafana) { verb in
-                        await actOnIncident(incident, verb)
+        if startSilence != nil {
+            content
+        } else {
+            NavigationStack {
+                content
+                    .navigationTitle(Text(verbatim: alert.alertname))
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
                     }
+                    .navigationDestination(isPresented: $silencing) {
+                        SilenceForm(
+                            alert: alert, minutes: 60, comment: silenceComment ?? "", silence: silence, done: silenced)
+                    }
+            }
+        }
+    }
+
+    private var content: some View {
+        List {
+            if startSilence != nil {
+                Text(verbatim: alert.alertname).font(.title3.bold())
+            }
+            summarySection
+            if let incident {
+                OnCallIncidentSection(incident: incident, confidence: confidence, grafana: onCallGrafana) { verb in
+                    await actOnIncident(incident, verb)
                 }
-                linksSection
-                // Only when the optional AI diagnosis is on.
-                if ai.enabled, let explainSource, !alert.fingerprint.isEmpty {
-                    ExplainSection(
-                        subject: .alert(sourceJSON: explainSource, fingerprint: alert.fingerprint),
-                        note: alertExplainNote(alertname: alert.alertname))
-                }
-                Section {
+            }
+            linksSection
+            // Only when the optional AI diagnosis is on.
+            if ai.enabled, let explainSource, !alert.fingerprint.isEmpty {
+                ExplainSection(
+                    subject: .alert(sourceJSON: explainSource, fingerprint: alert.fingerprint),
+                    note: alertExplainNote(alertname: alert.alertname))
+            }
+            Section {
+                if let startSilence {
+                    Button(action: startSilence) {
+                        Label("Silence…", systemImage: "bell.slash")
+                    }
+                } else {
                     NavigationLink {
                         SilenceForm(alert: alert, silence: silence, done: silenced)
                     } label: {
                         Label("Silence…", systemImage: "bell.slash")
                     }
                 }
-                Section("Labels") {
-                    ForEach(alert.labels.sorted { $0.key < $1.key }, id: \.key) { label in
-                        LabeledContent {
-                            Text(verbatim: label.value).textSelection(.enabled)
-                        } label: {
-                            Text(verbatim: label.key).font(.callout.monospaced())
-                        }
-                    }
-                }
-                if !alert.otherAnnotations.isEmpty {
-                    Section("Annotations") {
-                        ForEach(alert.otherAnnotations, id: \.key) { annotation in
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(verbatim: annotation.key).font(.caption.monospaced()).foregroundStyle(.secondary)
-                                Text(verbatim: annotation.value).textSelection(.enabled)
-                            }
-                        }
+            }
+            Section("Labels") {
+                ForEach(alert.labels.sorted { $0.key < $1.key }, id: \.key) { label in
+                    LabeledContent {
+                        Text(verbatim: label.value).textSelection(.enabled)
+                    } label: {
+                        Text(verbatim: label.key).font(.callout.monospaced())
                     }
                 }
             }
-            .navigationTitle(Text(verbatim: alert.alertname))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
-            }
-            .navigationDestination(isPresented: $silencing) {
-                SilenceForm(alert: alert, minutes: 60, comment: silenceComment ?? "", silence: silence, done: silenced)
+            if !alert.otherAnnotations.isEmpty {
+                Section("Annotations") {
+                    ForEach(alert.otherAnnotations, id: \.key) { annotation in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: annotation.key).font(.caption.monospaced()).foregroundStyle(.secondary)
+                            Text(verbatim: annotation.value).textSelection(.enabled)
+                        }
+                    }
+                }
             }
         }
     }

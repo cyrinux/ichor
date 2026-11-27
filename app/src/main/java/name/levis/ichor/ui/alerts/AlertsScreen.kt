@@ -61,6 +61,9 @@ import name.levis.ichor.ui.components.SwipeTabPager
 import name.levis.ichor.ui.components.TWO_TABS
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.pageContent
+import name.levis.ichor.ui.components.ReadableTab
+import name.levis.ichor.ui.components.listDetailPageContent
+import name.levis.ichor.ui.components.rememberTwoPanes
 import name.levis.ichor.ui.components.rememberKubeCanDenial
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.metrics.SourceDialog
@@ -94,7 +97,11 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
     val busy by vm.busy.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var sourceOpen by remember { mutableStateOf(false) }
+    // A phone's sheet holds the alert as tapped; a tablet's pane picks it by id ([paneId]), saved
+    // across rotation and process death, and shows it as last read.
     var opened by remember { mutableStateOf<AmAlert?>(null) }
+    var picked by rememberSaveable { mutableStateOf<String?>(null) }
+    val twoPanes = rememberTwoPanes()
     var silencing by remember { mutableStateOf<AmAlert?>(null) }
     var resolving by remember { mutableStateOf<OnCallIncident?>(null) }
     LaunchedEffect(key) { vm.load() }
@@ -135,19 +142,33 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
         when {
             !state.ready -> LoadingBox(modifier)
             source == null -> NoSource(state, modifier, onSetUp = { sourceOpen = true }, onSearch = { vm.discover(useFirst = true) })
-            else -> Column(modifier.fillMaxSize()) {
+            else -> Column(Modifier.listDetailPageContent(padding, twoPanes).fillMaxSize()) {
                 MutedText(stringResource(R.string.alerts_source_line, source.label), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                 PrimaryTabRow(selectedTabIndex = tab) {
                     AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.alerts_tab_alerts)) })
                     AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(silencesTitle(state.silences)) })
                 }
                 SwipeTabPager(TWO_TABS, tab, onSelect = { tab = it }) { page ->
-                    when (page) {
-                        0 -> AlertsTab(
+                    if (page != 0) {
+                        ReadableTab(twoPanes) {
+                            SilencesTab(
+                                state.silences,
+                                state.withExpired,
+                                vm::setWithExpired,
+                                busy = busy,
+                                denial = expireDenial,
+                                onExpire = vm::expire,
+                                onRefresh = vm::refresh,
+                            )
+                        }
+                        return@SwipeTabPager
+                    }
+                    val list = @Composable {
+                        AlertsTab(
                             state.alerts,
                             state.filter,
                             vm::setFilter,
-                            onAlert = { opened = it },
+                            onAlert = { if (twoPanes) picked = it.paneId else opened = it },
                             onRefresh = vm::refresh,
                             rowCallbacks = AlertRowCallbacks(
                                 silenceDenial = silenceDenial,
@@ -160,14 +181,27 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
                             onCallError = state.onCallError,
                             onCallGrafana = state.onCallGrafana,
                         )
-                        else -> SilencesTab(
-                            state.silences,
-                            state.withExpired,
-                            vm::setWithExpired,
-                            busy = busy,
-                            denial = expireDenial,
-                            onExpire = vm::expire,
-                            onRefresh = vm::refresh,
+                    }
+                    if (!twoPanes) {
+                        list()
+                        return@SwipeTabPager
+                    }
+                    val alerts = (state.alerts as? UiState.Loaded)?.data
+                    AlertsListDetail(pickedAlert(alerts, picked), onClear = { picked = null }, list = list) { alert ->
+                        AlertDetail(
+                            alert = alert,
+                            nodes = nodes,
+                            links = links,
+                            silenceDenial = silenceDenial,
+                            // The silence sheet opens over the pane, which stays.
+                            onSilence = { silencing = alert },
+                            onLeave = {},
+                            modifier = Modifier.padding(20.dp),
+                            onCall = state.onCall,
+                            onCallGrafana = state.onCallGrafana,
+                            onCallBusy = { it in busy },
+                            onCallAct = vm::act,
+                            explainSource = state.source?.toGoJson(),
                         )
                     }
                 }
@@ -175,7 +209,7 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
         }
     }
 
-    opened?.let { alert ->
+    opened?.takeIf { !twoPanes }?.let { alert ->
         AlertSheet(
             alert = alert,
             nodes = nodes,

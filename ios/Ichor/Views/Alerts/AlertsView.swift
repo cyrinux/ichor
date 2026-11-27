@@ -38,6 +38,10 @@ struct AlertsView: View {
     /// The cluster's pager is Grafana IRM.
     @State private var onCallGrafana = false
     @State private var selected: AMAlert?
+    /// The fingerprint of the alert shown beside the list on an iPad split (AdaptiveListDetail).
+    @State private var picked: String?
+    /// Whether the alerts have the detail beside them.
+    @State private var split = false
     /// Silence 1 h chosen on the selected alert's notification: the comment its form starts with.
     @State private var silenceComment: String?
     /// Where a link of the alert sheet goes, once the sheet is gone.
@@ -60,7 +64,7 @@ struct AlertsView: View {
             } else if source != nil {
                 SwipeTabPager(tabs: [Tab.alerts, .silences], selection: $tab) { shown in
                     switch shown {
-                    case .alerts: alertsList
+                    case .alerts: alertsSplit
                     case .silences: silencesList
                     }
                 } topBar: {
@@ -217,6 +221,39 @@ struct AlertsView: View {
         return alerts.alerts.filter { $0.severity == severity && $0.matches(query) }.count
     }
 
+    /// The alerts, with the picked one beside them on an iPad split; alone, a row opens its sheet.
+    private var alertsSplit: some View {
+        AdaptiveListDetail(
+            selection: $picked, split: $split, placeholder: "Pick an alert to see its details",
+            systemImage: "bell.badge", pushesAlone: false
+        ) {
+            alertsList
+        } detail: { fingerprint in
+            // The alert as last read: a reload shows it silenced, or gone once resolved.
+            if let alert = loadedAlert(fingerprint) {
+                detailSheet(alert, embedded: true)
+            } else {
+                ContentUnavailableView("Pick an alert to see its details", systemImage: "bell.badge")
+                    .themedBackground()
+            }
+        }
+    }
+
+    /// The alert of the last read with this fingerprint; nil before a read or once it stopped.
+    private func loadedAlert(_ fingerprint: String) -> AMAlert? {
+        guard case .loaded(let alerts, _, _) = state else { return nil }
+        return alerts.alerts.first { $0.id == fingerprint }
+    }
+
+    /// Beside the list on an iPad split, else its sheet.
+    private func open(_ alert: AMAlert) {
+        if split {
+            picked = alert.id
+        } else {
+            selected = alert
+        }
+    }
+
     private var alertsList: some View {
         LoadStateView(state: state, retry: reload) { alerts in
             let groups = alerts.filtered(severities: severities, query: query)
@@ -235,7 +272,10 @@ struct AlertsView: View {
                         ForEach(group.alerts) { alert in
                             AlertListRow(
                                 alert: alert, incident: onCall?.incident(of: alert.fingerprint),
-                                open: { selected = alert }, silence: { silenceFromRow(alert) })
+                                open: { open(alert) }, silence: { silenceFromRow(alert) }
+                            )
+                            // Beside the detail, the row shown there is highlighted.
+                            .listRowBackground(split && picked == alert.id ? Color.accentColor.opacity(0.15) : nil)
                         }
                     } header: {
                         HStack(spacing: 6) {
@@ -411,11 +451,17 @@ struct AlertsView: View {
     }
 
     /// The sheet of `alert`, apart from `body` to keep the type checker fast.
-    private func detailSheet(_ alert: AMAlert) -> some View {
+    /// The alert's sheet, or with `embedded` its detail beside the list: links push at once and
+    /// Silence… opens the sheet on its silence form.
+    private func detailSheet(_ alert: AMAlert, embedded: Bool = false) -> some View {
         AlertDetailSheet(
             alert: alert, node: alertNode(alert.labels, in: nodes),
             canOpenKube: model.allows(.workloads), silence: silence,
             open: { route in
+                if embedded {
+                    path.append(route)
+                    return
+                }
                 pendingRoute = route
                 selected = nil
             },
@@ -430,7 +476,8 @@ struct AlertsView: View {
             confidence: onCall?.matches[alert.fingerprint]?.confidence ?? .alertname,
             actOnIncident: actOnIncident,
             onCallGrafana: onCallGrafana,
-            explainSource: source.flatMap { try? TalosJSON.encode($0) })
+            explainSource: source.flatMap { try? TalosJSON.encode($0) },
+            startSilence: embedded ? { silenceFromRow(alert) } : nil)
     }
 
     /// The incidents behind `alerts`, after them: the alerts never wait for the pager. The demo

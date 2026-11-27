@@ -5824,6 +5824,8 @@
     <string name="sa_help_copy_yaml">Copy YAML</string>
     <string name="panes_pick_node">Pick a node to see its details</string>
     <string name="panes_pick_app">Pick an application to see its details</string>
+    <string name="panes_pick_workload">Pick a workload to see its details</string>
+    <string name="panes_pick_alert">Pick an alert to see its details</string>
     <string name="sanitize_title">Clean up dead pods</string>
     <string name="sanitize_subtitle_namespace">Done or stuck pods in %1$s, as k9s sanitize picks them</string>
     <string name="sanitize_subtitle_all">Done or stuck pods in every namespace, as k9s sanitize picks them</string>

@@ -5686,6 +5686,8 @@
     <string name="sa_help_copy_yaml">复制 YAML</string>
     <string name="panes_pick_node">选择一个节点以查看详情</string>
     <string name="panes_pick_app">选择一个应用以查看详情</string>
+    <string name="panes_pick_workload">选择一个工作负载以查看详情</string>
+    <string name="panes_pick_alert">选择一条告警以查看详情</string>
     <string name="sanitize_title">清理失效的 Pod</string>
     <string name="sanitize_subtitle_namespace">%1$s 中已完成或卡住的 Pod，按 k9s sanitize 的方式挑选</string>
     <string name="sanitize_subtitle_all">所有命名空间中已完成或卡住的 Pod，按 k9s sanitize 的方式挑选</string>

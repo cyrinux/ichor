@@ -74,7 +74,7 @@ class AlertObjectLinks(
  * [onCall], what the pager says and its actions. [explainSource]: the Alertmanager it was read
  * from (its Go JSON), for "Explain with AI" when the optional AI diagnosis is on.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlertSheet(
     alert: AmAlert,
@@ -89,69 +89,107 @@ fun AlertSheet(
     onCallAct: (OnCallIncident, String) -> Unit = { _, _ -> },
     explainSource: String? = null,
 ) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        AlertDetail(
+            alert = alert,
+            nodes = nodes,
+            links = links,
+            silenceDenial = silenceDenial,
+            onSilence = onSilence,
+            onLeave = onDismiss,
+            // Under the sheet's drag handle: no top padding, and clear of the navigation bar.
+            modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 16.dp).navigationBarsPadding(),
+            onCall = onCall,
+            onCallGrafana = onCallGrafana,
+            onCallBusy = onCallBusy,
+            onCallAct = onCallAct,
+            explainSource = explainSource,
+        )
+    }
+}
+
+/**
+ * [AlertSheet]'s content, scrolling: in the sheet on a phone, in the detail pane beside the list
+ * on a tablet ([AlertsListDetail]). It carries no sheet insets or drag handle: the caller pads it
+ * through [modifier]. [onLeave]: called before "Explain with AI" opens its chat.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun AlertDetail(
+    alert: AmAlert,
+    nodes: Set<String>,
+    links: AlertObjectLinks,
+    silenceDenial: KubePermission?,
+    onSilence: () -> Unit,
+    onLeave: () -> Unit,
+    modifier: Modifier = Modifier,
+    onCall: OnCallIncidents? = null,
+    onCallGrafana: Boolean = false,
+    onCallBusy: (String) -> Boolean = { false },
+    onCallAct: (OnCallIncident, String) -> Unit = { _, _ -> },
+    explainSource: String? = null,
+) {
     val app = LocalContext.current.applicationContext as TalosApp
     val ai by app.aiPreferences.settings.collectAsStateWithLifecycle()
     val uri = LocalUriHandler.current
     val objects = remember(alert, nodes) { alert.objectLinks(nodes) }
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 16.dp).navigationBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                SeverityDot(alert.severity)
-                Text(alert.alertname, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 10.dp).weight(1f))
+    Column(
+        Modifier.verticalScroll(rememberScrollState()).then(modifier),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            SeverityDot(alert.severity)
+            Text(alert.alertname, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 10.dp).weight(1f))
+        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            StatusPill(severityLabel(alert.severity), severityColor(alert.severity))
+            StatusPill(stateLabel(alert), if (alert.suppressed) LocalStatusColors.current.muted else severityColor(alert.severity))
+        }
+        if (alert.summary.isNotEmpty()) Text(alert.summary, style = MaterialTheme.typography.bodyLarge)
+        if (alert.description.isNotEmpty()) MutedText(alert.description)
+        if (alert.startsAt > 0) {
+            InfoRow(stringResource(R.string.alerts_started), "${timeAgo(alert.startsAt)} · ${formatDateTime(alert.startsAt)}")
+        }
+        if (alert.receivers.isNotEmpty()) InfoRow(stringResource(R.string.alerts_receivers), alert.receivers.joinToString(", "))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (alert.runbookURL.isNotEmpty()) {
+                LinkButton(Icons.AutoMirrored.Outlined.MenuBook, stringResource(R.string.alerts_runbook)) { runCatching { uri.openUri(alert.runbookURL) } }
             }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                StatusPill(severityLabel(alert.severity), severityColor(alert.severity))
-                StatusPill(stateLabel(alert), if (alert.suppressed) LocalStatusColors.current.muted else severityColor(alert.severity))
+            if (alert.generatorURL.isNotEmpty()) {
+                LinkButton(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.alerts_generator)) { runCatching { uri.openUri(alert.generatorURL) } }
             }
-            if (alert.summary.isNotEmpty()) Text(alert.summary, style = MaterialTheme.typography.bodyLarge)
-            if (alert.description.isNotEmpty()) MutedText(alert.description)
-            if (alert.startsAt > 0) {
-                InfoRow(stringResource(R.string.alerts_started), "${timeAgo(alert.startsAt)} · ${formatDateTime(alert.startsAt)}")
+            objects.pod?.let { pod ->
+                LinkButton(Icons.Outlined.Widgets, stringResource(R.string.alerts_open_pod)) { links.onPod(objects.namespace.orEmpty(), pod) }
             }
-            if (alert.receivers.isNotEmpty()) InfoRow(stringResource(R.string.alerts_receivers), alert.receivers.joinToString(", "))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (alert.runbookURL.isNotEmpty()) {
-                    LinkButton(Icons.AutoMirrored.Outlined.MenuBook, stringResource(R.string.alerts_runbook)) { runCatching { uri.openUri(alert.runbookURL) } }
-                }
-                if (alert.generatorURL.isNotEmpty()) {
-                    LinkButton(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.alerts_generator)) { runCatching { uri.openUri(alert.generatorURL) } }
-                }
-                objects.pod?.let { pod ->
-                    LinkButton(Icons.Outlined.Widgets, stringResource(R.string.alerts_open_pod)) { links.onPod(objects.namespace.orEmpty(), pod) }
-                }
-                objects.namespace?.let { ns ->
-                    LinkButton(Icons.Outlined.Folder, stringResource(R.string.alerts_open_namespace, ns)) { links.onNamespace(ns) }
-                }
-                objects.node?.let { node ->
-                    LinkButton(Icons.Outlined.Dns, stringResource(R.string.alerts_open_node, node)) { links.onNode(node) }
-                }
+            objects.namespace?.let { ns ->
+                LinkButton(Icons.Outlined.Folder, stringResource(R.string.alerts_open_namespace, ns)) { links.onNamespace(ns) }
             }
-            IchorButton(onClick = onSilence, enabled = silenceDenial == null, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                Icon(Icons.Outlined.NotificationsOff, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(stringResource(R.string.alerts_silence), modifier = Modifier.padding(start = 8.dp))
+            objects.node?.let { node ->
+                LinkButton(Icons.Outlined.Dns, stringResource(R.string.alerts_open_node, node)) { links.onNode(node) }
             }
-            KubeDenialNote(silenceDenial)
-            if (ai.enabled && explainSource != null && alert.fingerprint.isNotEmpty()) {
-                ExplainCard(ExplainKind.ALERT, alertExplainSubject(alert, explainSource), alertExplainNote(alert), onLeave = onDismiss)
-            }
-            onCall?.incidentOf(alert.fingerprint)?.let { incident ->
-                OnCallIncidentSection(
-                    incident,
-                    onCall.matches[alert.fingerprint]?.confidence.orEmpty(),
-                    onCallBusy(incident.id),
-                    grafana = onCallGrafana,
-                ) { verb -> onCallAct(incident, verb) }
-            }
-            SectionTitle(stringResource(R.string.alerts_labels))
-            alert.labels.toSortedMap().forEach { (name, value) -> InfoRow(name, value, mono = true) }
-            val others = alert.annotations.filterKeys { it !in SHOWN_ANNOTATIONS }
-            if (others.isNotEmpty()) {
-                SectionTitle(stringResource(R.string.alerts_annotations))
-                others.toSortedMap().forEach { (name, value) -> InfoRow(name, value) }
-            }
+        }
+        IchorButton(onClick = onSilence, enabled = silenceDenial == null, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            Icon(Icons.Outlined.NotificationsOff, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(stringResource(R.string.alerts_silence), modifier = Modifier.padding(start = 8.dp))
+        }
+        KubeDenialNote(silenceDenial)
+        if (ai.enabled && explainSource != null && alert.fingerprint.isNotEmpty()) {
+            ExplainCard(ExplainKind.ALERT, alertExplainSubject(alert, explainSource), alertExplainNote(alert), onLeave = onLeave)
+        }
+        onCall?.incidentOf(alert.fingerprint)?.let { incident ->
+            OnCallIncidentSection(
+                incident,
+                onCall.matches[alert.fingerprint]?.confidence.orEmpty(),
+                onCallBusy(incident.id),
+                grafana = onCallGrafana,
+            ) { verb -> onCallAct(incident, verb) }
+        }
+        SectionTitle(stringResource(R.string.alerts_labels))
+        alert.labels.toSortedMap().forEach { (name, value) -> InfoRow(name, value, mono = true) }
+        val others = alert.annotations.filterKeys { it !in SHOWN_ANNOTATIONS }
+        if (others.isNotEmpty()) {
+            SectionTitle(stringResource(R.string.alerts_annotations))
+            others.toSortedMap().forEach { (name, value) -> InfoRow(name, value) }
         }
     }
 }

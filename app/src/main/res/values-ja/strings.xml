@@ -5686,6 +5686,8 @@
     <string name="sa_help_copy_yaml">YAML をコピー</string>
     <string name="panes_pick_node">ノードを選択すると詳細が表示されます</string>
     <string name="panes_pick_app">アプリケーションを選択すると詳細が表示されます</string>
+    <string name="panes_pick_workload">ワークロードを選択すると詳細が表示されます</string>
+    <string name="panes_pick_alert">アラートを選択すると詳細が表示されます</string>
     <string name="sanitize_title">終了した Pod をクリーンアップ</string>
     <string name="sanitize_subtitle_namespace">%1$s 内の完了済みまたは停滞中の Pod（k9s sanitize と同じ基準で選択）</string>
     <string name="sanitize_subtitle_all">すべての名前空間の完了済みまたは停滞中の Pod（k9s sanitize と同じ基準で選択）</string>
