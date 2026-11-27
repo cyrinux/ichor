@@ -888,6 +888,10 @@
         <item quantity="one">%1$d Tunnel ausgefallen</item>
         <item quantity="other">%1$d Tunnel ausgefallen</item>
     </plurals>
+    <plurals name="widget_vms_down">
+        <item quantity="one">%1$d VM aus</item>
+        <item quantity="other">%1$d VMs aus</item>
+    </plurals>
     <string name="widget_all_ready">alle bereit</string>
     <string name="widget_etcd_no_alarms">etcd: keine Alarme</string>
     <plurals name="widget_etcd_alarms">
@@ -4666,6 +4670,13 @@
     <string name="monitor_kubespan_desc">Warnt, wenn ein Tunnel zwischen zwei Nodes ausgefallen ist (Talos-Cluster; liest bei jeder Prüfung die Peers aller Nodes).</string>
     <string name="monitor_kubespan_down">Tunnel %1$s ist ausgefallen</string>
     <string name="monitor_kubespan_up">Tunnel %1$s ist wieder da</string>
+    <string name="monitor_talos_vms">Talos-VMs</string>
+    <string name="monitor_talos_vms_desc">Warnen, wenn eine VM, die laufen sollte, aus ist oder fehlschlägt (Talos 1.15; liest bei jeder Prüfung die VMs jedes Knotens).</string>
+    <string name="monitor_talos_vm_down">%1$s ist auf %2$s aus</string>
+    <string name="monitor_talos_vm_error">%1$s ist auf %2$s fehlgeschlagen</string>
+    <string name="monitor_talos_vm_disk">Ein Datenträger von %1$s ist auf %2$s ausgefallen</string>
+    <string name="monitor_talos_vm_ok">%1$s auf %2$s ist wieder in Ordnung</string>
+    <string name="talos_vms_problems_title">Braucht Aufmerksamkeit</string>
     <string name="monitor_sensors_auto">Eigene Grenze jedes Sensors (kritisch − 5 °C, sonst sein Maximum)</string>
     <string name="monitor_sensors_threshold">Warnen ab %1$d °C</string>
     <string name="monitor_sensor_hot">%1$s läuft heiß (%2$s °C)</string>

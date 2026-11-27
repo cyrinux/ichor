@@ -960,6 +960,12 @@
         <item quantity="many">%1$d туннелей не работают</item>
         <item quantity="other">%1$d туннеля не работают</item>
     </plurals>
+    <plurals name="widget_vms_down">
+        <item quantity="one">%1$d ВМ не работает</item>
+        <item quantity="few">%1$d ВМ не работают</item>
+        <item quantity="many">%1$d ВМ не работают</item>
+        <item quantity="other">%1$d ВМ не работают</item>
+    </plurals>
     <string name="widget_all_ready">все готовы</string>
     <string name="widget_etcd_no_alarms">etcd: нет сигналов</string>
     <plurals name="widget_etcd_alarms">
@@ -4890,6 +4896,13 @@
     <string name="monitor_kubespan_desc">Оповещать, когда туннель между двумя узлами не работает (кластеры Talos; при каждой проверке читает пиры всех узлов).</string>
     <string name="monitor_kubespan_down">Туннель %1$s не работает</string>
     <string name="monitor_kubespan_up">Туннель %1$s снова работает</string>
+    <string name="monitor_talos_vms">Виртуальные машины Talos</string>
+    <string name="monitor_talos_vms_desc">Оповещать, когда виртуальная машина, которая должна работать, остановлена или в ошибке (Talos 1.15; при каждой проверке читает виртуальные машины каждого узла).</string>
+    <string name="monitor_talos_vm_down">%1$s не работает на %2$s</string>
+    <string name="monitor_talos_vm_error">Ошибка %1$s на %2$s</string>
+    <string name="monitor_talos_vm_disk">Сбой диска %1$s на %2$s</string>
+    <string name="monitor_talos_vm_ok">%1$s на %2$s снова в норме</string>
+    <string name="talos_vms_problems_title">Требует внимания</string>
     <string name="monitor_sensors_auto">Собственный предел каждого датчика (критический − 5 °C, иначе его максимум)</string>
     <string name="monitor_sensors_threshold">Оповещать при %1$d °C</string>
     <string name="monitor_sensor_hot">%1$s перегревается (%2$s °C)</string>

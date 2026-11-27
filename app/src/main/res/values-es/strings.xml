@@ -895,6 +895,10 @@
         <item quantity="one">%1$d túnel caído</item>
         <item quantity="other">%1$d túneles caídos</item>
     </plurals>
+    <plurals name="widget_vms_down">
+        <item quantity="one">%1$d VM parada</item>
+        <item quantity="other">%1$d VM paradas</item>
+    </plurals>
     <string name="widget_all_ready">todos listos</string>
     <string name="widget_etcd_no_alarms">etcd: sin alarmas</string>
     <plurals name="widget_etcd_alarms">
@@ -4675,6 +4679,13 @@
     <string name="monitor_kubespan_desc">Avisa cuando un túnel entre dos nodos está caído (clústeres Talos; lee los pares de cada nodo en cada comprobación).</string>
     <string name="monitor_kubespan_down">Túnel %1$s caído</string>
     <string name="monitor_kubespan_up">Túnel %1$s recuperado</string>
+    <string name="monitor_talos_vms">Máquinas virtuales de Talos</string>
+    <string name="monitor_talos_vms_desc">Avisar cuando una máquina virtual que debería funcionar está parada o falla (Talos 1.15; lee las máquinas virtuales de cada nodo en cada comprobación).</string>
+    <string name="monitor_talos_vm_down">%1$s está parada en %2$s</string>
+    <string name="monitor_talos_vm_error">%1$s falló en %2$s</string>
+    <string name="monitor_talos_vm_disk">Un disco de %1$s falló en %2$s</string>
+    <string name="monitor_talos_vm_ok">%1$s en %2$s vuelve a la normalidad</string>
+    <string name="talos_vms_problems_title">Requiere atención</string>
     <string name="monitor_sensors_auto">El límite de cada sensor (crítico − 5 °C, si no su máximo)</string>
     <string name="monitor_sensors_threshold">Avisar a %1$d °C</string>
     <string name="monitor_sensor_hot">%1$s se calienta (%2$s °C)</string>

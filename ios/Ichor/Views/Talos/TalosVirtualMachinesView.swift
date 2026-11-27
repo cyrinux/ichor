@@ -61,6 +61,9 @@ struct TalosVirtualMachinesView: View {
                     Text(verbatim: hostname).font(.caption.monospaced()).foregroundStyle(.secondary)
                 }
             }
+            TalosVMProblemsSection(report: report) { ref in
+                selected = ref.id
+            }
             ForEach(shown) { entry in
                 Section {
                     nodeNotice(entry)

@@ -8,6 +8,7 @@ public enum ClusterStatusPart: Equatable, Sendable {
     case notReady(Int)
     case unreachable(Int)
     case tunnelsDown(Int)
+    case vmsDown(Int)
     case etcdHealthy
     case etcdAlarms(Int)
     /// The snapshot is older than glanceStaleAfter: what it says may no longer be true.
@@ -31,7 +32,7 @@ public struct ClusterStatusSummary: Equatable, Sendable {
     public var healthy: Bool {
         !parts.contains { part in
             switch part {
-            case .notReady, .unreachable, .tunnelsDown, .etcdAlarms: return true
+            case .notReady, .unreachable, .tunnelsDown, .vmsDown, .etcdAlarms: return true
             default: return false
             }
         }
@@ -47,7 +48,11 @@ public func clusterStatusSummary(_ snapshot: ClusterSnapshot?, now: Date) -> Clu
     if snapshot.unreachableCount > 0 { parts.append(.unreachable(snapshot.unreachableCount)) }
     let tunnelsDown = snapshot.kubespanChecked ? snapshot.kubespanIssues.count : 0
     if tunnelsDown > 0 { parts.append(.tunnelsDown(tunnelsDown)) }
-    if snapshot.notReadyCount == 0 && snapshot.unreachableCount == 0 && tunnelsDown == 0 { parts.append(.allReady) }
+    let vmsDown = snapshot.vmChecked ? snapshot.vmIssues.count : 0
+    if vmsDown > 0 { parts.append(.vmsDown(vmsDown)) }
+    if snapshot.notReadyCount == 0 && snapshot.unreachableCount == 0 && tunnelsDown == 0 && vmsDown == 0 {
+        parts.append(.allReady)
+    }
     if snapshot.etcdChecked {
         parts.append(snapshot.etcdAlarms.isEmpty ? .etcdHealthy : .etcdAlarms(snapshot.etcdAlarms.count))
     }

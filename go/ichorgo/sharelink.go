@@ -67,6 +67,8 @@ var shareTargets = map[string]shareFields{
 	"hardware": {node: true},
 	// The KubeSpan map (a tunnel alert's).
 	"kubespan": {},
+	// The cluster's Talos virtual machines (a VM alert's).
+	"talos-vms": {},
 }
 
 var (

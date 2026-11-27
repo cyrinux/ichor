@@ -185,10 +185,24 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertTitle(context, alert)
     AlertKind.KUBESPAN_DOWN -> context.getString(R.string.monitor_kubespan_down, alert.subject)
     AlertKind.KUBESPAN_UP -> context.getString(R.string.monitor_kubespan_up, alert.subject)
+    AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK -> talosVmAlertTitle(context, alert)
     AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> pluginAlertTitle(context, alert)
     AlertKind.PROPOSAL_MERGED -> context.getString(R.string.monitor_proposal_merged, ProposalDetail.parse(alert.detail).number)
     AlertKind.PROPOSAL_CLOSED -> context.getString(R.string.monitor_proposal_closed, ProposalDetail.parse(alert.detail).number)
     AlertKind.SIGN_IN_REQUIRED -> context.getString(R.string.kube_signin_renew_notification_title)
+}
+
+/** "app is down on worker-1", "app failed on worker-1", "A disk of app failed on worker-1", or the cleared form. */
+private fun talosVmAlertTitle(context: Context, alert: Alert): String {
+    val d = TalosVmDetail.parse(alert.detail)
+    return if (alert.problem) talosVmProblemTitle(context, d) else context.getString(R.string.monitor_talos_vm_ok, d.vm, d.hostname)
+}
+
+/** The title of a Talos VM problem, as the notification and the VM list's card word it. */
+fun talosVmProblemTitle(context: Context, d: TalosVmDetail): String = when (d.kind) {
+    TALOS_VM_DISK_FAILED -> context.getString(R.string.monitor_talos_vm_disk, d.vm, d.hostname)
+    TALOS_VM_ERROR -> context.getString(R.string.monitor_talos_vm_error, d.vm, d.hostname)
+    else -> context.getString(R.string.monitor_talos_vm_down, d.vm, d.hostname)
 }
 
 /** "kube-green: demo-lab/weekend", or "… is healthy again": the plugin's name and its finding's own title. */
@@ -433,6 +447,9 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertText(context, alert)
     AlertKind.KUBESPAN_DOWN -> kubespanAlertText(context, alert)
     AlertKind.KUBESPAN_UP -> context.getString(R.string.monitor_kubespan)
+    // The node's own words (clipped by Go), else the track's name.
+    AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK ->
+        TalosVmDetail.parse(alert.detail).detail.takeIf { alert.problem && it.isNotBlank() } ?: context.getString(R.string.monitor_talos_vms)
     AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> pluginAlertText(context, alert)
     // The request's own title, unmasked: left out in screenshot mode.
     AlertKind.PROPOSAL_MERGED, AlertKind.PROPOSAL_CLOSED ->

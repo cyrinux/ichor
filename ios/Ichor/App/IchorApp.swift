@@ -270,6 +270,8 @@ enum Route: Hashable {
     /// The guided replacement of a failed etcd member; node: its address as last seen.
     case replaceControlPlane(memberId: String, node: String, hostname: String)
     case kubespan
+    /// The cluster's Talos virtual machines (a Talos VM alert).
+    case talosVMs
     /// Kubernetes Deployments, StatefulSets and DaemonSets (os:admin).
     case workloads
     /// The Kubernetes screen on a tab, showing one workload, pod or CronJob (a share link).
@@ -526,6 +528,7 @@ struct MainNavigation: View {
         case .replaceControlPlane(let memberId, let node, let hostname):
             ReplaceControlPlaneView(memberId: memberId, node: node, hostname: hostname)
         case .kubespan: KubeSpanView()
+        case .talosVMs: TalosVirtualMachinesView()
         case .workloads: KubernetesView()
         case .kubernetes(let focus):
             KubernetesView(focus: focus).recordsOpened(focus.shareTarget, label: focus.name, detail: focus.namespace)

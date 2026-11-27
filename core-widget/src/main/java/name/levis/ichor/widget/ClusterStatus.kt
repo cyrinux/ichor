@@ -18,6 +18,10 @@ data class NodeCounts(
     /** The KubeSpan mesh could be read this time (absent from an older phone's payload: not checked). */
     val kubespanChecked: Boolean = false,
     val tunnelsDown: Int = 0,
+    /** The Talos VMs could be read this time (absent from an older phone's payload: not checked). */
+    val vmChecked: Boolean = false,
+    /** Talos VMs that should run and do not. */
+    val vmsDown: Int = 0,
 )
 
 /** One dot + label in the widget's status row. */
@@ -25,6 +29,7 @@ sealed interface StatusItem {
     data class NotReady(val count: Int) : StatusItem
     data class Unreachable(val count: Int) : StatusItem
     data class TunnelsDown(val count: Int) : StatusItem
+    data class VmsDown(val count: Int) : StatusItem
     data object AllReady : StatusItem
     data class Etcd(val alarms: Int) : StatusItem
 }
@@ -41,6 +46,7 @@ fun statusItems(c: NodeCounts, max: Int = 2): List<StatusItem> {
         if (c.notReady > 0) add(StatusItem.NotReady(c.notReady))
         if (c.unreachable > 0) add(StatusItem.Unreachable(c.unreachable))
         if (c.kubespanChecked && c.tunnelsDown > 0) add(StatusItem.TunnelsDown(c.tunnelsDown))
+        if (c.vmChecked && c.vmsDown > 0) add(StatusItem.VmsDown(c.vmsDown))
         if (isEmpty() && c.total > 0 && c.ready == c.total) add(StatusItem.AllReady)
     }
     val etcd = if (c.etcdChecked) listOf(StatusItem.Etcd(c.etcdAlarms)) else emptyList()
@@ -52,6 +58,7 @@ fun toneOf(item: StatusItem): Tone = when (item) {
     is StatusItem.NotReady -> Tone.WARN
     is StatusItem.Unreachable -> Tone.BAD
     is StatusItem.TunnelsDown -> Tone.BAD
+    is StatusItem.VmsDown -> Tone.BAD
     StatusItem.AllReady -> Tone.OK
     is StatusItem.Etcd -> if (item.alarms == 0) Tone.OK else Tone.BAD
 }

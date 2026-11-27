@@ -5,6 +5,7 @@ public enum GlanceItem: Equatable, Sendable {
     case notReady(Int)
     case unreachable(Int)
     case tunnelsDown(Int)
+    case vmsDown(Int)
     case allReady
     case etcdNoAlarms
     case etcdAlarms(Int)
@@ -14,7 +15,7 @@ public enum GlanceItem: Equatable, Sendable {
     public var tone: Tone {
         switch self {
         case .notReady: return .warning
-        case .unreachable, .tunnelsDown, .etcdAlarms: return .problem
+        case .unreachable, .tunnelsDown, .vmsDown, .etcdAlarms: return .problem
         case .allReady, .etcdNoAlarms: return .ok
         }
     }
@@ -31,6 +32,9 @@ public func glanceItems(_ snapshot: ClusterSnapshot) -> [GlanceItem] {
     if snapshot.unreachableCount > 0 { items.append(.unreachable(snapshot.unreachableCount)) }
     if snapshot.kubespanChecked, !snapshot.kubespanIssues.isEmpty {
         items.append(.tunnelsDown(snapshot.kubespanIssues.count))
+    }
+    if snapshot.vmChecked, !snapshot.vmIssues.isEmpty {
+        items.append(.vmsDown(snapshot.vmIssues.count))
     }
     if items.isEmpty { items.append(.allReady) }
     if snapshot.etcdChecked {

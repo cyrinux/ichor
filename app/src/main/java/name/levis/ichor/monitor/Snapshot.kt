@@ -102,6 +102,14 @@ data class ClusterSnapshot(
     val kubespanIssues: Map<String, String> = emptyMap(),
     /** Always empty: every tunnel down is critical. Kept so the track reads like the others. */
     val kubespanPending: List<String> = emptyList(),
+    /** Watching the Talos virtual machines was on for this check (on by default, Talos clusters only). */
+    val vmWatched: Boolean = false,
+    /** Their problems could be read this time. */
+    val vmChecked: Boolean = false,
+    /** VMs that should run and do not ("node|vm|name" → see [TalosVmDetail]), kept like [dataIssues]. */
+    val vmIssues: Map<String, String> = emptyMap(),
+    /** Always empty: every such VM is critical. Kept so the track reads like the others. */
+    val vmPending: List<String> = emptyList(),
     /** Watching the CRD plugins' findings was on for this check (with the data services, opt-in). */
     val pluginWatched: Boolean = false,
     /** Their findings could be read this time. */
@@ -165,7 +173,13 @@ fun snapshotOf(
     /** KubeSpan tunnels watched ([kubespanIssues] null when watched but unreadable, see [kubespanIssuesOf]). */
     kubespanWatched: Boolean = false,
     kubespanIssues: Map<String, String>? = null,
+    /** Talos VMs watched ([vmIssues] null when watched but unreadable, see [talosVmIssuesOf]). */
+    vmWatched: Boolean = false,
+    vmIssues: Map<String, String>? = null,
 ): ClusterSnapshot = ClusterSnapshot(
+    vmWatched = vmWatched,
+    vmChecked = vmWatched && vmIssues != null,
+    vmIssues = vmIssues?.takeIf { vmWatched }.orEmpty(),
     kubespanWatched = kubespanWatched,
     kubespanChecked = kubespanWatched && kubespanIssues != null,
     kubespanIssues = kubespanIssues?.takeIf { kubespanWatched }.orEmpty(),
