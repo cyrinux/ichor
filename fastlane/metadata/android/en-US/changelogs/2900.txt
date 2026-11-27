@@ -1,0 +1,6 @@
+• The upgrade plan warns about settings Talos 1.15 ignores
+• Native BGP sessions of a Talos node on the Network screen, with an alert when one stays down
+• Talos containers run without Kubernetes show in a node's containers, with logs, restart and an alert
+• Alert when a Talos virtual machine that should run is down, on both apps
+• Talos virtual machines on the node screen and in a cluster-wide list
+• Show the switch and port each node cable goes to, from LLDP on Talos 1.15
