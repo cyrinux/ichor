@@ -21,6 +21,19 @@ class MetaKeysTest {
         assertTrue(got.loaded)
         assertEquals(listOf(true, false, false), got.keys.map { it.editable })
         assertFalse(got.known.single().writable)
+        assertFalse(got.keys.any { it.redacted })
+    }
+
+    @Test
+    fun aRedactedValueIsNotEditable() {
+        val got = TalosJson.decodeFromString(
+            MetaKeyList.serializer(),
+            """{"keys":[{"key":10,"hex":"0x0a","name":"metal network config","value":"links:\n    - wireguard:\n        privateKey: REDACTED\n","size":49,"binary":false,"secret":false,"writable":true,"redacted":true}],"loaded":true}""",
+        )
+        val key = got.keys.single()
+        assertTrue(key.redacted)
+        assertTrue(key.writable)
+        assertFalse(key.editable)
     }
 
     @Test

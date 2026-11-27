@@ -14,14 +14,16 @@ public struct MetaKey: Decodable, Equatable, Identifiable, Sendable {
     public let secret: Bool
     /// The API accepts a write or delete of this key.
     public let writable: Bool
+    /// Talos 1.15 replaced the secrets of `value` with REDACTED for this role (below os:admin).
+    public let redacted: Bool
 
     public var id: Int { key }
 
-    /// Only a writable text value can be edited as text.
-    public var editable: Bool { writable && !binary && !secret }
+    /// Only a writable text value can be edited as text; a redacted one would write REDACTED back.
+    public var editable: Bool { writable && !binary && !secret && !redacted }
 
     private enum CodingKeys: String, CodingKey {
-        case key, hex, name, value, size, binary, secret, writable
+        case key, hex, name, value, size, binary, secret, writable, redacted
     }
 
     public init(from decoder: Decoder) throws {
@@ -34,6 +36,7 @@ public struct MetaKey: Decodable, Equatable, Identifiable, Sendable {
         binary = try c.field(.binary, false)
         secret = try c.field(.secret, false)
         writable = try c.field(.writable, false)
+        redacted = try c.field(.redacted, false)
     }
 }
 

@@ -67,15 +67,31 @@ struct MetaKeysView: View {
         }
     }
 
+    /// The value as the node sent it; on a redacted key the REDACTED values are dimmed.
+    private func valueText(_ key: MetaKey) -> AttributedString {
+        guard key.redacted else { return AttributedString(key.value) }
+        var text = AttributedString()
+        for segment in redactedSegments(key.value) {
+            var part = AttributedString(segment.text)
+            if segment.redacted { part.foregroundColor = .secondary }
+            text += part
+        }
+        return text
+    }
+
     @ViewBuilder
     private func row(_ key: MetaKey) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(verbatim: key.hex).font(.headline.monospaced())
+            HStack(spacing: 8) {
+                Text(verbatim: key.hex).font(.headline.monospaced())
+                if key.redacted { RedactedTag() }
+            }
+            // The size of a redacted value is that of the redacted form: not shown.
             Text(
                 verbatim: [
                     key.name.isEmpty ? String(localized: "Unknown key") : key.name,
-                    ByteCountFormatter.string(fromByteCount: Int64(key.size), countStyle: .file),
-                ].joined(separator: "  ·  ")
+                    key.redacted ? nil : ByteCountFormatter.string(fromByteCount: Int64(key.size), countStyle: .file),
+                ].compactMap { $0 }.joined(separator: "  ·  ")
             )
             .font(.caption).foregroundStyle(.secondary)
             if key.secret {
@@ -84,7 +100,7 @@ struct MetaKeysView: View {
                 if key.binary {
                     Text("Binary value, shown in hex.").font(.caption).foregroundStyle(.secondary)
                 }
-                Text(verbatim: key.value).font(.caption.monospaced()).lineLimit(12).textSelection(.enabled)
+                Text(valueText(key)).font(.caption.monospaced()).lineLimit(12).textSelection(.enabled)
             }
             if !key.writable {
                 Text("Written by Talos only.").font(.caption).foregroundStyle(.secondary)

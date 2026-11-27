@@ -327,7 +327,7 @@ struct ResourceDetailView: View {
 }
 
 /// "Redacted for your role": Talos 1.15 replaced the secret values (a role below os:admin).
-private struct RedactedTag: View {
+struct RedactedTag: View {
     var body: some View {
         Tag(String(localized: "Redacted for your role"), color: .secondary)
     }

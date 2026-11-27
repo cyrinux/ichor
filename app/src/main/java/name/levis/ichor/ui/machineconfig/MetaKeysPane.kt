@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -39,6 +40,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -58,6 +61,7 @@ import name.levis.ichor.model.MetaKey
 import name.levis.ichor.model.MetaKeyList
 import name.levis.ichor.model.metaHex
 import name.levis.ichor.model.parseMetaKey
+import name.levis.ichor.model.redactedRanges
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.components.ErrorBox
@@ -66,6 +70,7 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.node.HostnameConfirmDialog
+import name.levis.ichor.ui.resources.RedactedTag
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiStateOf
 import name.levis.ichor.ui.uiText
@@ -235,10 +240,13 @@ private fun MetaKeyCard(key: MetaKey, enabled: Boolean, onEdit: (MetaKey) -> Uni
         Column(Modifier.padding(start = 16.dp, top = 8.dp, bottom = 12.dp, end = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(key.hex, style = MaterialTheme.typography.titleSmall, fontFamily = FontFamily.Monospace)
-                    MutedText(
-                        listOf(key.name.ifEmpty { stringResource(R.string.meta_unknown_key) }, formatBytes(key.size.toLong())).joinToString("  ·  "),
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(key.hex, style = MaterialTheme.typography.titleSmall, fontFamily = FontFamily.Monospace)
+                        if (key.redacted) RedactedTag()
+                    }
+                    // The size of a redacted value is that of the redacted form: not shown.
+                    val size = formatBytes(key.size.toLong()).takeUnless { key.redacted }
+                    MutedText(listOfNotNull(key.name.ifEmpty { stringResource(R.string.meta_unknown_key) }, size).joinToString("  ·  "))
                 }
                 if (key.value.isNotEmpty()) {
                     TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.meta_copy, key.hex), onClick = {
@@ -256,12 +264,27 @@ private fun MetaKeyCard(key: MetaKey, enabled: Boolean, onEdit: (MetaKey) -> Uni
                 key.secret -> MutedText(stringResource(R.string.meta_secret))
                 else -> {
                     if (key.binary) MutedText(stringResource(R.string.meta_binary))
-                    Text(key.value, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, maxLines = 12)
+                    MetaValue(key)
                 }
             }
             if (!key.writable) MutedText(stringResource(R.string.meta_read_only))
         }
     }
+}
+
+/** The value as the node sent it; on a redacted key the REDACTED values are dimmed. */
+@Composable
+private fun MetaValue(key: MetaKey) {
+    val dimmed = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+    val text = remember(key.value, key.redacted, dimmed) {
+        buildAnnotatedString {
+            append(key.value)
+            if (key.redacted) {
+                redactedRanges(key.value).forEach { addStyle(SpanStyle(color = dimmed), it.first, it.last + 1) }
+            }
+        }
+    }
+    Text(text, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, maxLines = 12)
 }
 
 /** Typing a key's value: [current] when editing one, else a key picked from [known] or typed in hex. */
