@@ -383,6 +383,7 @@
   "Ichor is open source, with no ads or tracking. The builds from this repository and GitHub releases are free; the Google Play version is a paid download that funds the project. Drift detection, the incident recorder and every feature on this page are built in the open. If Ichor saves you a trip to the laptop, help fund what comes next through <a href=\"https://github.com/sponsors/cyrinux\">GitHub Sponsors</a> or in crypto.": "Ichor はオープンソースで、広告もトラッキングもありません。このリポジトリと GitHub リリースからのビルドは無料です。Google Play 版はプロジェクトを資金化する有料ダウンロードです。ドリフト検出、インシデントレコーダー、このページのすべての機能は開発過程も公開されています。Ichor でノートパソコンを開く回数が減るなら、次を作る資金づくりをどうぞ:",
   "QR code of the Bitcoin donation address": "Bitcoin 寄付アドレスの QR コード",
   "Copied": "コピーしました",
+  "Selected: copy it": "選択しました：コピーしてください",
   "Copy address": "アドレスをコピー",
   "Open in wallet": "ウォレットで開く",
   "QR code of the Ethereum donation address": "Ethereum 寄付アドレスの QR コード",

@@ -92,9 +92,9 @@
   </header>
   <div id="part" hidden>
     <dl>
-      <div class="row" id="row-m"><div><dt>Manufacturer</dt><dd id="m"></dd></div><button class="copy" data-copy="m">Copy</button></div>
-      <div class="row" id="row-p"><div><dt>Model / part number</dt><dd id="p"></dd></div><button class="copy" data-copy="p">Copy</button></div>
-      <div class="row" id="row-s"><div><dt>Serial number</dt><dd class="mono" id="s"></dd></div><button class="copy" data-copy="s">Copy</button></div>
+      <div class="row" id="row-m"><div><dt>Manufacturer</dt><dd id="m"></dd></div><button class="copy" data-copy="m" data-copied="Copied" data-copy-failed="Selected: copy it">Copy</button></div>
+      <div class="row" id="row-p"><div><dt>Model / part number</dt><dd id="p"></dd></div><button class="copy" data-copy="p" data-copied="Copied" data-copy-failed="Selected: copy it">Copy</button></div>
+      <div class="row" id="row-s"><div><dt>Serial number</dt><dd class="mono" id="s"></dd></div><button class="copy" data-copy="s" data-copied="Copied" data-copy-failed="Selected: copy it">Copy</button></div>
     </dl>
     <div class="actions">
       <a class="button primary" id="vendor" target="_blank" rel="noopener noreferrer" hidden>Vendor support</a>
@@ -177,25 +177,9 @@
       $("paste").hidden = deep || vendor.noLookup || !values.s;
     }
 
-    document.querySelectorAll(".copy").forEach(function (button) {
-      button.addEventListener("click", function () {
-        var text = values[button.dataset.copy];
-        var done = function () { button.textContent = "Copied"; setTimeout(function () { button.textContent = "Copy"; }, 1500); };
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).then(done, function () { select(button.dataset.copy); });
-        } else {
-          select(button.dataset.copy);
-        }
-      });
-    });
-    function select(id) {
-      var range = document.createRange();
-      range.selectNodeContents($(id));
-      var selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
+    // The Copy buttons: ../copy.js.
   })();
 </script>
+<script src="../copy.js"></script>
 </body>
 </html>

@@ -144,6 +144,24 @@ html.js .platform {
   color: var(--accent);
 }
 
+/* Each provider links to the section of the features page about it. */
+.strip a {
+  color: inherit;
+  text-decoration: none;
+  text-underline-offset: 0.25em;
+}
+
+.strip a:hover {
+  text-decoration: underline;
+}
+
+.strip a:focus-visible,
+.provider-grid a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 .feature {
   display: grid;
   gap: 2.5rem;
@@ -232,15 +250,22 @@ html.js .platform {
   justify-self: stretch;
 }
 
-.provider-grid span {
+.provider-grid a {
   padding: 1rem;
   border: 1px solid var(--line);
   border-radius: 12px;
   font-weight: 500;
   text-align: center;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s;
 }
 
-.provider-grid span:first-child {
+.provider-grid a:hover {
+  border-color: var(--accent);
+}
+
+.provider-grid a:first-child {
   grid-column: 1 / -1;
   border-color: var(--accent);
   color: var(--accent);
