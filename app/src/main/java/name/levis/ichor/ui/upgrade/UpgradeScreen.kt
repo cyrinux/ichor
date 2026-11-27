@@ -476,6 +476,7 @@ private fun PlanChecks(plan: UpgradePlan, versionRisk: String) {
             if (plan.blockers.isEmpty() && risks.isEmpty() && plan.warnings.isEmpty()) {
                 Text(stringResource(R.string.upgrade_no_issues), color = colors.ok, style = MaterialTheme.typography.bodyMedium)
             }
+            plan.notes.forEach { MutedText("ⓘ $it") }
         }
     }
 }

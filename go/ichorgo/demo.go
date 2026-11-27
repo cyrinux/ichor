@@ -186,9 +186,12 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 		if !ok {
 			return "", fmt.Errorf("%q is not a Talos version (vX.Y.Z)", asked)
 		}
-		plan := clusterUpgradePlan{Version: version, Nodes: []clusterPlanNode{}, Blockers: []string{}, Warnings: []string{}}
+		plan := clusterUpgradePlan{Version: version, Nodes: []clusterPlanNode{}, Blockers: []string{}, Warnings: []string{}, Notes: []string{}}
 		for i, n := range nodes {
 			up := upgradePlan{Hostname: n.Hostname, ControlPlane: n.Role == "controlplane", CurrentVersion: n.Version}
+			if i == 3 { // the first worker exposes containerd metrics the version 3 way
+				up.cri = []criDoc{{name: "enable-metrics", content: "[metrics]\n  address = \"0.0.0.0:11234\"\n"}}
+			}
 			plan.Nodes = append(plan.Nodes, clusterNodeOf(n.Node, up, version, i == 0)) // a1, demo-cp-1, leads etcd
 		}
 		plan.Nodes = orderClusterNodes(plan.Nodes)

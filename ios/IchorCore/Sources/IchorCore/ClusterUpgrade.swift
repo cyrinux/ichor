@@ -54,6 +54,8 @@ public struct ClusterUpgradePlan: Decodable, Equatable, Sendable {
     public let warnings: [String]
     /// The upgrade drains nodes by itself (Talos v1.18+); otherwise the switch offers it.
     public let drain: Bool
+    /// Information about the version (what it offers once enabled): nothing to acknowledge.
+    public let notes: [String]
 
     public var pending: [ClusterUpgradeNode] { nodes.filter { $0.nodeState != .done } }
     public var done: Int { nodes.count { $0.nodeState == .done } }
@@ -67,7 +69,7 @@ public struct ClusterUpgradePlan: Decodable, Equatable, Sendable {
     public var allWarnings: [String] { warnings + nodes.flatMap { n in n.warnings.map { "\(n.name): \($0)" } } }
     public var canStart: Bool { !upToDate && allBlockers.isEmpty }
 
-    private enum CodingKeys: String, CodingKey { case version, image, nodes, blockers, warnings, drain }
+    private enum CodingKeys: String, CodingKey { case version, image, nodes, blockers, warnings, drain, notes }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -77,6 +79,7 @@ public struct ClusterUpgradePlan: Decodable, Equatable, Sendable {
         blockers = try c.field(.blockers, [])
         warnings = try c.field(.warnings, [])
         drain = try c.field(.drain, false)
+        notes = try c.field(.notes, [])
     }
 }
 

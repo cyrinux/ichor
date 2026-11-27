@@ -56,6 +56,9 @@ type clusterUpgradePlan struct {
 	Warnings []string          `json:"warnings"`
 	// Drain: a node to upgrade does not drain by itself: StartClusterUpgrade can drain it.
 	Drain bool `json:"drain"`
+	// Notes are what the version offers once enabled, or the nodes whose settings it ignores
+	// could not be checked: information, nothing to acknowledge.
+	Notes []string `json:"notes"`
 }
 
 type clusterPlanNode struct {
@@ -68,6 +71,7 @@ type clusterPlanNode struct {
 	Leader   bool     `json:"leader"`
 	Blockers []string `json:"blockers"`
 	Warnings []string `json:"warnings"`
+	notes    []string // versionUpgradeNotes' notes for this node, merged into the plan's
 }
 
 // ClusterUpgradePlan lists, in the order StartClusterUpgrade follows, the context's nodes
@@ -111,7 +115,7 @@ func gatherClusterPlan(ctx context.Context, s *session, kube kubeTarget, version
 		return clusterUpgradePlan{}, fmt.Errorf("%q is not a Talos version (vX.Y.Z)", version)
 	}
 
-	plan := clusterUpgradePlan{Version: v, Nodes: []clusterPlanNode{}, Blockers: []string{}, Warnings: []string{}}
+	plan := clusterUpgradePlan{Version: v, Nodes: []clusterPlanNode{}, Blockers: []string{}, Warnings: []string{}, Notes: []string{}}
 
 	leader := etcdLeaderNode(ctx, s)
 
@@ -168,12 +172,22 @@ func clusterNodeOf(node string, up upgradePlan, version string, leader bool) clu
 
 	for _, w := range up.Warnings {
 		// Peers' states and mixed versions are what a roll goes through: not this node's.
-		if !strings.Contains(w, "different Talos versions") {
+		// The node plan's notes on the next minor are recomputed for version below.
+		if !strings.Contains(w, "different Talos versions") && !slices.Contains(up.versionWarnings, w) {
 			n.Warnings = append(n.Warnings, w)
 		}
 	}
 
 	n.Warnings = append(n.Warnings, up.Acknowledge...)
+
+	vn := versionUpgradeNotes(up.CurrentVersion, version, up.cri, up.criErr)
+	n.Warnings = append(n.Warnings, vn.warnings...)
+
+	if vn.unchecked != "" {
+		n.notes = append(n.notes, n.Hostname+": "+vn.unchecked)
+	}
+
+	n.notes = append(n.notes, vn.notes...)
 
 	return n
 }
@@ -199,6 +213,12 @@ func summarizeClusterPlan(plan *clusterUpgradePlan) {
 
 		if len(n.Blockers) > 0 {
 			plan.Warnings = append(plan.Warnings, fmt.Sprintf("%s cannot be upgraded now: the roll pauses before it until that is fixed", n.Hostname))
+		}
+
+		for _, note := range n.notes {
+			if !slices.Contains(plan.Notes, note) {
+				plan.Notes = append(plan.Notes, note)
+			}
 		}
 	}
 

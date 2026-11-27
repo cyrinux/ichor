@@ -39,11 +39,19 @@ type upgradePlan struct {
 	Forceable   bool     `json:"forceable"` // every blocker is an etcd check that force skips
 	// Drainable: this upgrade does not drain the node (the LifecycleService path), so
 	// StartNodeMaintenanceUpgrade, which drains it first, is worth offering.
-	Drainable    bool     `json:"drainable"`
+	Drainable bool `json:"drainable"`
+	// Notes are what the next minor offers once enabled, or why the node's settings it
+	// ignores could not be checked: information, nothing to acknowledge.
+	Notes        []string `json:"notes"`
 	etcdBlockers []string // the blockers force bypasses
 	upgradeOnly  []string // the warnings about upgrading itself, which a reboot plan drops
-	target       planPeer
-	peers        []planPeer // the other nodes
+	// versionWarnings are the warnings about the next minor (versionUpgradeNotes): a cluster
+	// plan recomputes them for its own version from cri and criErr.
+	versionWarnings []string
+	cri             []criDoc
+	criErr          string
+	target          planPeer
+	peers           []planPeer // the other nodes
 }
 
 type planEtcd struct {
@@ -84,6 +92,7 @@ type planInput struct {
 	defaultImage string
 	endpoints    []string   // the talosconfig context's endpoints
 	lock         *lockState // nil when not checked
+	cri          []criDoc   // the CRI customization fragments of the machine config (os:admin)
 }
 
 // UpgradePlan checks whether node can be upgraded now, read-only (os:reader, os:admin to read
@@ -133,7 +142,7 @@ func gatherPlanFor(ctx context.Context, s *session, node string, kube kubeTarget
 	}
 
 	in.defaultImage = defaultInstallerRepo + ":" + in.target.version
-	in.image, in.imageErr = installerImage(ctx, s.client, node)
+	in.image, in.cri, in.imageErr = planConfig(ctx, s.client, node)
 
 	if in.target.controlPlane {
 		via := []string{node}
@@ -168,19 +177,33 @@ func peerFromProbe(node string, p nodeProbe) planPeer {
 
 // installerImage reads machine.install.image from the node's machine config (os:admin).
 func installerImage(ctx context.Context, c *client.Client, node string) (string, string) {
+	image, _, err := planConfig(ctx, c, node)
+
+	return image, err
+}
+
+// planConfig reads what a plan needs from the node's machine config (os:admin):
+// machine.install.image and the CRI customization fragments, or why it cannot.
+func planConfig(ctx context.Context, c *client.Client, node string) (string, []criDoc, string) {
 	ctx, cancel := context.WithTimeout(ctx, nodeTimeout)
 	defer cancel()
 
 	mc, err := safe.StateGetByID[*config.MachineConfig](client.WithNode(ctx, node), c.COSI, config.ActiveID)
 	if err != nil {
-		return "", friendlyError(err)
+		return "", nil, friendlyError(err)
 	}
 
-	if cfg := mc.Provider(); cfg != nil && cfg.Machine() != nil && cfg.Machine().Install() != nil {
-		return cfg.Machine().Install().Image(), ""
+	cfg := mc.Provider()
+	if cfg == nil {
+		return "", nil, ""
 	}
 
-	return "", ""
+	image := ""
+	if cfg.Machine() != nil && cfg.Machine().Install() != nil {
+		image = cfg.Machine().Install().Image()
+	}
+
+	return image, criDocs(cfg), ""
 }
 
 // gatherEtcdHealth lists the etcd members through the first control plane of via that
@@ -298,6 +321,7 @@ func computePlan(in planInput) upgradePlan {
 		Blockers:       []string{},
 		Warnings:       []string{},
 		Acknowledge:    []string{},
+		Notes:          []string{},
 		target:         t,
 		peers:          in.others,
 	}
@@ -320,6 +344,8 @@ func computePlan(in planInput) upgradePlan {
 	}
 
 	plan.Schematic = imageSchematic(plan.CurrentImage)
+
+	applyVersionNotes(&plan, in)
 
 	switch {
 	case t.stage == runtime.MachineStageUpgrading.String() || t.stage == runtime.MachineStageInstalling.String():

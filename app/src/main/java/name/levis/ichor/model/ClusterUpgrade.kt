@@ -41,6 +41,8 @@ data class ClusterUpgradePlan(
     val warnings: List<String> = emptyList(),
     /** Whether the upgrade drains nodes by itself (Talos v1.18+); otherwise the switch offers it. */
     val drain: Boolean = false,
+    /** Information about [version] (what it offers once enabled): nothing to acknowledge. */
+    val notes: List<String> = emptyList(),
 ) {
     val pending: List<ClusterUpgradeNode> get() = nodes.filter { it.state != ClusterUpgradeNode.DONE }
     val done: Int get() = nodes.count { it.state == ClusterUpgradeNode.DONE }

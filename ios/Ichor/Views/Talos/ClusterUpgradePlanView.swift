@@ -130,6 +130,13 @@ struct ClusterUpgradePlanView: View {
                 }.foregroundStyle(.statusWarn)
             }
             if p.allBlockers.isEmpty && p.allWarnings.isEmpty { Text("No issues found").foregroundStyle(.statusOK) }
+            ForEach(p.notes, id: \.self) { note in
+                Label {
+                    Text(verbatim: note)
+                } icon: {
+                    Image(systemName: "info.circle")
+                }.foregroundStyle(.secondary)
+            }
         }
         Section {
             if p.upToDate { Text("Every node already runs \(p.version).").foregroundStyle(.statusOK) }
