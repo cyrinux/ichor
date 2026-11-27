@@ -167,6 +167,8 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 		for _, id := range []string{"upgrade", "etcdSnapshot", "etcdMemberActions", "supportBundle", "issueConfig", "debugShell", "serviceControl", "reset"} {
 			features.Features[id] = featureState{Reason: errDemoUnavailable.Error()}
 		}
+		// The demo nodes say v1.14 but show the hypervisor's VMs (demoNodeVMs).
+		features.Features["hypervisor"] = featureState{Supported: true, MinVersion: featureMinVersion("hypervisor")}
 		return toJSON(features)
 	case "NodeNetTool":
 		return toJSON(demoNetTool(n, args))
@@ -290,6 +292,8 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 		})
 	case "NodeSensors":
 		return toJSON(demoSensors(n))
+	case "NodeVirtualMachines":
+		return toJSON(demoNodeVMs(n))
 	case "NodeDiskHealth":
 		return `{"supported":false,"reason":"Disk health data is unavailable in the demo cluster","disks":[]}`, nil
 	case "KubeSpanStatus":
