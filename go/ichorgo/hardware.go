@@ -24,8 +24,12 @@ type nodeHardware struct {
 	Security   *securityInfo   `json:"security"` // null when unavailable
 	// Watchdog is the armed watchdog timer; null when none is configured (or when the read
 	// failed: errors["watchdog"] then says why).
-	Watchdog *watchdogInfo     `json:"watchdog"`
-	Errors   map[string]string `json:"errors"` // section -> error, for sections that failed
+	Watchdog *watchdogInfo `json:"watchdog"`
+	// NUMA and CPUScaling come from Talos 1.15 resources (hardware_cpu.go): empty on an older
+	// node, in a container, or on a VM without a cpufreq driver.
+	NUMA       []numaNode         `json:"numa"`
+	CPUScaling []cpuScalingPolicy `json:"cpuScaling"`
+	Errors     map[string]string  `json:"errors"` // section -> error, for sections that failed
 }
 
 type systemInfo struct {
@@ -115,7 +119,8 @@ func NodeHardware(configYAML, contextName, node string) (out string, err error) 
 		st := s.client.COSI
 		out := nodeHardware{
 			Processors: []processorInfo{}, Memory: []memoryModule{}, Disks: []diskInfo{},
-			Extensions: []extensionInfo{}, Errors: map[string]string{},
+			Extensions: []extensionInfo{}, NUMA: []numaNode{}, CPUScaling: []cpuScalingPolicy{},
+			Errors: map[string]string{},
 		}
 
 		if si, err := safe.StateGetByID[*hardware.SystemInformation](ctx, st, hardware.SystemInformationID); err != nil {
@@ -170,6 +175,8 @@ func NodeHardware(configYAML, contextName, node string) (out string, err error) 
 		if len(out.Errors) == hardwareSections {
 			return "", fmt.Errorf("node %s: %s", node, out.Errors["system"])
 		}
+
+		readCPUTopology(ctx, s, node, &out)
 
 		return toJSON(out)
 	})

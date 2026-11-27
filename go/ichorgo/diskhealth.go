@@ -261,9 +261,14 @@ func specString(spec map[string]any, key string) string {
 
 // specInt reads a YAML number (int, uint64 or float, depending on its size).
 func specInt(spec map[string]any, key string) *int64 {
+	return yamlInt(spec[key])
+}
+
+// yamlInt is a decoded YAML number as an int64, nil when the value is not a number.
+func yamlInt(value any) *int64 {
 	var n int64
 
-	switch v := spec[key].(type) {
+	switch v := value.(type) {
 	case int:
 		n = int64(v)
 	case int64:

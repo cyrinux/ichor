@@ -112,6 +112,14 @@ var featureRules = []featureRule{
 	// v1.8.0 (before: the Disks API). All read through the COSI API; a section missing on a
 	// version is reported in NodeHardware's "errors", not as a failure.
 	{name: "hardware", min: oldestCOSI},
+	// NUMATopologies.hardware.talos.dev: not in v1.14.7, first in v1.15.0-beta.1 (pkg/machinery/
+	// resources/hardware/numa_topology.go, read untyped, hardware_cpu.go). NodeHardware lists the
+	// NUMA nodes only when the node knows the type; the apps read the list rather than this row.
+	{name: "numa", min: "v1.15", hint: "the NUMA topology"},
+	// CPUScalingStatuses and CPUScalingSpecs .hardware.talos.dev and the CPUScalingConfig
+	// document: first in v1.15.0-beta.1 (cpu_scaling_status.go, read untyped). NodeHardware lists
+	// the cpufreq policies only when the node knows the type; the apps read the list.
+	{name: "cpuScaling", min: "v1.15", hint: "the CPU scaling policies"},
 	// rpc CPUFreqStats (machine.proto): first in v1.5.0; rpc Read and List (hwmon, thermal
 	// zones, throttle counters): v1.0.0; PCIDevices.hardware.talos.dev is listed through the
 	// COSI API. NodeSensors reports a missing part in its "errors".

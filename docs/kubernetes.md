@@ -249,6 +249,13 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   the thermal zones and `CPUFreqStats` (Talos 1.5+). Cores held below 70 % of their top speed
   under the `performance` governor, or a sensor above its max, mark the node *Throttled* there
   and, once that screen was opened, on its row in the node lists. A VM has no Sensors card.
+- **CPU scaling and NUMA (Talos 1.15):** *About this node* lists the node's cpufreq policies
+  (governor, the CPUs each drives, the frequency window, the energy preference, the core type on
+  hybrid CPUs and the `CPUScalingConfig` document that set it) and, on a machine split in
+  several NUMA nodes, each node's CPUs and memory, read from the `CPUScalingStatus` and
+  `NUMATopology` resources. A `powersave` policy on a throttled node adds a hint: that governor
+  is a classic cause of a slow node. An older Talos, a VM without a cpufreq driver and Talos in
+  a container show neither card.
 - **Spare parts:** *Find spare parts* next to the system, each memory module and each disk on
   *About this node* opens a page of the Ichor site, in your browser, with the part's
   manufacturer, model or part number and serial number: copy them, open the vendor's support

@@ -1386,6 +1386,12 @@
     <string name="hardware_cpu_frequency">CPU 周波数</string>
     <string name="hardware_freq_range">%1$d–%2$d MHz</string>
     <string name="hardware_cpu_core_mhz">cpu%1$d %2$d MHz</string>
+    <string name="hardware_cpu_scaling">CPU スケーリング</string>
+    <string name="hardware_numa">NUMA</string>
+    <string name="hardware_powersave_hint">powersave ガバナーが、すでにスロットリング中のノードでこれらのコアを抑えています。performance ガバナーを指定した CPUScalingConfig で全速を維持できます。</string>
+    <string name="hardware_cpu_scaling_set_by">%1$s で設定</string>
+    <string name="hardware_numa_node">ノード %1$d</string>
+    <string name="hardware_cpu_count">CPU: %1$d</string>
     <string name="images_title">イメージ</string>
     <string name="images_search">名前またはダイジェストでフィルター</string>
     <string name="images_sort_name">名前</string>

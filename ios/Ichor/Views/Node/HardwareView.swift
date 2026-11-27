@@ -38,6 +38,8 @@ struct HardwareView: View {
                     }
                     systemSection(hw)
                     processorsSection(hw)
+                    if hw.showsCPUScaling { CPUScalingSection(hardware: hw, throttled: throttled) }
+                    if hw.showsNUMA { NUMASection(hardware: hw) }
                     memorySection(hw)
                     disksSection(hw)
                     extensionsSection(hw)
@@ -69,6 +71,17 @@ struct HardwareView: View {
     /// Talos has watchdog timers from 1.7; shown while the node's features are unknown.
     private var watchdogShown: Bool { nodes.support(.watchdog, node: node).supported }
 
+    private var throttled: Bool {
+        if case .loaded(let s, _, _) = sensors { return s.throttled }
+        return false
+    }
+
+    /// CPU scaling and NUMA come from Talos 1.15 resources: shown when the node reports them.
+    private var loadedHardware: NodeHardware? {
+        if case .loaded(let hw, _, _) = state { return hw }
+        return nil
+    }
+
     private var pciShown: Bool {
         if case .loaded(let s, _, _) = sensors { return !s.pci.isEmpty || s.errors["pci"] != nil }
         return false
@@ -79,6 +92,8 @@ struct HardwareView: View {
             JumpSection(id: "sensors", label: String(localized: "Sensors")),
             JumpSection(id: "system", label: String(localized: "System")),
             JumpSection(id: "processors", label: String(localized: "Processors")),
+            JumpSection(id: "cpuScaling", label: String(localized: "CPU scaling")),
+            JumpSection(id: "numa", label: String(localized: "NUMA")),
             JumpSection(id: "memory", label: String(localized: "Memory")),
             JumpSection(id: "disks", label: String(localized: "Disks")),
             JumpSection(id: "extensions", label: String(localized: "System extensions")),
@@ -88,6 +103,8 @@ struct HardwareView: View {
         ].filter {
             ($0.id != "sensors" || sensorsShown) && ($0.id != "pci" || pciShown)
                 && ($0.id != "watchdog" || watchdogShown)
+                && ($0.id != "cpuScaling" || loadedHardware?.showsCPUScaling == true)
+                && ($0.id != "numa" || loadedHardware?.showsNUMA == true)
         }
     }
 

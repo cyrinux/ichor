@@ -1439,6 +1439,12 @@
     <string name="hardware_cpu_frequency">Frecuencia de CPU</string>
     <string name="hardware_freq_range">%1$d–%2$d MHz</string>
     <string name="hardware_cpu_core_mhz">cpu%1$d %2$d MHz</string>
+    <string name="hardware_cpu_scaling">Escalado de CPU</string>
+    <string name="hardware_numa">NUMA</string>
+    <string name="hardware_powersave_hint">El gobernador powersave frena estos núcleos en un nodo que ya está limitado. Un CPUScalingConfig con el gobernador performance los mantiene a plena velocidad.</string>
+    <string name="hardware_cpu_scaling_set_by">Definido por %1$s</string>
+    <string name="hardware_numa_node">Nodo %1$d</string>
+    <string name="hardware_cpu_count">CPU: %1$d</string>
     <string name="images_title">Imágenes</string>
     <string name="images_search">Filtrar por nombre o digest</string>
     <string name="images_sort_name">Nombre</string>
