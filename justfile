@@ -169,6 +169,17 @@ i18n-check:
     python3 scripts/check-unused-strings.py
     python3 scripts/site-i18n.py --check
 
+# Every button, link and pointer-cursor element of the website does something when clicked
+# (/, /features.html, /parts/ at 1280 and 390 px). Local only: playwright-core pinned in a temp
+# directory, the system Chromium (or CHROMIUM=/path).
+site-buttons-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"' EXIT
+    npm install --silent --no-save --prefix "$tmp" playwright-core@1.65.1 >/dev/null
+    NODE_PATH="$tmp/node_modules" node scripts/check-site-buttons.mjs
+
 # Translated website: `just site` writes docs/<lang>/ (as CI does before publishing);
 # `just site --sync` lists new English strings in docs-i18n/*.json for translation.
 site *args:

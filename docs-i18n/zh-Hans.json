@@ -383,6 +383,7 @@
   "Ichor is open source, with no ads or tracking. The builds from this repository and GitHub releases are free; the Google Play version is a paid download that funds the project. Drift detection, the incident recorder and every feature on this page are built in the open. If Ichor saves you a trip to the laptop, help fund what comes next through <a href=\"https://github.com/sponsors/cyrinux\">GitHub Sponsors</a> or in crypto.": "Ichor 是开源的，没有广告和跟踪。来自本仓库和 GitHub releases 的版本免费；Google Play 版本是付费下载，用于为项目提供资金。漂移检测、事件记录器以及本页的每一项功能都在公开开发。如果 Ichor 让您少跑一次笔记本，请通过以下方式资助接下来的开发：",
   "QR code of the Bitcoin donation address": "Bitcoin 捐赠地址的 QR 码",
   "Copied": "已复制",
+  "Selected: copy it": "已选中：请复制",
   "Copy address": "复制地址",
   "Open in wallet": "在钱包中打开",
   "QR code of the Ethereum donation address": "Ethereum 捐赠地址的 QR 码",

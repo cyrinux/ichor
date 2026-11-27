@@ -174,21 +174,21 @@
                 a restart is never aimed at the wrong one.
               </p>
               <ul class="ways" aria-label="How a cluster gets in">
-                <li>
+                <li id="talos">
                   <h3>Talos Linux</h3>
                   <p>
                     A talosconfig, with the roles baked into its certificate: node
                     health, logs, etcd, KubeSpan, upgrades, the Talos API end to end.
                   </p>
                 </li>
-                <li>
+                <li id="omni">
                   <h3>Sidero Omni</h3>
                   <p>
                     Sign in to the instance as omnictl does, pick the clusters it
                     lists. Omni's role for your identity is what the app may do.
                   </p>
                 </li>
-                <li>
+                <li id="managed">
                   <h3>Managed Kubernetes</h3>
                   <p>
                     EKS, GKE, AKS, DigitalOcean and Rancher: list the clusters of
@@ -198,7 +198,7 @@
                     or your organisation's OAuth client, Entra ID.
                   </p>
                 </li>
-                <li>
+                <li id="kubeconfig">
                   <h3>Anything else</h3>
                   <p>
                     A client certificate, a ServiceAccount token, or OIDC with
@@ -224,31 +224,31 @@
           </div>
 
           <ul class="chips" aria-label="Works with" translate="no">
-            <li class="talos">Talos Linux</li>
-            <li>Sidero Omni</li>
-            <li>Amazon EKS</li>
-            <li>Google GKE</li>
-            <li>Azure AKS</li>
-            <li>DigitalOcean</li>
-            <li>Rancher</li>
-            <li>OIDC · kubelogin</li>
-            <li>Client certificate</li>
-            <li>ServiceAccount token</li>
-            <li>Argo CD</li>
-            <li>Flux</li>
-            <li>Argo Rollouts</li>
+            <li class="talos"><a href="#talos">Talos Linux</a></li>
+            <li><a href="#omni">Sidero Omni</a></li>
+            <li><a href="#managed">Amazon EKS</a></li>
+            <li><a href="#managed">Google GKE</a></li>
+            <li><a href="#managed">Azure AKS</a></li>
+            <li><a href="#managed">DigitalOcean</a></li>
+            <li><a href="#managed">Rancher</a></li>
+            <li><a href="#kubeconfig">OIDC · kubelogin</a></li>
+            <li><a href="#kubeconfig">Client certificate</a></li>
+            <li><a href="#kubeconfig">ServiceAccount token</a></li>
+            <li><a href="#argocd">Argo CD</a></li>
+            <li><a href="#gitops">Flux</a></li>
+            <li><a href="#crds">Argo Rollouts</a></li>
             <li>Cilium · Calico</li>
-            <li>CAST AI</li>
-            <li>Cluster API</li>
-            <li>Crossplane</li>
-            <li>Tailscale</li>
-            <li>KubeVirt</li>
-            <li>Longhorn · Rook Ceph</li>
-            <li>CloudNativePG</li>
-            <li>Velero</li>
-            <li>Kyverno · Gatekeeper</li>
-            <li>Alertmanager</li>
-            <li>Any CRD, as a plugin</li>
+            <li><a href="#castai">CAST AI</a></li>
+            <li><a href="#crds">Cluster API</a></li>
+            <li><a href="#crds">Crossplane</a></li>
+            <li><a href="#crds">Tailscale</a></li>
+            <li><a href="#kubevirt">KubeVirt</a></li>
+            <li><a href="#data-services">Longhorn · Rook Ceph</a></li>
+            <li><a href="#data-services">CloudNativePG</a></li>
+            <li><a href="#velero">Velero</a></li>
+            <li><a href="#policies">Kyverno · Gatekeeper</a></li>
+            <li><a href="#alertmanager">Alertmanager</a></li>
+            <li><a href="#plugins">Any CRD, as a plugin</a></li>
           </ul>
 
           <p class="reassure">
@@ -274,7 +274,7 @@
           </p>
 
           <div class="spotlight">
-            <article class="insight">
+            <article class="insight" id="plugins">
               <picture class="card-shot" data-shot="feature-plugins"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-plugins-light.webp" /><img src="screenshots/feature-plugins.webp" width="540" height="1041" loading="lazy" alt="Any operator, as a plugin" /></picture>
               <h3>Any operator, as a plugin</h3>
               <p>
@@ -289,7 +289,7 @@
               <p class="ask">"Does the app know my operator?" → it does now, without an app release.</p>
             </article>
 
-            <article class="insight">
+            <article class="insight" id="gitops">
               <picture class="card-shot" data-shot="feature-gitops"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-gitops-light.webp" /><img src="screenshots/feature-gitops.webp" width="540" height="1041" loading="lazy" alt="Edit in Git, from the phone" /></picture>
               <h3>Edit in Git, from the phone</h3>
               <p>
@@ -498,7 +498,7 @@
               <p class="ask">"Memory of every pod on w-2, stacked" → a panel, checked.</p>
             </article>
 
-            <article class="insight">
+            <article class="insight" id="castai">
               <picture class="card-shot" data-shot="feature-castai"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-castai-light.webp" /><img src="screenshots/feature-castai.webp" width="540" height="1041" loading="lazy" alt="CAST AI on both platforms" /></picture>
               <h3>CAST AI on both platforms</h3>
               <p>
@@ -582,7 +582,7 @@
               <p class="ask">"Is the new switch any faster?" → measured.</p>
             </article>
 
-            <article class="insight">
+            <article class="insight" id="data-services">
               <picture class="card-shot" data-shot="feature-data-services"><source media="(prefers-color-scheme: light)" srcset="screenshots/feature-data-services-light.webp" /><img src="screenshots/feature-data-services.webp" width="540" height="1041" loading="lazy" alt="Data services" /></picture>
               <h3>Data services</h3>
               <p>
@@ -1417,7 +1417,7 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
                 </td>
                 <td class="role" translate="no">RBAC</td>
               </tr>
-              <tr>
+              <tr id="alertmanager">
                 <td class="cmd" translate="no">kubectl get events -w, amtool alert, amtool silence</td>
                 <td class="what">
                   <strong>Live events and Alertmanager</strong
@@ -1429,7 +1429,7 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
                 </td>
                 <td class="role" translate="no">RBAC</td>
               </tr>
-              <tr>
+              <tr id="policies">
                 <td class="cmd" translate="no">kubectl get cpol,policyreports, constraints</td>
                 <td class="what">
                   <strong>Policies</strong
@@ -1441,7 +1441,7 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
                 </td>
                 <td class="role" translate="no">RBAC</td>
               </tr>
-              <tr>
+              <tr id="kubevirt">
                 <td class="cmd" translate="no">virtctl, kubectl get vm,vmi</td>
                 <td class="what">
                   <strong>Virtual machines</strong
@@ -1452,7 +1452,7 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
                 </td>
                 <td class="role" translate="no">RBAC</td>
               </tr>
-              <tr>
+              <tr id="velero">
                 <td class="cmd" translate="no">helm rollback, velero restore, kubectl apply --dry-run</td>
                 <td class="what">
                   <strong>Helm, Velero and YAML</strong
@@ -1464,7 +1464,7 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
                 </td>
                 <td class="role" translate="no">RBAC</td>
               </tr>
-              <tr>
+              <tr id="crds">
                 <td class="cmd" translate="no">kubectl argo rollouts, kubectl get managed, tailscale</td>
                 <td class="what">
                   <strong>Argo Rollouts, Crossplane, Tailscale, Cluster API</strong
@@ -1933,7 +1933,8 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
                 <button
                   type="button"
                   data-copied="Copied"
-                  data-i18n-attr="data-copied"
+                  data-copy-failed="Selected: copy it"
+                  data-i18n-attr="data-copied data-copy-failed"
                   data-copy="btc-address">
                   Copy address
                 </button>
@@ -1960,7 +1961,8 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
                 <button
                   type="button"
                   data-copied="Copied"
-                  data-i18n-attr="data-copied"
+                  data-copy-failed="Selected: copy it"
+                  data-i18n-attr="data-copied data-copy-failed"
                   data-copy="eth-address">
                   Copy address
                 </button>
@@ -2017,6 +2019,7 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
     </footer>
 
     <script src="site.js"></script>
+    <script src="copy.js"></script>
     <script>
       // The beta form has no server: it writes the mail and hands it to the mail app.
       var betaForm = document.getElementById("beta-form");
@@ -2066,21 +2069,6 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
         });
       }
 
-      document.querySelectorAll("[data-copy]").forEach(function (button) {
-        var label = button.textContent;
-        button.addEventListener("click", function () {
-          var text = document.getElementById(button.dataset.copy).textContent;
-          var done = function () {
-            button.textContent = button.dataset.copied;
-            setTimeout(function () {
-              button.textContent = label;
-            }, 1500);
-          };
-          if (navigator.clipboard) {
-            navigator.clipboard.writeText(text).then(done, function () {});
-          }
-        });
-      });
     </script>
   </body>
 </html>

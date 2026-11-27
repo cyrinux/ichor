@@ -644,16 +644,39 @@ pre {
   list-style: none;
 }
 
+/* A chip is a link to the section about it; one with no such section is plain text, with no pill. */
 .chips li {
   font: 500 0.85rem/1 "IBM Plex Mono", ui-monospace, monospace;
+  padding: 0.5rem 0.3rem;
+  color: var(--ink-2);
+}
+
+.chips li:has(a) {
+  padding: 0;
+}
+
+.chips a {
+  display: inline-block;
   padding: 0.5rem 0.8rem;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface);
-  color: var(--ink-2);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
 }
 
-.chips li.talos {
+.chips a:hover {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.chips a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.chips li.talos a {
   color: var(--accent-ink);
   border-color: var(--accent);
 }
@@ -685,6 +708,9 @@ pre {
 
   .chips li {
     font-size: 0.78rem;
+  }
+
+  .chips a {
     padding: 0.4rem 0.65rem;
   }
 
