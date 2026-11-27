@@ -28,6 +28,7 @@ import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ContainerInfo
 import name.levis.ichor.model.isCriticalService
 import name.levis.ichor.model.system
+import name.levis.ichor.model.talosContainer
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
@@ -66,7 +67,8 @@ class ContainerRestartViewModel(private val talos: TalosRepository, private val 
 
 /**
  * Confirms a container restart: a Talos system container (apid, trustd, an extension) asks
- * for the typed hostname, a Kubernetes one a plain confirm (the kubelet starts it again).
+ * for the typed hostname, a Kubernetes one or a Talos container (a ContainerConfig's) a plain
+ * confirm (the kubelet, or Talos, starts it again).
  */
 @Composable
 fun ContainerRestartDialog(container: ContainerInfo, hostname: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
@@ -82,7 +84,10 @@ fun ContainerRestartDialog(container: ContainerInfo, hostname: String, onConfirm
     IchorAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
-        text = { Text(stringResource(R.string.container_restart_kubernetes_note), style = MaterialTheme.typography.bodyMedium) },
+        text = {
+            val note = if (container.talosContainer) R.string.container_restart_talos_note else R.string.container_restart_kubernetes_note
+            Text(stringResource(note), style = MaterialTheme.typography.bodyMedium)
+        },
         confirmButton = { IchorTextButton(onClick = onConfirm) { Text(confirmLabel, color = LocalStatusColors.current.bad) } },
         dismissButton = { IchorTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )

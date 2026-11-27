@@ -25,6 +25,7 @@ public func firingAlerts(_ snapshot: ClusterSnapshot, now: Date) -> [Alert] {
     clear.amTrack = cleared(snapshot.amTrack)
     clear.storageTrack = cleared(snapshot.storageTrack)
     clear.sensorTrack = cleared(snapshot.sensorTrack)
+    clear.talosContainerTrack = cleared(snapshot.talosContainerTrack)
     clear.pluginTrack = cleared(snapshot.pluginTrack)
     return evaluate(previous: clear, current: snapshot, now: now).alerts.filter(\.problem)
 }

@@ -86,7 +86,7 @@ class LogsViewModel(
     override val keepsDataOnFailure = true
     override suspend fun fetch() = when (source) {
         is LogSource.Service -> talos.logs(node, source.name)
-        is LogSource.Container -> talos.containerLogs(node, source.id)
+        is LogSource.Container -> talos.containerLogs(node, source.namespace, source.id)
     }
 }
 
@@ -120,7 +120,7 @@ class LogFollowViewModel(
         try {
             val lines = when (source) {
                 is LogSource.Service -> talos.followLogs(node, source.name, FOLLOW_TAIL_LINES)
-                is LogSource.Container -> talos.followContainerLogs(node, source.id, FOLLOW_TAIL_LINES)
+                is LogSource.Container -> talos.followContainerLogs(node, source.namespace, source.id, FOLLOW_TAIL_LINES)
             }
             lines.collectLogBatches(::apply)
         } catch (e: CancellationException) {

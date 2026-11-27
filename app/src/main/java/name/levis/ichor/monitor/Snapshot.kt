@@ -102,6 +102,14 @@ data class ClusterSnapshot(
     val kubespanIssues: Map<String, String> = emptyMap(),
     /** Always empty: every tunnel down is critical. Kept so the track reads like the others. */
     val kubespanPending: List<String> = emptyList(),
+    /** Watching the Talos containers was on for this check (on by default, Talos clusters only). */
+    val talosContainerWatched: Boolean = false,
+    /** They could be read this time (a node answered). */
+    val talosContainerChecked: Boolean = false,
+    /** Failed or crash-looping Talos containers ("node|name" → see [TalosContainerDetail]), kept like [dataIssues]. */
+    val talosContainerIssues: Map<String, String> = emptyMap(),
+    /** Talos container warnings (restarting) seen once and not notified yet. */
+    val talosContainerPending: List<String> = emptyList(),
     /** Watching the Talos virtual machines was on for this check (on by default, Talos clusters only). */
     val vmWatched: Boolean = false,
     /** Their problems could be read this time. */
@@ -181,6 +189,9 @@ fun snapshotOf(
     /** KubeSpan tunnels watched ([kubespanIssues] null when watched but unreadable, see [kubespanIssuesOf]). */
     kubespanWatched: Boolean = false,
     kubespanIssues: Map<String, String>? = null,
+    /** Talos containers watched ([talosContainerIssues] null when watched but unreadable, see [talosContainerIssuesOf]). */
+    talosContainerWatched: Boolean = false,
+    talosContainerIssues: Map<String, String>? = null,
     /** Talos VMs watched ([vmIssues] null when watched but unreadable, see [talosVmIssuesOf]). */
     vmWatched: Boolean = false,
     vmIssues: Map<String, String>? = null,
@@ -188,6 +199,9 @@ fun snapshotOf(
     bgpWatched: Boolean = false,
     bgpIssues: Map<String, String>? = null,
 ): ClusterSnapshot = ClusterSnapshot(
+    talosContainerWatched = talosContainerWatched,
+    talosContainerChecked = talosContainerWatched && talosContainerIssues != null,
+    talosContainerIssues = talosContainerIssues?.takeIf { talosContainerWatched }.orEmpty(),
     bgpWatched = bgpWatched,
     bgpChecked = bgpWatched && bgpIssues != null,
     bgpIssues = bgpIssues?.takeIf { bgpWatched }.orEmpty(),

@@ -17,11 +17,14 @@ final class LogFollower {
     private var pending: [String] = []
     private var nextID = 0
 
-    /// Follows a Kubernetes container's log when `containerID` is set, else the service's (the
-    /// kernel log when `service` is nil).
-    func run(_ client: TalosClient, node: String, service: String?, containerID: String? = nil) async {
+    /// Follows a container's log when `container` is set, else the service's (the kernel log
+    /// when `service` is nil).
+    func run(_ client: TalosClient, node: String, service: String?, container: LogContainer? = nil) async {
         let stream =
-            containerID.map { client.followContainerLogs(node: node, containerID: $0, tailLines: Self.tailLines) }
+            container.map {
+                client.followContainerLogs(
+                    node: node, namespace: $0.namespace, containerID: $0.id, tailLines: Self.tailLines)
+            }
             ?? client.followLogs(node: node, service: service, tailLines: Self.tailLines)
         await follow(stream)
     }
@@ -86,6 +89,8 @@ struct LogDisplay {
 struct LogContainer: Hashable {
     let id: String
     let name: String
+    /// Containerd namespace: Kubernetes or the Talos containers.
+    var namespace: String = ContainerNamespace.kubernetes
 }
 
 /// Last 500 lines of a service log, of a container's log, or the kernel log (dmesg) when
@@ -150,7 +155,7 @@ struct LogsView: View {
         .task(id: "\(following)#\(model.dataGeneration)") {
             if following {
                 guard let client = model.client else { return }
-                await follower.run(client, node: node, service: service, containerID: container?.id)
+                await follower.run(client, node: node, service: service, container: container)
             } else {
                 await load()
             }
@@ -164,7 +169,8 @@ struct LogsView: View {
         state = await .from {
             let tail: LogTail
             if let container {
-                tail = try await client.containerLogs(node: node, containerID: container.id)
+                tail = try await client.containerLogs(
+                    node: node, namespace: container.namespace, containerID: container.id)
             } else {
                 tail = try await client.logs(node: node, service: service)
             }

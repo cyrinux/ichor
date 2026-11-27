@@ -186,6 +186,13 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
             let kept = snapshot.sensorIssues[subject].map { SensorIssue(value: $0).hostname } ?? ""
             return .hardware(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept)
         case "kubespan": return .screen(.kubespan)
+        case "taloscontainer":
+            // "<node>|<name>": the node, whose Containers tab lists it.
+            let address = storageIssueNode(subject)
+            guard !address.isEmpty else { return nil }
+            let kept = snapshot.talosContainerIssues[subject].map { TalosContainerIssue(value: $0).hostname } ?? ""
+            let hostname = kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept
+            return .node(address: address, hostname: hostname, tab: "")
         case "vm": return .screen(.talosVMs)
         case "bgp":
             // "<node>|<instance>|<peer>": that node's Network screen.

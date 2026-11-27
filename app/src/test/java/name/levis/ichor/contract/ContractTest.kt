@@ -45,6 +45,12 @@ import name.levis.ichor.model.KubeCronJobList
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.KubePodPage
 import name.levis.ichor.model.KubeSpanMeshHealth
+import name.levis.ichor.model.ContainerSample
+import name.levis.ichor.model.SYSTEM_CONTAINERS
+import name.levis.ichor.model.TALOS_CONTAINERS
+import name.levis.ichor.model.TalosContainersHealth
+import name.levis.ichor.monitor.DATA_WARNING
+import name.levis.ichor.monitor.talosContainerSeverity
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubeTopPods
 import name.levis.ichor.model.KubeWorkloadList
@@ -116,6 +122,15 @@ class ContractTest {
         "topology" to Row(ClusterTopology.serializer()),
         "netmap" to Row(NetMap.serializer()) { assertEquals("Node", it.problem?.kind); assertTrue(it.edges.isNotEmpty()) },
         "kubespan-mesh" to Row(KubeSpanMeshHealth.serializer()) { assertEquals(it.broken, it.issues.size) },
+        "talos-containers" to Row(ContainerSample.serializer()) {
+            assertEquals(listOf(SYSTEM_CONTAINERS, TALOS_CONTAINERS, TALOS_CONTAINERS), it.containers.map { c -> c.namespace })
+            assertEquals(12L, it.containers[2].restartCount)
+            assertTrue(it.containers[2].lastLog.isNotEmpty())
+        },
+        "talos-containers-health" to Row(TalosContainersHealth.serializer()) {
+            assertEquals(listOf("192.0.2.21"), it.unread)
+            assertEquals(DATA_WARNING, talosContainerSeverity(it.issues.values.single()))
+        },
         "cluster-updates" to Row(ClusterUpdates.serializer()) { assertTrue(updateSections(it).images.isNotEmpty()) },
         "update-proposal-plan" to Row(UpdateProposalPlan.serializer()) { assertEquals(2, it.files[0].changes.size) },
         "diag-entries" to Row(ListSerializer(DiagEntry.serializer())) { assertEquals("ClusterOverview", it[0].attrs.getValue("fn").content) },

@@ -21,6 +21,8 @@ enum class AlertKind {
     SENSOR_PROBLEM, SENSOR_OK,
     /** A KubeSpan tunnel between two nodes down ([Alert.detail]: a [KubeSpanDetail]), or back. */
     KUBESPAN_DOWN, KUBESPAN_UP,
+    /** A Talos container failed or restarting repeatedly ([Alert.detail]: a [TalosContainerDetail]), or running again. */
+    TALOS_CONTAINER_PROBLEM, TALOS_CONTAINER_OK,
     /** A Talos VM that should run is down or failing ([Alert.detail]: a [TalosVmDetail]), or runs again. */
     TALOS_VM_PROBLEM, TALOS_VM_OK,
     /** A node's BGP session down on two checks in a row ([Alert.detail]: a [BgpDetail]), or up again. */
@@ -107,6 +109,11 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
     val vm = if (blind) prev.vmTrack else evaluateTrack(prev?.vmTrack, cur.vmTrack, comparable, ::talosVmSeverity, ::talosVmAlert, alerts)
     val bgp = if (blind) prev.bgpTrack else evaluateTrack(prev?.bgpTrack, cur.bgpTrack, comparable, ::bgpSeverity, ::bgpAlert, alerts)
     val plugin = if (blind) prev.pluginTrack else evaluateTrack(prev?.pluginTrack, cur.pluginTrack, comparable, ::pluginSeverity, ::pluginAlert, alerts)
+    val talosContainer = if (blind) {
+        prev.talosContainerTrack
+    } else {
+        evaluateTrack(prev?.talosContainerTrack, cur.talosContainerTrack, comparable, ::talosContainerSeverity, ::talosContainerAlert, alerts)
+    }
 
     val next = if (blind) prev.copy(certNotAfter = cur.certNotAfter) else cur
     return Evaluation(
@@ -153,6 +160,10 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             pluginChecked = plugin.checked,
             pluginIssues = plugin.issues,
             pluginPending = plugin.pending,
+            talosContainerWatched = talosContainer.watched,
+            talosContainerChecked = talosContainer.checked,
+            talosContainerIssues = talosContainer.issues,
+            talosContainerPending = talosContainer.pending,
             // Stepped after the run's history record (see [withStorageTrends]); kept until then.
             storageTrends = prev?.takeIf { comparable && storage.watched }?.storageTrends.orEmpty(),
             memoryTrends = prev?.takeIf { comparable }?.memoryTrends.orEmpty(),
@@ -173,6 +184,8 @@ private val ClusterSnapshot.kubespanTrack: Track get() = Track(kubespanWatched, 
 private val ClusterSnapshot.vmTrack: Track get() = Track(vmWatched, vmChecked, vmIssues, vmPending)
 private val ClusterSnapshot.bgpTrack: Track get() = Track(bgpWatched, bgpChecked, bgpIssues, bgpPending)
 private val ClusterSnapshot.pluginTrack: Track get() = Track(pluginWatched, pluginChecked, pluginIssues, pluginPending)
+private val ClusterSnapshot.talosContainerTrack: Track
+    get() = Track(talosContainerWatched, talosContainerChecked, talosContainerIssues, talosContainerPending)
 
 /**
  * Issues of one track (key → value, [severityOf] reading [DATA_CRITICAL] or [DATA_WARNING] from the
@@ -266,6 +279,15 @@ private fun sensorAlert(key: String, value: String, problem: Boolean): Alert = A
     detail = value,
 )
 
+/** [key] "node|name", [value] a [TalosContainerDetail]: the container's name is the subject. */
+private fun talosContainerAlert(key: String, value: String, problem: Boolean): Alert = Alert(
+    key = "taloscontainer:$key",
+    kind = if (problem) AlertKind.TALOS_CONTAINER_PROBLEM else AlertKind.TALOS_CONTAINER_OK,
+    problem = problem,
+    subject = TalosContainerDetail.parse(value).name,
+    detail = value,
+)
+
 /** [key] "idA|idB", [value] a [KubeSpanDetail]: both hostnames are the subject. */
 private fun kubespanAlert(key: String, value: String, problem: Boolean): Alert = Alert(
     key = "kubespan:$key",
@@ -347,6 +369,7 @@ fun firingAlerts(snapshot: ClusterSnapshot): List<Alert> {
         track(snapshot.storageIssues, ::storageAlert) +
         track(snapshot.sensorIssues, ::sensorAlert) +
         track(snapshot.kubespanIssues, ::kubespanAlert) +
+        track(snapshot.talosContainerIssues, ::talosContainerAlert) +
         track(snapshot.vmIssues, ::talosVmAlert) +
         track(snapshot.bgpIssues, ::bgpAlert) +
         track(snapshot.pluginIssues, ::pluginAlert)

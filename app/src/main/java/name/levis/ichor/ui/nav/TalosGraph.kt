@@ -15,6 +15,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.DriftFix
 import name.levis.ichor.model.PatchPrefill
 import name.levis.ichor.model.SnippetPrefill
+import name.levis.ichor.model.K8S_CONTAINERS
 import name.levis.ichor.model.LogSource
 import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.address
@@ -142,7 +143,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
                 onBack = { nav.popBackStack() },
                 onLogs = { service -> nav.navigate(Routes.logs(addr, host, service)) },
                 onContainerLogs = { c ->
-                    nav.navigate(Routes.containerLogs(addr, host, c.id, containerLogTitle(c), containerLogSubtitle(c)))
+                    nav.navigate(Routes.containerLogs(addr, host, c.namespace, c.id, containerLogTitle(c), containerLogSubtitle(c)))
                 },
             )
         }
@@ -327,6 +328,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             navArgument("host") { type = NavType.StringType },
             navArgument("service") { type = NavType.StringType; defaultValue = "" },
             navArgument("container") { type = NavType.StringType; defaultValue = "" },
+            navArgument("ns") { type = NavType.StringType; defaultValue = "" },
             navArgument("title") { type = NavType.StringType; defaultValue = "" },
             navArgument("subtitle") { type = NavType.StringType; defaultValue = "" },
         ),
@@ -341,6 +343,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             } else {
                 LogSource.Container(
                     id = container,
+                    namespace = entry.arguments?.getString("ns").orEmpty().ifEmpty { K8S_CONTAINERS },
                     title = entry.arguments?.getString("title").orEmpty().ifEmpty { container.take(12) },
                     subtitle = entry.arguments?.getString("subtitle").orEmpty(),
                 )

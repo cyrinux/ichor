@@ -104,7 +104,7 @@ func TestDemoPublicReadsAndActions(t *testing.T) {
 			func() (string, error) { return ResourceGet(yaml, "", n.Node, "network", "hostname", "hostname") },
 			func() (string, error) { return KernelLogs(yaml, "", n.Node, 10) },
 			func() (string, error) { return ServiceLogs(yaml, "", n.Node, "kubelet", 10) },
-			func() (string, error) { return ContainerLogs(yaml, "", n.Node, "demo-web", 10) },
+			func() (string, error) { return ContainerLogs(yaml, "", n.Node, "", "demo-web", 10) },
 		}
 		for i, read := range reads {
 			out, err := read()

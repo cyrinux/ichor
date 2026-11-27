@@ -22,7 +22,7 @@ internal object Routes {
     const val OVERVIEW = "overview"
     const val NODE = "node?addr={addr}&host={host}&role={role}&action={action}"
     const val NODE_TABS = "node/tabs?addr={addr}&host={host}&tab={tab}"
-    const val LOGS = "logs?addr={addr}&host={host}&service={service}&container={container}&title={title}&subtitle={subtitle}"
+    const val LOGS = "logs?addr={addr}&host={host}&service={service}&container={container}&ns={ns}&title={title}&subtitle={subtitle}"
     const val STORAGE = "storage?addr={addr}&host={host}"
     const val NODE_FILES = "node-files?addr={addr}&host={host}"
     const val RESOURCES = "resources?addr={addr}&host={host}"
@@ -70,9 +70,12 @@ internal object Routes {
         "resource?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&ns=${Uri.encode(ref.namespace)}&type=${Uri.encode(ref.type)}" +
             "&id=${Uri.encode(id)}&sensitive=${ref.sensitive}"
 
-    /** The log of a CRI container: [title] its name, [subtitle] its "namespace/pod". */
-    fun containerLogs(addr: String, host: String, container: String, title: String, subtitle: String) =
-        "logs?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&container=${Uri.encode(container)}" +
+    /**
+     * The log of a container: [namespace] its containerd namespace (k8s.io, taloscontainers),
+     * [title] its name, [subtitle] its "namespace/pod".
+     */
+    fun containerLogs(addr: String, host: String, namespace: String, container: String, title: String, subtitle: String) =
+        "logs?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&container=${Uri.encode(container)}&ns=${Uri.encode(namespace)}" +
             "&title=${Uri.encode(title)}&subtitle=${Uri.encode(subtitle)}"
     const val ETCD = "etcd"
 

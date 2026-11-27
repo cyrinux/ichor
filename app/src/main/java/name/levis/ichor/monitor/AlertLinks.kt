@@ -23,7 +23,8 @@ val Alert.channel: AlertChannel
     get() = when (kind) {
         AlertKind.NODE_READY, AlertKind.NODE_NOT_READY, AlertKind.NODE_UNREACHABLE, AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK,
         AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK, AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK,
-        AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK, AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK,
+        AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK, AlertKind.TALOS_CONTAINER_PROBLEM, AlertKind.TALOS_CONTAINER_OK,
+        AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK,
         AlertKind.BGP_DOWN, AlertKind.BGP_UP,
         -> AlertChannel.NODES
         AlertKind.KUBESPAN_DOWN, AlertKind.KUBESPAN_UP -> AlertChannel.MESH
@@ -82,6 +83,12 @@ fun Alert.shareTarget(): ShareTarget? = when (kind) {
     // "sensor:node|hot" or "sensor:node|throttled": that node's Hardware screen.
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> ShareTarget.hardware(key.substringAfter(':').substringBefore('|'), subject)
     AlertKind.KUBESPAN_DOWN, AlertKind.KUBESPAN_UP -> ShareTarget.screen(ShareTarget.KUBESPAN)
+    // "taloscontainer:node|name": that node, whose Containers tab lists it.
+    AlertKind.TALOS_CONTAINER_PROBLEM, AlertKind.TALOS_CONTAINER_OK -> ShareTarget(
+        target = ShareTarget.NODE,
+        addr = key.removePrefix("taloscontainer:").substringBefore('|'),
+        host = TalosContainerDetail.parse(detail).hostname,
+    )
     // "vm:node|vm|name": the cluster's Talos virtual machines, where the problems card is.
     AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK -> ShareTarget.screen(ShareTarget.TALOS_VMS)
     // "bgp:node|instance|peer": that node's Network screen, where its sessions are.

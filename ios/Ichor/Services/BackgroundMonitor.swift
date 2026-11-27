@@ -114,6 +114,16 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: sensorsKey) }
     }
 
+    static let talosContainersKey = "monitor.taloscontainers"
+    /// On by default: also read every node's Talos containers (Talos 1.15), to alert when one fails or keeps restarting.
+    static var talosContainersWatched: Bool {
+        get {
+            let defaults = UserDefaults.standard
+            return defaults.object(forKey: talosContainersKey) == nil ? true : defaults.bool(forKey: talosContainersKey)
+        }
+        set { UserDefaults.standard.set(newValue, forKey: talosContainersKey) }
+    }
+
     static let kubespanKey = "monitor.kubespan"
     /// On by default: also read every node's KubeSpan peers, to alert when a tunnel goes down (cheap, Talos only).
     static var kubespanWatched: Bool {
@@ -579,6 +589,9 @@ enum BackgroundMonitor {
         // And the KubeSpan tunnels: Go judges them from every node's peers, the app only keeps the verdict.
         let watchKubespan = kubespanWatched && !context.isKube
         let knownKubespan = knownKubespanIssues(previous, context: context.name)
+        // And the Talos containers: Go keeps the failed and crash-looping ones, never their output.
+        let watchTalosContainers = talosContainersWatched && !context.isKube
+        let knownTalosContainers = knownTalosContainerIssues(previous, context: context.name)
         // And the Talos VMs: Go judges which should run and do not, the app keeps the verdict.
         let watchVMs = vmsWatched && !context.isKube
         let knownVMs = knownTalosVMIssues(previous, context: context.name)
@@ -615,6 +628,10 @@ enum BackgroundMonitor {
             guard let health = try? await client.kubeSpanMeshHealth() else { return nil }
             return kubespanIssuesOf(health, known: knownKubespan)
         }
+        async let talosContainerRead = ifWatched(watchTalosContainers, within: left) { () -> [String: String]? in
+            guard let health = try? await client.talosContainersHealth() else { return nil }
+            return talosContainerIssuesOf(health, known: knownTalosContainers)
+        }
         async let vmRead = ifWatched(watchVMs, within: left) { () -> [String: String]? in
             guard let report = try? await client.clusterVirtualMachineProblems() else { return nil }
             return talosVMIssuesOf(report, known: knownVMs)
@@ -631,6 +648,7 @@ enum BackgroundMonitor {
         let storageIssues = storage?.issues
         let sensorIssues = await sensorRead
         let kubespanIssues = await kubespanRead
+        let talosContainerIssues = await talosContainerRead
         let vmIssues = await vmRead
         let bgpIssues = await bgpRead
         let pluginIssues = await pluginRead
@@ -662,6 +680,7 @@ enum BackgroundMonitor {
                 storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn,
                 sensorWatched: watchSensors, sensorIssues: sensorIssues,
                 kubespanWatched: watchKubespan, kubespanIssues: kubespanIssues,
+                talosContainerWatched: watchTalosContainers, talosContainerIssues: talosContainerIssues,
                 vmWatched: watchVMs, vmIssues: vmIssues,
                 bgpWatched: watchBGP, bgpIssues: bgpIssues,
                 pluginWatched: watchPlugins, pluginIssues: pluginIssues),

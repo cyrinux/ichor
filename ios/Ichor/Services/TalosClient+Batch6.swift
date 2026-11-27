@@ -10,14 +10,20 @@ enum SupportBundleEvent: Sendable {
 /// Container logs, storage, etcd member actions, resources, support bundle and version
 /// compatibility calls (see TalosClient for the conventions).
 extension TalosClient {
-    /// Last `lines` lines of a Kubernetes container's log (os:reader); `containerID` is the
-    /// id from `containers`.
-    func containerLogs(node: String, containerID: String, lines: Int = 500) async throws -> LogTail {
-        try await Self.json { [config, context] in IchorgoContainerLogs(config, context, node, containerID, lines, $0) }
+    /// Last `lines` lines of a container's log (os:reader); `containerID` is the id from
+    /// `containers`, `namespace` its containerd namespace (Kubernetes or Talos containers).
+    func containerLogs(
+        node: String, namespace: String = ContainerNamespace.kubernetes, containerID: String, lines: Int = 500
+    ) async throws -> LogTail {
+        try await Self.json { [config, context] in
+            IchorgoContainerLogs(config, context, node, namespace, containerID, lines, $0)
+        }
     }
 
     /// `talosctl logs -k -f` of one container, starting with the last `tailLines`.
-    func followContainerLogs(node: String, containerID: String, tailLines: Int = 200) -> AsyncStream<LogFollowItem> {
+    func followContainerLogs(
+        node: String, namespace: String = ContainerNamespace.kubernetes, containerID: String, tailLines: Int = 200
+    ) -> AsyncStream<LogFollowItem> {
         TalosClient.bridged { continuation in
             let bridge = LogBridge(
                 line: { continuation.yield(.line($0)) },
@@ -26,7 +32,7 @@ extension TalosClient {
                     continuation.finish()
                 }
             )
-            let run = IchorgoStartContainerLogFollow(config, context, node, containerID, tailLines, bridge)
+            let run = IchorgoStartContainerLogFollow(config, context, node, namespace, containerID, tailLines, bridge)
             return BridgedRun(bridge) { run?.cancel() }
         }
     }
@@ -82,6 +88,12 @@ extension TalosClient {
     /// The broken KubeSpan tunnels of every node's peers, for the tunnel alert (os:reader).
     func kubeSpanMeshHealth() async throws -> KubeSpanMeshHealth {
         try await Self.json { [config, context] in IchorgoKubeSpanMeshHealth(config, context, $0) }
+    }
+
+    /// Every node's failed or crash-looping Talos containers (Talos 1.15), for the container
+    /// alert (os:reader). Never their error text nor their last log.
+    func talosContainersHealth() async throws -> TalosContainersHealth {
+        try await Self.json { [config, context] in IchorgoTalosContainersHealth(config, context, $0) }
     }
 
     /// `talosctl -n NODE etcd forfeit-leadership` (os:admin); node must be the leader.

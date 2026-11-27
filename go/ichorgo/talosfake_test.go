@@ -64,6 +64,12 @@ type fakeTalos struct {
 	rebootErr        error
 	resets           []*machineapi.ResetRequest   // the Reset requests received, in order
 	restarts         []*machineapi.RestartRequest // the container Restart requests, in order
+	// logRequests are the Logs requests received, in order.
+	logRequests []*machineapi.LogsRequest
+	// talosContainers answer Containers for the taloscontainers namespace (Talos 1.15).
+	talosContainers []*machineapi.ContainerInfo
+	// containerCalls are the namespaces each node's Containers calls asked for, in order.
+	containerCalls map[string][]string
 	// wipes are the BlockDeviceWipe requests received, in order; wipeErr answers them instead.
 	wipes     []*storageapi.BlockDeviceWipeRequest
 	wipeErr   error
@@ -252,6 +258,14 @@ func (f *fakeTalos) called(prefix string) []string {
 	}
 
 	return out
+}
+
+// containerNamespaces are the namespaces node's Containers calls asked for, in order.
+func (f *fakeTalos) containerNamespaces(node string) []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	return slices.Clone(f.containerCalls[nodeKey(node)])
 }
 
 // waitVersion blocks while the node ctx targets is held (see versionHold).

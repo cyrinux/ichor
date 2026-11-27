@@ -112,12 +112,13 @@ internal class TalosStreams(private val configs: ConfigRepository) {
         )
     }
 
-    fun followContainerLogs(node: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = logFollowFlow { listener ->
+    fun followContainerLogs(node: String, namespace: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = logFollowFlow { listener ->
         val stored = configs.forCall()
         Ichorgo.startContainerLogFollow(
             stored.yaml,
             stored.activeContext,
             node,
+            namespace,
             containerId,
             tailLines.toLong(),
             listener,

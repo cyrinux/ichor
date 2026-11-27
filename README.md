@@ -39,6 +39,9 @@ tour** shows it again.
   repeat until acknowledged.
 - **Talos Hypervisor:** virtual machines of a node (Talos 1.15), with their disks and addresses,
   on the node's screen and in one list for the cluster.
+- **Talos containers:** the containers a node runs without Kubernetes (Talos 1.15), with their
+  state, health, restarts and last error, their logs and a restart, and an alert when one fails
+  or keeps restarting.
 - **Any Kubernetes cluster:** workloads with rollout history and undo for Deployments,
   StatefulSets and DaemonSets (the pod template diff first) and a Deployment's pause, pods, logs and shells, a browser of every object with
   summary, YAML, scale and delete, Jobs, Services and load balancing, storage, autoscaling
