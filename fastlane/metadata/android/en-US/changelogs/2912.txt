@@ -1,0 +1,4 @@
+• The Hardware screen shows each CPU scaling policy and the NUMA nodes of a Talos 1.15 node
+• The resource browser opens redacted resources for reader roles on Talos 1.15
+• Etcd membership phase of each control-plane node on the etcd screen, on Talos 1.15
+• META keys and Talos VM specs open for reader roles on Talos 1.15
