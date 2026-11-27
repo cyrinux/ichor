@@ -183,6 +183,24 @@ durations, counts, status codes, kinds or verbs: never a context, node, namespac
 name or URL. `just probe -data-dir DIR diag-tail [N]` prints it (DIR keeps it across runs),
 `just probe -data-dir DIR diag-export /tmp/diag.zip` writes the zip the apps will share.
 
+## Baseline profile
+
+The Android release builds ship a baseline profile
+(`app/src/main/generated/baselineProfiles/baseline-prof.txt`), so that the start-up and overview
+paths are compiled at install time instead of running interpreted after an install or an update.
+`:baselineprofile` (`BaselineProfileGenerator`) records it by walking the offline demo: a cold
+start, the overview, a node, its kernel log, and back. Its anchors are the smoke test's tags
+(`ui/components/SmokeTags.kt`), which the app exposes to UI Automator as resource ids.
+
+Regenerate it after a big navigation or start-up change, never by hand:
+
+- `just baseline-profile` with an API 33+ (or rooted) emulator or device connected, or
+- the **Baseline profile** workflow (Actions → Run workflow), whose `baseline-profile` artifact
+  unzips into `app/src/main/generated/baselineProfiles/`.
+
+Then commit the file. Pull requests only compile the generator (`./build.sh smoke`); release
+builds never need a device.
+
 ## Reproducible builds
 
 Every release APK on GitHub can be rebuilt from its tag and must come out the same once the

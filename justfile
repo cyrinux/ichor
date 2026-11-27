@@ -139,6 +139,12 @@ verify-release TAG *flags:
 build-play:
     ./build.sh play
 
+# Regenerates the Android baseline profile (app/src/main/generated/baselineProfiles) on the
+# device or emulator adb sees: API 33+, or rooted. No emulator at hand: run the Baseline profile
+# workflow by hand and unzip its artifact there (CONTRIBUTING.md "Baseline profile").
+baseline-profile:
+    ICHOR_SKIP_TESTS=1 ICHOR_LOCAL_MODEL=0 ./build.sh baseline
+
 # Formatting, vet, staticcheck and every unit test (Go + Kotlin), without packaging an APK.
 check:
     ./build.sh check

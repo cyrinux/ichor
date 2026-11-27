@@ -20,3 +20,5 @@ include(":app")
 include(":core-widget")
 // Wear OS tile and complication, fed by the phone's snapshot over the Data Layer.
 include(":wear")
+// Generates the app's baseline profile on a device (`just baseline-profile`).
+include(":baselineprofile")

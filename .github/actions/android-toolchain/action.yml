@@ -18,6 +18,9 @@ inputs:
   save:
     description: Save the Nix store cache when its key missed, on main (the check job only).
     default: "false"
+  gradle-read-only:
+    description: Never write the Gradle home cache, even on main (jobs run by hand, which would add an entry).
+    default: "false"
 
 outputs:
   go-cache-key:
@@ -62,7 +65,7 @@ runs:
     # deduplicated across jobs by the action), read-only on pull requests and tags.
     - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       with:
-        cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+        cache-read-only: ${{ inputs.gradle-read-only == 'true' || github.ref != 'refs/heads/main' }}
 
     # Go modules and build cache (GOMODCACHE and GOCACHE defaults of the Nix shell): a warm
     # cache turns `gomobile bind` from two minutes into twenty seconds. Keyed on go.sum, so it is
