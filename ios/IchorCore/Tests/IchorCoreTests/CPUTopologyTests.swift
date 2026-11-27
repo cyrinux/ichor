@@ -15,10 +15,11 @@ final class CPUTopologyTests: XCTestCase {
 
     func testDecodeGoJSON() throws {
         let hw = try TalosJSON.decode(NodeHardware.self, from: json)
-        XCTAssertEqual(hw.numa, [
+        let expected = [
             NUMANode(id: 0, cpus: "0-7", cpuCount: 8, memoryBytes: 34_359_738_368),
             NUMANode(id: 1, cpus: "8-15", cpuCount: 8, memoryBytes: 34_359_738_368),
-        ])
+        ]
+        XCTAssertEqual(hw.numa, expected)
         XCTAssertEqual(
             hw.cpuScaling.first,
             CPUScalingPolicy(
