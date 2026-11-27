@@ -14,6 +14,24 @@ What a switch sends is shown as plain text, clipped, and never opened as a link;
 mode the switch names become `switch-1`, `switch-2`… and the addresses are masked like the
 node's. It needs os:reader.
 
+## BGP sessions
+
+From Talos 1.14 a node can peer with the network fabric itself (native BGP, the
+`BGPInstanceConfig` documents). **Node → Network** then shows a **BGP** section with each
+session (`talosctl get bgppeerstatus`): the peer's address, its AS number and the node's own, the
+state (established in green, anything else in red), the prefixes received and advertised and how
+long the session has been up. From Talos 1.15 a session that negotiated graceful restart says so,
+and a peer that is restarting shows as such, not as down: its routes are kept meanwhile. The
+section is hidden on older Talos versions and on nodes that do not peer. Only the session status
+is read, never the instance configuration (its passwords are sensitive); it needs os:reader. In
+screenshot mode the peer addresses are masked like the node's and the AS numbers become
+documentation ones (64496–64511).
+
+**Settings → Alerts → BGP sessions** (on by default, Talos clusters) reads every node's sessions
+at each background check and notifies when one is still down at the next check, so a node's own
+reboot or a short flap never does; a session that comes back says so once. Tapping the
+notification opens that node's Network screen.
+
 ## Network tools
 
 **Node menu → Network tools** runs one check from that node and shows the result as fields,

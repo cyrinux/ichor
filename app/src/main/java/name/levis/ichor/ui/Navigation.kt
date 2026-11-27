@@ -502,6 +502,8 @@ private suspend fun ShareTarget.talosRoute(app: TalosApp, action: AlertActionReq
     }
     ShareTarget.STORAGE -> clusterNode(app)?.let { n -> Routes.storage(n.node, n.hostname) }
     ShareTarget.HARDWARE -> clusterNode(app)?.let { n -> Routes.hardware(n.node, n.hostname) }
+    // A node's Network screen (a BGP alert's).
+    ShareTarget.NETWORK -> clusterNode(app)?.let { n -> Routes.network(n.node, n.hostname) }
     // The screen opens on its map, the first tab.
     ShareTarget.KUBESPAN -> Routes.KUBESPAN.takeUnless { app.configRepository.config.value?.activeIsKube == true }
     // The cluster's list, where the problems card is (a Talos VM alert's).

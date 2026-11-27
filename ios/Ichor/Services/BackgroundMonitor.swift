@@ -131,6 +131,13 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: vmsKey) }
     }
 
+    static let bgpKey = "monitor.bgp"
+    /// On by default: also read every node's BGP sessions, to alert when one stays down (Talos 1.14+).
+    static var bgpWatched: Bool {
+        get { UserDefaults.standard.object(forKey: bgpKey) as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: bgpKey) }
+    }
+
     static let sensorThresholdKey = "monitor.sensorThreshold"
     /// sensorThresholdAuto (each sensor's own limit) or the °C every node is held to.
     static var sensorThreshold: Int {
@@ -575,6 +582,9 @@ enum BackgroundMonitor {
         // And the Talos VMs: Go judges which should run and do not, the app keeps the verdict.
         let watchVMs = vmsWatched && !context.isKube
         let knownVMs = knownTalosVMIssues(previous, context: context.name)
+        // And the nodes' BGP sessions: Go judges which are down, the app keeps the verdict.
+        let watchBGP = bgpWatched && !context.isKube
+        let knownBGP = knownBGPIssues(previous, context: context.name)
         let fingerprint = context.fingerprint
         async let dataRead = ifWatched(watchData, within: left) { try? await client.dataServices(hints: "") }
         async let gitopsRead = ifWatched(watchGitOps, within: left) { await readGitOps(client, known: known) }
@@ -609,6 +619,10 @@ enum BackgroundMonitor {
             guard let report = try? await client.clusterVirtualMachineProblems() else { return nil }
             return talosVMIssuesOf(report, known: knownVMs)
         }
+        async let bgpRead = ifWatched(watchBGP, within: left) { () -> [String: String]? in
+            guard let report = try? await client.clusterBGPPeers() else { return nil }
+            return bgpIssuesOf(report, known: knownBGP)
+        }
         let dataServices = await dataRead
         let gitopsIssues = await gitopsRead
         let checkupIssues = await checkupRead
@@ -618,6 +632,7 @@ enum BackgroundMonitor {
         let sensorIssues = await sensorRead
         let kubespanIssues = await kubespanRead
         let vmIssues = await vmRead
+        let bgpIssues = await bgpRead
         let pluginIssues = await pluginRead
         let now = Date()
         if let kubeNodes {
@@ -648,6 +663,7 @@ enum BackgroundMonitor {
                 sensorWatched: watchSensors, sensorIssues: sensorIssues,
                 kubespanWatched: watchKubespan, kubespanIssues: kubespanIssues,
                 vmWatched: watchVMs, vmIssues: vmIssues,
+                bgpWatched: watchBGP, bgpIssues: bgpIssues,
                 pluginWatched: watchPlugins, pluginIssues: pluginIssues),
             extras)
     }

@@ -247,6 +247,15 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
         null
     }
 
+    // And for the nodes' own BGP sessions (Talos 1.14+ native BGP): Go judges which are down, the
+    // app keeps the verdict. A cluster added from a kubeconfig has no Talos API.
+    val watchBgp = store.bgpWatched.value && !kube
+    val bgpIssues = if (watchBgp) {
+        runCatching { reads.talos.clusterBgpPeers() }.getOrNull()?.let { bgpIssuesOf(it, known = knownBgpIssues(prev, name)) }
+    } else {
+        null
+    }
+
     return if (kubeNodes != null) {
         val snapshot = kubeSnapshotOf(
             kubeNodes, name, context.certNotAfter, now, fingerprint, watchData, dataServices,
@@ -280,6 +289,8 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
             kubespanIssues = kubespanIssues,
             vmWatched = watchVms,
             vmIssues = vmIssues,
+            bgpWatched = watchBgp,
+            bgpIssues = bgpIssues,
             pluginWatched = watchPlugins,
             pluginIssues = pluginIssues,
         )

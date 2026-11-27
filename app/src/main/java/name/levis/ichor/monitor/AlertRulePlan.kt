@@ -32,6 +32,7 @@ val Alert.ruleKind: String
         AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> "sensor"
         AlertKind.KUBESPAN_DOWN, AlertKind.KUBESPAN_UP -> "kubespan"
         AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK -> "vm"
+        AlertKind.BGP_DOWN, AlertKind.BGP_UP -> "bgp"
         AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK -> "memory"
         AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> "plugin"
         AlertKind.PROPOSAL_MERGED, AlertKind.PROPOSAL_CLOSED -> "proposal"
@@ -61,6 +62,7 @@ val Alert.ruleSeverity: String
         AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorSeverity(detail)
         AlertKind.KUBESPAN_DOWN, AlertKind.KUBESPAN_UP -> kubespanSeverity(detail)
         AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK -> talosVmSeverity(detail)
+        AlertKind.BGP_DOWN, AlertKind.BGP_UP -> ALERT_SEVERITY_WARNING
         AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> pluginSeverity(detail)
         AlertKind.PROPOSAL_MERGED, AlertKind.PROPOSAL_CLOSED -> ALERT_SEVERITY_INFO
     }

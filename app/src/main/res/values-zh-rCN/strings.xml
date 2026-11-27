@@ -1311,6 +1311,14 @@
     <string name="network_neighbor_vlan">VLAN %1$s</string>
     <string name="network_neighbor_management">管理 %1$s</string>
     <string name="network_neighbor_copy">复制邻居详情</string>
+    <string name="network_bgp">BGP</string>
+    <string name="network_bgp_hint">节点自身的 BGP 会话（Talos 原生 BGP）：每个对等体、其 AS 号、会话状态以及交换的前缀。</string>
+    <string name="network_bgp_asn">AS %1$s · 本地 AS %2$s</string>
+    <string name="network_bgp_instance">实例 %1$s</string>
+    <string name="network_bgp_prefixes">收到 %1$s · 通告 %2$s</string>
+    <string name="network_bgp_since">建立于 %1$s</string>
+    <string name="network_bgp_graceful">平滑重启</string>
+    <string name="network_bgp_restarting">对等体正在重启</string>
     <string name="connections_search">按地址、端口、状态或进程筛选</string>
     <string name="connections_listening">监听中</string>
     <string name="connections_all">全部</string>
@@ -4569,6 +4577,11 @@
     <string name="monitor_talos_vm_error">%2$s 上的 %1$s 出错</string>
     <string name="monitor_talos_vm_disk">%2$s 上 %1$s 的磁盘出错</string>
     <string name="monitor_talos_vm_ok">%2$s 上的 %1$s 已恢复正常</string>
+    <string name="monitor_bgp">BGP 会话</string>
+    <string name="monitor_bgp_desc">当节点的 BGP 会话在下一次检查时仍然断开时发出告警（Talos 1.14+ 原生 BGP；每次检查都会读取每个节点的会话）。</string>
+    <string name="monitor_bgp_down">%2$s 上到 %1$s 的 BGP 会话已断开</string>
+    <string name="monitor_bgp_up">%2$s 上到 %1$s 的 BGP 会话已恢复</string>
+    <string name="monitor_bgp_state">会话状态：%1$s</string>
     <string name="talos_vms_problems_title">需要处理</string>
     <string name="monitor_sensors_auto">每个传感器自身的上限（严重值 − 5 °C，否则为其最大值）</string>
     <string name="monitor_sensors_threshold">达到 %1$d °C 时告警</string>

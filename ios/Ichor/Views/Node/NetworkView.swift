@@ -33,6 +33,7 @@ struct NetworkView: View {
                 }
                 linksSection(network)
                 NeighborsSection(network: network)
+                BGPSection(network: network)
                 addressesSection(network)
                 routesSection(network)
                 dnsSection(network)

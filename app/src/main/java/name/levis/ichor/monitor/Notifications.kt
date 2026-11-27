@@ -186,6 +186,7 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.KUBESPAN_DOWN -> context.getString(R.string.monitor_kubespan_down, alert.subject)
     AlertKind.KUBESPAN_UP -> context.getString(R.string.monitor_kubespan_up, alert.subject)
     AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK -> talosVmAlertTitle(context, alert)
+    AlertKind.BGP_DOWN, AlertKind.BGP_UP -> bgpAlertTitle(context, alert)
     AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> pluginAlertTitle(context, alert)
     AlertKind.PROPOSAL_MERGED -> context.getString(R.string.monitor_proposal_merged, ProposalDetail.parse(alert.detail).number)
     AlertKind.PROPOSAL_CLOSED -> context.getString(R.string.monitor_proposal_closed, ProposalDetail.parse(alert.detail).number)
@@ -203,6 +204,12 @@ fun talosVmProblemTitle(context: Context, d: TalosVmDetail): String = when (d.ki
     TALOS_VM_DISK_FAILED -> context.getString(R.string.monitor_talos_vm_disk, d.vm, d.hostname)
     TALOS_VM_ERROR -> context.getString(R.string.monitor_talos_vm_error, d.vm, d.hostname)
     else -> context.getString(R.string.monitor_talos_vm_down, d.vm, d.hostname)
+}
+
+/** "BGP session to 192.0.2.1 down on worker-1", or up again. */
+private fun bgpAlertTitle(context: Context, alert: Alert): String {
+    val d = BgpDetail.parse(alert.detail)
+    return context.getString(if (alert.problem) R.string.monitor_bgp_down else R.string.monitor_bgp_up, d.peer, d.hostname)
 }
 
 /** "kube-green: demo-lab/weekend", or "… is healthy again": the plugin's name and its finding's own title. */
@@ -451,6 +458,10 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK ->
         TalosVmDetail.parse(alert.detail).detail.takeIf { alert.problem && it.isNotBlank() } ?: context.getString(R.string.monitor_talos_vms)
     AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> pluginAlertText(context, alert)
+    // The session's state (ACTIVE, IDLE…) while down, else the track's name.
+    AlertKind.BGP_DOWN, AlertKind.BGP_UP ->
+        BgpDetail.parse(alert.detail).state.takeIf { alert.problem && it.isNotBlank() }
+            ?.let { context.getString(R.string.monitor_bgp_state, it) } ?: context.getString(R.string.monitor_bgp)
     // The request's own title, unmasked: left out in screenshot mode.
     AlertKind.PROPOSAL_MERGED, AlertKind.PROPOSAL_CLOSED ->
         if ((context.applicationContext as? name.levis.ichor.TalosApp)?.uiPreferences?.privacyMask?.value?.enabled == true) "" else alert.subject

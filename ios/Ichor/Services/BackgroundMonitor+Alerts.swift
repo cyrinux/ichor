@@ -258,6 +258,11 @@ extension BackgroundMonitor {
                 return (alert.title, alert.text)
             }
             return localizedTalosVM(alert, issue: TalosVMIssue(value: value))
+        case "bgp":
+            guard let value = snapshot.bgpIssues[subject] ?? previous?.bgpIssues[subject] else {
+                return (alert.title, alert.text)
+            }
+            return localizedBGP(alert, issue: BGPIssue(value: value))
         case "unreachable":
             // The cluster is named in the subtitle.
             guard alert.problem else {
@@ -344,6 +349,21 @@ extension BackgroundMonitor {
         }
         let title = talosVMProblemTitle(kind: issue.kind, vm: vm, host: host)
         return (title, issue.detail.isEmpty ? String(localized: "Talos virtual machines") : issue.detail)
+    }
+
+    /// A BGP session down, its state as the text, or up again; worded as on Android.
+    private static func localizedBGP(_ alert: Alert, issue: BGPIssue) -> (title: String, text: String) {
+        let (peer, host) = (issue.peer, issue.hostname)
+        guard alert.problem else {
+            return (
+                String(localized: "BGP session to \(peer) is up again on \(host)"), String(localized: "BGP sessions")
+            )
+        }
+        let state = issue.state
+        return (
+            String(localized: "BGP session to \(peer) is down on \(host)"),
+            state.isEmpty ? String(localized: "BGP sessions") : String(localized: "Session state: \(state)")
+        )
     }
 
     /// A tunnel down, in the map banner's words, or back; worded as on Android.

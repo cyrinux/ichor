@@ -401,6 +401,11 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "bgp-peers", args: "", run: func(e env) (out string, err error) {
+		out, err = ichorgo.ClusterBGPPeers(e.cfg, e.context)
+
+		return out, err
+	}},
 	{name: "features", args: "NODE", run: func(e env) (out string, err error) {
 		out, err = ichorgo.NodeFeatures(e.cfg, e.context, flag.Arg(1))
 
