@@ -46,6 +46,7 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.EtcdMember
 import name.levis.ichor.model.EtcdNodeStatus
 import name.levis.ichor.model.EtcdOverview
+import name.levis.ichor.model.unsettledPhase
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
@@ -575,6 +576,7 @@ private fun EtcdContent(
 @Composable
 private fun MemberStatusCard(status: EtcdNodeStatus, hostname: String, lag: EtcdLag?, actions: MemberActions?, onDefrag: (() -> Unit)?) {
     val colors = LocalStatusColors.current
+    val phase = status.unsettledPhase
     IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -583,6 +585,8 @@ private fun MemberStatusCard(status: EtcdNodeStatus, hostname: String, lag: Etcd
                     Text(status.node, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                 }
                 when {
+                    // A node still joining has no running etcd yet: its phase says more than "error".
+                    phase != null -> StatusPill(membershipPhaseLabel(phase), colors.warn)
                     status.error != null -> StatusPill(stringResource(R.string.etcd_status_error), colors.bad)
                     status.errors.isNotEmpty() -> StatusPill(stringResource(R.string.etcd_status_errors), colors.bad)
                     status.isLeader -> StatusPill(stringResource(R.string.etcd_status_leader), colors.ok)
@@ -592,6 +596,7 @@ private fun MemberStatusCard(status: EtcdNodeStatus, hostname: String, lag: Etcd
                 }
                 actions?.let { MemberOverflow(it) }
             }
+            status.membershipError?.takeIf { it.isNotBlank() }?.let { Text(it, color = colors.bad, style = MaterialTheme.typography.bodySmall) }
             if (status.error != null) {
                 Text(status.error, color = colors.bad, style = MaterialTheme.typography.bodySmall)
                 return@Column

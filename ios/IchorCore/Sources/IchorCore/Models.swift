@@ -394,6 +394,10 @@ public struct EtcdNodeStatus: Decodable, Equatable, Identifiable, Sendable {
     public let raftAppliedIndex: UInt64?
     public let version: String
     public let errors: [String]
+    /// Talos 1.15+: where the node stands in joining etcd, see `unsettledPhase`; nil on older nodes.
+    public let membershipPhase: String?
+    /// Talos 1.15+: the last error Talos met driving that membership.
+    public let membershipError: String?
 
     public var id: String { node }
 }

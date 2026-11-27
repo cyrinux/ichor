@@ -305,6 +305,10 @@
     <string name="etcd_status_leader">Leader</string>
     <string name="etcd_status_learner">Learner</string>
     <string name="etcd_status_follower">Follower</string>
+    <string name="etcd_phase_preparing">正在准备 etcd</string>
+    <string name="etcd_phase_joining">正在加入 etcd</string>
+    <string name="etcd_phase_leaving">正在离开 etcd</string>
+    <string name="etcd_phase_left">已离开 etcd</string>
     <string name="etcd_status_lagging">落后</string>
     <string name="etcd_member_id">成员 ID</string>
     <string name="etcd_db_size">数据库大小</string>

@@ -359,6 +359,10 @@
     <string name="etcd_status_leader">Лідер</string>
     <string name="etcd_status_learner">Учень</string>
     <string name="etcd_status_follower">Послідовник</string>
+    <string name="etcd_phase_preparing">Підготовка etcd</string>
+    <string name="etcd_phase_joining">Приєднується до etcd</string>
+    <string name="etcd_phase_leaving">Залишає etcd</string>
+    <string name="etcd_phase_left">Залишив etcd</string>
     <string name="etcd_status_lagging">Відстає</string>
     <string name="etcd_member_id">ID учасника</string>
     <string name="etcd_db_size">Розмір БД</string>

@@ -328,6 +328,10 @@
     <string name="etcd_status_leader">Leader</string>
     <string name="etcd_status_learner">Learner</string>
     <string name="etcd_status_follower">Follower</string>
+    <string name="etcd_phase_preparing">Preparazione di etcd</string>
+    <string name="etcd_phase_joining">Ingresso in etcd</string>
+    <string name="etcd_phase_leaving">Uscita da etcd</string>
+    <string name="etcd_phase_left">Uscito da etcd</string>
     <string name="etcd_status_lagging">In ritardo</string>
     <string name="etcd_member_id">ID membro</string>
     <string name="etcd_db_size">Dimensione DB</string>

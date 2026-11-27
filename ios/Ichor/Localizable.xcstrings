@@ -1,6 +1,62 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Joining etcd" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tritt etcd bei" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Uniéndose a etcd" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rejoint etcd" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ingresso in etcd" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "etcd に参加中" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Entrando no etcd" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Присоединяется к etcd" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Приєднується до etcd" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在加入 etcd" } }
+      }
+    },
+    "Leaving etcd" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verlässt etcd" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Saliendo de etcd" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Quitte etcd" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Uscita da etcd" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "etcd から離脱中" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Saindo do etcd" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Покидает etcd" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Залишає etcd" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在离开 etcd" } }
+      }
+    },
+    "Left etcd" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hat etcd verlassen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Salió de etcd" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "A quitté etcd" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Uscito da etcd" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "etcd から離脱済み" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Saiu do etcd" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Покинул etcd" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Залишив etcd" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已离开 etcd" } }
+      }
+    },
+    "Preparing etcd" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "etcd wird vorbereitet" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Preparando etcd" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Préparation d'etcd" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Preparazione di etcd" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "etcd を準備中" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Preparando o etcd" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подготовка etcd" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Підготовка etcd" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在准备 etcd" } }
+      }
+    },
     "Starting" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -66,6 +66,10 @@ var featureRules = []featureRule{
 	// rpc EtcdStatus, EtcdAlarmList, EtcdAlarmDisarm, EtcdDefragment (machine.proto): first in
 	// v1.4.0 (EtcdMemberList is in v1.0.0: on older nodes EtcdStatus still lists the members).
 	{name: "etcd", min: "v1.4", hint: "the etcd status API"},
+	// EtcdMembershipStatuses.etcd.talos.dev: not in v1.14, first in v1.15.0-beta.1 (pkg/machinery/
+	// resources/etcd/membership_status.go). EtcdStatus adds each node's phase when the node has
+	// the type; the apps read that rather than this row.
+	{name: "etcdMembership", min: "v1.15", hint: "the etcd membership phase"},
 	// rpc EtcdSnapshot (machine.proto): v1.0.0.
 	{name: "etcdSnapshot"},
 	// rpc EtcdRemoveMemberByID (machine.proto): first in v1.3.0 (EtcdForfeitLeadership: v1.0.0).

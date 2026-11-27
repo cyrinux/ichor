@@ -373,6 +373,9 @@ func ControlPlaneReplaceWait(configYAML, contextName string, memberCountBefore, 
 
 			if cps, err := s.controlPlanes(ctx); err == nil {
 				result = joinState(gatherMemberPlan(ctx, s.client, cps, ""), memberCountBefore)
+				if !result.Joined {
+					result.Detail = withMembershipDetail(result.Detail, readEtcdMembership(ctx, s, cps))
+				}
 			}
 
 			if result.Joined || !time.Now().Add(cpReplacePoll).Before(deadline) {

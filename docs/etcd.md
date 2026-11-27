@@ -54,3 +54,15 @@ NOSPACE…** (os:admin) runs the usual sequence as one followed run:
 The run stops at the first failure and says which member failed. When the alarm comes back at
 once, the database is still over its quota: raise `quota-backend-bytes` in the machine config,
 or delete data.
+
+### Membership phase (Talos 1.15)
+
+From Talos 1.15 each control-plane node reports where it stands in joining etcd
+(`talosctl get etcdmembershipstatus`). The etcd screen shows it as a chip on the node's card when
+the node is not yet, or no longer, a voting member: **Preparing etcd** (its certificates or data
+volume are not ready), **Joining etcd** (waiting to be added, or for the cluster bootstrap),
+**Learner** (added, still catching up; if it is interrupted now, Talos wipes its data and it
+joins again from scratch), **Leaving etcd** and **Left etcd**. The last error Talos met is shown
+under it, in red. While a control-plane replacement waits for the new member, its step lists the
+phase of every node that is not settled yet. On older Talos versions nothing changes. It needs
+os:reader.
