@@ -23,6 +23,7 @@ extension FleetFinding {
         case "storage": String(localized: "Storage")
         case "sensor": String(localized: "Temperature")
         case "kubespan": "KubeSpan"
+        case "vm": String(localized: "Virtual machines")
         case "plugin": String(localized: "Plugins")
         default: String(localized: "Finding")
         }

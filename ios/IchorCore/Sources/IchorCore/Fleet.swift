@@ -39,6 +39,8 @@ public struct FleetEntry: Encodable, Equatable, Sendable {
     public let sensorIssues: [String: String]
     public let kubespanChecked: Bool
     public let kubespanIssues: [String: String]
+    public let vmChecked: Bool
+    public let vmIssues: [String: String]
     public let pluginChecked: Bool
     public let pluginIssues: [String: String]
 
@@ -73,6 +75,8 @@ public struct FleetEntry: Encodable, Equatable, Sendable {
         sensorIssues = snapshot?.sensorIssues ?? [:]
         kubespanChecked = snapshot?.kubespanChecked ?? false
         kubespanIssues = snapshot?.kubespanIssues ?? [:]
+        vmChecked = snapshot?.vmChecked ?? false
+        vmIssues = snapshot?.vmIssues ?? [:]
         pluginChecked = snapshot?.pluginChecked ?? false
         pluginIssues = snapshot?.pluginIssues ?? [:]
     }

@@ -21,6 +21,8 @@ enum class AlertKind {
     SENSOR_PROBLEM, SENSOR_OK,
     /** A KubeSpan tunnel between two nodes down ([Alert.detail]: a [KubeSpanDetail]), or back. */
     KUBESPAN_DOWN, KUBESPAN_UP,
+    /** A Talos VM that should run is down or failing ([Alert.detail]: a [TalosVmDetail]), or runs again. */
+    TALOS_VM_PROBLEM, TALOS_VM_OK,
     /** The cluster could not be read for several checks in a row ([Alert.detail]: how many), or answers again. */
     CLUSTER_UNREACHABLE, CLUSTER_REACHABLE,
     /** A CRD plugin's finding ([Alert.key] its key, [Alert.detail]: a [PluginIssue]), or no longer. */
@@ -100,6 +102,7 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
     val storage = if (blind) prev.storageTrack else evaluateTrack(prev?.storageTrack, cur.storageTrack, comparable, ::storageSeverity, ::storageAlert, alerts)
     val sensor = if (blind) prev.sensorTrack else evaluateTrack(prev?.sensorTrack, cur.sensorTrack, comparable, ::sensorSeverity, ::sensorAlert, alerts)
     val kubespan = if (blind) prev.kubespanTrack else evaluateTrack(prev?.kubespanTrack, cur.kubespanTrack, comparable, ::kubespanSeverity, ::kubespanAlert, alerts)
+    val vm = if (blind) prev.vmTrack else evaluateTrack(prev?.vmTrack, cur.vmTrack, comparable, ::talosVmSeverity, ::talosVmAlert, alerts)
     val plugin = if (blind) prev.pluginTrack else evaluateTrack(prev?.pluginTrack, cur.pluginTrack, comparable, ::pluginSeverity, ::pluginAlert, alerts)
 
     val next = if (blind) prev.copy(certNotAfter = cur.certNotAfter) else cur
@@ -135,6 +138,10 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             kubespanChecked = kubespan.checked,
             kubespanIssues = kubespan.issues,
             kubespanPending = kubespan.pending,
+            vmWatched = vm.watched,
+            vmChecked = vm.checked,
+            vmIssues = vm.issues,
+            vmPending = vm.pending,
             pluginWatched = plugin.watched,
             pluginChecked = plugin.checked,
             pluginIssues = plugin.issues,
@@ -156,6 +163,7 @@ private val ClusterSnapshot.amTrack: Track get() = Track(amWatched, amChecked, a
 private val ClusterSnapshot.storageTrack: Track get() = Track(storageWatched, storageChecked, storageIssues, storagePending)
 private val ClusterSnapshot.sensorTrack: Track get() = Track(sensorWatched, sensorChecked, sensorIssues, sensorPending)
 private val ClusterSnapshot.kubespanTrack: Track get() = Track(kubespanWatched, kubespanChecked, kubespanIssues, kubespanPending)
+private val ClusterSnapshot.vmTrack: Track get() = Track(vmWatched, vmChecked, vmIssues, vmPending)
 private val ClusterSnapshot.pluginTrack: Track get() = Track(pluginWatched, pluginChecked, pluginIssues, pluginPending)
 
 /**
@@ -259,6 +267,15 @@ private fun kubespanAlert(key: String, value: String, problem: Boolean): Alert =
     detail = value,
 )
 
+/** [key] "node|vm|name", [value] a [TalosVmDetail]: the VM's name is the subject. */
+private fun talosVmAlert(key: String, value: String, problem: Boolean): Alert = Alert(
+    key = "vm:$key",
+    kind = if (problem) AlertKind.TALOS_VM_PROBLEM else AlertKind.TALOS_VM_OK,
+    problem = problem,
+    subject = TalosVmDetail.parse(value).vm,
+    detail = value,
+)
+
 /** [key] the finding's ("plugin:…", already an alert key), [value] a [PluginIssue]: its title is the subject. */
 private fun pluginAlert(key: String, value: String, problem: Boolean): Alert = Alert(
     key = key,
@@ -313,5 +330,6 @@ fun firingAlerts(snapshot: ClusterSnapshot): List<Alert> {
         track(snapshot.storageIssues, ::storageAlert) +
         track(snapshot.sensorIssues, ::sensorAlert) +
         track(snapshot.kubespanIssues, ::kubespanAlert) +
+        track(snapshot.vmIssues, ::talosVmAlert) +
         track(snapshot.pluginIssues, ::pluginAlert)
 }

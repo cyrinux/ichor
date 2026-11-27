@@ -893,6 +893,10 @@
         <item quantity="one">%1$d tunnel down</item>
         <item quantity="other">%1$d tunnels down</item>
     </plurals>
+    <plurals name="widget_vms_down">
+        <item quantity="one">%1$d VM down</item>
+        <item quantity="other">%1$d VMs down</item>
+    </plurals>
     <string name="widget_all_ready">all ready</string>
     <string name="widget_etcd_no_alarms">etcd: no alarms</string>
     <plurals name="widget_etcd_alarms">
@@ -4676,6 +4680,13 @@
     <string name="monitor_kubespan_desc">Alert when a tunnel between two nodes is down (Talos clusters; reads every node\'s peers at each check).</string>
     <string name="monitor_kubespan_down">Tunnel %1$s is down</string>
     <string name="monitor_kubespan_up">Tunnel %1$s is back</string>
+    <string name="monitor_talos_vms">Talos virtual machines</string>
+    <string name="monitor_talos_vms_desc">Alert when a virtual machine that should run is down or failing (Talos 1.15; reads every node\'s virtual machines at each check).</string>
+    <string name="monitor_talos_vm_down">%1$s is down on %2$s</string>
+    <string name="monitor_talos_vm_error">%1$s failed on %2$s</string>
+    <string name="monitor_talos_vm_disk">A disk of %1$s failed on %2$s</string>
+    <string name="monitor_talos_vm_ok">%1$s on %2$s is back to normal</string>
+    <string name="talos_vms_problems_title">Needs attention</string>
     <string name="monitor_sensors_auto">Each sensor\'s own limit (critical − 5 °C, else its max)</string>
     <string name="monitor_sensors_threshold">Alert at %1$d °C</string>
     <string name="monitor_sensor_hot">%1$s runs hot (%2$s °C)</string>

@@ -23,6 +23,10 @@
         <item quantity="one">%d tunnel down</item>
         <item quantity="other">%d tunnels down</item>
     </plurals>
+    <plurals name="wear_vms_down">
+        <item quantity="one">%d VM down</item>
+        <item quantity="other">%d VMs down</item>
+    </plurals>
     <plurals name="wear_etcd_alarms">
         <item quantity="one">%d etcd alarm</item>
         <item quantity="other">%d etcd alarms</item>

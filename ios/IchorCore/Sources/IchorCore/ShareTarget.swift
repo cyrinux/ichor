@@ -12,6 +12,8 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         case data, checkup, alerts, storage, hardware
         /// The KubeSpan screen, which opens on its map.
         case kubespan
+        /// The cluster's Talos virtual machines.
+        case talosVMs = "talos-vms"
     }
 
     public var cluster: String
@@ -177,6 +179,7 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
             let kept = snapshot.sensorIssues[subject].map { SensorIssue(value: $0).hostname } ?? ""
             return .hardware(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept)
         case "kubespan": return .screen(.kubespan)
+        case "vm": return .screen(.talosVMs)
         case "memory":
             // "<node address>:trend": the node, whose History card shows the trend.
             let address = memoryTrendNode(subject: subject)

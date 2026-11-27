@@ -49,6 +49,7 @@ func demoNodeVMs(n nodeOverview) nodeVMs {
 		},
 	}
 	out.Libraries = []contentLibrary{{Name: "images", Path: "/var/mnt/vm-images", Phase: "ready"}}
+	out.Problems = vmProblemsOf(n.Node, out.VMs)
 
 	return learnVMNames(out)
 }

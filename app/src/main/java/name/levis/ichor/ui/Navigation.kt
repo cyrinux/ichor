@@ -504,6 +504,8 @@ private suspend fun ShareTarget.talosRoute(app: TalosApp, action: AlertActionReq
     ShareTarget.HARDWARE -> clusterNode(app)?.let { n -> Routes.hardware(n.node, n.hostname) }
     // The screen opens on its map, the first tab.
     ShareTarget.KUBESPAN -> Routes.KUBESPAN.takeUnless { app.configRepository.config.value?.activeIsKube == true }
+    // The cluster's list, where the problems card is (a Talos VM alert's).
+    ShareTarget.TALOS_VMS -> Routes.talosVms().takeUnless { app.configRepository.config.value?.activeIsKube == true }
     ShareTarget.ARGO_APP -> Routes.argoApp(namespace, name, sync = action?.action == AlertAction.SYNC)
     ShareTarget.FLUX_APP -> Routes.fluxApp(kind, namespace, name, reconcile = action?.action == AlertAction.RECONCILE)
     // A data service's catalog id opens its tab; "plugin-<id>" (a plugin finding's alert) where

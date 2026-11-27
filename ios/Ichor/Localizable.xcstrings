@@ -215807,6 +215807,168 @@
         "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Abrir pod" } },
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открыть под" } }
       }
+    },
+    "Alert when a virtual machine that should run is down or failing (Talos 1.15; reads every node's virtual machines at each check)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Alert when a virtual machine that should run is down or failing (Talos 1.15; reads every node's virtual machines at each check)." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Alerter quand une machine virtuelle qui devrait tourner est arrêtée ou en échec (Talos 1.15 ; lit les machines virtuelles de chaque nœud à chaque vérification)." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Warnen, wenn eine VM, die laufen sollte, aus ist oder fehlschlägt (Talos 1.15; liest bei jeder Prüfung die VMs jedes Knotens)." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Avisar cuando una máquina virtual que debería funcionar está parada o falla (Talos 1.15; lee las máquinas virtuales de cada nodo en cada comprobación)." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvisa quando una macchina virtuale che dovrebbe funzionare è ferma o in errore (Talos 1.15; legge le macchine virtuali di ogni nodo a ogni controllo)." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "動作しているはずの仮想マシンが停止または失敗したときに通知します（Talos 1.15。チェックごとに各ノードの仮想マシンを読み取ります）。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alertar quando uma máquina virtual que deveria estar rodando está parada ou falhando (Talos 1.15; lê as máquinas virtuais de cada nó a cada verificação)." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Оповещать, когда виртуальная машина, которая должна работать, остановлена или в ошибке (Talos 1.15; при каждой проверке читает виртуальные машины каждого узла)." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сповіщати, коли віртуальна машина, яка має працювати, зупинена або в помилці (Talos 1.15; під час кожної перевірки читає віртуальні машини кожного вузла)." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当本应运行的虚拟机停止或出错时告警（Talos 1.15；每次检查都会读取每个节点的虚拟机）。" } }
+      }
+    },
+    "%@ is down on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ is down on %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ est arrêtée sur %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ ist auf %2$@ aus" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ está parada en %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ è ferma su %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ の %1$@ が停止しています" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ está parada em %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ не работает на %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ не працює на %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ 上的 %1$@ 已停止" } }
+      }
+    },
+    "%@ failed on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ failed on %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ en échec sur %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ ist auf %2$@ fehlgeschlagen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ falló en %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ in errore su %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ の %1$@ が失敗しました" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ falhou em %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ошибка %1$@ на %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Помилка %1$@ на %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ 上的 %1$@ 出错" } }
+      }
+    },
+    "A disk of %@ failed on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "A disk of %1$@ failed on %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Un disque de %1$@ est en échec sur %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein Datenträger von %1$@ ist auf %2$@ ausgefallen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Un disco de %1$@ falló en %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Un disco di %1$@ è in errore su %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ の %1$@ のディスクが失敗しました" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Um disco de %1$@ falhou em %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сбой диска %1$@ на %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Збій диска %1$@ на %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ 上 %1$@ 的磁盘出错" } }
+      }
+    },
+    "%@ on %@ is back to normal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ on %2$@ is back to normal" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ sur %2$@ est revenue à la normale" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ auf %2$@ ist wieder in Ordnung" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ en %2$@ vuelve a la normalidad" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ su %2$@ è tornata alla normalità" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ の %1$@ が正常に戻りました" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ em %2$@ voltou ao normal" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ на %2$@ снова в норме" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ на %2$@ знову в нормі" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ 上的 %1$@ 已恢复正常" } }
+      }
+    },
+    "%lld VMs down" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM down" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld VMs down" } }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM arrêtée" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM arrêtées" } }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM aus" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld VMs aus" } }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM parada" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM paradas" } }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM ferma" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM ferme" } }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "VM %lld 台が停止" } }
+            }
+          }
+        },
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM parada" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld VMs paradas" } }
+            }
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не работает" } },
+              "few" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не работают" } },
+              "many" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не работают" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не работают" } }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не працює" } },
+              "few" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не працюють" } },
+              "many" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не працюють" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не працюють" } }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 台虚拟机停止" } }
+            }
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

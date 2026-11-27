@@ -253,6 +253,11 @@ extension BackgroundMonitor {
                 return (alert.title, alert.text)
             }
             return localizedKubespan(alert, issue: KubeSpanIssue(value: value))
+        case "vm":
+            guard let value = snapshot.vmIssues[subject] ?? previous?.vmIssues[subject] else {
+                return (alert.title, alert.text)
+            }
+            return localizedTalosVM(alert, issue: TalosVMIssue(value: value))
         case "unreachable":
             // The cluster is named in the subtitle.
             guard alert.problem else {
@@ -327,6 +332,18 @@ extension BackgroundMonitor {
             String(localized: "\(host) runs hot (\(celsiusText(issue.celsius)) °C)"),
             String(localized: "\(issue.label), alert at \(celsiusText(issue.limit)) °C")
         )
+    }
+
+    /// A Talos VM down, failed or with a failed disk, the node's words as the text, or back; worded as on Android.
+    private static func localizedTalosVM(_ alert: Alert, issue: TalosVMIssue) -> (title: String, text: String) {
+        let (vm, host) = (issue.vm, issue.hostname)
+        guard alert.problem else {
+            return (
+                String(localized: "\(vm) on \(host) is back to normal"), String(localized: "Talos virtual machines")
+            )
+        }
+        let title = talosVMProblemTitle(kind: issue.kind, vm: vm, host: host)
+        return (title, issue.detail.isEmpty ? String(localized: "Talos virtual machines") : issue.detail)
     }
 
     /// A tunnel down, in the map banner's words, or back; worded as on Android.

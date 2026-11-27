@@ -60,6 +60,8 @@ type fleetEntry struct {
 	StorageIssues  map[string]string `json:"storageIssues"`
 	SensorChecked  bool              `json:"sensorChecked"`
 	SensorIssues   map[string]string `json:"sensorIssues"`
+	VMChecked      bool              `json:"vmChecked"`
+	VMIssues       map[string]string `json:"vmIssues"`
 	PluginChecked  bool              `json:"pluginChecked"`
 	PluginIssues   map[string]string `json:"pluginIssues"`
 
@@ -68,7 +70,7 @@ type fleetEntry struct {
 }
 
 // fleetFinding is the one thing a row says is wrong. Detail is the GitOps tool ("argocd",
-// "flux") and empty elsewhere.
+// "flux"), a KubeSpan tunnel's reason or a Talos VM problem's kind, and empty elsewhere.
 type fleetFinding struct {
 	Track    string `json:"track"`
 	Severity string `json:"severity"`

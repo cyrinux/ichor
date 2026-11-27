@@ -130,6 +130,9 @@ private fun TalosVmList(report: TalosClusterVms, grouped: Boolean, onOpen: (Talo
             TalosVmCountChips(report.all, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
             HorizontalDivider()
         }
+        if (report.problems.isNotEmpty()) {
+            item(key = "problems") { TalosVmProblemsCard(report, onOpen) }
+        }
         if (shown.isEmpty()) item(key = "empty") { EmptyText(stringResource(R.string.vm_empty)) }
         shown.forEach { entry -> nodeGroup(entry, grouped, onOpen) }
     }

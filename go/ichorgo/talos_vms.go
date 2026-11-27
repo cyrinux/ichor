@@ -64,7 +64,8 @@ type nodeVMs struct {
 	Reason    string            `json:"reason"`
 	VMs       []talosVM         `json:"vms"`
 	Libraries []contentLibrary  `json:"libraries"`
-	Errors    map[string]string `json:"errors"` // section -> error, for sections that failed
+	Problems  []vmProblem       `json:"problems"` // VMs that should run and do not, see vmProblemOf
+	Errors    map[string]string `json:"errors"`   // section -> error, for sections that failed
 }
 
 type talosVM struct {
@@ -178,7 +179,7 @@ func readNodeVMsEntry(ctx context.Context, s *session, node string) nodeVMsEntry
 }
 
 func emptyNodeVMs() nodeVMs {
-	return nodeVMs{VMs: []talosVM{}, Libraries: []contentLibrary{}, Errors: map[string]string{}}
+	return nodeVMs{VMs: []talosVM{}, Libraries: []contentLibrary{}, Problems: []vmProblem{}, Errors: map[string]string{}}
 }
 
 // readNodeVMs reads node's hypervisor resources; ctx targets node. It fails only when the node
@@ -219,7 +220,14 @@ func readNodeVMs(ctx context.Context, s *session, node string) (nodeVMs, error) 
 		return nodeVMs{}, fmt.Errorf("node %s: %s", node, errs[vmSectionVMs])
 	}
 
-	return buildNodeVMs(in, errs), nil
+	out := buildNodeVMs(in, errs)
+
+	// Without the statuses nothing can be judged: no problem rather than every VM down.
+	if errs[vmSectionVMs] == "" {
+		out.Problems = vmProblemsOf(node, out.VMs)
+	}
+
+	return out, nil
 }
 
 // specsByID decodes the specs of items; one that does not decode is named in errs[section].

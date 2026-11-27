@@ -16,6 +16,7 @@ struct MonitoringSection: View {
     @State private var memoryTrendWatched = BackgroundMonitor.memoryTrendWatched
     @State private var sensorsWatched = BackgroundMonitor.sensorsWatched
     @State private var kubespanWatched = BackgroundMonitor.kubespanWatched
+    @State private var vmsWatched = BackgroundMonitor.vmsWatched
     @State private var sensorThreshold = BackgroundMonitor.sensorThreshold
     @State private var unreachableWatched = BackgroundMonitor.unreachableWatched
     @State private var unreachableRuns = BackgroundMonitor.unreachableRuns
@@ -196,6 +197,25 @@ struct MonitoringSection: View {
                     Text("KubeSpan tunnels")
                     Text(
                         "Alert when a tunnel between two nodes is down (Talos clusters; reads every node's peers at each check)."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
+            // On by default: every node's Talos VMs are read at every check.
+            Toggle(
+                isOn: Binding(
+                    get: { vmsWatched },
+                    set: { on in
+                        BackgroundMonitor.vmsWatched = on
+                        vmsWatched = on
+                    })
+            ) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Talos virtual machines")
+                    Text(
+                        "Alert when a virtual machine that should run is down or failing (Talos 1.15; reads every node's virtual machines at each check)."
                     )
                     .font(.caption)
                     .foregroundStyle(.secondary)
