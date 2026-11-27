@@ -77,6 +77,10 @@ var featureRules = []featureRule{
 	// SMARTStatuses.block.talos.dev and the DiskSMARTConfig document: not in v1.14.0, on main
 	// (1.15, "Disk SMART Status" in hack/release.toml).
 	{name: "diskHealth", min: "v1.15", hint: "the SMARTStatus resource"},
+	// VirtualMachineStatuses, VirtualMachineSpecs, VirtualMachineDiskStatuses and
+	// ContentLibraryStatuses .hypervisor.talos.dev: pkg/machinery/resources/hypervisor is not
+	// in v1.14.0, first in v1.15.0-beta.1 (read untyped, talos_vms.go).
+	{name: "hypervisor", min: "v1.15", hint: "the Talos hypervisor resources"},
 	// rpc GenerateClientConfiguration (machine.proto): v1.0.0.
 	{name: "issueConfig"},
 	// LinkStatuses/AddressStatuses/RouteStatuses/ResolverStatuses/TimeServerStatuses

@@ -214,6 +214,7 @@ func TestDemoKubeRefusesMutationsAndTalos(t *testing.T) {
 		"node name": func() (string, error) { return KubeNodeName(yaml, "", "192.0.2.20") },
 		"discover":  func() (string, error) { return DiscoverNodes(yaml, "") },
 		"storage":   func() (string, error) { return ClusterStorageHealth(yaml, "") },
+		"vms":       func() (string, error) { return ClusterVirtualMachines(yaml, "") },
 	}
 
 	for name, read := range talos {

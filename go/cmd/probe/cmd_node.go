@@ -391,6 +391,16 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "node-vms", args: "NODE", run: func(e env) (out string, err error) {
+		out, err = ichorgo.NodeVirtualMachines(e.cfg, e.context, flag.Arg(1))
+
+		return out, err
+	}},
+	{name: "cluster-vms", args: "", run: func(e env) (out string, err error) {
+		out, err = ichorgo.ClusterVirtualMachines(e.cfg, e.context)
+
+		return out, err
+	}},
 	{name: "features", args: "NODE", run: func(e env) (out string, err error) {
 		out, err = ichorgo.NodeFeatures(e.cfg, e.context, flag.Arg(1))
 
