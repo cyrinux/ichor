@@ -71,7 +71,7 @@ func isTalosDemoContext(yaml, name string) bool {
 }
 
 // demoTalosVersion is the Talos version the demo nodes say they run.
-const demoTalosVersion = "v1.14.0"
+const demoTalosVersion = "v1.14.7"
 
 func demoNodes() []nodeOverview {
 	nodes := make([]nodeOverview, 5)
