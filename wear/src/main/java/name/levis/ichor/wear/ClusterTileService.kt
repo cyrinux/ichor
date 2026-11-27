@@ -1,5 +1,6 @@
 package name.levis.ichor.wear
 
+import android.content.Context
 import android.content.res.Resources
 import androidx.concurrent.futures.CallbackToFutureAdapter
 import androidx.wear.protolayout.ColorBuilders.argb
@@ -42,7 +43,7 @@ class ClusterTileService : TileService() {
     override fun onTileRequest(requestParams: RequestBuilders.TileRequest): ListenableFuture<TileBuilders.Tile> =
         CallbackToFutureAdapter.getFuture { completer ->
             WatchSnapshotStore.fetchIfMissing(this) {
-                completer.set(tile(resources, WatchSnapshotStore.active(this), System.currentTimeMillis()))
+                completer.set(tile(this, WatchSnapshotStore.active(this), System.currentTimeMillis()))
             }
             "ClusterTile"
         }
@@ -54,11 +55,12 @@ class ClusterTileService : TileService() {
         }
 }
 
-private fun tile(res: Resources, cluster: WearCluster?, now: Long): TileBuilders.Tile =
+/** Tapped: the app, on this cluster's page (the first of the phone's list), or its list without data. */
+private fun tile(context: Context, cluster: WearCluster?, now: Long): TileBuilders.Tile =
     TileBuilders.Tile.Builder()
         .setResourcesVersion(RESOURCES_VERSION)
         .setFreshnessIntervalMillis(FRESHNESS_MS)
-        .setTileTimeline(Timeline.fromLayoutElement(layout(res, cluster, now)))
+        .setTileTimeline(Timeline.fromLayoutElement(opensApp(context, layout(context.resources, cluster, now), cluster?.let { 0 })))
         .build()
 
 private fun layout(res: Resources, c: WearCluster?, now: Long): LayoutElement {

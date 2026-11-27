@@ -2,6 +2,7 @@ package name.levis.ichor.wear
 
 import android.content.ComponentName
 import android.content.Context
+import android.content.SharedPreferences
 import android.net.Uri
 import androidx.wear.tiles.TileService
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
@@ -37,6 +38,14 @@ object WatchSnapshotStore {
     }
 
     fun has(context: Context): Boolean = prefs(context).contains(KEY)
+
+    /** Calls [onChange] after each new payload until the returned function is called. */
+    fun observe(context: Context, onChange: () -> Unit): () -> Unit {
+        val prefs = prefs(context)
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key -> if (key == KEY || key == null) onChange() }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        return { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
 
     /** The payload bytes of the phone's `/snapshot` data item. */
     fun bytesOf(item: DataItem): ByteArray? =

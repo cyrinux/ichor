@@ -404,6 +404,12 @@ Part of the [Ichor documentation](../README.md#documentation).
   complication ("2/6", short text or ranged value) from the same check: counts only, no name.
   On iOS the same fleet widget sits on the Home Screen and the Lock Screen, and the Apple Watch
   gets a fleet complication and the counts above its cluster list, from the phone's last check.
+  Both watches also have an app: the clusters of the phone's last check (colour, name, "2 down"
+  or "OK", the check's age), then a cluster's issues and its nodes, the ones down first. A node
+  goes to the watch with its short host name (none in screenshot mode, none when it is an
+  address) and its state; for one that does not answer, a category ("Timed out", "Name not
+  found"), never the error's text. On Wear OS tapping the cluster tile opens that cluster,
+  tapping the fleet tile the list; at most 30 nodes per cluster go along.
 - **Data services:** the storage, database and backup operators the cluster runs (Longhorn, Garage,
   CloudNativePG, Dragonfly, MariaDB, Percona, Velero, Rook Ceph, CSI VolumeSnapshots, backup
   CronJobs) on one tabbed screen, each with its health and what needs a look. The other

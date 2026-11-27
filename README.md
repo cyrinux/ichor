@@ -89,7 +89,8 @@ proxying behave exactly like `talosctl`.
 an F-Droid repository that ships the signed release APKs. Release APKs are rebuilt from their
 tag and compared in CI (`just verify-release`, see
 [Reproducible builds](CONTRIBUTING.md#reproducible-builds)). The release also carries
-`ichor-wear-v<version>.apk`, the Wear OS tile: it only works with the Google Play phone build
+`ichor-wear-v<version>.apk`, the Wear OS app (clusters and their nodes, tiles and
+complications): it only works with the Google Play phone build
 (same package and signing key), so it is not meant for F-Droid.
 
 ## Documentation
