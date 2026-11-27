@@ -38,6 +38,7 @@ data class ShareTarget(
         const val STORAGE = "storage"
         const val HARDWARE = "hardware"
         const val KUBESPAN = "kubespan"
+        const val TALOS_VMS = "talos-vms"
 
         /** The node screen's tabs, by their index there. */
         val NODE_TABS = listOf("services", "resources", "live", "processes", "pods", "cgroups", "kube-pods")

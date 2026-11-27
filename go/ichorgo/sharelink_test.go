@@ -75,6 +75,7 @@ func TestShareLinkRoundTrip(t *testing.T) {
 		{Cluster: c, Target: "storage", Host: "worker-1", Addr: "10.0.0.5"},
 		{Cluster: c, Target: "hardware", Host: "worker-1", Addr: "10.0.0.5"},
 		{Cluster: c, Target: "kubespan"},
+		{Cluster: c, Target: "talos-vms"},
 	}
 
 	for _, want := range targets {

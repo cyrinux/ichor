@@ -855,6 +855,9 @@
     <plurals name="widget_tunnels_down">
         <item quantity="other">トンネル %1$d 本が切断</item>
     </plurals>
+    <plurals name="widget_vms_down">
+        <item quantity="other">VM %1$d 台が停止</item>
+    </plurals>
     <string name="widget_all_ready">すべて準備完了</string>
     <string name="widget_etcd_no_alarms">etcd：アラームなし</string>
     <plurals name="widget_etcd_alarms">
@@ -4572,6 +4575,13 @@
     <string name="monitor_talos_container_ok">%2$s の %1$s が再び動作しています</string>
     <string name="monitor_talos_container_failed">終了コード %1$d で失敗しました。Talos は再起動しません。</string>
     <string name="monitor_talos_container_restarting">%1$d 回再起動、最後の終了コード %2$d。</string>
+    <string name="monitor_talos_vms">Talos 仮想マシン</string>
+    <string name="monitor_talos_vms_desc">動作しているはずの仮想マシンが停止または失敗したときに通知します（Talos 1.15。チェックごとに各ノードの仮想マシンを読み取ります）。</string>
+    <string name="monitor_talos_vm_down">%2$s の %1$s が停止しています</string>
+    <string name="monitor_talos_vm_error">%2$s の %1$s が失敗しました</string>
+    <string name="monitor_talos_vm_disk">%2$s の %1$s のディスクが失敗しました</string>
+    <string name="monitor_talos_vm_ok">%2$s の %1$s が正常に戻りました</string>
+    <string name="talos_vms_problems_title">要対応</string>
     <string name="monitor_sensors_auto">各センサー固有の上限（critical − 5 °C、なければ max）</string>
     <string name="monitor_sensors_threshold">%1$d °C でアラート</string>
     <string name="monitor_sensor_hot">%1$s が高温です（%2$s °C）</string>

@@ -895,6 +895,10 @@
         <item quantity="one">%1$d tunnel caduto</item>
         <item quantity="other">%1$d tunnel caduti</item>
     </plurals>
+    <plurals name="widget_vms_down">
+        <item quantity="one">%1$d VM ferma</item>
+        <item quantity="other">%1$d VM ferme</item>
+    </plurals>
     <string name="widget_all_ready">tutti pronti</string>
     <string name="widget_etcd_no_alarms">etcd: nessun allarme</string>
     <plurals name="widget_etcd_alarms">
@@ -4687,6 +4691,13 @@
     <string name="monitor_talos_container_ok">%1$s su %2$s è di nuovo in esecuzione</string>
     <string name="monitor_talos_container_failed">Non riuscito con codice di uscita %1$d: Talos non lo riavvia.</string>
     <string name="monitor_talos_container_restarting">Riavviato %1$d volte, ultimo codice di uscita %2$d.</string>
+    <string name="monitor_talos_vms">Macchine virtuali Talos</string>
+    <string name="monitor_talos_vms_desc">Avvisa quando una macchina virtuale che dovrebbe funzionare è ferma o in errore (Talos 1.15; legge le macchine virtuali di ogni nodo a ogni controllo).</string>
+    <string name="monitor_talos_vm_down">%1$s è ferma su %2$s</string>
+    <string name="monitor_talos_vm_error">%1$s in errore su %2$s</string>
+    <string name="monitor_talos_vm_disk">Un disco di %1$s è in errore su %2$s</string>
+    <string name="monitor_talos_vm_ok">%1$s su %2$s è tornata alla normalità</string>
+    <string name="talos_vms_problems_title">Richiede attenzione</string>
     <string name="monitor_sensors_auto">Il limite di ogni sensore (critico − 5 °C, altrimenti il suo massimo)</string>
     <string name="monitor_sensors_threshold">Avvisa a %1$d °C</string>
     <string name="monitor_sensor_hot">%1$s si scalda (%2$s °C)</string>

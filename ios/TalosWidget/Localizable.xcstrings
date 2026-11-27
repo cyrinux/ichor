@@ -1640,6 +1640,93 @@
         "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Quantos dos seus clusters precisam de atenção, segundo a última verificação em segundo plano." } },
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сколько ваших кластеров требуют внимания, по последней фоновой проверке." } }
       }
+    },
+    "%lld VMs down" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM down" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld VMs down" } }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM arrêtée" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM arrêtées" } }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM aus" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld VMs aus" } }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM parada" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM paradas" } }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM ferma" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM ferme" } }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "VM %lld 台が停止" } }
+            }
+          }
+        },
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld VM parada" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld VMs paradas" } }
+            }
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не работает" } },
+              "few" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не работают" } },
+              "many" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не работают" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не работают" } }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не працює" } },
+              "few" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не працюють" } },
+              "many" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не працюють" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld ВМ не працюють" } }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 台虚拟机停止" } }
+            }
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

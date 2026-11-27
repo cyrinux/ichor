@@ -118,6 +118,16 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         _kubespanWatched.value = watched
     }
 
+    private val _vmsWatched = MutableStateFlow(prefs.getBoolean(KEY_VMS, true))
+
+    /** On by default: also read every node's Talos virtual machines, to alert when one that should run is down (Talos 1.15). */
+    val vmsWatched: StateFlow<Boolean> = _vmsWatched.asStateFlow()
+
+    fun setVmsWatched(watched: Boolean) {
+        prefs.edit().putBoolean(KEY_VMS, watched).apply()
+        _vmsWatched.value = watched
+    }
+
     private val _signInNotified = MutableStateFlow(prefs.getStringSet(KEY_SIGN_IN_NOTIFIED, null)?.toSet().orEmpty())
 
     /** The fingerprints of the clusters already told "sign in again", until each is signed in again. */
@@ -285,6 +295,7 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_SENSORS = "sensors_watched"
         private const val KEY_KUBESPAN = "kubespan_watched"
         private const val KEY_TALOS_CONTAINERS = "talos_containers_watched"
+        private const val KEY_VMS = "talos_vms_watched"
         private const val KEY_SENSOR_THRESHOLD = "sensor_threshold"
         private const val KEY_SIGN_IN_NOTIFIED = "sign_in_notified"
         private const val KEY_ALERT_RULES = "alert_rules"

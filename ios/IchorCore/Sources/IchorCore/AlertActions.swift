@@ -43,7 +43,7 @@ public func alertActions(key: String, problem: Bool, canWake: Bool, canAcknowled
         default: return [.snooze]
         }
     case "am": return canAcknowledgePage ? [.silence, .acknowledgePage, .snooze] : [.silence, .snooze]
-    case "etcd", "data", "checkup", "storage", "sensor", "kubespan", "taloscontainer", "cert", "unreachable":
+    case "etcd", "data", "checkup", "storage", "sensor", "kubespan", "taloscontainer", "vm", "cert", "unreachable":
         return [.snooze]
     default: return []
     }

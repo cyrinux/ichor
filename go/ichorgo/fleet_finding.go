@@ -29,6 +29,7 @@ const (
 	fleetTrackGitOps   = "gitops"
 	fleetTrackStorage  = "storage"
 	fleetTrackSensor   = "sensor"
+	fleetTrackVM       = "vm"
 	fleetTrackPlugin   = "plugin"
 )
 
@@ -49,6 +50,7 @@ func fleetTracksOf(e fleetEntry) []fleetTrack {
 		{fleetTrackData, e.DataChecked, e.DataIssues, fleetDataSubject},
 		{fleetTrackGitOps, e.GitopsChecked, e.GitopsIssues, fleetGitOpsSubject},
 		{fleetTrackStorage, e.StorageChecked, e.StorageIssues, fleetStorageSubject},
+		{fleetTrackVM, e.VMChecked, e.VMIssues, fleetVMSubject},
 		{fleetTrackSensor, e.SensorChecked, e.SensorIssues, fleetSensorSubject},
 		{fleetTrackPlugin, e.PluginChecked, e.PluginIssues, fleetPluginSubject},
 	}
@@ -253,6 +255,19 @@ func fleetGitOpsSubject(key, value string) (string, string) {
 // "severity|smart|hostname|device|…".
 func fleetStorageSubject(key, value string) (string, string) {
 	return fleetHostSubject(key, value, func(parts []string) string { return parts[3] }), ""
+}
+
+// fleetVMSubject: "hostname vm" from "severity|kind|hostname|vm|detail" (a Talos virtual machine
+// that should run and does not), the kind (vmDown, vmError, vmDiskFailed) as the detail.
+func fleetVMSubject(key, value string) (string, string) {
+	parts := strings.Split(value, "|")
+	kind := ""
+
+	if len(parts) >= 2 {
+		kind = parts[1]
+	}
+
+	return fleetHostSubject(key, value, func(parts []string) string { return parts[3] }), kind
 }
 
 // fleetSensorSubject: "hostname hot" or "hostname throttled" from "severity|hot|hostname|…".

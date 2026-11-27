@@ -23,6 +23,7 @@ import name.levis.ichor.model.NodeMetaEdits
 import name.levis.ichor.model.NodeMetaPlan
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanMeshHealth
+import name.levis.ichor.model.TalosVmProblemReport
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.LogEntry
 import name.levis.ichor.model.LogTail
@@ -284,6 +285,11 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** Every node's hottest sensor and throttling, for the monitor's temperature alert. */
     suspend fun sensorHealth(): ClusterSensorHealth = call { cfg, ctx ->
         TalosJson.decodeFromString(ClusterSensorHealth.serializer(), Ichorgo.clusterSensorHealth(cfg, ctx))
+    }
+
+    /** Every node's Talos VM problems (ClusterVirtualMachines, Talos 1.15), for the monitor's VM alert; not cached. */
+    suspend fun clusterVirtualMachineProblems(): TalosVmProblemReport = call { cfg, ctx ->
+        TalosJson.decodeFromString(TalosVmProblemReport.serializer(), Ichorgo.clusterVirtualMachines(cfg, ctx))
     }
 
     /** The broken KubeSpan tunnels, for the monitor's tunnel alert; not cached. */

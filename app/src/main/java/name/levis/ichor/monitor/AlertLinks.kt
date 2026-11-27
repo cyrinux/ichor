@@ -24,6 +24,7 @@ val Alert.channel: AlertChannel
         AlertKind.NODE_READY, AlertKind.NODE_NOT_READY, AlertKind.NODE_UNREACHABLE, AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK,
         AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK, AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK,
         AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK, AlertKind.TALOS_CONTAINER_PROBLEM, AlertKind.TALOS_CONTAINER_OK,
+        AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK, AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK,
         -> AlertChannel.NODES
         AlertKind.KUBESPAN_DOWN, AlertKind.KUBESPAN_UP -> AlertChannel.MESH
         AlertKind.ETCD_ALARM, AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK, AlertKind.AM_FIRING, AlertKind.AM_RESOLVED,
@@ -87,6 +88,8 @@ fun Alert.shareTarget(): ShareTarget? = when (kind) {
         addr = key.removePrefix("taloscontainer:").substringBefore('|'),
         host = TalosContainerDetail.parse(detail).hostname,
     )
+    // "vm:node|vm|name": the cluster's Talos virtual machines, where the problems card is.
+    AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK -> ShareTarget.screen(ShareTarget.TALOS_VMS)
     // "memory:<node address>:trend" (an IPv6 address has colons too): that node, whose History card shows the trend.
     AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK ->
         ShareTarget(target = ShareTarget.NODE, addr = key.removePrefix("memory:").removeSuffix(":trend"), host = subject)

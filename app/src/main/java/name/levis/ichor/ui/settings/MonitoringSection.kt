@@ -68,6 +68,7 @@ fun MonitoringSection(app: TalosApp) {
     val sensorsWatched by store.sensorsWatched.collectAsStateWithLifecycle()
     val kubespanWatched by store.kubespanWatched.collectAsStateWithLifecycle()
     val talosContainersWatched by store.talosContainersWatched.collectAsStateWithLifecycle()
+    val vmsWatched by store.vmsWatched.collectAsStateWithLifecycle()
     val unreachable by store.unreachableAlerts.collectAsStateWithLifecycle()
     val unreachableRuns by store.unreachableRuns.collectAsStateWithLifecycle()
     val interval by store.intervalMinutes.collectAsStateWithLifecycle()
@@ -251,6 +252,19 @@ fun MonitoringSection(app: TalosApp) {
                 IchorSwitch(
                     checked = talosContainersWatched,
                     onCheckedChange = { store.setTalosContainersWatched(it) },
+                    enabled = enabled,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            // And for the Talos virtual machines: on by default, every node's VMs are read at every check.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_talos_vms), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_talos_vms_desc))
+                }
+                IchorSwitch(
+                    checked = vmsWatched,
+                    onCheckedChange = { store.setVmsWatched(it) },
                     enabled = enabled,
                     modifier = Modifier.padding(start = 12.dp),
                 )

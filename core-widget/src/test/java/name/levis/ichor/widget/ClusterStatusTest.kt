@@ -45,6 +45,16 @@ class ClusterStatusTest {
     }
 
     @Test
+    fun aTalosVmDownIsBadAndNeverAllReady() {
+        val down = counts().copy(vmChecked = true, vmsDown = 1)
+        assertEquals(listOf(StatusItem.VmsDown(1), StatusItem.Etcd(0)), statusItems(down))
+        assertEquals(Tone.BAD, toneOf(StatusItem.VmsDown(1)))
+        assertEquals(Tone.BAD, toneOf(down, now, now))
+        // Not read this time: says nothing.
+        assertEquals(StatusItem.AllReady, statusItems(counts().copy(vmsDown = 1)).first())
+    }
+
+    @Test
     fun toneIsTheWorstItemEvenBeyondTheTwoShown() {
         assertEquals(Tone.OK, toneOf(counts(), now, now))
         assertEquals(Tone.WARN, toneOf(counts(ready = 2, notReady = 1), now, now))

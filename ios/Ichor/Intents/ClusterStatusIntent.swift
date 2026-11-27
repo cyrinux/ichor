@@ -37,6 +37,7 @@ enum ClusterStatusWords {
         case .notReady(let n): return String(localized: "\(String(n)) not ready")
         case .unreachable(let n): return String(localized: "\(String(n)) unreachable")
         case .tunnelsDown(let n): return String(localized: "\(n) tunnels down")
+        case .vmsDown(let n): return String(localized: "\(n) VMs down")
         case .etcdHealthy: return String(localized: "etcd healthy")
         case .etcdAlarms(let n): return String(localized: "etcd: \(String(n)) alarms")
         case .stale: return String(localized: "may be out of date")
@@ -78,7 +79,7 @@ struct ClusterStatusSnippet: View {
     private func color(_ part: ClusterStatusPart) -> Color {
         switch part {
         case .notReady, .stale: return .orange
-        case .unreachable, .tunnelsDown, .etcdAlarms: return .red
+        case .unreachable, .tunnelsDown, .vmsDown, .etcdAlarms: return .red
         case .nodes: return .secondary
         case .allReady, .etcdHealthy: return .green
         }

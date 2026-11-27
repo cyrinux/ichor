@@ -247,6 +247,17 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
         null
     }
 
+    // And for the Talos virtual machines: Go judges which should run and do not, the app keeps the
+    // verdict. A node older than Talos 1.15 has none; a cluster added from a kubeconfig has no Talos API.
+    val watchVms = store.vmsWatched.value && !kube
+    val vmIssues = if (watchVms) {
+        runCatching { reads.talos.clusterVirtualMachineProblems() }.getOrNull()?.let {
+            talosVmIssuesOf(it, known = knownTalosVmIssues(prev, name))
+        }
+    } else {
+        null
+    }
+
     return if (kubeNodes != null) {
         val snapshot = kubeSnapshotOf(
             kubeNodes, name, context.certNotAfter, now, fingerprint, watchData, dataServices,
@@ -280,6 +291,8 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
             kubespanIssues = kubespanIssues,
             talosContainerWatched = watchTalosContainers,
             talosContainerIssues = talosContainerIssues,
+            vmWatched = watchVms,
+            vmIssues = vmIssues,
             pluginWatched = watchPlugins,
             pluginIssues = pluginIssues,
         )

@@ -890,6 +890,10 @@
         <item quantity="one">%1$d túnel fora do ar</item>
         <item quantity="other">%1$d túneis fora do ar</item>
     </plurals>
+    <plurals name="widget_vms_down">
+        <item quantity="one">%1$d VM parada</item>
+        <item quantity="other">%1$d VMs paradas</item>
+    </plurals>
     <string name="widget_all_ready">todos prontos</string>
     <string name="widget_etcd_no_alarms">etcd: nenhum alarme</string>
     <plurals name="widget_etcd_alarms">
@@ -4683,6 +4687,13 @@
     <string name="monitor_talos_container_ok">%1$s em %2$s voltou a funcionar</string>
     <string name="monitor_talos_container_failed">Falhou com o código de saída %1$d: o Talos não o inicia de novo.</string>
     <string name="monitor_talos_container_restarting">Reiniciado %1$d vezes, último código de saída %2$d.</string>
+    <string name="monitor_talos_vms">Máquinas virtuais do Talos</string>
+    <string name="monitor_talos_vms_desc">Alertar quando uma máquina virtual que deveria estar rodando está parada ou falhando (Talos 1.15; lê as máquinas virtuais de cada nó a cada verificação).</string>
+    <string name="monitor_talos_vm_down">%1$s está parada em %2$s</string>
+    <string name="monitor_talos_vm_error">%1$s falhou em %2$s</string>
+    <string name="monitor_talos_vm_disk">Um disco de %1$s falhou em %2$s</string>
+    <string name="monitor_talos_vm_ok">%1$s em %2$s voltou ao normal</string>
+    <string name="talos_vms_problems_title">Requer atenção</string>
     <string name="monitor_sensors_auto">O limite próprio de cada sensor (crítico − 5 °C, senão o máximo)</string>
     <string name="monitor_sensors_threshold">Alertar em %1$d °C</string>
     <string name="monitor_sensor_hot">%1$s está quente (%2$s °C)</string>

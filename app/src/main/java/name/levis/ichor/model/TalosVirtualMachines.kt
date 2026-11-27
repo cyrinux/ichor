@@ -15,6 +15,8 @@ data class TalosNodeVms(
     val libraries: List<TalosContentLibrary> = emptyList(),
     /** Section (vms, specs, disks, libraries) to its error, for the sections that failed. */
     val errors: Map<String, String> = emptyMap(),
+    /** The VMs that should run and do not, as Go judged them (the background alert's). */
+    val problems: List<TalosVmProblem> = emptyList(),
 ) {
     /** Whether the node has something to show: the entries are hidden otherwise. */
     val hasVms: Boolean get() = supported && vms.isNotEmpty()
@@ -94,8 +96,9 @@ data class TalosNodeVmsEntry(
     val libraries: List<TalosContentLibrary> = emptyList(),
     val errors: Map<String, String> = emptyMap(),
     val error: String = "",
+    val problems: List<TalosVmProblem> = emptyList(),
 ) {
-    val report: TalosNodeVms get() = TalosNodeVms(supported, reason, vms, libraries, errors)
+    val report: TalosNodeVms get() = TalosNodeVms(supported, reason, vms, libraries, errors, problems)
 }
 
 /** Every node's VMs, read in parallel; a node that does not answer carries an error. */
@@ -114,13 +117,21 @@ data class TalosClusterVms(val context: String = "", val nodes: List<TalosNodeVm
 
     val all: List<TalosVm> get() = nodes.flatMap { it.vms }
 
+    /** Every node's problems, with the node they are on. */
+    val problems: List<Pair<TalosNodeVmsEntry, TalosVmProblem>> get() = nodes.flatMap { n -> n.problems.map { n to it } }
+
     /** Something is on its way: worth polling. */
     val busy: Boolean get() = all.any { it.vmState == VmState.CHANGING }
 
     companion object {
         /** One node's report as a cluster of one, so the list and its sheet serve both. */
         fun ofNode(node: String, hostname: String, report: TalosNodeVms) = TalosClusterVms(
-            nodes = listOf(TalosNodeVmsEntry(node, hostname, report.supported, report.reason, report.vms, report.libraries, report.errors)),
+            nodes = listOf(
+                TalosNodeVmsEntry(
+                    node, hostname, report.supported, report.reason, report.vms, report.libraries, report.errors,
+                    problems = report.problems,
+                ),
+            ),
         )
     }
 }

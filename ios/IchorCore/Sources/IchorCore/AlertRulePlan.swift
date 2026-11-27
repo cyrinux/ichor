@@ -53,7 +53,7 @@ public func alertRuleSeverity(_ alert: Alert, snapshot: ClusterSnapshot?, previo
         guard let value = kept({ $0.memoryTrends }, node) else { return alertSeverityWarning }
         return StorageTrendIssue(value: value).critical ? alertSeverityCritical : alertSeverityWarning
     case "sensor": return kept({ $0.sensorIssues }, subject).map { level(SensorIssue(value: $0).severity) } ?? ""
-    case "kubespan": return alertSeverityCritical
+    case "kubespan", "vm": return alertSeverityCritical
     case "taloscontainer":
         return kept({ $0.talosContainerIssues }, subject).map { level(TalosContainerIssue(value: $0).severity) } ?? ""
     case "plugin": return kept({ $0.pluginIssues }, alert.key).map { PluginIssue(value: $0).severity } ?? ""

@@ -164,7 +164,9 @@ func TestBuildNodeVirtualMachines(t *testing.T) {
 			{Name: "images", Path: "/var/mnt/vm-images", Phase: "ready"},
 			{Name: "iso", Phase: "notReady", Error: `volume "iso" is not mounted`},
 		},
-		Errors: map[string]string{},
+		// buildNodeVMs leaves them to readNodeVMs, which knows the node (vmProblemsOf).
+		Problems: []vmProblem{},
+		Errors:   map[string]string{},
 	}
 
 	if !equalJSON(t, got, want) {

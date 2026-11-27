@@ -74,6 +74,13 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     /// talosContainerIssuesOf), kept like dataIssues.
     public var talosContainerIssues: [String: String]
     public var talosContainerPending: [String]
+    /// Watching the Talos virtual machines was on for this check (on by default, Talos clusters only),
+    /// and their problems could be read.
+    public var vmWatched: Bool
+    public var vmChecked: Bool
+    /// VMs that should run and do not ("<node>|vm|<name>" → TalosVMIssue value, see talosVMIssuesOf).
+    public var vmIssues: [String: String]
+    public var vmPending: [String]
     /// Watching the plugins' findings was on for this check (with the data services, opt-in), and
     /// they could be read.
     public var pluginWatched: Bool
@@ -108,6 +115,7 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         kubespanPending: [String] = [],
         talosContainerWatched: Bool = false, talosContainerChecked: Bool = false,
         talosContainerIssues: [String: String] = [:], talosContainerPending: [String] = [],
+        vmWatched: Bool = false, vmChecked: Bool = false, vmIssues: [String: String] = [:], vmPending: [String] = [],
         pluginWatched: Bool = false, pluginChecked: Bool = false, pluginIssues: [String: String] = [:],
         pluginPending: [String] = [], kube: Bool = false,
         firstSeen: [String: Int64] = [:], lastNotified: [String: Int64] = [:]
@@ -153,6 +161,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.talosContainerChecked = talosContainerChecked
         self.talosContainerIssues = talosContainerIssues
         self.talosContainerPending = talosContainerPending
+        self.vmWatched = vmWatched
+        self.vmChecked = vmChecked
+        self.vmIssues = vmIssues
+        self.vmPending = vmPending
         self.pluginWatched = pluginWatched
         self.pluginChecked = pluginChecked
         self.pluginIssues = pluginIssues
@@ -208,6 +220,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         talosContainerChecked = try c.field(.talosContainerChecked, false)
         talosContainerIssues = try c.field(.talosContainerIssues, [:])
         talosContainerPending = try c.field(.talosContainerPending, [])
+        vmWatched = try c.field(.vmWatched, false)
+        vmChecked = try c.field(.vmChecked, false)
+        vmIssues = try c.field(.vmIssues, [:])
+        vmPending = try c.field(.vmPending, [])
         pluginWatched = try c.field(.pluginWatched, false)
         pluginChecked = try c.field(.pluginChecked, false)
         pluginIssues = try c.field(.pluginIssues, [:])
@@ -280,6 +296,15 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         }
     }
 
+    var vmTrack: IssueTrack {
+        get { IssueTrack(watched: vmWatched, checked: vmChecked, issues: vmIssues, pending: vmPending) }
+        set {
+            (vmWatched, vmChecked, vmIssues, vmPending) = (
+                newValue.watched, newValue.checked, newValue.issues, newValue.pending
+            )
+        }
+    }
+
     var sensorTrack: IssueTrack {
         get { IssueTrack(watched: sensorWatched, checked: sensorChecked, issues: sensorIssues, pending: sensorPending) }
         set {
@@ -341,6 +366,7 @@ public struct NodeState: Codable, Equatable, Sendable {
 /// kubespanWatched: watching the KubeSpan tunnels was on; kubespanIssues (see kubespanIssuesOf): nil when unreadable.
 /// talosContainerWatched: watching the Talos containers was on; talosContainerIssues (see
 /// talosContainerIssuesOf): nil when unreadable.
+/// vmWatched: watching the Talos VMs was on; vmIssues (see talosVMIssuesOf): nil when unreadable.
 /// pluginWatched: watching the plugins' findings was on; pluginIssues (see pluginIssuesWithGaps): nil when unreadable.
 public func snapshotOf(
     _ overview: ClusterOverview, etcd: EtcdOverview?, certNotAfter: Int64, takenAt: Date,
@@ -353,6 +379,7 @@ public func snapshotOf(
     sensorWatched: Bool = false, sensorIssues: [String: String]? = nil,
     kubespanWatched: Bool = false, kubespanIssues: [String: String]? = nil,
     talosContainerWatched: Bool = false, talosContainerIssues: [String: String]? = nil,
+    vmWatched: Bool = false, vmIssues: [String: String]? = nil,
     pluginWatched: Bool = false, pluginIssues: [String: String]? = nil
 ) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
@@ -393,6 +420,9 @@ public func snapshotOf(
         talosContainerWatched: talosContainerWatched,
         talosContainerChecked: talosContainerWatched && talosContainerIssues != nil,
         talosContainerIssues: talosContainerWatched ? talosContainerIssues ?? [:] : [:],
+        vmWatched: vmWatched,
+        vmChecked: vmWatched && vmIssues != nil,
+        vmIssues: vmWatched ? vmIssues ?? [:] : [:],
         pluginWatched: pluginWatched,
         pluginChecked: pluginWatched && pluginIssues != nil,
         pluginIssues: pluginWatched ? pluginIssues ?? [:] : [:]
@@ -679,6 +709,8 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
         next.kubespanTrack = evaluateKubespan(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.talosContainerTrack = evaluateTalosContainers(
+            previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.vmTrack = evaluateTalosVMs(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.pluginTrack = evaluatePlugins(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)

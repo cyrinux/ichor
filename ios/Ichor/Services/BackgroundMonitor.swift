@@ -134,6 +134,13 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: kubespanKey) }
     }
 
+    static let vmsKey = "monitor.talosVMs"
+    /// On by default: also read every node's Talos VMs, to alert when one that should run is down (Talos 1.15).
+    static var vmsWatched: Bool {
+        get { UserDefaults.standard.object(forKey: vmsKey) as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: vmsKey) }
+    }
+
     static let sensorThresholdKey = "monitor.sensorThreshold"
     /// sensorThresholdAuto (each sensor's own limit) or the °C every node is held to.
     static var sensorThreshold: Int {
@@ -578,6 +585,9 @@ enum BackgroundMonitor {
         // And the Talos containers: Go keeps the failed and crash-looping ones, never their output.
         let watchTalosContainers = talosContainersWatched && !context.isKube
         let knownTalosContainers = knownTalosContainerIssues(previous, context: context.name)
+        // And the Talos VMs: Go judges which should run and do not, the app keeps the verdict.
+        let watchVMs = vmsWatched && !context.isKube
+        let knownVMs = knownTalosVMIssues(previous, context: context.name)
         let fingerprint = context.fingerprint
         async let dataRead = ifWatched(watchData, within: left) { try? await client.dataServices(hints: "") }
         async let gitopsRead = ifWatched(watchGitOps, within: left) { await readGitOps(client, known: known) }
@@ -612,6 +622,10 @@ enum BackgroundMonitor {
             guard let health = try? await client.talosContainersHealth() else { return nil }
             return talosContainerIssuesOf(health, known: knownTalosContainers)
         }
+        async let vmRead = ifWatched(watchVMs, within: left) { () -> [String: String]? in
+            guard let report = try? await client.clusterVirtualMachineProblems() else { return nil }
+            return talosVMIssuesOf(report, known: knownVMs)
+        }
         let dataServices = await dataRead
         let gitopsIssues = await gitopsRead
         let checkupIssues = await checkupRead
@@ -621,6 +635,7 @@ enum BackgroundMonitor {
         let sensorIssues = await sensorRead
         let kubespanIssues = await kubespanRead
         let talosContainerIssues = await talosContainerRead
+        let vmIssues = await vmRead
         let pluginIssues = await pluginRead
         let now = Date()
         if let kubeNodes {
@@ -651,6 +666,7 @@ enum BackgroundMonitor {
                 sensorWatched: watchSensors, sensorIssues: sensorIssues,
                 kubespanWatched: watchKubespan, kubespanIssues: kubespanIssues,
                 talosContainerWatched: watchTalosContainers, talosContainerIssues: talosContainerIssues,
+                vmWatched: watchVMs, vmIssues: vmIssues,
                 pluginWatched: watchPlugins, pluginIssues: pluginIssues),
             extras)
     }

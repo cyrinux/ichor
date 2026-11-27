@@ -12,25 +12,29 @@ public struct TalosNodeVMs: Decodable, Equatable, Hashable, Sendable {
     public let libraries: [TalosContentLibrary]
     /// Section (vms, specs, disks, libraries) to its error, for the sections that failed.
     public let errors: [String: String]
+    /// The VMs that should run and do not, as Go judged them (the background alert's).
+    public let problems: [TalosVMProblem]
 
     public init(
         supported: Bool, reason: String = "", vms: [TalosVM] = [], libraries: [TalosContentLibrary] = [],
-        errors: [String: String] = [:]
+        errors: [String: String] = [:], problems: [TalosVMProblem] = []
     ) {
         self.supported = supported
         self.reason = reason
         self.vms = vms
         self.libraries = libraries
         self.errors = errors
+        self.problems = problems
     }
 
-    private enum CodingKeys: String, CodingKey { case supported, reason, vms, libraries, errors }
+    private enum CodingKeys: String, CodingKey { case supported, reason, vms, libraries, errors, problems }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
             supported: try c.field(.supported, false), reason: try c.field(.reason, ""), vms: try c.field(.vms, []),
-            libraries: try c.field(.libraries, []), errors: try c.field(.errors, [:]))
+            libraries: try c.field(.libraries, []), errors: try c.field(.errors, [:]),
+            problems: try c.field(.problems, []))
     }
 
     /// Whether the node has something to show: the entries are hidden otherwise.
@@ -218,6 +222,11 @@ public struct TalosClusterVMs: Decodable, Equatable, Hashable, Sendable {
     }
 
     public var all: [TalosVM] { nodes.flatMap(\.report.vms) }
+
+    /// Every node's problems, with the node they are on.
+    public var problems: [(entry: TalosNodeVMsEntry, problem: TalosVMProblem)] {
+        nodes.flatMap { entry in entry.report.problems.map { (entry: entry, problem: $0) } }
+    }
 
     /// Something is on its way: worth polling.
     public var busy: Bool { all.contains { $0.vmState == .changing } }
