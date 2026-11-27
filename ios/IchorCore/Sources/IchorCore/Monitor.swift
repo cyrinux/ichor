@@ -81,6 +81,12 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     /// VMs that should run and do not ("<node>|vm|<name>" → TalosVMIssue value, see talosVMIssuesOf).
     public var vmIssues: [String: String]
     public var vmPending: [String]
+    /// Watching the nodes' BGP sessions was on (on by default, Talos clusters only), and they could
+    /// be read; sessions down ("<node>|<instance>|<peer>" → BGPIssue value, see bgpIssuesOf).
+    public var bgpWatched: Bool
+    public var bgpChecked: Bool
+    public var bgpIssues: [String: String]
+    public var bgpPending: [String]
     /// Watching the plugins' findings was on for this check (with the data services, opt-in), and
     /// they could be read.
     public var pluginWatched: Bool
@@ -116,6 +122,8 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         talosContainerWatched: Bool = false, talosContainerChecked: Bool = false,
         talosContainerIssues: [String: String] = [:], talosContainerPending: [String] = [],
         vmWatched: Bool = false, vmChecked: Bool = false, vmIssues: [String: String] = [:], vmPending: [String] = [],
+        bgpWatched: Bool = false, bgpChecked: Bool = false, bgpIssues: [String: String] = [:],
+        bgpPending: [String] = [],
         pluginWatched: Bool = false, pluginChecked: Bool = false, pluginIssues: [String: String] = [:],
         pluginPending: [String] = [], kube: Bool = false,
         firstSeen: [String: Int64] = [:], lastNotified: [String: Int64] = [:]
@@ -165,6 +173,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.vmChecked = vmChecked
         self.vmIssues = vmIssues
         self.vmPending = vmPending
+        self.bgpWatched = bgpWatched
+        self.bgpChecked = bgpChecked
+        self.bgpIssues = bgpIssues
+        self.bgpPending = bgpPending
         self.pluginWatched = pluginWatched
         self.pluginChecked = pluginChecked
         self.pluginIssues = pluginIssues
@@ -224,6 +236,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         vmChecked = try c.field(.vmChecked, false)
         vmIssues = try c.field(.vmIssues, [:])
         vmPending = try c.field(.vmPending, [])
+        bgpWatched = try c.field(.bgpWatched, false)
+        bgpChecked = try c.field(.bgpChecked, false)
+        bgpIssues = try c.field(.bgpIssues, [:])
+        bgpPending = try c.field(.bgpPending, [])
         pluginWatched = try c.field(.pluginWatched, false)
         pluginChecked = try c.field(.pluginChecked, false)
         pluginIssues = try c.field(.pluginIssues, [:])
@@ -367,6 +383,7 @@ public struct NodeState: Codable, Equatable, Sendable {
 /// talosContainerWatched: watching the Talos containers was on; talosContainerIssues (see
 /// talosContainerIssuesOf): nil when unreadable.
 /// vmWatched: watching the Talos VMs was on; vmIssues (see talosVMIssuesOf): nil when unreadable.
+/// bgpWatched: watching the BGP sessions was on; bgpIssues (see bgpIssuesOf): nil when unreadable.
 /// pluginWatched: watching the plugins' findings was on; pluginIssues (see pluginIssuesWithGaps): nil when unreadable.
 public func snapshotOf(
     _ overview: ClusterOverview, etcd: EtcdOverview?, certNotAfter: Int64, takenAt: Date,
@@ -380,6 +397,7 @@ public func snapshotOf(
     kubespanWatched: Bool = false, kubespanIssues: [String: String]? = nil,
     talosContainerWatched: Bool = false, talosContainerIssues: [String: String]? = nil,
     vmWatched: Bool = false, vmIssues: [String: String]? = nil,
+    bgpWatched: Bool = false, bgpIssues: [String: String]? = nil,
     pluginWatched: Bool = false, pluginIssues: [String: String]? = nil
 ) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
@@ -423,6 +441,9 @@ public func snapshotOf(
         vmWatched: vmWatched,
         vmChecked: vmWatched && vmIssues != nil,
         vmIssues: vmWatched ? vmIssues ?? [:] : [:],
+        bgpWatched: bgpWatched,
+        bgpChecked: bgpWatched && bgpIssues != nil,
+        bgpIssues: bgpWatched ? bgpIssues ?? [:] : [:],
         pluginWatched: pluginWatched,
         pluginChecked: pluginWatched && pluginIssues != nil,
         pluginIssues: pluginWatched ? pluginIssues ?? [:] : [:]
@@ -712,6 +733,7 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
             previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.vmTrack = evaluateTalosVMs(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.bgpTrack = evaluateBGP(previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.pluginTrack = evaluatePlugins(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)
         // The trend alerts are evaluated once the history ring has this check (evaluateStorageTrends).

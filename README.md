@@ -34,7 +34,7 @@ tour** shows it again.
   with try mode, hardware (with the watchdog timer that reboots a stuck node, turned on from a config snippet), storage, KubeSpan (a red banner when a tunnel is down, also said on the home summary and in Cluster health), packet capture and a debug shell. Reboot, shut down
   or wake a node, upgrade Talos node by node or the whole cluster, upgrade Kubernetes, create a
   new cluster from a machine booted from the Talos ISO or on a Hetzner server, add, replace, reset or wipe a node (or one of its disks), recover etcd, rotate the Talos CA, export the cluster's `secrets.yaml`. Alerts when a node goes down, before it runs out of memory, or a KubeSpan tunnel between two
-  nodes is down, or a Talos virtual machine that should run is down or failing (both on by default on Talos clusters), with quiet hours, a per-cluster
+  nodes is down, a Talos virtual machine that should run is down or failing, or a node's own BGP session stays down (all on by default on Talos clusters), with quiet hours, a per-cluster
   minimum severity, a digest, flapping alerts folded into the digest, and critical alerts that
   repeat until acknowledged.
 - **Talos Hypervisor:** virtual machines of a node (Talos 1.15), with their disks and addresses,
@@ -106,7 +106,7 @@ complications): it only works with the Google Play phone build
 | [Roles](docs/roles.md) | Which talosconfig role each feature needs |
 | [Adding clusters](docs/clusters.md) | Talosconfig for the phone, kubeconfig and cloud clusters, Omni, several clusters, share links, backup and restore |
 | [Kubernetes screens](docs/kubernetes.md) | Checkup, CronJobs, capacity, policies, autoscaling, virtual machines, Crossplane, Tailscale, Cluster API, image scans, Argo CD icons |
-| [Network](docs/network.md) | Where each cable goes (LLDP neighbours, Talos 1.15), node network tools, packet capture, network test |
+| [Network](docs/network.md) | Where each cable goes (LLDP neighbours, Talos 1.15), the node's BGP sessions (Talos 1.14), node network tools, packet capture, network test |
 | [Safety](docs/safety.md) | What protects the cluster and the phone; VPN, firewall and ACLs for reaching it |
 | [etcd](docs/etcd.md) | Snapshots, recovery, the NOSPACE fix |
 | [Cluster insights](docs/insights.md) | Drift, incident recorder, bottleneck metrics |

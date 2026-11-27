@@ -128,6 +128,16 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         _vmsWatched.value = watched
     }
 
+    private val _bgpWatched = MutableStateFlow(prefs.getBoolean(KEY_BGP, true))
+
+    /** On by default: also read every node's BGP sessions, to alert when one stays down (Talos 1.14+). */
+    val bgpWatched: StateFlow<Boolean> = _bgpWatched.asStateFlow()
+
+    fun setBgpWatched(watched: Boolean) {
+        prefs.edit().putBoolean(KEY_BGP, watched).apply()
+        _bgpWatched.value = watched
+    }
+
     private val _signInNotified = MutableStateFlow(prefs.getStringSet(KEY_SIGN_IN_NOTIFIED, null)?.toSet().orEmpty())
 
     /** The fingerprints of the clusters already told "sign in again", until each is signed in again. */
@@ -296,6 +306,7 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_KUBESPAN = "kubespan_watched"
         private const val KEY_TALOS_CONTAINERS = "talos_containers_watched"
         private const val KEY_VMS = "talos_vms_watched"
+        private const val KEY_BGP = "bgp_watched"
         private const val KEY_SENSOR_THRESHOLD = "sensor_threshold"
         private const val KEY_SIGN_IN_NOTIFIED = "sign_in_notified"
         private const val KEY_ALERT_RULES = "alert_rules"

@@ -56,6 +56,7 @@ public func alertRuleSeverity(_ alert: Alert, snapshot: ClusterSnapshot?, previo
     case "kubespan", "vm": return alertSeverityCritical
     case "taloscontainer":
         return kept({ $0.talosContainerIssues }, subject).map { level(TalosContainerIssue(value: $0).severity) } ?? ""
+    case "bgp": return alertSeverityWarning
     case "plugin": return kept({ $0.pluginIssues }, alert.key).map { PluginIssue(value: $0).severity } ?? ""
     default: return ""
     }

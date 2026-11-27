@@ -25,6 +25,8 @@ enum class AlertKind {
     TALOS_CONTAINER_PROBLEM, TALOS_CONTAINER_OK,
     /** A Talos VM that should run is down or failing ([Alert.detail]: a [TalosVmDetail]), or runs again. */
     TALOS_VM_PROBLEM, TALOS_VM_OK,
+    /** A node's BGP session down on two checks in a row ([Alert.detail]: a [BgpDetail]), or up again. */
+    BGP_DOWN, BGP_UP,
     /** The cluster could not be read for several checks in a row ([Alert.detail]: how many), or answers again. */
     CLUSTER_UNREACHABLE, CLUSTER_REACHABLE,
     /** A CRD plugin's finding ([Alert.key] its key, [Alert.detail]: a [PluginIssue]), or no longer. */
@@ -105,6 +107,7 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
     val sensor = if (blind) prev.sensorTrack else evaluateTrack(prev?.sensorTrack, cur.sensorTrack, comparable, ::sensorSeverity, ::sensorAlert, alerts)
     val kubespan = if (blind) prev.kubespanTrack else evaluateTrack(prev?.kubespanTrack, cur.kubespanTrack, comparable, ::kubespanSeverity, ::kubespanAlert, alerts)
     val vm = if (blind) prev.vmTrack else evaluateTrack(prev?.vmTrack, cur.vmTrack, comparable, ::talosVmSeverity, ::talosVmAlert, alerts)
+    val bgp = if (blind) prev.bgpTrack else evaluateTrack(prev?.bgpTrack, cur.bgpTrack, comparable, ::bgpSeverity, ::bgpAlert, alerts)
     val plugin = if (blind) prev.pluginTrack else evaluateTrack(prev?.pluginTrack, cur.pluginTrack, comparable, ::pluginSeverity, ::pluginAlert, alerts)
     val talosContainer = if (blind) {
         prev.talosContainerTrack
@@ -149,6 +152,10 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             vmChecked = vm.checked,
             vmIssues = vm.issues,
             vmPending = vm.pending,
+            bgpWatched = bgp.watched,
+            bgpChecked = bgp.checked,
+            bgpIssues = bgp.issues,
+            bgpPending = bgp.pending,
             pluginWatched = plugin.watched,
             pluginChecked = plugin.checked,
             pluginIssues = plugin.issues,
@@ -175,6 +182,7 @@ private val ClusterSnapshot.storageTrack: Track get() = Track(storageWatched, st
 private val ClusterSnapshot.sensorTrack: Track get() = Track(sensorWatched, sensorChecked, sensorIssues, sensorPending)
 private val ClusterSnapshot.kubespanTrack: Track get() = Track(kubespanWatched, kubespanChecked, kubespanIssues, kubespanPending)
 private val ClusterSnapshot.vmTrack: Track get() = Track(vmWatched, vmChecked, vmIssues, vmPending)
+private val ClusterSnapshot.bgpTrack: Track get() = Track(bgpWatched, bgpChecked, bgpIssues, bgpPending)
 private val ClusterSnapshot.pluginTrack: Track get() = Track(pluginWatched, pluginChecked, pluginIssues, pluginPending)
 private val ClusterSnapshot.talosContainerTrack: Track
     get() = Track(talosContainerWatched, talosContainerChecked, talosContainerIssues, talosContainerPending)
@@ -298,6 +306,15 @@ private fun talosVmAlert(key: String, value: String, problem: Boolean): Alert = 
     detail = value,
 )
 
+/** [key] "node|instance|peer", [value] a [BgpDetail]: the peer is the subject. */
+private fun bgpAlert(key: String, value: String, problem: Boolean): Alert = Alert(
+    key = "bgp:$key",
+    kind = if (problem) AlertKind.BGP_DOWN else AlertKind.BGP_UP,
+    problem = problem,
+    subject = BgpDetail.parse(value).peer,
+    detail = value,
+)
+
 /** [key] the finding's ("plugin:…", already an alert key), [value] a [PluginIssue]: its title is the subject. */
 private fun pluginAlert(key: String, value: String, problem: Boolean): Alert = Alert(
     key = key,
@@ -354,5 +371,6 @@ fun firingAlerts(snapshot: ClusterSnapshot): List<Alert> {
         track(snapshot.kubespanIssues, ::kubespanAlert) +
         track(snapshot.talosContainerIssues, ::talosContainerAlert) +
         track(snapshot.vmIssues, ::talosVmAlert) +
+        track(snapshot.bgpIssues, ::bgpAlert) +
         track(snapshot.pluginIssues, ::pluginAlert)
 }

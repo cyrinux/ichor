@@ -24,6 +24,7 @@ import name.levis.ichor.model.NodeMetaPlan
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanMeshHealth
 import name.levis.ichor.model.TalosVmProblemReport
+import name.levis.ichor.model.BgpPeerReport
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.LogEntry
 import name.levis.ichor.model.LogTail
@@ -290,6 +291,11 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** Every node's Talos VM problems (ClusterVirtualMachines, Talos 1.15), for the monitor's VM alert; not cached. */
     suspend fun clusterVirtualMachineProblems(): TalosVmProblemReport = call { cfg, ctx ->
         TalosJson.decodeFromString(TalosVmProblemReport.serializer(), Ichorgo.clusterVirtualMachines(cfg, ctx))
+    }
+
+    /** Every node's BGP sessions and those down (ClusterBGPPeers, Talos 1.14+), for the monitor's BGP alert; not cached. */
+    suspend fun clusterBgpPeers(): BgpPeerReport = call { cfg, ctx ->
+        TalosJson.decodeFromString(BgpPeerReport.serializer(), Ichorgo.clusterBGPPeers(cfg, ctx))
     }
 
     /** The broken KubeSpan tunnels, for the monitor's tunnel alert; not cached. */

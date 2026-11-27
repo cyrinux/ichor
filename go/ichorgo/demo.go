@@ -240,7 +240,8 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			Addresses: []addressInfo{{Address: n.Node + "/24", Link: "eth0", Family: "inet4", Scope: "global"}},
 			Routes:    []routeInfo{{Destination: "default", Gateway: "192.0.2.1", Link: "eth0", Table: "main", Family: "inet4"}},
 			Resolvers: []string{"192.0.2.1"}, TimeServers: []string{"time.demo.invalid"},
-			Neighbors: demoNeighbors(), NeighborsSupported: true, Errors: map[string]string{},
+			Neighbors: demoNeighbors(), NeighborsSupported: true,
+			BGPPeers: demoNodeBGPPeers(n.Hostname), BGPSupported: true, Errors: map[string]string{},
 		})
 	case "NodeConnections":
 		return toJSON([]connectionInfo{

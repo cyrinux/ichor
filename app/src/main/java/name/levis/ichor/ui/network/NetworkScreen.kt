@@ -47,6 +47,7 @@ import name.levis.ichor.model.isDefault
 import name.levis.ichor.model.isUp
 import name.levis.ichor.model.LldpNeighbor
 import name.levis.ichor.model.neighborsByLink
+import name.levis.ichor.model.showsBgp
 import name.levis.ichor.model.showsNeighbors
 import name.levis.ichor.model.visible
 import name.levis.ichor.ui.LoadingViewModel
@@ -148,6 +149,18 @@ private fun NetworkContent(network: NodeNetwork, showVirtual: Boolean, onShowVir
                     network.neighbors.forEachIndexed { i, neighbor ->
                         if (i > 0) HorizontalDivider()
                         NeighborRow(neighbor)
+                    }
+                }
+            }
+        }
+        // Talos 1.14+ native BGP: hidden on older nodes and on nodes that do not peer.
+        if (network.showsBgp) {
+            item {
+                Section(stringResource(R.string.network_bgp), network.errors[NetworkSection.BGP], network.bgpPeers.isEmpty()) {
+                    MutedText(stringResource(R.string.network_bgp_hint))
+                    network.bgpPeers.forEachIndexed { i, peer ->
+                        if (i > 0) HorizontalDivider()
+                        BgpPeerRow(peer)
                     }
                 }
             }

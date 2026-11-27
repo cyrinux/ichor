@@ -1318,6 +1318,14 @@
     <string name="network_neighbor_vlan">VLAN %1$s</string>
     <string name="network_neighbor_management">管理 %1$s</string>
     <string name="network_neighbor_copy">隣接機器の詳細をコピー</string>
+    <string name="network_bgp">BGP</string>
+    <string name="network_bgp_hint">ノード自身の BGP セッション (Talos ネイティブ BGP): 各ピア、その AS 番号、セッション状態、交換したプレフィックス。</string>
+    <string name="network_bgp_asn">AS %1$s · ローカル AS %2$s</string>
+    <string name="network_bgp_instance">インスタンス %1$s</string>
+    <string name="network_bgp_prefixes">受信 %1$s · 広報 %2$s</string>
+    <string name="network_bgp_since">確立 %1$s</string>
+    <string name="network_bgp_graceful">グレースフルリスタート</string>
+    <string name="network_bgp_restarting">ピア再起動中</string>
     <string name="connections_search">アドレス、ポート、状態、プロセスでフィルター</string>
     <string name="connections_listening">待ち受け中</string>
     <string name="connections_all">すべて</string>
@@ -4581,6 +4589,11 @@
     <string name="monitor_talos_vm_error">%2$s の %1$s が失敗しました</string>
     <string name="monitor_talos_vm_disk">%2$s の %1$s のディスクが失敗しました</string>
     <string name="monitor_talos_vm_ok">%2$s の %1$s が正常に戻りました</string>
+    <string name="monitor_bgp">BGP セッション</string>
+    <string name="monitor_bgp_desc">ノードの BGP セッションが次のチェックでもダウンしたままのときに通知します (Talos 1.14 以降のネイティブ BGP。チェックごとに全ノードのセッションを読み取ります)。</string>
+    <string name="monitor_bgp_down">%2$s の %1$s への BGP セッションがダウン</string>
+    <string name="monitor_bgp_up">%2$s の %1$s への BGP セッションが復旧</string>
+    <string name="monitor_bgp_state">セッション状態: %1$s</string>
     <string name="talos_vms_problems_title">要対応</string>
     <string name="monitor_sensors_auto">各センサー固有の上限（critical − 5 °C、なければ max）</string>
     <string name="monitor_sensors_threshold">%1$d °C でアラート</string>

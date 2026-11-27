@@ -37,6 +37,7 @@ data class ShareTarget(
         const val ALERTS = "alerts"
         const val STORAGE = "storage"
         const val HARDWARE = "hardware"
+        const val NETWORK = "network"
         const val KUBESPAN = "kubespan"
         const val TALOS_VMS = "talos-vms"
 
@@ -56,6 +57,9 @@ data class ShareTarget(
 
         /** A node's Hardware screen (its sensors). */
         fun hardware(addr: String, host: String) = ShareTarget(target = HARDWARE, addr = addr, host = host)
+
+        /** A node's Network screen (its links, neighbours and BGP sessions). */
+        fun network(addr: String, host: String) = ShareTarget(target = NETWORK, addr = addr, host = host)
 
         fun kubernetes(tab: Int) = ShareTarget(target = WORKLOADS, tab = KUBE_TABS.getOrNull(tab).orEmpty())
 
@@ -104,7 +108,7 @@ fun ShareTarget.kubeNodeName(nodes: Collection<String>): String? =
  * point the app's Talos calls at another address. Null for any other link.
  */
 fun ShareTarget.configuredNode(context: ContextSummary?): String? {
-    if (target != ShareTarget.STORAGE && target != ShareTarget.HARDWARE) return null
+    if (target != ShareTarget.STORAGE && target != ShareTarget.HARDWARE && target != ShareTarget.NETWORK) return null
     val targets = context?.let { it.nodes.ifEmpty { it.endpoints } }.orEmpty()
     return addr.takeIf { it.isNotEmpty() && it in targets }
 }

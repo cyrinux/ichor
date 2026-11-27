@@ -80,6 +80,11 @@ extension TalosClient {
         try await Self.json { [config, context] in IchorgoClusterVirtualMachines(config, context, $0) }
     }
 
+    /// Every node's BGP sessions and those down (ClusterBGPPeers, Talos 1.14+), for the BGP alert (os:reader).
+    func clusterBGPPeers() async throws -> BGPPeerReport {
+        try await Self.json { [config, context] in IchorgoClusterBGPPeers(config, context, $0) }
+    }
+
     /// The broken KubeSpan tunnels of every node's peers, for the tunnel alert (os:reader).
     func kubeSpanMeshHealth() async throws -> KubeSpanMeshHealth {
         try await Self.json { [config, context] in IchorgoKubeSpanMeshHealth(config, context, $0) }

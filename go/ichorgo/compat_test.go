@@ -82,7 +82,7 @@ var requiredFeatures = []string{
 	"events", "containers", "containerRestart", "processes", "logFollow", "serviceControl", "packetCapture", "upgrade", "volumes", "disks",
 	"diskUsage", "mounts", "kubespan", "etcd", "etcdSnapshot", "etcdMemberActions", "resourceBrowser",
 	"supportBundle", "diskHealth", "issueConfig", "network", "connections", "time", "hardware", "images",
-	"imagePull", "machineConfig", "debugShell", "reset", "diskWipe", "sensors", "meta", "watchdog", "hypervisor", "lldp",
+	"imagePull", "machineConfig", "debugShell", "reset", "diskWipe", "sensors", "meta", "watchdog", "hypervisor", "lldp", "bgp",
 	"talosContainers",
 }
 
@@ -147,27 +147,30 @@ func TestComputeFeatures(t *testing.T) {
 		// A prerelease of 1.15 has 1.15's features.
 		{"v1.15.0-alpha.2", nil},
 		{"v1.14.1", []string{"diskHealth", "hypervisor", "lldp", "talosContainers"}},
-		{"v1.13.0", []string{"diskHealth", "hypervisor", "lldp", "talosContainers"}},
-		{"v1.12.4", []string{"debugShell", "diskHealth", "hypervisor", "lldp", "talosContainers"}},
-		{"v1.8.0", []string{"debugShell", "diskHealth", "diskWipe", "hypervisor", "lldp", "talosContainers"}},
-		{"v1.7.6", []string{"debugShell", "diskHealth", "diskWipe", "disks", "hypervisor", "lldp", "talosContainers", "volumes"}},
-		{"v1.6.7", []string{"debugShell", "diskHealth", "diskWipe", "disks", "hypervisor", "lldp", "talosContainers", "volumes", "watchdog"}},
-		{"v1.5.0", []string{"debugShell", "diskHealth", "diskWipe", "disks", "hypervisor", "lldp", "talosContainers", "volumes", "watchdog"}},
-		{"v1.4.8", []string{"debugShell", "diskHealth", "diskWipe", "disks", "hypervisor", "images", "lldp", "sensors", "talosContainers", "volumes", "watchdog"}},
+		{"v1.13.0", []string{"bgp", "diskHealth", "hypervisor", "lldp", "talosContainers"}},
+		{"v1.12.4", []string{"bgp", "debugShell", "diskHealth", "hypervisor", "lldp", "talosContainers"}},
+		{"v1.8.0", []string{"bgp", "debugShell", "diskHealth", "diskWipe", "hypervisor", "lldp", "talosContainers"}},
+		{"v1.7.6", []string{"bgp", "debugShell", "diskHealth", "diskWipe", "disks", "hypervisor", "lldp", "talosContainers", "volumes"}},
+		{"v1.6.7", []string{"bgp", "debugShell", "diskHealth", "diskWipe", "disks", "hypervisor", "lldp", "talosContainers", "volumes", "watchdog"}},
+		{"v1.5.0", []string{"bgp", "debugShell", "diskHealth", "diskWipe", "disks", "hypervisor", "lldp", "talosContainers", "volumes", "watchdog"}},
+		{"v1.4.8", []string{
+			"bgp", "debugShell", "diskHealth", "diskWipe", "disks", "hypervisor", "images", "lldp", "sensors", "talosContainers", "volumes",
+			"watchdog",
+		}},
 		{"v1.3.7", []string{
-			"connections", "debugShell", "diskHealth", "diskWipe", "disks", "etcd", "hypervisor", "images", "lldp", "meta", "reset", "sensors",
-			"talosContainers", "volumes", "watchdog",
+			"bgp", "connections", "debugShell", "diskHealth", "diskWipe", "disks", "etcd", "hypervisor", "images", "lldp", "meta", "reset",
+			"sensors", "talosContainers", "volumes", "watchdog",
 		}},
 		{"v1.2.0", []string{
-			"connections", "debugShell", "diskHealth", "diskWipe", "disks", "etcd", "etcdMemberActions", "hardware", "hypervisor", "images",
+			"bgp", "connections", "debugShell", "diskHealth", "diskWipe", "disks", "etcd", "etcdMemberActions", "hardware", "hypervisor", "images",
 			"kubespan", "lldp", "machineConfig", "meta", "network", "reset", "resourceBrowser", "sensors", "talosContainers", "volumes", "watchdog",
 		}},
 		{"v1.1.3", []string{
-			"connections", "debugShell", "diskHealth", "diskWipe", "disks", "etcd", "etcdMemberActions", "hardware", "hypervisor", "images",
+			"bgp", "connections", "debugShell", "diskHealth", "diskWipe", "disks", "etcd", "etcdMemberActions", "hardware", "hypervisor", "images",
 			"kubespan", "lldp", "machineConfig", "meta", "network", "packetCapture", "reset", "resourceBrowser", "sensors", "talosContainers",
 			"volumes", "watchdog",
 		}},
-		{"v1.10.3", []string{"debugShell", "diskHealth", "hypervisor", "lldp", "talosContainers"}}, // 1.10 > 1.8: compared as numbers
+		{"v1.10.3", []string{"bgp", "debugShell", "diskHealth", "hypervisor", "lldp", "talosContainers"}}, // 1.10 > 1.8: compared as numbers
 	}
 
 	for _, tt := range tests {

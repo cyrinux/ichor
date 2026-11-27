@@ -1460,6 +1460,14 @@
     <string name="network_neighbor_vlan">VLAN %1$s</string>
     <string name="network_neighbor_management">керування %1$s</string>
     <string name="network_neighbor_copy">Скопіювати дані сусіда</string>
+    <string name="network_bgp">BGP</string>
+    <string name="network_bgp_hint">Власні сесії BGP вузла (вбудований BGP Talos): кожен пір, його номер AS, стан сесії та префікси, якими обмінюються.</string>
+    <string name="network_bgp_asn">AS %1$s · локальна AS %2$s</string>
+    <string name="network_bgp_instance">екземпляр %1$s</string>
+    <string name="network_bgp_prefixes">%1$s отримано · %2$s оголошено</string>
+    <string name="network_bgp_since">встановлено %1$s</string>
+    <string name="network_bgp_graceful">м\'який перезапуск</string>
+    <string name="network_bgp_restarting">пір перезапускається</string>
     <string name="connections_search">Фільтр за адресою, портом, станом або процесом</string>
     <string name="connections_listening">Прослуховують</string>
     <string name="connections_all">Усі</string>
@@ -4910,6 +4918,11 @@
     <string name="monitor_talos_vm_error">Помилка %1$s на %2$s</string>
     <string name="monitor_talos_vm_disk">Збій диска %1$s на %2$s</string>
     <string name="monitor_talos_vm_ok">%1$s на %2$s знову в нормі</string>
+    <string name="monitor_bgp">Сесії BGP</string>
+    <string name="monitor_bgp_desc">Сповіщати, коли сесія BGP вузла все ще розірвана під час наступної перевірки (вбудований BGP Talos 1.14+; читає сесії кожного вузла під час кожної перевірки).</string>
+    <string name="monitor_bgp_down">Сесія BGP з %1$s розірвана на %2$s</string>
+    <string name="monitor_bgp_up">Сесію BGP з %1$s відновлено на %2$s</string>
+    <string name="monitor_bgp_state">Стан сесії: %1$s</string>
     <string name="talos_vms_problems_title">Потребує уваги</string>
     <string name="monitor_sensors_auto">Власна межа кожного датчика (критична − 5 °C, інакше його максимум)</string>
     <string name="monitor_sensors_threshold">Сповіщати за %1$d °C</string>

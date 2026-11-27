@@ -326,6 +326,8 @@ enum Route: Hashable {
     case storage(node: String, hostname: String)
     /// A node's Hardware screen: sensors, CPUs and PCI devices (a share link, a temperature alert).
     case hardware(node: String, hostname: String)
+    /// A node's Network screen: links, neighbours and BGP sessions (a share link, a BGP alert).
+    case network(node: String, hostname: String)
     /// The drain of a node (the maintenance screen, drain only); on a cluster without Talos,
     /// node and hostname are its Kubernetes name.
     case drain(node: String, hostname: String)
@@ -563,6 +565,7 @@ struct MainNavigation: View {
         case .debugShell(let node, let hostname): DebugShellView(node: node, hostname: hostname)
         case .storage(let node, let hostname): StorageView(node: node, hostname: hostname)
         case .hardware(let node, let hostname): HardwareView(node: node, hostname: hostname)
+        case .network(let node, let hostname): NetworkView(node: node, hostname: hostname)
         case .drain(let node, let hostname): MaintenanceView(node: node, hostname: hostname, drainOnly: true)
         case .upgrade(let node, let hostname): UpgradeView(node: node, hostname: hostname)
         case .maintenance(let node, let hostname): MaintenanceView(node: node, hostname: hostname)

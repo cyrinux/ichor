@@ -1370,6 +1370,14 @@
     <string name="network_neighbor_vlan">VLAN %1$s</string>
     <string name="network_neighbor_management">management %1$s</string>
     <string name="network_neighbor_copy">Copy the neighbour details</string>
+    <string name="network_bgp">BGP</string>
+    <string name="network_bgp_hint">The node\'s own BGP sessions (Talos native BGP): each peer, its AS number, the session state and the prefixes exchanged.</string>
+    <string name="network_bgp_asn">AS %1$s · local AS %2$s</string>
+    <string name="network_bgp_instance">instance %1$s</string>
+    <string name="network_bgp_prefixes">%1$s in · %2$s out</string>
+    <string name="network_bgp_since">established %1$s</string>
+    <string name="network_bgp_graceful">graceful restart</string>
+    <string name="network_bgp_restarting">peer restarting</string>
     <string name="connections_search">Filter by address, port, state or process</string>
     <string name="connections_listening">Listening</string>
     <string name="connections_all">All</string>
@@ -4698,6 +4706,11 @@
     <string name="monitor_talos_vm_error">%1$s failed on %2$s</string>
     <string name="monitor_talos_vm_disk">A disk of %1$s failed on %2$s</string>
     <string name="monitor_talos_vm_ok">%1$s on %2$s is back to normal</string>
+    <string name="monitor_bgp">BGP sessions</string>
+    <string name="monitor_bgp_desc">Alert when a node\'s BGP session is still down at the next check (Talos 1.14+ native BGP; reads every node\'s sessions at each check).</string>
+    <string name="monitor_bgp_down">BGP session to %1$s is down on %2$s</string>
+    <string name="monitor_bgp_up">BGP session to %1$s is up again on %2$s</string>
+    <string name="monitor_bgp_state">Session state: %1$s</string>
     <string name="talos_vms_problems_title">Needs attention</string>
     <string name="monitor_sensors_auto">Each sensor\'s own limit (critical − 5 °C, else its max)</string>
     <string name="monitor_sensors_threshold">Alert at %1$d °C</string>

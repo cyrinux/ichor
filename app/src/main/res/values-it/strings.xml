@@ -1371,6 +1371,14 @@
     <string name="network_neighbor_vlan">VLAN %1$s</string>
     <string name="network_neighbor_management">gestione %1$s</string>
     <string name="network_neighbor_copy">Copia i dettagli del vicino</string>
+    <string name="network_bgp">BGP</string>
+    <string name="network_bgp_hint">Le sessioni BGP del nodo stesso (BGP nativo di Talos): ogni peer, il suo numero di AS, lo stato della sessione e i prefissi scambiati.</string>
+    <string name="network_bgp_asn">AS %1$s · AS locale %2$s</string>
+    <string name="network_bgp_instance">istanza %1$s</string>
+    <string name="network_bgp_prefixes">%1$s ricevuti · %2$s annunciati</string>
+    <string name="network_bgp_since">stabilita %1$s</string>
+    <string name="network_bgp_graceful">riavvio controllato</string>
+    <string name="network_bgp_restarting">peer in riavvio</string>
     <string name="connections_search">Filtra per indirizzo, porta, stato o processo</string>
     <string name="connections_listening">In ascolto</string>
     <string name="connections_all">Tutte</string>
@@ -4697,6 +4705,11 @@
     <string name="monitor_talos_vm_error">%1$s in errore su %2$s</string>
     <string name="monitor_talos_vm_disk">Un disco di %1$s è in errore su %2$s</string>
     <string name="monitor_talos_vm_ok">%1$s su %2$s è tornata alla normalità</string>
+    <string name="monitor_bgp">Sessioni BGP</string>
+    <string name="monitor_bgp_desc">Avvisa quando una sessione BGP di un nodo è ancora giù al controllo successivo (BGP nativo di Talos 1.14+; legge le sessioni di ogni nodo a ogni controllo).</string>
+    <string name="monitor_bgp_down">Sessione BGP verso %1$s giù su %2$s</string>
+    <string name="monitor_bgp_up">Sessione BGP verso %1$s di nuovo attiva su %2$s</string>
+    <string name="monitor_bgp_state">Stato della sessione: %1$s</string>
     <string name="talos_vms_problems_title">Richiede attenzione</string>
     <string name="monitor_sensors_auto">Il limite di ogni sensore (critico − 5 °C, altrimenti il suo massimo)</string>
     <string name="monitor_sensors_threshold">Avvisa a %1$d °C</string>

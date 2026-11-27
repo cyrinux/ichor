@@ -18,6 +18,7 @@ struct MonitoringSection: View {
     @State private var kubespanWatched = BackgroundMonitor.kubespanWatched
     @State private var talosContainersWatched = BackgroundMonitor.talosContainersWatched
     @State private var vmsWatched = BackgroundMonitor.vmsWatched
+    @State private var bgpWatched = BackgroundMonitor.bgpWatched
     @State private var sensorThreshold = BackgroundMonitor.sensorThreshold
     @State private var unreachableWatched = BackgroundMonitor.unreachableWatched
     @State private var unreachableRuns = BackgroundMonitor.unreachableRuns
@@ -236,6 +237,25 @@ struct MonitoringSection: View {
                     Text("Talos virtual machines")
                     Text(
                         "Alert when a virtual machine that should run is down or failing (Talos 1.15; reads every node's virtual machines at each check)."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
+            // On by default: every node's BGP sessions are read at every check; nodes without BGP add nothing.
+            Toggle(
+                isOn: Binding(
+                    get: { bgpWatched },
+                    set: { on in
+                        BackgroundMonitor.bgpWatched = on
+                        bgpWatched = on
+                    })
+            ) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("BGP sessions")
+                    Text(
+                        "Alert when a node's BGP session is still down at the next check (Talos 1.14+ native BGP; reads every node's sessions at each check)."
                     )
                     .font(.caption)
                     .foregroundStyle(.secondary)

@@ -118,6 +118,14 @@ data class ClusterSnapshot(
     val vmIssues: Map<String, String> = emptyMap(),
     /** Always empty: every such VM is critical. Kept so the track reads like the others. */
     val vmPending: List<String> = emptyList(),
+    /** Watching the nodes' BGP sessions was on for this check (on by default, Talos clusters only). */
+    val bgpWatched: Boolean = false,
+    /** The sessions could be read this time. */
+    val bgpChecked: Boolean = false,
+    /** Sessions down and notified ("node|instance|peer" → see [BgpDetail]), kept like [dataIssues]. */
+    val bgpIssues: Map<String, String> = emptyMap(),
+    /** Sessions seen down once and not notified yet (a reboot, a flap). */
+    val bgpPending: List<String> = emptyList(),
     /** Watching the CRD plugins' findings was on for this check (with the data services, opt-in). */
     val pluginWatched: Boolean = false,
     /** Their findings could be read this time. */
@@ -187,10 +195,16 @@ fun snapshotOf(
     /** Talos VMs watched ([vmIssues] null when watched but unreadable, see [talosVmIssuesOf]). */
     vmWatched: Boolean = false,
     vmIssues: Map<String, String>? = null,
+    /** BGP sessions watched ([bgpIssues] null when watched but unreadable, see [bgpIssuesOf]). */
+    bgpWatched: Boolean = false,
+    bgpIssues: Map<String, String>? = null,
 ): ClusterSnapshot = ClusterSnapshot(
     talosContainerWatched = talosContainerWatched,
     talosContainerChecked = talosContainerWatched && talosContainerIssues != null,
     talosContainerIssues = talosContainerIssues?.takeIf { talosContainerWatched }.orEmpty(),
+    bgpWatched = bgpWatched,
+    bgpChecked = bgpWatched && bgpIssues != null,
+    bgpIssues = bgpIssues?.takeIf { bgpWatched }.orEmpty(),
     vmWatched = vmWatched,
     vmChecked = vmWatched && vmIssues != null,
     vmIssues = vmIssues?.takeIf { vmWatched }.orEmpty(),

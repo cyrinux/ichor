@@ -69,6 +69,7 @@ fun MonitoringSection(app: TalosApp) {
     val kubespanWatched by store.kubespanWatched.collectAsStateWithLifecycle()
     val talosContainersWatched by store.talosContainersWatched.collectAsStateWithLifecycle()
     val vmsWatched by store.vmsWatched.collectAsStateWithLifecycle()
+    val bgpWatched by store.bgpWatched.collectAsStateWithLifecycle()
     val unreachable by store.unreachableAlerts.collectAsStateWithLifecycle()
     val unreachableRuns by store.unreachableRuns.collectAsStateWithLifecycle()
     val interval by store.intervalMinutes.collectAsStateWithLifecycle()
@@ -265,6 +266,19 @@ fun MonitoringSection(app: TalosApp) {
                 IchorSwitch(
                     checked = vmsWatched,
                     onCheckedChange = { store.setVmsWatched(it) },
+                    enabled = enabled,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            // And for the nodes' BGP sessions: on by default, nodes without BGP add nothing.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_bgp), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_bgp_desc))
+                }
+                IchorSwitch(
+                    checked = bgpWatched,
+                    onCheckedChange = { store.setBgpWatched(it) },
                     enabled = enabled,
                     modifier = Modifier.padding(start = 12.dp),
                 )

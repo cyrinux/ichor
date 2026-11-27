@@ -609,6 +609,178 @@
         }
       }
     },
+    "The node's own BGP sessions (Talos native BGP): each peer, its AS number, the session state and the prefixes exchanged." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die eigenen BGP-Sitzungen des Knotens (natives BGP von Talos): jeder Peer, seine AS-Nummer, der Sitzungsstatus und die ausgetauschten Präfixe." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las sesiones BGP del propio nodo (BGP nativo de Talos): cada par, su número de AS, el estado de la sesión y los prefijos intercambiados." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les sessions BGP du nœud lui-même (BGP natif de Talos) : chaque pair, son numéro d'AS, l'état de la session et les préfixes échangés." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Le sessioni BGP del nodo stesso (BGP nativo di Talos): ogni peer, il suo numero di AS, lo stato della sessione e i prefissi scambiati." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノード自身の BGP セッション (Talos ネイティブ BGP): 各ピア、その AS 番号、セッション状態、交換したプレフィックス。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "As sessões BGP do próprio nó (BGP nativo do Talos): cada par, seu número de AS, o estado da sessão e os prefixos trocados." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Собственные сессии BGP узла (встроенный BGP Talos): каждый пир, его номер AS, состояние сессии и переданные префиксы." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Власні сесії BGP вузла (вбудований BGP Talos): кожен пір, його номер AS, стан сесії та префікси, якими обмінюються." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "节点自身的 BGP 会话（Talos 原生 BGP）：每个对等体、其 AS 号、会话状态以及交换的前缀。" } }
+      }
+    },
+    "AS %@ · local AS %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "AS %1$@ · local AS %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "AS %1$@ · lokale AS %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "AS %1$@ · AS local %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "AS %1$@ · AS local %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "AS %1$@ · AS locale %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AS %1$@ · ローカル AS %2$@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "AS %1$@ · AS local %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "AS %1$@ · локальная AS %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "AS %1$@ · локальна AS %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "AS %1$@ · 本地 AS %2$@" } }
+      }
+    },
+    "instance %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Instanz %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "instancia %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "instance %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "istanza %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "インスタンス %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "instância %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "экземпляр %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "екземпляр %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "实例 %@" } }
+      }
+    },
+    "%@ in · %@ out" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ in · %2$@ out" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ empfangen · %2$@ angekündigt" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ recibidos · %2$@ anunciados" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ reçus · %2$@ annoncés" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ ricevuti · %2$@ annunciati" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "受信 %1$@ · 広報 %2$@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ recebidos · %2$@ anunciados" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ получено · %2$@ анонсировано" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ отримано · %2$@ оголошено" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "收到 %1$@ · 通告 %2$@" } }
+      }
+    },
+    "established %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "aufgebaut %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "establecida %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "établie %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "stabilita %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "確立 %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "estabelecida %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "установлена %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "встановлено %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "建立于 %@" } }
+      }
+    },
+    "graceful restart" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Graceful Restart" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "reinicio ordenado" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "redémarrage en douceur" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "riavvio controllato" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "グレースフルリスタート" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "reinício suave" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "мягкий перезапуск" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "м'який перезапуск" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "平滑重启" } }
+      }
+    },
+    "peer restarting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Peer startet neu" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "par reiniciándose" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "pair en redémarrage" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "peer in riavvio" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ピア再起動中" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "par reiniciando" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "пир перезапускается" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "пір перезапускається" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "对等体正在重启" } }
+      }
+    },
+    "BGP sessions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "BGP-Sitzungen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sesiones BGP" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sessions BGP" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sessioni BGP" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "BGP セッション" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sessões BGP" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сессии BGP" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сесії BGP" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "BGP 会话" } }
+      }
+    },
+    "Alert when a node's BGP session is still down at the next check (Talos 1.14+ native BGP; reads every node's sessions at each check)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Warnen, wenn eine BGP-Sitzung eines Knotens bei der nächsten Prüfung noch getrennt ist (natives BGP ab Talos 1.14; liest bei jeder Prüfung die Sitzungen jedes Knotens)." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Avisar cuando una sesión BGP de un nodo sigue caída en la siguiente comprobación (BGP nativo de Talos 1.14+; lee las sesiones de cada nodo en cada comprobación)." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Alerter quand une session BGP d'un nœud est toujours coupée à la vérification suivante (BGP natif de Talos 1.14+ ; lit les sessions de chaque nœud à chaque vérification)." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvisa quando una sessione BGP di un nodo è ancora giù al controllo successivo (BGP nativo di Talos 1.14+; legge le sessioni di ogni nodo a ogni controllo)." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノードの BGP セッションが次のチェックでもダウンしたままのときに通知します (Talos 1.14 以降のネイティブ BGP。チェックごとに全ノードのセッションを読み取ります)。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Alertar quando uma sessão BGP de um nó ainda estiver caída na verificação seguinte (BGP nativo do Talos 1.14+; lê as sessões de cada nó a cada verificação)." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Оповещать, когда сессия BGP узла всё ещё разорвана при следующей проверке (встроенный BGP Talos 1.14+; читает сессии каждого узла при каждой проверке)." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сповіщати, коли сесія BGP вузла все ще розірвана під час наступної перевірки (вбудований BGP Talos 1.14+; читає сесії кожного вузла під час кожної перевірки)." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当节点的 BGP 会话在下一次检查时仍然断开时发出告警（Talos 1.14+ 原生 BGP；每次检查都会读取每个节点的会话）。" } }
+      }
+    },
+    "BGP session to %@ is down on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "BGP session to %1$@ is down on %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "BGP-Sitzung zu %1$@ auf %2$@ getrennt" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sesión BGP con %1$@ caída en %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Session BGP vers %1$@ coupée sur %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sessione BGP verso %1$@ giù su %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ の %1$@ への BGP セッションがダウン" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sessão BGP com %1$@ caída em %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сессия BGP с %1$@ разорвана на %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сесія BGP з %1$@ розірвана на %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ 上到 %1$@ 的 BGP 会话已断开" } }
+      }
+    },
+    "BGP session to %@ is up again on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "BGP session to %1$@ is up again on %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "BGP-Sitzung zu %1$@ auf %2$@ wieder aufgebaut" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sesión BGP con %1$@ restablecida en %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Session BGP vers %1$@ rétablie sur %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sessione BGP verso %1$@ di nuovo attiva su %2$@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ の %1$@ への BGP セッションが復旧" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sessão BGP com %1$@ restabelecida em %2$@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сессия BGP с %1$@ снова установлена на %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сесію BGP з %1$@ відновлено на %2$@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%2$@ 上到 %1$@ 的 BGP 会话已恢复" } }
+      }
+    },
+    "Session state: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sitzungsstatus: %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Estado de la sesión: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "État de la session : %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Stato della sessione: %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "セッション状態: %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Estado da sessão: %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Состояние сессии: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Стан сесії: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "会话状态：%@" } }
+      }
+    },
     "Talos virtual machines" : {
       "extractionState" : "manual",
       "localizations" : {
