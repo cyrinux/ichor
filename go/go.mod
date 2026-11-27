@@ -9,9 +9,9 @@ require (
 	github.com/cosi-project/runtime v1.17.1
 	github.com/fluxcd/pkg/envsubst v1.9.0
 	github.com/gopacket/gopacket v1.7.7
-	github.com/siderolabs/crypto v0.6.5
-	github.com/siderolabs/go-api-signature v0.3.13
-	github.com/siderolabs/talos/pkg/machinery v1.14.4
+	github.com/siderolabs/crypto v0.6.6
+	github.com/siderolabs/go-api-signature v0.4.0
+	github.com/siderolabs/talos/pkg/machinery v1.14.7
 	go.yaml.in/yaml/v4 v4.0.0
 	golang.org/x/crypto v0.59.0
 	golang.org/x/net v0.62.0

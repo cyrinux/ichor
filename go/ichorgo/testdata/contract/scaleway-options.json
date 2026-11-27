@@ -4,11 +4,11 @@
     {
       "arch": "x86_64",
       "id": "demo-talos",
-      "name": "talos-v1.14.0-scaleway-amd64-9d2c5e4b1a7f",
+      "name": "talos-v1.14.7-scaleway-amd64-9d2c5e4b1a7f",
       "schematic": "9d2c5e4b1a7f",
       "sizeGB": 10,
       "talos": true,
-      "talosVersion": "v1.14.0"
+      "talosVersion": "v1.14.7"
     },
     {
       "arch": "x86_64",
@@ -30,7 +30,7 @@
     }
   ],
   "templateSchematic": "9d2c5e4b1a7f0836c4d2e1b9a0f7c6d5e4b3a2918f7e6d5c4b3a29180f7e6d5c",
-  "templateVersion": "v1.14.0",
+  "templateVersion": "v1.14.7",
   "types": [
     {
       "arch": "x86_64",

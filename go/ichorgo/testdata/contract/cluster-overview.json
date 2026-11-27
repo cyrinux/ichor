@@ -16,7 +16,7 @@
       "role": "controlplane",
       "stage": "running",
       "unmetConditions": [],
-      "version": "v1.14.0"
+      "version": "v1.14.7"
     },
     {
       "arch": "amd64",
@@ -33,7 +33,7 @@
       "role": "controlplane",
       "stage": "running",
       "unmetConditions": [],
-      "version": "v1.14.0"
+      "version": "v1.14.7"
     },
     {
       "arch": "amd64",
@@ -50,7 +50,7 @@
       "role": "controlplane",
       "stage": "running",
       "unmetConditions": [],
-      "version": "v1.14.0"
+      "version": "v1.14.7"
     }
   ]
 }
