@@ -37,14 +37,48 @@ func vmProgressText(_ progress: VmProgress?) -> String? {
     }
 }
 
+/// A VM's status as its platform writes it, coloured by state, read out with its meaning. Shared
+/// by the KubeVirt screens and the Talos hypervisor's (Views/Talos).
+struct VmStateBadge: View {
+    let label: String
+    let state: VmState
+
+    var body: some View {
+        let status = label.isEmpty ? "-" : label
+        StatusPill(label: status, color: state.color)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(String(localized: "Status: \(status)"))
+    }
+}
+
 /// KubeVirt's status as written, coloured by state, read out with its meaning.
 struct VmStatusBadge: View {
     let vm: VirtualMachine
 
     var body: some View {
-        let status = vm.status.isEmpty ? "-" : vm.status
-        StatusPill(label: status, color: vm.vmState.color)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(String(localized: "Status: \(status)"))
+        VmStateBadge(label: vm.status, state: vm.vmState)
+    }
+}
+
+/// One count chip of a VM list: how many, its label, its colour.
+struct VmCountChip {
+    let count: Int
+    let label: String
+    let color: Color
+}
+
+/// The count chips of a VM list; only the non-zero ones, nothing when all are zero.
+struct VmCountChips: View {
+    let chips: [VmCountChip]
+
+    var body: some View {
+        let shown = chips.filter { $0.count > 0 }
+        if !shown.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(shown, id: \.label) { StatusPill(label: $0.label, color: $0.color) }
+                }
+            }
+        }
     }
 }

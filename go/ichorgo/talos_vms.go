@@ -304,7 +304,20 @@ func buildNodeVMs(in vmSpecs, errs map[string]string) nodeVMs {
 
 	sort.Slice(out.Libraries, func(i, j int) bool { return out.Libraries[i].Name < out.Libraries[j].Name })
 
-	return out
+	return learnVMNames(out)
+}
+
+// vmHostRole is the role a VM name is learned with: screenshot mode shows it as vm-N.
+const vmHostRole = "vm"
+
+// learnVMNames teaches the screenshot mask the names of report's VMs, so they are shown (and
+// map back) like node hostnames; their addresses are masked as every address is.
+func learnVMNames(report nodeVMs) nodeVMs {
+	for _, vm := range report.VMs {
+		privacy.learnHost(vm.Name, vmHostRole)
+	}
+
+	return report
 }
 
 // mapTalosVM maps a VM's status and spec; either may be nil.

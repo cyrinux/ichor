@@ -62,6 +62,7 @@ import name.levis.ichor.ui.resources.ResourceListScreen
 import name.levis.ichor.ui.resources.ResourceRef
 import name.levis.ichor.ui.resources.ResourceTypesScreen
 import name.levis.ichor.ui.storage.StorageScreen
+import name.levis.ichor.ui.talosvms.TalosVmsScreen
 import name.levis.ichor.ui.node.NodeFilesScreen
 import name.levis.ichor.ui.upgrade.UpgradeScreen
 
@@ -78,6 +79,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             onOpenNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
             onTab = { n, tab -> nav.navigate(Routes.nodeTabs(n.node, n.hostname, tab)) },
             onMenu = { n, entry -> nodeMenuRoute(n.node, n.hostname, entry)?.let(nav::navigate) },
+            onTalosVms = { n -> nav.navigate(Routes.talosVms(n.node, n.hostname)) },
         )
     }
     composable(
@@ -105,6 +107,21 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             onBack = { nav.popBackStack() },
             onTab = { tab -> nav.navigate(Routes.nodeTabs(addr, host, tab)) },
             onMenu = { item -> nodeMenuRoute(addr, host, item)?.let { nav.navigate(it) } },
+            onTalosVms = { nav.navigate(Routes.talosVms(addr, host)) },
+        )
+    }
+    composable(
+        Routes.TALOS_VMS,
+        arguments = listOf(
+            navArgument("addr") { type = NavType.StringType; defaultValue = "" },
+            navArgument("host") { type = NavType.StringType; defaultValue = "" },
+        ),
+    ) { entry ->
+        val addr = entry.arguments?.getString("addr").orEmpty().ifEmpty { null }
+        TalosVmsScreen(
+            node = addr,
+            hostname = entry.arguments?.getString("host").orEmpty().ifEmpty { addr.orEmpty() },
+            onBack = { nav.popBackStack() },
         )
     }
     composable(

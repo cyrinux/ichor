@@ -5538,6 +5538,14 @@
     <string name="vm_action_requested">%2$s の %1$s を要求しました</string>
     <string name="vm_force_stop_requested">%1$s の強制停止を要求しました</string>
     <string name="vm_migration_started">%1$s の移行を開始しました：%2$s</string>
+    <string name="talos_vms_title">Talos 仮想マシン</string>
+    <string name="talos_vms_count_pending">%1$d 件保留中</string>
+    <string name="talos_vms_state">状態</string>
+    <string name="talos_vms_wanted_state">目標状態</string>
+    <string name="talos_vms_stage">ステージ</string>
+    <string name="talos_vms_profile">プロファイル</string>
+    <string name="talos_vms_interfaces">ネットワークインターフェース</string>
+    <string name="talos_vms_disk_read_only">読み取り専用</string>
     <string name="longhorn_snapshots_title">スナップショットとバックアップ</string>
     <string name="longhorn_snapshots_label">スナップショット</string>
     <string name="longhorn_backups_label">バックアップ</string>

@@ -5538,6 +5538,14 @@
     <string name="vm_action_requested">已为 %2$s 请求 %1$s</string>
     <string name="vm_force_stop_requested">已为 %1$s 请求强制停止</string>
     <string name="vm_migration_started">%1$s 的迁移已开始：%2$s</string>
+    <string name="talos_vms_title">Talos 虚拟机</string>
+    <string name="talos_vms_count_pending">%1$d 个待处理</string>
+    <string name="talos_vms_state">状态</string>
+    <string name="talos_vms_wanted_state">期望状态</string>
+    <string name="talos_vms_stage">阶段</string>
+    <string name="talos_vms_profile">配置文件</string>
+    <string name="talos_vms_interfaces">网络接口</string>
+    <string name="talos_vms_disk_read_only">只读</string>
     <string name="longhorn_snapshots_title">快照与备份</string>
     <string name="longhorn_snapshots_label">快照</string>
     <string name="longhorn_backups_label">备份</string>

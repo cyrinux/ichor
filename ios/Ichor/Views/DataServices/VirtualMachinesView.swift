@@ -139,21 +139,19 @@ private struct VmCountsRow: View {
     let counts: VmCounts
 
     var body: some View {
-        let all: [(count: Int, label: String, color: Color)] = [
-            (counts.running, String(localized: "\(counts.running) running"), Color.statusOK),
-            (counts.stopped, String(localized: "\(counts.stopped) stopped"), Color.secondary),
-            (counts.failing, String(localized: "\(counts.failing) failing"), Color.statusBad),
-            (counts.migrating, String(localized: "\(counts.migrating) migrating"), Color.statusWarn),
-            (counts.importing, String(localized: "\(counts.importing) importing a disk"), Color.statusWarn),
-        ]
-        let chips = all.filter { $0.count > 0 }.map { ($0.label, $0.color) }
-        if !chips.isEmpty {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    ForEach(chips, id: \.0) { StatusPill(label: $0.0, color: $0.1) }
-                }
-            }
-        }
+        VmCountChips(chips: [
+            VmCountChip(
+                count: counts.running, label: String(localized: "\(counts.running) running"), color: .statusOK),
+            VmCountChip(
+                count: counts.stopped, label: String(localized: "\(counts.stopped) stopped"), color: .secondary),
+            VmCountChip(
+                count: counts.failing, label: String(localized: "\(counts.failing) failing"), color: .statusBad),
+            VmCountChip(
+                count: counts.migrating, label: String(localized: "\(counts.migrating) migrating"), color: .statusWarn),
+            VmCountChip(
+                count: counts.importing, label: String(localized: "\(counts.importing) importing a disk"),
+                color: .statusWarn),
+        ])
     }
 }
 

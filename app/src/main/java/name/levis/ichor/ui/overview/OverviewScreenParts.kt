@@ -57,6 +57,7 @@ import name.levis.ichor.ui.flux.FluxViewModel
 import name.levis.ichor.ui.gitops.hasClusterRepo
 import name.levis.ichor.ui.plugins.PluginDetectViewModel
 import name.levis.ichor.ui.share.rememberClusterPins
+import name.levis.ichor.ui.talosvms.rememberClusterHasTalosVms
 import name.levis.ichor.ui.tour.TourAnchor
 import name.levis.ichor.ui.tour.tourAnchor
 import name.levis.ichor.ui.userMessage
@@ -162,6 +163,11 @@ internal fun rememberOverviewCards(
         active = kubernetes && OverviewCard.TOOLS in layout.visible,
         key = listOf(config?.activeContext, generation, invalidations),
     )
+    // The Talos hypervisor's VMs, beside Storage on that card: only once a node runs some.
+    val talosVms = rememberClusterHasTalosVms(
+        active = kubernetes && OverviewCard.TOOLS in layout.visible,
+        key = listOf(config?.activeContext, generation, invalidations),
+    )
     // The objects pinned on this cluster (kept apart while screenshot mode is on).
     val pins = rememberClusterPins()
     val absentCards = setOfNotNull(
@@ -187,6 +193,7 @@ internal fun rememberOverviewCards(
             kubeTools = kubernetes,
             toolPlugins = (plugins as? UiState.Loaded)?.data?.homeTiles.orEmpty(),
             operators = operators,
+            talosVms = talosVms,
         ),
         argoHinted = argoHinted,
         fluxHinted = fluxHinted,

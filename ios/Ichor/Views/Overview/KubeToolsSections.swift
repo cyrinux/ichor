@@ -17,6 +17,8 @@ struct KubeToolsSections: View {
     var argoRollouts = false
     var virtualMachines = false
     var policies = false
+    /// A node runs Talos hypervisor VMs (Talos overview): their entry joins Storage.
+    var talosVMs = false
     /// Ran while shown, again with each new `refreshID` (on the first section only, so once).
     var refreshID: Date?
     var onRefresh: (() async -> Void)?
@@ -98,6 +100,14 @@ struct KubeToolsSections: View {
                 KubeStorageView()
             } label: {
                 toolLabel(Text("Storage"), systemImage: "externaldrive")
+            }
+            // The Talos hypervisor's VMs (not KubeVirt's): only once a node reports some.
+            if talosVMs {
+                NavigationLink {
+                    TalosVirtualMachinesView()
+                } label: {
+                    toolLabel(Text("Talos virtual machines"), systemImage: "desktopcomputer")
+                }
             }
             NavigationLink(value: Route.dataServices(hints: "", downNodes: downNodes)) {
                 toolLabel(KubeHomeAction.dataServices)
@@ -264,7 +274,10 @@ struct OverviewKubeTools: View {
     let downNodes: Set<String>
     let refreshID: Date?
     @Environment(AppModel.self) private var model
+    @Environment(NodesStore.self) private var nodes
     @State private var operators = KubeOperators()
+    /// Whether a node runs Talos VMs; false until one says so, or when the read fails.
+    @State private var talosVMs = false
 
     var body: some View {
         if model.allows(.workloads) {
@@ -272,7 +285,7 @@ struct OverviewKubeTools: View {
                 services: loaded, plugins: plugins, downNodes: downNodes,
                 crossplane: operators.crossplane, tailscale: operators.tailscale,
                 clusterLifecycle: operators.clusterLifecycle, argoRollouts: operators.argoRollouts,
-                virtualMachines: operators.virtualMachines, policies: operators.policies,
+                virtualMachines: operators.virtualMachines, policies: operators.policies, talosVMs: talosVMs,
                 refreshID: refreshID, onRefresh: loadOperators)
         }
     }
@@ -282,6 +295,14 @@ struct OverviewKubeTools: View {
         let found = await KubeOperators.read(with: client)
         guard !Task.isCancelled else { return }
         operators = found
+        // Not asked when every node whose Talos is known lacks the hypervisor (older than 1.15).
+        guard nodes.clusterSupport(.hypervisor).supported else {
+            talosVMs = false
+            return
+        }
+        let vms = (try? await client.clusterVirtualMachines().hasVMs) ?? false
+        guard !Task.isCancelled else { return }
+        talosVMs = vms
     }
 
     private var loaded: DataServices? {

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Computer
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,6 +55,7 @@ import name.levis.ichor.model.down
 import name.levis.ichor.model.ResetRequest
 import name.levis.ichor.model.ResetWipe
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.model.TalosNodeVms
 import name.levis.ichor.model.allows
 import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.authenticate
@@ -73,6 +75,8 @@ import name.levis.ichor.ui.secretsbundle.rememberSecretsBundleExport
 import name.levis.ichor.ui.share.PinButton
 import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.ui.share.rememberShareLink
+import name.levis.ichor.ui.talosvms.rememberNodeTalosVms
+import name.levis.ichor.ui.talosvms.talosVmSummary
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 
@@ -93,6 +97,8 @@ fun NodeDetailScreen(
     initialCordon: Boolean = false,
     onTab: (Int) -> Unit,
     onMenu: (NodeMenuEntry) -> Unit,
+    /** The node's Talos virtual machines (the row shows only when it runs some). */
+    onTalosVms: () -> Unit = {},
     power: PowerViewModel = viewModel(key = "power-$node", factory = factory { PowerViewModel(app.nodeLifecycleRepository, node) }),
 ) {
     var confirming by remember { mutableStateOf<PowerAction?>(null) }
@@ -112,6 +118,8 @@ fun NodeDetailScreen(
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val canPower = config?.activeSummary?.allows(Feature.POWER) ?: false
     val (features, reachability) = rememberNodeState(node)
+    // Only on a Talos with the hypervisor (1.15) that runs VMs: no row otherwise.
+    val talosVms = rememberNodeTalosVms(node, features)?.takeIf { it.hasVms }
     // Only on a node that does not answer, and only once its MAC is known (nothing in screenshot mode).
     val wakeOnLan = rememberWakeOnLan(config?.activeSummary?.fingerprint)
     val onWake = if (reachability.down) {
@@ -275,6 +283,7 @@ fun NodeDetailScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         NodeHeader(node, role, cordoned[node], reachability)
                         ForgetNodeCard(app, node, hostname, reachability.down, onForgotten = onBack)
+                        talosVms?.let { TalosVmsRow(it, reachability.down, onTalosVms) }
                     }
                 }
                 nodeSections(
@@ -345,6 +354,18 @@ fun NodeDetailScreen(
             onDismiss = { confirming = null },
         )
     }
+}
+
+/** The node's VMs: the count by state under the title; dimmed while the node does not answer. */
+@Composable
+private fun TalosVmsRow(report: TalosNodeVms, down: Boolean, onClick: () -> Unit) {
+    MenuRow(
+        label = stringResource(R.string.vm_title),
+        icon = Icons.Outlined.Computer,
+        notice = if (down) stringResource(R.string.node_hub_unreachable_notice) else talosVmSummary(report.vms),
+        enabled = !down,
+        onClick = onClick,
+    )
 }
 
 /**

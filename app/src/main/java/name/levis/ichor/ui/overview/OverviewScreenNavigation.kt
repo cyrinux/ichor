@@ -59,6 +59,8 @@ class OverviewScreenNavigation(
     val onResources: () -> Unit,
     val onHelm: () -> Unit,
     val onStorage: () -> Unit,
+    /** The Talos hypervisor's virtual machines, cluster-wide. */
+    val onTalosVms: () -> Unit,
     val onServices: () -> Unit,
     /** The cluster's own Git repository (its Cluster repository setting), from its root. */
     val onRepository: () -> Unit,
