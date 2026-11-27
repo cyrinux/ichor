@@ -209,7 +209,7 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			if i == 2 {
 				index -= 2400
 			}
-			result.Statuses = append(result.Statuses, etcdNodeStatus{Node: n.Node, MemberID: id, IsLeader: i == 0, DbSize: 64 << 20, DbSizeInUse: 42 << 20, RaftIndex: index, RaftAppliedIndex: index, RaftTerm: 4, Version: "3.6.0", Errors: []string{}})
+			result.Statuses = append(result.Statuses, etcdNodeStatus{Node: n.Node, MemberID: id, IsLeader: i == 0, DbSize: 64 << 20, DbSizeInUse: 42 << 20, RaftIndex: index, RaftAppliedIndex: index, RaftTerm: 4, Version: "3.6.0", Errors: []string{}, MembershipPhase: etcdPhaseMember})
 		}
 		return toJSON(result)
 	case "ServiceLogs", "KernelLogs", "ContainerLogs":

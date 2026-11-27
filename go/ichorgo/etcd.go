@@ -44,6 +44,11 @@ type etcdNodeStatus struct {
 	RaftAppliedIndex uint64   `json:"raftAppliedIndex"`
 	Version          string   `json:"version"`
 	Errors           []string `json:"errors"`
+	// MembershipPhase is where the node stands in joining etcd (Talos 1.15+, EtcdMembershipStatus):
+	// preparing, joining, learner, member, leaving or left; empty on older nodes.
+	MembershipPhase string `json:"membershipPhase,omitempty"`
+	// MembershipError is the last error Talos met driving that membership.
+	MembershipError string `json:"membershipError,omitempty"`
 }
 
 type etcdAlarm struct {
@@ -72,6 +77,8 @@ func EtcdStatus(configYAML, contextName string) (out string, err error) {
 		if err != nil {
 			return "", err
 		}
+
+		out = withEtcdMembership(out, readEtcdMembership(ctx, s, statusNodes(out.Statuses)))
 
 		for _, m := range out.Members {
 			privacy.learnHost(m.Hostname, "controlplane")

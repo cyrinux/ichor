@@ -382,6 +382,9 @@ private struct MemberStatusRow: View {
                 Spacer()
                 pill
             }
+            if let membershipError = status.membershipError, !membershipError.isEmpty {
+                Text(membershipError).font(.caption).foregroundStyle(.statusBad)
+            }
             if let error = status.error {
                 Text(error).font(.caption).foregroundStyle(.statusBad)
             } else {
@@ -423,7 +426,10 @@ private struct MemberStatusRow: View {
     }
 
     @ViewBuilder private var pill: some View {
-        if status.error != nil || !status.errors.isEmpty {
+        // A node still joining has no running etcd yet: its phase says more than "error".
+        if let phase = status.unsettledPhase {
+            StatusPill(label: phaseLabel(phase), color: .orange)
+        } else if status.error != nil || !status.errors.isEmpty {
             StatusPill(label: String(localized: "Error"), color: .red)
         } else if status.isLeader {
             StatusPill(label: String(localized: "Leader"), color: .green)
@@ -433,6 +439,18 @@ private struct MemberStatusRow: View {
             StatusPill(label: String(localized: "Learner"), color: .orange)
         } else {
             StatusPill(label: String(localized: "Follower"), color: .gray)
+        }
+    }
+
+    /// The chip label of a Talos etcd membership phase; an unknown phase is shown as Talos names it.
+    private func phaseLabel(_ phase: String) -> String {
+        switch phase {
+        case "preparing": String(localized: "Preparing etcd")
+        case "joining": String(localized: "Joining etcd")
+        case "learner": String(localized: "Learner")
+        case "leaving": String(localized: "Leaving etcd")
+        case "left": String(localized: "Left etcd")
+        default: phase
         }
     }
 }

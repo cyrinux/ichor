@@ -305,6 +305,10 @@
     <string name="etcd_status_leader">リーダー</string>
     <string name="etcd_status_learner">ラーナー</string>
     <string name="etcd_status_follower">フォロワー</string>
+    <string name="etcd_phase_preparing">etcd を準備中</string>
+    <string name="etcd_phase_joining">etcd に参加中</string>
+    <string name="etcd_phase_leaving">etcd から離脱中</string>
+    <string name="etcd_phase_left">etcd から離脱済み</string>
     <string name="etcd_status_lagging">遅延</string>
     <string name="etcd_member_id">メンバー ID</string>
     <string name="etcd_db_size">DB サイズ</string>

@@ -270,6 +270,10 @@ data class EtcdNodeStatus(
     val raftAppliedIndex: Long = 0,
     val version: String = "",
     val errors: List<String> = emptyList(),
+    /** Talos 1.15+: where the node stands in joining etcd, see [unsettledPhase]; null on older nodes. */
+    val membershipPhase: String? = null,
+    /** Talos 1.15+: the last error Talos met driving that membership. */
+    val membershipError: String? = null,
 )
 
 @Serializable
