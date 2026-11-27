@@ -93,6 +93,42 @@ class ContainersTest {
     }
 
     @Test
+    fun talosContainersListBetweenSystemAndPods() {
+        fun talos(id: String, cpu: Double) =
+            ContainerRow(c(id, 0, pod = "", ns = "").copy(namespace = TALOS_CONTAINERS, status = "running", health = "healthy"), cpu)
+        val rows = listOf(
+            ContainerRow(c("web", 0, pod = "web", memory = 500), 50.0),
+            talos("edge-proxy", 1.0),
+            ContainerRow(c("apid", 0, pod = "", ns = "").copy(namespace = SYSTEM_CONTAINERS, status = "RUNNING"), 1.0),
+            talos("sensor-agent", 3.0),
+        )
+        val groups = rows.podGroups("", ContainerSort.CPU)
+        assertEquals(listOf("system", "talos", "pod"), groups.map { if (it.system) "system" else if (it.talos) "talos" else "pod" })
+        assertEquals(listOf("sensor-agent", "edge-proxy"), groups[1].containers.map { it.info.id })
+        // No Talos container: no group.
+        assertTrue(rows.filterNot { it.info.talosContainer }.podGroups("", ContainerSort.CPU).none { it.talos })
+    }
+
+    @Test
+    fun decodesTalosContainerStatus() {
+        val sample = TalosJson.decodeFromString(
+            ContainerSample.serializer(),
+            """{"at":1,"containers":[{"id":"agent","namespace":"taloscontainers","name":"agent","status":"backoff",
+            |"health":"degraded","restartCount":12,"exitCode":1,"error":"task exited with code 1","waitingFor":[],
+            |"lastLog":"starting\nfatal: no database\n"}]}""".trimMargin(),
+        )
+        val agent = sample.containers.single()
+        assertTrue(agent.talosContainer)
+        assertEquals(12L, agent.restartCount)
+        assertEquals(TalosContainerHealth.DEGRADED, agent.talosHealth)
+        assertEquals("fatal: no database", agent.lastErrorLine)
+        assertEquals("task exited with code 1", agent.copy(lastLog = "").lastErrorLine)
+        assertEquals(TalosContainerHealth.HEALTHY, agent.copy(health = "healthy", status = "running").talosHealth)
+        assertEquals(TalosContainerHealth.DEGRADED, agent.copy(health = "healthy", status = "failed").talosHealth)
+        assertEquals(TalosContainerHealth.STARTING, agent.copy(health = "pulling", status = "pulling").talosHealth)
+    }
+
+    @Test
     fun runningAndStatusLabel() {
         assertTrue(c("a", 0).running)
         val exited = c("a", 0).copy(status = "CONTAINER_EXITED")

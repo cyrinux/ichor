@@ -66,6 +66,14 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     /// Broken tunnels ("<idA>|<idB>" → KubeSpanIssue value, see kubespanIssuesOf), kept like dataIssues.
     public var kubespanIssues: [String: String]
     public var kubespanPending: [String]
+    /// Watching the Talos containers was on for this check (on by default, Talos clusters only), and
+    /// a node answered.
+    public var talosContainerWatched: Bool
+    public var talosContainerChecked: Bool
+    /// Failed or crash-looping Talos containers ("<node>|<name>" → TalosContainerIssue value, see
+    /// talosContainerIssuesOf), kept like dataIssues.
+    public var talosContainerIssues: [String: String]
+    public var talosContainerPending: [String]
     /// Watching the Talos virtual machines was on for this check (on by default, Talos clusters only),
     /// and their problems could be read.
     public var vmWatched: Bool
@@ -111,6 +119,8 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         sensorPending: [String] = [],
         kubespanWatched: Bool = false, kubespanChecked: Bool = false, kubespanIssues: [String: String] = [:],
         kubespanPending: [String] = [],
+        talosContainerWatched: Bool = false, talosContainerChecked: Bool = false,
+        talosContainerIssues: [String: String] = [:], talosContainerPending: [String] = [],
         vmWatched: Bool = false, vmChecked: Bool = false, vmIssues: [String: String] = [:], vmPending: [String] = [],
         bgpWatched: Bool = false, bgpChecked: Bool = false, bgpIssues: [String: String] = [:],
         bgpPending: [String] = [],
@@ -155,6 +165,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.kubespanChecked = kubespanChecked
         self.kubespanIssues = kubespanIssues
         self.kubespanPending = kubespanPending
+        self.talosContainerWatched = talosContainerWatched
+        self.talosContainerChecked = talosContainerChecked
+        self.talosContainerIssues = talosContainerIssues
+        self.talosContainerPending = talosContainerPending
         self.vmWatched = vmWatched
         self.vmChecked = vmChecked
         self.vmIssues = vmIssues
@@ -214,6 +228,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         kubespanChecked = try c.field(.kubespanChecked, false)
         kubespanIssues = try c.field(.kubespanIssues, [:])
         kubespanPending = try c.field(.kubespanPending, [])
+        talosContainerWatched = try c.field(.talosContainerWatched, false)
+        talosContainerChecked = try c.field(.talosContainerChecked, false)
+        talosContainerIssues = try c.field(.talosContainerIssues, [:])
+        talosContainerPending = try c.field(.talosContainerPending, [])
         vmWatched = try c.field(.vmWatched, false)
         vmChecked = try c.field(.vmChecked, false)
         vmIssues = try c.field(.vmIssues, [:])
@@ -276,6 +294,19 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         }
         set {
             (kubespanWatched, kubespanChecked, kubespanIssues, kubespanPending) = (
+                newValue.watched, newValue.checked, newValue.issues, newValue.pending
+            )
+        }
+    }
+
+    var talosContainerTrack: IssueTrack {
+        get {
+            IssueTrack(
+                watched: talosContainerWatched, checked: talosContainerChecked, issues: talosContainerIssues,
+                pending: talosContainerPending)
+        }
+        set {
+            (talosContainerWatched, talosContainerChecked, talosContainerIssues, talosContainerPending) = (
                 newValue.watched, newValue.checked, newValue.issues, newValue.pending
             )
         }
@@ -349,6 +380,8 @@ public struct NodeState: Codable, Equatable, Sendable {
 /// storageWarn: the warning threshold they were read with.
 /// sensorWatched: watching node temperatures was on; sensorIssues (see sensorIssuesOf): nil when unreadable.
 /// kubespanWatched: watching the KubeSpan tunnels was on; kubespanIssues (see kubespanIssuesOf): nil when unreadable.
+/// talosContainerWatched: watching the Talos containers was on; talosContainerIssues (see
+/// talosContainerIssuesOf): nil when unreadable.
 /// vmWatched: watching the Talos VMs was on; vmIssues (see talosVMIssuesOf): nil when unreadable.
 /// bgpWatched: watching the BGP sessions was on; bgpIssues (see bgpIssuesOf): nil when unreadable.
 /// pluginWatched: watching the plugins' findings was on; pluginIssues (see pluginIssuesWithGaps): nil when unreadable.
@@ -362,6 +395,7 @@ public func snapshotOf(
     storageWarn: Int = storageWarnDefault,
     sensorWatched: Bool = false, sensorIssues: [String: String]? = nil,
     kubespanWatched: Bool = false, kubespanIssues: [String: String]? = nil,
+    talosContainerWatched: Bool = false, talosContainerIssues: [String: String]? = nil,
     vmWatched: Bool = false, vmIssues: [String: String]? = nil,
     bgpWatched: Bool = false, bgpIssues: [String: String]? = nil,
     pluginWatched: Bool = false, pluginIssues: [String: String]? = nil
@@ -401,6 +435,9 @@ public func snapshotOf(
         kubespanWatched: kubespanWatched,
         kubespanChecked: kubespanWatched && kubespanIssues != nil,
         kubespanIssues: kubespanWatched ? kubespanIssues ?? [:] : [:],
+        talosContainerWatched: talosContainerWatched,
+        talosContainerChecked: talosContainerWatched && talosContainerIssues != nil,
+        talosContainerIssues: talosContainerWatched ? talosContainerIssues ?? [:] : [:],
         vmWatched: vmWatched,
         vmChecked: vmWatched && vmIssues != nil,
         vmIssues: vmWatched ? vmIssues ?? [:] : [:],
@@ -691,6 +728,8 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
         next.sensorTrack = evaluateSensors(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.kubespanTrack = evaluateKubespan(
+            previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.talosContainerTrack = evaluateTalosContainers(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.vmTrack = evaluateTalosVMs(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)

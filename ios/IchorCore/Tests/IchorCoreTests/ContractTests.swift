@@ -84,6 +84,17 @@ final class ContractTests: XCTestCase {
             XCTAssertFalse($0.edges.isEmpty)
         },
         "kubespan-mesh": ContractTests.row(KubeSpanMeshHealth.self) { XCTAssertEqual($0.issues.count, $0.broken) },
+        "talos-containers": ContractTests.row(ContainerSample.self) {
+            XCTAssertEqual(
+                $0.containers.map(\.namespace),
+                [ContainerNamespace.system, ContainerNamespace.talos, ContainerNamespace.talos])
+            XCTAssertEqual($0.containers[2].restartCount, 12)
+            XCTAssertFalse($0.containers[2].lastLog.isEmpty)
+        },
+        "talos-containers-health": ContractTests.row(TalosContainersHealth.self) {
+            XCTAssertEqual($0.unread, ["192.0.2.21"])
+            XCTAssertEqual($0.issues.values.map { TalosContainerIssue(value: $0).severity }, ["warning"])
+        },
         "cluster-updates": ContractTests.row(ClusterUpdates.self) { XCTAssertFalse(updateSections($0).images.isEmpty) },
         "update-proposal-plan": ContractTests.row(UpdateProposalPlan.self) {
             XCTAssertEqual($0.files.first?.changes.count, 2)

@@ -185,6 +185,10 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertTitle(context, alert)
     AlertKind.KUBESPAN_DOWN -> context.getString(R.string.monitor_kubespan_down, alert.subject)
     AlertKind.KUBESPAN_UP -> context.getString(R.string.monitor_kubespan_up, alert.subject)
+    AlertKind.TALOS_CONTAINER_PROBLEM, AlertKind.TALOS_CONTAINER_OK -> TalosContainerDetail.parse(alert.detail).let {
+        val title = if (alert.problem) R.string.monitor_talos_container_problem else R.string.monitor_talos_container_ok
+        context.getString(title, it.name, it.hostname)
+    }
     AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK -> talosVmAlertTitle(context, alert)
     AlertKind.BGP_DOWN, AlertKind.BGP_UP -> bgpAlertTitle(context, alert)
     AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> pluginAlertTitle(context, alert)
@@ -251,6 +255,16 @@ private fun sensorAlertText(context: Context, alert: Alert): String {
         !alert.problem -> context.getString(R.string.monitor_sensors)
         d.throttled -> context.getString(R.string.monitor_sensor_throttled_text)
         else -> context.getString(R.string.monitor_sensor_hot_text, d.label, celsius(d.limit))
+    }
+}
+
+/** Its state and counts only: a Talos container's error and last log are workload output, never notified. */
+private fun talosContainerAlertText(context: Context, alert: Alert): String {
+    val d = TalosContainerDetail.parse(alert.detail)
+    return if (d.failed) {
+        context.getString(R.string.monitor_talos_container_failed, d.exitCode)
+    } else {
+        context.getString(R.string.monitor_talos_container_restarting, d.restartCount, d.exitCode)
     }
 }
 
@@ -454,6 +468,8 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertText(context, alert)
     AlertKind.KUBESPAN_DOWN -> kubespanAlertText(context, alert)
     AlertKind.KUBESPAN_UP -> context.getString(R.string.monitor_kubespan)
+    AlertKind.TALOS_CONTAINER_PROBLEM -> talosContainerAlertText(context, alert)
+    AlertKind.TALOS_CONTAINER_OK -> context.getString(R.string.node_pods_talos)
     // The node's own words (clipped by Go), else the track's name.
     AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK ->
         TalosVmDetail.parse(alert.detail).detail.takeIf { alert.problem && it.isNotBlank() } ?: context.getString(R.string.monitor_talos_vms)

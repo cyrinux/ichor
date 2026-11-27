@@ -360,7 +360,8 @@ Part of the [Ichor documentation](../README.md#documentation).
 - **Container restart (node → Pods → a container's menu → Restart container…, `os:admin`):**
   `talosctl restart` without a reboot. A Talos system container (apid, trustd, an extension
   service) asks for the typed hostname; a Kubernetes container asks a plain confirm, as the
-  kubelet starts it again. With the app lock on, you authenticate first.
+  kubelet starts it again, and so does a Talos container (Talos 1.15, declared in the machine
+  config), which its restart policy starts again. With the app lock on, you authenticate first.
 
 - **Policy mode (Kubernetes → Policies → a Kyverno policy, `os:admin`):** switching a policy
   to Audit, which lets requests that break it through, asks for the typed policy name; switching

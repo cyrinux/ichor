@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -16,7 +17,8 @@ import (
 
 // Containerd namespaces of a node: "system" holds Talos' own containers (apid, trustd and the
 // extension services; etcd and kubelet are services, see ServiceAction), run by containerd;
-// "k8s.io" the Kubernetes ones, run through the CRI.
+// "k8s.io" the Kubernetes ones, run through the CRI; "taloscontainers" (containerNSTalos,
+// Talos 1.15, talos_containers.go) the ones ContainerConfig documents declare.
 const (
 	containerNSSystem = constants.SystemContainerdNamespace
 	containerNSK8s    = constants.K8sContainerdNamespace
@@ -29,7 +31,7 @@ type containerList struct {
 
 type containerInfo struct {
 	ID           string `json:"id"`
-	Namespace    string `json:"namespace"` // containerNSSystem or containerNSK8s
+	Namespace    string `json:"namespace"` // containerNSSystem, containerNSTalos or containerNSK8s
 	PodNamespace string `json:"podNamespace"`
 	Pod          string `json:"pod"`
 	Name         string `json:"name"`
@@ -38,11 +40,21 @@ type containerInfo struct {
 	Pid          uint32 `json:"pid"`
 	Memory       uint64 `json:"memory"` // bytes
 	CPUNanos     uint64 `json:"cpuNanos"`
+	// The ContainerStatus of a Talos container; empty for the other namespaces. Status is
+	// then its state (pending, pulling, starting, running, exited, backoff, stopping,
+	// succeeded, failed).
+	Health       string   `json:"health"` // pending | pulling | healthy | degraded
+	RestartCount uint64   `json:"restartCount"`
+	ExitCode     int32    `json:"exitCode"`
+	Error        string   `json:"error"`
+	WaitingFor   []string `json:"waitingFor"` // the unmet gates while pending; never null
+	LastLog      string   `json:"lastLog"`    // what it wrote before it failed (workload output)
 }
 
-// NodeContainers lists the containers on node, Talos' system ones then the Kubernetes ones,
-// with their memory and cumulative CPU time, like `talosctl containers [-k]` +
-// `talosctl stats [-k]` (os:reader).
+// NodeContainers lists the containers on node, Talos' system ones, then the Talos containers
+// (Talos 1.15, with their ContainerStatus), then the Kubernetes ones, with their memory and
+// cumulative CPU time, like `talosctl containers [-k]` + `talosctl stats [-k]` +
+// `talosctl get containerstatuses` (os:reader).
 func NodeContainers(configYAML, contextName, node string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -64,19 +76,24 @@ func NodeContainers(configYAML, contextName, node string) (out string, err error
 		system, _ := s.client.Containers(ctx, containerNSSystem, common.ContainerDriver_CONTAINERD) //nolint:errcheck
 		systemStats, _ := s.client.Stats(ctx, containerNSSystem, common.ContainerDriver_CONTAINERD) //nolint:errcheck
 
+		talos := readTalosContainers(ctx, s, node)
+
 		return toJSON(containerList{
 			At: time.Now().UnixMilli(),
-			Containers: append(
+			Containers: withWaitingLists(slices.Concat(
 				mergeContainers(containerNSSystem, first(system.GetMessages()).GetContainers(), first(systemStats.GetMessages()).GetStats()),
-				mergeContainers(containerNSK8s, first(list.GetMessages()).GetContainers(), first(stats.GetMessages()).GetStats())...),
+				talos,
+				mergeContainers(containerNSK8s, first(list.GetMessages()).GetContainers(), first(stats.GetMessages()).GetStats()))),
 		})
 	})
 }
 
 // ContainerRestart restarts one container on node without rebooting it, like
 // `talosctl restart [-k] ID` (os:admin). namespace is "system" (a Talos container such as
-// apid or an extension service) or "k8s.io" (a Kubernetes container, which the kubelet
-// starts again). Talos stops the container; its supervisor starts it again.
+// apid or an extension service), "taloscontainers" (a container a ContainerConfig declares,
+// Talos 1.15: id is its name, restarted as its current instance) or "k8s.io" (a Kubernetes
+// container, which the kubelet starts again). Talos stops the container; its supervisor
+// starts it again.
 func ContainerRestart(configYAML, contextName, node, namespace, id string) (err error) {
 	defer maskErr(&err)
 
@@ -94,21 +111,48 @@ func ContainerRestart(configYAML, contextName, node, namespace, id string) (err 
 		return errors.New("no container given")
 	}
 
+	if namespace == containerNSTalos {
+		id = privacy.unmaskText(id)
+	}
+
 	return nodeAction(configYAML, contextName, node, callTimeout, func(ctx context.Context, c *client.Client) error {
-		return c.Restart(ctx, namespace, driver, id)
+		target := id
+
+		if namespace == containerNSTalos {
+			instance, err := resolveTalosRestartID(ctx, c, id)
+			if err != nil {
+				return err
+			}
+
+			target = instance
+		}
+
+		return c.Restart(ctx, namespace, driver, target)
 	})
 }
 
 // containerDriver is the runtime that manages the containers of namespace.
 func containerDriver(namespace string) (common.ContainerDriver, error) {
 	switch namespace {
-	case containerNSSystem:
+	case containerNSSystem, containerNSTalos:
 		return common.ContainerDriver_CONTAINERD, nil
 	case containerNSK8s:
 		return common.ContainerDriver_CRI, nil
 	}
 
-	return 0, fmt.Errorf("unknown container namespace %q (system or k8s.io)", namespace)
+	return 0, fmt.Errorf("unknown container namespace %q (system, taloscontainers or k8s.io)", namespace)
+}
+
+// withWaitingLists gives every container a waiting list (empty outside the Talos ones), so the
+// apps never decode null.
+func withWaitingLists(list []containerInfo) []containerInfo {
+	for i := range list {
+		if list[i].WaitingFor == nil {
+			list[i].WaitingFor = []string{}
+		}
+	}
+
+	return list
 }
 
 // mergeContainers joins the container info of namespace with stats by id, dropping pause

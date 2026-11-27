@@ -85,6 +85,11 @@ var featureRules = []featureRule{
 	// ContentLibraryStatuses .hypervisor.talos.dev: pkg/machinery/resources/hypervisor is not
 	// in v1.14.0, first in v1.15.0-beta.1 (read untyped, talos_vms.go).
 	{name: "hypervisor", min: "v1.15", hint: "the Talos hypervisor resources"},
+	// ContainerStatuses.containers.talos.dev and the taloscontainers containerd namespace:
+	// pkg/machinery/resources/containers/status.go is not in v1.14.7, first in v1.15.0-beta.1
+	// (read untyped, talos_containers.go). NodeContainers lists them only when the node knows
+	// the type; the apps read the list rather than this row.
+	{name: "talosContainers", min: "v1.15", hint: "Talos containers (ContainerConfig)"},
 	// rpc GenerateClientConfiguration (machine.proto): v1.0.0.
 	{name: "issueConfig"},
 	// LinkStatuses/AddressStatuses/RouteStatuses/ResolverStatuses/TimeServerStatuses
