@@ -67,7 +67,7 @@ fun kubeProblemText(problem: String): Int = when (problem) {
     "kube-file-path" -> R.string.kube_problem_file_path
     "kube-proxy-url" -> R.string.kube_problem_proxy
     "kube-basic-auth" -> R.string.kube_problem_basic_auth
-    "kube-sign-in-later" -> R.string.kube_problem_sign_in_later
+    "kube-auth-provider" -> R.string.kube_problem_auth_provider
     KUBE_PROBLEM_EXEC -> R.string.kube_problem_exec
     "kube-no-credentials" -> R.string.kube_problem_no_credentials
     else -> R.string.kube_problem_invalid

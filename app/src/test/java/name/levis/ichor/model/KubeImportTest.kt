@@ -73,7 +73,7 @@ class KubeImportTest {
         assertEquals(R.string.kube_auth_provider, kubeAuthLabel("auth-provider"))
         assertNull(kubeAuthLabel("something-new"))
         assertEquals(R.string.kube_problem_file_path, kubeProblemText("kube-file-path"))
-        assertEquals(R.string.kube_problem_sign_in_later, kubeProblemText("kube-sign-in-later"))
+        assertEquals(R.string.kube_problem_auth_provider, kubeProblemText("kube-auth-provider"))
         // A code from a newer core still says something.
         assertEquals(R.string.kube_problem_invalid, kubeProblemText("kube-something-new"))
         assertEquals(R.string.kube_problem_proxy, kubeProblemText("kube-proxy-url"))

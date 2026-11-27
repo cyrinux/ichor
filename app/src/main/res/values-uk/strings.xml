@@ -4351,7 +4351,7 @@
     <string name="kube_problem_file_path">Він читає файли з вашого комп’ютера. Виконайте там kubectl config view --flatten --minify та імпортуйте результат.</string>
     <string name="kube_problem_proxy">Адреса проксі в proxy-url недійсна.</string>
     <string name="kube_problem_basic_auth">Вхід за ім’ям користувача та паролем не підтримується.</string>
-    <string name="kube_problem_sign_in_later">Цей спосіб входу ще не підтримується: він з’явиться в наступній версії.</string>
+    <string name="kube_problem_auth_provider">Застарілі auth provider не підтримуються. Використайте клієнтський сертифікат або токен.</string>
     <string name="kube_problem_exec">Цей плагін exec не підтримується. Використайте клієнтський сертифікат або токен.</string>
     <string name="kube_problem_exec_named">Плагін облікових даних %1$s не може працювати на телефоні.</string>
     <string name="kube_exec_hint_token_wrapper">Він лише виводить токен: вставте цей токен або використайте клієнтський сертифікат.</string>

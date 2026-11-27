@@ -408,7 +408,7 @@ func newSignInMethod(method string, user *kubeStoreUser, cluster *kubeStoreClust
 		return factory(user, cluster)
 	}
 
-	return nil, fmt.Errorf("signing in with %s is not supported yet", method)
+	return nil, fmt.Errorf("signing in with %s is not supported", method)
 }
 
 // extraSignInMethods are the cloud methods, registered by their files.
