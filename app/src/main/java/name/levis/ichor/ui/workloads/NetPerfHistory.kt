@@ -1,11 +1,12 @@
 package name.levis.ichor.ui.workloads
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import name.levis.ichor.ui.components.predictiveBackPreview
+import name.levis.ichor.ui.components.rememberPredictiveBack
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.MaterialTheme
 import name.levis.ichor.ui.design.IchorOutlinedButton
@@ -79,20 +80,23 @@ internal fun NetPerfHistoryList(history: List<NetPerfReport>, onOpen: (NetPerfRe
 /** A saved test: when it ran and what it measured. Back returns to the setup. */
 @Composable
 internal fun NetPerfSaved(report: NetPerfReport, onBack: () -> Unit, onDelete: () -> Unit) {
-    BackHandler(onBack = onBack)
+    val back = rememberPredictiveBack(onBack = onBack)
     val gutter = Modifier.padding(horizontal = 16.dp)
-    Column(gutter) {
-        Text(
-            stringResource(R.string.netperf_summary, report.client, report.server, report.seconds),
-            style = MaterialTheme.typography.titleSmall,
-            fontFamily = FontFamily.Monospace,
-        )
-        MutedText(testedAt(report))
-    }
-    NetPerfResults(report.setup, report.results, running = false)
-    Row(gutter.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        IchorOutlinedButton(onClick = onBack, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_back)) }
-        IchorOutlinedButton(onClick = onDelete, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_delete)) }
+    // One layer, so the whole saved test follows a back swipe; spaced like the tab's column.
+    Column(Modifier.predictiveBackPreview(back), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(gutter) {
+            Text(
+                stringResource(R.string.netperf_summary, report.client, report.server, report.seconds),
+                style = MaterialTheme.typography.titleSmall,
+                fontFamily = FontFamily.Monospace,
+            )
+            MutedText(testedAt(report))
+        }
+        NetPerfResults(report.setup, report.results, running = false)
+        Row(gutter.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            IchorOutlinedButton(onClick = onBack, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_back)) }
+            IchorOutlinedButton(onClick = onDelete, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_delete)) }
+        }
     }
 }
 

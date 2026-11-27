@@ -2,7 +2,6 @@ package name.levis.ichor.ui.tour
 
 import name.levis.ichor.ui.components.SMOKE_TOUR_SKIP
 import androidx.compose.ui.platform.testTag
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -17,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
+import name.levis.ichor.ui.components.predictiveBackPreview
+import name.levis.ichor.ui.components.rememberPredictiveBack
 import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CardDefaults
@@ -87,7 +88,7 @@ fun TourOverlay(steps: List<TourStep>, anchors: TourAnchors, onFinish: () -> Uni
     // The step whose anchor was scrolled into view, then laid out; none is drawn before.
     var revealed by remember { mutableStateOf(-1) }
     var viewport by remember { mutableStateOf(Rect.Zero) }
-    BackHandler(onBack = onFinish)
+    val back = rememberPredictiveBack(onBack = onFinish)
     // A list scrolls to the anchor first; one still absent after that is skipped.
     LaunchedEffect(current) {
         steps.getOrNull(current)?.let { anchors.reveal(it.anchor) }
@@ -99,7 +100,9 @@ fun TourOverlay(steps: List<TourStep>, anchors: TourAnchors, onFinish: () -> Uni
             .fillMaxSize()
             .onGloballyPositioned { viewport = it.boundsInRoot() }
             // Taps on the scrim go nowhere: the home under it waits for the tour.
-            .pointerInput(Unit) { detectTapGestures { } },
+            .pointerInput(Unit) { detectTapGestures { } }
+            // Inside the measured viewport, so the anchors' positions do not move with the swipe.
+            .predictiveBackPreview(back),
     ) {
         // Nothing is known to be on screen before the overlay itself is laid out.
         if (viewport.isEmpty) return@Box

@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.argocd
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -14,11 +13,14 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.ui.components.EmptyDetailPane
 import name.levis.ichor.ui.components.ListAndDetailExpanded
+import name.levis.ichor.ui.components.predictiveBackPreview
+import name.levis.ichor.ui.components.rememberPredictiveBack
 import name.levis.ichor.ui.components.rememberTwoPanes
 
 /**
@@ -45,7 +47,7 @@ fun ArgoListDetail(
     var picked by rememberSaveable { mutableStateOf<String?>(null) }
     val selected = picked?.split("/", limit = 2)?.takeIf { it.size == 2 }
     // Composed before the panes, so the list's multi-select and the app's sheets win over it.
-    BackHandler(enabled = selected != null) { picked = null }
+    val back = rememberPredictiveBack(enabled = selected != null) { picked = null }
     ListDetailPaneScaffold(
         directive = calculatePaneScaffoldDirective(currentWindowAdaptiveInfoV2()),
         value = ListAndDetailExpanded,
@@ -55,7 +57,7 @@ fun ArgoListDetail(
             }
         },
         detailPane = {
-            AnimatedPane {
+            AnimatedPane(modifier = Modifier.predictiveBackPreview(back)) {
                 if (selected == null) {
                     EmptyDetailPane(Icons.Outlined.Sync, stringResource(R.string.panes_pick_app))
                 } else {

@@ -1,11 +1,12 @@
 package name.levis.ichor.ui.workloads
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.PrimaryScrollableTabRow
+import name.levis.ichor.ui.components.predictiveBackPreview
+import name.levis.ichor.ui.components.rememberPredictiveBack
 import name.levis.ichor.ui.design.IchorScaffold
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
@@ -169,7 +170,7 @@ fun KubernetesScreen(
     val scope = rememberKubeScope(app, namespaces, mask.enabled, focus.namespace)
     val bar by app.uiPreferences.kubernetesBar.collectAsStateWithLifecycle()
     var customizing by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = customizing) { customizing = false }
+    val back = rememberPredictiveBack(enabled = customizing) { customizing = false }
     val share = rememberShareLink()
     // The pods tab's "Clean up dead pods", for the namespace listed.
     var sanitizing by rememberSaveable { mutableStateOf(false) }
@@ -240,7 +241,7 @@ fun KubernetesScreen(
         },
     ) { padding ->
         if (customizing) {
-            ActionBarEditor(bar, kubernetesActionLook, app.uiPreferences::setKubernetesBar, Modifier.pageContent(padding), groups = kubernetesActionGroups)
+            ActionBarEditor(bar, kubernetesActionLook, app.uiPreferences::setKubernetesBar, Modifier.pageContent(padding).predictiveBackPreview(back), groups = kubernetesActionGroups)
             return@IchorScaffold
         }
         Column(Modifier.pageContent(padding).fillMaxSize()) {

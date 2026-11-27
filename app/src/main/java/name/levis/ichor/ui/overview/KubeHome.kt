@@ -3,8 +3,9 @@ package name.levis.ichor.ui.overview
 import name.levis.ichor.ui.components.SMOKE_KUBE_HOME
 import androidx.compose.ui.platform.testTag
 import name.levis.ichor.selectCluster
+import name.levis.ichor.ui.components.predictiveBackPreview
+import name.levis.ichor.ui.components.rememberPredictiveBack
 import name.levis.ichor.ui.gitops.hasClusterRepo
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -233,7 +234,7 @@ fun KubeHomeScreen(
     // Shared with the Talos home: one choice of compact or full nodes for every cluster.
     val nodesExpanded by app.uiPreferences.nodesExpanded.collectAsStateWithLifecycle()
     var customizing by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = customizing) { customizing = false }
+    val back = rememberPredictiveBack(enabled = customizing) { customizing = false }
     val customize = rememberCustomizeTrigger { customizing = true }
     // How the cluster signs in, read again after each sign-in (invalidations): null for static credentials.
     val signIn by produceState<KubeSignInInfo?>(null, config?.activeContext, invalidations) {
@@ -377,7 +378,7 @@ fun KubeHomeScreen(
             barLook = kubeHomeActionLook,
             barGroups = kubeHomeActionGroups,
             onBarChange = app.uiPreferences::setKubeHomeBar,
-            modifier = Modifier.pageContent(padding),
+            modifier = Modifier.pageContent(padding).predictiveBackPreview(back),
             absent = absentCards,
         )
         else when (val s = state) {
