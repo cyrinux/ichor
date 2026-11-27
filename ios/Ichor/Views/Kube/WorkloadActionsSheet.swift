@@ -34,8 +34,13 @@ struct WorkloadActionsSheet: View {
     /// again before a scale it would undo.
     @State private var kubeGreen: KubeGreenNamespace?
 
-    init(workload: KubeWorkload, changed: @escaping () async -> Void) {
+    /// Beside the workloads on an iPad split (`AdaptiveListDetail`): no stack, title or Done of
+    /// its own (it is part of the Kubernetes screen), the name with share and pin on top instead.
+    let embedded: Bool
+
+    init(workload: KubeWorkload, embedded: Bool = false, changed: @escaping () async -> Void) {
         self.workload = workload
+        self.embedded = embedded
         self.changed = changed
         _replicas = State(initialValue: workload.desired)
         _current = State(initialValue: workload.desired)
@@ -43,125 +48,143 @@ struct WorkloadActionsSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    Text(verbatim: "\(workload.kind) · \(workload.namespace)")
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
-                    Text("\(workload.ready)/\(workload.desired) ready").monospacedDigit()
-                    if let kubeGreen {
-                        KubeGreenAsleepLabel(status: kubeGreen, kind: workload.kind)
+        if embedded {
+            content
+        } else {
+            NavigationStack {
+                content
+                    .navigationTitle(Text(verbatim: workload.name))
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                        ToolbarItemGroup(placement: .topBarLeading) { shareButtons }
                     }
-                    if let selection = workload.podSelection {
-                        NavigationLink {
-                            WorkloadPodsView(workload: workload, selection: selection)
-                        } label: {
-                            Label("Pods", systemImage: "cube")
-                        }
-                    }
-                    NavigationLink {
-                        WorkloadLogsSheet(workload: workload)
-                    } label: {
-                        Label("Logs of all pods", systemImage: "doc.text")
-                    }
-                }
-                if workload.canPauseRollout { pauseSection }
-                if workload.canScale { scaleSection }
-                if workload.hasHistory { historySection }
-                Section {
-                    KubeEventsRows(namespace: workload.namespace, kind: "", name: workload.name)
-                } header: {
-                    Text(verbatim: CheckupText.kubeEventsTitle)
-                }
             }
-            .loadsKubeActionAccess(namespace: workload.namespace)
-            .themedBackground()
-            .navigationTitle(Text(verbatim: workload.name))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
-                ToolbarItemGroup(placement: .topBarLeading) {
-                    ShareLinkButton(
-                        target: .workload(kind: workload.kind, namespace: workload.namespace, name: workload.name))
-                    PinButton(
-                        target: .workload(kind: workload.kind, namespace: workload.namespace, name: workload.name),
-                        label: workload.name)
-                }
-            }
-            .task {
-                if workload.hasHistory { await loadRevisions() }
-                await loadKubeGreen()
-            }
-            .confirmationDialog(
-                String(localized: "Argo CD will revert this"), isPresented: $askArgo, titleVisibility: .visible,
-                presenting: argoOwner
-            ) { owner in
-                Button(String(localized: "Freeze \(owner.app.name) 1 h, then scale")) {
-                    freezeFirst = true; confirmAfterArgo()
-                }
-                Button(String(localized: "Scale anyway")) {
-                    freezeFirst = false; confirmAfterArgo()
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: { owner in
-                Text(
-                    "\(owner.app.name) deploys this workload with self-heal on: within minutes it puts the replicas back as Git has them. Freeze \(owner.app.name) first to keep your change for a while."
-                )
-            }
-            .confirmationDialog(
-                String(localized: "Scale \(workload.name) to \(replicas)?"), isPresented: $confirmScale,
-                titleVisibility: .visible
-            ) {
-                Button("Scale") { Task { await scale() } }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text(
-                    verbatim: [
-                        String(
-                            localized:
-                                "From \(current) to \(replicas) replicas in \(workload.namespace), like kubectl scale."),
-                        kubeGreenWarning,
-                    ]
-                    .compactMap { $0 }
-                    .joined(separator: "\n\n"))
-            }
-            .sheet(isPresented: $confirmScaleToZero) {
-                HostnameConfirmationSheet(
-                    title: String(localized: "Scale \(workload.name) to 0?"),
-                    message: [
-                        String(
-                            localized:
-                                "Every pod of \(workload.name) stops: what it serves is down until it is scaled up again."
-                        ), kubeGreenWarning,
-                    ]
-                    .compactMap { $0 }
-                    .joined(separator: "\n\n"),
-                    hostname: workload.name,
-                    actionTitle: String(localized: "Scale to 0")
-                ) {
-                    confirmScaleToZero = false
-                    Task { await scale() }
-                }
-            }
-            .sheet(item: $diffRevision) { revision in
-                RevisionDiffSheet(
-                    workload: workload, revision: revision, history: loadedHistory ?? WorkloadRevisionList()
-                ) {
-                    // The diff sheet goes first: the rollout sheet follows once it is gone.
-                    diffRevision = nil
-                    try? await Task.sleep(for: .milliseconds(350))
-                    await rollback(to: revision)
-                }
-            }
-            .sheet(item: $following) { workload in
-                RolloutStatusSheet(workload: workload) {
-                    await changed()
-                    await loadRevisions()
-                }
-            }
-            .messageAlert($resultMessage)
         }
+    }
+
+    @ViewBuilder
+    private var shareButtons: some View {
+        ShareLinkButton(target: .workload(kind: workload.kind, namespace: workload.namespace, name: workload.name))
+        PinButton(
+            target: .workload(kind: workload.kind, namespace: workload.namespace, name: workload.name),
+            label: workload.name)
+    }
+
+    private var content: some View {
+        List {
+            Section {
+                if embedded {
+                    HStack {
+                        Text(verbatim: workload.name).font(.headline)
+                        Spacer()
+                        shareButtons.labelStyle(.iconOnly)
+                    }
+                    .buttonStyle(.borderless)
+                }
+                Text(verbatim: "\(workload.kind) · \(workload.namespace)")
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+                Text("\(workload.ready)/\(workload.desired) ready").monospacedDigit()
+                if let kubeGreen {
+                    KubeGreenAsleepLabel(status: kubeGreen, kind: workload.kind)
+                }
+                if let selection = workload.podSelection {
+                    NavigationLink {
+                        WorkloadPodsView(workload: workload, selection: selection)
+                    } label: {
+                        Label("Pods", systemImage: "cube")
+                    }
+                }
+                NavigationLink {
+                    WorkloadLogsSheet(workload: workload)
+                } label: {
+                    Label("Logs of all pods", systemImage: "doc.text")
+                }
+            }
+            if workload.canPauseRollout { pauseSection }
+            if workload.canScale { scaleSection }
+            if workload.hasHistory { historySection }
+            Section {
+                KubeEventsRows(namespace: workload.namespace, kind: "", name: workload.name)
+            } header: {
+                Text(verbatim: CheckupText.kubeEventsTitle)
+            }
+        }
+        .loadsKubeActionAccess(namespace: workload.namespace)
+        .themedBackground()
+        .task {
+            if workload.hasHistory { await loadRevisions() }
+            await loadKubeGreen()
+        }
+        .confirmationDialog(
+            String(localized: "Argo CD will revert this"), isPresented: $askArgo, titleVisibility: .visible,
+            presenting: argoOwner
+        ) { owner in
+            Button(String(localized: "Freeze \(owner.app.name) 1 h, then scale")) {
+                freezeFirst = true; confirmAfterArgo()
+            }
+            Button(String(localized: "Scale anyway")) {
+                freezeFirst = false; confirmAfterArgo()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { owner in
+            Text(
+                "\(owner.app.name) deploys this workload with self-heal on: within minutes it puts the replicas back as Git has them. Freeze \(owner.app.name) first to keep your change for a while."
+            )
+        }
+        .confirmationDialog(
+            String(localized: "Scale \(workload.name) to \(replicas)?"), isPresented: $confirmScale,
+            titleVisibility: .visible
+        ) {
+            Button("Scale") { Task { await scale() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(
+                verbatim: [
+                    String(
+                        localized:
+                            "From \(current) to \(replicas) replicas in \(workload.namespace), like kubectl scale."),
+                    kubeGreenWarning,
+                ]
+                .compactMap { $0 }
+                .joined(separator: "\n\n"))
+        }
+        .sheet(isPresented: $confirmScaleToZero) {
+            HostnameConfirmationSheet(
+                title: String(localized: "Scale \(workload.name) to 0?"),
+                message: [
+                    String(
+                        localized:
+                            "Every pod of \(workload.name) stops: what it serves is down until it is scaled up again."
+                    ), kubeGreenWarning,
+                ]
+                .compactMap { $0 }
+                .joined(separator: "\n\n"),
+                hostname: workload.name,
+                actionTitle: String(localized: "Scale to 0")
+            ) {
+                confirmScaleToZero = false
+                Task { await scale() }
+            }
+        }
+        .sheet(item: $diffRevision) { revision in
+            RevisionDiffSheet(
+                workload: workload, revision: revision, history: loadedHistory ?? WorkloadRevisionList()
+            ) {
+                // The diff sheet goes first: the rollout sheet follows once it is gone.
+                diffRevision = nil
+                try? await Task.sleep(for: .milliseconds(350))
+                await rollback(to: revision)
+            }
+        }
+        .sheet(item: $following) { workload in
+            RolloutStatusSheet(workload: workload) {
+                await changed()
+                await loadRevisions()
+            }
+        }
+        .messageAlert($resultMessage)
     }
 
     /// Pause a Deployment's rollout (a template change then waits), or resume a paused one.

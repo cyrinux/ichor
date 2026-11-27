@@ -38592,6 +38592,36 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выберите приложение, чтобы увидеть подробности" } }
       }
     },
+    "Pick a workload to see its details" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pick a workload to see its details" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisissez une charge de travail pour voir ses détails" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elige una carga de trabajo para ver sus detalles" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Виберіть робоче навантаження, щоб побачити його деталі" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wähle einen Workload, um seine Details zu sehen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scegli un workload per vederne i dettagli" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择一个工作负载以查看详情" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ワークロードを選択すると詳細が表示されます" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escolha uma carga de trabalho para ver os detalhes" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выберите рабочую нагрузку, чтобы увидеть подробности" } }
+      }
+    },
+    "Pick an alert to see its details" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pick an alert to see its details" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisissez une alerte pour voir ses détails" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elige una alerta para ver sus detalles" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Виберіть сповіщення, щоб побачити його деталі" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wähle einen Alarm, um seine Details zu sehen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scegli un avviso per vederne i dettagli" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择一条告警以查看详情" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アラートを選択すると詳細が表示されます" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escolha um alerta para ver os detalhes" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выберите оповещение, чтобы увидеть подробности" } }
+      }
+    },
     "%@ on %@: DiskPressure" : {
       "extractionState" : "manual",
       "localizations" : {

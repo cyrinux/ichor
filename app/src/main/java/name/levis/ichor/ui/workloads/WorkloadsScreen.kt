@@ -2,6 +2,7 @@ package name.levis.ichor.ui.workloads
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,6 +60,7 @@ import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.rememberFirstKubeDenial
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.ui.components.emptyOrNoMatch
+import name.levis.ichor.ui.components.rememberTwoPanes
 import name.levis.ichor.ui.components.groupedCardRows
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -119,14 +122,15 @@ fun WorkloadsTab(
     onFocused: () -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val progress by vm.progress.collectAsStateWithLifecycle()
     val restarting by vm.restarts.restarting.collectAsStateWithLifecycle()
     LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setScope(control.scope) }
     PollWhileStarted { vm.follow() }
     var confirm by remember { mutableStateOf<KubeWorkload?>(null) }
-    var opened by remember { mutableStateOf<String?>(null) }
+    // Saved: a tablet's detail pane keeps its workload across rotation and process death.
+    var opened by rememberSaveable { mutableStateOf<String?>(null) }
     var revisionOf by remember { mutableStateOf<Pair<KubeRevision, KubeRevisionList>?>(null) }
     var podsOf by remember { mutableStateOf<PodSelection.OfWorkload?>(null) }
+    val twoPanes = rememberTwoPanes()
     val listed = (state as? UiState.Loaded)?.data?.items
     LaunchedEffect(focusKey, listed) {
         if (focusKey != null && listed.orEmpty().any { it.key == focusKey }) {
@@ -141,9 +145,10 @@ fun WorkloadsTab(
     ActionMessageToasts(vm.actions.messages)
     RolloutStatusSheet(vm.restarts)
 
-    // The live row, so the sheet follows a refresh (new replica count, new revision).
-    val openedWorkload = (state as? UiState.Loaded)?.data?.items?.firstOrNull { it.key == opened }
-    // A revision's diff replaces the workload's sheet; closing it goes back to the sheet.
+    // The live row, so the sheet or pane follows a refresh (new replica count, new revision).
+    val openedWorkload = pickedWorkload(listed, opened)
+    // A revision's diff replaces the workload's sheet (on a tablet, covers its pane); closing it
+    // goes back to the workload.
     val shownRevision = revisionOf
     if (openedWorkload != null && shownRevision != null) {
         val (revision, history) = shownRevision
@@ -165,22 +170,35 @@ fun WorkloadsTab(
             onDismiss = { revisionOf = null },
         )
     }
-    openedWorkload?.takeIf { shownRevision == null }?.let { w ->
-        WorkloadSheet(
+    // The sheet's content, in the sheet on a phone and beside the list on a tablet. The pane
+    // stays put when the pods sheet or the Autoscaling screen opens over it.
+    val detail: @Composable (KubeWorkload, PaddingValues) -> Unit = { w, padding ->
+        WorkloadDetail(
             workload = w,
             actions = vm.actions,
             onRestart = { confirm = w },
             onRevision = { revision, history -> revisionOf = revision to history },
-            onDismiss = { opened = null },
-            onAutoscaling = { opened = null; onAutoscaling() },
+            onAutoscaling = {
+                if (!twoPanes) opened = null
+                onAutoscaling()
+            },
             onPods = w.podSelection?.let { selection ->
                 {
-                    // One sheet at a time: the pods replace the workload's.
-                    opened = null
+                    // One sheet at a time: on a phone the pods replace the workload's.
+                    if (!twoPanes) opened = null
                     podsOf = selection
                 }
             },
+            contentPadding = padding,
         )
+    }
+    if (!twoPanes) {
+        openedWorkload?.takeIf { shownRevision == null }?.let { w ->
+            WorkloadSheet(onDismiss = { opened = null }) {
+                // Under the sheet's drag handle: no top padding.
+                detail(w, PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp))
+            }
+        }
     }
     confirm?.let { w ->
         RestartConfirmDialog(
@@ -193,6 +211,32 @@ fun WorkloadsTab(
         )
     }
 
+    val list: @Composable (Modifier) -> Unit = { listModifier ->
+        WorkloadsList(control, vm, query, onQuery, restarting, onRestart = { confirm = it }, onOpen = { opened = it.key }, listModifier)
+    }
+    if (twoPanes) {
+        WorkloadsListDetail(openedWorkload, onClear = { opened = null }, list = { list(Modifier) }, modifier = modifier) { w ->
+            detail(w, PaddingValues(16.dp))
+        }
+    } else {
+        list(modifier)
+    }
+}
+
+/** The scope picker, search and the workloads, a tap on one calling [onOpen]. */
+@Composable
+private fun WorkloadsList(
+    control: KubeScopeControl,
+    vm: WorkloadsViewModel,
+    query: String,
+    onQuery: (String) -> Unit,
+    restarting: Set<String>,
+    onRestart: (KubeWorkload) -> Unit,
+    onOpen: (KubeWorkload) -> Unit,
+    modifier: Modifier,
+) {
+    val state by vm.state.collectAsStateWithLifecycle()
+    val progress by vm.progress.collectAsStateWithLifecycle()
     KubeListFrame(control, state, { it.namespaces }, query, onQuery, vm::refresh, modifier) { s ->
         val load = s.data
         val selected = control.scope.namespace
@@ -214,8 +258,8 @@ fun WorkloadsTab(
                         WorkloadRow(
                             w,
                             restarting = w.key in restarting,
-                            onRestart = { confirm = w },
-                            onOpen = { opened = w.key },
+                            onRestart = { onRestart(w) },
+                            onOpen = { onOpen(w) },
                             autoscaled = w.autoscaler != null,
                             autoscalerStateOk = w.autoscaler?.stateOk ?: true,
                         )

@@ -6073,6 +6073,8 @@
     <string name="sa_help_copy_yaml">Копировать YAML</string>
     <string name="panes_pick_node">Выберите узел, чтобы увидеть подробности</string>
     <string name="panes_pick_app">Выберите приложение, чтобы увидеть подробности</string>
+    <string name="panes_pick_workload">Выберите рабочую нагрузку, чтобы увидеть подробности</string>
+    <string name="panes_pick_alert">Выберите оповещение, чтобы увидеть подробности</string>
     <string name="sanitize_title">Очистить мёртвые поды</string>
     <string name="sanitize_subtitle_namespace">Завершённые или зависшие поды в %1$s, отобранные как в k9s sanitize</string>
     <string name="sanitize_subtitle_all">Завершённые или зависшие поды во всех пространствах имён, отобранные как в k9s sanitize</string>

@@ -57,11 +57,15 @@ private struct AvailableWidthKey: EnvironmentKey {
 
 /// `list` alone, or `list` beside `detail` of the selected item (a placeholder before any pick).
 /// `split` follows which of the two is on screen, for the screen's polling and toolbar.
+/// `pushesAlone` false is for a list that is one page of a `SwipeTabPager` (workloads, alerts):
+/// a navigation destination must not sit in its lazy stack, so alone the list stays alone, the
+/// pick kept for when the screen widens again, and its rows open their sheet as on an iPhone.
 struct AdaptiveListDetail<Item: Hashable, ListContent: View, Detail: View>: View {
     @Binding var selection: Item?
     @Binding var split: Bool
     let placeholder: LocalizedStringKey
     let systemImage: String
+    let pushesAlone: Bool
     let list: ListContent
     let detail: (Item) -> Detail
 
@@ -69,12 +73,14 @@ struct AdaptiveListDetail<Item: Hashable, ListContent: View, Detail: View>: View
 
     init(
         selection: Binding<Item?>, split: Binding<Bool> = .constant(false), placeholder: LocalizedStringKey,
-        systemImage: String, @ViewBuilder list: () -> ListContent, @ViewBuilder detail: @escaping (Item) -> Detail
+        systemImage: String, pushesAlone: Bool = true, @ViewBuilder list: () -> ListContent,
+        @ViewBuilder detail: @escaping (Item) -> Detail
     ) {
         _selection = selection
         _split = split
         self.placeholder = placeholder
         self.systemImage = systemImage
+        self.pushesAlone = pushesAlone
         self.list = list()
         self.detail = detail
     }
@@ -82,14 +88,19 @@ struct AdaptiveListDetail<Item: Hashable, ListContent: View, Detail: View>: View
     var body: some View {
         GeometryReader { geometry in
             let isSplit = ListDetailLayout.isSplit(sizeClass, width: geometry.size.width)
-            content(isSplit: isSplit)
-                .onChange(of: isSplit, initial: true) { _, now in split = now }
-                // Alone with an item picked (a link opened on an iPad too narrow to split, or a
-                // split screen narrowed): the item pushed over the list. Back clears the pick.
-                // On an iPhone nothing picks, so this never shows.
-                .navigationDestination(isPresented: pushed(isSplit: isSplit)) {
-                    if let selection { detail(selection).id(selection) }
-                }
+            if pushesAlone {
+                content(isSplit: isSplit)
+                    .onChange(of: isSplit, initial: true) { _, now in split = now }
+                    // Alone with an item picked (a link opened on an iPad too narrow to split, or a
+                    // split screen narrowed): the item pushed over the list. Back clears the pick.
+                    // On an iPhone nothing picks, so this never shows.
+                    .navigationDestination(isPresented: pushed(isSplit: isSplit)) {
+                        if let selection { detail(selection).id(selection) }
+                    }
+            } else {
+                content(isSplit: isSplit)
+                    .onChange(of: isSplit, initial: true) { _, now in split = now }
+            }
         }
     }
 

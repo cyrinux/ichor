@@ -87,6 +87,9 @@ struct KubernetesView: View {
     @State private var linkedNamespace: String?
     /// The row id of the share link's item, until its sheet opens.
     @State private var focusID: String?
+    /// The id of the workload shown beside the list on an iPad split: kept here, as the tab's
+    /// page is dropped when another tab scrolls in.
+    @State private var pickedWorkload: String?
     private let focusTab: Tab
 
     /// networkTest: opened on the network test (a followed test's Live Activity).
@@ -185,7 +188,9 @@ struct KubernetesView: View {
     var body: some View {
         SwipeTabPager(tabs: [Tab.workloads, .pods, .cronJobs, .network], selection: $tab) { shown in
             switch shown {
-            case .workloads: WorkloadsList(list: workloads, control: scopeControl, query: query, focus: focus)
+            case .workloads:
+                WorkloadsList(
+                    list: workloads, control: scopeControl, query: query, focus: focus, picked: $pickedWorkload)
             // Clean up dead pods for the namespace listed (every namespace when none is picked).
             case .pods:
                 PodsList(
@@ -342,13 +347,16 @@ struct NamespacePicker: View {
 }
 
 /// Deployments, StatefulSets and DaemonSets with a rolling restart like `kubectl rollout restart`;
-/// tap one for scale and, for a Deployment, its revisions to roll back to.
+/// tap one for scale and, for a Deployment, its revisions to roll back to. On an iPad split the
+/// tapped workload shows beside the list (`AdaptiveListDetail`) instead of in a sheet.
 private struct WorkloadsList: View {
     let list: PagedList<KubeWorkload>
     let control: KubeScopeControl
     let query: String
     /// A share link's workload: its sheet opens once listed.
     @Binding var focus: String?
+    /// The id of the workload beside the list on an iPad split.
+    @Binding var picked: String?
 
     @Environment(AppModel.self) private var model
     @Environment(\.scenePhase) private var scenePhase
@@ -359,8 +367,50 @@ private struct WorkloadsList: View {
     @State private var following: KubeWorkload?
     /// Its scale and history sheet is open.
     @State private var actions: KubeWorkload?
+    /// Whether the list has the detail beside it (AdaptiveListDetail).
+    @State private var split = false
 
     var body: some View {
+        AdaptiveListDetail(
+            selection: $picked, split: $split, placeholder: "Pick a workload to see its details",
+            systemImage: "square.stack.3d.up", pushesAlone: false
+        ) {
+            workloadList
+        } detail: { id in
+            // The live row, so its counts follow a reload.
+            if let workload = list.loadedItems.first(where: { $0.id == id }) {
+                WorkloadActionsSheet(workload: workload, embedded: true) { await load() }
+            } else {
+                ContentUnavailableView("Pick a workload to see its details", systemImage: "square.stack.3d.up")
+                    .themedBackground()
+            }
+        }
+        .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
+        .sheet(item: $following) { workload in RolloutStatusSheet(workload: workload) { await load() } }
+        .sheet(item: $actions) { workload in WorkloadActionsSheet(workload: workload) { await load() } }
+        .task(id: list.loadedItems.map(\.id)) {
+            guard let focus, let workload = list.loadedItems.first(where: { $0.id == focus }) else { return }
+            open(workload)
+            self.focus = nil
+        }
+        .task(
+            id: ChangeTrigger(settles: list.settles, active: scenePhase == .active, namespace: control.scope.namespace)
+        ) {
+            await followChanges()
+        }
+        .messageAlert($resultMessage)
+    }
+
+    /// Beside the list on an iPad split, else its sheet.
+    private func open(_ workload: KubeWorkload) {
+        if split {
+            picked = workload.id
+        } else {
+            actions = workload
+        }
+    }
+
+    private var workloadList: some View {
         KubeListFrame(control: control, list: list, query: query, namespaces: workloadNamespaces) { load in
             let selected = control.scope.namespace
             // Sorted once complete: rows do not jump as pages arrive.
@@ -375,8 +425,10 @@ private struct WorkloadsList: View {
                         WorkloadRow(
                             workload: workload, showNamespace: selected == nil,
                             restarting: restarting.contains(workload.id),
-                            onOpen: { actions = workload }
+                            onOpen: { open(workload) }
                         ) { confirm = workload }
+                        // Beside the detail, the row shown there is highlighted.
+                        .listRowBackground(split && picked == workload.id ? Color.accentColor.opacity(0.15) : nil)
                     }
                     if load.hasMore && query.isEmpty { LoadMoreRow { list.loadMore(model: model) } }
                 }
@@ -388,20 +440,6 @@ private struct WorkloadsList: View {
             .themedBackground()
             .accessibilityIdentifier(SmokeID.screen("workloads"))
         }
-        .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
-        .sheet(item: $following) { workload in RolloutStatusSheet(workload: workload) { await load() } }
-        .sheet(item: $actions) { workload in WorkloadActionsSheet(workload: workload) { await load() } }
-        .task(id: list.loadedItems.map(\.id)) {
-            guard let focus, let workload = list.loadedItems.first(where: { $0.id == focus }) else { return }
-            actions = workload
-            self.focus = nil
-        }
-        .task(
-            id: ChangeTrigger(settles: list.settles, active: scenePhase == .active, namespace: control.scope.namespace)
-        ) {
-            await followChanges()
-        }
-        .messageAlert($resultMessage)
     }
 
     private struct ChangeTrigger: Hashable {

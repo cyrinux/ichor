@@ -6069,6 +6069,8 @@
     <string name="sa_help_copy_yaml">Копіювати YAML</string>
     <string name="panes_pick_node">Виберіть вузол, щоб побачити його деталі</string>
     <string name="panes_pick_app">Виберіть застосунок, щоб побачити його деталі</string>
+    <string name="panes_pick_workload">Виберіть робоче навантаження, щоб побачити його деталі</string>
+    <string name="panes_pick_alert">Виберіть сповіщення, щоб побачити його деталі</string>
     <string name="sanitize_title">Прибрати мертві поди</string>
     <string name="sanitize_subtitle_namespace">Завершені або завислі поди в %1$s, вибрані як у k9s sanitize</string>
     <string name="sanitize_subtitle_all">Завершені або завислі поди в усіх просторах імен, вибрані як у k9s sanitize</string>

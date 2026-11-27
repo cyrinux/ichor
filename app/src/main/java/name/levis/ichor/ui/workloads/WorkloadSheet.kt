@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -88,85 +89,95 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiStateOf
 import name.levis.ichor.util.timeAgo
 
+/** A workload's sheet on a phone: [content] is its [WorkloadDetail], fully expanded. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WorkloadSheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        content()
+    }
+}
+
 /**
  * One workload's actions: restart, pause or resume a Deployment's rollout, a scale stepper
  * (Deployments and StatefulSets) and its revisions; a tap on one opens its diff and rollback
- * ([onRevision], with the history it belongs to).
+ * ([onRevision], with the history it belongs to). Scrolling, in [WorkloadSheet] on a phone and
+ * in the detail pane beside the list on a tablet ([WorkloadsListDetail]); it carries no sheet
+ * insets or drag handle: [contentPadding] is the caller's.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun WorkloadSheet(
+fun WorkloadDetail(
     workload: KubeWorkload,
     actions: WorkloadActions,
     onRestart: () -> Unit,
     onRevision: (KubeRevision, KubeRevisionList) -> Unit,
-    onDismiss: () -> Unit,
     /** Opens the list of its pods; null for a kind whose pods cannot be listed. */
-    onPods: (() -> Unit)? = null,
+    onPods: (() -> Unit)?,
     /** Opens the Autoscaling screen; null where the screen is not wired. */
-    onAutoscaling: (() -> Unit)? = null,
+    onAutoscaling: (() -> Unit)?,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
 ) {
     val busy by actions.busy.collectAsStateWithLifecycle()
     // kube-green may have the namespace asleep: say it, and warn before a change it would undo.
     val kubeGreen = rememberKubeGreenNamespace(workload.namespace)
     var showLogs by rememberSaveable(workload.key) { mutableStateOf(false) }
     if (showLogs) WorkloadLogsSheet(workload, onDismiss = { showLogs = false })
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        Column(
-            Modifier.verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Row {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(workload.name, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    Text("${workload.kind}  ·  ${workload.namespace}", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    MutedText(stringResource(R.string.workloads_ready_count, workload.ready, workload.desired))
-                }
-                PinButton(ShareTarget.workload(workload.kind, workload.namespace, workload.name), workload.name)
-                ShareLinkButton(ShareTarget.workload(workload.kind, workload.namespace, workload.name))
-                AddToHomeButton(ShareTarget.workload(workload.kind, workload.namespace, workload.name), workload.name)
+    Column(
+        modifier.verticalScroll(rememberScrollState()).padding(contentPadding),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(workload.name, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text("${workload.kind}  ·  ${workload.namespace}", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                MutedText(stringResource(R.string.workloads_ready_count, workload.ready, workload.desired))
             }
-            KubeGreenAsleepNote(kubeGreen, workload.kind)
-            val access = rememberKubeActionAccess(workload.namespace)
-            val restartDenial = access?.denial(KubeAction.restart(workload.kind))
-            val pauseDenial = access?.denial(KubeAction.PAUSE_ROLLOUT)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                IchorOutlinedButton(onClick = onRestart, enabled = workload.canRestart && restartDenial == null) {
-                    Icon(Icons.Outlined.RestartAlt, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(stringResource(R.string.workloads_restart_confirm))
-                }
-                if (onPods != null) {
-                    IchorOutlinedButton(onClick = onPods) {
-                        Icon(Icons.Outlined.ViewInAr, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.pods_title))
-                    }
-                }
-                IchorOutlinedButton(onClick = { showLogs = true }) {
-                    Icon(Icons.Outlined.Description, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(stringResource(R.string.workload_logs_open))
-                }
-                if (workload.canPauseRollout) {
-                    PauseButton(workload, enabled = workload.key !in busy && pauseDenial == null) { actions.pauseRollout(workload, it) }
-                }
-            }
-            KubeDenialNote(restartDenial)
-            // A Deployment's pause needs the restart's patch: one note for both.
-            if (workload.canPauseRollout && restartDenial == null) KubeDenialNote(pauseDenial)
-            if (workload.canScale) {
-                HorizontalDivider()
-                ScaleSection(workload, actions, workload.key in busy, access?.denial(KubeAction.scale(workload.kind)), kubeGreen, onAutoscaling)
-            }
-            if (workload.hasHistory) {
-                HorizontalDivider()
-                HistorySection(workload, actions, workload.key in busy, access?.denial(KubeAction.rollback(workload.kind)), onRevision)
-            }
-            HorizontalDivider()
-            Text(stringResource(R.string.kube_events_title), style = MaterialTheme.typography.titleSmall)
-            KubeEventsList(workload.namespace, "", workload.name)
+            PinButton(ShareTarget.workload(workload.kind, workload.namespace, workload.name), workload.name)
+            ShareLinkButton(ShareTarget.workload(workload.kind, workload.namespace, workload.name))
+            AddToHomeButton(ShareTarget.workload(workload.kind, workload.namespace, workload.name), workload.name)
         }
+        KubeGreenAsleepNote(kubeGreen, workload.kind)
+        val access = rememberKubeActionAccess(workload.namespace)
+        val restartDenial = access?.denial(KubeAction.restart(workload.kind))
+        val pauseDenial = access?.denial(KubeAction.PAUSE_ROLLOUT)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            IchorOutlinedButton(onClick = onRestart, enabled = workload.canRestart && restartDenial == null) {
+                Icon(Icons.Outlined.RestartAlt, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(stringResource(R.string.workloads_restart_confirm))
+            }
+            if (onPods != null) {
+                IchorOutlinedButton(onClick = onPods) {
+                    Icon(Icons.Outlined.ViewInAr, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.pods_title))
+                }
+            }
+            IchorOutlinedButton(onClick = { showLogs = true }) {
+                Icon(Icons.Outlined.Description, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(stringResource(R.string.workload_logs_open))
+            }
+            if (workload.canPauseRollout) {
+                PauseButton(workload, enabled = workload.key !in busy && pauseDenial == null) { actions.pauseRollout(workload, it) }
+            }
+        }
+        KubeDenialNote(restartDenial)
+        // A Deployment's pause needs the restart's patch: one note for both.
+        if (workload.canPauseRollout && restartDenial == null) KubeDenialNote(pauseDenial)
+        if (workload.canScale) {
+            HorizontalDivider()
+            ScaleSection(workload, actions, workload.key in busy, access?.denial(KubeAction.scale(workload.kind)), kubeGreen, onAutoscaling)
+        }
+        if (workload.hasHistory) {
+            HorizontalDivider()
+            HistorySection(workload, actions, workload.key in busy, access?.denial(KubeAction.rollback(workload.kind)), onRevision)
+        }
+        HorizontalDivider()
+        Text(stringResource(R.string.kube_events_title), style = MaterialTheme.typography.titleSmall)
+        KubeEventsList(workload.namespace, "", workload.name)
     }
 }
 
