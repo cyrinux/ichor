@@ -22,6 +22,8 @@ data class UpgradePlan(
     val forceable: Boolean = false,
     /** This upgrade does not drain the node: offer to drain it first (a maintenance run). */
     val drainable: Boolean = false,
+    /** Information about the next minor (what it offers once enabled): nothing to acknowledge. */
+    val notes: List<String> = emptyList(),
 )
 
 @Serializable

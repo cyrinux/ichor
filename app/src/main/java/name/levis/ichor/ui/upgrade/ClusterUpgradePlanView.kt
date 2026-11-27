@@ -99,7 +99,7 @@ fun ClusterUpgradePlanView(
                 IchorCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(vertical = 8.dp)) { p.nodes.forEachIndexed { i, n -> PlanNodeRow(i + 1, n) } }
                 }
-                Checks(p.allBlockers(), warnings, understood) { understood = it }
+                Checks(p.allBlockers(), warnings, p.notes, understood) { understood = it }
                 if (p.upToDate) Text(stringResource(R.string.cluster_upgrade_up_to_date, p.version), color = colors.ok)
                 if (busyWith != null) Text(busyWith, color = colors.warn, style = MaterialTheme.typography.bodySmall)
                 MutedText(stringResource(R.string.cluster_upgrade_keep_open))
@@ -160,7 +160,13 @@ private fun PlanNodeRow(position: Int, node: ClusterUpgradeNode) {
 }
 
 @Composable
-private fun Checks(blockers: List<String>, warnings: List<String>, understood: Boolean, onUnderstood: (Boolean) -> Unit) {
+private fun Checks(
+    blockers: List<String>,
+    warnings: List<String>,
+    notes: List<String>,
+    understood: Boolean,
+    onUnderstood: (Boolean) -> Unit,
+) {
     val colors = LocalStatusColors.current
     IchorCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -179,6 +185,7 @@ private fun Checks(blockers: List<String>, warnings: List<String>, understood: B
             if (blockers.isEmpty() && warnings.isEmpty()) {
                 Text(stringResource(R.string.upgrade_no_issues), color = colors.ok, style = MaterialTheme.typography.bodyMedium)
             }
+            notes.forEach { MutedText("ⓘ $it") }
         }
     }
 }

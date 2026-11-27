@@ -264,7 +264,7 @@ struct UpgradeView: View {
 
     @ViewBuilder private func checksSection(_ plan: UpgradePlan, gate: UpgradeGate) -> some View {
         if !plan.blockers.isEmpty || !plan.warnings.isEmpty || !gate.acknowledgments.isEmpty || gate.downgrade
-            || gate.sameVersion || force
+            || gate.sameVersion || force || !plan.notes.isEmpty
         {
             Section("Checks") {
                 ForEach(plan.blockers, id: \.self) { blocker in
@@ -303,6 +303,14 @@ struct UpgradeView: View {
                 if gate.sameVersion {
                     Label("This node already runs this version: the image is reinstalled.", systemImage: "info.circle")
                         .foregroundStyle(.secondary)
+                }
+                ForEach(plan.notes, id: \.self) { note in
+                    Label {
+                        Text(verbatim: note)
+                    } icon: {
+                        Image(systemName: "info.circle")
+                    }
+                    .foregroundStyle(.secondary)
                 }
                 if force {
                     HStack {

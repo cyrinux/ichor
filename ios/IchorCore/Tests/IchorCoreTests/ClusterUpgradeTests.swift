@@ -36,6 +36,17 @@ final class ClusterUpgradeTests: XCTestCase {
         XCTAssertFalse(upToDate.canStart)
     }
 
+    func testNotesDecode() throws {
+        let plan = try TalosJSON.decode(
+            ClusterUpgradePlan.self,
+            from: #"{"version":"v1.15.0","nodes":[],"notes":["SMART needs a DiskSMARTConfig"]}"#)
+        XCTAssertEqual(plan.notes, ["SMART needs a DiskSMARTConfig"])
+        let none = try TalosJSON.decode(ClusterUpgradePlan.self, from: #"{"version":"v1.15.0","notes":null}"#)
+        XCTAssertEqual(none.notes, [])
+        let node = try TalosJSON.decode(UpgradePlan.self, from: #"{"node":"10.0.0.1","notes":["a note"]}"#)
+        XCTAssertEqual(node.notes, ["a note"])
+    }
+
     func testProgress() throws {
         let progress = try TalosJSON.decode(
             ClusterUpgradeProgress.self,

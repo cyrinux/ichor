@@ -45,6 +45,14 @@ class ClusterUpgradeTest {
     }
 
     @Test
+    fun notesDecode() {
+        assertEquals(listOf("SMART needs a DiskSMARTConfig"), plan("""{"version":"v1.15.0","notes":["SMART needs a DiskSMARTConfig"]}""").notes)
+        assertEquals(emptyList<String>(), plan("""{"version":"v1.15.0"}""").notes)
+        val node = TalosJson.decodeFromString(UpgradePlan.serializer(), """{"node":"10.0.0.1","notes":["a note"]}""")
+        assertEquals(listOf("a note"), node.notes)
+    }
+
+    @Test
     fun progressDecodes() {
         val p = TalosJson.decodeFromString(
             ClusterUpgradeProgress.serializer(),

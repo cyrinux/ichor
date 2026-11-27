@@ -46,12 +46,14 @@ public struct UpgradePlan: Decodable, Equatable, Sendable {
     public let forceable: Bool?
     /// This upgrade does not drain the node: offer to drain it first (a maintenance run).
     public let drainable: Bool
+    /// Information about the next minor (what it offers once enabled): nothing to acknowledge.
+    public let notes: [String]
 
     public init(
         node: String, hostname: String = "", controlPlane: Bool = false, currentVersion: String = "",
         currentImage: String = "", schematic: String = "", etcd: Etcd? = nil,
         blockers: [String] = [], warnings: [String] = [], acknowledge: [String] = [], forceable: Bool? = nil,
-        drainable: Bool = false
+        drainable: Bool = false, notes: [String] = []
     ) {
         self.node = node
         self.hostname = hostname
@@ -65,12 +67,13 @@ public struct UpgradePlan: Decodable, Equatable, Sendable {
         self.acknowledge = acknowledge
         self.forceable = forceable
         self.drainable = drainable
+        self.notes = notes
     }
 
     private enum CodingKeys: String, CodingKey {
         case node, hostname, controlPlane, currentVersion, currentImage, schematic, etcd, blockers, warnings,
             acknowledge, forceable
-        case drainable
+        case drainable, notes
     }
 
     // Go encodes empty slices as null and may omit empty strings.
@@ -88,6 +91,7 @@ public struct UpgradePlan: Decodable, Equatable, Sendable {
         acknowledge = try c.field(.acknowledge, [])
         forceable = try c.decodeIfPresent(Bool.self, forKey: .forceable)
         drainable = try c.field(.drainable, false)
+        notes = try c.field(.notes, [])
     }
 }
 
