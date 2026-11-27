@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import name.levis.ichor.ui.components.predictiveBackPreview
+import name.levis.ichor.ui.components.rememberPredictiveBack
 import name.levis.ichor.ui.design.IchorButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -215,9 +217,10 @@ fun KubeObjectScreen(
 
     val bar by app.uiPreferences.kubeObjectBar.collectAsStateWithLifecycle()
     var customizing by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = customizing) { customizing = false }
+    val back = rememberPredictiveBack(enabled = customizing) { customizing = false }
 
     val current = edit
+    // Asks before dropping changes, so no preview of a close that may not come.
     BackHandler(enabled = current != null) {
         when {
             current?.review != null -> vm.backToEditor()
@@ -285,7 +288,7 @@ fun KubeObjectScreen(
         },
     ) { padding ->
         if (customizing) {
-            ActionBarEditor(bar, kubeObjectActionLook, app.uiPreferences::setKubeObjectBar, Modifier.padding(padding))
+            ActionBarEditor(bar, kubeObjectActionLook, app.uiPreferences::setKubeObjectBar, Modifier.padding(padding).predictiveBackPreview(back))
             return@IchorScaffold
         }
         // Asked while editing: an update the credentials cannot run cannot be saved.

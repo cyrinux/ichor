@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.kubenodes
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -14,6 +13,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
@@ -22,6 +22,8 @@ import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.EmptyDetailPane
 import name.levis.ichor.ui.components.ListAndDetailExpanded
+import name.levis.ichor.ui.components.predictiveBackPreview
+import name.levis.ichor.ui.components.rememberPredictiveBack
 import name.levis.ichor.ui.components.rememberTwoPanes
 import name.levis.ichor.ui.overview.KubeHomeViewModel
 
@@ -52,7 +54,7 @@ fun KubeNodesListDetail(
     val node = picked?.let { name -> (state as? UiState.Loaded)?.data?.nodes?.firstOrNull { it.name == name } }
     // Composed before the panes, so the detail's sheets win over it. A node gone from the list
     // shows the placeholder again, and Back then leaves.
-    BackHandler(enabled = node != null) { picked = null }
+    val back = rememberPredictiveBack(enabled = node != null) { picked = null }
     ListDetailPaneScaffold(
         directive = calculatePaneScaffoldDirective(currentWindowAdaptiveInfoV2()),
         value = ListAndDetailExpanded,
@@ -62,7 +64,7 @@ fun KubeNodesListDetail(
             }
         },
         detailPane = {
-            AnimatedPane {
+            AnimatedPane(modifier = Modifier.predictiveBackPreview(back)) {
                 if (node == null) {
                     EmptyDetailPane(Icons.Outlined.Dns, stringResource(R.string.panes_pick_node))
                 } else {

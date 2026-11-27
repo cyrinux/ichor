@@ -10,7 +10,6 @@ import name.levis.ichor.ui.components.MutedText
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import name.levis.ichor.ui.components.predictiveBackPreview
+import name.levis.ichor.ui.components.rememberPredictiveBack
 import name.levis.ichor.ui.design.IchorButton
 import name.levis.ichor.ui.design.IchorCard
 import androidx.compose.material3.CircularProgressIndicator
@@ -92,7 +93,7 @@ fun ImportScreen(
     var source by rememberSaveable { mutableStateOf(ImportSource.PICK) }
     // In the paste or QR view: back returns to the drop zone, not out of the screen.
     val inSource = source != ImportSource.PICK && (state is ImportState.Idle || state is ImportState.Invalid)
-    BackHandler(enabled = inSource) { source = ImportSource.PICK }
+    val back = rememberPredictiveBack(enabled = inSource) { source = ImportSource.PICK }
     // Not saveable: it may contain the client private key, which must not land in saved instance state.
     var pasted by remember { mutableStateOf("") }
     // Not saveable either, for the same reason.
@@ -189,6 +190,8 @@ fun ImportScreen(
                     onNewCluster = onNewCluster,
                     // A restore replaces every cluster: offered when there is none yet.
                     restore = if (firstRun) ({ RestoreBackupButton(onRestored = onImported) }) else null,
+                    // The paste, QR or form view follows a back swipe to the drop zone.
+                    modifier = Modifier.predictiveBackPreview(back),
                 )
             }
         }

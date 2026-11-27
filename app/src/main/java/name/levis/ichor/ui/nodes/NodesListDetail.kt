@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.nodes
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -14,12 +13,15 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.ui.components.EmptyDetailPane
 import name.levis.ichor.ui.components.ListAndDetailExpanded
+import name.levis.ichor.ui.components.predictiveBackPreview
+import name.levis.ichor.ui.components.rememberPredictiveBack
 import name.levis.ichor.ui.components.rememberTwoPanes
 import name.levis.ichor.ui.node.NodeDetailScreen
 import name.levis.ichor.ui.node.NodeMenuEntry
@@ -57,7 +59,7 @@ fun NodesListDetail(
     var picked by rememberSaveable { mutableStateOf<String?>(null) }
     val selected = decodePick(picked)
     // Composed before the panes, so the detail's own handlers (an open sheet) win over it.
-    BackHandler(enabled = selected != null) { picked = null }
+    val back = rememberPredictiveBack(enabled = selected != null) { picked = null }
     ListDetailPaneScaffold(
         directive = calculatePaneScaffoldDirective(currentWindowAdaptiveInfoV2()),
         value = ListAndDetailExpanded,
@@ -73,7 +75,7 @@ fun NodesListDetail(
             }
         },
         detailPane = {
-            AnimatedPane {
+            AnimatedPane(modifier = Modifier.predictiveBackPreview(back)) {
                 if (selected == null) {
                     EmptyDetailPane(Icons.Outlined.Dns, stringResource(R.string.panes_pick_node))
                 } else {

@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.node
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +36,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import name.levis.ichor.ui.components.predictiveBackPreview
+import name.levis.ichor.ui.components.rememberPredictiveBack
 import java.time.OffsetDateTime
 import name.levis.ichor.R
 import name.levis.ichor.model.NodeDirListing
@@ -86,7 +87,7 @@ fun NodeFilesScreen(node: String, hostname: String, onBack: () -> Unit) {
         if (link) viaLink = viaLink + path
     }
 
-    BackHandler(enabled = history.size > 1) { history = history.dropLast(1) }
+    val back = rememberPredictiveBack(enabled = history.size > 1) { history = history.dropLast(1) }
     opened?.let { path -> NodeFileSheet(node, path, onDismiss = { opened = null }) }
     if (goTo) {
         GoToPathDialog(
@@ -116,7 +117,7 @@ fun NodeFilesScreen(node: String, hostname: String, onBack: () -> Unit) {
         Column(Modifier.padding(padding).fillMaxSize()) {
             RootChips(dir, (state as? UiState.Loaded)?.data?.roots.orEmpty()) { open(it, false) }
             PathBar(dir) { open(it, false) }
-            Loaded(state, refresh = { attempt++ }, modifier = Modifier.weight(1f)) { listing ->
+            Loaded(state, refresh = { attempt++ }, modifier = Modifier.weight(1f).predictiveBackPreview(back)) { listing ->
                 DirectoryList(
                     listing,
                     viaLink = dir in viaLink,

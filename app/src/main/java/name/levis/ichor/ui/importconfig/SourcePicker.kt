@@ -90,8 +90,9 @@ internal fun SourcePicker(
     onDiscover: (DiscoveryProvider) -> Unit,
     restore: (@Composable () -> Unit)?,
     onNewCluster: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
 ) {
-    Column(Modifier.fillMaxSize()) {
+    Column(modifier.fillMaxSize()) {
         if (error != null) {
             Text(
                 error,

@@ -1,7 +1,7 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.ui.components.predictiveBackPreview
 import name.levis.ichor.ui.components.rememberClusterLabels
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material3.Icon
+import name.levis.ichor.ui.components.rememberPredictiveBack
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarHost
@@ -188,7 +189,7 @@ private fun TalosOverview(
     val nodesExpanded by app.uiPreferences.nodesExpanded.collectAsStateWithLifecycle()
     val bar by app.uiPreferences.overviewBar.collectAsStateWithLifecycle()
     var customizing by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = customizing) { customizing = false }
+    val back = rememberPredictiveBack(enabled = customizing) { customizing = false }
     val customize = rememberCustomizeTrigger { customizing = true }
     var showDiscovered by remember { mutableStateOf(false) }
     LaunchedEffect(loaded, config?.activeContext, invalidations) {
@@ -252,7 +253,7 @@ private fun TalosOverview(
                     },
                 )
             }
-            if (customizing) OverviewEditor(app, layout, bar, cards.absent, Modifier.pageContent(padding))
+            if (customizing) OverviewEditor(app, layout, bar, cards.absent, Modifier.pageContent(padding).predictiveBackPreview(back))
             else if (config?.activeSummary?.needsEndpoint == true) NoEndpointsBox(
                 onScan = { scanningEndpoints = true },
                 onAddEndpoint = { editingEndpoints = config?.activeContext }.takeIf { !clusterLabels.masked },

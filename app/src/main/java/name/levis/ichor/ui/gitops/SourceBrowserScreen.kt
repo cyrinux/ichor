@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.gitops
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -28,6 +27,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import name.levis.ichor.ui.components.predictiveBackPreview
+import name.levis.ichor.ui.components.rememberPredictiveBack
 import name.levis.ichor.ui.design.IchorScaffold
 import androidx.compose.material3.Text
 import name.levis.ichor.ui.design.IchorTextButton
@@ -101,8 +102,10 @@ fun SourceBrowserScreen(
     val config by talos.configRepository.config.collectAsStateWithLifecycle()
     val generation by talos.configRepository.generation.collectAsStateWithLifecycle()
     LaunchedEffect(config?.activeContext, generation) { vm.load(target, startDir, config?.activeContext to generation) }
-    BackHandler(enabled = trail.isNotEmpty() && !search.open) { vm.back() }
-    BackHandler(enabled = search.open) { vm.closeSearch() }
+    // Back closes the search first, then goes up one folder; the closing layer follows the swipe.
+    val back = rememberPredictiveBack(enabled = search.open || trail.isNotEmpty()) {
+        if (search.open) vm.closeSearch() else vm.back()
+    }
     // Back from Settings with a token: read again.
     val missingHost by rememberUpdatedState(listing.missingHost)
     LifecycleResumeEffect(Unit) {
@@ -157,20 +160,24 @@ fun SourceBrowserScreen(
                     NotBrowsable(src)
                 } else if (search.open) {
                     HorizontalDivider()
-                    SourceSearchPane(search, onSearch = vm::search, onClose = vm::closeSearch, onHit = onHit)
+                    Column(Modifier.fillMaxSize().predictiveBackPreview(back)) {
+                        SourceSearchPane(search, onSearch = vm::search, onClose = vm::closeSearch, onHit = onHit)
+                    }
                 } else {
                     Breadcrumb(listing.dir, vm::open)
                     HorizontalDivider()
-                    Listing(
-                        src, listing, onDir = vm::open, onFile = onFile, onAddToken = onAddToken, onRetry = vm::refresh,
-                        staged = stagedFiles.map { it.path }.toSet(),
-                        // The cluster repository's root lists the pull requests opened from the phone on it.
-                        header = if (target == SourceTarget.Repo && listing.dir.isEmpty()) {
-                            { ProposalsCard(talos.gitOpsRepository, "", "", "", "", refresh = src.revision) }
-                        } else {
-                            null
-                        },
-                    )
+                    Column(Modifier.fillMaxSize().predictiveBackPreview(back)) {
+                        Listing(
+                            src, listing, onDir = vm::open, onFile = onFile, onAddToken = onAddToken, onRetry = vm::refresh,
+                            staged = stagedFiles.map { it.path }.toSet(),
+                            // The cluster repository's root lists the pull requests opened from the phone on it.
+                            header = if (target == SourceTarget.Repo && listing.dir.isEmpty()) {
+                                { ProposalsCard(talos.gitOpsRepository, "", "", "", "", refresh = src.revision) }
+                            } else {
+                                null
+                            },
+                        )
+                    }
                 }
             }
         }

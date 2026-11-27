@@ -1,11 +1,13 @@
 package name.levis.ichor.ui.argocd
 
-import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Box
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.model.KubePermission
 import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.predictiveBackPreview
 import name.levis.ichor.ui.components.rememberKubeDenialAcross
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.components.rememberPredictiveBack
 import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.share.AddToHomeButton
 import androidx.compose.foundation.layout.Column
@@ -102,7 +104,7 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
         selection = emptySet()
         selectMode = false
     }
-    BackHandler(enabled = selecting) { endSelection() }
+    val back = rememberPredictiveBack(enabled = selecting) { endSelection() }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var confirmSync by remember { mutableStateOf<List<ArgoApp>?>(null) }
     val loaded = (state as? UiState.Loaded)?.data
@@ -158,17 +160,19 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
         },
         bottomBar = {
             if (selecting) {
-                SelectionBar(
-                    count = selectedApps.size,
-                    // Allowed only when allowed in every namespace of the selection.
-                    denial = rememberKubeDenialAcross(KubeAction.ARGO_SYNC, selectedApps.map { it.namespace }.distinct()),
-                    onClear = endSelection,
-                    onSync = { confirmSync = selectedApps.filterNot { it.isRunning }.takeIf { it.isNotEmpty() } },
-                    onRefresh = {
-                        vm.act(selectedApps, ArgoAction.REFRESH)
-                        endSelection()
-                    },
-                )
+                Box(Modifier.predictiveBackPreview(back)) {
+                    SelectionBar(
+                        count = selectedApps.size,
+                        // Allowed only when allowed in every namespace of the selection.
+                        denial = rememberKubeDenialAcross(KubeAction.ARGO_SYNC, selectedApps.map { it.namespace }.distinct()),
+                        onClear = endSelection,
+                        onSync = { confirmSync = selectedApps.filterNot { it.isRunning }.takeIf { it.isNotEmpty() } },
+                        onRefresh = {
+                            vm.act(selectedApps, ArgoAction.REFRESH)
+                            endSelection()
+                        },
+                    )
+                }
             }
         },
     ) { padding ->
