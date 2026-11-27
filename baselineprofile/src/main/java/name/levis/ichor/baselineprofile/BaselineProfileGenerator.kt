@@ -34,9 +34,9 @@ class BaselineProfileGenerator {
 
     @Test
     fun startupAndTheDemoWalk() {
-        // Passed by the baseline profile Gradle plugin: the release id, with its .foss suffix.
+        // Set in build.gradle.kts from the tested APK: the release id, with its .foss suffix.
         val target = InstrumentationRegistry.getArguments().getString("targetAppId")
-            ?: error("targetAppId is not set: run through :app:generateReleaseBaselineProfile")
+            ?: error("targetAppId is not set: run through :app:generateBaselineProfile")
         rule.collect(packageName = target) {
             pressHome()
             startActivityAndWait(Intent(Intent.ACTION_VIEW, Uri.parse("ichor://demo")).setPackage(packageName))
