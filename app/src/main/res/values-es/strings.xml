@@ -4144,7 +4144,7 @@
     <string name="kube_problem_file_path">Lee archivos de tu ordenador. Ejecuta allí kubectl config view --flatten --minify e importa su salida.</string>
     <string name="kube_problem_proxy">La dirección del proxy en proxy-url no es válida.</string>
     <string name="kube_problem_basic_auth">El inicio de sesión con usuario y contraseña no está soportado.</string>
-    <string name="kube_problem_sign_in_later">Este inicio de sesión aún no está soportado: llegará en una versión futura.</string>
+    <string name="kube_problem_auth_provider">Los auth providers heredados no son compatibles. Usa un certificado de cliente o un token.</string>
     <string name="kube_problem_exec">Este plugin exec no está soportado. Usa un certificado de cliente o un token.</string>
     <string name="kube_problem_exec_named">El plugin de credenciales %1$s no puede ejecutarse en un teléfono.</string>
     <string name="kube_exec_hint_token_wrapper">Solo imprime un token: pega ese token o usa un certificado de cliente.</string>

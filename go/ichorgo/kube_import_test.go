@@ -93,6 +93,7 @@ users:
 - {name: do, user: {exec: {command: doctl, args: [kubernetes, cluster, kubeconfig, exec-credential, abc]}}}
 - {name: rancher, user: {exec: {command: rancher, args: [token, --server, rancher.example.org]}}}
 - {name: legacy-oidc, user: {auth-provider: {name: oidc, config: {idp-issuer-url: "https://old.example.org"}}}}
+- {name: openstack, user: {auth-provider: {name: openstack, config: {ttl: 10m}}}}
 - {name: custom, user: {exec: {command: /usr/local/bin/my-auth}}}
 - {name: teleport, user: {exec: {command: /opt/teleport/tsh, args: [kube, credentials, --kube-cluster=prod, --teleport-cluster=tele.example.org, --proxy=tele.example.org:443]}}}
 - {name: vault, user: {exec: {command: vault, args: [read, -field=token, kubernetes/creds/ops]}}}
@@ -111,6 +112,7 @@ contexts:
 - {name: do, context: {cluster: c, user: do}}
 - {name: rancher, context: {cluster: c, user: rancher}}
 - {name: legacy-oidc, context: {cluster: c, user: legacy-oidc}}
+- {name: openstack, context: {cluster: c, user: openstack}}
 - {name: custom, context: {cluster: c, user: custom}}
 - {name: teleport, context: {cluster: c, user: teleport}}
 - {name: vault, context: {cluster: c, user: vault}}
@@ -126,16 +128,6 @@ contexts:
 - {name: no-user, context: {cluster: c, user: nobody}}
 - {name: no-cluster, context: {cluster: nowhere, user: sa}}
 `, crt, key, jwt)
-}
-
-// cloudProblem is what the preview says of a recognised cloud method: nothing once the app
-// signs in with it.
-func cloudProblem(method string) string {
-	if supportedSignIn(method) {
-		return ""
-	}
-
-	return KubeProblemSignInLater
 }
 
 // importableNames are the contexts of yaml the preview marks importable, in its order.
@@ -204,13 +196,14 @@ func TestParseKubeconfigPreview(t *testing.T) {
 	want := map[string]row{
 		"cert":           {authCert, "", ""},
 		"sa":             {authToken, "", ""},
-		"eks":            {authEKS, "prod", cloudProblem(authEKS)},
-		"gke":            {authGKE, "", cloudProblem(authGKE)},
+		"eks":            {authEKS, "prod", ""},
+		"gke":            {authGKE, "", ""},
 		"oidc":           {authOIDC, "https://id.example.org", ""},
-		"azure":          {authAzure, "t1", cloudProblem(authAzure)},
-		"do":             {authDigitalOcean, "", cloudProblem(authDigitalOcean)},
-		"rancher":        {authRancher, "rancher.example.org", cloudProblem(authRancher)},
+		"azure":          {authAzure, "t1", ""},
+		"do":             {authDigitalOcean, "", ""},
+		"rancher":        {authRancher, "rancher.example.org", ""},
 		"legacy-oidc":    {authOIDC, "https://old.example.org", KubeProblemInvalid}, // no client ID
+		"openstack":      {authAuthProvider, "openstack", KubeProblemAuthProvider},
 		"custom":         {authExec, "my-auth", KubeProblemExec},
 		"teleport":       {authTeleport, "prod", ""},
 		"vault":          {authExec, "vault", KubeProblemExec},
@@ -268,6 +261,10 @@ func TestParseKubeconfigPreview(t *testing.T) {
 	byName := map[string]kubeContextSummary{}
 	for _, c := range s.Contexts {
 		byName[c.Name] = c
+	}
+
+	if c := byName["openstack"]; c.ProblemDetail != "openstack" {
+		t.Errorf("auth-provider problem detail = %q, want its name", c.ProblemDetail)
 	}
 
 	if c := byName["cert"]; c.User != "alice" || c.CertNotAfter != 2000000000 || len(c.Roles) != 1 || c.Roles[0] != "system:masters" {

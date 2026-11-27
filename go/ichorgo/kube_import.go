@@ -59,7 +59,7 @@ const (
 	KubeProblemFilePath       = "kube-file-path"
 	KubeProblemProxy          = "kube-proxy-url"
 	KubeProblemBasicAuth      = "kube-basic-auth"
-	KubeProblemSignInLater    = "kube-sign-in-later"
+	KubeProblemAuthProvider   = "kube-auth-provider" // a legacy auth-provider: ProblemDetail is its name
 	KubeProblemExec           = "kube-exec-unsupported"
 	KubeProblemNoCredentials  = "kube-no-credentials"
 	KubeProblemInvalid        = "kube-invalid"
@@ -369,7 +369,7 @@ func kubeContextProblem(doc *kubeconfigDoc, name string, cluster *kubeStoreClust
 		}
 	}
 
-	switch method, _ := kubeAuthMethod(user); method {
+	switch method, methodDetail := kubeAuthMethod(user); method {
 	case authCert:
 		if u.ClientCertificateData == "" || u.ClientKeyData == "" {
 			return KubeProblemFilePath, cmpOr(u.ClientCertificate, u.ClientKey)
@@ -384,11 +384,9 @@ func kubeContextProblem(doc *kubeconfigDoc, name string, cluster *kubeStoreClust
 		return KubeProblemNoCredentials, ""
 	case authExec:
 		return KubeProblemExec, execCommandName(u.Exec)
+	case authAuthProvider:
+		return KubeProblemAuthProvider, methodDetail
 	default:
-		if !supportedSignIn(method) {
-			return KubeProblemSignInLater, method
-		}
-
 		if _, err := newSignInMethod(method, user, cluster); err != nil {
 			return KubeProblemInvalid, err.Error()
 		}

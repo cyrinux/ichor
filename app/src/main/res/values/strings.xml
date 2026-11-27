@@ -4146,7 +4146,7 @@
     <string name="kube_problem_file_path">It reads files from your computer. Run kubectl config view --flatten --minify there and import its output.</string>
     <string name="kube_problem_proxy">The proxy address in proxy-url is not valid.</string>
     <string name="kube_problem_basic_auth">Sign-in with a username and password is not supported.</string>
-    <string name="kube_problem_sign_in_later">This sign-in is not supported yet: it comes in a later version.</string>
+    <string name="kube_problem_auth_provider">Legacy auth providers are not supported. Use a client certificate or a token.</string>
     <string name="kube_problem_exec">This exec plugin is not supported. Use a client certificate or a token.</string>
     <string name="kube_problem_exec_named">The %1$s credential plugin cannot run on a phone.</string>
     <string name="kube_exec_hint_token_wrapper">It only prints a token: paste that token, or use a client certificate.</string>

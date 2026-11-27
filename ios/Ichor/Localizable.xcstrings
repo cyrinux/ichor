@@ -183832,43 +183832,32 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вход по имени пользователя и паролю не поддерживается." } }
       }
     },
-    "Signing in with %@ comes in a later version." : {
+    "The %@ auth provider is not supported. Use a client certificate or a token." : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La connexion avec %@ arrive dans une prochaine version."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El inicio de sesión con %@ llegará en una versión posterior."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вхід через %@ з’явиться в наступній версії."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Anmeldung mit %@ kommt in einer späteren Version."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L'accesso con %@ arriverà in una versione successiva."
-          }
-        },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "使用 %@ 登录将在后续版本中提供。" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@によるサインインは今後のバージョンで対応予定です。" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O login com %@ virá em uma versão futura." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вход через %@ появится в одной из следующих версий." } }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L’auth provider %@ n’est pas pris en charge. Utilisez un certificat client ou un jeton." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El auth provider %@ no es compatible. Usa un certificado de cliente o un token." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Auth provider %@ не підтримується. Використайте клієнтський сертифікат або токен." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Auth-Provider %@ wird nicht unterstützt. Nutze ein Client-Zertifikat oder ein Token." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L’auth provider %@ non è supportato. Usa un certificato client o un token." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "不支持 auth provider %@。请使用客户端证书或令牌。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "auth provider %@ はサポートしていません。クライアント証明書かトークンを使ってください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O auth provider %@ não é compatível. Use um certificado de cliente ou um token." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Auth provider %@ не поддерживается. Используйте клиентский сертификат или токен." } }
+      }
+    },
+    "Legacy auth providers are not supported. Use a client certificate or a token." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les anciens auth providers ne sont pas pris en charge. Utilisez un certificat client ou un jeton." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Los auth providers heredados no son compatibles. Usa un certificado de cliente o un token." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Застарілі auth provider не підтримуються. Використайте клієнтський сертифікат або токен." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Veraltete Auth-Provider werden nicht unterstützt. Nutze ein Client-Zertifikat oder ein Token." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Gli auth provider legacy non sono supportati. Usa un certificato client o un token." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "不支持旧版 auth provider。请使用客户端证书或令牌。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "従来の auth provider はサポートしていません。クライアント証明書かトークンを使ってください。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Auth providers legados não são compatíveis. Use um certificado de cliente ou um token." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Устаревшие auth provider не поддерживаются. Используйте клиентский сертификат или токен." } }
       }
     },
     "This exec plugin cannot run on a phone." : {

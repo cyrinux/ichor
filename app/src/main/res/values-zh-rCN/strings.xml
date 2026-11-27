@@ -4031,7 +4031,7 @@
     <string name="kube_problem_file_path">它会读取你电脑上的文件。在电脑上运行 kubectl config view --flatten --minify 并导入其输出。</string>
     <string name="kube_problem_proxy">proxy-url 中的代理地址无效。</string>
     <string name="kube_problem_basic_auth">不支持使用用户名和密码登录。</string>
-    <string name="kube_problem_sign_in_later">暂不支持此登录方式：将在后续版本中提供。</string>
+    <string name="kube_problem_auth_provider">不支持旧版 auth provider。请使用客户端证书或令牌。</string>
     <string name="kube_problem_exec">不支持此 exec 插件。使用客户端证书或令牌。</string>
     <string name="kube_problem_exec_named">凭据插件 %1$s 无法在手机上运行。</string>
     <string name="kube_exec_hint_token_wrapper">它只输出一个令牌：粘贴该令牌，或使用客户端证书。</string>

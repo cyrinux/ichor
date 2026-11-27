@@ -4031,7 +4031,7 @@
     <string name="kube_problem_file_path">コンピューター上のファイルを参照しています。そのコンピューターで kubectl config view --flatten --minify を実行し、出力をインポートしてください。</string>
     <string name="kube_problem_proxy">proxy-url のプロキシアドレスが無効です。</string>
     <string name="kube_problem_basic_auth">ユーザー名とパスワードによるサインインはサポートしていません。</string>
-    <string name="kube_problem_sign_in_later">このサインイン方法はまだサポートしていません。今後のバージョンで対応予定です。</string>
+    <string name="kube_problem_auth_provider">従来の auth provider はサポートしていません。クライアント証明書かトークンを使ってください。</string>
     <string name="kube_problem_exec">この exec プラグインはサポートしていません。クライアント証明書またはトークンを使用してください。</string>
     <string name="kube_problem_exec_named">認証情報プラグイン %1$s はスマートフォンでは実行できません。</string>
     <string name="kube_exec_hint_token_wrapper">トークンを出力するだけです。そのトークンを貼り付けるか、クライアント証明書を使用してください。</string>

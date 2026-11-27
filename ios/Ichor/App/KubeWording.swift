@@ -62,8 +62,15 @@ extension ContextSummary {
             return String(localized: "The proxy address in proxy-url is not valid.")
         case "kube-basic-auth":
             return String(localized: "Signing in with a username and password is not supported.")
-        case "kube-sign-in-later":
-            return String(localized: "Signing in with \(localizedAuthLabel) comes in a later version.")
+        case "kube-auth-provider":
+            guard !detail.isEmpty else {
+                return String(
+                    localized: "Legacy auth providers are not supported. Use a client certificate or a token."
+                )
+            }
+            return String(
+                localized: "The \(detail) auth provider is not supported. Use a client certificate or a token."
+            )
         case "kube-exec-unsupported":
             guard !detail.isEmpty else { return String(localized: "This exec plugin cannot run on a phone.") }
             let named = String(localized: "The \(detail) credential plugin cannot run on a phone.")
