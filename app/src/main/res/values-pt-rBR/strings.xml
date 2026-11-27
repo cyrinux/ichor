@@ -5674,6 +5674,14 @@
     <string name="vm_action_requested">%1$s solicitado para %2$s</string>
     <string name="vm_force_stop_requested">Parada forçada solicitada para %1$s</string>
     <string name="vm_migration_started">Migração de %1$s iniciada: %2$s</string>
+    <string name="talos_vms_title">Máquinas virtuais do Talos</string>
+    <string name="talos_vms_count_pending">%1$d pendentes</string>
+    <string name="talos_vms_state">Estado</string>
+    <string name="talos_vms_wanted_state">Estado desejado</string>
+    <string name="talos_vms_stage">Etapa</string>
+    <string name="talos_vms_profile">Perfil</string>
+    <string name="talos_vms_interfaces">Interfaces de rede</string>
+    <string name="talos_vms_disk_read_only">somente leitura</string>
     <string name="longhorn_snapshots_title">Snapshots e backups</string>
     <string name="longhorn_snapshots_label">Snapshots</string>
     <string name="longhorn_backups_label">Backups</string>

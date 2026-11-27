@@ -50,7 +50,7 @@ func demoNodeVMs(n nodeOverview) nodeVMs {
 	}
 	out.Libraries = []contentLibrary{{Name: "images", Path: "/var/mnt/vm-images", Phase: "ready"}}
 
-	return out
+	return learnVMNames(out)
 }
 
 // demoClusterVMs is ClusterVirtualMachines for the demo cluster.

@@ -40,6 +40,17 @@ final class NodesStore {
         IchorCore.clusterSupport(Array(nodeFeatures.values), feature)
     }
 
+    /// Whether node's features are known and say it has `feature`: for an entry that is only
+    /// shown on evidence (the Talos VMs), not one shown dimmed.
+    func knownSupport(_ feature: NodeFeature, node: String) -> Bool {
+        nodeFeatures[node]?.features[feature.rawValue]?.supported == true
+    }
+
+    /// Whether some node's features are known and say it has `feature`.
+    func anyKnownSupport(_ feature: NodeFeature) -> Bool {
+        nodeFeatures.values.contains { $0.features[feature.rawValue]?.supported == true }
+    }
+
     /// Loads node's features unless they are cached for `version` (the node's Talos version
     /// when the caller knows it: an upgraded node is asked again). Failures are silent: an
     /// unknown node counts as supporting everything and answers for itself.

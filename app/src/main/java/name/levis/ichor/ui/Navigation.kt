@@ -401,6 +401,7 @@ fun Navigation(
                             onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
                             onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
                             onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
+                            onTalosVms = { nav.navigate(Routes.talosVms()) },
                             onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
                             onRepository = { nav.navigate(Routes.repoSource()) },
                             onGitHosts = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },

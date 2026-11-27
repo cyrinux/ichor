@@ -5931,6 +5931,14 @@
     <string name="vm_action_requested">Запрошено действие «%1$s» для %2$s</string>
     <string name="vm_force_stop_requested">Запрошена принудительная остановка %1$s</string>
     <string name="vm_migration_started">Миграция %1$s запущена: %2$s</string>
+    <string name="talos_vms_title">Виртуальные машины Talos</string>
+    <string name="talos_vms_count_pending">%1$d в ожидании</string>
+    <string name="talos_vms_state">Состояние</string>
+    <string name="talos_vms_wanted_state">Желаемое состояние</string>
+    <string name="talos_vms_stage">Стадия</string>
+    <string name="talos_vms_profile">Профиль</string>
+    <string name="talos_vms_interfaces">Сетевые интерфейсы</string>
+    <string name="talos_vms_disk_read_only">только чтение</string>
     <string name="longhorn_snapshots_title">Снимки и резервные копии</string>
     <string name="longhorn_snapshots_label">Снимки</string>
     <string name="longhorn_backups_label">Резервные копии</string>

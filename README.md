@@ -37,6 +37,8 @@ tour** shows it again.
   nodes is down (on by default on Talos clusters), with quiet hours, a per-cluster
   minimum severity, a digest, flapping alerts folded into the digest, and critical alerts that
   repeat until acknowledged.
+- **Talos Hypervisor:** virtual machines of a node (Talos 1.15), with their disks and addresses,
+  on the node's screen and in one list for the cluster.
 - **Any Kubernetes cluster:** workloads with rollout history and undo for Deployments,
   StatefulSets and DaemonSets (the pod template diff first) and a Deployment's pause, pods, logs and shells, a browser of every object with
   summary, YAML, scale and delete, Jobs, Services and load balancing, storage, autoscaling

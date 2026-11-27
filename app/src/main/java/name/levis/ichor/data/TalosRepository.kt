@@ -47,6 +47,8 @@ import name.levis.ichor.model.NodeSensors
 import name.levis.ichor.model.NodeNetwork
 import name.levis.ichor.model.NodeTime
 import name.levis.ichor.model.DiskHealthReport
+import name.levis.ichor.model.TalosClusterVms
+import name.levis.ichor.model.TalosNodeVms
 import name.levis.ichor.model.DiskLayoutList
 import name.levis.ichor.model.DiskUsage
 import name.levis.ichor.model.MountList
@@ -508,6 +510,16 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** SMART/NVMe health per disk; [DiskHealthReport.supported] false on older Talos. */
     suspend fun diskHealth(node: String): DiskHealthReport = call { cfg, ctx ->
         TalosJson.decodeFromString(DiskHealthReport.serializer(), Ichorgo.nodeDiskHealth(cfg, ctx, node))
+    }
+
+    /** The Talos hypervisor's VMs on [node] (Talos 1.15); [TalosNodeVms.supported] false on older Talos. */
+    suspend fun nodeVirtualMachines(node: String): TalosNodeVms = call { cfg, ctx ->
+        TalosJson.decodeFromString(TalosNodeVms.serializer(), Ichorgo.nodeVirtualMachines(cfg, ctx, node))
+    }
+
+    /** [nodeVirtualMachines] for every node, in parallel; a node that does not answer carries an error. */
+    suspend fun clusterVirtualMachines(): TalosClusterVms = call { cfg, ctx ->
+        TalosJson.decodeFromString(TalosClusterVms.serializer(), Ichorgo.clusterVirtualMachines(cfg, ctx))
     }
 
     /** Resource types the node knows (`talosctl get rd`). */

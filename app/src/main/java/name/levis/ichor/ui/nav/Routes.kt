@@ -82,6 +82,11 @@ internal object Routes {
     fun replaceControlPlane(member: String, addr: String, host: String) =
         "replacecp?member=${Uri.encode(member)}&addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
     const val KUBESPAN = "kubespan"
+
+    /** The Talos hypervisor's virtual machines: the cluster's, or one node's when addr is set. */
+    const val TALOS_VMS = "talos-vms?addr={addr}&host={host}"
+
+    fun talosVms(addr: String = "", host: String = "") = "talos-vms?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
     const val NODES = "nodes?filter={filter}"
 
     /** The Nodes screen of a large cluster; [filter] preselects one (null: all). */

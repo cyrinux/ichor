@@ -51,6 +51,7 @@ fun NodesListDetail(
     onOpenNode: (NodeOverview) -> Unit,
     onTab: (NodeOverview, Int) -> Unit,
     onMenu: (NodeOverview, NodeMenuEntry) -> Unit,
+    onTalosVms: (NodeOverview) -> Unit = {},
 ) {
     if (!rememberTwoPanes()) {
         NodesScreen(initialFilter = initialFilter, vm = vm, onBack = onBack, onNode = onOpenNode, onNodeAction = onNodeAction)
@@ -88,6 +89,7 @@ fun NodesListDetail(
                             onBack = { picked = null },
                             onTab = { tab -> onTab(selected, tab) },
                             onMenu = { entry -> onMenu(selected, entry) },
+                            onTalosVms = { onTalosVms(selected) },
                         )
                     }
                 }

@@ -57,6 +57,7 @@ enum class TalosFeature(val key: String) {
     DISK_WIPE("diskWipe"),
     META("meta"),
     WATCHDOG("watchdog"),
+    HYPERVISOR("hypervisor"),
 }
 
 /** Support of [feature] on this node; supported while unknown (features not loaded, new name). */

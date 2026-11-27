@@ -3,8 +3,6 @@ package name.levis.ichor.ui.vms
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -53,7 +51,6 @@ import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
@@ -174,22 +171,20 @@ private fun VmList(report: VirtualMachines, namespace: String?, busy: Set<String
 }
 
 /** Running, stopped, failing, migrating and importing counts; only the non-zero ones. */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CountChips(report: VirtualMachines, modifier: Modifier = Modifier) {
     val colors = LocalStatusColors.current
     val c = report.counts
-    val chips = listOf(
-        Triple(c.running, R.string.vm_count_running, colors.ok),
-        Triple(c.stopped, R.string.vm_count_stopped, colors.muted),
-        Triple(c.failing, R.string.vm_count_failing, colors.bad),
-        Triple(c.migrating, R.string.vm_count_migrating, colors.warn),
-        Triple(c.importing, R.string.vm_count_importing, colors.warn),
-    ).filter { it.first > 0 }
-    if (chips.isEmpty()) return
-    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        chips.forEach { (count, label, color) -> Tag(stringResource(label, count), color) }
-    }
+    VmCountChips(
+        listOf(
+            VmCountChip(c.running, R.string.vm_count_running, colors.ok),
+            VmCountChip(c.stopped, R.string.vm_count_stopped, colors.muted),
+            VmCountChip(c.failing, R.string.vm_count_failing, colors.bad),
+            VmCountChip(c.migrating, R.string.vm_count_migrating, colors.warn),
+            VmCountChip(c.importing, R.string.vm_count_importing, colors.warn),
+        ),
+        modifier,
+    )
 }
 
 /** Name and status, then namespace, node, first address and guest OS, then what is in flight. */

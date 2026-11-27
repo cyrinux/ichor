@@ -98,12 +98,14 @@ internal fun KubeToolsCard(
     argoRollouts: Boolean = false,
     virtualMachines: Boolean = false,
     policies: Boolean = false,
+    /** Opens the Talos hypervisor's VMs (Talos overview); null hides the entry (no VM, older Talos). */
+    talosVms: (() -> Unit)? = null,
     /** The active CRD plugins of other categories than Data services, each a tool in its family. */
     plugins: List<PluginDetectItem> = emptyList(),
     /** The integrations read with Data services: those outside storage open from their family. */
     dataServices: DataServices? = null,
 ) {
-    val groups = kubeToolGroups(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, virtualMachines = virtualMachines, policies = policies, plugins = plugins, dataServices = dataServices)
+    val groups = kubeToolGroups(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, virtualMachines = virtualMachines, policies = policies, talosVms = talosVms, plugins = plugins, dataServices = dataServices)
     val labelStyle = MaterialTheme.typography.bodyLarge
     SectionCard(stringResource(R.string.common_kind_kubernetes)) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -197,9 +199,10 @@ private fun kubeToolGroups(
     argoRollouts: Boolean,
     virtualMachines: Boolean,
     policies: Boolean,
+    talosVms: (() -> Unit)?,
     plugins: List<PluginDetectItem>,
     dataServices: DataServices?,
-): List<KubeToolGroup> = kubeToolGroupsNative(nav, crossplane, tailscale, clusterLifecycle, argoRollouts, virtualMachines, policies).mapIndexed { index, group ->
+): List<KubeToolGroup> = kubeToolGroupsNative(nav, crossplane, tailscale, clusterLifecycle, argoRollouts, virtualMachines, policies, talosVms).mapIndexed { index, group ->
     val systems = dataServices?.let { services ->
         services.detected.filter { serviceToolGroup(it.family) == index }.map { kind ->
             val health = services.summary(kind)?.takeIf { it.attention > 0 }?.health
@@ -244,6 +247,7 @@ private fun kubeToolGroupsNative(
     argoRollouts: Boolean,
     virtualMachines: Boolean,
     policies: Boolean,
+    talosVms: (() -> Unit)?,
 ): List<KubeToolGroup> = listOf(
     KubeToolGroup(
         stringResource(R.string.kube_tools_group_workloads),
@@ -270,8 +274,10 @@ private fun kubeToolGroupsNative(
     ),
     KubeToolGroup(
         stringResource(R.string.kube_tools_group_storage),
-        listOf(
+        listOfNotNull(
             KubeTool(stringResource(R.string.storage_title), Icons.Outlined.Storage, nav.onStorage),
+            // The Talos hypervisor's VMs (not KubeVirt's): only once a node reports some.
+            talosVms?.let { KubeTool(stringResource(R.string.talos_vms_title), Icons.Outlined.Computer, it) },
             KubeTool(stringResource(R.string.data_services_title), Icons.Outlined.Dataset, { nav.onDataServices(null, false) }),
         ),
     ),

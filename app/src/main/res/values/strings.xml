@@ -5682,6 +5682,14 @@
     <string name="vm_action_requested">%1$s requested for %2$s</string>
     <string name="vm_force_stop_requested">Forced stop requested for %1$s</string>
     <string name="vm_migration_started">Migration of %1$s started: %2$s</string>
+    <string name="talos_vms_title">Talos virtual machines</string>
+    <string name="talos_vms_count_pending">%1$d pending</string>
+    <string name="talos_vms_state">State</string>
+    <string name="talos_vms_wanted_state">Wanted state</string>
+    <string name="talos_vms_stage">Stage</string>
+    <string name="talos_vms_profile">Profile</string>
+    <string name="talos_vms_interfaces">Network interfaces</string>
+    <string name="talos_vms_disk_read_only">read-only</string>
     <string name="longhorn_snapshots_title">Snapshots &amp; backups</string>
     <string name="longhorn_snapshots_label">Snapshots</string>
     <string name="longhorn_backups_label">Backups</string>

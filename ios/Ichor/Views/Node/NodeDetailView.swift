@@ -25,6 +25,8 @@ struct NodeDetailView: View {
     /// The cluster's history over `period` (uptime strip); nil without one.
     @State private var history: HistoryQueryResult?
     @State private var period = HistoryPeriod.week
+    /// The node's Talos VMs, once its Talos is known to have the hypervisor (1.15); nil before.
+    @State private var talosVMs: TalosNodeVMs?
     /// Closes the hub after a power action when it is not a pushed screen (beside the nodes list
     /// on an iPad, where dismiss would close the list too); nil: dismiss.
     private let onDone: (() -> Void)?
@@ -41,7 +43,7 @@ struct NodeDetailView: View {
             header
             NodeForgetSection(ref: ref) { close() }
             NodeStatusSection(ref: ref, open: $open)
-            NodeInspectSection(node: ref.address, open: $open)
+            NodeInspectSection(node: ref.address, open: $open, vms: talosVMs)
             NodeTroubleshootSection(node: ref.address, open: $open)
             NodeOperateSection(
                 node: ref.address, hostname: ref.hostname, maintenanceRunning: maintenanceRunning, open: $open,
@@ -54,7 +56,10 @@ struct NodeDetailView: View {
         .navigationTitle(ref.hostname)
         .navigationBarTitleDisplayMode(.inline)
         // What this node's Talos version can do: gates the rows once known.
-        .task { await nodes.loadFeatures(node: ref.address) }
+        .task {
+            await nodes.loadFeatures(node: ref.address)
+            await loadTalosVMs()
+        }
         // Masked like the screen in screenshot mode: reloaded when it changes.
         .task(id: "\(period.rawValue)#\(model.dataGeneration)") {
             history = await HistoryStore.query(
@@ -120,6 +125,12 @@ struct NodeDetailView: View {
         } message: {
             Text("The app stops targeting this node, and its Kubernetes Node is deleted once its kubelet has stopped.")
         }
+    }
+
+    /// Only on a Talos with the hypervisor: an older node is not asked; a failed read shows no row.
+    private func loadTalosVMs() async {
+        guard let client = model.client, nodes.knownSupport(.hypervisor, node: ref.address) else { return }
+        talosVMs = try? await client.nodeVirtualMachines(node: ref.address)
     }
 
     private func close() {

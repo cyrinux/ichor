@@ -6,6 +6,7 @@ enum NodeHubScreen: Hashable {
     case kernelLog, events, network, storage, files, images, resourceBrowser, hardware, kubePods
     case debugShell, netTools, capture
     case machineConfig, upgrade, maintenance, drain, nodeMeta
+    case talosVMs
 
     @MainActor
     @ViewBuilder
@@ -28,6 +29,7 @@ enum NodeHubScreen: Hashable {
         case .maintenance: MaintenanceView(node: ref.address, hostname: ref.hostname)
         case .drain: MaintenanceView(node: ref.address, hostname: ref.hostname, drainOnly: true)
         case .nodeMeta: NodeMetaEditorView(node: ref.address, hostname: ref.hostname)
+        case .talosVMs: TalosVirtualMachinesView(node: ref.address, hostname: ref.hostname)
         }
     }
 }
@@ -136,6 +138,8 @@ struct NodeStatusSection: View {
 struct NodeInspectSection: View {
     let node: String
     @Binding var open: NodeHubScreen?
+    /// The node's Talos VMs: their row shows only when it runs some (Talos 1.15).
+    var vms: TalosNodeVMs?
 
     @Environment(AppModel.self) private var model
     @Environment(NodesStore.self) private var nodes
@@ -181,6 +185,24 @@ struct NodeInspectSection: View {
                 support: support(.hardware, .hardware)
             ) {
                 open = .hardware
+            }
+            if let vms, vms.hasVMs {
+                // The count by state under the title; off, saying so, while the node does not answer.
+                let down = nodes.reachability(of: node).isDown
+                Button {
+                    open = .talosVMs
+                } label: {
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Virtual machines")
+                            Text(verbatim: down ? String(localized: "Node unreachable") : talosVMSummary(vms.vms))
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        Image(systemName: "desktopcomputer")
+                    }
+                }
+                .disabled(down)
             }
         }
     }

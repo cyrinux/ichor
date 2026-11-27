@@ -217,8 +217,9 @@ private fun MenuTile(
     }
 }
 
+/** A row of the node screen: icon, label and the [notice] under it; dimmed when not [enabled]. */
 @Composable
-private fun MenuRow(
+internal fun MenuRow(
     label: String,
     icon: ImageVector,
     notice: String?,

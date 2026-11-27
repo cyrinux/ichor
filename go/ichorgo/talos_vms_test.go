@@ -302,3 +302,24 @@ func TestDemoVirtualMachines(t *testing.T) {
 		t.Errorf("demo features: %s %v", features, err)
 	}
 }
+
+// Screenshot mode shows VM names like node hostnames (vm-N) and masks their addresses.
+func TestVirtualMachinesMasked(t *testing.T) {
+	yaml := demoConfigForTest(t)
+	enableMask(t, "")
+
+	out, err := ClusterVirtualMachines(yaml, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, real := range []string{`"build-runner"`, `"legacy-app"`, `"test-desktop"`, "198.51.100.21"} {
+		if strings.Contains(out, real) {
+			t.Errorf("%s shows in screenshot mode: %s", real, out)
+		}
+	}
+
+	if !strings.Contains(out, `"name":"vm-1"`) {
+		t.Errorf("no masked VM name: %s", out)
+	}
+}

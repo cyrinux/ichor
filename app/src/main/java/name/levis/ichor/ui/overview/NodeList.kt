@@ -84,6 +84,8 @@ internal class OverviewCardData(
     val toolPlugins: List<PluginDetectItem>,
     /** The operators the cluster runs, asked only while that card is shown. */
     val operators: KubeOperators,
+    /** A node runs Talos hypervisor VMs: their entry joins that card. */
+    val talosVms: Boolean = false,
 )
 
 /** The reads the overview's GitOps and Alerts cards offer to run again. */
@@ -361,6 +363,7 @@ private fun OverviewItems.overviewCard(
                     argoRollouts = ops.argoRollouts,
                     virtualMachines = ops.virtualMachines,
                     policies = ops.policies,
+                    talosVms = nav.onTalosVms.takeIf { cards.talosVms },
                     plugins = cards.toolPlugins,
                     dataServices = (cards.dataServices as? UiState.Loaded)?.data,
                 )
