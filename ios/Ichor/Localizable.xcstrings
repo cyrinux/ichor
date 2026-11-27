@@ -73056,6 +73056,34 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Общее время" } }
       }
     },
+    "Redacted for your role" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Für deine Rolle geschwärzt" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ocultado para tu rol" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Masqué pour votre rôle" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Oscurato per il tuo ruolo" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このロールでは伏せ字" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ocultado para sua função" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Скрыто для вашей роли" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Приховано для вашої ролі" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已按你的角色隐去" } }
+      }
+    },
+    "Talos replaced the secret values with REDACTED: your talosconfig role is below os:admin." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Talos hat die geheimen Werte durch REDACTED ersetzt: Deine talosconfig-Rolle liegt unter os:admin." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Talos sustituyó los valores secretos por REDACTED: el rol de tu talosconfig está por debajo de os:admin." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Talos a remplacé les valeurs secrètes par REDACTED : le rôle de votre talosconfig est inférieur à os:admin." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Talos ha sostituito i valori segreti con REDACTED: il ruolo del tuo talosconfig è inferiore a os:admin." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Talos がシークレットの値を REDACTED に置き換えました。talosconfig のロールが os:admin 未満です。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Talos substituiu os valores secretos por REDACTED: a função do seu talosconfig está abaixo de os:admin." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Talos заменил секретные значения на REDACTED: роль вашего talosconfig ниже os:admin." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Talos замінив секретні значення на REDACTED: роль вашого talosconfig нижча за os:admin." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Talos 已将机密值替换为 REDACTED：你的 talosconfig 角色低于 os:admin。" } }
+      }
+    },
     "Redirect" : {
       "extractionState" : "manual",
       "localizations" : {

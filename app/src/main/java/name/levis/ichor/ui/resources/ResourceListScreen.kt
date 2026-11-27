@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.resources
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,6 +48,7 @@ import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SearchField
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.util.formatDateTime
@@ -134,7 +136,10 @@ private fun ItemRow(item: ResourceItem, onClick: () -> Unit) {
         item.updated.takeIf { it > 0 }?.let { formatDateTime(it) }
     }
     Column(Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = stringResource(R.string.common_open), onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp)) {
-        Text(item.id, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(item.id, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f, fill = false))
+            if (item.redacted) RedactedTag()
+        }
         val facts = listOfNotNull(
             item.phase.takeIf { it.isNotBlank() },
             item.version.takeIf { it.isNotBlank() }?.let { stringResource(R.string.resources_version, it) },
@@ -144,4 +149,10 @@ private fun ItemRow(item: ResourceItem, onClick: () -> Unit) {
             MutedText(facts.joinToString(" · "))
         }
     }
+}
+
+/** "Redacted for your role": Talos 1.15 replaced the secret values (a role below os:admin). */
+@Composable
+internal fun RedactedTag(modifier: Modifier = Modifier) {
+    Tag(stringResource(R.string.resources_redacted), modifier = modifier)
 }

@@ -1,5 +1,6 @@
 package name.levis.ichor.model
 
+import name.levis.ichor.data.TalosJson
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -42,5 +43,26 @@ class ResourcesTest {
         val items = listOf(ResourceItem("eth0"), ResourceItem("lo"), ResourceItem("kubespan"))
         assertEquals(listOf("eth0"), items.matching("ETH").map { it.id })
         assertEquals(3, items.matching("  ").size)
+    }
+
+    @Test
+    fun redactedFlagDecodes() {
+        val list = TalosJson.decodeFromString(
+            ResourceList.serializer(),
+            """{"type":"t","namespace":"n","items":[{"id":"a","redacted":true},{"id":"b"}],"truncated":false}""",
+        )
+        assertEquals(listOf(true, false), list.items.map { it.redacted })
+        assertTrue(TalosJson.decodeFromString(ResourceDetail.serializer(), """{"yaml":"x","redacted":true}""").redacted)
+        // Talos 1.14 and older never send the field.
+        assertFalse(TalosJson.decodeFromString(ResourceDetail.serializer(), """{"yaml":"x"}""").redacted)
+    }
+
+    @Test
+    fun redactedRangesFindWholeWords() {
+        val yaml = "privateKey: REDACTED\nname: NOT_REDACTED\npeers:\n  - presharedKey: REDACTED\n"
+        val ranges = redactedRanges(yaml)
+        assertEquals(2, ranges.size)
+        assertTrue(ranges.all { yaml.substring(it) == REDACTED_PLACEHOLDER })
+        assertTrue(redactedRanges("a: REDACTEDX\n").isEmpty())
     }
 }

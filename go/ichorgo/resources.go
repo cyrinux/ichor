@@ -35,10 +35,14 @@ type resourceItem struct {
 	Version   string `json:"version"`
 	Phase     string `json:"phase"`
 	Updated   int64  `json:"updated"` // unix ms, 0 when unknown
+	// Redacted: the node replaced the secret values with REDACTED (Talos 1.15, a role
+	// below os:admin). Absent otherwise.
+	Redacted bool `json:"redacted,omitempty"`
 }
 
 type resourceYAML struct {
-	YAML string `json:"yaml"`
+	YAML     string `json:"yaml"`
+	Redacted bool   `json:"redacted,omitempty"` // as resourceItem.Redacted
 }
 
 // ResourceTypes lists the resource types node knows, from its resource definitions, like
@@ -100,15 +104,16 @@ func sensitivityName(spec *meta.ResourceDefinitionSpec) string {
 }
 
 // ResourceList lists the resources of a type on node, like `talosctl get TYPE` (os:reader;
-// os:admin for sensitive types, enforced by the node). resourceType is a canonical type or
-// an alias; an empty namespace means the type's default one. At most 1000 items.
+// os:admin for sensitive types, enforced by the node, except that Talos 1.15 serves the
+// redactable ones redacted to lower roles: see acceptRedacted). resourceType is a canonical
+// type or an alias; an empty namespace means the type's default one. At most 1000 items.
 func ResourceList(configYAML, contextName, node, namespace, resourceType string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
 	if isDemoContext(configYAML, contextName) {
-		return demoRead("ResourceList", configYAML, contextName, node)
+		return demoRead("ResourceList", configYAML, contextName, node, resourceType)
 	}
 
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
@@ -121,7 +126,7 @@ func ResourceList(configYAML, contextName, node, namespace, resourceType string)
 			namespace = rd.DefaultNamespace
 		}
 
-		list, err := s.client.COSI.List(ctx, resource.NewMetadata(namespace, rd.Type, "", resource.VersionUndefined))
+		list, err := s.client.COSI.List(acceptRedacted(ctx), resource.NewMetadata(namespace, rd.Type, "", resource.VersionUndefined))
 		if err != nil {
 			return "", s.friendlyErr(node, err)
 		}
@@ -135,7 +140,10 @@ func mapResourceItems(resourceType, namespace string, items []resource.Resource)
 
 	for _, r := range items {
 		md := r.Metadata()
-		item := resourceItem{ID: md.ID(), Namespace: md.Namespace(), Version: md.Version().String(), Phase: md.Phase().String()}
+		item := resourceItem{
+			ID: md.ID(), Namespace: md.Namespace(), Version: md.Version().String(), Phase: md.Phase().String(),
+			Redacted: isRedacted(r),
+		}
 
 		if !md.Updated().IsZero() {
 			item.Updated = md.Updated().UnixMilli()
@@ -155,15 +163,17 @@ func mapResourceItems(resourceType, namespace string, items []resource.Resource)
 
 // ResourceGet returns one resource of node as YAML (metadata and spec), like
 // `talosctl get TYPE ID -o yaml` (os:reader; os:admin for sensitive types, enforced by the
-// node). Sensitive resources hold secrets (keys, tokens, the machine config): the app must
-// warn before showing them.
+// node, which on Talos 1.15 serves the redactable ones redacted to lower roles: "redacted"
+// is then true). Sensitive resources hold secrets (keys, tokens, the machine config): the
+// app must warn before showing them. A redacted one is shown as the node sent it, never
+// completed from another read.
 func ResourceGet(configYAML, contextName, node, namespace, resourceType, id string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
 	if isDemoContext(configYAML, contextName) {
-		return demoRead("ResourceGet", configYAML, contextName, node)
+		return demoRead("ResourceGet", configYAML, contextName, node, resourceType, id)
 	}
 	id = privacy.unmaskText(id)
 
@@ -177,7 +187,7 @@ func ResourceGet(configYAML, contextName, node, namespace, resourceType, id stri
 			namespace = rd.DefaultNamespace
 		}
 
-		r, err := s.client.COSI.Get(ctx, resource.NewMetadata(namespace, rd.Type, id, resource.VersionUndefined))
+		r, err := s.client.COSI.Get(acceptRedacted(ctx), resource.NewMetadata(namespace, rd.Type, id, resource.VersionUndefined))
 		if err != nil {
 			if state.IsNotFoundError(err) {
 				return "", fmt.Errorf("%s %q not found in namespace %s", rd.Type, id, namespace)
@@ -191,7 +201,7 @@ func ResourceGet(configYAML, contextName, node, namespace, resourceType, id stri
 			return "", err
 		}
 
-		return toJSON(resourceYAML{YAML: text})
+		return toJSON(resourceYAML{YAML: text, Redacted: isRedacted(r)})
 	})
 }
 

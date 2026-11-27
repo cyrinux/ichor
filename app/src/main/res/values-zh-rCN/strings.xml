@@ -1746,6 +1746,8 @@
     <string name="resources_truncated">仅显示前 %1$d 个</string>
     <string name="resources_version">版本 %1$s</string>
     <string name="resources_copy">复制 YAML</string>
+    <string name="resources_redacted">已按你的角色隐去</string>
+    <string name="resources_redacted_hint">Talos 已将机密值替换为 REDACTED：你的 talosconfig 角色低于 os:admin。</string>
     <string name="support_bundle_title">支持包</string>
     <string name="settings_support_bundle_desc">将节点的日志和集群详情收集到一个 zip 中，类似 talosctl support。</string>
     <string name="settings_support_bundle_open">创建支持包…</string>

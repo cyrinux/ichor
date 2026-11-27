@@ -12,6 +12,7 @@ reads those roles and explains up front when a feature needs more.
 | Node services and resources | `ServiceList`, `Memory`, `LoadAvg`, `SystemStat`, `CPUInfo`, `Mounts` | `os:reader` |
 | Service logs and kernel log (dmesg) | `Logs`, `Dmesg` | `os:reader` |
 | Node files: list a directory, read a text file (512 KiB, secrets under `/system/state` redacted) | `List`, `Read` | `os:reader` |
+| Resource browser (`talosctl get rd`, `talosctl get TYPE`); sensitive types with their secret values shown as `REDACTED` on Talos 1.15 (see the note) | COSI `List`, `Get` of resource definitions and resources | `os:reader`; sensitive types in full **`os:admin`** |
 | etcd members, leader, DB size, alarms | `EtcdMemberList`, `EtcdStatus`, `EtcdAlarmList` | `os:reader` |
 | Background alerts and widget | same as the overview and etcd | `os:reader` |
 | AI diagnosis report (optional) | the calls above, `Time`, `Events`, `Containers`, `NodeStatus`, `StaticPodStatus` | `os:reader` |
@@ -81,6 +82,15 @@ Notes:
 - **Live cluster usage:** above 24 nodes, each sample (`SystemStat`, `Memory`) asks only the nodes
   with a problem and those on screen, and every node once a minute, the totals keeping each node's
   last counters, so the summary card says "Live: N of M nodes" in between.
+- **Sensitive resources on Talos 1.15:** the resource browser asks for the redacted form,
+  like `talosctl get` does. To `os:reader` and `os:operator`, Talos 1.15 then serves a
+  sensitive resource that has one (a link spec with a WireGuard key, a BGP instance with a
+  password) with each secret value replaced by `REDACTED`; the list row and the resource carry
+  a "Redacted for your role" chip, and the `REDACTED` values are dimmed. Metadata is never
+  redacted. Sensitive types without a redacted form (such as the Kubernetes
+  secrets) are still refused with "permission denied" below `os:admin`, and so
+  are all sensitive types on Talos 1.14 and older. `os:admin` always gets the full resource.
+  The app never fills a redacted resource in from another read.
 - **Roles combine:** an `os:operator` config can do everything an `os:reader` one can.
 - **Kubernetes access:** see [Kubernetes clusters without Talos](clusters.md#kubernetes-clusters-without-talos)
   to use your own kubeconfig identity instead of the admin kubeconfig (no `os:admin` needed).

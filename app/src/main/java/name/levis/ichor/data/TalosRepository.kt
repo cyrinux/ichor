@@ -552,8 +552,8 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     }
 
     /** `talosctl get TYPE ID -o yaml` (never cached: may hold secrets). */
-    suspend fun resourceGet(node: String, namespace: String, type: String, id: String): String = call { cfg, ctx ->
-        TalosJson.decodeFromString(ResourceDetail.serializer(), Ichorgo.resourceGet(cfg, ctx, node, namespace, type, id)).yaml
+    suspend fun resourceGet(node: String, namespace: String, type: String, id: String): ResourceDetail = call { cfg, ctx ->
+        TalosJson.decodeFromString(ResourceDetail.serializer(), Ichorgo.resourceGet(cfg, ctx, node, namespace, type, id))
     }
 
     suspend fun driftSnapshot(): String = call { cfg, ctx -> Ichorgo.clusterDriftSnapshot(cfg, ctx) }

@@ -45,6 +45,8 @@ data class ResourceItem(
     val phase: String = "",
     /** Epoch milliseconds; 0 when unknown. */
     val updated: Long = 0,
+    /** Talos 1.15 replaced its secret values with REDACTED for this role (below os:admin). */
+    val redacted: Boolean = false,
 )
 
 /** Items whose id contains [query] (case-insensitive; all when blank). */
@@ -53,5 +55,14 @@ fun List<ResourceItem>.matching(query: String): List<ResourceItem> {
     return if (q.isEmpty()) this else filter { it.id.contains(q, ignoreCase = true) }
 }
 
+/** One resource as YAML; [redacted] as [ResourceItem.redacted]. */
 @Serializable
-data class ResourceDetail(val yaml: String = "")
+data class ResourceDetail(val yaml: String = "", val redacted: Boolean = false)
+
+/** The placeholder Talos puts in place of each secret value it redacts. */
+const val REDACTED_PLACEHOLDER = "REDACTED"
+
+private val redactedWord = Regex("""(?<![\w-])$REDACTED_PLACEHOLDER(?![\w-])""")
+
+/** Where [yaml] holds the REDACTED placeholder as a whole word, to show those values dimmed. */
+fun redactedRanges(yaml: String): List<IntRange> = redactedWord.findAll(yaml).map { it.range }.toList()

@@ -1746,6 +1746,8 @@
     <string name="resources_truncated">最初の%1$d個のみ表示しています</string>
     <string name="resources_version">バージョン %1$s</string>
     <string name="resources_copy">YAML をコピー</string>
+    <string name="resources_redacted">このロールでは伏せ字</string>
+    <string name="resources_redacted_hint">Talos がシークレットの値を REDACTED に置き換えました。talosconfig のロールが os:admin 未満です。</string>
     <string name="support_bundle_title">サポートバンドル</string>
     <string name="settings_support_bundle_desc">talosctl support のように、ノードのログとクラスターの詳細を zip にまとめます。</string>
     <string name="settings_support_bundle_open">サポートバンドルを作成…</string>

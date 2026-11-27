@@ -1803,6 +1803,8 @@
     <string name="resources_truncated">Somente os primeiros %1$d são mostrados</string>
     <string name="resources_version">versão %1$s</string>
     <string name="resources_copy">Copiar YAML</string>
+    <string name="resources_redacted">Ocultado para sua função</string>
+    <string name="resources_redacted_hint">O Talos substituiu os valores secretos por REDACTED: a função do seu talosconfig está abaixo de os:admin.</string>
     <string name="support_bundle_title">Pacote de suporte</string>
     <string name="settings_support_bundle_desc">Reunir os logs e os detalhes do cluster dos nós em um zip, como o talosctl support.</string>
     <string name="settings_support_bundle_open">Criar um pacote de suporte…</string>
