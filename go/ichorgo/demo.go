@@ -329,12 +329,8 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			root = args[0]
 		}
 		return toJSON(map[string]any{"entries": []map[string]any{{"path": root + "/services", "size": 32 << 20, "isDir": true}, {"path": root + "/system.log", "size": 8 << 20, "isDir": false}}, "truncated": false})
-	case "ResourceTypes":
-		return toJSON([]resourceTypeInfo{{Type: "HostnameStatuses.net.talos.dev", Aliases: []string{"hostname"}, Namespace: "network"}})
-	case "ResourceList":
-		return toJSON(resourceItems{Type: "HostnameStatuses.net.talos.dev", Namespace: "network", Items: []resourceItem{{ID: "hostname", Namespace: "network", Version: "1", Phase: "running", Updated: now}}})
-	case "ResourceGet":
-		return toJSON(map[string]string{"yaml": fmt.Sprintf("metadata:\n  namespace: network\n  type: HostnameStatuses.net.talos.dev\n  id: hostname\n  version: 1\nspec:\n  hostname: %s\n  domainname: demo.invalid\n", n.Hostname)})
+	case "ResourceTypes", "ResourceList", "ResourceGet":
+		return demoResource(operation, n.Hostname, now, args)
 	}
 	return "", errDemoUnavailable
 }

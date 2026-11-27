@@ -1805,6 +1805,8 @@
     <string name="resources_truncated">Nur die ersten %1$d werden angezeigt</string>
     <string name="resources_version">Version %1$s</string>
     <string name="resources_copy">YAML kopieren</string>
+    <string name="resources_redacted">Für deine Rolle geschwärzt</string>
+    <string name="resources_redacted_hint">Talos hat die geheimen Werte durch REDACTED ersetzt: Deine talosconfig-Rolle liegt unter os:admin.</string>
     <string name="support_bundle_title">Support-Bundle</string>
     <string name="settings_support_bundle_desc">Sammelt Logs und Cluster-Details der Knoten in einer ZIP-Datei, wie talosctl support.</string>
     <string name="settings_support_bundle_open">Support-Bundle erstellen…</string>

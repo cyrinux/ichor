@@ -49,6 +49,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.model.ResourceDetail
+import name.levis.ichor.model.redactedRanges
+import name.levis.ichor.ui.components.MutedText
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import name.levis.ichor.security.SecureWhile
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
@@ -60,7 +65,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.TooltipIconButton
 
 /** One resource as YAML. Never cached: a sensitive one holds secrets. */
-class ResourceDetailViewModel(private val talos: TalosRepository, private val ref: ResourceRef, private val id: String) : LoadingViewModel<String>() {
+class ResourceDetailViewModel(private val talos: TalosRepository, private val ref: ResourceRef, private val id: String) : LoadingViewModel<ResourceDetail>() {
     // A sensitive resource is read only once the user reveals it.
     override val loadsOnOpen = false
     override suspend fun fetch() = talos.resourceGet(ref.node, ref.namespace, ref.type, id)
@@ -85,7 +90,7 @@ fun ResourceDetailScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
-    val yaml = (state as? UiState.Loaded)?.data
+    val yaml = (state as? UiState.Loaded)?.data?.yaml
 
     // Secrets on screen: no screenshot, no recents thumbnail.
     SecureWhile(ref.sensitive)
@@ -143,6 +148,7 @@ fun ResourceDetailScreen(
                 is UiState.Failed -> ErrorBox(s.message, vm::refresh)
                 is UiState.Loaded -> {
                     if (s.refreshing) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    if (s.data.redacted) RedactedNotice()
                     SelectionContainer {
                         Box(
                             Modifier
@@ -151,13 +157,37 @@ fun ResourceDetailScreen(
                                 .horizontalScroll(rememberScrollState())
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                         ) {
-                            Text(s.data, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, softWrap = false)
+                            ResourceYaml(s.data)
                         }
                     }
                 }
             }
         }
     }
+}
+
+/** Talos 1.15 served the resource redacted: the chip, and why. */
+@Composable
+private fun RedactedNotice() {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        RedactedTag()
+        MutedText(stringResource(R.string.resources_redacted_hint), Modifier.padding(top = 4.dp))
+    }
+}
+
+/** The YAML as the node sent it; on a redacted resource the REDACTED values are dimmed. */
+@Composable
+private fun ResourceYaml(detail: ResourceDetail) {
+    val dimmed = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+    val text = remember(detail, dimmed) {
+        buildAnnotatedString {
+            append(detail.yaml)
+            if (detail.redacted) {
+                redactedRanges(detail.yaml).forEach { addStyle(SpanStyle(color = dimmed), it.first, it.last + 1) }
+            }
+        }
+    }
+    Text(text, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, softWrap = false)
 }
 
 @Composable

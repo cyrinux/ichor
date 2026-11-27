@@ -133,6 +133,7 @@ private struct ResourceItemRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(verbatim: item.id).font(.callout.monospaced()).lineLimit(2).truncationMode(.middle)
+            if item.redacted { RedactedTag() }
             HStack(spacing: 10) {
                 if !item.version.isEmpty { Text("version \(item.version)") }
                 if !item.phase.isEmpty { Text(verbatim: item.phase) }
@@ -215,9 +216,9 @@ struct ResourceDetailView: View {
     private var loadedContent: some View {
         LoadStateView(state: state, retry: load) { document in
             VStack(alignment: .leading, spacing: 0) {
-                if type.isSensitive || message != nil { banner }
+                if type.isSensitive || message != nil || document.redacted { banner(redacted: document.redacted) }
                 ScrollView([.vertical, .horizontal]) {
-                    Text(verbatim: document.yaml)
+                    Text(yamlText(document))
                         .font(.caption.monospaced())
                         .textSelection(.enabled)
                         .fixedSize()
@@ -246,9 +247,15 @@ struct ResourceDetailView: View {
         }
     }
 
-    private var banner: some View {
+    private func banner(redacted: Bool) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            if type.isSensitive {
+            if redacted {
+                RedactedTag()
+                Text("Talos replaced the secret values with REDACTED: your talosconfig role is below os:admin.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            if type.isSensitive && !redacted {
                 Label(
                     "This resource contains secrets (keys, tokens). Show it only where nobody else can see your screen.",
                     systemImage: "lock.fill"
@@ -261,6 +268,18 @@ struct ResourceDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal)
         .padding(.vertical, 8)
+    }
+
+    /// The YAML as the node sent it; on a redacted resource the REDACTED values are dimmed.
+    private func yamlText(_ document: ResourceDocument) -> AttributedString {
+        guard document.redacted else { return AttributedString(document.yaml) }
+        var text = AttributedString()
+        for segment in redactedSegments(document.yaml) {
+            var part = AttributedString(segment.text)
+            if segment.redacted { part.foregroundColor = .secondary }
+            text += part
+        }
+        return text
     }
 
     private var loadedYAML: String? {
@@ -304,5 +323,12 @@ struct ResourceDetailView: View {
         message =
             type.isSensitive
             ? String(localized: "Copied. The clipboard is cleared in 2 minutes.") : String(localized: "Copied.")
+    }
+}
+
+/// "Redacted for your role": Talos 1.15 replaced the secret values (a role below os:admin).
+private struct RedactedTag: View {
+    var body: some View {
+        Tag(String(localized: "Redacted for your role"), color: .secondary)
     }
 }

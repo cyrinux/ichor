@@ -12,6 +12,7 @@ import (
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -176,6 +177,10 @@ func (s fakeTalosState) Get(ctx context.Context, req *cosiv1alpha1.GetRequest) (
 		return nil, err
 	}
 
+	if err := s.f.readerAccess(ctx, node, req.GetType()); err != nil {
+		return nil, err
+	}
+
 	found := s.find(node, req.GetType(), req.GetId())
 	if len(found) == 0 {
 		return nil, status.Errorf(codes.NotFound, "resource %s/%s not found", req.GetType(), req.GetId())
@@ -195,6 +200,10 @@ func (s fakeTalosState) List(req *cosiv1alpha1.ListRequest, stream grpc.ServerSt
 		return err
 	}
 
+	if err := s.f.readerAccess(stream.Context(), node, req.GetType()); err != nil {
+		return err
+	}
+
 	for _, r := range s.find(node, req.GetType(), "") {
 		res, err := marshalResource(r)
 		if err != nil {
@@ -207,4 +216,25 @@ func (s fakeTalosState) List(req *cosiv1alpha1.ListRequest, stream grpc.ServerSt
 	}
 
 	return nil
+}
+
+// readerAccess is the check of fakeTalos.sensitive.
+func (f *fakeTalos) readerAccess(ctx context.Context, node, typ string) error {
+	f.mu.Lock()
+	redactable, sensitive := f.sensitive[typ]
+	version := f.versions[node]
+	f.mu.Unlock()
+
+	if !sensitive {
+		return nil
+	}
+
+	md, _ := metadata.FromIncomingContext(ctx)
+	accepts := slices.Contains(md.Get(redactModeHeader), redactModeAccept)
+
+	if redactable && accepts && compareVersions(version, "v1.15.0-alpha.0") >= 0 {
+		return nil
+	}
+
+	return status.Errorf(codes.PermissionDenied, "not authorized")
 }

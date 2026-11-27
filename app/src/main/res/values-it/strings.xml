@@ -1812,6 +1812,8 @@
     <string name="resources_truncated">Sono mostrati solo i primi %1$d</string>
     <string name="resources_version">versione %1$s</string>
     <string name="resources_copy">Copia YAML</string>
+    <string name="resources_redacted">Oscurato per il tuo ruolo</string>
+    <string name="resources_redacted_hint">Talos ha sostituito i valori segreti con REDACTED: il ruolo del tuo talosconfig è inferiore a os:admin.</string>
     <string name="support_bundle_title">Bundle di supporto</string>
     <string name="settings_support_bundle_desc">Raccoglie log e dettagli del cluster dei nodi in uno zip, come talosctl support.</string>
     <string name="settings_support_bundle_open">Crea un bundle di supporto…</string>

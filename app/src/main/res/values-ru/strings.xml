@@ -1921,6 +1921,8 @@
     <string name="resources_truncated">Показаны только первые %1$d</string>
     <string name="resources_version">версия %1$s</string>
     <string name="resources_copy">Копировать YAML</string>
+    <string name="resources_redacted">Скрыто для вашей роли</string>
+    <string name="resources_redacted_hint">Talos заменил секретные значения на REDACTED: роль вашего talosconfig ниже os:admin.</string>
     <string name="support_bundle_title">Пакет поддержки</string>
     <string name="settings_support_bundle_desc">Собрать журналы и сведения о кластере с узлов в zip-архив, как talosctl support.</string>
     <string name="settings_support_bundle_open">Создать пакет поддержки…</string>

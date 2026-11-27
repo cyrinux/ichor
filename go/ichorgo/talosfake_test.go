@@ -92,6 +92,11 @@ type fakeTalos struct {
 	files map[string]map[string]string
 	// denied are the paths whose List and Read answer PermissionDenied (a role that may not).
 	denied map[string]bool
+	// sensitive makes the COSI state answer like a node to an os:reader: a type listed is
+	// PermissionDenied, unless it maps to true (redactable, like a link spec), the node runs
+	// Talos 1.15 or later and the call accepts redaction (a 1.14 node ignores the header).
+	// Resources of a redactable type are stored as the node redacts them.
+	sensitive map[string]bool
 	// cpuFreq is a node's CPUFreqStats answer (a node without an entry: Unimplemented).
 	cpuFreq map[string][]*machineapi.CPUFreqStats
 	// applies are the ApplyConfiguration requests received, in order; a real (not dry run)

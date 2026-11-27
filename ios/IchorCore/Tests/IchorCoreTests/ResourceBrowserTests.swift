@@ -42,6 +42,30 @@ final class ResourceBrowserTests: XCTestCase {
         XCTAssertEqual(try TalosJSON.decode(ResourceDocument.self, from: #"{"yaml":"a: 1\n"}"#).yaml, "a: 1\n")
     }
 
+    func testRedactedDecoding() throws {
+        let list = try TalosJSON.decode(
+            ResourceItems.self, from: #"{"items":[{"id":"configuration/wg0","redacted":true},{"id":"lo"}]}"#)
+        XCTAssertEqual(list.items.map(\.redacted), [true, false])
+        let document = try TalosJSON.decode(ResourceDocument.self, from: #"{"yaml":"k: REDACTED\n","redacted":true}"#)
+        XCTAssertEqual(document, ResourceDocument(yaml: "k: REDACTED\n", redacted: true))
+        XCTAssertFalse(try TalosJSON.decode(ResourceDocument.self, from: #"{"yaml":"a: 1\n"}"#).redacted)
+    }
+
+    func testRedactedSegments() {
+        let yaml = "privateKey: REDACTED\nname: NOT_REDACTED\n  - presharedKey: REDACTED"
+        XCTAssertEqual(
+            redactedSegments(yaml),
+            [
+                YAMLSegment(text: "privateKey: ", redacted: false),
+                YAMLSegment(text: "REDACTED", redacted: true),
+                YAMLSegment(text: "\nname: NOT_REDACTED\n  - presharedKey: ", redacted: false),
+                YAMLSegment(text: "REDACTED", redacted: true),
+            ])
+        XCTAssertEqual(redactedSegments("a: 1\n"), [YAMLSegment(text: "a: 1\n", redacted: false)])
+        XCTAssertEqual(redactedSegments(""), [])
+        XCTAssertEqual(redactedSegments("REDACTEDX").map(\.text).joined(), "REDACTEDX")
+    }
+
     func testSensitivity() {
         XCTAssertFalse(isSensitiveResource(""))
         XCTAssertFalse(isSensitiveResource("  "))
