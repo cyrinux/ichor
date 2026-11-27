@@ -8,6 +8,8 @@ enum class HardwarePart(val key: String, @StringRes val title: Int) {
     SENSORS("sensors", R.string.hardware_sensors),
     SYSTEM("system", R.string.hardware_system),
     PROCESSORS("processors", R.string.hardware_processors),
+    CPU_SCALING("cpuScaling", R.string.hardware_cpu_scaling),
+    NUMA("numa", R.string.hardware_numa),
     MEMORY("memory", R.string.hardware_memory),
     DISKS("disks", R.string.hardware_disks),
     EXTENSIONS("extensions", R.string.hardware_extensions),
@@ -18,15 +20,24 @@ enum class HardwarePart(val key: String, @StringRes val title: Int) {
 
 /**
  * The cards shown, in order: sensors first when there are some (or their read failed), PCI last
- * when there are devices, the watchdog when the node's Talos has watchdog timers (1.7); the
+ * when there are devices, the watchdog when the node's Talos has watchdog timers (1.7), CPU
+ * scaling and NUMA when a Talos 1.15 node reports them (NUMA only with several nodes); the
  * other hardware cards always. One list drives both the `LazyColumn` items and the section
  * rail, so a card's position is its rail index.
  */
-fun hardwareParts(sensors: Boolean, pci: Boolean, watchdog: Boolean = true): List<HardwarePart> = HardwarePart.entries.filter {
+fun hardwareParts(
+    sensors: Boolean,
+    pci: Boolean,
+    watchdog: Boolean = true,
+    cpuScaling: Boolean = false,
+    numa: Boolean = false,
+): List<HardwarePart> = HardwarePart.entries.filter {
     when (it) {
         HardwarePart.SENSORS -> sensors
         HardwarePart.PCI -> pci
         HardwarePart.WATCHDOG -> watchdog
+        HardwarePart.CPU_SCALING -> cpuScaling
+        HardwarePart.NUMA -> numa
         else -> true
     }
 }

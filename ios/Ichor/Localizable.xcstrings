@@ -202663,6 +202663,90 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "%lld об/мин" } }
       }
     },
+    "CPU scaling" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Gestion de fréquence CPU" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Escalado de CPU" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Масштабування ЦП" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "CPU-Skalierung" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scaling della CPU" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CPU 频率调节" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "CPU スケーリング" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Escalonamento de CPU" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Масштабирование ЦП" } }
+      }
+    },
+    "NUMA" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "NUMA" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "NUMA" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "NUMA" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "NUMA" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "NUMA" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "NUMA" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "NUMA" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "NUMA" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "NUMA" } }
+      }
+    },
+    "The powersave governor holds these cores back on a node that is already throttled. A CPUScalingConfig with the performance governor keeps them at speed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le gouverneur powersave bride ces cœurs sur un nœud déjà ralenti. Un CPUScalingConfig avec le gouverneur performance les garde à pleine vitesse." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El gobernador powersave frena estos núcleos en un nodo que ya está limitado. Un CPUScalingConfig con el gobernador performance los mantiene a plena velocidad." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Регулятор powersave стримує ці ядра на вузлі, який уже тротлиться. CPUScalingConfig з регулятором performance тримає їх на повній швидкості." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Governor powersave bremst diese Kerne auf einem Knoten, der bereits gedrosselt wird. Eine CPUScalingConfig mit dem Governor performance hält sie auf voller Geschwindigkeit." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il governor powersave frena questi core su un nodo già limitato. Un CPUScalingConfig con il governor performance li mantiene alla massima velocità." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "powersave 调速器在已降频的节点上压低这些核心的速度。使用 performance 调速器的 CPUScalingConfig 可让其保持全速。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "powersave ガバナーが、すでにスロットリング中のノードでこれらのコアを抑えています。performance ガバナーを指定した CPUScalingConfig で全速を維持できます。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O governador powersave segura estes núcleos em um nó que já está limitado. Um CPUScalingConfig com o governador performance os mantém em velocidade máxima." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Регулятор powersave сдерживает эти ядра на узле, который уже троттлится. CPUScalingConfig с регулятором performance держит их на полной скорости." } }
+      }
+    },
+    "Set by %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Défini par %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Definido por %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Задано в %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gesetzt von %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impostato da %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "由 %@ 设置" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ で設定" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Definido por %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Задано в %@" } }
+      }
+    },
+    "Node %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nœud %lld" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nodo %lld" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вузол %lld" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Knoten %lld" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nodo %lld" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "节点 %lld" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ノード %lld" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nó %lld" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Узел %lld" } }
+      }
+    },
+    "CPUs: %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "CPU : %lld" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "CPU: %lld" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "ЦП: %lld" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "CPUs: %lld" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "CPU: %lld" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CPU:%lld" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "CPU: %lld" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "CPUs: %lld" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ЦП: %lld" } }
+      }
+    },
     "Thermal throttle events" : {
       "extractionState" : "manual",
       "localizations" : {

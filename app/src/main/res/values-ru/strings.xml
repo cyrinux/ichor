@@ -1530,6 +1530,12 @@
     <string name="hardware_cpu_frequency">Частота CPU</string>
     <string name="hardware_freq_range">%1$d–%2$d МГц</string>
     <string name="hardware_cpu_core_mhz">cpu%1$d %2$d МГц</string>
+    <string name="hardware_cpu_scaling">Масштабирование ЦП</string>
+    <string name="hardware_numa">NUMA</string>
+    <string name="hardware_powersave_hint">Регулятор powersave сдерживает эти ядра на узле, который уже троттлится. CPUScalingConfig с регулятором performance держит их на полной скорости.</string>
+    <string name="hardware_cpu_scaling_set_by">Задано в %1$s</string>
+    <string name="hardware_numa_node">Узел %1$d</string>
+    <string name="hardware_cpu_count">ЦП: %1$d</string>
     <string name="images_title">Образы</string>
     <string name="images_search">Фильтр по имени или digest</string>
     <string name="images_sort_name">Имя</string>

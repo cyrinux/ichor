@@ -82,33 +82,57 @@ func readBGPPeers(ctx context.Context, s *session, node string, out *nodeNetwork
 // listRawSpecs lists a type's resources with the raw COSI API and decodes the YAML spec each one
 // carries, whatever this client's machinery knows of the type; ctx targets the node.
 func listRawSpecs(ctx context.Context, s *session, namespace, resourceType string) ([]map[string]any, error) {
+	out := []map[string]any{}
+
+	if err := eachRawSpec(ctx, s, namespace, resourceType, func(_ string, spec map[string]any) {
+		out = append(out, spec)
+	}); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+// listRawSpecsByID is listRawSpecs keyed by resource id.
+func listRawSpecsByID(ctx context.Context, s *session, namespace, resourceType string) (map[string]map[string]any, error) {
+	out := map[string]map[string]any{}
+
+	if err := eachRawSpec(ctx, s, namespace, resourceType, func(id string, spec map[string]any) {
+		out[id] = spec
+	}); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+// eachRawSpec calls fn with each resource's id and decoded spec, in the order the node sends them.
+func eachRawSpec(ctx context.Context, s *session, namespace, resourceType string, fn func(id string, spec map[string]any)) error {
 	stream, err := v1alpha1.NewStateClient(s.client.Conn()).List(ctx, &v1alpha1.ListRequest{
 		Namespace: namespace,
 		Type:      resourceType,
 		Options:   &v1alpha1.ListOptions{},
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	out := []map[string]any{}
 
 	for {
 		resp, err := stream.Recv()
 		if errors.Is(err, io.EOF) {
-			return out, nil
+			return nil
 		}
 
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		spec := map[string]any{}
 		if err := yaml.Unmarshal([]byte(resp.GetResource().GetSpec().GetYamlSpec()), &spec); err != nil {
-			return nil, fmt.Errorf("%s %s: decode spec: %w", resourceType, resp.GetResource().GetMetadata().GetId(), err)
+			return fmt.Errorf("%s %s: decode spec: %w", resourceType, resp.GetResource().GetMetadata().GetId(), err)
 		}
 
-		out = append(out, spec)
+		fn(resp.GetResource().GetMetadata().GetId(), spec)
 	}
 }
 

@@ -1438,6 +1438,12 @@
     <string name="hardware_cpu_frequency">CPU frequency</string>
     <string name="hardware_freq_range">%1$d–%2$d MHz</string>
     <string name="hardware_cpu_core_mhz">cpu%1$d %2$d MHz</string>
+    <string name="hardware_cpu_scaling">CPU scaling</string>
+    <string name="hardware_numa">NUMA</string>
+    <string name="hardware_powersave_hint">The powersave governor holds these cores back on a node that is already throttled. A CPUScalingConfig with the performance governor keeps them at speed.</string>
+    <string name="hardware_cpu_scaling_set_by">Set by %1$s</string>
+    <string name="hardware_numa_node">Node %1$d</string>
+    <string name="hardware_cpu_count">CPUs: %1$d</string>
     <string name="images_title">Images</string>
     <string name="images_search">Filter by name or digest</string>
     <string name="images_sort_name">Name</string>

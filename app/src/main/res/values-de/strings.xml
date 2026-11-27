@@ -1432,6 +1432,12 @@
     <string name="hardware_cpu_frequency">CPU-Takt</string>
     <string name="hardware_freq_range">%1$d–%2$d MHz</string>
     <string name="hardware_cpu_core_mhz">cpu%1$d %2$d MHz</string>
+    <string name="hardware_cpu_scaling">CPU-Skalierung</string>
+    <string name="hardware_numa">NUMA</string>
+    <string name="hardware_powersave_hint">Der Governor powersave bremst diese Kerne auf einem Knoten, der bereits gedrosselt wird. Eine CPUScalingConfig mit dem Governor performance hält sie auf voller Geschwindigkeit.</string>
+    <string name="hardware_cpu_scaling_set_by">Gesetzt von %1$s</string>
+    <string name="hardware_numa_node">Knoten %1$d</string>
+    <string name="hardware_cpu_count">CPUs: %1$d</string>
     <string name="images_title">Images</string>
     <string name="images_search">Nach Name oder Digest filtern</string>
     <string name="images_sort_name">Name</string>

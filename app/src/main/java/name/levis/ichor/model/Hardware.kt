@@ -16,7 +16,11 @@ data class NodeHardware(
     val security: SecurityInfo? = null,
     /** Null when no watchdog timer is configured (or its read failed: see [errors]). */
     val watchdog: WatchdogInfo? = null,
-    /** Section ("system", "processors", "memory", "disks", "extensions", "security", "watchdog") -> error. */
+    /** NUMA nodes (Talos 1.15+, bare metal); empty elsewhere. */
+    val numa: List<NumaNode> = emptyList(),
+    /** cpufreq policies (Talos 1.15+, with a cpufreq driver); empty elsewhere. */
+    val cpuScaling: List<CpuScalingPolicy> = emptyList(),
+    /** Section ("system", "processors", "memory", "disks", "extensions", "security", "watchdog", "numa", "cpuScaling") -> error. */
     val errors: Map<String, String> = emptyMap(),
 )
 
@@ -114,6 +118,8 @@ object HardwareSection {
     const val EXTENSIONS = "extensions"
     const val SECURITY = "security"
     const val WATCHDOG = "watchdog"
+    const val NUMA = "numa"
+    const val CPU_SCALING = "cpuScaling"
 }
 
 /** Installed memory in bytes (sum of the populated modules). */

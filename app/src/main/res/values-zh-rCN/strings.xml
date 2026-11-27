@@ -1386,6 +1386,12 @@
     <string name="hardware_cpu_frequency">CPU 频率</string>
     <string name="hardware_freq_range">%1$d–%2$d MHz</string>
     <string name="hardware_cpu_core_mhz">cpu%1$d %2$d MHz</string>
+    <string name="hardware_cpu_scaling">CPU 频率调节</string>
+    <string name="hardware_numa">NUMA</string>
+    <string name="hardware_powersave_hint">powersave 调速器在已降频的节点上压低这些核心的速度。使用 performance 调速器的 CPUScalingConfig 可让其保持全速。</string>
+    <string name="hardware_cpu_scaling_set_by">由 %1$s 设置</string>
+    <string name="hardware_numa_node">节点 %1$d</string>
+    <string name="hardware_cpu_count">CPU:%1$d</string>
     <string name="images_title">镜像</string>
     <string name="images_search">按名称或摘要筛选</string>
     <string name="images_sort_name">名称</string>

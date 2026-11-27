@@ -15,10 +15,16 @@ public struct NodeHardware: Decodable, Equatable, Sendable {
     /// nil when no watchdog timer is configured (or its read failed: see `errors["watchdog"]`).
     public let watchdog: WatchdogInfo?
 
+    /// NUMA nodes (Talos 1.15+, bare metal); empty elsewhere.
+    public let numa: [NUMANode]
+    /// cpufreq policies (Talos 1.15+, with a cpufreq driver); empty elsewhere.
+    public let cpuScaling: [CPUScalingPolicy]
+
     public init(
         system: SystemInfo? = nil, processors: [ProcessorInfo] = [], memory: [MemoryModule] = [],
         disks: [DiskInfo] = [],
         extensions: [ExtensionInfo] = [], security: SecurityInfo? = nil, watchdog: WatchdogInfo? = nil,
+        numa: [NUMANode] = [], cpuScaling: [CPUScalingPolicy] = [],
         errors: [String: String] = [:]
     ) {
         self.system = system
@@ -28,11 +34,13 @@ public struct NodeHardware: Decodable, Equatable, Sendable {
         self.extensions = extensions
         self.security = security
         self.watchdog = watchdog
+        self.numa = numa
+        self.cpuScaling = cpuScaling
         self.errors = errors
     }
 
     private enum CodingKeys: String, CodingKey {
-        case system, processors, memory, disks, extensions, security, watchdog, errors
+        case system, processors, memory, disks, extensions, security, watchdog, numa, cpuScaling, errors
     }
 
     // Go encodes empty (nil) slices and maps as null.
@@ -45,6 +53,8 @@ public struct NodeHardware: Decodable, Equatable, Sendable {
         extensions = try c.field(.extensions, [])
         security = try c.decodeIfPresent(SecurityInfo.self, forKey: .security)
         watchdog = try c.decodeIfPresent(WatchdogInfo.self, forKey: .watchdog)
+        numa = try c.field(.numa, [])
+        cpuScaling = try c.field(.cpuScaling, [])
         errors = try c.field(.errors, [:])
     }
 

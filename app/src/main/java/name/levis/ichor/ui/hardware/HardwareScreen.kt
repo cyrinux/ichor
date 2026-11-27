@@ -44,6 +44,9 @@ import name.levis.ichor.model.SecurityInfo
 import name.levis.ichor.model.SystemInfo
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.WatchdogInfo
+import name.levis.ichor.model.powersaveWhileThrottled
+import name.levis.ichor.model.showsCpuScaling
+import name.levis.ichor.model.showsNuma
 import name.levis.ichor.model.sortedDisks
 import name.levis.ichor.model.support
 import name.levis.ichor.model.totalMemoryBytes
@@ -124,6 +127,8 @@ private fun HardwareContent(hw: NodeHardware, sensorsState: UiState<NodeSensors>
         sensors = sensors?.showsSensorsCard() == true || sensorsState is UiState.Failed,
         pci = sensors?.showsPciCard() == true,
         watchdog = watchdog,
+        cpuScaling = hw.showsCpuScaling,
+        numa = hw.showsNuma,
     )
     val labels = parts.map { stringResource(it.title) }
     val sections = remember(parts, labels) { parts.mapIndexed { i, part -> JumpSection(part.key, labels[i], i) } }
@@ -160,6 +165,12 @@ private fun HardwareCard(part: HardwarePart, hw: NodeHardware, sensors: NodeSens
                 if (i > 0) HorizontalDivider()
                 ProcessorRow(cpu)
             }
+        }
+        HardwarePart.CPU_SCALING -> Section(title, hw.errors[HardwareSection.CPU_SCALING], hw.cpuScaling.isEmpty()) {
+            CpuScalingRows(hw.cpuScaling, powersaveHint = hw.powersaveWhileThrottled(sensors?.throttled == true))
+        }
+        HardwarePart.NUMA -> Section(title, hw.errors[HardwareSection.NUMA], hw.numa.isEmpty()) {
+            NumaRows(hw.numa)
         }
         HardwarePart.MEMORY -> Section(title, hw.errors[HardwareSection.MEMORY], hw.memory.isEmpty()) {
             InfoRow(stringResource(R.string.hardware_memory_total), formatBytes(hw.totalMemoryBytes))

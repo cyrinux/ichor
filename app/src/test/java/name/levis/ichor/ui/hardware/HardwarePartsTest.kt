@@ -25,6 +25,16 @@ class HardwarePartsTest {
     }
 
     @Test
+    fun cpuScalingAndNumaFollowTheProcessors() {
+        val parts = hardwareParts(sensors = false, pci = false, cpuScaling = true, numa = true)
+        assertEquals(
+            listOf(HardwarePart.SYSTEM, HardwarePart.PROCESSORS, HardwarePart.CPU_SCALING, HardwarePart.NUMA, HardwarePart.MEMORY),
+            parts.take(5),
+        )
+        assertEquals(always.size + 2, parts.size)
+    }
+
+    @Test
     fun keysAreUniqueSoEachCardIsOneItem() {
         assertEquals(HardwarePart.entries.size, HardwarePart.entries.map { it.key }.toSet().size)
     }
