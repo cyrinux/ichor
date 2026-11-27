@@ -21,6 +21,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.content.IntentCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
@@ -133,7 +136,9 @@ class MainActivity : FragmentActivity() {
             val stored by app.configRepository.config.collectAsStateWithLifecycle()
             val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
             IchorTheme(themeMode, uiStyle, clusterColors.seedOf(stored?.activeSummary)) {
-                Surface {
+                // Test tags double as resource ids for UI Automator, which runs in another process:
+                // the baseline profile generator (:baselineprofile) finds the screens by them.
+                Surface(Modifier.semantics { testTagsAsResourceId = true }) {
                     val targets = LaunchTargets(deepLink, openCluster, backupFile, openShell, openTarget)
                     AppLockGate(app, onWiped = ::recreate) { Root(app, targets) }
                 }

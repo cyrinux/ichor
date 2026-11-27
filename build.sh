@@ -6,6 +6,7 @@
 #   ./build.sh play       # Google Play App Bundle: release without self-update/donations
 #   ./build.sh check      # formatting, vet, staticcheck and all unit tests (Go + Kotlin), no APK
 #   ./build.sh smoke      # the debug APK and its demo-mode smoke test APK (CI job ui-smoke)
+#   ./build.sh baseline   # regenerates the baseline profile on the connected device or emulator
 #   BUILDER=docker ./build.sh   # force the container toolchain
 #   IN_CONTAINER=1 ./build.sh   # tools already on PATH (CI runner using build/Dockerfile)
 #   ICHOR_SKIP_TESTS=1 ./build.sh debug   # no Go or Kotlin unit tests (CI: the check job runs them)
@@ -25,8 +26,12 @@ case "$VARIANT" in
   # Lint runs once, on the debug build of each app (lint-baseline.xml holds the known findings).
   check) GRADLE_TASKS=(testDebugUnitTest :app:lintDebug :wear:lintDebug :wear:assembleDebug) ;;
   # The app and its instrumentation test, installed on an emulator by android.yml's ui-smoke.
-  smoke) GRADLE_TASKS=(:app:assembleDebug :app:assembleDebugAndroidTest) ;;
-  *) echo "unknown variant: $VARIANT (debug|release|play|check|smoke)" >&2; exit 2 ;;
+  # Also compiles the baseline profile generator, so that it does not rot between regenerations.
+  smoke) GRADLE_TASKS=(:app:assembleDebug :app:assembleDebugAndroidTest :baselineprofile:compileNonMinifiedReleaseKotlin) ;;
+  # Regenerates app/src/main/generated/baselineProfiles/baseline-prof.txt on the device adb sees
+  # (API 33+, or rooted): `just baseline-profile`, or the Baseline profile workflow.
+  baseline) GRADLE_TASKS=(:app:generateBaselineProfile) ;;
+  *) echo "unknown variant: $VARIANT (debug|release|play|check|smoke|baseline)" >&2; exit 2 ;;
 esac
 # The CI build jobs skip the tests, which their check job runs once (see android.yml).
 if [[ "${ICHOR_SKIP_TESTS:-0}" == 1 && "$VARIANT" == debug ]]; then
@@ -213,6 +218,7 @@ build_inside() {
   gradle --no-daemon "${gradle_props[@]}" "${GRADLE_TASKS[@]}"
   case "$VARIANT" in
     check) ;;
+    baseline) wc -l "$ROOT/app/src/main/generated/baselineProfiles/baseline-prof.txt" ;;
     smoke) find "$ROOT/app/build/outputs/apk" -path '*debug*' -name '*.apk' -printf '%s\t%p\n' | sort -n ;;
     play) find "$ROOT/app/build/outputs/bundle/play" -name '*.aab' -printf '%s\t%p\n' ;;
     *) find "$ROOT/app/build/outputs/apk/$VARIANT" -name '*.apk' -printf '%s\t%p\n' | sort -n ;;
