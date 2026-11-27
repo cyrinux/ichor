@@ -539,6 +539,9 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">告警</string>
     <string name="monitor_notifications_blocked">此应用的通知已被屏蔽；请在 Android 设置中允许通知。</string>
+    <string name="live_updates_off_title">Live Updates 已关闭</string>
+    <string name="live_updates_off_desc">正在进行的升级、维护和其他操作可以在状态栏的标签和锁定屏幕顶部显示进度。请为 Ichor 允许 Live Updates 以在那里查看。</string>
+    <string name="live_updates_allow">允许 Live Updates</string>
     <string name="alerts_offer_title">节点宕机时收到通知</string>
     <string name="alerts_offer_body">Ichor 会在后台检查你的集群，并在节点、API 或卷需要关注时通知你。数据不会离开你的手机。</string>
     <string name="alerts_offer_turn_on">开启提醒</string>

@@ -295,6 +295,8 @@ fun MonitoringSection(app: TalosApp) {
             error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }
         }
     }
+    // Android 16+: only while Live Updates are turned off for the app.
+    LiveUpdatesRow()
 }
 
 /** The warning and critical fill thresholds of the storage alerts; critical stays above warning. */

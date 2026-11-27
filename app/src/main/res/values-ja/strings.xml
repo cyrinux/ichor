@@ -539,6 +539,9 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">アラート</string>
     <string name="monitor_notifications_blocked">このアプリの通知はブロックされています。Android の設定で許可してください。</string>
+    <string name="live_updates_off_title">Live Updates がオフです</string>
+    <string name="live_updates_off_desc">実行中のアップグレード、メンテナンスなどの操作は、ステータスバーのチップとロック画面の上部に進行状況を表示できます。そこに表示するには、Ichor の Live Updates を許可してください。</string>
+    <string name="live_updates_allow">Live Updates を許可</string>
     <string name="alerts_offer_title">ノードが落ちたら通知を受け取る</string>
     <string name="alerts_offer_body">Ichor はバックグラウンドでクラスターを確認し、ノード、API、ボリュームに確認が必要なときに通知します。データが端末の外に出ることはありません。</string>
     <string name="alerts_offer_turn_on">アラートをオンにする</string>

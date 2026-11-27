@@ -567,6 +567,9 @@
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Alerts</string>
     <string name="monitor_notifications_blocked">Benachrichtigungen sind für diese App blockiert. Erlaube sie in den Android-Einstellungen.</string>
+    <string name="live_updates_off_title">Live Updates sind aus</string>
+    <string name="live_updates_off_desc">Laufende Upgrades, Wartungen und andere Vorgänge können ihren Fortschritt als Chip in der Statusleiste und oben auf dem Sperrbildschirm zeigen. Erlaube Live Updates für Ichor, um sie dort zu sehen.</string>
+    <string name="live_updates_allow">Live Updates erlauben</string>
     <string name="alerts_offer_title">Benachrichtigt werden, wenn ein Knoten ausfällt</string>
     <string name="alerts_offer_body">Ichor prüft deine Cluster im Hintergrund und benachrichtigt dich, wenn ein Knoten, die API oder ein Volume Aufmerksamkeit braucht. Nichts verlässt dein Telefon.</string>
     <string name="alerts_offer_turn_on">Benachrichtigungen einschalten</string>
