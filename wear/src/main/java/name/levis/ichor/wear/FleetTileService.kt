@@ -1,5 +1,6 @@
 package name.levis.ichor.wear
 
+import android.content.Context
 import android.content.res.Resources
 import androidx.concurrent.futures.CallbackToFutureAdapter
 import androidx.wear.protolayout.LayoutElementBuilders
@@ -33,7 +34,7 @@ class FleetTileService : TileService() {
     override fun onTileRequest(requestParams: RequestBuilders.TileRequest): ListenableFuture<TileBuilders.Tile> =
         CallbackToFutureAdapter.getFuture { completer ->
             WatchSnapshotStore.fetchIfMissing(this) {
-                completer.set(fleetTile(resources, WatchSnapshotStore.fleet(this), System.currentTimeMillis()))
+                completer.set(fleetTile(this, WatchSnapshotStore.fleet(this), System.currentTimeMillis()))
             }
             "FleetTile"
         }
@@ -45,11 +46,12 @@ class FleetTileService : TileService() {
         }
 }
 
-private fun fleetTile(res: Resources, fleet: FleetTally?, now: Long): TileBuilders.Tile =
+/** Tapped: the app's list of clusters. */
+private fun fleetTile(context: Context, fleet: FleetTally?, now: Long): TileBuilders.Tile =
     TileBuilders.Tile.Builder()
         .setResourcesVersion(RESOURCES_VERSION)
         .setFreshnessIntervalMillis(FRESHNESS_MS)
-        .setTileTimeline(Timeline.fromLayoutElement(fleetLayout(res, fleet, now)))
+        .setTileTimeline(Timeline.fromLayoutElement(opensApp(context, fleetLayout(context.resources, fleet, now))))
         .build()
 
 private fun fleetLayout(res: Resources, t: FleetTally?, now: Long): LayoutElement {

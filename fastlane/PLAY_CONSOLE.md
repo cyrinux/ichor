@@ -102,6 +102,7 @@ the Play Console reports.
 | Phone screenshots | `<locale>/images/phoneScreenshots/` (7 per locale, 1080×2082 PNG) |
 | 7" tablet screenshots | `en-US/images/sevenInchScreenshots/` (7, portrait, from the `Nexus 7 2013` emulator profile, 600 dp wide) |
 | 10" tablet screenshots | `en-US/images/tenInchScreenshots/` (7, landscape, from the `pixel_tablet` emulator profile, 1280 dp wide) |
+| Wear OS screenshots | none yet: hand step. Play reviews a Wear app with an activity for Wear quality (round screens, no phone-only UI) and wants at least one Wear screenshot (384×384 or larger, square) under *Store presence → Main store listing → Wear OS*; take it on a round Wear emulator |
 | Default language | English (United States), en-US |
 | Translations | fr-FR, es-ES, uk, de-DE, it-IT, zh-CN, ru-RU, pt-BR, ja-JP |
 

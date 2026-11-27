@@ -12,6 +12,10 @@ import name.levis.ichor.monitor.MonitorState
 import name.levis.ichor.monitor.NodeState
 import name.levis.ichor.widget.FleetTally
 import name.levis.ichor.widget.NodeCounts
+import name.levis.ichor.widget.WEAR_MAX_NODES
+import name.levis.ichor.widget.WearNode
+import name.levis.ichor.widget.WearNodeHealth
+import name.levis.ichor.widget.WearNodeProblem
 import name.levis.ichor.widget.encodeWearPayload
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -68,10 +72,42 @@ class WearPayloadTest {
     fun noCredentialEndpointOrHostnameGoesToTheWatch() {
         val json = encodeWearPayload(wearPayload(state, summary, "admin@lab", emptyMap(), masked = false)).decodeToString()
         val lower = json.lowercase()
-        val forbidden = listOf("talosconfig", "kubeconfig", "token", "endpoint", "cert", "192.0.2.", "cp-0", "https://", "nospace", "longhorn", "fingerprint")
+        val forbidden = listOf(
+            "talosconfig", "kubeconfig", "token", "expired", "endpoint", "cert", "192.0.2.", "lab.example", "https://",
+            "nospace", "longhorn", "fingerprint",
+        )
         for (word in forbidden) {
             assertFalse("payload carries \"$word\": $json", lower.contains(word))
         }
+    }
+
+    @Test
+    fun screenshotModeSendsNoHostName() {
+        val json = encodeWearPayload(wearPayload(state, summary, "admin@lab", emptyMap(), masked = true)).decodeToString()
+        assertFalse(json, json.contains("cp-"))
+    }
+
+    @Test
+    fun theNodesGoDownFirstWithAShortNameAndACategory() {
+        val p = wearPayload(state, summary, "admin@lab", emptyMap(), masked = false)
+        assertEquals(
+            listOf(
+                WearNode("cp-2", WearNodeHealth.UNREACHABLE, WearNodeProblem.UNREACHABLE),
+                WearNode("cp-1", WearNodeHealth.NOT_READY),
+                WearNode("cp-0", WearNodeHealth.READY),
+            ),
+            p.clusters[0].nodes,
+        )
+    }
+
+    @Test
+    fun anAddressIsNoNameAndTheListIsCapped() {
+        val many = snap("admin@lab", "fl").copy(
+            nodes = (1..40).associate { "192.0.2.$it" to NodeState("192.0.2.$it", NodeHealth.UNREACHABLE, "dial tcp 192.0.2.$it:50000: i/o timeout") },
+        )
+        val nodes = wearNodesOf(many, masked = false)
+        assertEquals(WEAR_MAX_NODES, nodes.size)
+        assertEquals(WearNode("", WearNodeHealth.UNREACHABLE, WearNodeProblem.TIMEOUT), nodes.first())
     }
 
     @Test
@@ -92,6 +128,6 @@ class WearPayloadTest {
         val p = wearPayload(state.copy(fleet = fleet), summary, "admin@lab", emptyMap(), masked = false, now = now)
         assertEquals(FleetTally(bad = 1, ok = 1, total = 2, takenAt = now), p.fleet)
         val json = encodeWearPayload(p).decodeToString()
-        assertFalse(json, json.contains("cp-2") || json.contains("Home lab"))
+        assertFalse(json, json.contains("cp-2 unreachable") || json.contains("Home lab"))
     }
 }

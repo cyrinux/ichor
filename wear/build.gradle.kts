@@ -1,8 +1,9 @@
-// The Wear OS app: a tile and a complication showing the cluster's health from the snapshot the
+// The Wear OS app: an activity listing the clusters and their nodes, tiles and complications showing the cluster's health from the snapshot the
 // phone's background monitor sends over the Data Layer (the Play phone build's
 // src/play/.../wear/WearSnapshotSyncs.kt). No talosconfig or kubeconfig on the watch.
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -43,6 +44,10 @@ android {
         }
     }
 
+    buildFeatures {
+        compose = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -66,6 +71,10 @@ dependencies {
     implementation(libs.wear.protolayout)
     implementation(libs.wear.complications.data.source)
     implementation(libs.androidx.concurrent.futures)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.wear.compose.material3)
+    implementation(libs.wear.compose.foundation)
+    implementation(libs.wear.compose.navigation)
 
     testImplementation(libs.junit)
 }

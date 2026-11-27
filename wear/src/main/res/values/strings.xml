@@ -40,4 +40,22 @@
     <string name="wear_fleet_need_attention">need attention</string>
     <string name="wear_fleet_all_fine">All %1$d fine</string>
     <string name="wear_fleet_unchecked">Not checked: %1$d</string>
+    <!-- The watch app (WatchActivity): the clusters, then a cluster's issues and nodes. -->
+    <string name="wear_clusters_title">Clusters</string>
+    <string name="wear_issues_header">Issues</string>
+    <string name="wear_nodes_header">Nodes</string>
+    <string name="wear_no_issues">No issues</string>
+    <string name="wear_no_check">No check yet</string>
+    <string name="wear_node_number">Node %1$d</string>
+    <string name="wear_node_ready">Ready</string>
+    <string name="wear_node_not_ready">Not ready</string>
+    <string name="wear_node_unreachable">Unreachable</string>
+    <string name="wear_problem_timeout">Timed out</string>
+    <string name="wear_problem_refused">Connection refused</string>
+    <string name="wear_problem_no_such_host">Name not found</string>
+    <string name="wear_problem_tls">TLS error</string>
+    <string name="wear_problem_unreachable">No answer</string>
+    <string name="wear_no_node_list">Update Ichor on your phone to see the nodes</string>
+    <string name="wear_last_check">Last check %1$s</string>
+    <string name="wear_refresh_on_phone">Open Ichor on your phone to refresh</string>
 </resources>
