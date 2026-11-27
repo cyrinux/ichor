@@ -31,6 +31,15 @@ baselineProfile {
     useConnectedDevices = true
 }
 
+// The generator reads the app's id from here (the release build's, with its .foss suffix): the
+// plugin does not pass it itself.
+androidComponents {
+    onVariants { variant ->
+        val loader = variant.artifacts.getBuiltArtifactsLoader()
+        variant.instrumentationRunnerArguments.put("targetAppId", variant.testedApks.map { loader.load(it)?.applicationId })
+    }
+}
+
 dependencies {
     implementation(libs.androidx.test.ext.junit)
     implementation(libs.androidx.test.runner)
