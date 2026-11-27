@@ -2,6 +2,7 @@ package name.levis.ichor.baselineprofile
 
 import android.content.Intent
 import android.net.Uri
+import java.io.ByteArrayOutputStream
 import androidx.benchmark.macro.junit4.BaselineProfileRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
@@ -42,8 +43,11 @@ class BaselineProfileGenerator {
             startActivityAndWait(Intent(Intent.ACTION_VIEW, Uri.parse("ichor://demo")).setPackage(packageName))
             device.skipTour()
 
-            device.waitForObject(By.scrollable(true)).fling(Direction.DOWN)
-            device.waitForObject(By.scrollable(true)).fling(Direction.UP)
+            // The nodes may be below the fold: a lazy list composes only what shows.
+            val overview = device.waitForObject(By.scrollable(true))
+            overview.fling(Direction.DOWN)
+            overview.fling(Direction.UP)
+            overview.scrollUntil(Direction.DOWN, Until.findObject(By.res(NODE)))
             device.waitForObject(By.res(NODE)).click()
 
             val nodeScreen = device.waitForObject(By.res(NODE_SCREEN))
@@ -63,13 +67,21 @@ class BaselineProfileGenerator {
         wait(Until.findObject(By.res(TOUR_SKIP)), TOUR_TIMEOUT_MS)?.click()
     }
 
+    /** Waits for [selector]; on a timeout, the error lists what showed (ids and texts). */
     private fun UiDevice.waitForObject(selector: BySelector): UiObject2 =
         wait(Until.findObject(selector), TIMEOUT_MS)
-            ?: throw AssertionError("$selector did not show within $TIMEOUT_MS ms")
+            ?: throw AssertionError("$selector did not show within $TIMEOUT_MS ms; on screen:\n${onScreen()}")
+
+    private fun UiDevice.onScreen(): String {
+        val dump = ByteArrayOutputStream().also { dumpWindowHierarchy(it) }.toString()
+        return Regex("""(?:resource-id|text|content-desc)="([^"]+)"""").findAll(dump)
+            .map { it.value }.distinct().take(SCREEN_LINES).joinToString("\n")
+    }
 
     private companion object {
         const val TIMEOUT_MS = 30_000L
         const val TOUR_TIMEOUT_MS = 5_000L
+        const val SCREEN_LINES = 80
 
         // The app's SmokeTags.kt (another APK: its constants are not on this classpath).
         const val TOUR_SKIP = "smoke-tour-skip"
