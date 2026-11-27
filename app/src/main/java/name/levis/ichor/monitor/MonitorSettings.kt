@@ -98,6 +98,16 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         _sensorsWatched.value = watched
     }
 
+    private val _talosContainersWatched = MutableStateFlow(prefs.getBoolean(KEY_TALOS_CONTAINERS, true))
+
+    /** On by default: also read every node's Talos containers, to alert when one fails or keeps restarting (Talos 1.15). */
+    val talosContainersWatched: StateFlow<Boolean> = _talosContainersWatched.asStateFlow()
+
+    fun setTalosContainersWatched(watched: Boolean) {
+        prefs.edit().putBoolean(KEY_TALOS_CONTAINERS, watched).apply()
+        _talosContainersWatched.value = watched
+    }
+
     private val _kubespanWatched = MutableStateFlow(prefs.getBoolean(KEY_KUBESPAN, true))
 
     /** On by default: also read every node's KubeSpan peers, to alert when a tunnel goes down (cheap, Talos only). */
@@ -274,6 +284,7 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_MEMORY_TREND = "memory_trend_alerts"
         private const val KEY_SENSORS = "sensors_watched"
         private const val KEY_KUBESPAN = "kubespan_watched"
+        private const val KEY_TALOS_CONTAINERS = "talos_containers_watched"
         private const val KEY_SENSOR_THRESHOLD = "sensor_threshold"
         private const val KEY_SIGN_IN_NOTIFIED = "sign_in_notified"
         private const val KEY_ALERT_RULES = "alert_rules"

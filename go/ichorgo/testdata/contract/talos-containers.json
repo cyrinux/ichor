@@ -1,0 +1,59 @@
+{
+  "at": 1767323045000,
+  "containers": [
+    {
+      "cpuNanos": 0,
+      "error": "",
+      "exitCode": 0,
+      "health": "",
+      "id": "apid",
+      "image": "talos/apid",
+      "lastLog": "",
+      "memory": 25165824,
+      "name": "apid",
+      "namespace": "system",
+      "pid": 102,
+      "pod": "",
+      "podNamespace": "",
+      "restartCount": 0,
+      "status": "RUNNING",
+      "waitingFor": []
+    },
+    {
+      "cpuNanos": 4000000000,
+      "error": "",
+      "exitCode": 0,
+      "health": "healthy",
+      "id": "edge-proxy",
+      "image": "registry.example.org/edge/proxy:3.1",
+      "lastLog": "",
+      "memory": 50331648,
+      "name": "edge-proxy",
+      "namespace": "taloscontainers",
+      "pid": 410,
+      "pod": "",
+      "podNamespace": "",
+      "restartCount": 0,
+      "status": "running",
+      "waitingFor": []
+    },
+    {
+      "cpuNanos": 0,
+      "error": "task exited with code 1",
+      "exitCode": 1,
+      "health": "degraded",
+      "id": "sensor-agent",
+      "image": "registry.example.org/edge/sensor-agent:1.4",
+      "lastLog": "fatal: cannot open /var/lib/sensor-agent/state.db: no such file or directory",
+      "memory": 0,
+      "name": "sensor-agent",
+      "namespace": "taloscontainers",
+      "pid": 0,
+      "pod": "",
+      "podNamespace": "",
+      "restartCount": 12,
+      "status": "backoff",
+      "waitingFor": []
+    }
+  ]
+}

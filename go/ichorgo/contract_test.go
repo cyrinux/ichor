@@ -92,6 +92,22 @@ var contractFixtures = []struct {
 			Issues: map[string]string{"node-a|node-b": "critical|neverHandshaked|0|node-a|node-b"},
 		}
 	}},
+	// A node's containers with its Talos containers (NodeContainers), CPU and memory frozen; the
+	// trim keeps three entries, so no Kubernetes container (the ordering is a unit test).
+	{"talos-containers", func() any {
+		talos := demoTalosContainers(nodeOverview{Hostname: demoTalosContainersHost})
+		talos[0].CPUNanos = 4e9
+
+		return containerList{At: contractNow.UnixMilli(), Containers: withWaitingLists(slices.Concat([]containerInfo{
+			{ID: "apid", Namespace: containerNSSystem, Name: "apid", Image: "talos/apid", Status: "RUNNING", Pid: 102, Memory: 24 << 20},
+		}, talos))}
+	}},
+	{"talos-containers-health", func() any {
+		return talosContainersHealthOf("demo", []talosContainersEntry{
+			{Node: "192.0.2.20", Hostname: demoTalosContainersHost, Containers: demoTalosContainers(nodeOverview{Hostname: demoTalosContainersHost})},
+			{Node: "192.0.2.21", Error: "connection refused"},
+		})
+	}},
 	{"cluster-updates", func() any {
 		u := demoClusterUpdates(contractNow)
 		sortUpdates(&u)

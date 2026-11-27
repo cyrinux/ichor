@@ -21,6 +21,44 @@ final class ContainersTests: XCTestCase {
         XCTAssertEqual(NodeContainer(id: "0123456789abcdef", pod: "p", name: "").displayName, "0123456789ab")
     }
 
+    func testTalosContainersListBetweenSystemAndPods() throws {
+        let json = #"""
+            {"at":1,"containers":[
+            {"id":"w","podNamespace":"default","pod":"web","name":"web"},
+            {"id":"sensor-agent","namespace":"taloscontainers","name":"sensor-agent","status":"backoff",
+             "health":"degraded","restartCount":12,"exitCode":1,"error":"task exited with code 1",
+             "waitingFor":[],"lastLog":"starting\nfatal: cannot open state.db\n"},
+            {"id":"apid","namespace":"system","name":"apid","status":"RUNNING"}]}
+            """#
+        let sample = try TalosJSON.decode(ContainerSample.self, from: json)
+        let agent = sample.containers[1]
+        XCTAssertTrue(agent.isTalosContainer)
+        XCTAssertEqual(agent.restartCount, 12)
+        XCTAssertEqual(agent.exitCode, 1)
+        XCTAssertEqual(agent.talosHealth, .degraded)
+        XCTAssertEqual(agent.lastErrorLine, "fatal: cannot open state.db")
+        XCTAssertEqual(sample.containers[0].health, "")
+        XCTAssertEqual(sample.containers[0].waitingFor, [])
+
+        let rows = sample.containers.map { ContainerRow(container: $0, cpuPercent: nil) }
+        let pods = sortPods(groupPods(rows), by: .cpu)
+        XCTAssertEqual(pods.map(\.id), ["system", "taloscontainers", "default/web"])
+        XCTAssertEqual(pods.map(\.isTalos), [false, true, false])
+        XCTAssertEqual(filterPods(pods, query: "sensor").map(\.isTalos), [true])
+    }
+
+    func testTalosContainerHealthTone() {
+        func container(_ status: String, _ health: String, error: String = "") -> NodeContainer {
+            NodeContainer(
+                id: "c", namespace: ContainerNamespace.talos, pod: "", name: "c", status: status, health: health,
+                error: error)
+        }
+        XCTAssertEqual(container("running", "healthy").talosHealth, .healthy)
+        XCTAssertEqual(container("failed", "healthy").talosHealth, .degraded)
+        XCTAssertEqual(container("pulling", "pulling").talosHealth, .starting)
+        XCTAssertEqual(container("exited", "degraded", error: " exit 3 \n").lastErrorLine, "exit 3")
+    }
+
     func testSystemContainersGroupFirst() {
         let rows = [
             ContainerRow(container: NodeContainer(id: "w", pod: "web", name: "web", memory: 500), cpuPercent: 50),

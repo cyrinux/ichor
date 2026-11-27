@@ -56,6 +56,10 @@ import name.levis.ichor.model.ContainerSample
 import name.levis.ichor.model.ContainerSort
 import name.levis.ichor.model.FeatureSupport
 import name.levis.ichor.model.PodGroup
+import name.levis.ichor.model.TalosContainerHealth
+import name.levis.ichor.model.lastErrorLine
+import name.levis.ichor.model.talosContainer
+import name.levis.ichor.model.talosHealth
 import name.levis.ichor.model.containerRows
 import name.levis.ichor.model.podGroups
 import name.levis.ichor.model.running
@@ -68,6 +72,7 @@ import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SMOKE_CONTAINER_ROW
 import name.levis.ichor.ui.components.SearchField
+import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.pollEvery
@@ -94,7 +99,8 @@ class PodsViewModel(private val talos: TalosRepository, private val node: String
 }
 
 /**
- * The node's containers grouped by pod, Talos' own first. A tap opens the container's log;
+ * The node's containers grouped by pod, Talos' own first, then the Talos containers (Talos
+ * 1.15; no group without any). A tap opens the container's log;
  * [onRestart] (null: the role cannot restart) adds "Restart container…" to the row's menu.
  */
 @Composable
@@ -174,12 +180,20 @@ private fun PodHeader(group: PodGroup) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    if (group.system) stringResource(R.string.node_pods_system) else group.pod.ifEmpty { "—" },
+                    when {
+                        group.system -> stringResource(R.string.node_pods_system)
+                        group.talos -> stringResource(R.string.node_pods_talos)
+                        else -> group.pod.ifEmpty { "—" }
+                    },
                     style = MaterialTheme.typography.titleSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                val detail = if (group.system) stringResource(R.string.node_pods_system_detail) else group.namespace
+                val detail = when {
+                    group.system -> stringResource(R.string.node_pods_system_detail)
+                    group.talos -> stringResource(R.string.node_pods_talos_detail)
+                    else -> group.namespace
+                }
                 if (detail.isNotEmpty()) {
                     Text(detail, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -291,5 +305,47 @@ private fun ContainerDetails(row: ContainerRow, modifier: Modifier, muted: Color
                 color = if (c.running) muted else warn,
             )
         }
+        if (c.talosContainer) TalosContainerStatus(c, muted)
+    }
+}
+
+/** A Talos container's health, restarts, the gates it waits for and the last line it logged before failing. */
+@Composable
+private fun TalosContainerStatus(c: ContainerInfo, muted: Color) {
+    val colors = LocalStatusColors.current
+    val (label, color) = when (c.talosHealth) {
+        TalosContainerHealth.HEALTHY -> stringResource(R.string.common_status_healthy) to colors.ok
+        TalosContainerHealth.DEGRADED -> stringResource(R.string.talos_container_degraded) to colors.bad
+        TalosContainerHealth.STARTING -> stringResource(R.string.talos_container_starting) to colors.warn
+    }
+    Row(
+        Modifier.padding(top = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        StatusPill(label, color)
+        Text(
+            stringResource(R.string.node_pods_restarts, c.restartCount),
+            style = MaterialTheme.typography.labelSmall,
+            color = if (c.restartCount > 0) colors.warn else muted,
+        )
+    }
+    if (c.waitingFor.isNotEmpty()) {
+        Text(
+            stringResource(R.string.node_pods_waiting, c.waitingFor.joinToString(", ")),
+            style = MaterialTheme.typography.labelSmall,
+            color = muted,
+        )
+    }
+    // Workload output (masked like any text in screenshot mode): plain text, two lines at most.
+    c.lastErrorLine.takeIf { it.isNotEmpty() && c.talosHealth != TalosContainerHealth.HEALTHY }?.let { line ->
+        Text(
+            line,
+            style = MaterialTheme.typography.bodySmall,
+            fontFamily = FontFamily.Monospace,
+            color = colors.bad,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }

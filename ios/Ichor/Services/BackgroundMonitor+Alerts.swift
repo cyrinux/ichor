@@ -253,6 +253,11 @@ extension BackgroundMonitor {
                 return (alert.title, alert.text)
             }
             return localizedKubespan(alert, issue: KubeSpanIssue(value: value))
+        case "taloscontainer":
+            guard let value = snapshot.talosContainerIssues[subject] ?? previous?.talosContainerIssues[subject] else {
+                return (alert.title, alert.text)
+            }
+            return localizedTalosContainer(alert, issue: TalosContainerIssue(value: value))
         case "unreachable":
             // The cluster is named in the subtitle.
             guard alert.problem else {
@@ -346,6 +351,23 @@ extension BackgroundMonitor {
             }
         let meaning = String(localized: "Pods on these nodes cannot reach each other over KubeSpan.")
         return (String(localized: "Tunnel \(subject) is down"), "\(reason) · \(meaning)")
+    }
+
+    /// A Talos container failed or restarting, or running again; worded as on Android. Its state
+    /// and counts only, never what it logged.
+    private static func localizedTalosContainer(_ alert: Alert, issue: TalosContainerIssue) -> (
+        title: String, text: String
+    ) {
+        let name = issue.name
+        let host = issue.hostname
+        guard alert.problem else {
+            return (String(localized: "\(name) on \(host) is running again"), String(localized: "Talos containers"))
+        }
+        let text =
+            issue.failed
+            ? String(localized: "Failed with exit code \(issue.exitCode): Talos does not start it again.")
+            : String(localized: "Restarted \(issue.restartCount) times, last exit code \(issue.exitCode).")
+        return (String(localized: "\(name) on \(host) is failing"), text)
     }
 
     private static func localizedStorage(_ alert: Alert, issue: StorageIssue, warn: Int) -> (

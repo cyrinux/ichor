@@ -1,0 +1,10 @@
+{
+  "checked": true,
+  "context": "demo",
+  "issues": {
+    "192.0.2.20|sensor-agent": "warning|backoff|12|1|demo-worker-1|sensor-agent"
+  },
+  "unread": [
+    "192.0.2.21"
+  ]
+}

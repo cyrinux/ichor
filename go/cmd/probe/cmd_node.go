@@ -188,7 +188,7 @@ var nodeCommands = []command{
 		return out, err
 	}},
 	{name: "container-restart", args: "NODE NAMESPACE ID", run: func(e env) (out string, err error) {
-		// Restarts the container for real (NAMESPACE: system or k8s.io).
+		// Restarts the container for real (NAMESPACE: system, taloscontainers or k8s.io).
 		err = ichorgo.ContainerRestart(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3))
 
 		return "restarted", err
@@ -315,15 +315,16 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
-	{name: "container-logs", args: "NODE ID", run: func(e env) (out string, err error) {
-		out, err = ichorgo.ContainerLogs(e.cfg, e.context, flag.Arg(1), flag.Arg(2), 20)
+	{name: "container-logs", args: "NODE ID [NAMESPACE]", run: func(e env) (out string, err error) {
+		// NAMESPACE: k8s.io (the default) or taloscontainers (ID: the ContainerConfig name).
+		out, err = ichorgo.ContainerLogs(e.cfg, e.context, flag.Arg(1), flag.Arg(3), flag.Arg(2), 20)
 
 		return out, err
 	}},
-	{name: "container-follow", args: "NODE ID", run: func(e env) (out string, err error) {
+	{name: "container-follow", args: "NODE ID [NAMESPACE]", run: func(e env) (out string, err error) {
 		// Follows for a few seconds and prints only how many lines came.
 		l := &lineCounter{done: make(chan string, 1)}
-		run := ichorgo.StartContainerLogFollow(e.cfg, e.context, flag.Arg(1), flag.Arg(2), 10, l)
+		run := ichorgo.StartContainerLogFollow(e.cfg, e.context, flag.Arg(1), flag.Arg(3), flag.Arg(2), 10, l)
 
 		select {
 		case msg := <-l.done:

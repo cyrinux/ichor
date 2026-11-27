@@ -210,16 +210,16 @@ func TestContainerLogsFake(t *testing.T) {
 
 	cfg := f.start(t, node)
 
-	out, err := ContainerLogs(cfg, "fake", node, "kube-system/web:app:1", 50)
+	out, err := ContainerLogs(cfg, "fake", node, "", "kube-system/web:app:1", 50)
 	if tail := decodeJSON[logTail](t, out, err); len(tail.Lines) != 1 || tail.Lines[0] != "log line of kube-system/web:app:1" {
 		t.Errorf("logs = %s", out)
 	}
 
-	if _, err := ContainerLogs(cfg, "fake", node, " ", 50); err == nil {
+	if _, err := ContainerLogs(cfg, "fake", node, "", " ", 50); err == nil {
 		t.Error("an empty container id must be refused")
 	}
 
-	if _, err := ContainerLogs(cfg, "fake", node, "kube-system/gone:app:1", 50); err == nil {
+	if _, err := ContainerLogs(cfg, "fake", node, "", "kube-system/gone:app:1", 50); err == nil {
 		t.Error("a log the node cannot read must fail")
 	}
 }

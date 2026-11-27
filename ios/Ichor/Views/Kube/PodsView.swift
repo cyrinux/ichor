@@ -29,7 +29,7 @@ final class PodMonitor {
 /// Pods running on the node, grouped from CRI containers, with Talos' own containers first: CPU%
 /// from CPU time deltas between two polls, memory as reported by the runtime. A long press on a
 /// container restarts it (os:admin): typed hostname for a system container, a plain confirm for
-/// a Kubernetes one (the kubelet starts it again).
+/// a Kubernetes one (the kubelet starts it again) or a Talos container (its restart policy does).
 struct PodsView: View {
     let node: String
     let hostname: String
@@ -43,7 +43,7 @@ struct PodsView: View {
     @State private var sort = ProcessSort.cpu
     /// A system container waiting for the typed hostname.
     @State private var systemRestart: NodeContainer?
-    /// A Kubernetes container waiting for a plain confirm.
+    /// A Kubernetes or Talos container waiting for a plain confirm.
     @State private var kubeRestart: NodeContainer?
     @State private var restarting = false
     @State private var resultMessage: String?
@@ -54,7 +54,7 @@ struct PodsView: View {
             Section {
                 if let error = monitor.error { ErrorOrNoticeText(message: error) }
                 if let sample = monitor.sample {
-                    LabeledContent("Pods", value: "\(monitor.pods.filter { !$0.isSystem }.count)")
+                    LabeledContent("Pods", value: "\(monitor.pods.filter { !$0.isSystem && !$0.isTalos }.count)")
                     LabeledContent("Containers", value: "\(sample.containers.count)")
                     LabeledContent("Memory", value: formatBytes(monitor.pods.reduce(UInt64(0)) { $0 &+ $1.memory }))
                 } else if monitor.error == nil {
@@ -132,8 +132,12 @@ struct PodsView: View {
         ) { container in
             Button("Restart", role: .destructive) { Task { await restart(container) } }
             Button("Cancel", role: .cancel) {}
-        } message: { _ in
-            Text("The kubelet starts the container again; the pod keeps running.")
+        } message: { container in
+            if container.isTalosContainer {
+                Text("Talos stops the container and starts it again according to its restart policy.")
+            } else {
+                Text("The kubelet starts the container again; the pod keeps running.")
+            }
         }
         .alert(resultMessage ?? "", isPresented: $resultMessage.isPresent()) {
             Button("OK") {}
@@ -175,10 +179,12 @@ extension PodsView {
     }
 }
 
-/// "pod/container" for the log screen's title.
+/// "pod/container" for the log screen's title, with the namespace the log is read from.
 private func logContainer(_ container: NodeContainer) -> LogContainer {
     let name = container.name.isEmpty ? container.id : container.name
-    return LogContainer(id: container.id, name: container.pod.isEmpty ? name : "\(container.pod)/\(name)")
+    return LogContainer(
+        id: container.id, name: container.pod.isEmpty ? name : "\(container.pod)/\(name)",
+        namespace: container.isTalosContainer ? ContainerNamespace.talos : ContainerNamespace.kubernetes)
 }
 
 private struct PodHeader: View {
@@ -188,7 +194,13 @@ private struct PodHeader: View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 1) {
                 Group {
-                    if pod.isSystem { Text("System") } else { Text(verbatim: pod.pod) }
+                    if pod.isSystem {
+                        Text("System")
+                    } else if pod.isTalos {
+                        Text("Talos containers")
+                    } else {
+                        Text(verbatim: pod.pod)
+                    }
                 }
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(pod.allRunning ? Color.primary : Color.orange)
@@ -196,6 +208,8 @@ private struct PodHeader: View {
                 .lineLimit(1)
                 if pod.isSystem {
                     Text("Talos containers").font(.caption2).textCase(nil)
+                } else if pod.isTalos {
+                    Text("Declared in the machine config, run without Kubernetes").font(.caption2).textCase(nil)
                 } else if !pod.namespace.isEmpty {
                     Text(verbatim: pod.namespace).font(.caption2).textCase(nil)
                 }
@@ -238,6 +252,46 @@ private struct ContainerRowView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
             .monospacedDigit()
+            if container.isTalosContainer { TalosContainerStatus(container: container) }
+        }
+    }
+}
+
+/// A Talos container's health, restarts, the gates it waits for and the last line it logged
+/// before failing.
+private struct TalosContainerStatus: View {
+    let container: NodeContainer
+
+    var body: some View {
+        let (label, color) = tone
+        HStack(spacing: 8) {
+            StatusPill(label: label, color: color)
+            Text("Restarts: \(Int(clamping: container.restartCount))")
+                .font(.caption2)
+                .foregroundStyle(container.restartCount > 0 ? Color.statusWarn : Color.secondary)
+                .monospacedDigit()
+        }
+        if !container.waitingFor.isEmpty {
+            Text("Waiting on \(container.waitingFor.joined(separator: ", "))")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        // Workload output (masked by the core in screenshot mode like any text): plain text, two
+        // lines at most.
+        if container.talosHealth != .healthy, !container.lastErrorLine.isEmpty {
+            Text(verbatim: container.lastErrorLine)
+                .font(.caption.monospaced())
+                .foregroundStyle(Color.statusBad)
+                .lineLimit(2)
+                .truncationMode(.tail)
+        }
+    }
+
+    private var tone: (String, Color) {
+        switch container.talosHealth {
+        case .healthy: (String(localized: "Healthy"), .statusOK)
+        case .degraded: (String(localized: "Degraded"), .statusBad)
+        case .starting: (String(localized: "Starting"), .statusWarn)
         }
     }
 }

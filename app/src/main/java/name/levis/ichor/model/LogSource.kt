@@ -10,9 +10,12 @@ sealed interface LogSource {
         override val key: String get() = name ?: "kernel"
     }
 
-    /** A CRI container's log; [title] is its name, [subtitle] its "namespace/pod". */
-    data class Container(val id: String, val title: String, val subtitle: String) : LogSource {
-        override val key: String get() = "container-$id"
+    /**
+     * A container's log: a Kubernetes one ([namespace] [K8S_CONTAINERS]) or a Talos container
+     * ([TALOS_CONTAINERS], [id] its name); [title] is its name, [subtitle] its "namespace/pod".
+     */
+    data class Container(val id: String, val title: String, val subtitle: String, val namespace: String = K8S_CONTAINERS) : LogSource {
+        override val key: String get() = "container-$namespace-$id"
     }
 }
 

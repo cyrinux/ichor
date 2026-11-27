@@ -236,6 +236,17 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
         null
     }
 
+    // And for the Talos containers (Talos 1.15): Go judges them from every node's ContainerStatuses;
+    // a node that does not answer keeps its known issues. A cluster added from a kubeconfig has none.
+    val watchTalosContainers = store.talosContainersWatched.value && !kube
+    val talosContainerIssues = if (watchTalosContainers) {
+        runCatching { reads.talos.talosContainersHealth() }.getOrNull()?.let {
+            talosContainerIssuesOf(it, known = knownTalosContainerIssues(prev, name))
+        }
+    } else {
+        null
+    }
+
     return if (kubeNodes != null) {
         val snapshot = kubeSnapshotOf(
             kubeNodes, name, context.certNotAfter, now, fingerprint, watchData, dataServices,
@@ -267,6 +278,8 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
             sensorIssues = sensorIssues,
             kubespanWatched = watchKubespan,
             kubespanIssues = kubespanIssues,
+            talosContainerWatched = watchTalosContainers,
+            talosContainerIssues = talosContainerIssues,
             pluginWatched = watchPlugins,
             pluginIssues = pluginIssues,
         )

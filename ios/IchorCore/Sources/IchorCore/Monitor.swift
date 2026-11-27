@@ -66,6 +66,14 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     /// Broken tunnels ("<idA>|<idB>" → KubeSpanIssue value, see kubespanIssuesOf), kept like dataIssues.
     public var kubespanIssues: [String: String]
     public var kubespanPending: [String]
+    /// Watching the Talos containers was on for this check (on by default, Talos clusters only), and
+    /// a node answered.
+    public var talosContainerWatched: Bool
+    public var talosContainerChecked: Bool
+    /// Failed or crash-looping Talos containers ("<node>|<name>" → TalosContainerIssue value, see
+    /// talosContainerIssuesOf), kept like dataIssues.
+    public var talosContainerIssues: [String: String]
+    public var talosContainerPending: [String]
     /// Watching the plugins' findings was on for this check (with the data services, opt-in), and
     /// they could be read.
     public var pluginWatched: Bool
@@ -98,6 +106,8 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         sensorPending: [String] = [],
         kubespanWatched: Bool = false, kubespanChecked: Bool = false, kubespanIssues: [String: String] = [:],
         kubespanPending: [String] = [],
+        talosContainerWatched: Bool = false, talosContainerChecked: Bool = false,
+        talosContainerIssues: [String: String] = [:], talosContainerPending: [String] = [],
         pluginWatched: Bool = false, pluginChecked: Bool = false, pluginIssues: [String: String] = [:],
         pluginPending: [String] = [], kube: Bool = false,
         firstSeen: [String: Int64] = [:], lastNotified: [String: Int64] = [:]
@@ -139,6 +149,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.kubespanChecked = kubespanChecked
         self.kubespanIssues = kubespanIssues
         self.kubespanPending = kubespanPending
+        self.talosContainerWatched = talosContainerWatched
+        self.talosContainerChecked = talosContainerChecked
+        self.talosContainerIssues = talosContainerIssues
+        self.talosContainerPending = talosContainerPending
         self.pluginWatched = pluginWatched
         self.pluginChecked = pluginChecked
         self.pluginIssues = pluginIssues
@@ -190,6 +204,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         kubespanChecked = try c.field(.kubespanChecked, false)
         kubespanIssues = try c.field(.kubespanIssues, [:])
         kubespanPending = try c.field(.kubespanPending, [])
+        talosContainerWatched = try c.field(.talosContainerWatched, false)
+        talosContainerChecked = try c.field(.talosContainerChecked, false)
+        talosContainerIssues = try c.field(.talosContainerIssues, [:])
+        talosContainerPending = try c.field(.talosContainerPending, [])
         pluginWatched = try c.field(.pluginWatched, false)
         pluginChecked = try c.field(.pluginChecked, false)
         pluginIssues = try c.field(.pluginIssues, [:])
@@ -244,6 +262,19 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         }
         set {
             (kubespanWatched, kubespanChecked, kubespanIssues, kubespanPending) = (
+                newValue.watched, newValue.checked, newValue.issues, newValue.pending
+            )
+        }
+    }
+
+    var talosContainerTrack: IssueTrack {
+        get {
+            IssueTrack(
+                watched: talosContainerWatched, checked: talosContainerChecked, issues: talosContainerIssues,
+                pending: talosContainerPending)
+        }
+        set {
+            (talosContainerWatched, talosContainerChecked, talosContainerIssues, talosContainerPending) = (
                 newValue.watched, newValue.checked, newValue.issues, newValue.pending
             )
         }
@@ -308,6 +339,8 @@ public struct NodeState: Codable, Equatable, Sendable {
 /// storageWarn: the warning threshold they were read with.
 /// sensorWatched: watching node temperatures was on; sensorIssues (see sensorIssuesOf): nil when unreadable.
 /// kubespanWatched: watching the KubeSpan tunnels was on; kubespanIssues (see kubespanIssuesOf): nil when unreadable.
+/// talosContainerWatched: watching the Talos containers was on; talosContainerIssues (see
+/// talosContainerIssuesOf): nil when unreadable.
 /// pluginWatched: watching the plugins' findings was on; pluginIssues (see pluginIssuesWithGaps): nil when unreadable.
 public func snapshotOf(
     _ overview: ClusterOverview, etcd: EtcdOverview?, certNotAfter: Int64, takenAt: Date,
@@ -319,6 +352,7 @@ public func snapshotOf(
     storageWarn: Int = storageWarnDefault,
     sensorWatched: Bool = false, sensorIssues: [String: String]? = nil,
     kubespanWatched: Bool = false, kubespanIssues: [String: String]? = nil,
+    talosContainerWatched: Bool = false, talosContainerIssues: [String: String]? = nil,
     pluginWatched: Bool = false, pluginIssues: [String: String]? = nil
 ) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
@@ -356,6 +390,9 @@ public func snapshotOf(
         kubespanWatched: kubespanWatched,
         kubespanChecked: kubespanWatched && kubespanIssues != nil,
         kubespanIssues: kubespanWatched ? kubespanIssues ?? [:] : [:],
+        talosContainerWatched: talosContainerWatched,
+        talosContainerChecked: talosContainerWatched && talosContainerIssues != nil,
+        talosContainerIssues: talosContainerWatched ? talosContainerIssues ?? [:] : [:],
         pluginWatched: pluginWatched,
         pluginChecked: pluginWatched && pluginIssues != nil,
         pluginIssues: pluginWatched ? pluginIssues ?? [:] : [:]
@@ -640,6 +677,8 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
         next.sensorTrack = evaluateSensors(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.kubespanTrack = evaluateKubespan(
+            previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.talosContainerTrack = evaluateTalosContainers(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.pluginTrack = evaluatePlugins(
             previous: previous, current: current, comparable: comparable, alerts: &alerts)

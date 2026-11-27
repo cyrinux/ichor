@@ -7,6 +7,7 @@ import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.OverviewListener
 import name.levis.ichor.util.StartupTrace
 import name.levis.ichor.model.MetaKeyList
+import name.levis.ichor.model.TalosContainersHealth
 import name.levis.ichor.model.AuditReport
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.NodeDirListing
@@ -162,12 +163,12 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         TalosJson.decodeFromString(NodeFileText.serializer(), Ichorgo.nodeFileRead(cfg, ctx, node, path))
     }
 
-    /** One sample of the node's system and CRI containers for the Pods tab (not cached: always fresh). */
+    /** One sample of the node's system, Talos and CRI containers for the Pods tab (not cached: always fresh). */
     suspend fun containers(node: String): ContainerSample = call { cfg, ctx ->
         TalosJson.decodeFromString(ContainerSample.serializer(), Ichorgo.nodeContainers(cfg, ctx, node))
     }
 
-    /** `talosctl -n NODE restart [-k] ID` (os:admin); [namespace] is `system` or `k8s.io`. */
+    /** `talosctl -n NODE restart [-k] ID` (os:admin); [namespace] is `system`, `taloscontainers` or `k8s.io`. */
     suspend fun containerRestart(node: String, namespace: String, id: String) = call { cfg, ctx ->
         Ichorgo.containerRestart(cfg, ctx, node, namespace, id)
     }
@@ -202,8 +203,9 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
      */
     fun followLogs(node: String, service: String?, tailLines: Int): Flow<StreamItem<String>> = streams.followLogs(node, service, tailLines)
 
-    /** Like [followLogs] for one CRI container (`talosctl logs -k -f`). */
-    fun followContainerLogs(node: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = streams.followContainerLogs(node, containerId, tailLines)
+    /** Like [followLogs] for one container of [namespace] (`talosctl logs [-k] -f`). */
+    fun followContainerLogs(node: String, namespace: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> =
+        streams.followContainerLogs(node, namespace, containerId, tailLines)
 
     /** A network check from [node] (see [TalosStreams.netTool]); needs os:admin. */
     fun netTool(node: String, tool: NetTool, target: String, options: NetToolOptions): Flow<NetToolEvent> =
@@ -308,9 +310,14 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         decodeLogTail(TalosJson, json)
     }
 
-    /** Last [lines] lines of a CRI container's log (`talosctl logs -k`). */
-    suspend fun containerLogs(node: String, containerId: String, lines: Int = 500): LogTail = call { cfg, ctx ->
-        decodeLogTail(TalosJson, Ichorgo.containerLogs(cfg, ctx, node, containerId, lines.toLong()))
+    /** Last [lines] lines of the log of a container of [namespace] (`talosctl logs [-k]`). */
+    suspend fun containerLogs(node: String, namespace: String, containerId: String, lines: Int = 500): LogTail = call { cfg, ctx ->
+        decodeLogTail(TalosJson, Ichorgo.containerLogs(cfg, ctx, node, namespace, containerId, lines.toLong()))
+    }
+
+    /** Every node's Talos containers in trouble, for the background check (Talos 1.15; os:reader). */
+    suspend fun talosContainersHealth(): TalosContainersHealth = call { cfg, ctx ->
+        TalosJson.decodeFromString(TalosContainersHealth.serializer(), Ichorgo.talosContainersHealth(cfg, ctx))
     }
 
     /**

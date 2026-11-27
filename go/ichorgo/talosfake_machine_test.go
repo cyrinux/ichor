@@ -433,6 +433,10 @@ func (m fakeTalosMachine) Logs(req *machineapi.LogsRequest, stream grpc.ServerSt
 		return err
 	}
 
+	m.f.mu.Lock()
+	m.f.logRequests = append(m.f.logRequests, req)
+	m.f.mu.Unlock()
+
 	if req.GetId() == m.f.failLogs {
 		return status.Error(codes.NotFound, "log not found")
 	}
@@ -449,8 +453,25 @@ func (m fakeTalosMachine) Dmesg(_ *machineapi.DmesgRequest, stream grpc.ServerSt
 }
 
 func (m fakeTalosMachine) Containers(ctx context.Context, req *machineapi.ContainersRequest) (*machineapi.ContainersResponse, error) {
-	if _, err := m.f.enter(ctx, "Containers"); err != nil {
+	node, err := m.f.enter(ctx, "Containers")
+	if err != nil {
 		return nil, err
+	}
+
+	m.f.mu.Lock()
+	if m.f.containerCalls == nil {
+		m.f.containerCalls = map[string][]string{}
+	}
+	m.f.containerCalls[node] = append(m.f.containerCalls[node], req.GetNamespace())
+	talos := m.f.talosContainers
+	m.f.mu.Unlock()
+
+	if req.GetNamespace() == "taloscontainers" {
+		if req.GetDriver() != common.ContainerDriver_CONTAINERD {
+			return nil, status.Error(codes.InvalidArgument, "Talos containers are listed through containerd")
+		}
+
+		return &machineapi.ContainersResponse{Messages: []*machineapi.Container{{Containers: talos}}}, nil
 	}
 
 	if req.GetNamespace() == "system" {
