@@ -2,6 +2,18 @@
 
 Part of the [Ichor documentation](../README.md#documentation).
 
+## Where the cable goes
+
+**Node → Network** lists the node's links, addresses, routes, DNS and time servers. From
+Talos 1.15 the node also listens for LLDP on its physical Ethernet links and keeps what the
+switch at the other end announces (`talosctl get lldpneighborstatus`): the **Neighbours**
+section shows, per link, the switch name, the port, its VLANs and the switch's management
+address, and each link row carries the switch and port as a second line. A long press copies a
+neighbour. The section is hidden on older Talos versions and when no switch announces itself.
+What a switch sends is shown as plain text, clipped, and never opened as a link; in screenshot
+mode the switch names become `switch-1`, `switch-2`… and the addresses are masked like the
+node's. It needs os:reader.
+
 ## Network tools
 
 **Node menu → Network tools** runs one check from that node and shows the result as fields,

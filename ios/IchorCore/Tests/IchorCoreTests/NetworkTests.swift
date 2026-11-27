@@ -28,6 +28,32 @@ final class NetworkTests: XCTestCase {
         XCTAssertEqual(net, NodeNetwork())
     }
 
+    func testDecodeLLDPNeighbours() throws {
+        let json = #"""
+            {"links":[],"neighborsSupported":true,"errors":{},"neighbors":[
+            {"link":"eth0","chassisId":"02:00:5e:00:53:01","systemName":"sw-a","systemDescription":"",
+            "portId":"Ethernet12","portDescription":"uplink","managementAddresses":["192.0.2.250"],
+            "vlans":[{"id":30,"name":"servers"},{"id":41,"name":""}]},
+            {"link":"eth1","chassisId":"02:00:5e:00:53:02","systemName":"","portId":"7","managementAddresses":null,"vlans":null}]}
+            """#
+        let net = try TalosJSON.decode(NodeNetwork.self, from: json)
+        XCTAssertTrue(net.showsNeighbors)
+        let eth0 = try XCTUnwrap(net.neighbors(on: "eth0").first)
+        XCTAssertEqual(eth0.switchName, "sw-a")
+        XCTAssertEqual(eth0.vlans.map(\.label), ["30 servers", "41"])
+        XCTAssertEqual(eth0.managementAddresses, ["192.0.2.250"])
+        // No system name: the chassis id stands in.
+        XCTAssertEqual(net.neighbors(on: "eth1").first?.switchName, "02:00:5e:00:53:02")
+        XCTAssertEqual(net.neighbors(on: "eth1").first?.vlans, [])
+    }
+
+    func testNeighboursHiddenWhenUnsupportedOrSilent() throws {
+        // A Talos 1.14 node: no field at all.
+        XCTAssertFalse(try TalosJSON.decode(NodeNetwork.self, from: #"{"links":[]}"#).showsNeighbors)
+        XCTAssertFalse(NodeNetwork(neighborsSupported: true).showsNeighbors)
+        XCTAssertTrue(NodeNetwork(neighborsSupported: true, errors: ["neighbors": "denied"]).showsNeighbors)
+    }
+
     func testVirtualFiltering() {
         let links = [NetLink(name: "eth0"), NetLink(name: "lxc1", kind: "veth", virtual: true)]
         XCTAssertEqual(visibleLinks(links, showVirtual: false).map(\.name), ["eth0"])

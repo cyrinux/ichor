@@ -32,6 +32,7 @@ struct NetworkView: View {
                     Text("Virtual interfaces are the pod and CNI plumbing (veth, lxc, cilium, flannel…).")
                 }
                 linksSection(network)
+                NeighborsSection(network: network)
                 addressesSection(network)
                 routesSection(network)
                 dnsSection(network)
@@ -66,7 +67,7 @@ struct NetworkView: View {
         let hidden = network.links.count - links.count
         return Section {
             SectionError(message: network.errors["links"])
-            ForEach(links) { LinkRow(link: $0) }
+            ForEach(links) { LinkRow(link: $0, neighbors: network.neighbors(on: $0.name)) }
         } header: {
             Text("Interfaces")
         } footer: {
@@ -139,6 +140,8 @@ struct SectionError: View {
 
 struct LinkRow: View {
     let link: NetLink
+    /// The switches heard on this link over LLDP, shown as a second line.
+    var neighbors: [LLDPNeighbor] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -152,6 +155,7 @@ struct LinkRow: View {
                     label: link.state, color: link.isUp ? .green : link.state.lowercased() == "down" ? .red : .gray)
             }
             Text(verbatim: details).font(.caption.monospaced()).foregroundStyle(.secondary)
+            LinkNeighborsLine(neighbors: neighbors)
         }
     }
 

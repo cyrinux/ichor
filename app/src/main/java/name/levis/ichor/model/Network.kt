@@ -11,9 +11,42 @@ data class NodeNetwork(
     val routes: List<RouteInfo> = emptyList(),
     val resolvers: List<String> = emptyList(),
     val timeServers: List<String> = emptyList(),
-    /** Section ("links", "addresses", "routes", "resolvers", "timeServers") -> error. */
+    /** What the switches announce over LLDP (Talos 1.15+). */
+    val neighbors: List<LldpNeighbor> = emptyList(),
+    /** False on nodes older than Talos 1.15, which have no LLDP resource. */
+    val neighborsSupported: Boolean = false,
+    /** Section ("links", "addresses", "routes", "resolvers", "timeServers", "neighbors") -> error. */
     val errors: Map<String, String> = emptyMap(),
 )
+
+/** One switch heard on [link] over LLDP. Every text comes from the network: show, never link. */
+@Serializable
+data class LldpNeighbor(
+    val link: String,
+    val chassisId: String = "",
+    val systemName: String = "",
+    val systemDescription: String = "",
+    val portId: String = "",
+    val portDescription: String = "",
+    val managementAddresses: List<String> = emptyList(),
+    val vlans: List<LldpVlan> = emptyList(),
+)
+
+@Serializable
+data class LldpVlan(val id: Int, val name: String = "")
+
+/** The switch's name, else its chassis id. */
+val LldpNeighbor.switchName: String get() = systemName.ifEmpty { chassisId }
+
+/** "30 servers", or just "30". */
+val LldpVlan.label: String get() = if (name.isEmpty()) id.toString() else "$id $name"
+
+/** The neighbours heard on each link, by link name. */
+fun NodeNetwork.neighborsByLink(): Map<String, List<LldpNeighbor>> = neighbors.groupBy { it.link }
+
+/** Whether the Network screen shows the neighbours section: supported and something heard, or a failure. */
+val NodeNetwork.showsNeighbors: Boolean
+    get() = neighborsSupported && (neighbors.isNotEmpty() || errors[NetworkSection.NEIGHBORS] != null)
 
 @Serializable
 data class LinkInfo(
@@ -63,6 +96,7 @@ object NetworkSection {
     const val ROUTES = "routes"
     const val RESOLVERS = "resolvers"
     const val TIME_SERVERS = "timeServers"
+    const val NEIGHBORS = "neighbors"
 }
 
 /**

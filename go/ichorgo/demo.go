@@ -229,10 +229,14 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 		return toJSON(tail.result())
 	case "NodeNetwork":
 		return toJSON(nodeNetwork{
-			Links:     []linkInfo{{Name: "eth0", Type: "ether", State: "up", HardwareAddr: "02:00:00:00:00:10", MTU: 1500, SpeedMbit: 1000}},
+			Links: []linkInfo{
+				{Name: "eth0", Type: "ether", State: "up", HardwareAddr: "02:00:00:00:00:10", MTU: 1500, SpeedMbit: 1000},
+				{Name: "eth1", Type: "ether", State: "up", HardwareAddr: "02:00:00:00:00:11", MTU: 9000, SpeedMbit: 10000},
+			},
 			Addresses: []addressInfo{{Address: n.Node + "/24", Link: "eth0", Family: "inet4", Scope: "global"}},
 			Routes:    []routeInfo{{Destination: "default", Gateway: "192.0.2.1", Link: "eth0", Table: "main", Family: "inet4"}},
-			Resolvers: []string{"192.0.2.1"}, TimeServers: []string{"time.demo.invalid"}, Errors: map[string]string{},
+			Resolvers: []string{"192.0.2.1"}, TimeServers: []string{"time.demo.invalid"},
+			Neighbors: demoNeighbors(), NeighborsSupported: true, Errors: map[string]string{},
 		})
 	case "NodeConnections":
 		return toJSON([]connectionInfo{

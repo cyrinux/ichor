@@ -37,6 +37,30 @@ class NetworkTest {
         assertFalse(LinkInfo("eth1", state = "down").isUp)
     }
 
+    @Test
+    fun lldpNeighboursDecodeAndGroupByLink() {
+        val json = """{"links":[],"neighborsSupported":true,"errors":{},"neighbors":[
+            {"link":"eth0","chassisId":"02:00:5e:00:53:01","systemName":"sw-a","systemDescription":"",
+             "portId":"Ethernet12","portDescription":"uplink","managementAddresses":["192.0.2.250"],
+             "vlans":[{"id":30,"name":"servers"},{"id":41,"name":""}]},
+            {"link":"eth1","chassisId":"02:00:5e:00:53:02","systemName":"","portId":"7","managementAddresses":[],"vlans":[]}]}"""
+        val decoded = TalosJson.decodeFromString(NodeNetwork.serializer(), json)
+        assertTrue(decoded.showsNeighbors)
+        val byLink = decoded.neighborsByLink()
+        assertEquals("sw-a", byLink.getValue("eth0").single().switchName)
+        assertEquals(listOf("30 servers", "41"), byLink.getValue("eth0").single().vlans.map { it.label })
+        // No system name: the chassis id stands in.
+        assertEquals("02:00:5e:00:53:02", byLink.getValue("eth1").single().switchName)
+    }
+
+    @Test
+    fun neighboursHiddenWhenUnsupportedOrSilent() {
+        // A Talos 1.14 node: no field at all.
+        assertFalse(TalosJson.decodeFromString(NodeNetwork.serializer(), """{"links":[]}""").showsNeighbors)
+        assertFalse(NodeNetwork(neighborsSupported = true).showsNeighbors)
+        assertTrue(NodeNetwork(neighborsSupported = true, errors = mapOf(NetworkSection.NEIGHBORS to "denied")).showsNeighbors)
+    }
+
     private val sockets = listOf(
         ConnectionInfo("tcp", "0.0.0.0", 50000, state = "LISTEN", listening = true, pid = 1, processName = "apid"),
         ConnectionInfo("udp", "0.0.0.0", 123, listening = true, processName = "timed"),
