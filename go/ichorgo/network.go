@@ -21,9 +21,13 @@ type nodeNetwork struct {
 	TimeServers []string      `json:"timeServers"`
 	// Neighbors are what the switches announce over LLDP (Talos 1.15+, network_lldp.go);
 	// NeighborsSupported is false on older nodes, which have no such resource.
-	Neighbors          []lldpNeighbor    `json:"neighbors"`
-	NeighborsSupported bool              `json:"neighborsSupported"`
-	Errors             map[string]string `json:"errors"` // section -> error, for sections that failed
+	Neighbors          []lldpNeighbor `json:"neighbors"`
+	NeighborsSupported bool           `json:"neighborsSupported"`
+	// BGPPeers are the node's own BGP sessions (Talos 1.14+ native BGP, network_bgp.go);
+	// BGPSupported is false on older nodes, which have no such resource.
+	BGPPeers     []bgpPeer         `json:"bgpPeers"`
+	BGPSupported bool              `json:"bgpSupported"`
+	Errors       map[string]string `json:"errors"` // section -> error, for sections that failed
 }
 
 type linkInfo struct {
@@ -60,7 +64,8 @@ var virtualLinkPrefixes = []string{"lxc", "cilium_", "cali", "tunl", "wireguard.
 
 // NodeNetwork returns node's links, addresses, main-table routes, DNS resolvers and time
 // servers, like `talosctl get links/addresses/routes/resolvers/timeservers` (os:reader), plus
-// the LLDP neighbours on Talos 1.15+ (`talosctl get lldpneighborstatus`).
+// the LLDP neighbours on Talos 1.15+ (`talosctl get lldpneighborstatus`) and the native BGP
+// sessions on Talos 1.14+ (`talosctl get bgppeerstatus`).
 // Each section is best-effort; only a total failure is an error.
 func NodeNetwork(configYAML, contextName, node string) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -75,7 +80,7 @@ func NodeNetwork(configYAML, contextName, node string) (out string, err error) {
 		st := s.client.COSI
 		out := nodeNetwork{
 			Links: []linkInfo{}, Addresses: []addressInfo{}, Routes: []routeInfo{},
-			Resolvers: []string{}, TimeServers: []string{}, Neighbors: []lldpNeighbor{}, Errors: map[string]string{},
+			Resolvers: []string{}, TimeServers: []string{}, Neighbors: []lldpNeighbor{}, BGPPeers: []bgpPeer{}, Errors: map[string]string{},
 		}
 
 		if links, err := safe.StateListAll[*network.LinkStatus](ctx, st); err != nil {
@@ -116,8 +121,9 @@ func NodeNetwork(configYAML, contextName, node string) (out string, err error) {
 			return "", fmt.Errorf("node %s: %s", node, out.Errors["links"])
 		}
 
-		// After the total-failure check: the neighbours are an extra, never the only section.
+		// After the total-failure check: the neighbours and BGP are extras, never the only section.
 		readNeighbors(ctx, s, node, &out)
+		readBGPPeers(ctx, s, node, &out)
 
 		return toJSON(out)
 	})

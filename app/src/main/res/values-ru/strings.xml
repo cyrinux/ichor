@@ -1455,6 +1455,14 @@
     <string name="network_neighbor_vlan">VLAN %1$s</string>
     <string name="network_neighbor_management">управление %1$s</string>
     <string name="network_neighbor_copy">Скопировать данные соседа</string>
+    <string name="network_bgp">BGP</string>
+    <string name="network_bgp_hint">Собственные сессии BGP узла (встроенный BGP Talos): каждый пир, его номер AS, состояние сессии и переданные префиксы.</string>
+    <string name="network_bgp_asn">AS %1$s · локальная AS %2$s</string>
+    <string name="network_bgp_instance">экземпляр %1$s</string>
+    <string name="network_bgp_prefixes">%1$s получено · %2$s анонсировано</string>
+    <string name="network_bgp_since">установлена %1$s</string>
+    <string name="network_bgp_graceful">мягкий перезапуск</string>
+    <string name="network_bgp_restarting">пир перезапускается</string>
     <string name="connections_search">Фильтр по адресу, порту, состоянию или процессу</string>
     <string name="connections_listening">Прослушивание</string>
     <string name="connections_all">Все</string>
@@ -4902,6 +4910,11 @@
     <string name="monitor_talos_vm_error">Ошибка %1$s на %2$s</string>
     <string name="monitor_talos_vm_disk">Сбой диска %1$s на %2$s</string>
     <string name="monitor_talos_vm_ok">%1$s на %2$s снова в норме</string>
+    <string name="monitor_bgp">Сессии BGP</string>
+    <string name="monitor_bgp_desc">Оповещать, когда сессия BGP узла всё ещё разорвана при следующей проверке (встроенный BGP Talos 1.14+; читает сессии каждого узла при каждой проверке).</string>
+    <string name="monitor_bgp_down">Сессия BGP с %1$s разорвана на %2$s</string>
+    <string name="monitor_bgp_up">Сессия BGP с %1$s снова установлена на %2$s</string>
+    <string name="monitor_bgp_state">Состояние сессии: %1$s</string>
     <string name="talos_vms_problems_title">Требует внимания</string>
     <string name="monitor_sensors_auto">Собственный предел каждого датчика (критический − 5 °C, иначе его максимум)</string>
     <string name="monitor_sensors_threshold">Оповещать при %1$d °C</string>

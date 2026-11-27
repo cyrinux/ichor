@@ -24,6 +24,7 @@ val Alert.channel: AlertChannel
         AlertKind.NODE_READY, AlertKind.NODE_NOT_READY, AlertKind.NODE_UNREACHABLE, AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK,
         AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK, AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK,
         AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK, AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK,
+        AlertKind.BGP_DOWN, AlertKind.BGP_UP,
         -> AlertChannel.NODES
         AlertKind.KUBESPAN_DOWN, AlertKind.KUBESPAN_UP -> AlertChannel.MESH
         AlertKind.ETCD_ALARM, AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK, AlertKind.AM_FIRING, AlertKind.AM_RESOLVED,
@@ -83,6 +84,9 @@ fun Alert.shareTarget(): ShareTarget? = when (kind) {
     AlertKind.KUBESPAN_DOWN, AlertKind.KUBESPAN_UP -> ShareTarget.screen(ShareTarget.KUBESPAN)
     // "vm:node|vm|name": the cluster's Talos virtual machines, where the problems card is.
     AlertKind.TALOS_VM_PROBLEM, AlertKind.TALOS_VM_OK -> ShareTarget.screen(ShareTarget.TALOS_VMS)
+    // "bgp:node|instance|peer": that node's Network screen, where its sessions are.
+    AlertKind.BGP_DOWN, AlertKind.BGP_UP ->
+        ShareTarget.network(bgpIssueNode(key.removePrefix("bgp:")), BgpDetail.parse(detail).hostname)
     // "memory:<node address>:trend" (an IPv6 address has colons too): that node, whose History card shows the trend.
     AlertKind.MEMORY_TREND, AlertKind.MEMORY_TREND_OK ->
         ShareTarget(target = ShareTarget.NODE, addr = key.removePrefix("memory:").removeSuffix(":trend"), host = subject)

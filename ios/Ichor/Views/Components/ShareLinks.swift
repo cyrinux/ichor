@@ -32,10 +32,10 @@ extension ShareTarget {
     /// node of it (a node or disk alert) opens its nodes searched for that node.
     func route(client: TalosClient?, kube: Bool = false) async -> Route? {
         if kube, target == .node || target == .storage { return await kubeNodeRoute(client: client) }
-        if kube, [Target.node, .etcd, .health, .storage, .hardware, .kubespan, .talosVMs].contains(target) {
+        if kube, [Target.node, .etcd, .health, .storage, .hardware, .network, .kubespan, .talosVMs].contains(target) {
             return nil
         }
-        if target == .node || target == .storage || target == .hardware {
+        if target == .node || target == .storage || target == .hardware || target == .network {
             guard let nodes = try? await client?.overview().nodes,
                 let node = nodes.first(where: {
                     !addr.isEmpty && $0.node == addr || !host.isEmpty && $0.hostname == host
@@ -43,6 +43,7 @@ extension ShareTarget {
             else { return nil }
             if target == .storage { return .storage(node: node.node, hostname: node.hostname) }
             if target == .hardware { return .hardware(node: node.node, hostname: node.hostname) }
+            if target == .network { return .network(node: node.node, hostname: node.hostname) }
             let ref = NodeRef(address: node.node, hostname: node.hostname, role: node.role)
             // A link that names a tab opens the tabs on it; one without (or an unknown one) the hub.
             guard let shown = NodeTabsView.Tab.allCases.first(where: { $0.rawValue.lowercased() == tab }) else {
@@ -56,7 +57,7 @@ extension ShareTarget {
         case .health: .health
         case .argoCD: .argoCD(downNodes: [])
         case .flux: .flux(downNodes: [])
-        case .node, .storage, .hardware: nil
+        case .node, .storage, .hardware, .network: nil
         case .argoApp: .argoApp(namespace: namespace, name: name)
         case .fluxApp: .fluxApp(kind: kind, namespace: namespace, name: name)
         case .workloads, .workload, .pod, .cronJob: kubeFocus.map { Route.kubernetes($0) }

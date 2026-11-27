@@ -1364,6 +1364,14 @@
     <string name="network_neighbor_vlan">VLAN %1$s</string>
     <string name="network_neighbor_management">gestión %1$s</string>
     <string name="network_neighbor_copy">Copiar los datos del vecino</string>
+    <string name="network_bgp">BGP</string>
+    <string name="network_bgp_hint">Las sesiones BGP del propio nodo (BGP nativo de Talos): cada par, su número de AS, el estado de la sesión y los prefijos intercambiados.</string>
+    <string name="network_bgp_asn">AS %1$s · AS local %2$s</string>
+    <string name="network_bgp_instance">instancia %1$s</string>
+    <string name="network_bgp_prefixes">%1$s recibidos · %2$s anunciados</string>
+    <string name="network_bgp_since">establecida %1$s</string>
+    <string name="network_bgp_graceful">reinicio ordenado</string>
+    <string name="network_bgp_restarting">par reiniciándose</string>
     <string name="connections_search">Filtrar por dirección, puerto, estado o proceso</string>
     <string name="connections_listening">Escuchando</string>
     <string name="connections_all">Todas</string>
@@ -4685,6 +4693,11 @@
     <string name="monitor_talos_vm_error">%1$s falló en %2$s</string>
     <string name="monitor_talos_vm_disk">Un disco de %1$s falló en %2$s</string>
     <string name="monitor_talos_vm_ok">%1$s en %2$s vuelve a la normalidad</string>
+    <string name="monitor_bgp">Sesiones BGP</string>
+    <string name="monitor_bgp_desc">Avisar cuando una sesión BGP de un nodo sigue caída en la siguiente comprobación (BGP nativo de Talos 1.14+; lee las sesiones de cada nodo en cada comprobación).</string>
+    <string name="monitor_bgp_down">Sesión BGP con %1$s caída en %2$s</string>
+    <string name="monitor_bgp_up">Sesión BGP con %1$s restablecida en %2$s</string>
+    <string name="monitor_bgp_state">Estado de la sesión: %1$s</string>
     <string name="talos_vms_problems_title">Requiere atención</string>
     <string name="monitor_sensors_auto">El límite de cada sensor (crítico − 5 °C, si no su máximo)</string>
     <string name="monitor_sensors_threshold">Avisar a %1$d °C</string>

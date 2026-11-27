@@ -1359,6 +1359,14 @@
     <string name="network_neighbor_vlan">VLAN %1$s</string>
     <string name="network_neighbor_management">gerência %1$s</string>
     <string name="network_neighbor_copy">Copiar os detalhes do vizinho</string>
+    <string name="network_bgp">BGP</string>
+    <string name="network_bgp_hint">As sessões BGP do próprio nó (BGP nativo do Talos): cada par, seu número de AS, o estado da sessão e os prefixos trocados.</string>
+    <string name="network_bgp_asn">AS %1$s · AS local %2$s</string>
+    <string name="network_bgp_instance">instância %1$s</string>
+    <string name="network_bgp_prefixes">%1$s recebidos · %2$s anunciados</string>
+    <string name="network_bgp_since">estabelecida %1$s</string>
+    <string name="network_bgp_graceful">reinício suave</string>
+    <string name="network_bgp_restarting">par reiniciando</string>
     <string name="connections_search">Filtrar por endereço, porta, estado ou processo</string>
     <string name="connections_listening">Escutando</string>
     <string name="connections_all">Todos</string>
@@ -4681,6 +4689,11 @@
     <string name="monitor_talos_vm_error">%1$s falhou em %2$s</string>
     <string name="monitor_talos_vm_disk">Um disco de %1$s falhou em %2$s</string>
     <string name="monitor_talos_vm_ok">%1$s em %2$s voltou ao normal</string>
+    <string name="monitor_bgp">Sessões BGP</string>
+    <string name="monitor_bgp_desc">Alertar quando uma sessão BGP de um nó ainda estiver caída na verificação seguinte (BGP nativo do Talos 1.14+; lê as sessões de cada nó a cada verificação).</string>
+    <string name="monitor_bgp_down">Sessão BGP com %1$s caída em %2$s</string>
+    <string name="monitor_bgp_up">Sessão BGP com %1$s restabelecida em %2$s</string>
+    <string name="monitor_bgp_state">Estado da sessão: %1$s</string>
     <string name="talos_vms_problems_title">Requer atenção</string>
     <string name="monitor_sensors_auto">O limite próprio de cada sensor (crítico − 5 °C, senão o máximo)</string>
     <string name="monitor_sensors_threshold">Alertar em %1$d °C</string>

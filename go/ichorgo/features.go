@@ -90,6 +90,10 @@ var featureRules = []featureRule{
 	// resources/network/lldp_neighbor_status.go at v1.15.0-beta.1). NodeNetwork reports it as
 	// neighborsSupported; the apps read that rather than this row.
 	{name: "lldp", min: "v1.15", hint: "LLDP neighbours"},
+	// BGPPeerStatuses.net.talos.dev: first in v1.14 (pkg/machinery/resources/network/
+	// bgp_peer_status.go at v1.14.7; gracefulRestart and peerRestarting from v1.15.0-beta.1).
+	// NodeNetwork reports it as bgpSupported; the apps read that rather than this row.
+	{name: "bgp", min: "v1.14", hint: "native BGP"},
 	// rpc Netstat (machine.proto): first in v1.4.0.
 	{name: "connections", min: "v1.4"},
 	// TimeService (api/time/time.proto): v1.0.0.

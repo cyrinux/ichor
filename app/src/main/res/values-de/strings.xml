@@ -1357,6 +1357,14 @@
     <string name="network_neighbor_vlan">VLAN %1$s</string>
     <string name="network_neighbor_management">Verwaltung %1$s</string>
     <string name="network_neighbor_copy">Angaben des Nachbarn kopieren</string>
+    <string name="network_bgp">BGP</string>
+    <string name="network_bgp_hint">Die eigenen BGP-Sitzungen des Knotens (natives BGP von Talos): jeder Peer, seine AS-Nummer, der Sitzungsstatus und die ausgetauschten Präfixe.</string>
+    <string name="network_bgp_asn">AS %1$s · lokale AS %2$s</string>
+    <string name="network_bgp_instance">Instanz %1$s</string>
+    <string name="network_bgp_prefixes">%1$s empfangen · %2$s angekündigt</string>
+    <string name="network_bgp_since">aufgebaut %1$s</string>
+    <string name="network_bgp_graceful">Graceful Restart</string>
+    <string name="network_bgp_restarting">Peer startet neu</string>
     <string name="connections_search">Nach Adresse, Port, Status oder Prozess filtern</string>
     <string name="connections_listening">Lauschend</string>
     <string name="connections_all">Alle</string>
@@ -4676,6 +4684,11 @@
     <string name="monitor_talos_vm_error">%1$s ist auf %2$s fehlgeschlagen</string>
     <string name="monitor_talos_vm_disk">Ein Datenträger von %1$s ist auf %2$s ausgefallen</string>
     <string name="monitor_talos_vm_ok">%1$s auf %2$s ist wieder in Ordnung</string>
+    <string name="monitor_bgp">BGP-Sitzungen</string>
+    <string name="monitor_bgp_desc">Warnen, wenn eine BGP-Sitzung eines Knotens bei der nächsten Prüfung noch getrennt ist (natives BGP ab Talos 1.14; liest bei jeder Prüfung die Sitzungen jedes Knotens).</string>
+    <string name="monitor_bgp_down">BGP-Sitzung zu %1$s auf %2$s getrennt</string>
+    <string name="monitor_bgp_up">BGP-Sitzung zu %1$s auf %2$s wieder aufgebaut</string>
+    <string name="monitor_bgp_state">Sitzungsstatus: %1$s</string>
     <string name="talos_vms_problems_title">Braucht Aufmerksamkeit</string>
     <string name="monitor_sensors_auto">Eigene Grenze jedes Sensors (kritisch − 5 °C, sonst sein Maximum)</string>
     <string name="monitor_sensors_threshold">Warnen ab %1$d °C</string>

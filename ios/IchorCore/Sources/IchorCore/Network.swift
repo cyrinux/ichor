@@ -1,7 +1,7 @@
 import Foundation
 
 /// A node's network state from the Go core (NodeNetwork); each section is best-effort and
-/// a failed one is named in `errors` (links, addresses, routes, resolvers, timeServers, neighbors).
+/// a failed one is named in `errors` (links, addresses, routes, resolvers, timeServers, neighbors, bgp).
 public struct NodeNetwork: Decodable, Equatable, Sendable {
     public let links: [NetLink]
     public let addresses: [NetAddress]
@@ -12,12 +12,17 @@ public struct NodeNetwork: Decodable, Equatable, Sendable {
     public let neighbors: [LLDPNeighbor]
     /// False on nodes older than Talos 1.15, which have no LLDP resource.
     public let neighborsSupported: Bool
+    /// The node's own BGP sessions (Talos 1.14+ native BGP), see BGPPeer.
+    public let bgpPeers: [BGPPeer]
+    /// False on nodes older than Talos 1.14, which have no BGP resource.
+    public let bgpSupported: Bool
     public let errors: [String: String]
 
     public init(
         links: [NetLink] = [], addresses: [NetAddress] = [], routes: [NetRoute] = [],
         resolvers: [String] = [], timeServers: [String] = [], neighbors: [LLDPNeighbor] = [],
-        neighborsSupported: Bool = false, errors: [String: String] = [:]
+        neighborsSupported: Bool = false, bgpPeers: [BGPPeer] = [], bgpSupported: Bool = false,
+        errors: [String: String] = [:]
     ) {
         self.links = links
         self.addresses = addresses
@@ -26,11 +31,14 @@ public struct NodeNetwork: Decodable, Equatable, Sendable {
         self.timeServers = timeServers
         self.neighbors = neighbors
         self.neighborsSupported = neighborsSupported
+        self.bgpPeers = bgpPeers
+        self.bgpSupported = bgpSupported
         self.errors = errors
     }
 
     private enum CodingKeys: String, CodingKey {
-        case links, addresses, routes, resolvers, timeServers, neighbors, neighborsSupported, errors
+        case links, addresses, routes, resolvers, timeServers, neighbors, neighborsSupported, bgpPeers, bgpSupported
+        case errors
     }
 
     // Go encodes empty (nil) slices and maps as null.
@@ -43,6 +51,8 @@ public struct NodeNetwork: Decodable, Equatable, Sendable {
         timeServers = try c.field(.timeServers, [])
         neighbors = try c.field(.neighbors, [])
         neighborsSupported = try c.field(.neighborsSupported, false)
+        bgpPeers = try c.field(.bgpPeers, [])
+        bgpSupported = try c.field(.bgpSupported, false)
         errors = try c.field(.errors, [:])
     }
 
@@ -50,6 +60,12 @@ public struct NodeNetwork: Decodable, Equatable, Sendable {
     /// announced itself or the read failed.
     public var showsNeighbors: Bool {
         neighborsSupported && (!neighbors.isEmpty || errors["neighbors"] != nil)
+    }
+
+    /// The Network screen shows the BGP sessions when the node supports native BGP and either
+    /// peers or the read failed.
+    public var showsBGP: Bool {
+        bgpSupported && (!bgpPeers.isEmpty || errors["bgp"] != nil)
     }
 
     /// The neighbours heard on `link`.

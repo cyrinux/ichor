@@ -15,7 +15,11 @@ data class NodeNetwork(
     val neighbors: List<LldpNeighbor> = emptyList(),
     /** False on nodes older than Talos 1.15, which have no LLDP resource. */
     val neighborsSupported: Boolean = false,
-    /** Section ("links", "addresses", "routes", "resolvers", "timeServers", "neighbors") -> error. */
+    /** The node's own BGP sessions (Talos 1.14+ native BGP), see [BgpPeer]. */
+    val bgpPeers: List<BgpPeer> = emptyList(),
+    /** False on nodes older than Talos 1.14, which have no BGP resource. */
+    val bgpSupported: Boolean = false,
+    /** Section ("links", "addresses", "routes", "resolvers", "timeServers", "neighbors", "bgp") -> error. */
     val errors: Map<String, String> = emptyMap(),
 )
 
@@ -97,6 +101,7 @@ object NetworkSection {
     const val RESOLVERS = "resolvers"
     const val TIME_SERVERS = "timeServers"
     const val NEIGHBORS = "neighbors"
+    const val BGP = "bgp"
 }
 
 /**

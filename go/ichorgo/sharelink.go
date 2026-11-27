@@ -65,6 +65,8 @@ var shareTargets = map[string]shareFields{
 	"storage": {node: true},
 	// A node's Hardware screen (its sensors, the temperature alert's).
 	"hardware": {node: true},
+	// A node's Network screen (its links, neighbours and BGP sessions, a BGP alert's).
+	"network": {node: true},
 	// The KubeSpan map (a tunnel alert's).
 	"kubespan": {},
 	// The cluster's Talos virtual machines (a VM alert's).

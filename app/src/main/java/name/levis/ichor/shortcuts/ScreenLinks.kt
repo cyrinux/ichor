@@ -56,7 +56,7 @@ fun keepsPinned(shortcut: PinnedShortcut, current: Set<String>, known: Set<Strin
  * the screen's own [label] gives it for the others.
  */
 fun screenGlyph(target: String, label: String): String = when (target) {
-    ShareTarget.NODE, ShareTarget.STORAGE, ShareTarget.HARDWARE -> "N"
+    ShareTarget.NODE, ShareTarget.STORAGE, ShareTarget.HARDWARE, ShareTarget.NETWORK -> "N"
     ShareTarget.WORKLOAD, ShareTarget.WORKLOADS -> "W"
     ShareTarget.POD -> "P"
     ShareTarget.CRONJOB -> "C"

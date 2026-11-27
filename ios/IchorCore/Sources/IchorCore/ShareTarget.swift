@@ -14,6 +14,8 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         case kubespan
         /// The cluster's Talos virtual machines.
         case talosVMs = "talos-vms"
+        /// A node's Network screen (its links, neighbours and BGP sessions).
+        case network
     }
 
     public var cluster: String
@@ -84,6 +86,11 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
     /// The Hardware screen (sensors) of the node at `address`.
     public static func hardware(address: String, hostname: String) -> ShareTarget {
         ShareTarget(target: .hardware, host: hostname, addr: address)
+    }
+
+    /// A node's Network screen (a BGP alert's).
+    public static func network(address: String, hostname: String) -> ShareTarget {
+        ShareTarget(target: .network, host: hostname, addr: address)
     }
 
     public static func kubernetes(tab: KubeFocus.Tab) -> ShareTarget {
@@ -180,6 +187,12 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
             return .hardware(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept)
         case "kubespan": return .screen(.kubespan)
         case "vm": return .screen(.talosVMs)
+        case "bgp":
+            // "<node>|<instance>|<peer>": that node's Network screen.
+            let address = storageIssueNode(subject)
+            guard !address.isEmpty else { return nil }
+            let kept = snapshot.bgpIssues[subject].map { BGPIssue(value: $0).hostname } ?? ""
+            return .network(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept)
         case "memory":
             // "<node address>:trend": the node, whose History card shows the trend.
             let address = memoryTrendNode(subject: subject)

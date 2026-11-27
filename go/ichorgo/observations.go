@@ -76,7 +76,7 @@ func ClusterDriftSnapshot(configYAML, contextName string) (out string, err error
 			d.Errors["network"] = e.Error()
 		} else {
 			for k, v := range network.Errors {
-				if k != "neighbors" { // not compared: what the switches announce is not node config
+				if k != "neighbors" && k != "bgp" { // not compared: what peers announce is not node config
 					d.Errors[k] = v
 				}
 			}
