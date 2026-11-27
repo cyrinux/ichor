@@ -1441,6 +1441,12 @@
     <string name="network_metric">метрика %1$d</string>
     <string name="network_mtu">MTU %1$d</string>
     <string name="network_speed_mbit">%1$d Мб/с</string>
+    <string name="network_neighbors">Сусіди</string>
+    <string name="network_neighbors_hint">Що комутатори повідомляють через LLDP: комутатор і порт на іншому кінці кожного кабелю.</string>
+    <string name="network_neighbor_port">порт %1$s</string>
+    <string name="network_neighbor_vlan">VLAN %1$s</string>
+    <string name="network_neighbor_management">керування %1$s</string>
+    <string name="network_neighbor_copy">Скопіювати дані сусіда</string>
     <string name="connections_search">Фільтр за адресою, портом, станом або процесом</string>
     <string name="connections_listening">Прослуховують</string>
     <string name="connections_all">Усі</string>

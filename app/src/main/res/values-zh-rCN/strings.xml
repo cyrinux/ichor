@@ -1302,6 +1302,12 @@
     <string name="network_metric">metric %1$d</string>
     <string name="network_mtu">MTU %1$d</string>
     <string name="network_speed_mbit">%1$d Mb/s</string>
+    <string name="network_neighbors">邻居</string>
+    <string name="network_neighbors_hint">交换机通过 LLDP 通告的信息：每根网线另一端的交换机和端口。</string>
+    <string name="network_neighbor_port">端口 %1$s</string>
+    <string name="network_neighbor_vlan">VLAN %1$s</string>
+    <string name="network_neighbor_management">管理 %1$s</string>
+    <string name="network_neighbor_copy">复制邻居详情</string>
     <string name="connections_search">按地址、端口、状态或进程筛选</string>
     <string name="connections_listening">监听中</string>
     <string name="connections_all">全部</string>

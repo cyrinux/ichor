@@ -1443,6 +1443,12 @@
     <string name="network_metric">метрика %1$d</string>
     <string name="network_mtu">MTU %1$d</string>
     <string name="network_speed_mbit">%1$d Мбит/с</string>
+    <string name="network_neighbors">Соседи</string>
+    <string name="network_neighbors_hint">Что коммутаторы сообщают по LLDP: коммутатор и порт на другом конце каждого кабеля.</string>
+    <string name="network_neighbor_port">порт %1$s</string>
+    <string name="network_neighbor_vlan">VLAN %1$s</string>
+    <string name="network_neighbor_management">управление %1$s</string>
+    <string name="network_neighbor_copy">Скопировать данные соседа</string>
     <string name="connections_search">Фильтр по адресу, порту, состоянию или процессу</string>
     <string name="connections_listening">Прослушивание</string>
     <string name="connections_all">Все</string>

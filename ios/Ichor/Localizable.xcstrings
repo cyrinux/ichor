@@ -296,6 +296,90 @@
         }
       }
     },
+    "Neighbours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nachbarn" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Vecinos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Voisins" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Vicini" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "隣接機器" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Vizinhos" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Соседи" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Сусіди" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "邻居" } }
+      }
+    },
+    "What the switches announce over LLDP: the switch and port at the other end of each cable." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Was die Switches per LLDP melden: Switch und Port am anderen Ende jedes Kabels." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Lo que anuncian los switches por LLDP: el switch y el puerto al otro extremo de cada cable." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ce que les switchs annoncent par LLDP : le switch et le port au bout de chaque câble." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ciò che gli switch annunciano via LLDP: lo switch e la porta all’altro capo di ogni cavo." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "スイッチが LLDP で通知する内容: 各ケーブルの先にあるスイッチとポート。" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O que os switches anunciam via LLDP: o switch e a porta na outra ponta de cada cabo." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Что коммутаторы сообщают по LLDP: коммутатор и порт на другом конце каждого кабеля." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Що комутатори повідомляють через LLDP: комутатор і порт на іншому кінці кожного кабелю." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "交换机通过 LLDP 通告的信息：每根网线另一端的交换机和端口。" } }
+      }
+    },
+    "port %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Port %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "puerto %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "port %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "porta %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ポート %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "porta %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "порт %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "порт %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "端口 %@" } }
+      }
+    },
+    "VLAN %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "VLAN %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "VLAN %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "VLAN %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "VLAN %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "VLAN %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "VLAN %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "VLAN %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "VLAN %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "VLAN %@" } }
+      }
+    },
+    "management %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verwaltung %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "gestión %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "gestion %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "gestione %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "管理 %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "gerência %@" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "управление %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "керування %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "管理 %@" } }
+      }
+    },
+    "Copy the neighbour details" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Angaben des Nachbarn kopieren" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Copiar los datos del vecino" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Copier les détails du voisin" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Copia i dettagli del vicino" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "隣接機器の詳細をコピー" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Copiar os detalhes do vizinho" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Скопировать данные соседа" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Скопіювати дані сусіда" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制邻居详情" } }
+      }
+    },
     "Node pools (GKE)" : {
       "extractionState" : "manual",
       "localizations" : {

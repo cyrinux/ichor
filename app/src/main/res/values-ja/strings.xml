@@ -1302,6 +1302,12 @@
     <string name="network_metric">metric %1$d</string>
     <string name="network_mtu">MTU %1$d</string>
     <string name="network_speed_mbit">%1$d Mb/s</string>
+    <string name="network_neighbors">隣接機器</string>
+    <string name="network_neighbors_hint">スイッチが LLDP で通知する内容: 各ケーブルの先にあるスイッチとポート。</string>
+    <string name="network_neighbor_port">ポート %1$s</string>
+    <string name="network_neighbor_vlan">VLAN %1$s</string>
+    <string name="network_neighbor_management">管理 %1$s</string>
+    <string name="network_neighbor_copy">隣接機器の詳細をコピー</string>
     <string name="connections_search">アドレス、ポート、状態、プロセスでフィルター</string>
     <string name="connections_listening">待ち受け中</string>
     <string name="connections_all">すべて</string>

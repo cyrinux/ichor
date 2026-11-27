@@ -289,6 +289,8 @@ func (m *privacyMask) learnHostLocked(hostname, role string) {
 		prefix = "worker"
 	case vmHostRole:
 		prefix = "vm"
+	case lldpRole:
+		prefix = "switch"
 	}
 
 	var fake string
